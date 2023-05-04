@@ -41,25 +41,25 @@ class AacEncoder(
         return queue.poll()
     }
 
-    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
-            val outBytes = ByteArray(outData.remaining())
-            outData.get(outBytes)
+            val outBytes = ByteArray(outBuf.remaining())
+            outBuf.get(outBytes)
             csd0 = outBytes
             LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
         }
         val aacDataLength = info.size
         // The length of ADTS header is 7.
         val aacDataSizeWithAdtsLength = aacDataLength + 7
-        outData.position(info.offset)
-        outData.limit(info.offset + aacDataLength)
+        outBuf.position(info.offset)
+        outBuf.limit(info.offset + aacDataLength)
 
         // Add ADTS header to pcm data array which length is pcm data length plus 7.
         val aacDataWithAdts = ByteArray(aacDataSizeWithAdtsLength)
         addAdtsToDataWithoutCRC(aacDataWithAdts, aacDataSizeWithAdtsLength)
-        outData.get(aacDataWithAdts, 7, aacDataLength)
-        outData.position(info.offset)
+        outBuf.get(aacDataWithAdts, 7, aacDataLength)
+        outBuf.position(info.offset)
         callback.onEncoded(aacDataWithAdts, isConfig, isKeyFrame)
     }
 

@@ -96,7 +96,6 @@ class AacFilePlayer(
         ioScope.launch {
             try {
                 var isFinish = false
-                val decodeBufferInfo = MediaCodec.BufferInfo()
                 while (!isFinish && isPlaying) {
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
                     // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
@@ -128,6 +127,7 @@ class AacFilePlayer(
                         }
                     }
 
+                    val decodeBufferInfo = MediaCodec.BufferInfo()
                     var outputIndex: Int = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
                     // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var chunkPCM: ByteArray
@@ -159,10 +159,9 @@ class AacFilePlayer(
     fun stop() {
         isPlaying = false
         audioTrackPlayer.release()
-        runCatching { mediaExtractor?.release() }.onFailure { it.printStackTrace() }
         runCatching {
-            audioDecoder?.stop()
             audioDecoder?.release()
         }.onFailure { it.printStackTrace() }
+        runCatching { mediaExtractor?.release() }.onFailure { it.printStackTrace() }
     }
 }

@@ -66,9 +66,9 @@ class AacDecoder(
 
     override fun onInputData(): ByteArray? = queue.poll()
 
-    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
-        callback.onDecoded(outData.toByteArray())
+        callback.onDecoded(outBuf.toByteArray())
     }
 
     /**

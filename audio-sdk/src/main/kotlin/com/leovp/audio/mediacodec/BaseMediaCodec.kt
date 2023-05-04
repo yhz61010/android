@@ -1,21 +1,17 @@
-@file:Suppress("unused")
-
 package com.leovp.audio.mediacodec
 
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
-import java.nio.ByteBuffer
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
- * Date: 2023/4/25 16:39
+ * Date: 2023/5/4 10:18
  */
 abstract class BaseMediaCodec(
     private val codecName: String,
@@ -26,13 +22,15 @@ abstract class BaseMediaCodec(
         private const val TAG = "BaseMediaCodec"
     }
 
-    protected lateinit var format: MediaFormat
-    protected lateinit var codec: MediaCodec
+    internal lateinit var format: MediaFormat
+    internal lateinit var codec: MediaCodec
 
-    private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
+    protected val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
     private var frameCount: Long = 0
 
     abstract fun setFormatOptions(format: MediaFormat)
+
+    open fun setMediaCodecOptions(codec: MediaCodec) = Unit
 
     open fun start() {
         createMediaFormat()
@@ -71,65 +69,9 @@ abstract class BaseMediaCodec(
 
     private fun createCodec() {
         LogContext.log.i(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
-        val mediaCodec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
-        codec = mediaCodec.apply {
-            configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)
-            setCallback(mediaCodecCallback)
-        }
-    }
-
-    private val mediaCodecCallback = object : MediaCodec.Callback() {
-        override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
-            runCatching {
-                val inputBuffer = codec.getInputBuffer(index)
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = onInputData()?.also {
-                    inputBuffer?.put(it)
-                }
-                // if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
-                codec.queueInputBuffer(index, 0, data?.size ?: 0, getPresentationTimeUs(), 0)
-            }.onFailure { it.printStackTrace() }
-        }
-
-        override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-            runCatching {
-                val outputBuffer: ByteBuffer? = codec.getOutputBuffer(index) // little endian
-                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                // bufferFormat is equivalent to member variable outputFormat
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    // LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
-                    // val copiedBuffer = it.copyAll()
-                    // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
-                    //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
-                    // val outBytes = it.toByteArray()
-                    ioScope.launch {
-                        when {
-                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
-                                onOutputData(it, info, isConfig = true, isKeyFrame = false)
-
-                            (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
-                                onOutputData(it, info, isConfig = false, isKeyFrame = true)
-
-                            (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
-                            else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
-                        }
-                        codec.releaseOutputBuffer(index, false)
-                    }
-                }
-            }.onFailure { it.printStackTrace() }
-        }
-
-        override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            // Subsequent data will conform to new format.
-            // Can ignore if using getOutputFormat(outputBufferId)
-            this@BaseMediaCodec.format = format // option B
-        }
-
-        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            this@BaseMediaCodec.onError(codec, e)
-        }
+        codec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
+        codec.configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)
+        setMediaCodecOptions(codec)
     }
 
     /**

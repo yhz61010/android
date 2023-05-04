@@ -1,5 +1,6 @@
 package com.leovp.audio.base.bean
 
+import android.media.AudioFormat
 import androidx.annotation.Keep
 
 /**
@@ -20,10 +21,10 @@ import androidx.annotation.Keep
  * ```
  */
 @Keep
-data class AudioDecoderInfo(val sampleRate: Int, val channelConfig: Int, val audioFormat: Int) {
+data class AudioDecoderInfo(val sampleRate: Int, val channelConfig: Int, val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT) {
     val channelCount: Int = when (channelConfig) {
-        android.media.AudioFormat.CHANNEL_OUT_MONO -> 1
-        android.media.AudioFormat.CHANNEL_OUT_STEREO -> 2
+        AudioFormat.CHANNEL_OUT_MONO -> 1
+        AudioFormat.CHANNEL_OUT_STEREO -> 2
         else -> throw kotlin.IllegalArgumentException("Illegal channelConfig value=$channelConfig")
     }
 }

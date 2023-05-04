@@ -39,12 +39,11 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
             val inputIndex: Int = codec.dequeueInputBuffer(0)
             if (inputIndex > -1) {
-                codec.getInputBuffer(inputIndex)?.run {
-                    // Clear exist data.
-                    clear()
-                    // Put pcm audio data to encoder.
-                    put(audioData)
-                }
+                val inputBuf = codec.getInputBuffer(inputIndex) ?: return
+                // Clear exist data.
+                inputBuf.clear()
+                // Fill inputBuffer with valid data.
+                inputBuf.put(audioData)
                 codec.queueInputBuffer(inputIndex, 0, audioData.size, getPresentationTimeUs(), 0)
             }
 

@@ -24,12 +24,11 @@ abstract class BaseMediaCodecAsynchronous(codecName: String, sampleRate: Int, ch
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
             runCatching {
-                val inputBuffer = codec.getInputBuffer(index)
-                // fill inputBuffer with valid data
-                inputBuffer?.clear()
-                val data = onInputData()?.also {
-                    inputBuffer?.put(it)
-                }
+                val inputBuf = codec.getInputBuffer(index) ?: return
+                // Clear exist data.
+                inputBuf.clear()
+                // Fill inputBuffer with valid data.
+                val data = onInputData()?.also { inputBuf.put(it) }
                 // if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
                 codec.queueInputBuffer(index, 0, data?.size ?: 0, getPresentationTimeUs(), 0)
             }.onFailure { it.printStackTrace() }

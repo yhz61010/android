@@ -151,8 +151,8 @@ class MicRecorder(
         }.onFailure { it.printStackTrace(); stopResult = false }
         runCatching {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                LogContext.log.w(TAG, "Releasing recording...")
                 audioRecord.release()
+                LogContext.log.w(TAG, "Recording released.")
             }
         }.onFailure { it.printStackTrace(); stopResult = false }
         encodeWrapper?.release()

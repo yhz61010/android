@@ -89,7 +89,7 @@ class MicRecorder(
         audioRecord.startRecording()
         ioScope.launch {
             runCatching {
-                val pcmData = ShortArray(bufferSizeInBytes / 2)
+                var pcmData = ShortArray(bufferSizeInBytes / 2)
                 var st: Long
                 var ed: Long
                 var recordSize: Int
@@ -98,8 +98,9 @@ class MicRecorder(
                     st = SystemClock.elapsedRealtime()
                     recordSize = audioRecord.read(pcmData, 0, pcmData.size)
                     ed = SystemClock.elapsedRealtime()
+                    pcmData = pcmData.copyOfRange(0, recordSize)
                     if (BuildConfig.DEBUG) {
-                        LogContext.log.d(TAG, "Record[${recordSize * 2}] cost ${ed - st} ms.")
+                        LogContext.log.d(TAG, "Record[${pcmData.size * 2}] cost ${ed - st} ms.")
                     }
                     // If you want to reduce latency when transfer real-time audio stream,
                     // please drop the first generated audio.

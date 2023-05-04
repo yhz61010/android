@@ -1,5 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.audio
 
+import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
@@ -37,8 +38,16 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(16000, 32000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(16000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(8000, 32000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo = AudioDecoderInfo(8000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+
+        // AudioAttributes.USAGE_VOICE_COMMUNICATION
+        // AudioAttributes.USAGE_MEDIA
+        const val AUDIO_ATTR_USAGE: Int = AudioAttributes.USAGE_MEDIA
+
+        // AudioAttributes.CONTENT_TYPE_SPEECH
+        // AudioAttributes.CONTENT_TYPE_MUSIC
+        const val AUDIO_ATTR_CONTENT_TYPE: Int = AudioAttributes.CONTENT_TYPE_MUSIC
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding {
@@ -81,33 +90,26 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         binding.tvIp.text = NetworkUtil.getIp()[0]
 
         binding.btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                record(AudioType.PCM)
-            } else {
-                micRecorder?.stopRecord()
-            }
+            if (isChecked) record(AudioType.PCM) else micRecorder?.stopRecord()
         }
 
         binding.btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                record(AudioType.AAC)
-            } else {
-                micRecorder?.stopRecord()
-            }
+            if (isChecked) record(AudioType.AAC) else micRecorder?.stopRecord()
         }
 
         binding.btnRecordOpus.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                record(AudioType.OPUS)
-            } else {
-                micRecorder?.stopRecord()
-            }
+            if (isChecked) record(AudioType.OPUS) else micRecorder?.stopRecord()
         }
 
         var playPcmThread: Thread? = null
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                audioPlayer = AudioPlayer(applicationContext, audioDecoderInfo, AudioType.PCM)
+                audioPlayer = AudioPlayer(
+                    this,
+                    audioDecoderInfo,
+                    type = AudioType.PCM,
+                    usage = AUDIO_ATTR_USAGE,
+                    contentType = AUDIO_ATTR_CONTENT_TYPE)
                 playPcmThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->
@@ -130,7 +132,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
 
         binding.btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                aacFilePlayer = AacFilePlayer(applicationContext, audioDecoderInfo)
+                aacFilePlayer = AacFilePlayer(this, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
                 aacFilePlayer?.playAac(aacFile) {
                     runOnUiThread { btn.isChecked = false }
                 }

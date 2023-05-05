@@ -76,9 +76,9 @@ class AacDecoder(
         callback.onDecoded(outBuf.toByteArray())
     }
 
-    fun decode(rawData: ByteArray) {
-        // LogContext.log.e(TAG, "--->>> decode[${rawData.size}] queue[${queue.size}]")
-        queue.offer(rawData)
+    fun decode(aacData: ByteArray) {
+        // LogContext.log.e(TAG, "--->>> decode[${aacData.size}] queue[${queue.size}]")
+        queue.offer(aacData)
     }
 
     override fun stop() {

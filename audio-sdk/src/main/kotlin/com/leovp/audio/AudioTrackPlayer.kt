@@ -8,7 +8,9 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.media.AudioTrack.MODE_STREAM
+import android.media.AudioTrack.PLAYSTATE_PAUSED
 import android.media.AudioTrack.PLAYSTATE_PLAYING
+import android.media.AudioTrack.PLAYSTATE_STOPPED
 import android.media.AudioTrack.STATE_INITIALIZED
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.AudioTrack.getMinBufferSize
@@ -116,12 +118,15 @@ class AudioTrackPlayer(
      * ```
      */
     fun resume() {
+        if (audioTrack.playState == PLAYSTATE_PLAYING) {
+            return
+        }
         LogContext.log.w(TAG, "resume()")
         runCatching { audioTrack.play() }.onFailure { it.printStackTrace() }
     }
 
     /**
-     * After [pause] audio, if you want to play audio again [resume] method **MUST** be called.
+     * After [pause] audio, if you want to play audio again, [resume] method **MUST** be called.
      *
      * Example:
      * ```kotlin
@@ -132,6 +137,9 @@ class AudioTrackPlayer(
      * ```
      */
     fun pause() {
+        if (audioTrack.playState == PLAYSTATE_PAUSED) {
+            return
+        }
         LogContext.log.w(TAG, "pause()")
         runCatching {
             if (audioTrack.state == STATE_INITIALIZED) {
@@ -153,12 +161,18 @@ class AudioTrackPlayer(
      * ```
      */
     fun stop() {
+        if (audioTrack.playState == PLAYSTATE_STOPPED) {
+            return
+        }
         LogContext.log.w(TAG, "stop()")
         pause()
         runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.stop() }.onFailure { it.printStackTrace() }
     }
 
     fun release() {
+        if (audioTrack.state == STATE_UNINITIALIZED) {
+            return
+        }
         LogContext.log.w(TAG, "release()")
         stop()
         runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.release() }.onFailure { it.printStackTrace() }

@@ -27,10 +27,9 @@ abstract class BaseMediaCodecAsynchronous(codecName: String, sampleRate: Int, ch
                 // Clear exist data.
                 inputBuf.clear()
                 // Fill inputBuffer with valid data.
-                onInputData(inputBuf)
-                inputBuf.flip()
-                // if (BuildConfig.DEBUG) LogContext.log.d(TAG, "inputBuffer data=${data?.size}")
-                codec.queueInputBuffer(index, 0, inputBuf.remaining(), getPresentationTimeUs(), 0)
+                val size = onInputData(inputBuf)
+                // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
+                codec.queueInputBuffer(index, 0, size, getPresentationTimeUs(), 0)
             }.onFailure { it.printStackTrace() }
         }
 

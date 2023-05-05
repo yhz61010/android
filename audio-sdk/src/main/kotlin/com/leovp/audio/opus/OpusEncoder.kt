@@ -5,7 +5,7 @@ package com.leovp.audio.opus
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
-import com.leovp.audio.mediacodec.BaseMediaCodec
+import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.audio.mediacodec.utils.AudioCodecUtil
 import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toByteArray
@@ -110,7 +110,7 @@ class OpusEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
-    private val callback: IEncodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
+    private val callback: IEncodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "OpusEn"
     }
@@ -128,14 +128,17 @@ class OpusEncoder(
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
     }
 
-    override fun onInputData(): ByteArray? {
-        return queue.poll()
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        return queue.poll()?.let {
+            inBuf.put(it)
+            it.size
+        } ?: 0
     }
 
-    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
-            val opusCsd = AudioCodecUtil.parseOpusConfigFrame(outData) // little endian
+            val opusCsd = AudioCodecUtil.parseOpusConfigFrame(outBuf) // little endian
             csd0 = opusCsd?.csd0
             csd1 = opusCsd?.csd1
             csd2 = opusCsd?.csd2
@@ -144,9 +147,9 @@ class OpusEncoder(
                 "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexStringLE()}]")
             LogContext.log.w(TAG,
                 "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexStringLE()}]")
-            outData.flip()
+            outBuf.flip()
         }
-        callback.onEncoded(outData.toByteArray(), isConfig, isKeyFrame)
+        callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)
     }
 
     override fun stop() {

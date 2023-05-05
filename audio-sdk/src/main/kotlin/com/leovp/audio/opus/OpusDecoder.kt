@@ -5,7 +5,7 @@ package com.leovp.audio.opus
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.audio.mediacodec.BaseMediaCodec
+import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.bytes.toByteArray
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -19,7 +19,7 @@ class OpusDecoder(sampleRate: Int,
     val csd0: ByteArray,
     val csd1: ByteArray,
     val csd2: ByteArray,
-    private val callback: IDecodeCallback) : BaseMediaCodec(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
+    private val callback: IDecodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
     companion object {
         private const val TAG = "OpusDe"
     }
@@ -36,12 +36,15 @@ class OpusDecoder(sampleRate: Int,
         format.setByteBuffer("csd-2", csd2BB)
     }
 
-    override fun onInputData(): ByteArray? {
-        return queue.poll()
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        return queue.poll()?.let {
+            inBuf.put(it)
+            it.size
+        } ?: 0
     }
 
-    override fun onOutputData(outData: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
-        callback.onDecoded(outData.toByteArray())
+    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+        callback.onDecoded(outBuf.toByteArray())
     }
 
     fun decode(rawData: ByteArray) {

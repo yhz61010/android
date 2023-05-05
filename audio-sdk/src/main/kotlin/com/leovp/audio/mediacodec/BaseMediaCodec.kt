@@ -13,8 +13,7 @@ import kotlinx.coroutines.cancel
  * Author: Michael Leo
  * Date: 2023/5/4 10:18
  */
-abstract class BaseMediaCodec(
-    private val codecName: String,
+abstract class BaseMediaCodec(private val codecName: String,
     protected open val sampleRate: Int,
     protected open val channelCount: Int,
     private val isEncoding: Boolean = false) : IAudioMediaCodec {
@@ -48,8 +47,7 @@ abstract class BaseMediaCodec(
      */
     open fun release() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        flush()
-        // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
+        flush() // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
         // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
         runCatching { codec.release() }.onFailure { it.printStackTrace() }
         ioScope.cancel()
@@ -60,6 +58,9 @@ abstract class BaseMediaCodec(
         runCatching { codec.flush() }.onFailure { it.printStackTrace() }
     }
 
+    /**
+     * Most of time, you do NOT need to override this method.
+     */
     open fun createMediaFormat() {
         LogContext.log.i(TAG, "createMediaFormat() codec=$codecName sampleRate=$sampleRate channelCount=$channelCount")
         format = MediaFormat.createAudioFormat(codecName, sampleRate, channelCount)
@@ -67,6 +68,9 @@ abstract class BaseMediaCodec(
         setFormatOptions(format)
     }
 
+    /**
+     * Most of time, you do NOT need to override this method.
+     */
     open fun createCodec() {
         LogContext.log.i(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
         codec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
@@ -80,8 +84,8 @@ abstract class BaseMediaCodec(
      *
      * @return The calculated presentation time in microseconds.
      */
-    private fun computePresentationTimeUs(frameIndex: Long, sampleRate: Int): Long {
-        // LogContext.log.d(TAG, "computePresentationTimeUs=${frameIndex * 1_000_000L / sampleRate}")
+    private fun computePresentationTimeUs(frameIndex: Long,
+        sampleRate: Int): Long { // LogContext.log.d(TAG, "computePresentationTimeUs=${frameIndex * 1_000_000L / sampleRate}")
         return frameIndex * 1_000_000L / sampleRate
     }
 

@@ -47,27 +47,27 @@ abstract class BaseMediaCodec(
      * Release resource.
      */
     open fun release() {
-        ioScope.cancel()
         require(::codec.isInitialized) { "Did you call start() before?" }
-        stop()
+        flush()
         // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
-        codec.setCallback(null)
+        // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
         runCatching { codec.release() }.onFailure { it.printStackTrace() }
+        ioScope.cancel()
     }
 
     open fun flush() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        codec.flush()
+        runCatching { codec.flush() }.onFailure { it.printStackTrace() }
     }
 
-    private fun createMediaFormat() {
+    open fun createMediaFormat() {
         LogContext.log.i(TAG, "createMediaFormat() codec=$codecName sampleRate=$sampleRate channelCount=$channelCount")
         format = MediaFormat.createAudioFormat(codecName, sampleRate, channelCount)
         format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024)
         setFormatOptions(format)
     }
 
-    private fun createCodec() {
+    open fun createCodec() {
         LogContext.log.i(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
         codec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
         codec.configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)

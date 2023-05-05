@@ -10,9 +10,12 @@ import com.leovp.audio.BuildConfig
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.log.LogContext
 import java.io.File
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -79,8 +82,8 @@ class AacFilePlayer(
 
             // https://developer.android.com/reference/android/media/MediaCodec
             // AAC CSD: Decoder-specific information from ESDS
-            //                mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
-            //                mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
+            // mediaFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount)
+            // mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
             audioDecoder = MediaCodec.createDecoderByType(mime).apply {
                 configure(mediaFormat, null, null, 0)
@@ -97,6 +100,7 @@ class AacFilePlayer(
             try {
                 var isFinish = false
                 while (!isFinish && isPlaying) {
+                    ensureActive()
                     val inputIndex = audioDecoder?.dequeueInputBuffer(0)!!
                     // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "inputIndex=$inputIndex")
                     if (inputIndex > -1) {
@@ -116,8 +120,7 @@ class AacFilePlayer(
                             }
                         } catch (e: Exception) {
                             if (BuildConfig.DEBUG) LogContext.log.e(TAG, "inputIndex=$inputIndex sampleSize=$sampleSize", e)
-                        }
-                        // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
+                        } // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "sampleSize=$sampleSize")
                         if (sampleSize < 0) {
                             audioDecoder?.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             isFinish = true
@@ -132,6 +135,7 @@ class AacFilePlayer(
                     // if (BuildConfig.DEBUG) LogContext.log.v(TAG, "outputIndex=$outputIndex")
                     var chunkPCM: ByteArray
                     while (outputIndex >= 0) {
+                        ensureActive()
                         chunkPCM = ByteArray(decodeBufferInfo.size)
                         audioDecoder?.getOutputBuffer(outputIndex)?.apply {
                             position(decodeBufferInfo.offset)
@@ -147,10 +151,13 @@ class AacFilePlayer(
                         outputIndex = audioDecoder?.dequeueOutputBuffer(decodeBufferInfo, 0) ?: -1
                     }
                 }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) LogContext.log.e(TAG, "playAac() error", e)
+            } catch (ce: CancellationException) {
+                if (BuildConfig.DEBUG) LogContext.log.d(TAG, "Coroutine has been cancelled.")
+            } catch (e: IllegalStateException) {
+                if (BuildConfig.DEBUG) LogContext.log.e(TAG, "playAac() IllegalStateException error", e)
+            } catch (me: MediaCodec.CodecException) {
+                if (BuildConfig.DEBUG) LogContext.log.e(TAG, "playAac() CodecException error", me)
             } finally {
-                stop()
                 f.invoke()
             }
         }
@@ -158,10 +165,9 @@ class AacFilePlayer(
 
     fun stop() {
         isPlaying = false
+        ioScope.cancel()
         audioTrackPlayer.release()
-        runCatching {
-            audioDecoder?.release()
-        }.onFailure { it.printStackTrace() }
+        runCatching { audioDecoder?.release() }.onFailure { it.printStackTrace() }
         runCatching { mediaExtractor?.release() }.onFailure { it.printStackTrace() }
     }
 }

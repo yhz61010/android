@@ -14,6 +14,9 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
+ * If I use asynchronous MediaCodec, in my phone(HuaWei Honor V20) and Samsung Galaxy S9+,
+ * it will not play sound due to MediaCodec state error.
+ *
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
@@ -73,9 +76,6 @@ class AacDecoder(
         callback.onDecoded(outBuf.toByteArray())
     }
 
-    /**
-     * If I use asynchronous MediaCodec, most of time in my phone(HuaWei Honor V20), it will not play sound due to MediaCodec state error.
-     */
     fun decode(rawData: ByteArray) {
         // LogContext.log.e(TAG, "--->>> decode[${rawData.size}] queue[${queue.size}]")
         queue.offer(rawData)

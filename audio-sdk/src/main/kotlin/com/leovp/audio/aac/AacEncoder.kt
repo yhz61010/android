@@ -3,10 +3,10 @@
 package com.leovp.audio.aac
 
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
+import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.AAC_PROFILE_LC
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
@@ -23,7 +23,6 @@ class AacEncoder(
     private val callback: IEncodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "AacEn"
-        private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
     }
 
     val queue = ArrayBlockingQueue<ByteArray>(64)
@@ -32,13 +31,16 @@ class AacEncoder(
         private set
 
     override fun setFormatOptions(format: MediaFormat) {
-        format.setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, AAC_PROFILE_LC)
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
         // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
     }
 
-    override fun onInputData(inBuf: ByteBuffer) {
-        queue.poll()?.let { inBuf.put(it) }
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        return queue.poll()?.let {
+            inBuf.put(it)
+            it.size
+        } ?: 0
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {

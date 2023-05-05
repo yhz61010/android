@@ -3,10 +3,10 @@
 package com.leovp.audio.aac
 
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecSynchronous
+import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.AAC_PROFILE_LC
 import com.leovp.bytes.toByteArray
 import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
@@ -27,7 +27,6 @@ class AacDecoder(
     private val callback: IDecodeCallback) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
     companion object {
         private const val TAG = "AacDe"
-        private const val PROFILE_AAC_LC = MediaCodecInfo.CodecProfileLevel.AACObjectLC
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
@@ -59,7 +58,7 @@ class AacDecoder(
     // AAC CSD: Decoder-specific information from ESDS
     override fun setFormatOptions(format: MediaFormat) {
         LogContext.log.w(TAG, "setFormatOptions csd0[${csd0.size}]=HEX[${csd0.toHexStringLE()}]")
-        format.setInteger(MediaFormat.KEY_AAC_PROFILE, PROFILE_AAC_LC)
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, AAC_PROFILE_LC)
         // Set ADTS decoder information.
         format.setInteger(MediaFormat.KEY_IS_ADTS, 1)
         // https://developer.android.com/reference/android/media/MediaCodec#CSD
@@ -67,8 +66,11 @@ class AacDecoder(
         format.setByteBuffer("csd-0", csd0BB)
     }
 
-    override fun onInputData(inBuf: ByteBuffer) {
-        queue.poll()?.let { inBuf.put(it) }
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        return queue.poll()?.let {
+            inBuf.put(it)
+            it.size
+        } ?: 0
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {

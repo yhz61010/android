@@ -21,25 +21,31 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
     override fun start() {
         super.start()
         ioScope.launch {
-            while (true) {
+            do {
                 ensureActive()
-                process()
-            }
+            } while (process())
+            onEndOfStream()
         }
     }
 
-    private fun process() {
+    private fun process(): Boolean {
+        var isFinish = false
         try {
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.
             val inputIndex: Int = codec.dequeueInputBuffer(0)
             if (inputIndex > -1) {
-                val inputBuf = codec.getInputBuffer(inputIndex) ?: return
+                val inputBuf = codec.getInputBuffer(inputIndex) ?: return true
                 // Clear exist data.
                 inputBuf.clear()
                 // Fill inputBuffer with valid data.
-                onInputData(inputBuf)
-                inputBuf.flip()
-                codec.queueInputBuffer(inputIndex, 0, inputBuf.remaining(), getPresentationTimeUs(), 0)
+                val size = onInputData(inputBuf)
+                // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
+                if (size < 0) {
+                    codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                    isFinish = true
+                } else {
+                    codec.queueInputBuffer(inputIndex, 0, size, getPresentationTimeUs(), 0)
+                }
             }
 
             val bufferInfo = MediaCodec.BufferInfo()
@@ -47,10 +53,10 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
             val st = System.currentTimeMillis()
             // Start decoding and get output index
             var outputIndex: Int = codec.dequeueOutputBuffer(bufferInfo, 0)
+            // LogContext.log.d(TAG, "outputIndex=$outputIndex")
             while (outputIndex > -1) {
                 buffer = codec.getOutputBuffer(outputIndex)
                 if (buffer == null) continue
-
                 when {
                     (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
                         onOutputData(buffer, bufferInfo, isConfig = true, isKeyFrame = false)
@@ -58,7 +64,10 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
                     (bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
                         onOutputData(buffer, bufferInfo, isConfig = false, isKeyFrame = true)
 
-                    (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
+                    (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> {
+                        LogContext.log.w(TAG, "onEndOfStream()")
+                        onEndOfStream()
+                    }
 
                     else -> onOutputData(buffer, bufferInfo, isConfig = false, isKeyFrame = false)
                 }
@@ -72,5 +81,6 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
         } catch (e: Exception) {
             LogContext.log.e(TAG, "You can ignore this message safely. decodeAndPlay error")
         }
+        return !isFinish
     }
 }

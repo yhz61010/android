@@ -16,6 +16,7 @@ import com.leovp.audio.aac.AacFilePlayer
 import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.bean.AudioEncoderInfo
+import com.leovp.audio.opus.OpusFilePlayer
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.audio.receiver.AudioReceiver
 import com.leovp.demo.basiccomponents.examples.audio.sender.AudioSender
@@ -68,6 +69,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
     private var micRecorder: MicRecorder? = null
     private var audioPlayer: AudioPlayer? = null
     private var aacFilePlayer: AacFilePlayer? = null
+    private var opusFilePlayer: OpusFilePlayer? = null
 
     private var audioReceiver: AudioReceiver? = null
     private var audioSender: AudioSender? = null
@@ -105,7 +107,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
                 audioPlayer = AudioPlayer(
-                    this,
+                    this@AudioActivity,
                     audioDecoderInfo,
                     type = AudioType.PCM,
                     usage = AUDIO_ATTR_USAGE,
@@ -132,18 +134,31 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
 
         binding.btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                aacFilePlayer = AacFilePlayer(this, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
+                aacFilePlayer = AacFilePlayer(this@AudioActivity, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
                 aacFilePlayer?.playAac(aacFile) {
                     runOnUiThread { btn.isChecked = false }
+                    // LogContext.log.e(TAG, "=====> End callback <=====")
                 }
             } else {
                 aacFilePlayer?.stop()
             }
         }
+
+        binding.btnPlayOpus.setOnCheckedChangeListener { btn, isChecked ->
+            if (isChecked) {
+                opusFilePlayer = OpusFilePlayer(this@AudioActivity, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
+                opusFilePlayer?.playOpus(opusFile) {
+                    runOnUiThread { btn.isChecked = false }
+                    // LogContext.log.e(TAG, "=====> End callback <=====")
+                }
+            } else {
+                opusFilePlayer?.stop()
+            }
+        }
     }
 
     private val recordCallback = object : MicRecorder.RecordCallback {
-        override fun onRecording(data: ByteArray) {
+        override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
             when (recordType) {
                 AudioType.PCM -> runCatching {
                     LogContext.log.d(TAG, "PCM data[${data.size}]")
@@ -151,12 +166,12 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                 }.onFailure { it.printStackTrace() }
 
                 AudioType.AAC -> {
-                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}]")
+                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
                     runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 
                 AudioType.OPUS -> {
-                    LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}]")
+                    LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
                     runCatching { opusOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 
@@ -210,6 +225,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
             audioPlayer?.release()
         }
         aacFilePlayer?.stop()
+        opusFilePlayer?.stop()
         super.onStop()
     }
 

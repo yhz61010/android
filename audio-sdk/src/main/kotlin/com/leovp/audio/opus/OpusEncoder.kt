@@ -16,6 +16,37 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
+ * https://github.com/inodevip/OpusLibAndroidDemo
+ * https://github.com/apon/opus-android
+ * https://datatracker.ietf.org/doc/html/rfc6716
+ *
+ * - Opus supports bitrates: 6kbit/s ~ 510 kbit/s
+ * - Opus supports frame size in milliseconds: 2.5, 5, 10, 20, 40, 60 (20 ms frames are a good choice for most applications)
+ * - Opus supports sample rate: 8kHz ~ 48kHz. 8kHz, 12kHz, 16kHz, 24kHz, 48Khz
+ *
+ * We use 8kHz as example, the opus supports the following frame size:
+ * 8000 / 1000 = 8
+ *
+ * 8 * 2.5 =  20
+ * 8 * 5   =  40
+ * 8 * 10  =  80
+ * 8 * 20  = 160
+ * 8 * 40  = 320
+ * 8 * 60  = 480
+ *
+ * Encode:
+ * ```pseudocode
+ * val opusBytes = ByteArray(1000)
+ * encoder.encode(pcmBytes, opusBytes)
+ * ```
+ *
+ * Decode:
+ * ```pseudocode
+ * // 16 bit per sample (bit depth), so we use short type(2 bytes) to store per sample.
+ * val pcmBytes = ShortArray(FRAME_SIZE * NUM_CHANNELS)
+ * decoder.decode(opusBytes, pcmBytes)
+ * ```
+ *
  * https://datatracker.ietf.org/doc/html/rfc6716
  * https://www.rfc-editor.org/rfc/rfc7845#section-5.1
  * https://developer.android.com/reference/android/media/MediaCodec#CSD

@@ -46,6 +46,15 @@
         app:layout_constraintEnd_toEndOf="@+id/btnPlayPCM"
         app:layout_constraintTop_toTopOf="@+id/btnRecordAac" />
 
+    <ToggleButton
+        android:id="@+id/btnPlayOpus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" android:textOff="Play Opus"
+        android:textOn="Stop Playing"
+        app:layout_constraintEnd_toEndOf="@+id/btnPlayAac"
+        app:layout_constraintTop_toBottomOf="@+id/btnPlayAac" />
+
     <EditText
         android:id="@+id/etAudioReceiverIp"
         android:layout_width="0dp"

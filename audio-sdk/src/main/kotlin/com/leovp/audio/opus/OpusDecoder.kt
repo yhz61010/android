@@ -11,6 +11,10 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
+ * https://datatracker.ietf.org/doc/html/rfc6716
+ * https://www.rfc-editor.org/rfc/rfc7845#section-5.1
+ * https://developer.android.com/reference/android/media/MediaCodec#CSD
+ *
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */

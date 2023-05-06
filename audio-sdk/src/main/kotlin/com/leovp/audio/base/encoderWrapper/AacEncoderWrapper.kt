@@ -11,22 +11,22 @@ import com.leovp.audio.base.iters.OutputCallback
  * Date: 20-11-14 上午11:03
  */
 class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
-    private var aacEncoder = AacEncoder(
+    private var encoder = AacEncoder(
         encoderInfo.sampleRate,
         encoderInfo.channelCount,
         encoderInfo.bitrate,
         object : IEncodeCallback {
             override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
-                outputCallback.output(encodedBytes)
+                outputCallback.output(encodedBytes, isConfig, isKeyFrame)
             }
         }
     ).apply { start() }
 
     override fun encode(input: ByteArray) {
-        aacEncoder.queue.offer(input)
+        encoder.queue.offer(input)
     }
 
     override fun release() {
-        runCatching { aacEncoder.release() }.onFailure { it.printStackTrace() }
+        runCatching { encoder.release() }.onFailure { it.printStackTrace() }
     }
 }

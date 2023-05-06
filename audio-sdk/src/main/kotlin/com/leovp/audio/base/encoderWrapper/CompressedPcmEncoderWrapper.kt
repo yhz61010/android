@@ -14,7 +14,7 @@ class CompressedPcmEncoderWrapper(
     private val outputCallback: OutputCallback
 ) : AudioEncoderWrapper {
     override fun encode(input: ByteArray) {
-        outputCallback.output(input.compress())
+        outputCallback.output(input.compress(), isConfig = false, isKeyFrame = false)
     }
 
     override fun release() {

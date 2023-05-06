@@ -15,7 +15,8 @@ import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
-/*
+/**
+ * https://datatracker.ietf.org/doc/html/rfc6716
  * https://www.rfc-editor.org/rfc/rfc7845#section-5.1
  * https://developer.android.com/reference/android/media/MediaCodec#CSD
  *

@@ -62,8 +62,8 @@ class MicRecorder(
             type,
             encoderInfo,
             object : OutputCallback {
-                override fun output(out: ByteArray) {
-                    callback.onRecording(out)
+                override fun output(out: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                    callback.onRecording(out, isConfig, isKeyFrame)
                 }
             }
         )
@@ -110,7 +110,10 @@ class MicRecorder(
                     //     LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
                     //     continue
                     // }
-                    encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(pcmData.toByteArrayLE())
+                    encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(
+                        pcmData.toByteArrayLE(),
+                        isConfig = false,
+                        isKeyFrame = false)
                 }
             }.onFailure {
                 it.printStackTrace()
@@ -166,7 +169,7 @@ class MicRecorder(
         /**
          * @param data The byte order of [data] is little endian.
          */
-        fun onRecording(data: ByteArray)
+        fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean)
         fun onStop(stopResult: Boolean)
     }
 }

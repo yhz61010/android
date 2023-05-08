@@ -15,7 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.image.createBitmap
 import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
@@ -324,11 +324,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             when (builder.encodeType) {
                 EncodeType.H264 -> LogContext.log.w(
                     TAG,
-                    "Found SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}"
+                    "Found SPS/PPS=${vpsSpsPpsBuf?.toHexString()}"
                 )
                 EncodeType.H265 -> LogContext.log.w(
                     TAG,
-                    "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexStringLE()}"
+                    "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexString()}"
                 )
             }
         }

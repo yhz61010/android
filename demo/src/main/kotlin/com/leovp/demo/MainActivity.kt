@@ -32,7 +32,6 @@ import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
-import com.leovp.bytes.toHexStringLE
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityMainBinding
 import com.leovp.json.toJsonString
@@ -218,7 +217,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
             LogContext.log.i(ITAG, "Android ID=${getAndroidId()}")
         }
 
-        LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexStringLE(true, "")}")
+        LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexString(true, "")}")
         LogContext.log.i(ITAG, "uid=${getUniqueID()}")
 
         // LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)

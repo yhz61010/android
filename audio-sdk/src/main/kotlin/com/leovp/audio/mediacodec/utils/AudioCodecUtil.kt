@@ -7,6 +7,7 @@ import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.bytes.readLongLE
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Author: Michael Leo
@@ -27,9 +28,12 @@ object AudioCodecUtil {
         return aOpusHeaderValue == IAudioMediaCodec.OPUS_AOPUSHDR
     }
 
-    fun parseOpusConfigFrame(data: ByteArray): OpusCsd? {
+    /**
+     * @param byteOrder null means native order.
+     */
+    fun parseOpusConfigFrame(data: ByteArray, byteOrder: ByteOrder? = null): OpusCsd? {
         if (!isOpusConfigFrame(data)) return null
-        return parseOpusConfigFrame(ByteBuffer.wrap(data))
+        return parseOpusConfigFrame(ByteBuffer.wrap(data).also { buf -> byteOrder?.let { order -> buf.order(order) } })
     }
 
     fun parseOpusConfigFrame(buffer: ByteBuffer): OpusCsd? {

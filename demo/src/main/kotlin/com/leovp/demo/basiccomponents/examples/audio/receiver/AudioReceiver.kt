@@ -38,8 +38,8 @@ class AudioReceiver {
 
     private var audioPlayer: AudioPlayer? = null
     private var micRecorder: MicRecorder? = null
-    //    private var micOs: BufferedOutputStream? = null
-    //    private var rcvOs: BufferedOutputStream? = null
+    // private var micOs: BufferedOutputStream? = null
+    // private var rcvOs: BufferedOutputStream? = null
 
     private var recAudioQueue = ArrayBlockingQueue<ByteArray>(10)
     private var receiveAudioQueue = ArrayBlockingQueue<ByteArray>(64)
@@ -99,17 +99,19 @@ class AudioReceiver {
             micRecorder = MicRecorder(
                 AudioActivity.audioEncoderInfo,
                 object : MicRecorder.RecordCallback {
-                    override fun onRecording(data: ByteArray) {
+                    override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                         recAudioQueue.offer(data)
                         if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
-                        //                    runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
+                        // runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
                     }
 
                     override fun onStop(stopResult: Boolean) {
                     }
                 },
                 defaultAudioType
-            ).apply { startRecord() }
+            ).apply {
+                startRecord()
+            }
         }
 
         private fun sendRecAudioThread() {
@@ -139,9 +141,15 @@ class AudioReceiver {
 
     fun startServer(ctx: Context) {
         this.ctx = ctx
-        audioPlayer = AudioPlayer(ctx, AudioActivity.audioDecoderInfo, defaultAudioType)
-        //        micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
-        //        rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
+        audioPlayer = AudioPlayer(
+            ctx,
+            AudioActivity.audioDecoderInfo,
+            defaultAudioType,
+            usage = AudioActivity.AUDIO_ATTR_USAGE,
+            contentType = AudioActivity.AUDIO_ATTR_CONTENT_TYPE
+        )
+        // micOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "mic.aac")))
+        // rcvOs = BufferedOutputStream(FileOutputStream(FileUtil.createFile(ctx, "rcv.aac")))
 
         receiverServer = AudioReceiverWebSocket(10020, connectionListener).also {
             receiverHandler = AudioReceiverWebSocketHandler(it)
@@ -151,11 +159,10 @@ class AudioReceiver {
     }
 
     fun stopServer() {
-        //        micOs?.closeQuietly()
-        //        rcvOs?.closeQuietly()
+        // micOs?.closeQuietly()
+        // rcvOs?.closeQuietly()
         ioScope.cancel()
         // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
-        // Please check the initializing of AudioTrack in [PcmPlayer]
         //
         // And you must release AudioTrack first, otherwise, you will crash due to following exception:
         // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting

@@ -158,6 +158,7 @@ class OpusEncoder(
 
     override fun setFormatOptions(format: MediaFormat) {
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
+        // format.setInteger(MediaFormat.KEY_COMPLEXITY, 3)
     }
 
     override fun onInputData(inBuf: ByteBuffer): Int {
@@ -174,11 +175,9 @@ class OpusEncoder(
             csd0 = opusCsd?.csd0
             csd1 = opusCsd?.csd1
             csd2 = opusCsd?.csd2
-            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexString()}]")
-            LogContext.log.w(TAG,
-                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexString()}]")
-            LogContext.log.w(TAG,
-                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexString()}]")
+            LogContext.log.w(TAG, "csd0[${csd0?.size}] HEX[${csd0?.toHexString()}]")
+            LogContext.log.w(TAG, "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexString()}]")
+            LogContext.log.w(TAG, "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexString()}]")
             outBuf.flip()
         }
         callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)

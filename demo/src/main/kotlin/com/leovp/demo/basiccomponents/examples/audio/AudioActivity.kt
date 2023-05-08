@@ -172,7 +172,10 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
 
                 AudioType.OPUS -> {
                     LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
-                    runCatching { opusOs?.write(data) }.onFailure { it.printStackTrace() }
+                    runCatching {
+                        opusOs?.write("|leo|".encodeToByteArray())
+                        opusOs?.write(data)
+                    }.onFailure { it.printStackTrace() }
                 }
 
                 else -> Unit

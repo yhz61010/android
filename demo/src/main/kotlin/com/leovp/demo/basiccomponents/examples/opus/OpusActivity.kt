@@ -46,7 +46,7 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
 
     private fun getCsd(): OpusCsd? {
         val csdEndPos = findStartCode(5)
-        LogContext.log.w(tag, "csd end pos=$csdEndPos")
+        // LogContext.log.w(tag, "csd end pos=$csdEndPos")
 
         val csdBytes = ByteArray((csdEndPos - startCodeSize).toInt())
         try {
@@ -58,7 +58,7 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
             LogContext.log.e(tag, "EOFException", ioe)
         }
 
-        LogContext.log.e(tag, "csd[${csdBytes.size}]=${csdBytes.toHexString()}")
+        LogContext.log.w(tag, "csd[${csdBytes.size}]=${csdBytes.toHexString()}")
         return AudioCodecUtil.parseOpusConfigFrame(csdBytes, ByteOrder.LITTLE_ENDIAN)
     }
 
@@ -78,10 +78,10 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
                 rf.readFully(startCodeBytes)
                 // LogContext.log.i(tag, "startCodeBytes=${startCodeBytes.decodeToString()}")
             } catch (e: EOFException) {
-                LogContext.log.e(tag, "EOFException", e)
+                LogContext.log.w(tag, "Read file. EOF")
                 break
             } catch (ioe: IOException) {
-                LogContext.log.e(tag, "EOFException", ioe)
+                LogContext.log.e(tag, "IOException", ioe)
                 break
             }
             if (isStartCode(startCodeBytes)) {
@@ -133,10 +133,15 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
                         var startCodeEndPos: Long
                         try {
                             startCodeEndPos = findStartCode(startCodeBeginPos + startCodeSize)
+                            if (startCodeEndPos < 0) {
+                                LogContext.log.w(tag, "Can't find start code.")
+                                break
+                            }
+                            // LogContext.log.w(tag, "startCodeBeginPos=$startCodeBeginPos  startCodeEndPos=$startCodeEndPos")
                             val audioFrameData = ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
                             rf.seek(startCodeBeginPos + startCodeSize)
                             rf.readFully(audioFrameData)
-                            // LogContext.log.e(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
+                            // LogContext.log.d(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
                             decoder?.decode(audioFrameData)
                         } catch (e: EOFException) {
                             LogContext.log.e(tag, "EOFException", e)

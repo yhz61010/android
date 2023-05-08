@@ -9,7 +9,7 @@ import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.audio.mediacodec.utils.AudioCodecUtil
 import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toByteArray
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.kotlin.exts.formatDecimalSeparator
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
@@ -174,11 +174,11 @@ class OpusEncoder(
             csd0 = opusCsd?.csd0
             csd1 = opusCsd?.csd1
             csd2 = opusCsd?.csd2
-            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
+            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexString()}]")
             LogContext.log.w(TAG,
-                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexStringLE()}]")
+                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexString()}]")
             LogContext.log.w(TAG,
-                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexStringLE()}]")
+                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexString()}]")
             outBuf.flip()
         }
         callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)

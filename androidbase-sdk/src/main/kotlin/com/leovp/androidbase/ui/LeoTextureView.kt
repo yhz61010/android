@@ -16,7 +16,7 @@ import android.view.ViewGroup
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.TouchHelper
 import com.leovp.androidbase.utils.media.VideoUtil
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -125,8 +125,8 @@ class LeoTextureView @JvmOverloads constructor(
     fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray, screenInfo: Size) {
         LogContext.log.w(
             TAG,
-            "initDecoder()\nvps[${vps?.size}]=${vps?.toHexStringLE()}\n" +
-                "sps[${sps.size}]=${sps.toHexStringLE()}\npps[${pps.size}]=${pps.toHexStringLE()}"
+            "initDecoder()\nvps[${vps?.size}]=${vps?.toHexString()}\n" +
+                "sps[${sps.size}]=${sps.toHexString()}\npps[${pps.size}]=${pps.toHexString()}"
         )
         isH265 = vps != null
         val format = MediaFormat.createVideoFormat(

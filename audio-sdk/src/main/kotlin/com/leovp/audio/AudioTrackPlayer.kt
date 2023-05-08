@@ -46,7 +46,8 @@ class AudioTrackPlayer(
         val audioAttributesBuilder = AudioAttributes.Builder()
             // AudioAttributes.USAGE_MEDIA
             // AudioAttributes.USAGE_VOICE_COMMUNICATION
-            .setUsage(usage) // AudioAttributes.CONTENT_TYPE_MUSIC
+            .setUsage(usage)
+            // AudioAttributes.CONTENT_TYPE_MUSIC
             // AudioAttributes.CONTENT_TYPE_SPEECH
             .setContentType(contentType)
         // .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)

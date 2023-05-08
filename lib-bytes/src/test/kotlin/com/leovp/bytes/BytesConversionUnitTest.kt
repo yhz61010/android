@@ -15,23 +15,9 @@ class BytesConversionUnitTest {
                 0xD3.toByte(), 0xBA.toByte()
             ).toHexString()
         )
-        assertEquals(
-            "10,90,A0,1,31,A1,63,87,3D,AB",
-            byteArrayOf(
-                0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
-                0xD3.toByte(), 0xBA.toByte()
-            ).toHexString()
-        )
 
         assertEquals(
             "1,9,A,10,13,1A,36,78,D3,BA",
-            byteArrayOf(
-                0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
-                0xD3.toByte(), 0xBA.toByte()
-            ).toHexString(false)
-        )
-        assertEquals(
-            "10,90,A0,1,31,A1,63,87,3D,AB",
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
                 0xD3.toByte(), 0xBA.toByte()
@@ -45,13 +31,6 @@ class BytesConversionUnitTest {
                 0xD3.toByte(), 0xBA.toByte()
             ).toHexString(true)
         )
-        assertEquals(
-            "10,90,A0,01,31,A1,63,87,3D,AB",
-            byteArrayOf(
-                0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
-                0xD3.toByte(), 0xBA.toByte()
-            ).toHexString(true)
-        )
 
         assertEquals(
             "01090A10131A3678D3BA",
@@ -60,23 +39,9 @@ class BytesConversionUnitTest {
                 0xD3.toByte(), 0xBA.toByte()
             ).toHexString(true, "")
         )
-        assertEquals(
-            "1090A00131A163873DAB",
-            byteArrayOf(
-                0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
-                0xD3.toByte(), 0xBA.toByte()
-            ).toHexString(true, "")
-        )
 
         assertEquals(
             "1,9,A,10,13,1A,36,78,D3,BA",
-            byteArrayOf(
-                0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36,
-                0x78, 0xD3.toByte(), 0xBA.toByte()
-            ).toHexString(false, ",")
-        )
-        assertEquals(
-            "10,90,A0,1,31,A1,63,87,3D,AB",
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36,
                 0x78, 0xD3.toByte(), 0xBA.toByte()

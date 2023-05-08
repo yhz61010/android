@@ -1,5 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.opus
 
+import android.media.AudioAttributes
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.createFile
@@ -102,7 +103,12 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
         binding.btnPlay.setOnClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 val audioDecoderInfo = AudioActivity.audioDecoderInfo
-                audioTrackPlayer = AudioTrackPlayer(this@OpusActivity, audioDecoderInfo)
+                audioTrackPlayer = AudioTrackPlayer(
+                    this@OpusActivity,
+                    audioDecoderInfo,
+                    usage = AudioAttributes.USAGE_MEDIA,
+                    contentType = AudioAttributes.CONTENT_TYPE_MUSIC
+                )
                 audioTrackPlayer?.play()
 
                 rf = RandomAccessFile(opusFile, "r")
@@ -124,13 +130,13 @@ class OpusActivity : BaseDemonstrationActivity<ActivityOpusBinding>() {
                     var startCodeBeginPos = findStartCode(startCodeSize.toLong())
                     while (true) {
                         ensureActive()
-                        var startCodeEndPos: Long = 0
+                        var startCodeEndPos: Long
                         try {
                             startCodeEndPos = findStartCode(startCodeBeginPos + startCodeSize)
                             val audioFrameData = ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
                             rf.seek(startCodeBeginPos + startCodeSize)
                             rf.readFully(audioFrameData)
-                            LogContext.log.e(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
+                            // LogContext.log.e(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
                             decoder?.decode(audioFrameData)
                         } catch (e: EOFException) {
                             LogContext.log.e(tag, "EOFException", e)

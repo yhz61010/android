@@ -1,14 +1,14 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.8.20-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-7.4.2-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.0.2-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.8.21-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.0.0-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-8.1.1-green)](https://gradle.org)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 
 # Attention
-Starting with Android 14, apps with a targetSdkVersion lower than 23 can't be installed.
-So the min sdk of this project is 23 too.
+Starting with Android 14, apps with a targetSdkVersion lower than 23 (Android 6) can't be installed.
+So the min sdk of this project is 23 (Android 6) too.
 
 # How to import?
 ## For TOML

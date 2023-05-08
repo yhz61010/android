@@ -5,7 +5,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Environment
 import android.view.Surface
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.io.File
@@ -47,7 +47,7 @@ class DecoderVideoFileManager {
 //                val csd1ByteArray = ByteArray(csd1.remaining())
                 copiedCsd0.get(csd0ByteArray)
 //                csd1.get(csd1ByteArray)
-                LogContext.log.w(TAG, "csd0=HEX[${csd0ByteArray.toHexStringLE()}]")
+                LogContext.log.w(TAG, "csd0=HEX[${csd0ByteArray.toHexString()}]")
 //                LogContext.log.d(TAG, "csd1=${csd0ByteArray.toHexString()}")
                 outputVideoRawDataFile.write(csd0ByteArray)
 //                videoRawDataFile.write(csd1ByteArray)

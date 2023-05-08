@@ -3,7 +3,7 @@ package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 import android.os.SystemClock
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.androidbase.exts.kotlin.truncate
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
@@ -138,14 +138,14 @@ class DecodeH265RawFileByFFMpeg {
         val psei = getNalu()!!
         val ssei = getNalu()!!
 
-        LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
-        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
-        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
-        LogContext.log.w(TAG, "prefix_sei[${psei.size}]=${psei.toHexStringLE().truncate(80)}")
-        LogContext.log.w(TAG, "suffix_sei[${ssei.size}]=${ssei.toHexStringLE().truncate(80)}")
+        LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexString()}")
+        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexString()}")
+        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexString()}")
+        LogContext.log.w(TAG, "prefix_sei[${psei.size}]=${psei.toHexString().truncate(80)}")
+        LogContext.log.w(TAG, "suffix_sei[${ssei.size}]=${ssei.toHexString().truncate(80)}")
 
         val csd0 = vps + sps + pps + psei + ssei
-        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE().truncate(180)}")
+        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexString().truncate(180)}")
         csd0Size = csd0.size
         currentIndex = csd0Size.toLong()
 

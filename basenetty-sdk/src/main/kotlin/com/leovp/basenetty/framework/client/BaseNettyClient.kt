@@ -7,7 +7,6 @@ import com.leovp.basenetty.framework.base.ClientConnectStatus
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
-import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import com.leovp.log.base.ILog
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
@@ -644,7 +643,7 @@ abstract class BaseNettyClient protected constructor(
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
                     val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexString()
                     } else {
                         null
                     }

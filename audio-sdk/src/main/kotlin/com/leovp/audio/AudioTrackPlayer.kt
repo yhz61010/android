@@ -38,18 +38,15 @@ class AudioTrackPlayer(
     private val audioTrack: AudioTrack
 
     init {
-        val minBufferSize = getMinBufferSize(
-            audioDecoderInfo.sampleRate,
+        val minBufferSize = getMinBufferSize(audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelConfig,
-            audioDecoderInfo.audioFormat
-        ) * minPlayBufferSizeRatio
+            audioDecoderInfo.audioFormat) * minPlayBufferSizeRatio
         LogContext.log.w(TAG, "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         // val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder()
             // AudioAttributes.USAGE_MEDIA
             // AudioAttributes.USAGE_VOICE_COMMUNICATION
-            .setUsage(usage)
-            // AudioAttributes.CONTENT_TYPE_MUSIC
+            .setUsage(usage) // AudioAttributes.CONTENT_TYPE_MUSIC
             // AudioAttributes.CONTENT_TYPE_SPEECH
             .setContentType(contentType)
         // .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
@@ -99,7 +96,7 @@ class AudioTrackPlayer(
             val playData = pcmBytes.toShortArrayLE()
             wroteSize = audioTrack.write(playData, 0, playData.size)
             if (BuildConfig.DEBUG) {
-                LogContext.log.d(TAG, "Play PCM[${pcmBytes.size}]")
+                LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")
             }
         }
         // wroteSize is the length of short array. So we need to convert it to byte length.

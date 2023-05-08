@@ -6,7 +6,7 @@ import android.os.SystemClock
 import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineScope
@@ -49,9 +49,9 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
     private fun initAudioDecoder(csd0: ByteArray, csd1: ByteArray, csd2: ByteArray) {
         LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
         LogContext.log.i(TAG, "Channel count: ${audioDecoderInfo.channelCount}")
-        LogContext.log.i(TAG, "CSD0[${csd0.size}]=${csd0.toHexStringLE()}")
-        LogContext.log.i(TAG, "CSD1[${csd1.size}]=${csd1.toHexStringLE()}")
-        LogContext.log.i(TAG, "CSD2[${csd2.size}]=${csd2.toHexStringLE()}")
+        LogContext.log.i(TAG, "CSD0[${csd0.size}]=${csd0.toHexString()}")
+        LogContext.log.i(TAG, "CSD1[${csd1.size}]=${csd1.toHexString()}")
+        LogContext.log.i(TAG, "CSD2[${csd2.size}]=${csd2.toHexString()}")
         audioDecoder = OpusDecoder(audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount, csd0, csd1, csd2, object : IDecodeCallback {
             override fun onDecoded(pcmData: ByteArray) {
                 LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")

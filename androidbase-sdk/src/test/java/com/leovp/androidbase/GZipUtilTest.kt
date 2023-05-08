@@ -3,7 +3,7 @@ package com.leovp.androidbase
 import android.util.Log
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.GZipUtil
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
@@ -44,7 +44,7 @@ class GZipUtilTest {
         assertEquals(
             "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
                 "8E1950C66F35AD802D373D0953D86F2B434C4DFB4BF3F235960723E000000",
-            compressedBytes.toHexStringLE(true, "")
+            compressedBytes.toHexString(true, "")
         )
         assertEquals(true, GZipUtil.isGzip(compressedBytes))
     }

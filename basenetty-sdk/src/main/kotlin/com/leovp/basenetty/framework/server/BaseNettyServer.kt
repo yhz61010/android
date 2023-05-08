@@ -3,7 +3,6 @@ package com.leovp.basenetty.framework.server
 import com.leovp.basenetty.framework.base.BaseNetty
 import com.leovp.basenetty.framework.base.ServerConnectStatus
 import com.leovp.bytes.toHexString
-import com.leovp.bytes.toHexStringLE
 import com.leovp.log.LogContext
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
@@ -240,7 +239,7 @@ abstract class BaseNettyServer protected constructor(
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
                     val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexStringLE()
+                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexString()
                     } else {
                         null
                     }

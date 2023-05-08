@@ -4,7 +4,7 @@ import android.os.Build
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -34,7 +34,7 @@ object AESUtil {
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainText: String, secKey: String, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -71,7 +71,7 @@ object AESUtil {
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -113,7 +113,7 @@ object AESUtil {
      * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun encrypt(plainText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexStringLE(true, "")
+        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -284,9 +284,9 @@ object AESUtil {
         val salt: ByteArray = PBKDF2Util.generateSalt(DEFAULT_PRE_SALT_LENGTH)
 //        val iv: ByteArray = generateIv(cipher.blockSize)
         val rawKey: SecretKey = if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PBKDF2Util.generateKeyWithSHA512(secKey.toHexStringLE(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA512(secKey.toHexString(true, ""), salt)
         } else {
-            PBKDF2Util.generateKeyWithSHA1(secKey.toHexStringLE(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA1(secKey.toHexString(true, ""), salt)
         }
 
 //        val ivParams = IvParameterSpec(iv)
@@ -324,9 +324,9 @@ object AESUtil {
         val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)
         val oriCipherBytes: ByteArray = cipherBytes.copyOfRange(DEFAULT_PRE_SALT_LENGTH, cipherBytes.size)
         val rawKey: SecretKey = if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PBKDF2Util.generateKeyWithSHA512(secKey.toHexStringLE(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA512(secKey.toHexString(true, ""), salt)
         } else {
-            PBKDF2Util.generateKeyWithSHA1(secKey.toHexStringLE(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA1(secKey.toHexString(true, ""), salt)
         }
 
         return Cipher.getInstance(CIPHER_AES).run {

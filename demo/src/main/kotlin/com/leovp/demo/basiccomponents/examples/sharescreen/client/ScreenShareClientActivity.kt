@@ -31,7 +31,7 @@ import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.asByteAndForceToBytes
 import com.leovp.bytes.toBytesLE
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.MediaProjectionService
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
@@ -185,7 +185,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
     }
 
     private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
-        LogContext.log.w(ITAG, "initDecoder vps=${vps?.toHexStringLE()} sps=${sps.toHexStringLE()} pps=${pps.toHexStringLE()}")
+        LogContext.log.w(ITAG, "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}")
         this.vps = vps
         this.sps = sps
         this.pps = pps
@@ -266,7 +266,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
-                            LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexStringLE()}]")
+                            LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexString()}]")
                         }
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
@@ -465,7 +465,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                     CMD_GRAPHIC_CSD -> {
                         foundCsd.set(true)
                         queue.offer(dataArray)
-                        LogContext.log.w(ITAG, "csd=${dataArray.toHexStringLE()}")
+                        LogContext.log.w(ITAG, "csd=${dataArray.toHexString()}")
                         val vps: ByteArray?
                         val sps: ByteArray?
                         val pps: ByteArray?
@@ -484,7 +484,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                         LogContext.log.w(
                             ITAG,
                             "initDecoder with vps=" +
-                                "${vps?.toHexStringLE()} sps=${sps?.toHexStringLE()} pps=${pps?.toHexStringLE()}"
+                                "${vps?.toHexString()} sps=${sps?.toHexString()} pps=${pps?.toHexString()}"
                         )
                         if (sps != null && pps != null) {
                             initDecoder(vps, sps, pps)

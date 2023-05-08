@@ -3,7 +3,7 @@ package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 import android.os.SystemClock
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.androidbase.exts.kotlin.truncate
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
@@ -43,11 +43,11 @@ class DecodeH264RawFileByFFMpeg {
         val sps = getNalu()!!
         val pps = getNalu()!!
 
-        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
-        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
+        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexString()}")
+        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexString()}")
 
         val csd0 = sps + pps
-        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE().truncate(180)}")
+        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexString().truncate(180)}")
         csd0Size = csd0.size
         currentIndex = csd0Size.toLong()
 

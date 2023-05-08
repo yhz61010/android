@@ -3,7 +3,7 @@ package com.leovp.androidbase
 import android.util.Log
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.RSAUtil
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import kotlin.test.assertContentEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -31,7 +31,7 @@ class RSAUtilTest {
         // println("public  key=${pubKey.toHexStringLE(true, "")}")
 
         val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
-        val encryptedStr = encrypted.toHexStringLE(true, "")
+        val encryptedStr = encrypted.toHexString(true, "")
         // println("encrypted=$encryptedStr")
 
         val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
@@ -67,7 +67,7 @@ class RSAUtilTest {
         // println("public  key=${pubKey.toHexStringLE(true, "")}")
 
         val encrypted = RSAUtil.sign(priKey, plainText)!!
-        val encryptedStr = encrypted.toHexStringLE(true, "")
+        val encryptedStr = encrypted.toHexString(true, "")
         // println("encrypted=$encryptedStr")
 
         val decryptBytes = RSAUtil.verify(pubKey, encrypted)

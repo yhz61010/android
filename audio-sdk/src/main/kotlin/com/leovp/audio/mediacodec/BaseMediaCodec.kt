@@ -62,17 +62,18 @@ abstract class BaseMediaCodec(private val codecName: String,
      * Most of time, you do NOT need to override this method.
      */
     open fun createMediaFormat() {
-        LogContext.log.i(TAG, "createMediaFormat() codec=$codecName sampleRate=$sampleRate channelCount=$channelCount")
+        LogContext.log.w(TAG, "createMediaFormat() codec=$codecName sampleRate=$sampleRate channelCount=$channelCount")
         format = MediaFormat.createAudioFormat(codecName, sampleRate, channelCount)
         format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024)
         setFormatOptions(format)
+        LogContext.log.w(TAG, "format=$format")
     }
 
     /**
      * Most of time, you do NOT need to override this method.
      */
     open fun createCodec() {
-        LogContext.log.i(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
+        LogContext.log.w(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
         codec = if (isEncoding) MediaCodec.createEncoderByType(codecName) else MediaCodec.createDecoderByType(codecName)
         codec.configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)
         setMediaCodecOptions(codec)

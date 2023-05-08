@@ -36,10 +36,10 @@ class OpusFilePlayer(
     contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
 ) {
     companion object {
-        private const val TAG = "AacFilePlayer"
+        private const val TAG = "OpusFilePlayer"
+        const val startCode = "|leo|"
     }
 
-    private val startCode = "|leo|"
     private val startCodeSize = startCode.length
     private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("opus-file-player"))
 

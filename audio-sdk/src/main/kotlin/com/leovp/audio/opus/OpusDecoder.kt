@@ -31,6 +31,8 @@ class OpusDecoder(
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
 
+    val queueSize: Int get() = queue.size
+
     override fun setFormatOptions(format: MediaFormat) {
         // https://developer.android.com/reference/android/media/MediaCodec#CSD
         val csd0BB = ByteBuffer.wrap(csd0)

@@ -9,6 +9,7 @@ import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 2023/4/14 17:11
  */
-class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: AudioDecoderInfo) {
+class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo) {
     companion object {
         private const val TAG = "OpusStreamPlayer"
         private const val AUDIO_DATA_QUEUE_CAPACITY = 64
@@ -34,10 +35,9 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
 
-    private var frameCount = AtomicLong(0)
+    private var frameCount = 0
     private var dropFrameTimes = AtomicLong(0)
     private var playStartTimeInUs: Long = 0
-    private var rcvAudioDataCounter: Long = 0
 
     private val audioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo)
     private var audioDecoder: OpusDecoder? = null
@@ -73,7 +73,7 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
             LogContext.log.w(TAG, "Found audio config data[${audioData.size}].")
             runCatching {
                 synchronized(this) {
-                    frameCount.set(0)
+                    frameCount = 0
                     csd0 = audioData.copyOfRange(16, 16 + 19)
                     csd1 = audioData.copyOfRange(16 + 19 + 16, 16 + 19 + 16 + 8)
                     csd2 = audioData.copyOfRange(16 + 19 + 16 + 8 + 16, audioData.size)
@@ -100,14 +100,13 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
             "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
                 "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
         )
-        if (rcvAudioDataCounter >= AUDIO_DATA_QUEUE_CAPACITY || kotlin.math.abs(latencyInMs) > audioLatencyThresholdInMs) {
+        if ((audioDecoder?.queueSize ?: 0) >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(
                 TAG,
-                "Drop[${dropFrameTimes.get()}]|full[$rcvAudioDataCounter] latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
+                "Drop[${dropFrameTimes.get()}]|full[${audioDecoder?.queueSize ?: 0}] latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
-            rcvAudioDataCounter = 0
-            frameCount.set(0)
+            frameCount = 0
             runCatching { audioDecoder?.flush() }.getOrNull()
             runCatching { audioTrackPlayer.pause() }.getOrNull()
             runCatching { audioTrackPlayer.play() }.getOrNull()
@@ -118,10 +117,9 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
             }
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
         } else {
-            rcvAudioDataCounter++
             audioDecoder!!.decode(audioData)
         }
-        if (frameCount.get() % 50 == 0L) {
+        if (frameCount++ % 50 == 0) {
             LogContext.log.i(TAG, "AU[${audioData.size}][$latencyInMs]")
         }
     }
@@ -130,8 +128,7 @@ class OpusStreamPlayer(private val ctx: Context, private val audioDecoderInfo: A
         LogContext.log.w(TAG, "Stop playing audio")
         runCatching {
             ioScope.cancel()
-            rcvAudioDataCounter = 0
-            frameCount.set(0)
+            frameCount = 0
             dropFrameTimes.set(0)
             audioTrackPlayer.release()
         }.onFailure {

@@ -49,7 +49,6 @@ import com.leovp.demo.basiccomponents.examples.log.LogActivity
 import com.leovp.demo.basiccomponents.examples.mediaplayer.PlayH265VideoByMediaCodecActivity
 import com.leovp.demo.basiccomponents.examples.mediaplayer.PlayRawH265ByMediaCodecActivity
 import com.leovp.demo.basiccomponents.examples.opengl.OpenGLES20Activity
-import com.leovp.demo.basiccomponents.examples.opus.OpusActivity
 import com.leovp.demo.basiccomponents.examples.orientation.OrientationActivity
 import com.leovp.demo.basiccomponents.examples.pref.PrefActivity
 import com.leovp.demo.basiccomponents.examples.provider.ProviderActivity
@@ -135,7 +134,6 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
             Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
-            Pair("opus", OpusActivity::class.java),
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)

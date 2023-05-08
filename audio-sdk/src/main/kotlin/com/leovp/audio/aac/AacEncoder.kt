@@ -66,7 +66,7 @@ class AacEncoder(
     }
 
     /**
-     * Add 7-bits ADTS header to aac audio data.<br></br>
+     * Add 7-bytes ADTS header to aac audio data.<br></br>
      * <br></br>
      * https://www.jianshu.com/p/5c770a22e8f8
      * https://blog.csdn.net/tx3344/article/details/7414543

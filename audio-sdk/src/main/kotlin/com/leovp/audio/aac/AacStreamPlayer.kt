@@ -6,7 +6,7 @@ import android.os.SystemClock
 import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
@@ -69,7 +69,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
                 synchronized(this) {
                     frameCount = 0
                     csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
-                    LogContext.log.w(TAG, "Audio csd0=HEX[${csd0?.toHexStringLE()}]")
+                    LogContext.log.w(TAG, "Audio csd0=HEX[${csd0?.toHexString()}]")
                     initAudioDecoder(csd0!!)
                     audioTrackPlayer.play()
                     playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000

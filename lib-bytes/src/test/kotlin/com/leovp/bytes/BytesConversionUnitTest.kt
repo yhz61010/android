@@ -13,7 +13,7 @@ class BytesConversionUnitTest {
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
                 0xD3.toByte(), 0xBA.toByte()
-            ).toHexStringLE()
+            ).toHexString()
         )
         assertEquals(
             "10,90,A0,1,31,A1,63,87,3D,AB",
@@ -28,7 +28,7 @@ class BytesConversionUnitTest {
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
                 0xD3.toByte(), 0xBA.toByte()
-            ).toHexStringLE(false)
+            ).toHexString(false)
         )
         assertEquals(
             "10,90,A0,1,31,A1,63,87,3D,AB",
@@ -43,7 +43,7 @@ class BytesConversionUnitTest {
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
                 0xD3.toByte(), 0xBA.toByte()
-            ).toHexStringLE(true)
+            ).toHexString(true)
         )
         assertEquals(
             "10,90,A0,01,31,A1,63,87,3D,AB",
@@ -58,7 +58,7 @@ class BytesConversionUnitTest {
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36, 0x78,
                 0xD3.toByte(), 0xBA.toByte()
-            ).toHexStringLE(true, "")
+            ).toHexString(true, "")
         )
         assertEquals(
             "1090A00131A163873DAB",
@@ -73,7 +73,7 @@ class BytesConversionUnitTest {
             byteArrayOf(
                 0x01, 0x09, 0x0A, 0x10, 0x13, 0x1A, 0x36,
                 0x78, 0xD3.toByte(), 0xBA.toByte()
-            ).toHexStringLE(false, ",")
+            ).toHexString(false, ",")
         )
         assertEquals(
             "10,90,A0,1,31,A1,63,87,3D,AB",

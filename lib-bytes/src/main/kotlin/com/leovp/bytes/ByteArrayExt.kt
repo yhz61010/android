@@ -122,27 +122,27 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toInt().to
  */
 // fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
 
-fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
-    if (this.isEmpty()) return ""
-    val result = StringBuilder()
-    forEach {
-        val octet = it.toInt()
-        val highBit = octet and 0x0F
-        val lowBit = (octet and 0xF0).ushr(4)
-        if (highBit == 0) {
-            if (addPadding) result.append(HEX_CHARS[highBit])
-            result.append(HEX_CHARS[lowBit])
-        } else {
-            result.append(HEX_CHARS[highBit])
-            result.append(HEX_CHARS[lowBit])
-        }
-        if (delimiter.isNotEmpty()) result.append(delimiter)
-    }
-    if (delimiter.isNotEmpty()) result.deleteCharAt(result.length - 1)
-    return result.toString()
-}
+// fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
+//     if (this.isEmpty()) return ""
+//     val result = StringBuilder()
+//     forEach {
+//         val octet = it.toInt()
+//         val highBit = octet and 0x0F
+//         val lowBit = (octet and 0xF0).ushr(4)
+//         if (highBit == 0) {
+//             if (addPadding) result.append(HEX_CHARS[highBit])
+//             result.append(HEX_CHARS[lowBit])
+//         } else {
+//             result.append(HEX_CHARS[highBit])
+//             result.append(HEX_CHARS[lowBit])
+//         }
+//         if (delimiter.isNotEmpty()) result.append(delimiter)
+//     }
+//     if (delimiter.isNotEmpty()) result.deleteCharAt(result.length - 1)
+//     return result.toString()
+// }
 
-fun ByteArray.toHexStringLE(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
+fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
     if (this.isEmpty()) return ""
     val result = StringBuilder()
     forEach {
@@ -150,7 +150,7 @@ fun ByteArray.toHexStringLE(addPadding: Boolean = false, delimiter: CharSequence
         val highBit = (octet and 0xF0).ushr(4)
         val lowBit = octet and 0x0F
         if (highBit == 0) {
-            if (addPadding) result.append(HEX_CHARS[highBit])
+            if (addPadding) result.append('0')
             result.append(HEX_CHARS[lowBit])
         } else {
             result.append(HEX_CHARS[highBit])

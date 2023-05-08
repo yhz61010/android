@@ -2,7 +2,7 @@ package com.leovp.androidbase
 
 import android.util.Log
 import com.leovp.androidbase.utils.media.H265Util
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import kotlin.system.measureNanoTime
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
@@ -100,19 +100,19 @@ class H265UtilTest {
         )
 
         val vpsBytes = H265Util.getVps(csdByteArray)
-        println(vpsBytes?.toHexStringLE())
+        println(vpsBytes?.toHexString())
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x40, 1, 2, 3, 4, 5), vpsBytes)
 
         val spsBytes = H265Util.getSps(csdByteArray)
-        println(spsBytes?.toHexStringLE())
+        println(spsBytes?.toHexString())
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x42, 6, 7, 8, 9, 10), spsBytes)
 
         val ppsBytes = H265Util.getPps(csdByteArray)
-        println(ppsBytes?.toHexStringLE())
+        println(ppsBytes?.toHexString())
         assertArrayEquals(byteArrayOf(0, 0, 0, 1, 0x44, 11, 12, 13, 14, 15), ppsBytes)
 
         val seiBytes = H265Util.getSei(csdByteArray)
-        println(seiBytes?.toHexStringLE())
+        println(seiBytes?.toHexString())
         assertArrayEquals(
             byteArrayOf(
                 0, 0, 0, 1, 0x4E, 1, 5, 0x1A, 0x47, 0x56, 0x4A, 0xDC.toByte(),

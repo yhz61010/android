@@ -18,7 +18,8 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
-class OpusDecoder(sampleRate: Int,
+class OpusDecoder(
+    sampleRate: Int,
     channelCount: Int,
     val csd0: ByteArray,
     val csd1: ByteArray,

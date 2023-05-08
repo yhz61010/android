@@ -8,7 +8,7 @@ import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecSynchronous
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.AAC_PROFILE_LC
 import com.leovp.bytes.toByteArray
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -57,7 +57,7 @@ class AacDecoder(
     // https://developer.android.com/reference/android/media/MediaCodec
     // AAC CSD: Decoder-specific information from ESDS
     override fun setFormatOptions(format: MediaFormat) {
-        LogContext.log.w(TAG, "setFormatOptions csd0[${csd0.size}]=HEX[${csd0.toHexStringLE()}]")
+        LogContext.log.w(TAG, "setFormatOptions csd0[${csd0.size}]=HEX[${csd0.toHexString()}]")
         format.setInteger(MediaFormat.KEY_AAC_PROFILE, AAC_PROFILE_LC)
         // Set ADTS decoder information.
         format.setInteger(MediaFormat.KEY_IS_ADTS, 1)

@@ -3,7 +3,7 @@ package com.leovp.demo.basiccomponents.examples.mediaplayer.base
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.Surface
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.io.File
@@ -136,12 +136,12 @@ class DecodeH265RawFile {
             val sps = getNalu()!!
             val pps = getNalu()!!
 
-            LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexStringLE()}")
-            LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexStringLE()}")
-            LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexStringLE()}")
+            LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexString()}")
+            LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexString()}")
+            LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexString()}")
 
             val csd0 = vps + sps + pps
-            LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexStringLE()}")
+            LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexString()}")
             csd0Size = csd0.size
             currentIndex = csd0Size.toLong()
 

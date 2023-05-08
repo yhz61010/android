@@ -7,7 +7,7 @@ import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec.Companion.AAC_PROFILE_LC
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
@@ -49,7 +49,7 @@ class AacEncoder(
             val outBytes = ByteArray(outBuf.remaining())
             outBuf.get(outBytes)
             csd0 = outBytes
-            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexStringLE()}]")
+            LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexString()}]")
         }
         val aacDataLength = info.size
         // The length of ADTS header is 7.

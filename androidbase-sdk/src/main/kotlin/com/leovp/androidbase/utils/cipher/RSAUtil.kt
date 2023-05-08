@@ -4,7 +4,7 @@ package com.leovp.androidbase.utils.cipher
 
 import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.bytes.toHexStringLE
+import com.leovp.bytes.toHexString
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -221,11 +221,11 @@ object RSAUtil {
             val str1 = plainText.substring(0, MAX_ENCRYPT_LEN)
             val str2 = plainText.substring(MAX_ENCRYPT_LEN)
             """
-     |${encrypt(pubKey, str1)?.toHexStringLE(true, "")}
+     |${encrypt(pubKey, str1)?.toHexString(true, "")}
      |${encryptStringByFragment(pubKey, str2)}
             """.trimMargin()
         } else {
-            encrypt(pubKey, plainText)?.toHexStringLE(true, "")
+            encrypt(pubKey, plainText)?.toHexString(true, "")
         }
     }
 

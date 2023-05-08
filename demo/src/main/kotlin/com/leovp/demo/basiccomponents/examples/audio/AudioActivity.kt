@@ -39,8 +39,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        val audioEncoderInfo = AudioEncoderInfo(8000, 32000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(8000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        // By now, opus decoder by MediaCode only support 48kHz sample rate.
+        val audioEncoderInfo = AudioEncoderInfo(48000, 192000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioDecoderInfo = AudioDecoderInfo(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
 
         // AudioAttributes.USAGE_VOICE_COMMUNICATION
         // AudioAttributes.USAGE_MEDIA
@@ -173,7 +174,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                 AudioType.OPUS -> {
                     LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
                     runCatching {
-                        opusOs?.write("|leo|".encodeToByteArray())
+                        opusOs?.write(OpusFilePlayer.startCode.encodeToByteArray())
                         opusOs?.write(data)
                     }.onFailure { it.printStackTrace() }
                 }

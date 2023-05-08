@@ -121,6 +121,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         LogContext.log.w(TAG, "Stop playing audio")
         runCatching {
             ioScope.cancel()
+            frameCount = 0
             dropFrameTimes.set(0)
             audioTrackPlayer.release()
         }.onFailure {

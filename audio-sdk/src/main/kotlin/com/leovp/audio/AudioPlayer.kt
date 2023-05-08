@@ -55,7 +55,7 @@ class AudioPlayer(
                     type,
                     audioDecoderInfo,
                     object : OutputCallback {
-                        override fun output(out: ByteArray) {
+                        override fun output(out: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                             val st = SystemClock.elapsedRealtime()
                             audioTrackPlayer.write(out)
                             if (BuildConfig.DEBUG) {

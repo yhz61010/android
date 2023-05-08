@@ -48,7 +48,13 @@ class AudioSender {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.i(TAG, "onConnected")
             ctx?.toast("onConnected", debug = true)
-            audioPlayer = AudioPlayer(ctx!!, AudioActivity.audioDecoderInfo, defaultAudioType)
+            audioPlayer = AudioPlayer(
+                ctx!!,
+                AudioActivity.audioDecoderInfo,
+                defaultAudioType,
+                usage = AudioActivity.AUDIO_ATTR_USAGE,
+                contentType = AudioActivity.AUDIO_ATTR_CONTENT_TYPE
+            )
             sendRecAudioThread()
             startPlayThread()
         }
@@ -86,7 +92,7 @@ class AudioSender {
         micRecorder = MicRecorder(
             AudioActivity.audioEncoderInfo,
             object : MicRecorder.RecordCallback {
-                override fun onRecording(data: ByteArray) {
+                override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                     recAudioQueue.offer(data)
                     if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
                 }

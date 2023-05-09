@@ -12,7 +12,7 @@ android {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }
 
-    packagingOptions {
+    packaging {
         jniLibs {
             pickFirsts += setOf(
                 "lib/armeabi-v7a/libavutil.so",

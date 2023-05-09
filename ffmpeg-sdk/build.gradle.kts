@@ -9,7 +9,7 @@ android {
         // https://stackoverflow.com/a/46051246
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
         }
     }
 
@@ -21,7 +21,7 @@ android {
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }
-    packagingOptions {
+    packaging {
         jniLibs {
             pickFirsts += setOf(
                 "lib/armeabi-v7a/libavutil.so",

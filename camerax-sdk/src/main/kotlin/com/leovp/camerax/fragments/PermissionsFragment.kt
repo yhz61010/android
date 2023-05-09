@@ -4,11 +4,14 @@ import android.Manifest
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.Navigation
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.leovp.camerax.R
+import kotlinx.coroutines.launch
 
 /**
  * The sole purpose of this fragment is to request permissions and, once granted, display the
@@ -42,10 +45,12 @@ class PermissionsFragment : Fragment() {
     }
 
     private fun navigateToCamera() {
-        lifecycleScope.launchWhenStarted {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
-                PermissionsFragmentDirections.actionPermissionsToCamera()
-            )
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
+                    PermissionsFragmentDirections.actionPermissionsToCamera()
+                )
+            }
         }
     }
 }

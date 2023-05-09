@@ -39,8 +39,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
         private const val TAG = "AudioActivity"
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
-        // By now, opus decoder by MediaCode only support 48kHz sample rate.
-        val audioEncoderInfo = AudioEncoderInfo(48000, 192000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        // In practice, on the devices I tested on, opus encoder by MediaCodec ONLY supports 48kHz as sample rate.
+        // And the frame size seems like 960 samples (20ms).
+        val audioEncoderInfo = AudioEncoderInfo(48000, 128000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
         val audioDecoderInfo = AudioDecoderInfo(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
 
         // AudioAttributes.USAGE_VOICE_COMMUNICATION

@@ -24,6 +24,10 @@ import java.util.concurrent.ArrayBlockingQueue
  * - Opus supports frame size in milliseconds: 2.5, 5, 10, 20, 40, 60 (20 ms frames are a good choice for most applications)
  * - Opus supports sample rate: 8kHz ~ 48kHz. 8kHz, 12kHz, 16kHz, 24kHz, 48Khz
  *
+ * Attention:
+ * Anyway, in practice, on the devices I tested on, opus encoder by MediaCodec _ONLY_ supports 48kHz as sample rate
+ * and the frame size seems like 960 samples (20ms). Most important, all the above parameters are not configurable.
+ *
  * We use 8kHz as example, the opus supports the following frame size:
  * 8000 / 1000 = 8
  *

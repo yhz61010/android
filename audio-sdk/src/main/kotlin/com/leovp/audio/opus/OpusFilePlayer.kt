@@ -50,12 +50,12 @@ class OpusFilePlayer(
     private val audioTrackPlayer: AudioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, usage = usage, contentType = contentType)
     private var decoder: OpusDecoder? = null
 
-    private var cb: (() -> Unit)? = null
+    // private var cb: (() -> Unit)? = null
 
     private lateinit var rf: RandomAccessFile
 
     fun playOpus(opusFile: File, endCallback: () -> Unit) {
-        cb = endCallback
+        // cb = endCallback
         audioTrackPlayer.play()
         rf = RandomAccessFile(opusFile, "r")
         LogContext.log.w(TAG, "File length=${rf.length()}")
@@ -69,16 +69,19 @@ class OpusFilePlayer(
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     queue.put(pcmData)
-                    LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}] pcm[${pcmData.size}]")
+                    // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}] pcm[${pcmData.size}]")
                 }
             }
         ).apply { start() }
+
+        var isDecodeDone = false
         ioScope.launch {
             var startCodeBeginPos = findStartCode(startCodeSize.toLong())
             var frame: Long = 0
             val frameSize: Int = audioDecoderInfo.sampleRate / 1000 * 20 // 20ms
             val baseDelay = 16L
             var calcDelay = baseDelay
+            isDecodeDone = false
             while (true) {
                 ensureActive()
                 var startCodeEndPos: Long
@@ -98,7 +101,7 @@ class OpusFilePlayer(
                     if (delayMs < 20) {
                         calcDelay = baseDelay + (++frame / frameSize)
                     }
-                    LogContext.log.e(TAG, "-----> Delay=$delayMs")
+                    // LogContext.log.e(TAG, "-----> Delay=$delayMs")
                     delay(delayMs)
                 } catch (e: EOFException) {
                     LogContext.log.e(TAG, "EOFException", e)
@@ -111,7 +114,8 @@ class OpusFilePlayer(
                     break
                 }
                 startCodeBeginPos = startCodeEndPos
-            }
+            } // end while
+            isDecodeDone = true
         }
 
         ioScope.launch {
@@ -121,6 +125,16 @@ class OpusFilePlayer(
                 // LogContext.log.w(TAG, "play -> queue[${queue.size}] pcm=${pcmData.size}")
                 audioTrackPlayer.write(pcmData)
             }
+        }
+
+        ioScope.launch {
+            while (true) {
+                if (isDecodeDone && queue.isEmpty()) {
+                    break
+                }
+                delay(100)
+            }
+            endCallback.invoke()
         }
     }
 

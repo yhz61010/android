@@ -73,7 +73,7 @@ android {
 //        }
     }
 
-    packagingOptions {
+    packaging {
         jniLibs {
             pickFirsts += setOf(
                 "lib/armeabi-v7a/libavutil.so",

@@ -52,19 +52,22 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         LogContext.log.i(TAG, "CSD0[${csd0.size}]=${csd0.toHexString()}")
         LogContext.log.i(TAG, "CSD1[${csd1.size}]=${csd1.toHexString()}")
         LogContext.log.i(TAG, "CSD2[${csd2.size}]=${csd2.toHexString()}")
-        audioDecoder = OpusDecoder(audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount, csd0, csd1, csd2, object : IDecodeCallback {
-            override fun onDecoded(pcmData: ByteArray) {
-                LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
-                if (pcmData.isNotEmpty()) {
-                    if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) return
-                    if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
-                        LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
-                        // Play decoded audio data in PCM
-                        audioTrackPlayer.write(pcmData)
+        audioDecoder = OpusDecoder(
+            audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount,
+            csd0, csd1, csd2,
+            object : IDecodeCallback {
+                override fun onDecoded(pcmData: ByteArray) {
+                    LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
+                    if (pcmData.isNotEmpty()) {
+                        if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) return
+                        if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
+                            LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
+                            // Play decoded audio data in PCM
+                            audioTrackPlayer.write(pcmData)
+                        }
                     }
                 }
-            }
-        }).apply { start() }
+            }).apply { start() }
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {

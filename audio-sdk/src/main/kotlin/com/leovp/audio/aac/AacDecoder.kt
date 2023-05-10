@@ -67,10 +67,10 @@ class AacDecoder(
     }
 
     override fun onInputData(inBuf: ByteBuffer): Int {
-        return queue.poll()?.let {
+        return queue.take().let {
             inBuf.put(it)
             it.size
-        } ?: 0
+        }
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {

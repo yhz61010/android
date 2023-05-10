@@ -19,7 +19,6 @@ import java.util.concurrent.ArrayBlockingQueue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
@@ -110,8 +109,7 @@ class AudioSender {
                 ensureActive()
                 runCatching {
                     // LogContext.log.i(ITAG, "PCM[${pcmData.size}] to be sent.")
-                    recAudioQueue.poll()?.let { senderHandler?.sendAudioToServer(it) }
-                    delay(10)
+                    senderHandler?.sendAudioToServer(recAudioQueue.take())
                 }.onFailure { it.printStackTrace() }
             }
         }
@@ -119,11 +117,10 @@ class AudioSender {
 
     private fun startPlayThread() {
         LogContext.log.i(TAG, "Start decodeThread()")
-        ioScope.launch {
+        ioScope.launch(Dispatchers.IO) {
             while (true) {
                 ensureActive()
-                receiveAudioQueue.poll()?.let { audioPlayer?.play(it) }
-                delay(10)
+                audioPlayer?.play(receiveAudioQueue.take())
             }
         }
     }

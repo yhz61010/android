@@ -1,7 +1,7 @@
 #!/bin/bash
 
-FFMPEG_FOLDER=ffmpeg-5.1
-NDK_PATH=~/Library/Android/sdk/ndk/21.1.6352462
+FFMPEG_FOLDER=ffmpeg-6.0
+NDK_PATH=~/Library/Android/sdk/ndk/21.4.7075529
 # linux-x86_64
 HOST_TAG=darwin-x86_64
 MIN_SDK_VER=21

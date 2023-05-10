@@ -319,7 +319,7 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 fun isNonStable(version: String): Boolean {
-    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.toUpperCase().contains(it) }
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
     val regex = "^[0-9,.v-]+(-r)?$".toRegex()
     val isStable = stableKeyword || regex.matches(version)
     return isStable.not()
@@ -332,11 +332,11 @@ fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
     val propertyValue = project.properties[gradlePropertyName] as? String
     checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
 
-    val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".toUpperCase()
+    val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".uppercase()
     buildConfigField("String", androidResourceName, propertyValue)
 }
 
-fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.toLowerCase() }
+fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.uppercase() }
 
 /** Adds a new field to the generated BuildConfig class. */
 fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {

@@ -5,29 +5,31 @@ This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you pu
 If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
 
 ### Compile Environment：
-- OS：macOS 12.5
-- NDK：21.1.6352462
-- FFmpeg 5.1 "Riemann"(5.1 was released on 2022-07-22)
+- Android Studio: Flamingo | 2022.2.1
+- OS：macOS 13.2
+- NDK：21.4.7075529
+- FFmpeg 6.0 "Von Neumann"(6.0 was released on 2023-02-27)
 - cmake: 3.23.0
 - gcc:
-  Apple clang version 13.1.6 (clang-1316.0.21.2.5)
-  Target: x86_64-apple-darwin21.5.0
+  Apple clang version 14.0.0 (clang-1400.0.29.202)
+  Target: x86_64-apple-darwin22.3.0
   Thread model: posix
   InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+- JDK: java 17.0.6 2023-01-17 LTS
 
 ### How to compile ffmpeg and generate so file for Android
 You can download from official website and scroll to the **Releases** section:
 1. Get ffmpeg source
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% wget -c https://www.ffmpeg.org/releases/ffmpeg-5.1.tar.xz
+% wget -c https://www.ffmpeg.org/releases/ffmpeg-6.0.tar.xz
 ```
 Unzip it into the following folder:
 > # -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
 
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
-% tar xvJf ffmpeg-5.1.tar.xz
+% tar xvJf ffmpeg-6.0.tar.xz
 ```
 
 2. Compile and get static library

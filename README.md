@@ -3,6 +3,9 @@
 [![AGP](https://img.shields.io/badge/AGP-8.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-8.1.1-green)](https://gradle.org)
 
+[![Android Studio](https://img.shields.io/badge/AndroidStudio-Flamingo|2022.2.1-important)](https://gradle.org)
+[![JDK](https://img.shields.io/badge/JDK-17-9cf)](https://gradle.org)
+
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 

@@ -75,13 +75,17 @@ class OpusFilePlayer(
         ).apply { start() }
 
         var isDecodeDone = false
-        ioScope.launch {
+        ioScope.launch(Dispatchers.IO) {
             var startCodeBeginPos = findStartCode(startCodeSize.toLong())
+
+            val maxFrameSizeMs: Long = 20 // ms
+            val baseDelay = 10L
+            val maxFrameSize: Long = audioDecoderInfo.sampleRate / 1000 * maxFrameSizeMs
+
             var frame: Long = 0
-            val frameSize: Int = audioDecoderInfo.sampleRate / 1000 * 20 // 20ms
-            val baseDelay = 16L
             var calcDelay = baseDelay
             isDecodeDone = false
+            var delayChanged = false
             while (true) {
                 ensureActive()
                 var startCodeEndPos: Long
@@ -97,11 +101,26 @@ class OpusFilePlayer(
                     rf.readFully(audioFrameData)
                     // LogContext.log.d(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
                     decoder?.decode(audioFrameData)
-                    val delayMs = if (calcDelay > 20) 20 else calcDelay
-                    if (delayMs < 20) {
-                        calcDelay = baseDelay + (++frame / frameSize)
+                    val delayMs = if (calcDelay > maxFrameSizeMs) maxFrameSizeMs else calcDelay
+                    if (queue.size < 1) {
+                        calcDelay = 10
+                        delayChanged = false
+                        frame = 0
+                    } else if (queue.size in 1..10) {
+                        // Queue in good condition.
+                        delayChanged = false
+                        frame = 0
+                    } else {
+                        if (!delayChanged) {
+                            delayChanged = true
+                            calcDelay += 1
+                        }
+                        if (++frame % (maxFrameSize / 20) == 0L) {
+                            delayChanged = false
+                        }
                     }
-                    // LogContext.log.e(TAG, "-----> Delay=$delayMs")
+                    LogContext.log.e(TAG,
+                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged maxFrameSize=$maxFrameSize frame=$frame")
                     delay(delayMs)
                 } catch (e: EOFException) {
                     LogContext.log.e(TAG, "EOFException", e)
@@ -118,7 +137,7 @@ class OpusFilePlayer(
             isDecodeDone = true
         }
 
-        ioScope.launch {
+        ioScope.launch(Dispatchers.IO) {
             while (true) {
                 ensureActive()
                 val pcmData: ByteArray = queue.take()
@@ -159,7 +178,7 @@ class OpusFilePlayer(
         } catch (e: EOFException) {
             LogContext.log.e(TAG, "EOFException", e)
         } catch (ioe: IOException) {
-            LogContext.log.e(TAG, "EOFException", ioe)
+            LogContext.log.e(TAG, "IOException", ioe)
         }
 
         LogContext.log.w(TAG, "csd[${csdBytes.size}]=${csdBytes.toHexString()}")

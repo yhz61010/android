@@ -76,6 +76,8 @@ eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
 mmkv = "1.2.16"
+# 2.15.0 Build with error "Unsupported class file major version 63"
+# https://github.com/FasterXML/jackson-core/issues/955
 fasterxml = "2.14.3"
 xx-permissions = "18.0"
 bson = "2.13.1" # As of 2.13.0, you need to add fasterxml jackson manually.

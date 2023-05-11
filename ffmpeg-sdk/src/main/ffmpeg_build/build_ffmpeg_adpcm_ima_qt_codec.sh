@@ -51,6 +51,7 @@ pushd $FFMPEG_FOLDER
     --disable-avdevice \
     --disable-avformat \
     --disable-static \
+    --disable-vulkan \
     --enable-decoder=adpcm_ima_qt \
     --enable-encoder=adpcm_ima_qt \
     --enable-shared \

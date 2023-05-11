@@ -9,7 +9,7 @@ AdpcmImaQtEncoder *pEncoder = nullptr;
 JNIEnv *gEnv;
 jobject gObj;
 
-JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels, jint bitRate) {
+JNIEXPORT jint JNICALL init(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj, jint sampleRate, jint channels, jint bitRate) {
     if (nullptr == pEncoder) {
         pEncoder = new AdpcmImaQtEncoder(sampleRate, channels, bitRate);
         return 0;
@@ -17,7 +17,7 @@ JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint chan
     return -1;
 }
 
-JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
     delete pEncoder;
     pEncoder = nullptr;
 }
@@ -32,7 +32,7 @@ JNIEXPORT void JNICALL encode(JNIEnv *env, jobject obj, jbyteArray pcmByteArray)
     delete[] pcm_unit8_t_array;
 }
 
-JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
+JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
     return env->NewStringUTF("0.1.0");
 }
 
@@ -58,7 +58,7 @@ static JNINativeMethod methods[] = {
         {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
 };
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {
     JNIEnv *env;
 
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {

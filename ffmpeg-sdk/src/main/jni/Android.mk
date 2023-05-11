@@ -1,6 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
-MY_PREBUILT := $(LOCAL_PATH)/prebuilt/$(TARGET_ARCH_ABI)
+MY_PREBUILT := $(LOCAL_PATH)/../ffmpeg_build/prebuilt/$(TARGET_ARCH_ABI)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libavcodec

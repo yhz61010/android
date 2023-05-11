@@ -51,6 +51,7 @@ pushd $FFMPEG_FOLDER
     --disable-avdevice \
     --disable-avformat \
     --disable-static \
+    --disable-vulkan \
     --enable-jni \
     --enable-decoder=h264,hevc \
     --enable-shared \

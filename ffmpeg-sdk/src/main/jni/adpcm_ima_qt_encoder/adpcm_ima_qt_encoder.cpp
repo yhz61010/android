@@ -16,8 +16,10 @@ AdpcmImaQtEncoder::AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate) 
     ctx->sample_rate = sampleRate;
     ctx->bit_rate = bitRate;
     ctx->sample_fmt = AV_SAMPLE_FMT_S16P; // ADPCM-IMA-QT only support AV_SAMPLE_FMT_S16P
-    ctx->channel_layout = channels == 2 ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
-    ctx->channels = av_get_channel_layout_nb_channels(ctx->channel_layout);
+    ctx->ch_layout = channels == 2 ? (AVChannelLayout) AV_CHANNEL_LAYOUT_STEREO : (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+    // Old ffmpeg version usage.
+    // ctx->channel_layout = channels == 2 ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
+    // ctx->channels = av_get_channel_layout_nb_channels(ctx->channel_layout);
 
     int ret;
     /* open it */
@@ -40,7 +42,7 @@ AdpcmImaQtEncoder::AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate) 
 
     frame->nb_samples = ctx->frame_size;
     frame->format = ctx->sample_fmt;
-    frame->channel_layout = ctx->channel_layout;
+    frame->ch_layout = ctx->ch_layout;
 
     /* allocate the data buffers */
     ret = av_frame_get_buffer(frame, 0);
@@ -69,9 +71,9 @@ AdpcmImaQtEncoder::~AdpcmImaQtEncoder() {
 }
 
 void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCallbackFunc callback) {
-    bool isStereo = ctx->channels == 2;
-    uint8_t *outs[ctx->channels];
-    const int BUF_SIZE = frame->linesize[0] * ctx->channels;
+    bool isStereo = ctx->ch_layout.nb_channels == 2;
+    uint8_t *outs[ctx->ch_layout.nb_channels];
+    const int BUF_SIZE = frame->linesize[0] * ctx->ch_layout.nb_channels;
     outs[0] = new uint8_t[BUF_SIZE];
     if (isStereo)
         outs[1] = new uint8_t[BUF_SIZE];
@@ -79,7 +81,7 @@ void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, pCa
 //    LOGE("pcmLen=%d BUF_SIZE=%d channels=%d c->frame_size=%d frame->linesize[0]=%d frame->nb_samples=%d", pcmLen, BUF_SIZE, ctx->channels, ctx->frame_size, frame->linesize[0],
 //         frame->nb_samples);
 
-    const int loopStep = 2 * ctx->channels;
+    const int loopStep = 2 * ctx->ch_layout.nb_channels;
     int ret;
     for (int loop = 0; loop < pcmLen / BUF_SIZE; loop++) {
         ret = av_frame_make_writable(frame);
@@ -126,7 +128,7 @@ void AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacke
 
     /* read all the available output packets (in general there may be any
      * number of them */
-    while (ret >= 0) {
+    for(;;) {
         ret = avcodec_receive_packet(pCtx, pPkt);
 //        LOGE("avcodec_receive_packet AVERROR(EAGAIN)=%d AVERROR_EOF=%d ret=%d", AVERROR(EAGAIN), AVERROR_EOF, ret);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)

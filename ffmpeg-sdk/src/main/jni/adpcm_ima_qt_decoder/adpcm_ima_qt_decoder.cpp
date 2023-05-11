@@ -10,8 +10,10 @@ AdpcmImaQtDecoder::AdpcmImaQtDecoder(int sampleRate, int channels) {
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
     ctx = avcodec_alloc_context3(codec);
     ctx->sample_rate = sampleRate;
-    ctx->channels = channels;
-    ctx->channel_layout = av_get_default_channel_layout(ctx->channels);
+    ctx->ch_layout = channels == 2 ? (AVChannelLayout) AV_CHANNEL_LAYOUT_STEREO : (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+    // Old ffmpeg version usage.
+    // ctx->channels = channels;
+    // ctx->channel_layout = av_get_default_channel_layout(ctx->channels);
 
     int ret = avcodec_open2(ctx, codec, nullptr);
     if (ret < 0) {
@@ -55,10 +57,10 @@ uint8_t *AdpcmImaQtDecoder::decode(uint8_t *adpcmByteArray, int adpcmLength, int
     int each_channel_length = frame->linesize[0];
     uint8_t *left_channel_data = frame->data[0];
 
-    int pcmSize = each_channel_length * ctx->channels;
+    int pcmSize = each_channel_length * ctx->ch_layout.nb_channels;
     *outPcmLength = pcmSize;
 
-    if (ctx->channels > 1) { // For stereo
+    if (ctx->ch_layout.nb_channels > 1) { // For stereo
         auto *outPcmBytes = new uint8_t[pcmSize];
         uint8_t *right_channel_data = frame->data[1];
         int subI = 0;
@@ -79,7 +81,7 @@ AVCodecContext *AdpcmImaQtDecoder::getCodecContext() {
     return ctx;
 }
 
-int AdpcmImaQtDecoder::getSampleRate() const {
+__attribute__((unused)) int AdpcmImaQtDecoder::getSampleRate() const {
     return sampleRate;
 }
 

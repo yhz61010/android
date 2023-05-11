@@ -83,5 +83,5 @@ lint/tmp/
 /.cxx/
 /src/main/obj/
 /src/main/libs/
-/src/main/jni/prebuilt/
-/src/main/jni/ffmpeg-*/
+/src/main/ffmpeg_build/prebuilt/
+/src/main/ffmpeg_build/ffmpeg-*/

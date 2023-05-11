@@ -21,21 +21,21 @@ If your want to import this module by other projects, you can make a wrapper mod
 You can download from official website and scroll to the **Releases** section:
 1. Get ffmpeg source
 ```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
 % wget -c https://www.ffmpeg.org/releases/ffmpeg-6.0.tar.xz
 ```
 Unzip it into the following folder:
-> # -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
+> -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
 
 ```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
 % tar xvJf ffmpeg-6.0.tar.xz
 ```
 
 2. Compile and get static library
 
 ```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/ffmpeg_build
 ```
 
 Modify the ffmpeg version in `config.sh` file:
@@ -44,6 +44,10 @@ FFMPEG_FOLDER=ffmpeg-<ffmepg version>
 ```
 
 Run any one of the following scripts as you want:
+```shell
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
+```
+
 ```shell
 % ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
 % ./build_ffmpeg_adpcm_ima_qt_codec.sh

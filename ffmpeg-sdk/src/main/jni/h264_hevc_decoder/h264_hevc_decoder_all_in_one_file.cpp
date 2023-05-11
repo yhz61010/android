@@ -20,7 +20,7 @@ AVPacket *pkt = nullptr;
  * @param spsByteArray The data start with separator like 0x0, 0x0, 0x0, 0x01
  * @param ppsByteArray NOT Used. The data start with separator like 0x0, 0x0, 0x0, 0x01
  */
-JNIEXPORT jobject JNICALL init(JNIEnv *env, jobject obj,
+JNIEXPORT jobject JNICALL init(JNIEnv *env, __attribute__((unused)) jobject obj,
                                jbyteArray vpsByteArray,
                                jbyteArray spsByteArray, jbyteArray ppsByteArray,
                                jbyteArray prefixSeiByteArray, jbyteArray suffixSeiByteArray) {
@@ -132,7 +132,7 @@ JNIEXPORT jobject JNICALL init(JNIEnv *env, jobject obj,
     return returnObj;
 }
 
-JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
     if (ctx != nullptr) {
         avcodec_free_context(&ctx);
         ctx = nullptr;
@@ -148,7 +148,7 @@ JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
     LOGE("H264 & HEVC decoder released!");
 }
 
-JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray videoRawByteArray) {
+JNIEXPORT jobject JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject obj, jbyteArray videoRawByteArray) {
     int videoRawLen = env->GetArrayLength(videoRawByteArray);
     auto *video_raw_unit8_t_array = new uint8_t[videoRawLen];
     env->GetByteArrayRegion(videoRawByteArray, 0, videoRawLen, reinterpret_cast<jbyte *>(video_raw_unit8_t_array));
@@ -192,7 +192,7 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray videoRawBy
     return returnObj;
 }
 
-JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
+JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
     return env->NewStringUTF("0.1.0");
 }
 

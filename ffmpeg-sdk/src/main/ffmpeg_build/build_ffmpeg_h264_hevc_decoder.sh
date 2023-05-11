@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 初始化环境变量
-source config.sh
+. config.sh
 
 # ==================================
 

@@ -51,6 +51,7 @@ pushd $FFMPEG_FOLDER
     --disable-avdevice \
     --disable-avformat \
     --disable-static \
+    --disable-vulkan \
     --enable-jni \
     --enable-decoder=adpcm_ima_qt,h264,hevc \
     --enable-encoder=adpcm_ima_qt \

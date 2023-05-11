@@ -5,6 +5,8 @@ plugins {
 android {
     ndkVersion = libs.versions.ndk.sdk.get()
 
+    namespace = "com.leovp.ffmpeg"
+
     defaultConfig {
         // https://stackoverflow.com/a/46051246
         ndk {
@@ -46,7 +48,8 @@ android {
                 "lib/arm64-v8a/libc++_shared.so",
                 "lib/arm64-v8a/libadpcm-ima-qt-encoder.so",
                 "lib/arm64-v8a/libadpcm-ima-qt-decoder.so",
-                "lib/arm64-v8a/libh264-hevc-decoder.so"]
+                "lib/arm64-v8a/libh264-hevc-decoder.so"
+            )
         }
     }
 

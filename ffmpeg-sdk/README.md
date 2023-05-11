@@ -5,9 +5,11 @@ This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you pu
 If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
 
 ### Compile Environment：
+
 - Android Studio: Flamingo | 2022.2.1
 - OS：macOS 13.2
-- NDK：21.4.7075529
+- NDK：25.1.8937393
+- Min SDK: 23 (Android 6.0)
 - FFmpeg 6.0 "Von Neumann"(6.0 was released on 2023-02-27)
 - cmake: 3.23.0
 - gcc:
@@ -18,13 +20,18 @@ If your want to import this module by other projects, you can make a wrapper mod
 - JDK: java 17.0.6 2023-01-17 LTS
 
 ### How to compile ffmpeg and generate so file for Android
+
 You can download from official website and scroll to the **Releases** section:
+
 1. Get ffmpeg source
+
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
 % wget -c https://www.ffmpeg.org/releases/ffmpeg-6.0.tar.xz
 ```
+
 Unzip it into the following folder:
+
 > -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
 
 ```shell
@@ -35,23 +42,25 @@ Unzip it into the following folder:
 2. Compile and get static library
 
 ```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/ffmpeg_build
+% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
 ```
 
 Modify the ffmpeg version in `config.sh` file:
+
 ```shell
 FFMPEG_FOLDER=ffmpeg-<ffmepg version>
 ```
 
 Run any one of the following scripts as you want:
+
 ```shell
 % cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
 ```
 
 ```shell
-% ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
 % ./build_ffmpeg_adpcm_ima_qt_codec.sh
 % ./build_ffmpeg_h264_hevc_decoder.sh
+% ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
 ```
 
 3. Generate `so` files.

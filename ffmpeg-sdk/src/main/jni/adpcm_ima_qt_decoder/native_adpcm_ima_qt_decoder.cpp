@@ -6,7 +6,7 @@
 
 AdpcmImaQtDecoder *pDecoder = nullptr;
 
-JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
+JNIEXPORT jint JNICALL init(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj, jint sampleRate, jint channels) {
 //    LOGE("init decoder=%p", pDecoder);
     if (nullptr == pDecoder) {
         pDecoder = new AdpcmImaQtDecoder(sampleRate, channels);
@@ -15,19 +15,19 @@ JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint chan
     return -1;
 }
 
-JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL chunkSize(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
     return 34 * pDecoder->getChannels();
 }
 
-JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
     delete pDecoder;
     pDecoder = nullptr;
 }
 
-JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
+JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject obj, jbyteArray adpcmByteArray) {
     int adpcmLen = env->GetArrayLength(adpcmByteArray);
-    if (adpcmLen != pDecoder->getCodecContext()->channels * 34) {
-        LOGE("Decoder: ADPCM bytes must be %d", pDecoder->getCodecContext()->channels * 34);
+    if (adpcmLen != pDecoder->getCodecContext()->ch_layout.nb_channels * 34) {
+        LOGE("Decoder: ADPCM bytes must be %d", pDecoder->getCodecContext()->ch_layout.nb_channels * 34);
         return nullptr;
     }
     auto *adpcm_unit8_t_array = new uint8_t[adpcmLen];
@@ -45,7 +45,7 @@ JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmBy
     return pcm_byte_array;
 }
 
-JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz) {
+JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
     return env->NewStringUTF("0.1.0");
 }
 
@@ -59,7 +59,7 @@ static JNINativeMethod methods[] = {
         {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
 };
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {
     JNIEnv *env;
 
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {

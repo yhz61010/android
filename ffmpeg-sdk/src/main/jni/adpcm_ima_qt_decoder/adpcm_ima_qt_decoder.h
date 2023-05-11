@@ -30,7 +30,7 @@ public:
 
     uint8_t *decode(uint8_t *adpcmByteArray, int length, int *outPcmLength);
 
-    int getSampleRate() const;
+    __attribute__((unused)) __attribute__((unused)) int getSampleRate() const;
 
     int getChannels() const;
 

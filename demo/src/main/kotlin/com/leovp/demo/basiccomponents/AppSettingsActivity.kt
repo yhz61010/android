@@ -6,10 +6,10 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import androidx.annotation.RequiresApi
+import com.leovp.android.exts.packageUri
 import com.leovp.android.exts.toast
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityAppSettingsBinding
-import com.leovp.android.exts.packageUri
 import com.leovp.log.base.ITAG
 
 class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding>() {

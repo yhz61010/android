@@ -24,7 +24,8 @@ class AacDecoder(
     sampleRate: Int,
     channelCount: Int,
     private val csd0: ByteArray,
-    private val callback: IDecodeCallback) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
+    private val callback: IDecodeCallback
+) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
     companion object {
         private const val TAG = "AacDe"
     }

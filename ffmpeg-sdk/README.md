@@ -8,7 +8,7 @@ If your want to import this module by other projects, you can make a wrapper mod
 
 - Android Studio: Flamingo | 2022.2.1
 - OS：macOS 13.2
-- NDK：25.1.8937393
+- NDK：25.2.9519653
 - Min SDK: 23 (Android 6.0)
 - FFmpeg 6.0 "Von Neumann"(6.0 was released on 2023-02-27)
 - cmake: 3.23.0

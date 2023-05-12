@@ -57,7 +57,8 @@ class TouchHelper(private val touchListener: TouchListener) {
             touchMoveTimeInterval.put(activePointerId, currentTime)
 
             touchListener.onEvent(
-                MotionEvent.ACTION_MOVE, activePointerId,
+                MotionEvent.ACTION_MOVE,
+                activePointerId,
                 event.getX(event.actionIndex).toInt(),
                 event.getY(event.actionIndex).toInt(),
                 (activePressure * 100).toInt(),
@@ -108,7 +109,8 @@ class TouchHelper(private val touchListener: TouchListener) {
         //        }
         runCatching {
             touchListener.onEvent(
-                MotionEvent.ACTION_DOWN, activePointerId,
+                MotionEvent.ACTION_DOWN,
+                activePointerId,
                 event.getX(activePointerId).roundToInt(),
                 event.getY(activePointerId).roundToInt(),
                 (activePressure * 100).toInt(),

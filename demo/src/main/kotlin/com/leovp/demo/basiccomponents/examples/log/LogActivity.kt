@@ -2,9 +2,9 @@ package com.leovp.demo.basiccomponents.examples.log
 
 import android.os.Bundle
 import android.util.Log
+import com.leovp.android.utils.DeviceUtil
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityLogBinding
-import com.leovp.android.utils.DeviceUtil
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 

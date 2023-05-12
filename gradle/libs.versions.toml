@@ -5,9 +5,9 @@
 compile-sdk = "33"
 min-sdk = "23"
 target-sdk = "33"
-ndk-sdk = "21.4.7075529"
+ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.1"
+leo-version = "5.12.2"
 
 #===================
 #===== Compile =====
@@ -54,8 +54,8 @@ compose-compilerextension = "1.2.0"
 #=======================
 detekt = "1.22.0"
 dokka = "1.7.10"
-ktlint = "0.49.0"
-ktlint-gradle = "11.3.1"
+# ktlint = "0.49.0"
+ktlint-gradle = "11.3.2"
 benmanes = "0.46.0"
 vcu = "0.7.0"
 jacoco = "0.8.8"

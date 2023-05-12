@@ -58,17 +58,25 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
          * ```
          */
         private val POINT_DATA_FIRE_L = floatArrayOf(
-            -1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, -1.0f
+            -1.0f,
+            -1.0f,
+            -1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f
         )
 
         private val POINT_DATA_BEAUTY = floatArrayOf(
-            -0.5f, -0.5f,
-            -0.5f, 0.5f,
-            0.5f, 0.5f,
-            0.5f, -0.5f
+            -0.5f,
+            -0.5f,
+            -0.5f,
+            0.5f,
+            0.5f,
+            0.5f,
+            0.5f,
+            -0.5f
         )
 
         /**
@@ -86,10 +94,14 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
          * ```
          */
         private val TEX_VERTEX = floatArrayOf(
-            0f, 1f,
-            0f, 0f,
-            1f, 0f,
-            1f, 1f
+            0f,
+            1f,
+            0f,
+            0f,
+            1f,
+            0f,
+            1f,
+            1f
         )
     }
 
@@ -143,8 +155,12 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private fun drawFireL() {
         GLES20.glVertexAttribPointer(
-            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataFireL
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexDataFireL
         )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
@@ -161,8 +177,12 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private fun drawBeauty() {
         GLES20.glVertexAttribPointer(
-            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexDataBeauty
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexDataBeauty
         )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 

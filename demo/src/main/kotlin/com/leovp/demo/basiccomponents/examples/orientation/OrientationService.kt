@@ -7,12 +7,12 @@ import android.content.res.Configuration
 import android.os.IBinder
 import android.view.IRotationWatcher
 import android.view.OrientationEventListener
-import com.leovp.androidbase.framework.BaseService
 import com.leovp.android.exts.screenSurfaceRotation
 import com.leovp.android.exts.surfaceRotationName
-import com.leovp.reflection.wrappers.ServiceManager
+import com.leovp.androidbase.framework.BaseService
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.reflection.wrappers.ServiceManager
 
 class OrientationService : BaseService() {
 

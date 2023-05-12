@@ -28,7 +28,7 @@ class AudioTrackPlayer(
     mode: Int = MODE_STREAM,
     usage: Int = AudioAttributes.USAGE_MEDIA, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
     contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    minPlayBufferSizeRatio: Int = 1,
+    minPlayBufferSizeRatio: Int = 1
 ) {
     companion object {
         private const val TAG = "AudioTrackPlayer"
@@ -38,9 +38,11 @@ class AudioTrackPlayer(
     private val audioTrack: AudioTrack
 
     init {
-        val minBufferSize = getMinBufferSize(audioDecoderInfo.sampleRate,
+        val minBufferSize = getMinBufferSize(
+            audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelConfig,
-            audioDecoderInfo.audioFormat) * minPlayBufferSizeRatio
+            audioDecoderInfo.audioFormat
+        ) * minPlayBufferSizeRatio
         LogContext.log.w(TAG, "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
         // val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder()

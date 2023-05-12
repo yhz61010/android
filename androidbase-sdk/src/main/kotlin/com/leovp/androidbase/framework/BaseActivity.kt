@@ -108,7 +108,8 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     override fun onConfigurationChanged(newConfig: Configuration) {
         LogContext.log.w(
             tag,
-            "=====> onConfigurationChanged <=====", outputType = OUTPUT_TYPE_FRAMEWORK
+            "=====> onConfigurationChanged <=====",
+            outputType = OUTPUT_TYPE_FRAMEWORK
         )
         super.onConfigurationChanged(newConfig)
     }
@@ -180,7 +181,9 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         } catch (e: Exception) {
             LogContext.log.e(
                 tag,
-                "dispatchTouchEvent() exception.", e, outputType = OUTPUT_TYPE_FRAMEWORK
+                "dispatchTouchEvent() exception.",
+                e,
+                outputType = OUTPUT_TYPE_FRAMEWORK
             )
         }
         return ret
@@ -209,7 +212,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
 
     data class TrafficConfig(
         var allowToOutputDefaultWifiTrafficInfo: Boolean = false,
-        var frequencyInSecond: Int = 3,
+        var frequencyInSecond: Int = 3
     )
 
     // ==============================

@@ -46,19 +46,27 @@ abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
                         renderRatio < specificRatio -> {
                             val widthScale = renderRatio / specificRatio
                             floatArrayOf(
-                                -widthScale, -1.0f,
-                                widthScale, -1.0f,
-                                -widthScale, 1.0f,
-                                widthScale, 1.0f
+                                -widthScale,
+                                -1.0f,
+                                widthScale,
+                                -1.0f,
+                                -widthScale,
+                                1.0f,
+                                widthScale,
+                                1.0f
                             )
                         }
                         else -> {
                             val heightScale = specificRatio / renderRatio
                             floatArrayOf(
-                                -1.0f, -heightScale,
-                                1.0f, -heightScale,
-                                -1.0f, heightScale,
-                                1.0f, heightScale
+                                -1.0f,
+                                -heightScale,
+                                1.0f,
+                                -heightScale,
+                                -1.0f,
+                                heightScale,
+                                1.0f,
+                                heightScale
                             )
                         }
                     }

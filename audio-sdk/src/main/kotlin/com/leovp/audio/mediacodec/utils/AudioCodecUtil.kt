@@ -87,9 +87,7 @@ object AudioCodecUtil {
 
         // The length of identification header. In generally, the length is 19 (0x13).
         val idHeaderLength = buffer.long // little endian
-        if (idHeaderLength < 0 || idHeaderLength >= 0x7FFFFFFF) {
-            throw IllegalArgumentException("Invalid block size in OPUS header: $idHeaderLength")
-        }
+        require(idHeaderLength in 0..0x7ffffffe) { "Invalid block size in OPUS header: $idHeaderLength" }
         val idHeaderSize = idHeaderLength.toInt()
         if (buffer.remaining() < idHeaderSize) {
             LogContext.log.e(TAG, "Not enough data in OPUS header (invalid size: $idHeaderSize)")
@@ -103,10 +101,7 @@ object AudioCodecUtil {
             val idDly = buffer.long
             if (idDly == IAudioMediaCodec.OPUS_AOPUSDLY) {
                 val idDlyLength = buffer.long
-                if (idDlyLength < 0 || idDlyLength >= 0x7FFFFFFF) {
-                    LogContext.log.e(TAG, "Invalid block size in OPUS DLY: $idDlyLength")
-                    return OpusCsd(csd0, emptyCsd, emptyCsd)
-                }
+                require(idDlyLength in 0..0x7ffffffe) { "Invalid block size in OPUS DLY: $idDlyLength" }
                 val idDlySize = idDlyLength.toInt()
                 if (buffer.remaining() < idDlySize) {
                     LogContext.log.e(TAG, "Not enough data in OPUS DLY (invalid size: $idDlySize)")
@@ -122,10 +117,7 @@ object AudioCodecUtil {
             val idPrl = buffer.long
             if (idPrl == IAudioMediaCodec.OPUS_AOPUSPRL) {
                 val idPrlLength = buffer.long
-                if (idPrlLength < 0 || idPrlLength >= 0x7FFFFFFF) {
-                    LogContext.log.e(TAG, "Invalid block size in OPUS PRL: $idPrlLength")
-                    return OpusCsd(csd0, csd1 ?: emptyCsd, emptyCsd)
-                }
+                require(idPrlLength in 0..0x7ffffffe) { "Invalid block size in OPUS PRL: $idPrlLength" }
                 val idPrlSize = idPrlLength.toInt()
                 if (buffer.remaining() < idPrlSize) {
                     LogContext.log.e(TAG, "Not enough data in OPUS PRL (invalid size: $idPrlSize)")

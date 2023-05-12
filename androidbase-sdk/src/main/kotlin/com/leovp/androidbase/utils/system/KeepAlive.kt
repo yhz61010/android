@@ -75,7 +75,9 @@ class KeepAlive(
         val intent = Intent(app, KeepAliveReceiver::class.java)
 //            intent.putExtra("package", app.id)
         val pendingIntent = PendingIntent.getBroadcast(
-            app, 0, intent,
+            app,
+            0,
+            intent,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             } else {

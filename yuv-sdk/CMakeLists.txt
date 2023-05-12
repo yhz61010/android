@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 
+project(leo-yuv)
+
 # https://developer.android.com/studio/projects/configure-cmake?hl=zh-cn
 
 # 官方标准配置

@@ -3,8 +3,8 @@ package com.leovp.demo.basiccomponents.examples.opengl.renderers
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.Matrix
-import com.leovp.demo.R
 import com.leovp.android.exts.readAssetsFileAsString
+import com.leovp.demo.R
 import com.leovp.opengl.BaseRenderer
 import com.leovp.opengl.util.GLConstants.THREE_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl.util.createFloatBuffer
@@ -83,9 +83,14 @@ class L12U1BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRend
         val ratio: Float = width.toFloat() / height
         // 设置透视投影
         Matrix.frustumM(
-            projectMatrix, 0,
-            -ratio, ratio, -1f, 1f,
-            3f, 20f
+            projectMatrix,
+            0,
+            -ratio,
+            ratio,
+            -1f,
+            1f,
+            3f,
+            20f
         )
         // 设置相机位置
         Matrix.setLookAtM(
@@ -115,8 +120,12 @@ class L12U1BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRend
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(
-            aPositionLocation, THREE_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBuffer
+            aPositionLocation,
+            THREE_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexBuffer
         )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 

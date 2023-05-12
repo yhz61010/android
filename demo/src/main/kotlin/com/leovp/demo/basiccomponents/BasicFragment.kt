@@ -133,7 +133,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
-            Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
+            Pair("Bitmap Native Util", BitmapNativeActivity::class.java)
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)

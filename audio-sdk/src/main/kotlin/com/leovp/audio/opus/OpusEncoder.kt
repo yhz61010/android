@@ -146,7 +146,8 @@ class OpusEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
-    private val callback: IEncodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
+    private val callback: IEncodeCallback
+) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "OpusEn"
     }

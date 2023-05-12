@@ -26,7 +26,8 @@ data class AudioEncoderInfo(
     val sampleRate: Int,
     val bitrate: Int,
     val channelConfig: Int,
-    val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT) {
+    val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT
+) {
     val channelCount: Int = when (channelConfig) {
         AudioFormat.CHANNEL_IN_MONO -> 1
         AudioFormat.CHANNEL_IN_STEREO -> 2

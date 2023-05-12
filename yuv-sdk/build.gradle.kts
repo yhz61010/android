@@ -6,6 +6,8 @@ plugins {
 }
 
 android {
+    ndkVersion = libs.versions.ndk.sdk.get()
+
     namespace = "com.leovp.yuv"
 
     defaultConfig {

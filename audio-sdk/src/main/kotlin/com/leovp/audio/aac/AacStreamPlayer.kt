@@ -47,19 +47,24 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
 
     private fun initAudioDecoder(csd0: ByteArray) {
         LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
-        audioDecoder = AacDecoder(audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount, csd0, object : IDecodeCallback {
-            override fun onDecoded(pcmData: ByteArray) {
-                LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
-                if (pcmData.isNotEmpty()) {
-                    if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) return
-                    if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
-                        LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
-                        // Play decoded audio data in PCM
-                        audioTrackPlayer.write(pcmData)
+        audioDecoder = AacDecoder(
+            audioDecoderInfo.sampleRate,
+            audioDecoderInfo.channelCount,
+            csd0,
+            object : IDecodeCallback {
+                override fun onDecoded(pcmData: ByteArray) {
+                    LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
+                    if (pcmData.isNotEmpty()) {
+                        if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) return
+                        if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
+                            LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
+                            // Play decoded audio data in PCM
+                            audioTrackPlayer.write(pcmData)
+                        }
                     }
                 }
             }
-        }).apply { start() }
+        ).apply { start() }
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {

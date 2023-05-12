@@ -13,10 +13,12 @@ import kotlinx.coroutines.cancel
  * Author: Michael Leo
  * Date: 2023/5/4 10:18
  */
-abstract class BaseMediaCodec(private val codecName: String,
+abstract class BaseMediaCodec(
+    private val codecName: String,
     protected open val sampleRate: Int,
     protected open val channelCount: Int,
-    private val isEncoding: Boolean = false) : IAudioMediaCodec {
+    private val isEncoding: Boolean = false
+) : IAudioMediaCodec {
     companion object {
         private const val TAG = "BaseMediaCodec"
     }
@@ -85,8 +87,10 @@ abstract class BaseMediaCodec(private val codecName: String,
      *
      * @return The calculated presentation time in microseconds.
      */
-    private fun computePresentationTimeUs(frameIndex: Long,
-        sampleRate: Int): Long { // LogContext.log.d(TAG, "computePresentationTimeUs=${frameIndex * 1_000_000L / sampleRate}")
+    private fun computePresentationTimeUs(
+        frameIndex: Long,
+        sampleRate: Int
+    ): Long { // LogContext.log.d(TAG, "computePresentationTimeUs=${frameIndex * 1_000_000L / sampleRate}")
         return frameIndex * 1_000_000L / sampleRate
     }
 

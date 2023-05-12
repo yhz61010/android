@@ -81,7 +81,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             binding.tvSurfaceRotation.text =
                 "${screenSurfaceRotation.surfaceRotationLiteralName}($screenSurfaceRotation) " +
-                    screenSurfaceRotation.surfaceRotationName
+                screenSurfaceRotation.surfaceRotationName
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
             val screenPortraitOrLandscape = getScreenOrientation()

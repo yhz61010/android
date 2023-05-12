@@ -150,7 +150,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
             },
-            builder.width, builder.height
+            builder.width,
+            builder.height
         )
 
         with(format) {

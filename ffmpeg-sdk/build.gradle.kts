@@ -20,9 +20,11 @@ android {
             path = File("src/main/jni/Android.mk")
         }
     }
+
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }
+
     packaging {
         jniLibs {
             pickFirsts += setOf(
@@ -53,11 +55,11 @@ android {
         }
     }
 
-    publishing {
-        // Publishes "release" build variant with "release" component created by
-        // Android Gradle plugin
-        singleVariant("release")
-    }
+    // publishing {
+    //     // Publishes "release" build variant with "release" component created by
+    //     // Android Gradle plugin
+    //     singleVariant("release")
+    // }
 }
 
 dependencies {

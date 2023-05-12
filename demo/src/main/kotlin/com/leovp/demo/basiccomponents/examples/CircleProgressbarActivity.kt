@@ -2,6 +2,7 @@ package com.leovp.demo.basiccomponents.examples
 
 import android.os.Bundle
 import android.view.View
+import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circleprogressbar.CircleProgressbar
@@ -9,7 +10,6 @@ import com.leovp.circleprogressbar.base.DefaultOnClickListener
 import com.leovp.circleprogressbar.base.State
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCircleProgressbarBinding
-import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import kotlin.concurrent.thread

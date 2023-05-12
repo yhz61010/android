@@ -95,7 +95,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         LogContext.log.w(
-            tag, "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
+            tag,
+            "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
             outputType = ILog.OUTPUT_TYPE_SYSTEM
         )
         super.onSurfaceChanged(gl, width, height)
@@ -154,7 +155,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      */
     fun setVideoDimension(width: Int, height: Int, renderWidth: Int, renderHeight: Int) {
         LogContext.log.i(
-            tag, "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight",
+            tag,
+            "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight",
             outputType = ILog.OUTPUT_TYPE_SYSTEM
         )
         if (width > 0 && height > 0) {

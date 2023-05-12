@@ -12,11 +12,11 @@ import android.widget.ToggleButton
 import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.androidbase.utils.media.DeviceSound
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.databinding.FragmentCameraViewBinding
 import com.leovp.camera2live.utils.OrientationLiveData
-import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.log.LogContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

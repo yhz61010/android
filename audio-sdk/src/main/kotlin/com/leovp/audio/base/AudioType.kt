@@ -8,5 +8,5 @@ enum class AudioType {
     PCM,
     COMPRESSED_PCM,
     AAC,
-    OPUS,
+    OPUS
 }

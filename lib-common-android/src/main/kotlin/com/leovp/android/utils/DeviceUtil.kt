@@ -224,7 +224,8 @@ class DeviceUtil private constructor(private val ctx: Context) {
             val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
                 "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
             val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
-            val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
+            val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches " +
+                "RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
                 "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
                 "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
                 "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +

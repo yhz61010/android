@@ -141,7 +141,8 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
                 EMAIL_SMTP_PROTOCOL,
                 EMAIL_SMTP_HOST,
                 EMAIL_SMTP_PORT,
-                FROM, FROM_PWD,
+                FROM,
+                FROM_PWD,
                 EMAIL_SMTP_SSL
             )
 

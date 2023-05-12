@@ -108,15 +108,23 @@ class L6U1TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseRe
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(
-            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexData
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexData
         )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 加载纹理坐标
         GLES20.glVertexAttribPointer(
-            aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, texVertexBuffer
+            aTexCoordLocation,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            texVertexBuffer
         )
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 

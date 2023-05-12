@@ -53,8 +53,11 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         LogContext.log.i(TAG, "CSD1[${csd1.size}]=${csd1.toHexString()}")
         LogContext.log.i(TAG, "CSD2[${csd2.size}]=${csd2.toHexString()}")
         audioDecoder = OpusDecoder(
-            audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount,
-            csd0, csd1, csd2,
+            audioDecoderInfo.sampleRate,
+            audioDecoderInfo.channelCount,
+            csd0,
+            csd1,
+            csd2,
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
@@ -67,7 +70,8 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
                         }
                     }
                 }
-            }).apply { start() }
+            }
+        ).apply { start() }
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {

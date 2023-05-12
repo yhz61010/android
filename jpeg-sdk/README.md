@@ -24,11 +24,12 @@ jpeg-sdk
 You can run the following handy shell to do the things mentioned above:
 
 ```shell
-$ cd /Users/cl10194-m/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/jpeg-sdk/
+$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/jpeg-sdk/
 $ sh copy_necessary_files_from_jpeg_burbo.sh
 ```
 
 ## How to compile `jpeg-sdk`
+
 You have three ways to compile `jpeg-sdk` module:
 
 - Compile with `gradlew` command.
@@ -41,4 +42,4 @@ $ ./gradlew :jpeg-sdk:assemble
 - Compile from `Gradle` sidebar. Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> jpeg-sdk
   -> build -> assemble **.
 - Compile from `Build` menu. Select `jpeg-sdk` module then click from menu **Build -> Make Module '
-  LeoAndroidBaseUtil.jpeg-sdk'**. You can select the compile option from `Build Variants` menu. 
+  LeoAndroidBaseUtil.jpeg-sdk'**. You can select the compile option from `Build Variants` menu.

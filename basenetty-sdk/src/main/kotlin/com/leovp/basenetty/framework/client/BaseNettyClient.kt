@@ -110,7 +110,10 @@ abstract class BaseNettyClient protected constructor(
         } else {
             webSocketUri.port
         },
-        connectionListener, retryStrategy, headers, timeout
+        connectionListener,
+        retryStrategy,
+        headers,
+        timeout
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
@@ -135,7 +138,10 @@ abstract class BaseNettyClient protected constructor(
         } else {
             webSocketUri.port
         },
-        connectionListener, retryStrategy, headers, timeout
+        connectionListener,
+        retryStrategy,
+        headers,
+        timeout
     ) {
         this.webSocketUri = webSocketUri
         this.trustAllServers = trustAllServers

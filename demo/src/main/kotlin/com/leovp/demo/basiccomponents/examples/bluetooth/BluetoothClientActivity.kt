@@ -87,7 +87,8 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
     private fun initData() {
         device = intent.getParcelableExtraOrNull("device")
         bluetoothGatt = device!!.connectGatt(
-            this, false,
+            this,
+            false,
             object : BluetoothGattCallback() {
                 @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
                 override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {

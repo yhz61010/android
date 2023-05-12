@@ -90,17 +90,25 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
          * ```
          */
         private val VERTEX_DATA_FIRE_L = floatArrayOf(
-            -1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, -1.0f
+            -1.0f,
+            -1.0f,
+            -1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f
         )
 
         private val VERTEX_DATA_BEAUTY = floatArrayOf(
-            -0.2f, -0.2f,
-            -0.2f, 0.2f,
-            0.2f, 0.2f,
-            0.2f, -0.2f
+            -0.2f,
+            -0.2f,
+            -0.2f,
+            0.2f,
+            0.2f,
+            0.2f,
+            0.2f,
+            -0.2f
         )
 
         /**
@@ -118,10 +126,14 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
          * ```
          */
         private val TEX_COORD_FIRE_L = floatArrayOf(
-            0f, 1f,
-            0f, 0f,
-            1f, 0f,
-            1f, 1f
+            0f,
+            1f,
+            0f,
+            0f,
+            1f,
+            0f,
+            1f,
+            1f
         )
     }
 
@@ -144,10 +156,14 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
         return floatArrayOf(
-            -(vertex[2] + 1.0f) / 2.0f, 2 - (vertex[3] + 1.0f) / 2.0f,
-            -(vertex[0] + 1.0f) / 2.0f, -(vertex[1] + 1.0f) / 2.0f,
-            2 - (vertex[6] + 1.0f) / 2.0f, -(vertex[7] + 1.0f) / 2.0f,
-            2 - (vertex[4] + 1.0f) / 2.0f, 2 - (vertex[5] + 1.0f) / 2.0f
+            -(vertex[2] + 1.0f) / 2.0f,
+            2 - (vertex[3] + 1.0f) / 2.0f,
+            -(vertex[0] + 1.0f) / 2.0f,
+            -(vertex[1] + 1.0f) / 2.0f,
+            2 - (vertex[6] + 1.0f) / 2.0f,
+            -(vertex[7] + 1.0f) / 2.0f,
+            2 - (vertex[4] + 1.0f) / 2.0f,
+            2 - (vertex[5] + 1.0f) / 2.0f
         )
     }
 
@@ -177,15 +193,23 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(
-            texCoordLocationFireL, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferFireL
+            texCoordLocationFireL,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            textureBufferFireL
         )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
         GLES20.glVertexAttribPointer(
-            texCoordLocationBeauty, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferBeauty
+            texCoordLocationBeauty,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            textureBufferBeauty
         )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
@@ -206,8 +230,12 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
         GLES20.glEnableVertexAttribArray(aPositionLocation)
         GLES20.glVertexAttribPointer(
-            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBufferFireL
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexBufferFireL
         )
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI

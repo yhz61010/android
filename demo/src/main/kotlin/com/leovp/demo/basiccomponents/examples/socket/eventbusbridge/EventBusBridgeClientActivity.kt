@@ -93,7 +93,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy,
-        headers: Map<String, String>? = null,
+        headers: Map<String, String>? = null
     ) : BaseNettyClient(webSocketUri, connectionListener, false, retryStrategy, headers) {
 
         override fun getTagName() = "ebr-s"

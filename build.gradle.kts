@@ -4,7 +4,6 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 val customGroup = "com.leovp"
 // You can use it in subproject like this:
@@ -44,9 +43,9 @@ allprojects {
 
     // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
     apply(plugin = rootProject.libs.plugins.ktlint.gradle.get().pluginId)
-    configure<KtlintExtension> {
-        version.set(rootProject.libs.versions.ktlint.asProvider().get())
-    }
+    // configure<KtlintExtension> {
+    //     version.set(rootProject.libs.versions.ktlint.asProvider().get())
+    // }
 
     apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
 
@@ -195,7 +194,7 @@ fun Project.configureBase(): BaseExtension {
             "RtlEnabled"
         )
         packagingOptions.resources.pickFirsts += setOf(
-            "META-INF/atomicfu.kotlin_module",
+            "META-INF/atomicfu.kotlin_module"
         )
         packagingOptions.resources.excludes += setOf(
             "META-INF/licenses/**",
@@ -204,7 +203,7 @@ fun Project.configureBase(): BaseExtension {
             "META-INF/DEPENDENCIES*",
             "META-INF/INDEX.LIST",
             "META-INF/io.netty.versions.properties",
-            "META-INF/{AL2.0,LGPL2.1}",
+            "META-INF/{AL2.0,LGPL2.1}"
             // "**/*.proto",
             // "**/*.bin",
             // "**/*.java",

@@ -46,14 +46,14 @@ import com.leovp.android.exts.circularClose
 import com.leovp.android.exts.circularReveal
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.utils.FileDocumentUtil
-import com.leovp.camerax.enums.CameraRatio
-import com.leovp.camerax.enums.RecordUiState
-import com.leovp.camerax.fragments.base.BaseCameraXFragment
-import com.leovp.camerax.listeners.CameraXTouchListener
 import com.leovp.camerax.R
 import com.leovp.camerax.databinding.FragmentVideoBinding
 import com.leovp.camerax.databinding.IncPreviewGridBinding
 import com.leovp.camerax.databinding.IncRatioOptionsBinding
+import com.leovp.camerax.enums.CameraRatio
+import com.leovp.camerax.enums.RecordUiState
+import com.leovp.camerax.fragments.base.BaseCameraXFragment
+import com.leovp.camerax.listeners.CameraXTouchListener
 import com.leovp.camerax.utils.getAspectRatio
 import com.leovp.camerax.utils.getAspectRatioString
 import com.leovp.camerax.utils.getNameString
@@ -355,10 +355,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 val provider = ProcessCameraProvider.getInstance(requireContext()).await()
                 provider.unbindAll()
                 for (
-                    camSelector in arrayOf(
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        CameraSelector.DEFAULT_FRONT_CAMERA
-                    )
+                camSelector in arrayOf(
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                )
                 ) {
                     runCatching {
                         // just get the camera.cameraInfo to query capabilities
@@ -490,7 +490,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             flag = hasGrid,
             rotationAngle = 180f,
             firstIcon = R.drawable.ic_grid_off,
-            secondIcon = R.drawable.ic_grid_on,
+            secondIcon = R.drawable.ic_grid_on
         ) { flag ->
             prefs.putBoolean(KEY_GRID, flag)
             incPreviewGridBinding.groupGridLines.visibility = if (flag) View.VISIBLE else View.GONE
@@ -622,7 +622,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         arrayOf(
             binding.btnRecordVideo,
             binding.btnSwitchCamera,
-            binding.btnGallery,
+            binding.btnGallery
         ).forEach {
             it.isEnabled = enable
         }

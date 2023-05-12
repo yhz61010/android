@@ -113,7 +113,8 @@ class MicRecorder(
                     encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(
                         pcmData.toByteArrayLE(),
                         isConfig = false,
-                        isKeyFrame = false)
+                        isKeyFrame = false
+                    )
                 }
             }.onFailure {
                 it.printStackTrace()

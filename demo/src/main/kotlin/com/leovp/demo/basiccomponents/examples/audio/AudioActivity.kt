@@ -113,7 +113,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
                     audioDecoderInfo,
                     type = AudioType.PCM,
                     usage = AUDIO_ATTR_USAGE,
-                    contentType = AUDIO_ATTR_CONTENT_TYPE)
+                    contentType = AUDIO_ATTR_CONTENT_TYPE
+                )
                 playPcmThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->

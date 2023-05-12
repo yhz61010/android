@@ -5,13 +5,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
 import com.leovp.android.exts.toast
+import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityNetworkMonitorBinding
-import com.leovp.android.utils.NetworkUtil
-import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.json.toJsonString
+import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.*

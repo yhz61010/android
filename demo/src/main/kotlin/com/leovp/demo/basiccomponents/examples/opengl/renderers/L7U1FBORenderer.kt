@@ -182,8 +182,11 @@ class L7U1FBORenderer(@Suppress("unused") private val ctx: Context) : L7BaseRend
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0])
         // 2. 将纹理对象挂载到 FrameBuffer 上，存储颜色信息
         GLES20.glFramebufferTexture2D(
-            GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
-            GLES20.GL_TEXTURE_2D, texture[0], 0
+            GLES20.GL_FRAMEBUFFER,
+            GLES20.GL_COLOR_ATTACHMENT0,
+            GLES20.GL_TEXTURE_2D,
+            texture[0],
+            0
         )
     }
 

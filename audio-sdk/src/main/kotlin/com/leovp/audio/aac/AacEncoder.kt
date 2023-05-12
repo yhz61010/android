@@ -20,7 +20,8 @@ class AacEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
-    private val callback: IEncodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, true) {
+    private val callback: IEncodeCallback
+) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, true) {
     companion object {
         private const val TAG = "AacEn"
     }

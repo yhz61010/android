@@ -196,7 +196,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
             },
-            screenInfo.width, screenInfo.height
+            screenInfo.width,
+            screenInfo.height
         )
 
         //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
@@ -612,7 +613,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 "duration=${touchUpStartTime - touchDownStartTime}ms"
         )
         webSocketClientHandler?.sendDragData(
-            touchDownRawX, touchDownRawY, touchUpRawX, touchUpRawY,
+            touchDownRawX,
+            touchDownRawY,
+            touchUpRawX,
+            touchUpRawY,
             touchUpStartTime - touchDownStartTime
         )
         return super.dispatchTouchEvent(event)

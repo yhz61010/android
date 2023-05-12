@@ -41,7 +41,6 @@ import java.net.Proxy
 import kotlin.concurrent.thread
 import kotlin.math.pow
 
-
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {
         allowToOutputDefaultWifiTrafficInfo = true

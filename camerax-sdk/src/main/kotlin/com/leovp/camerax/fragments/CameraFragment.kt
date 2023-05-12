@@ -559,7 +559,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         captureForOutputFile(
                             incPreviewGridBinding.viewFinder,
                             imageCapture,
-                            outputPictureDirectory, startCaptureTimestamp
+                            outputPictureDirectory,
+                            startCaptureTimestamp
                         ) { savedImage, exc ->
                             lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
                             if (exc != null) {
@@ -610,7 +611,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     } else {
                         captureForBytes(
                             incPreviewGridBinding.viewFinder,
-                            imageCapture, startCaptureTimestamp
+                            imageCapture,
+                            startCaptureTimestamp
                         ) { savedImage, exc ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
                             lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
@@ -659,7 +661,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             cameraUiContainerBottomBinding.cameraCaptureButton,
             cameraUiContainerBottomBinding.cameraSwitchButton,
-            cameraUiContainerBottomBinding.photoViewButton,
+            cameraUiContainerBottomBinding.photoViewButton
         ).forEach {
             it.isEnabled = enable
         }
@@ -713,7 +715,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             flag = hasGrid,
             rotationAngle = 180f,
             firstIcon = R.drawable.ic_grid_off,
-            secondIcon = R.drawable.ic_grid_on,
+            secondIcon = R.drawable.ic_grid_on
         ) { flag ->
             hasGrid = flag
             prefs.putBoolean(KEY_GRID, flag)

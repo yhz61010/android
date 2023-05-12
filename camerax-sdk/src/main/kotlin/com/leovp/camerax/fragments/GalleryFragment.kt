@@ -15,11 +15,11 @@ import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.leovp.camerax.R
-import com.leovp.camerax.databinding.FragmentGalleryBinding
 import com.leovp.android.exts.padWithDisplayCutout
 import com.leovp.android.exts.share
 import com.leovp.android.exts.showImmersive
+import com.leovp.camerax.R
+import com.leovp.camerax.databinding.FragmentGalleryBinding
 import com.leovp.log.LogContext
 import java.io.File
 import java.util.*
@@ -164,7 +164,9 @@ class GalleryFragment internal constructor() : Fragment() {
                             // Send relevant broadcast to notify other apps of deletion
                             MediaScannerConnection.scanFile(
                                 view.context,
-                                arrayOf(mediaFile.absolutePath), null, null
+                                arrayOf(mediaFile.absolutePath),
+                                null,
+                                null
                             )
 
                             // Notify our view pager

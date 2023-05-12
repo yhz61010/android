@@ -35,7 +35,7 @@ class OpusFilePlayer(
     // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
     usage: Int = AudioAttributes.USAGE_MEDIA,
     // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC
 ) {
     companion object {
         private const val TAG = "OpusFilePlayer"
@@ -64,8 +64,11 @@ class OpusFilePlayer(
         LogContext.log.w(TAG, "csd1=${opusCsd.csd1.toHexString()}")
         LogContext.log.w(TAG, "csd2=${opusCsd.csd2.toHexString()}")
         decoder = OpusDecoder(
-            audioDecoderInfo.sampleRate, audioDecoderInfo.channelCount,
-            opusCsd.csd0, opusCsd.csd1, opusCsd.csd2,
+            audioDecoderInfo.sampleRate,
+            audioDecoderInfo.channelCount,
+            opusCsd.csd0,
+            opusCsd.csd1,
+            opusCsd.csd2,
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     queue.put(pcmData)
@@ -88,13 +91,11 @@ class OpusFilePlayer(
             var delayChanged = false
             while (true) {
                 ensureActive()
-                var startCodeEndPos: Long
+                var startCodeEndPos: Long = 0
+                var foundError = false
                 try {
                     startCodeEndPos = findStartCode(startCodeBeginPos + startCodeSize)
-                    if (startCodeEndPos < 0) {
-                        LogContext.log.w(TAG, "Can't find start code.")
-                        break
-                    }
+                    require(startCodeEndPos > -1) { "Can't find start code." }
                     // LogContext.log.w(tag, "startCodeBeginPos=$startCodeBeginPos  startCodeEndPos=$startCodeEndPos")
                     val audioFrameData = ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
                     rf.seek(startCodeBeginPos + startCodeSize)
@@ -119,17 +120,25 @@ class OpusFilePlayer(
                             delayChanged = false
                         }
                     }
-                    LogContext.log.e(TAG,
-                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged maxFrameSize=$maxFrameSize frame=$frame")
+                    LogContext.log.e(
+                        TAG,
+                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged maxFrameSize=$maxFrameSize frame=$frame"
+                    )
                     delay(delayMs)
                 } catch (e: EOFException) {
                     LogContext.log.e(TAG, "EOFException", e)
-                    break
+                    foundError = true
                 } catch (ioe: IOException) {
                     LogContext.log.e(TAG, "IOException", ioe)
-                    break
+                    foundError = true
                 } catch (nase: NegativeArraySizeException) {
                     LogContext.log.e(TAG, "NegativeArraySizeException", nase)
+                    foundError = true
+                } catch (iae: IllegalArgumentException) {
+                    LogContext.log.e(TAG, "IllegalArgumentException", iae)
+                    foundError = true
+                }
+                if (foundError) {
                     break
                 }
                 startCodeBeginPos = startCodeEndPos
@@ -201,7 +210,7 @@ class OpusFilePlayer(
                 rf.readFully(startCodeBytes)
                 // LogContext.log.i(tag, "startCodeBytes=${startCodeBytes.decodeToString()}")
             } catch (e: EOFException) {
-                LogContext.log.w(TAG, "Read file. EOF")
+                LogContext.log.w(TAG, "Read file. EOF", e)
                 break
             } catch (ioe: IOException) {
                 LogContext.log.e(TAG, "IOException", ioe)

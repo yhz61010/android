@@ -6,14 +6,14 @@ import android.view.KeyEvent
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
+import com.leovp.android.exts.hideNavigationBar
+import com.leovp.android.exts.requestFullScreenAfterVisible
+import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.camerax.databinding.ActivityCameraxMainBinding
 import com.leovp.camerax.enums.CapturedImageStrategy
 import com.leovp.camerax.fragments.CameraFragment
 import com.leovp.camerax.listeners.CaptureImageListener
 import com.leovp.camerax.listeners.impl.SimpleCaptureImageListener
-import com.leovp.android.exts.hideNavigationBar
-import com.leovp.android.exts.requestFullScreenAfterVisible
-import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 
 /**
  * Add following `<activity>` in your `<AndroidManifest.xml>`.

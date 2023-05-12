@@ -224,7 +224,8 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
                 bluetoothGattServer?.notifyCharacteristicChanged(
                     connectedDevice!!,
                     characteristicRead!!,
-                    false, msg.toByteArray()
+                    false,
+                    msg.toByteArray()
                 )
             } else {
                 @Suppress("DEPRECATION")

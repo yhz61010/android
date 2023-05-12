@@ -82,7 +82,10 @@ object FileDocumentUtil {
                 // DocumentProvider
                 val selectionArgs: Array<String> = arrayOf(split[1])
                 return getDataColumn(
-                    context, contentUri, selection, selectionArgs
+                    context,
+                    contentUri,
+                    selection,
+                    selectionArgs
                 )
             }
             isGoogleDriveUri(uri) -> {

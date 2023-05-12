@@ -24,7 +24,8 @@ class OpusDecoder(
     val csd0: ByteArray,
     val csd1: ByteArray,
     val csd2: ByteArray,
-    private val callback: IDecodeCallback) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
+    private val callback: IDecodeCallback
+) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
     companion object {
         private const val TAG = "OpusDe"
     }

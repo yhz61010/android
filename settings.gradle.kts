@@ -78,7 +78,7 @@ include(
     "lib-network",
     "lib-reflection",
     "lib-common-android",
-    "lib-common-kotlin",
+    "lib-common-kotlin"
 
     // "ffmpeg-sdk"
 )

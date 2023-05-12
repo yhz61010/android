@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference
 object Falcon {
     //region Constants
     private const val TAG = "Falcon"
+
     //endregion
     //region Public API
     /**

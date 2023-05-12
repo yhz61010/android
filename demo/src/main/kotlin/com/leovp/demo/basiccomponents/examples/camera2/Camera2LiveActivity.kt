@@ -7,15 +7,15 @@ import androidx.activity.addCallback
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.leovp.android.exts.hideNavigationBar
+import com.leovp.android.exts.requestFullScreenAfterVisible
+import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.camera2live.view.BackPressedListener
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCamera2LiveBinding
-import com.leovp.android.exts.hideNavigationBar
-import com.leovp.android.exts.requestFullScreenAfterVisible
-import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 

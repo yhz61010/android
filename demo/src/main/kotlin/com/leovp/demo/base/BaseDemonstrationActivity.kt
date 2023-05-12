@@ -2,8 +2,8 @@ package com.leovp.demo.base
 
 import android.os.Bundle
 import androidx.viewbinding.ViewBinding
-import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.android.utils.LangUtil
+import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.log.LogContext
 
 /**

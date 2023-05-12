@@ -53,10 +53,14 @@ class L4U1BasicGradientRenderer(@Suppress("unused") private val ctx: Context) : 
          * 该数组表示 4 个顶点数据，也就是 4 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            -0.5f, 0.5f,
-            0.5f, 0.5f
+            -0.5f,
+            -0.5f,
+            0.5f,
+            -0.5f,
+            -0.5f,
+            0.5f,
+            0.5f,
+            0.5f
         )
 
         /** 一个顶点有 3 个向量数据：r、g、b */

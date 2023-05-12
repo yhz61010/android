@@ -786,7 +786,8 @@ class Camera2ComponentHelper(
                     //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
                     //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
                 }.build(),
-                null, cameraHandler
+                null,
+                cameraHandler
             )
         }
     }

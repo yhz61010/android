@@ -136,7 +136,7 @@ android {
                 "META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json",
                 "META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json",
                 "META-INF/INDEX.LIST",
-                "META-INF/io.netty.versions.properties",
+                "META-INF/io.netty.versions.properties"
             )
         }
     }

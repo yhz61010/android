@@ -47,10 +47,14 @@ class L2U1BasicShapeRenderer(@Suppress("unused") private val ctx: Context) : Bas
          * 该数组表示 4 个顶点数据，也就是 4 个点的坐标。
          */
         private val POINT_DATA = floatArrayOf(
-            0f, .5f,
-            -.5f, 0f,
-            0f, -.5f,
-            .5f, 0f
+            0f,
+            .5f,
+            -.5f,
+            0f,
+            0f,
+            -.5f,
+            .5f,
+            0f
         )
     }
 

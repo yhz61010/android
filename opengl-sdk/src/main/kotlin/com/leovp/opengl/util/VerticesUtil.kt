@@ -22,10 +22,14 @@ object VerticesUtil {
      * ```
      */
     val VERTICES_COORD = floatArrayOf(
-        -1.0f, -1.0f, // lb
-        1.0f, -1.0f, // rb
-        -1.0f, 1.0f, // lt
-        1.0f, 1.0f // rt
+        -1.0f,
+        -1.0f, // lb
+        1.0f,
+        -1.0f, // rb
+        -1.0f,
+        1.0f, // lt
+        1.0f,
+        1.0f // rt
     )
 
     /**
@@ -50,10 +54,14 @@ object VerticesUtil {
      * ```
      */
     val TEX_COORD = floatArrayOf(
-        0.0f, 1.0f, // lb
-        1.0f, 1.0f, // rb
-        0.0f, 0.0f, // lt
-        1.0f, 0.0f // rt
+        0.0f,
+        1.0f, // lb
+        1.0f,
+        1.0f, // rb
+        0.0f,
+        0.0f, // lt
+        1.0f,
+        0.0f // rt
     )
 
     // ===============================
@@ -77,10 +85,14 @@ object VerticesUtil {
      * A(-1,-1)       D(1,-1)
      */
     val VERTICES_COORD_CW = floatArrayOf(
-        -1.0f, -1.0f,
-        -1.0f, 1.0f,
-        1.0f, 1.0f,
-        1.0f, -1.0f
+        -1.0f,
+        -1.0f,
+        -1.0f,
+        1.0f,
+        1.0f,
+        1.0f,
+        1.0f,
+        -1.0f
     )
 
     /**
@@ -106,10 +118,14 @@ object VerticesUtil {
      * ```
      */
     val TEX_COORD_CW = floatArrayOf(
-        0f, 1f,
-        0f, 0f,
-        1f, 0f,
-        1f, 1f
+        0f,
+        1f,
+        0f,
+        0f,
+        1f,
+        0f,
+        1f,
+        1f
     )
 
     enum class Rotation {
@@ -135,22 +151,34 @@ object VerticesUtil {
     fun rotate(verticesArray: FloatArray, rotation: Rotation): FloatArray {
         return when (rotation) {
             Rotation.ROTATION_90 -> floatArrayOf(
-                verticesArray[2], verticesArray[3],
-                verticesArray[6], verticesArray[7],
-                verticesArray[0], verticesArray[1],
-                verticesArray[4], verticesArray[5],
+                verticesArray[2],
+                verticesArray[3],
+                verticesArray[6],
+                verticesArray[7],
+                verticesArray[0],
+                verticesArray[1],
+                verticesArray[4],
+                verticesArray[5]
             )
             Rotation.ROTATION_180 -> floatArrayOf(
-                verticesArray[6], verticesArray[7],
-                verticesArray[4], verticesArray[5],
-                verticesArray[2], verticesArray[3],
-                verticesArray[0], verticesArray[1]
+                verticesArray[6],
+                verticesArray[7],
+                verticesArray[4],
+                verticesArray[5],
+                verticesArray[2],
+                verticesArray[3],
+                verticesArray[0],
+                verticesArray[1]
             )
             Rotation.ROTATION_270 -> floatArrayOf(
-                verticesArray[4], verticesArray[5],
-                verticesArray[0], verticesArray[1],
-                verticesArray[6], verticesArray[7],
-                verticesArray[2], verticesArray[3]
+                verticesArray[4],
+                verticesArray[5],
+                verticesArray[0],
+                verticesArray[1],
+                verticesArray[6],
+                verticesArray[7],
+                verticesArray[2],
+                verticesArray[3]
             )
             else -> verticesArray
         }
@@ -158,27 +186,39 @@ object VerticesUtil {
 
     fun flip(verticesArray: FloatArray, isHorizontal: Boolean = false, isVertical: Boolean = false): FloatArray {
         var temp = floatArrayOf(
-            verticesArray[0], verticesArray[1],
-            verticesArray[2], verticesArray[3],
-            verticesArray[4], verticesArray[5],
-            verticesArray[6], verticesArray[7]
+            verticesArray[0],
+            verticesArray[1],
+            verticesArray[2],
+            verticesArray[3],
+            verticesArray[4],
+            verticesArray[5],
+            verticesArray[6],
+            verticesArray[7]
         )
         temp = if (isHorizontal) {
             floatArrayOf(
-                temp[2], temp[3],
-                temp[0], temp[1],
-                temp[6], temp[7],
-                temp[4], temp[5]
+                temp[2],
+                temp[3],
+                temp[0],
+                temp[1],
+                temp[6],
+                temp[7],
+                temp[4],
+                temp[5]
             )
         } else {
             temp
         }
         temp = if (isVertical) {
             floatArrayOf(
-                temp[6], temp[7],
-                temp[4], temp[5],
-                temp[2], temp[3],
-                temp[0], temp[1]
+                temp[6],
+                temp[7],
+                temp[4],
+                temp[5],
+                temp[2],
+                temp[3],
+                temp[0],
+                temp[1]
             )
         } else {
             temp

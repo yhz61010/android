@@ -162,13 +162,17 @@ class L7U2FBORenderer(@Suppress("unused") private val ctx: Context) : L7BaseRend
         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderBuffer[0])
         // 3. 将 RenderBuffer 设置为深度类型，并设置大小
         GLES20.glRenderbufferStorage(
-            GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16,
-            textureBean.width, textureBean.height
+            GLES20.GL_RENDERBUFFER,
+            GLES20.GL_DEPTH_COMPONENT16,
+            textureBean.width,
+            textureBean.height
         )
         // 4. 设置当前的 RenderBuffer 来存储 FrameBuffer 的深度信息
         GLES20.glFramebufferRenderbuffer(
-            GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
-            GLES20.GL_RENDERBUFFER, renderBuffer[0]
+            GLES20.GL_FRAMEBUFFER,
+            GLES20.GL_DEPTH_ATTACHMENT,
+            GLES20.GL_RENDERBUFFER,
+            renderBuffer[0]
         )
         // 5. 解绑 RenderBuffer
         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0)
@@ -199,13 +203,18 @@ class L7U2FBORenderer(@Suppress("unused") private val ctx: Context) : L7BaseRend
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0])
         // 将纹理对象挂载到 FrameBuffer 上，存储颜色信息
         GLES20.glFramebufferTexture2D(
-            GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
-            GLES20.GL_TEXTURE_2D, texture[0], 0
+            GLES20.GL_FRAMEBUFFER,
+            GLES20.GL_COLOR_ATTACHMENT0,
+            GLES20.GL_TEXTURE_2D,
+            texture[0],
+            0
         )
         // 将 RenderBuffer 挂载到 FrameBuffer 上，存储深度信息
         GLES20.glFramebufferRenderbuffer(
-            GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
-            GLES20.GL_RENDERBUFFER, renderBuffer[0]
+            GLES20.GL_FRAMEBUFFER,
+            GLES20.GL_DEPTH_ATTACHMENT,
+            GLES20.GL_RENDERBUFFER,
+            renderBuffer[0]
         )
     }
 

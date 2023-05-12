@@ -3,6 +3,8 @@ package com.leovp.demo.basiccomponents.examples
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.exts.screenRealResolution
+import com.leovp.android.utils.DeviceUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
@@ -10,8 +12,6 @@ import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDeviceInfoBinding
-import com.leovp.android.exts.screenRealResolution
-import com.leovp.android.utils.DeviceUtil
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG

@@ -67,7 +67,7 @@ class OpenGLES20Activity :
         Item("L7_2_FrameBuffer 离屏渲染 - RenderBuffer", L7U2FBORenderer::class.java),
         Item("L8_1_滤镜渲染", L8U1FilterRenderer::class.java),
         Item("L11_动态改变顶点位置 & 颜色", L11DynamicPointRenderer::class.java),
-        Item("L12_1_球体", L12U1BallRenderer::class.java),
+        Item("L12_1_球体", L12U1BallRenderer::class.java)
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

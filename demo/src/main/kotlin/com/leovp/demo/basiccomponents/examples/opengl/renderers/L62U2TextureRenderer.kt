@@ -82,10 +82,14 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * ```
          */
         private val POINT_DATA_BEAUTY = floatArrayOf(
-            -0.2f, -0.2f,
-            -0.2f, 0.2f,
-            0.2f, 0.2f,
-            0.2f, -0.2f
+            -0.2f,
+            -0.2f,
+            -0.2f,
+            0.2f,
+            0.2f,
+            0.2f,
+            0.2f,
+            -0.2f
         )
 
         /**
@@ -103,19 +107,27 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
          * ```
          */
         private val TEX_COORD = floatArrayOf(
-            0f, 1f,
-            0f, 0f,
-            1f, 0f,
-            1f, 1f
+            0f,
+            1f,
+            0f,
+            0f,
+            1f,
+            0f,
+            1f,
+            1f
         )
     }
 
     private val vertexBufferFireL: FloatBuffer = createFloatBuffer(
         floatArrayOf(
-            -1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, -1.0f
+            -1.0f,
+            -1.0f,
+            -1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f
         )
     )
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
@@ -130,10 +142,14 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
             // -0.4f, -0.4f,
             // 1.4f, -0.4f,
             // 1.4f, 1.4f
-            -(vertex[2] + 1.0f) / 2.0f, 2 - (vertex[3] + 1.0f) / 2.0f,
-            -(vertex[0] + 1.0f) / 2.0f, -(vertex[1] + 1.0f) / 2.0f,
-            2 - (vertex[6] + 1.0f) / 2.0f, -(vertex[7] + 1.0f) / 2.0f,
-            2 - (vertex[4] + 1.0f) / 2.0f, 2 - (vertex[5] + 1.0f) / 2.0f
+            -(vertex[2] + 1.0f) / 2.0f,
+            2 - (vertex[3] + 1.0f) / 2.0f,
+            -(vertex[0] + 1.0f) / 2.0f,
+            -(vertex[1] + 1.0f) / 2.0f,
+            2 - (vertex[6] + 1.0f) / 2.0f,
+            -(vertex[7] + 1.0f) / 2.0f,
+            2 - (vertex[4] + 1.0f) / 2.0f,
+            2 - (vertex[5] + 1.0f) / 2.0f
         )
     }
 
@@ -167,15 +183,23 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(
-            texCoordLocationFireL, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferFireL
+            texCoordLocationFireL,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            textureBufferFireL
         )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationFireL)
 
         GLES20.glVertexAttribPointer(
-            texCoordLocationBeauty, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, textureBufferBeauty
+            texCoordLocationBeauty,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            textureBufferBeauty
         )
         // 通知 GL 程序使用指定的纹理属性索引
         GLES20.glEnableVertexAttribArray(texCoordLocationBeauty)
@@ -188,8 +212,12 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
         GLES20.glVertexAttribPointer(
-            aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT,
-            GLES20.GL_FLOAT, false, 0, vertexBufferFireL
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexBufferFireL
         )
         // 通知 GL 程序使用指定的顶点属性索引
         GLES20.glEnableVertexAttribArray(aPositionLocation)

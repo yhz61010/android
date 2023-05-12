@@ -5,9 +5,9 @@ import android.graphics.Rect
 import android.os.Build
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
+import com.leovp.android.exts.calculateNotchRect
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
-import com.leovp.android.exts.calculateNotchRect
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Suppress("unused")

@@ -1,5 +1,5 @@
 jdk:
-  - openjdk11
+  - openjdk17
 
 #before_install:
 #  - yes | sdkmanager --install "ndk;21.1.6352462" "cmake;3.18.1"

@@ -4,7 +4,8 @@
 [![Gradle](https://img.shields.io/badge/Gradle-8.1.1-green)](https://gradle.org)
 
 [![Android Studio](https://img.shields.io/badge/AndroidStudio-Flamingo|2022.2.1-green)](https://developer.android.com/studio)
-[![Java](https://img.shields.io/badge/Java-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Build Java Version](https://img.shields.io/badge/Java-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Compatibility Java Version](https://img.shields.io/badge/Java-11-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)

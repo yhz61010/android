@@ -184,7 +184,12 @@ fun Project.configureBase(): BaseExtension {
                 )
             }
         }
+
         buildFeatures.viewBinding = true
+        // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+        // Add this line as needed
+        // buildFeatures.buildConfig = true
+
         // turn off checking the given issue id's
         lintOptions.disable += setOf(
             // "MissingTranslation",

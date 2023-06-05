@@ -14,6 +14,16 @@ plugins {
 android {
     namespace = "com.leovp.demo"
 
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    buildFeatures {
+        dataBinding = true
+        // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
+        // viewBinding = true
+        aidl = true
+        // Add this line as needed
+        // buildConfig = true
+    }
+
     defaultConfig {
         versionCode = 14
         versionName = "1.4"
@@ -165,12 +175,6 @@ android {
 
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
-    }
-
-    buildFeatures {
-        dataBinding = true
-        viewBinding = true
-        aidl = true
     }
 
     lint {

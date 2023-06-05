@@ -1,3 +1,4 @@
+import android.annotation.SuppressLint
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -20,8 +21,8 @@ android {
         // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
         // viewBinding = true
         aidl = true
-        // Add this line as needed
-        // buildConfig = true
+        // Generate BuildConfig.java file
+        buildConfig = true
     }
 
     defaultConfig {
@@ -31,6 +32,7 @@ android {
 
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+            @SuppressLint("ChromeOsAbiSupport")
             abiFilters += setOf("arm64-v8a")
         }
 

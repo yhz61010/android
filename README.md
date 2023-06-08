@@ -1,9 +1,9 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.8.21-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.8.20-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.0.2-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-8.1.1-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/AndroidStudio-Flamingo|2022.2.1-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/AndroidStudio-Flamingo|2022.2.1.Patch.2-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/Java-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Java-11-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)

@@ -50,18 +50,20 @@ allprojects {
     apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
 
     detekt {
-        config = files("$rootDir/detekt.yml")
+        config.from(files("$rootDir/detekt.yml"))
 
         parallel = true
 
         // By default detekt does not check test source set and gradle specific files,
         // so hey have to be added manually.
-        source = files(
-            "$rootDir/buildSrc",
-            "$rootDir/build.gradle.kts",
-            "$rootDir/settings.gradle.kts",
-            "src/main/kotlin",
-            "src/test/kotlin"
+        source.from(
+            files(
+                "$rootDir/buildSrc",
+                "$rootDir/build.gradle.kts",
+                "$rootDir/settings.gradle.kts",
+                "src/main/kotlin",
+                "src/test/kotlin"
+            )
         )
     }
 
@@ -208,7 +210,8 @@ fun Project.configureBase(): BaseExtension {
             "META-INF/DEPENDENCIES*",
             "META-INF/INDEX.LIST",
             "META-INF/io.netty.versions.properties",
-            "META-INF/{AL2.0,LGPL2.1}"
+            "META-INF/{AL2.0,LGPL2.1}",
+            "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
             // "**/*.proto",
             // "**/*.bin",
             // "**/*.java",

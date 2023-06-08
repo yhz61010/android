@@ -7,29 +7,29 @@ min-sdk = "23"
 target-sdk = "33"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.5"
+leo-version = "5.12.6"
 
 #===================
 #===== Compile =====
 #===================
-agp = "8.0.1"
-kotlin = "1.8.21"
+agp = "8.0.2"
+kotlin = "1.8.22"
 
 #=================================
 #===== Android dependencies ======
 #=================================
-coroutines = "1.7.0"
+coroutines = "1.7.1"
 material = "1.9.0"
 appcompat = "1.6.1"
-activity-ktx = "1.7.1"
-fragment-ktx = "1.5.7"
+activity-ktx = "1.7.2"
+fragment-ktx = "1.6.0"
 core-ktx = "1.10.1"
 multidex = "2.0.1"
 preference = "1.2.0"
 recyclerview = "1.3.0"
 constraintlayout = "2.1.4"
 coordinatorlayout = "1.2.0"
-navigation = "2.5.3"
+navigation = "2.6.0"
 concurrent-futures-ktx = "1.1.0"
 lifecycle = "2.6.1"
 android-annotation = "4.1.1.4"
@@ -39,7 +39,7 @@ cardview = "1.0.0"
 viewpager2 = "1.0.0"
 swiperefreshlayout = "1.1.0"
 room = "2.5.1" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.3.0-alpha06"
+camera = "1.3.0-alpha07"
 exifinterface = "1.3.6"
 
 #===========================
@@ -52,16 +52,16 @@ compose-compilerextension = "1.2.0"
 #=======================
 #===== Third party =====
 #=======================
-detekt = "1.22.0"
+detekt = "1.23.0"
 dokka = "1.7.10"
 # ktlint = "0.49.0"
-ktlint-gradle = "11.3.2"
+ktlint-gradle = "11.4.0"
 benmanes = "0.46.0"
 vcu = "0.7.0"
 jacoco = "0.8.8"
-sonarqube = "4.0.0.2929"
+sonarqube = "4.2.0.3129"
 
-coil = "2.3.0"
+coil = "2.4.0"
 glide = "4.15.1"
 glide-transformations = "4.3.0"
 square-okhttp = "4.11.0"
@@ -78,16 +78,16 @@ karn-notify = "1.4.0"
 mmkv = "1.2.16"
 # 2.15.0 Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
-fasterxml = "2.14.3"
-xx-permissions = "18.0"
+fasterxml = "2.14.3" # 2.14.3
+xx-permissions = "18.2"
 bson = "2.13.1" # As of 2.13.0, you need to add fasterxml jackson manually.
 free-reflection = "3.1.0"
 flyco-tablayout = "2.2.0"
 srl = "2.0.5"
-netty = "4.1.92.Final"
-koin = "3.4.0"
-bytedeco-ffmpeg = "5.1.2-1.5.8"
-bytedeco-javacpp = "1.5.8"
+netty = "4.1.93.Final"
+koin = "3.4.2"
+bytedeco-ffmpeg = "6.0-1.5.9"
+bytedeco-javacpp = "1.5.9"
 material-dialogs = "3.3.0"
 android-animations = "2.4"
 java-mail = "1.6.7"
@@ -120,8 +120,8 @@ robolectric-version = "4.9.2"
 #===================
 #===== Compile =====
 #===================
-agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
-kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+# agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+# kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 

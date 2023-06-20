@@ -30,6 +30,7 @@ import com.leovp.android.exts.ydpi
 import com.leovp.android.utils.ApplicationManager
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.getMetaData
+import com.leovp.androidbase.utils.media.CodecUtil.printMediaCodecsList
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
 import com.leovp.demo.base.BaseDemonstrationActivity
@@ -40,6 +41,7 @@ import com.leovp.log.base.ITAG
 import java.net.Proxy
 import kotlin.concurrent.thread
 import kotlin.math.pow
+
 
 class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     trafficConfig.run {
@@ -232,6 +234,9 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         val xInch = screenRealResolution.width * 1.0 / xdpi
         val yInch = screenRealResolution.height * 1.0 / ydpi
         LogContext.log.i(ITAG, "inch=${kotlin.math.sqrt(xInch.pow(2) + yInch.pow(2))}")
+
+        LogContext.log.i(ITAG, "===================================")
+        printMediaCodecsList()
     }
 
     override fun onPause() {

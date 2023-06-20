@@ -6,6 +6,9 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaCodecInfo.CodecCapabilities
 import android.media.MediaCodecList
+import android.os.Build
+import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 
 /**
  * Author: Michael Leo
@@ -29,10 +32,13 @@ object CodecUtil {
      */
     fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray =
         getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
+
     fun getSupportedColorFormatForEncoder(mime: String): IntArray =
         getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
+
     fun getSupportedColorFormatForDecoder(mime: String): IntArray =
         getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
+
     private fun getSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
 
     fun getSupportedProfileLevels(codec: MediaCodec, mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
@@ -54,6 +60,64 @@ object CodecUtil {
                 !codecName.startsWith("OMX.", ignoreCase = true) &&
                     !codecName.startsWith("c2.", ignoreCase = true)
                 )
+    }
+
+    fun printMediaCodecsList() {
+        val mediaCodecList = MediaCodecList(MediaCodecList.ALL_CODECS)
+        val mediaCodecInfos = mediaCodecList.codecInfos
+        for (mediaCodecInfo in mediaCodecInfos) {
+            // val isEncoder = mediaCodecInfo.isEncoder
+            // val isDecoder = !isEncoder
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                LogContext.log.i(
+                    ITAG,
+                    String.format("name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
+                        mediaCodecInfo.name,
+                        mediaCodecInfo.isEncoder,
+                        mediaCodecInfo.isHardwareAccelerated,
+                        mediaCodecInfo.isSoftwareOnly,
+                        mediaCodecInfo.isVendor)
+                )
+            }
+            val types = mediaCodecInfo.supportedTypes
+            val typesCount = types.size
+            for ((i, type) in types.withIndex()) {
+                if (typesCount == 1 || i == typesCount - 1) {
+                    LogContext.log.i(ITAG, " └─ type: $type")
+                } else {
+                    LogContext.log.i(ITAG, " ├─ type: $type")
+                }
+                val capabilities = mediaCodecInfo.getCapabilitiesForType(type)
+                val formatsCount = capabilities.colorFormats.size
+                for ((j, colorFormat) in capabilities.colorFormats.withIndex()) {
+                    var colorFormatName = "unknown"
+                    @Suppress("DEPRECATION")
+                    when (colorFormat) {
+                        CodecCapabilities.COLOR_FormatYUV420Flexible -> colorFormatName = "YUV420Flexible"
+                        CodecCapabilities.COLOR_FormatSurface -> colorFormatName = "FormatSurface"
+                        CodecCapabilities.COLOR_FormatYUV420SemiPlanar -> colorFormatName = "YUV420SemiPlanar"
+                        CodecCapabilities.COLOR_FormatYUV420PackedPlanar -> colorFormatName = "YUV420PackedPlanar"
+                        CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar -> colorFormatName = "YUV420PackedSemiPlanar"
+                        CodecCapabilities.COLOR_FormatYUV420Planar -> colorFormatName = "YUV420Planar"
+                    }
+                    if (formatsCount == 1 || j == formatsCount - 1) {
+                        LogContext.log.i(
+                            ITAG,
+                            String.format("     └─ colorFormat: %s (%s)",
+                                colorFormat.toString().padStart(10, ' '),
+                                colorFormatName)
+                        )
+                    } else {
+                        LogContext.log.i(
+                            ITAG,
+                            String.format("     ├─ colorFormat: %s (%s)",
+                                colorFormat.toString().padStart(10, ' '),
+                                colorFormatName)
+                        )
+                    }
+                }
+            }
+        }
     }
 
     // ==========

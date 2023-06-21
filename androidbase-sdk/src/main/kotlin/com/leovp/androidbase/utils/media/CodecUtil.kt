@@ -7,8 +7,9 @@ import android.media.MediaCodecInfo
 import android.media.MediaCodecInfo.CodecCapabilities
 import android.media.MediaCodecList
 import android.os.Build
+import com.leovp.androidbase.exts.kotlin.TreeElement
+import com.leovp.androidbase.exts.kotlin.printTree
 import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 
 /**
  * Author: Michael Leo
@@ -65,31 +66,36 @@ object CodecUtil {
     fun printMediaCodecsList() {
         val mediaCodecList = MediaCodecList(MediaCodecList.ALL_CODECS)
         val mediaCodecInfos = mediaCodecList.codecInfos
+        val lv1List = ArrayList<TreeElement>()
         for (mediaCodecInfo in mediaCodecInfos) {
             // val isEncoder = mediaCodecInfo.isEncoder
             // val isDecoder = !isEncoder
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                LogContext.log.i(
-                    ITAG,
-                    String.format("name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
-                        mediaCodecInfo.name,
-                        mediaCodecInfo.isEncoder,
-                        mediaCodecInfo.isHardwareAccelerated,
-                        mediaCodecInfo.isSoftwareOnly,
-                        mediaCodecInfo.isVendor)
-                )
+            val str = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                String.format("name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
+                    mediaCodecInfo.name,
+                    mediaCodecInfo.isEncoder,
+                    mediaCodecInfo.isHardwareAccelerated,
+                    mediaCodecInfo.isSoftwareOnly,
+                    mediaCodecInfo.isVendor)
+                // LogContext.log.i(ITAG, str)
+            } else {
+                "Below Android Q"
             }
+            val lv1Element = TreeElement(str, null)
+            lv1List.add(lv1Element)
+
             val types = mediaCodecInfo.supportedTypes
-            val typesCount = types.size
-            for ((i, type) in types.withIndex()) {
-                if (typesCount == 1 || i == typesCount - 1) {
-                    LogContext.log.i(ITAG, " └─ type: $type")
-                } else {
-                    LogContext.log.i(ITAG, " ├─ type: $type")
-                }
+            val lv2List = ArrayList<TreeElement>()
+            lv1Element.children = lv2List
+            for (type in types) {
+                // LogContext.log.i(ITAG, "type: $type")
+                val lv2Element = TreeElement("type: $type", null)
+                lv2List.add(lv2Element)
                 val capabilities = mediaCodecInfo.getCapabilitiesForType(type)
-                val formatsCount = capabilities.colorFormats.size
-                for ((j, colorFormat) in capabilities.colorFormats.withIndex()) {
+
+                val lv3List = ArrayList<TreeElement>()
+                lv2Element.children = lv3List
+                for (colorFormat in capabilities.colorFormats) {
                     var colorFormatName = "unknown"
                     @Suppress("DEPRECATION")
                     when (colorFormat) {
@@ -100,24 +106,16 @@ object CodecUtil {
                         CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar -> colorFormatName = "YUV420PackedSemiPlanar"
                         CodecCapabilities.COLOR_FormatYUV420Planar -> colorFormatName = "YUV420Planar"
                     }
-                    if (formatsCount == 1 || j == formatsCount - 1) {
-                        LogContext.log.i(
-                            ITAG,
-                            String.format("     └─ colorFormat: %s (%s)",
-                                colorFormat.toString().padStart(10, ' '),
-                                colorFormatName)
-                        )
-                    } else {
-                        LogContext.log.i(
-                            ITAG,
-                            String.format("     ├─ colorFormat: %s (%s)",
-                                colorFormat.toString().padStart(10, ' '),
-                                colorFormatName)
-                        )
-                    }
+                    val strText = String.format("colorFormat: %s (%s)", colorFormat.toString().padStart(10, ' '), colorFormatName)
+                    // LogContext.log.i(ITAG, str)
+                    val lv3Element = TreeElement(strText, null)
+                    lv3List.add(lv3Element)
                 }
             }
-        }
+        } // root for
+
+        val root = TreeElement("MediaCodec", lv1List)
+        printTree(root, "", true) { LogContext.log.i(it) }
     }
 
     // ==========

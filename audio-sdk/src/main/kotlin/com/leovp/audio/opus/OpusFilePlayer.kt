@@ -9,6 +9,7 @@ import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.mediacodec.bean.OpusCsd
 import com.leovp.audio.mediacodec.utils.AudioCodecUtil
 import com.leovp.bytes.readBytes
+import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.io.EOFException
@@ -61,8 +62,8 @@ class OpusFilePlayer(
         LogContext.log.w(TAG, "File length=${rf.length()}")
         val opusCsd = getCsd()!!
         LogContext.log.w(TAG, "csd0=${opusCsd.csd0.toHexString()}")
-        LogContext.log.w(TAG, "csd1=${opusCsd.csd1.toHexString()}")
-        LogContext.log.w(TAG, "csd2=${opusCsd.csd2.toHexString()}")
+        LogContext.log.w(TAG, "csd1=${opusCsd.csd1.readLongLE()} ${opusCsd.csd1.toHexString()}")
+        LogContext.log.w(TAG, "csd2=${opusCsd.csd2.readLongLE()} ${opusCsd.csd2.toHexString()}")
         decoder = OpusDecoder(
             audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelCount,

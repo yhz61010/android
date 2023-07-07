@@ -8,12 +8,11 @@ import android.view.ViewGroup
 import androidx.navigation.findNavController
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.androidbase.framework.BaseFragment
-import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentForNavFirstBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fragment_for_nav_first) {
+class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>() {
     //    companion object {
     //        private const val ARG_PARAM1 = "param1"
     //        private const val ARG_PARAM2 = "param2"

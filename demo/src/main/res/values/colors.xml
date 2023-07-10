@@ -7,4 +7,7 @@
     <color name="teal_700">#FF3700B3</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- translucent -->
+    <color name="purple_700_translucent">#663700B3</color>
 </resources>

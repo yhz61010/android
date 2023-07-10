@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".basiccomponents.examples.statusbar.FullImmersiveActivity">
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content" android:scaleType="centerCrop"
+        android:src="@drawable/beauty"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnMagentaLight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:layout_marginTop="16dp"
+        android:text="Magenta light status bar"
+        app:layout_constraintStart_toStartOf="@+id/btnSetColorByView" app:layout_constraintTop_toBottomOf="@+id/btnSetColorByView" />
+
+    <Button
+        android:id="@+id/btnMagentaDark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Magenta dark status bar"
+        app:layout_constraintStart_toStartOf="@+id/btnSetColorByView"
+        app:layout_constraintTop_toBottomOf="@+id/btnMagentaLight" />
+
+    <TextView
+        android:id="@+id/tvBaseColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Base color"
+        android:padding="8dp"
+        android:textColor="@color/white"
+        android:background="@android:color/holo_blue_light"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnSetColorByView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Color by view"
+        app:layout_constraintStart_toStartOf="@+id/tvBaseColor"
+        app:layout_constraintTop_toBottomOf="@+id/tvBaseColor" />
+
+    <Button
+        android:id="@+id/btnRestore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:layout_marginTop="16dp"
+        android:text="Exit immersive"
+        app:layout_constraintStart_toStartOf="@+id/btnTranslucent"
+        app:layout_constraintTop_toBottomOf="@+id/btnTranslucent" />
+
+    <Button
+        android:id="@+id/btnTranslucent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Translucent"
+        app:layout_constraintStart_toStartOf="@+id/btnMagentaDark"
+        app:layout_constraintTop_toBottomOf="@+id/btnMagentaDark" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

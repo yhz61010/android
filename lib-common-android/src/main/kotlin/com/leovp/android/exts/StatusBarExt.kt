@@ -45,105 +45,56 @@ fun Activity.immersive(v: View, darkMode: Boolean? = null) {
 }
 
 /**
- * Set the color of status bar or make it transparent.
- * 设置透明状态栏或者状态栏颜色, 此函数会导致状态栏覆盖界面,
- * 如果不希望被状态栏遮挡Toolbar请再调用[statusPadding]设置视图的paddingTop 或者 [addStatusBarMargin]设置视图的marginTop为状态栏高度
- *
- * 如果不指定状态栏颜色则会应用透明状态栏(全屏属性), 会导致键盘遮挡输入框
+ * Make status bar in immersive mode with specific color. By default, transparent status bar.
+ * When transparent status bar, your view will be overlap on status bar.
+ * In this case, you'd better call [addStatusBarPadding] or [addStatusBarMargin] in the same time.
  *
  * @param color The color of status bar. Default value is transparent.
  * @param darkMode Whether to use dark mode or not.
  */
+@Suppress("DEPRECATION")
 fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boolean? = null) {
-    window.statusBarColor = color
-
     // On Android API 30 or above (R, Android 11), transparent or translucent status bar needs the following setting.
     // This method has already done the compatibility
     WindowCompat.setDecorFitsSystemWindows(window, false)
 
     if (Color.TRANSPARENT == color) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
     }
 
-    // Add this if your want your status bar translucent.
-    // window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+    window.statusBarColor = color
 
     if (darkMode != null) {
         darkMode(darkMode)
     }
-
-    // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-    //     window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-    //     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    // }
-    //
-    // when (color) {
-    //     Color.TRANSPARENT -> {
-    //         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-    //             // https://stackoverflow.com/a/64828028
-    //             WindowCompat.setDecorFitsSystemWindows(window, false)
-    //             WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-    //                 controller.hide(WindowInsetsCompat.Type.statusBars()) // controller.hide(WindowInsetsCompat.Type.navigationBars())
-    //                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    //             }
-    //         } else {
-    //             window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
-    //             window.statusBarColor = Color.TRANSPARENT
-    //         }
-    //     }
-    //
-    //     else -> window.statusBarColor = color
-    // }
 }
 
 /**
- * 退出沉浸式状态栏并恢复默认状态栏颜色
- *
- * @param black 是否显示黑色状态栏白色文字(不恢复状态栏颜色)
+ * Turn off status bar's immersive mode.
  */
-fun Activity.immersiveExit(black: Boolean = false) {
-    window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+@Suppress("DEPRECATION")
+fun Activity.immersiveExit() {
+    // On Android API 30 or above (R, Android 11), turn off status bar's immersive mode needs the following setting.
+    // This method has already done the compatibility
+    WindowCompat.setDecorFitsSystemWindows(window, true)
 
-    // 恢复默认状态栏颜色
-    if (black) {
-        window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    } else {
-        val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
-        window.statusBarColor = typedArray.getColor(0, 0)
-        typedArray.recycle()
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     }
 
-    // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-    //     // https://stackoverflow.com/a/64828028
-    //     WindowCompat.setDecorFitsSystemWindows(window, false)
-    //     WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-    //         controller.hide(WindowInsetsCompat.Type.statusBars()) // controller.hide(WindowInsetsCompat.Type.navigationBars())
-    //         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-    //     }
-    // } else {
-    //     window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-    //     window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
-    // }
-    //
-    // // Restore the default color of status bar.
-    // if (black) {
-    //     window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    // } else {
-    //     val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
-    //     window.statusBarColor = typedArray.getColor(0, 0)
-    //     typedArray.recycle()
-    // }
+    val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
+    window.statusBarColor = typedArray.getColor(0, 0)
+    typedArray.recycle()
 }
 
 /**
  * Set immersive color of status bar by resource id.
  */
-@JvmOverloads
 fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) = immersive(ContextCompat.getColor(this, color), darkMode)
 
 // </editor-fold>
@@ -161,7 +112,7 @@ fun Activity.darkMode(darkMode: Boolean = true) {
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.isAppearanceLightStatusBars = !darkMode
             controller.isAppearanceLightNavigationBars = !darkMode
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     } else {
         var systemUiVisibility = window.decorView.systemUiVisibility
@@ -184,38 +135,50 @@ fun Activity.darkMode(darkMode: Boolean = true) {
 
 //</editor-fold>
 
-// <editor-fold desc="间距">
+// <editor-fold desc="padding and margin">
 
 /**
- * 增加View的paddingTop, 增加高度为状态栏高度, 用于防止视图和状态栏重叠
- * 如果是RelativeLayout设置padding值会导致centerInParent等属性无法正常显示
- * @param remove 如果默认paddingTop大于状态栏高度则添加无效, 如果小于状态栏高度则无法删除
+ * Increase the view _paddingTop_ by status bar height.
+ * Do NOT support _RelativeLayout_ due to the displaying problem about _centerInParent_-like attributes.
+ *
+ * @param remove If remove if true, decrease the view _paddingTop_ by status bar height.
+ * If current view's _paddingTop_ is less than the status bar's height,
  */
-@JvmOverloads
-fun View.statusPadding(remove: Boolean = false) {
+fun View.addStatusBarPadding(remove: Boolean = false) {
     if (this is RelativeLayout) {
         throw UnsupportedOperationException("Unsupported set statusPadding for RelativeLayout")
     }
     val statusBarHeight = context.statusBarHeight
-    val lp = layoutParams
-    if (lp != null && lp.height > 0) {
-        lp.height += statusBarHeight // increase height
-    }
+    // val lp = layoutParams
+    // if (lp != null && lp.height > 0) {
+    //     lp.height += statusBarHeight // increase height
+    // }
     if (remove) {
         if (paddingTop < statusBarHeight) return
-        setPadding(paddingLeft, paddingTop - statusBarHeight, paddingRight, paddingBottom)
+        setPadding(
+            paddingLeft, paddingTop - statusBarHeight,
+            paddingRight, paddingBottom
+        )
     } else {
-        if (paddingTop >= statusBarHeight) return
         setPadding(paddingLeft, paddingTop + statusBarHeight, paddingRight, paddingBottom)
     }
 }
 
 /**
- * 增加View的marginTop值, 增加高度为状态栏高度, 用于防止视图和状态栏重叠
+ * Increase the view _topMargin_ by status bar height.
+ *
+ * @param remove If remove if true, decrease the view _topMargin_ by status bar height.
+ * If current view's _topMargin_ is less than the status bar's height,
  */
-fun View.addStatusBarMargin() {
+fun View.addStatusBarMargin(remove: Boolean = false) {
+    val statusBarHeight = context.statusBarHeight
     val lp = layoutParams as ViewGroup.MarginLayoutParams
-    lp.topMargin += context.statusBarHeight
+    if (remove) {
+        if (lp.topMargin < statusBarHeight) return
+        lp.topMargin -= statusBarHeight
+    } else {
+        lp.topMargin += statusBarHeight
+    }
     layoutParams = lp
 }
 

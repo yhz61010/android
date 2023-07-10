@@ -20,7 +20,7 @@
         android:id="@+id/btnMagentaLight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/default_margin"
         android:text="Magenta light status bar"
         app:layout_constraintStart_toStartOf="@+id/btnSetColorByView"
         app:layout_constraintTop_toBottomOf="@+id/btnSetColorByView" />
@@ -29,7 +29,7 @@
         android:id="@+id/btnMagentaDark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/default_margin"
         android:text="Magenta dark status bar"
         app:layout_constraintStart_toStartOf="@+id/btnSetColorByView"
         app:layout_constraintTop_toBottomOf="@+id/btnMagentaLight" />
@@ -38,8 +38,8 @@
         android:id="@+id/tvBaseColor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="?android:attr/actionBarSize"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
         android:background="@android:color/holo_blue_light"
         android:padding="8dp"
         android:text="Base color"
@@ -51,7 +51,7 @@
         android:id="@+id/btnSetColorByView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/default_margin"
         android:text="Color by view"
         app:layout_constraintStart_toStartOf="@+id/tvBaseColor"
         app:layout_constraintTop_toBottomOf="@+id/tvBaseColor" />
@@ -60,7 +60,7 @@
         android:id="@+id/btnRestore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/default_margin"
         android:text="Exit immersive"
         app:layout_constraintStart_toStartOf="@+id/btnTranslucent"
         app:layout_constraintTop_toBottomOf="@+id/btnTranslucent" />
@@ -69,7 +69,7 @@
         android:id="@+id/btnTranslucent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/default_margin"
         android:text="Translucent"
         app:layout_constraintStart_toStartOf="@+id/btnMagentaDark"
         app:layout_constraintTop_toBottomOf="@+id/btnMagentaDark" />

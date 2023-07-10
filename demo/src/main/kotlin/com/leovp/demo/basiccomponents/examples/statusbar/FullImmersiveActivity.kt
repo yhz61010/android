@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples.statusbar
 import android.graphics.Color
 import android.os.Bundle
 import androidx.core.content.ContextCompat
+import com.leovp.android.exts.addStatusBarMargin
 import com.leovp.android.exts.immersive
 import com.leovp.android.exts.immersiveExit
 import com.leovp.android.exts.setActionBarTransparent
@@ -28,6 +29,8 @@ class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBin
         // 3. immersive status bar with transparent.
         setActionBarTransparent()
         immersive()
+
+        binding.tvBaseColor.addStatusBarMargin()
 
         binding.btnSetColorByView.setOnSingleClickListener {
             // window.clearFlags(Window.FEATURE_ACTION_BAR_OVERLAY)

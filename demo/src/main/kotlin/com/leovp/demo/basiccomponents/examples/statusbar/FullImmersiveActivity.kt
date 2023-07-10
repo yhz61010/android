@@ -2,12 +2,15 @@ package com.leovp.demo.basiccomponents.examples.statusbar
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import com.leovp.android.exts.addStatusBarMargin
+import com.leovp.android.exts.getDimenInPixel
 import com.leovp.android.exts.immersive
 import com.leovp.android.exts.immersiveExit
 import com.leovp.android.exts.setActionBarTransparent
 import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.android.exts.topMargin
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFullImmersiveBinding
@@ -30,32 +33,56 @@ class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBin
         setActionBarTransparent()
         immersive()
 
-        binding.tvBaseColor.addStatusBarMargin()
+        resetProperMargin()
 
         binding.btnSetColorByView.setOnSingleClickListener {
             // window.clearFlags(Window.FEATURE_ACTION_BAR_OVERLAY)
             // setActionBarBackgroundRes(R.color.purple_500)
             immersive(binding.tvBaseColor)
+            resetProperMargin()
         }
 
         binding.btnMagentaLight.setOnSingleClickListener {
             // window.clearFlags(Window.FEATURE_ACTION_BAR_OVERLAY)
             // setActionBarBackgroundRes(R.color.purple_500)
             immersive(Color.MAGENTA, false)
+            resetProperMargin()
         }
 
         binding.btnMagentaDark.setOnSingleClickListener {
             // window.clearFlags(Window.FEATURE_ACTION_BAR_OVERLAY)
             // setActionBarBackgroundRes(R.color.purple_500)
             immersive(Color.MAGENTA, true)
+            resetProperMargin()
         }
 
         binding.btnTranslucent.setOnSingleClickListener {
             immersive(ContextCompat.getColor(this, R.color.purple_700_translucent), false)
+            resetProperMargin()
         }
 
         binding.btnRestore.setOnSingleClickListener {
             immersiveExit()
+            restoreMargin()
         }
+    }
+
+    private fun restoreMargin() {
+        binding.tvBaseColor.topMargin = getDimenInPixel("default_margin")
+        binding.tvBaseColor.topMargin += getStatusBarHeight()
+    }
+
+    private fun resetProperMargin() {
+        restoreMargin()
+        binding.tvBaseColor.addStatusBarMargin()
+    }
+
+    private fun getStatusBarHeight(): Int {
+        val tv = TypedValue()
+        var actionBarHeight = 0
+        if (this.theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
+        }
+        return actionBarHeight
     }
 }

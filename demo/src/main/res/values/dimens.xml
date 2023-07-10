@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="default_corner_radius">10dp</dimen>
+    <dimen name="default_margin">16dp</dimen>
     <dimen name="ic_clear_margin">16dp</dimen>
 </resources>

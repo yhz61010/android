@@ -18,7 +18,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
-
 //<editor-fold desc="Set status bar color">
 /** Set status bar color by color int. */
 fun Activity.statusBarColor(@ColorInt color: Int) {
@@ -48,7 +47,7 @@ fun Activity.immersive(v: View, darkMode: Boolean? = null) {
 /**
  * Set the color of status bar or make it transparent.
  * 设置透明状态栏或者状态栏颜色, 此函数会导致状态栏覆盖界面,
- * 如果不希望被状态栏遮挡Toolbar请再调用[statusPadding]设置视图的paddingTop 或者 [statusMargin]设置视图的marginTop为状态栏高度
+ * 如果不希望被状态栏遮挡Toolbar请再调用[statusPadding]设置视图的paddingTop 或者 [addStatusBarMargin]设置视图的marginTop为状态栏高度
  *
  * 如果不指定状态栏颜色则会应用透明状态栏(全屏属性), 会导致键盘遮挡输入框
  *
@@ -213,21 +212,11 @@ fun View.statusPadding(remove: Boolean = false) {
 
 /**
  * 增加View的marginTop值, 增加高度为状态栏高度, 用于防止视图和状态栏重叠
- * @param remove 如果默认marginTop大于状态栏高度则添加无效, 如果小于状态栏高度则无法删除
  */
-@JvmOverloads
-fun View.statusMargin(remove: Boolean = false) {
-    val statusBarHeight = context.statusBarHeight
+fun View.addStatusBarMargin() {
     val lp = layoutParams as ViewGroup.MarginLayoutParams
-    if (remove) {
-        if (lp.topMargin < statusBarHeight) return
-        lp.topMargin -= statusBarHeight
-        layoutParams = lp
-    } else {
-        if (lp.topMargin >= statusBarHeight) return
-        lp.topMargin += statusBarHeight
-        layoutParams = lp
-    }
+    lp.topMargin += context.statusBarHeight
+    layoutParams = lp
 }
 
 

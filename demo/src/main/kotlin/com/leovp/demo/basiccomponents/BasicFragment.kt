@@ -59,6 +59,7 @@ import com.leovp.demo.basiccomponents.examples.socket.SocketServerActivity
 import com.leovp.demo.basiccomponents.examples.socket.eventbusbridge.EventBusBridgeClientActivity
 import com.leovp.demo.basiccomponents.examples.socket.websocket.WebSocketClientActivity
 import com.leovp.demo.basiccomponents.examples.socket.websocket.WebSocketServerActivity
+import com.leovp.demo.basiccomponents.examples.statusbar.StatusBarActivity
 import com.leovp.demo.basiccomponents.examples.wifi.WifiActivity
 import com.leovp.demo.databinding.FragmentBasicBinding
 import com.leovp.log.LogContext
@@ -133,7 +134,8 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>() {
             Pair("Orientation", OrientationActivity::class.java),
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
-            Pair("Bitmap Native Util", BitmapNativeActivity::class.java)
+            Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
+            Pair("Status Bar", StatusBarActivity::class.java)
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)

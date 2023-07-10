@@ -28,7 +28,6 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
-import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
@@ -84,9 +83,9 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
         onCreateBeginning()
         super.onCreate(savedInstanceState)
         binding = getViewBinding(savedInstanceState).apply { setContentView(root) }
-        simpleActivityLauncher =
-            BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
-        EventBus.getDefault().register(this)
+        simpleActivityLauncher = BetterActivityResult
+            .registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
+        // EventBus.getDefault().register(this)
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -156,7 +155,7 @@ abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? 
     override fun onDestroy() {
         LogContext.log.w(tag, "=====> onDestroy <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
         stopTrafficMonitor()
-        EventBus.getDefault().unregister(this)
+        // EventBus.getDefault().unregister(this)
         super.onDestroy()
     }
 

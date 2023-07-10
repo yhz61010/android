@@ -1,6 +1,7 @@
 package com.leovp.androidbase.exts.android
 
 import android.view.View
+import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 
@@ -46,7 +47,7 @@ inline fun View.snack(message: String, length: Int = Snackbar.LENGTH_LONG, cross
  * ContextCompat.getColor(context, R.color.design_default_color_primary)
  * ```
  */
-fun Snackbar.action(@StringRes actionRes: Int, color: Int? = null, listener: (View) -> Unit) {
+fun Snackbar.action(@StringRes actionRes: Int, @ColorInt color: Int? = null, listener: (View) -> Unit) {
     action(view.resources.getString(actionRes), color, listener)
 }
 
@@ -57,7 +58,7 @@ fun Snackbar.action(@StringRes actionRes: Int, color: Int? = null, listener: (Vi
  * ContextCompat.getColor(context, R.color.design_default_color_primary)
  * ```
  */
-fun Snackbar.action(action: String, color: Int? = null, listener: (View) -> Unit) {
+fun Snackbar.action(action: String, @ColorInt color: Int? = null, listener: (View) -> Unit) {
     setAction(action, listener)
     color?.let { setActionTextColor(it) }
 }

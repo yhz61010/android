@@ -42,7 +42,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        <activity android:name=".basiccomponents.examples.opus.OpusActivity" android:exported="false" />
+        <activity android:name=".basiccomponents.examples.statusbar.FullImmersiveActivity"
+            android:exported="false"
+            android:theme="@style/ActivityThemeActionBarOverlay" />
+        <activity android:name=".basiccomponents.examples.statusbar.StatusBarActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.BitmapNativeActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.NetActivity" android:exported="false" />
         <activity android:name=".jetpackcomponents.examples.camerax.CameraXDemoActivity"
@@ -58,8 +61,7 @@
             <!-- Declare notch support -->
             <meta-data android:name="android.notch_support" android:value="true" />
         </activity>
-        <activity android:name=".jetpackcomponents.examples.navigation.NavigationMainActivity"
-            android:exported="false" />
+        <activity android:name=".jetpackcomponents.examples.navigation.NavigationMainActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.opengl.OpenGLESPlaygroundActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.opengl.OpenGLES20Activity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.adb.AdbCommunication" android:exported="false" />
@@ -75,14 +77,12 @@
             android:exported="true"
             android:screenOrientation="fullUser" />
         <activity android:name=".basiccomponents.AppSettingsActivity" android:exported="true" />
-        <activity android:name=".basiccomponents.examples.CircleProgressbarActivity"
-            android:configChanges="orientation|screenSize" />
+        <activity android:name=".basiccomponents.examples.CircleProgressbarActivity" android:configChanges="orientation|screenSize" />
         <activity android:name=".basiccomponents.examples.FloatViewActivity" />
         <activity android:name=".basiccomponents.examples.socket.eventbusbridge.EventBusBridgeClientActivity" />
         <activity android:name=".basiccomponents.examples.ToastActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize" />
-        <activity android:name=".basiccomponents.examples.ChangeAppLanguageActivity"
-            android:configChanges="orientation|screenSize" />
+        <activity android:name=".basiccomponents.examples.ChangeAppLanguageActivity" android:configChanges="orientation|screenSize" />
         <activity android:name=".basiccomponents.examples.audio.ADPCMActivity" />
         <activity android:name=".basiccomponents.examples.animation.PropertyAnimActivity" />
         <activity android:name=".basiccomponents.examples.animation.ViewAnimActivity" />
@@ -92,8 +92,7 @@
         <activity android:name=".basiccomponents.examples.AidlActivity" />
         <activity android:name=".basiccomponents.examples.accessibility.AccessibilityActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />
-        <activity android:name=".basiccomponents.examples.wifi.WifiActivity"
-            android:windowSoftInputMode="stateHidden|adjustResize" />
+        <activity android:name=".basiccomponents.examples.wifi.WifiActivity" android:windowSoftInputMode="stateHidden|adjustResize" />
         <activity android:name=".basiccomponents.examples.bluetooth.BluetoothClientActivity" />
         <activity android:name=".basiccomponents.examples.bluetooth.BluetoothServerActivity" />
         <activity android:name=".basiccomponents.examples.bluetooth.BluetoothScanActivity" />
@@ -170,8 +169,7 @@
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
 
-            <meta-data android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config" />
         </service>
         <service android:name=".basiccomponents.examples.ChangeAppTestService" android:exported="false" />
         <service android:name=".basiccomponents.examples.ToastActivity$TestService" android:exported="false">

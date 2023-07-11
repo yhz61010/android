@@ -23,7 +23,7 @@ import kotlin.system.measureNanoTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>() {
+class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>(R.layout.activity_bitmap_native) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBitmapNativeBinding {

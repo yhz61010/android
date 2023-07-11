@@ -9,13 +9,14 @@ import android.widget.ArrayAdapter
 import com.leovp.android.exts.id
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.system.AccessibilityUtil
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.demo.databinding.ActivityAccessibilityBinding
 import com.leovp.log.base.ITAG
 import org.greenrobot.eventbus.EventBus
 
-class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBinding>() {
+class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBinding>(R.layout.activity_accessibility) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAccessibilityBinding {

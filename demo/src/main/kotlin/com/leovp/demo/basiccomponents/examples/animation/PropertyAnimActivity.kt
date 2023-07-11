@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.animation.AccelerateInterpolator
 import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityPropertyAnimBinding
 import com.leovp.log.base.ITAG
@@ -23,7 +24,7 @@ import kotlin.random.Random
  * BounceInterpolator 结束时Q弹一下
  * CycleInterpolator 来回循环
  */
-class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBinding>() {
+class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBinding>(R.layout.activity_property_anim) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityPropertyAnimBinding {

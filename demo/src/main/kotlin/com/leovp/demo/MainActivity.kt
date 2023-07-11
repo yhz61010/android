@@ -42,8 +42,7 @@ import java.net.Proxy
 import kotlin.concurrent.thread
 import kotlin.math.pow
 
-
-class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
+class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
     trafficConfig.run {
         allowToOutputDefaultWifiTrafficInfo = true
         frequencyInSecond = 3
@@ -61,26 +60,26 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+
         // val navController = findNavController(R.id.nav_host_fragment_activity_main)
         val navController = navHostFragment.navController
+
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        val appBarConfiguration =
-            AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
+        val appBarConfiguration = AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
-            .permission(
-                Permission.MANAGE_EXTERNAL_STORAGE,
+            .permission(Permission.MANAGE_EXTERNAL_STORAGE,
                 Permission.CAMERA,
                 Permission.RECORD_AUDIO,
                 Permission.ACCESS_FINE_LOCATION,
                 Permission.ACCESS_COARSE_LOCATION,
                 Permission.SYSTEM_ALERT_WINDOW,
                 Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT, Permission.BLUETOOTH_SCAN
-            )
+                Permission.BLUETOOTH_CONNECT,
+                Permission.BLUETOOTH_SCAN)
             .request(object : OnPermissionCallback {
                 override fun onGranted(granted: MutableList<String>, all: Boolean) {
                 }
@@ -89,10 +88,8 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
                 }
             })
 
-        LogContext.log.i(
-            "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
-                "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
-        )
+        LogContext.log.i("real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
+            "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight")
 
         LogContext.log.i(ITAG, "===================================")
         val info = getPackageInfo()
@@ -155,10 +152,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         val signatures: List<ByteArray> = getApplicationSignatures()
         if (signatures.isNotEmpty()) {
             for (i in signatures.indices) {
-                LogContext.log.i(
-                    ITAG,
-                    "signatures:" + i + "=" + signatures[i].toHexString(true, "")
-                )
+                LogContext.log.i(ITAG, "signatures:" + i + "=" + signatures[i].toHexString(true, ""))
             }
         }
 
@@ -186,12 +180,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>({
         }
     }
 
-    @RequiresPermission(
-        allOf = [
-            Manifest.permission.CHANGE_NETWORK_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE
-        ]
-    )
+    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
     override fun onResume() {
         super.onResume()
         startTrafficNetwork("leovp.com")

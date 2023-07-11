@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 
+// https://juejin.cn/post/6956488908641304583
+
 // <editor-fold desc="Set status bar color">
 /** Set status bar color by color int. */
 fun Activity.statusBarColor(@ColorInt color: Int) {

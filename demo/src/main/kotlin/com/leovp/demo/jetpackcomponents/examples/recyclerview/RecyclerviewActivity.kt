@@ -24,7 +24,7 @@ import com.leovp.demo.jetpackcomponents.examples.recyclerview.base.SimpleAdapter
 import com.leovp.demo.jetpackcomponents.examples.recyclerview.base.SimpleItemTouchCallback
 import com.leovp.log.base.ITAG
 
-class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>() {
+class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>(R.layout.activity_recyclerview) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityRecyclerviewBinding {

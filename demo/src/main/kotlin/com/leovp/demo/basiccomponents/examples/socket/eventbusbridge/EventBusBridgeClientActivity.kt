@@ -11,6 +11,7 @@ import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityEventBusBridgeClientBinding
 import com.leovp.log.LogContext
@@ -33,7 +34,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusBridgeClientBinding>() {
+class EventBusBridgeClientActivity :
+    BaseDemonstrationActivity<ActivityEventBusBridgeClientBinding>(R.layout.activity_event_bus_bridge_client) {
 
     override fun getTagName(): String = ITAG
 
@@ -153,6 +155,7 @@ class EventBusBridgeClientActivity : BaseDemonstrationActivity<ActivityEventBusB
                     //       }
                     //   }
                 }
+
                 else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }
         }

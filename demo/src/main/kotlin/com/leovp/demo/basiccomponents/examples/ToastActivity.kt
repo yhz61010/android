@@ -10,12 +10,13 @@ import android.view.View
 import com.leovp.android.exts.cancelToast
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.getMetaData
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>() {
+class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.activity_toast) {
     override fun getTagName(): String = ITAG
 
     private lateinit var serviceIntent: Intent

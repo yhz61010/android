@@ -22,7 +22,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
-class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>() {
+class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.activity_a_d_p_c_m) {
     override fun getTagName(): String = ITAG
 
     companion object {

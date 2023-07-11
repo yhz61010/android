@@ -16,13 +16,14 @@ import com.leovp.android.exts.screenWidth
 import com.leovp.android.exts.surfaceRotationLiteralName
 import com.leovp.android.exts.surfaceRotationName
 import com.leovp.android.exts.toast
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityOrientationBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.reflection.wrappers.ServiceManager
 
-class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>() {
+class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>(R.layout.activity_orientation) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityOrientationBinding {

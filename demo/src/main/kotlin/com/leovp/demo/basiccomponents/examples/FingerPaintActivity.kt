@@ -5,12 +5,13 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.addCallback
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFingerPaintBinding
 import com.leovp.log.base.ITAG
 
 class FingerPaintActivity :
-    BaseDemonstrationActivity<ActivityFingerPaintBinding>(),
+    BaseDemonstrationActivity<ActivityFingerPaintBinding>(R.layout.activity_finger_paint),
     SeekBar.OnSeekBarChangeListener,
     View.OnClickListener {
     override fun getTagName(): String = ITAG

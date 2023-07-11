@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples.log
 import android.os.Bundle
 import android.util.Log
 import com.leovp.android.utils.DeviceUtil
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityLogBinding
 import com.leovp.log.LogContext
@@ -16,7 +17,7 @@ import com.leovp.log.base.ITAG
  * LogContext.log.w(ITAG, "Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
  * ```
  */
-class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>() {
+class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activity_log) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityLogBinding {

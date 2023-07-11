@@ -11,6 +11,7 @@ import com.leovp.android.exts.getBaseDirString
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.toast
 import com.leovp.bytes.toHexString
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareSetting
 import com.leovp.demo.databinding.ActivityScreenshotRecordH264Binding
@@ -24,7 +25,9 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>() {
+class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>(
+    R.layout.activity_screenshot_record_h264
+) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -45,9 +48,11 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
                     ITAG,
                     "Get $VIDEO_ENCODE_TYPE data[${data.size}]=${data.toHexString()} presentationTimeUs=$presentationTimeUs"
                 )
+
                 MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
                     LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data Key-Frame[${data.size}] presentationTimeUs=$presentationTimeUs")
                 }
+
                 else -> LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data[${data.size}] presentationTimeUs=$presentationTimeUs")
             }
             videoH26xOsForDebug.write(data)

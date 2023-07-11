@@ -5,7 +5,6 @@ package com.leovp.android.exts
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -14,8 +13,8 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 
 // <editor-fold desc="Set status bar color">
 /** Set status bar color by color int. */
@@ -51,23 +50,33 @@ fun Activity.immersive(v: View, darkMode: Boolean? = null) {
  * @param color The color of status bar. Default value is transparent.
  * @param darkMode Whether to use dark mode or not.
  */
-@Suppress("DEPRECATION")
 fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boolean? = null) {
-    // On Android API 30 or above (R, Android 11), transparent or translucent status bar needs the following setting.
-    // This method has already done the compatibility
-    WindowCompat.setDecorFitsSystemWindows(window, false)
-
-    if (Color.TRANSPARENT == color) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        }
-    }
-
+    // Set the color of status bar.
     window.statusBarColor = color
 
+    // Allow content to extend into status bar.
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+
+    // // Check WindowCompat.setDecorFitsSystemWindows method.
+    // if (Color.TRANSPARENT == color) {
+    //     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
+    //         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+    //         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+    //         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    //     }
+    // }
+
+    // Request the system to apply the window insets to the specified view.
+    // Window insets represent the areas of the window that are not covered by UI elements,
+    // such as the status bar or navigation bar.
+    //
+    // In order to deal with immersive modes, we have to make a request to update the view's layout or behavior
+    // to accommodate any changes in the window insets, where the view needs to be aware of the system window areas
+    // to ensure proper rendering and interaction.
+    ViewCompat.requestApplyInsets(window.decorView)
+
     if (darkMode != null) {
+        // Set the text color of status bar.
         statusBarDarkMode(darkMode)
     }
 }
@@ -75,20 +84,27 @@ fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boole
 /**
  * Turn off status bar's immersive mode.
  */
-@Suppress("DEPRECATION")
 fun Activity.immersiveExit(darkMode: Boolean? = null) {
-    // On Android API 30 or above (R, Android 11), turn off status bar's immersive mode needs the following setting.
-    // This method has already done the compatibility
+    // Disallow content to extend into status bar.
     WindowCompat.setDecorFitsSystemWindows(window, true)
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-    }
+    // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
+    //     window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+    //     window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    // }
 
     val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
     window.statusBarColor = typedArray.getColor(0, 0)
     typedArray.recycle()
+
+    // Request the system to apply the window insets to the specified view.
+    // Window insets represent the areas of the window that are not covered by UI elements,
+    // such as the status bar or navigation bar.
+    //
+    // In order to deal with immersive modes, we have to make a request to update the view's layout or behavior
+    // to accommodate any changes in the window insets, where the view needs to be aware of the system window areas
+    // to ensure proper rendering and interaction.
+    ViewCompat.requestApplyInsets(window.decorView)
 
     if (darkMode != null) {
         statusBarDarkMode(darkMode)
@@ -109,34 +125,38 @@ fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) = imm
  *
  * @param darkMode Whether to use dark mode or not.
  */
-@Suppress("DEPRECATION")
 fun Activity.statusBarDarkMode(darkMode: Boolean = true) {
-    when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-            WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-                controller.isAppearanceLightStatusBars = !darkMode
-                controller.isAppearanceLightNavigationBars = !darkMode
-                // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
-        else -> {
-            var systemUiVisibility = window.decorView.systemUiVisibility
-            systemUiVisibility = if (darkMode) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                } else {
-                    systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                }
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                } else {
-                    systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-                }
-            }
-            window.decorView.systemUiVisibility = systemUiVisibility
-        }
-    }
+    val controller = WindowCompat.getInsetsController(window, window.decorView)
+    controller.isAppearanceLightStatusBars = !darkMode
+    // controller.isAppearanceLightNavigationBars = !darkMode
+    // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+    // when {
+    //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+    //         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+    //             controller.isAppearanceLightStatusBars = !darkMode
+    //             controller.isAppearanceLightNavigationBars = !darkMode
+    //             // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    //         }
+    //     }
+    //     else -> {
+    //         var systemUiVisibility = window.decorView.systemUiVisibility
+    //         systemUiVisibility = if (darkMode) {
+    //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    //                 systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+    //             } else {
+    //                 systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+    //             }
+    //         } else {
+    //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    //                 systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+    //             } else {
+    //                 systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+    //             }
+    //         }
+    //         window.decorView.systemUiVisibility = systemUiVisibility
+    //     }
+    // }
 }
 
 // </editor-fold>

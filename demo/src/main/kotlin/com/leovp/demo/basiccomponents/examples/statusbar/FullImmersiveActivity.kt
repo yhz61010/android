@@ -61,6 +61,16 @@ class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBin
             resetProperMargin()
         }
 
+        binding.btnRestoreWithDark.setOnSingleClickListener {
+            immersiveExit(true)
+            restoreMargin()
+        }
+
+        binding.btnRestoreWithLight.setOnSingleClickListener {
+            immersiveExit(false)
+            restoreMargin()
+        }
+
         binding.btnRestore.setOnSingleClickListener {
             immersiveExit()
             restoreMargin()

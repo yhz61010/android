@@ -19,6 +19,7 @@ import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Size
+import android.util.TypedValue
 import android.view.Display
 import android.view.Surface
 import android.view.WindowInsets
@@ -221,6 +222,16 @@ val Context.statusBarHeight
             result = this.resources.getDimensionPixelSize(resourceId)
         }
         return result
+    }
+
+val Activity.actionBarHeight
+    get(): Int {
+        val tv = TypedValue()
+        var actionBarHeight = 0
+        if (this.theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
+        }
+        return actionBarHeight
     }
 
 val Context.isFullScreenDevice get(): Boolean = screenRatio >= 1.97f

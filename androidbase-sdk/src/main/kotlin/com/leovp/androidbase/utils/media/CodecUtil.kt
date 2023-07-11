@@ -71,12 +71,14 @@ object CodecUtil {
             // val isEncoder = mediaCodecInfo.isEncoder
             // val isDecoder = !isEncoder
             val str = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                String.format("name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
+                String.format(
+                    "name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
                     mediaCodecInfo.name,
                     mediaCodecInfo.isEncoder,
                     mediaCodecInfo.isHardwareAccelerated,
                     mediaCodecInfo.isSoftwareOnly,
-                    mediaCodecInfo.isVendor)
+                    mediaCodecInfo.isVendor
+                )
                 // LogContext.log.i(ITAG, str)
             } else {
                 "Below Android Q"

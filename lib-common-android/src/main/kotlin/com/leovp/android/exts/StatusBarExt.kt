@@ -3,7 +3,6 @@
 package com.leovp.android.exts
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
@@ -69,7 +68,7 @@ fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boole
     window.statusBarColor = color
 
     if (darkMode != null) {
-        darkMode(darkMode)
+        statusBarDarkMode(darkMode)
     }
 }
 
@@ -92,7 +91,7 @@ fun Activity.immersiveExit(darkMode: Boolean? = null) {
     typedArray.recycle()
 
     if (darkMode != null) {
-        darkMode(darkMode)
+        statusBarDarkMode(darkMode)
     }
 }
 
@@ -104,35 +103,39 @@ fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) = imm
 // </editor-fold>
 
 // <editor-fold desc="dark mode">
+
 /**
- * 开关状态栏暗色模式, 并不会透明状态栏, 只是单纯的状态栏文字变暗色调.
+ * Set dark mode for status bar.
  *
  * @param darkMode Whether to use dark mode or not.
  */
 @Suppress("DEPRECATION")
-fun Activity.darkMode(darkMode: Boolean = true) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-            controller.isAppearanceLightStatusBars = !darkMode
-            controller.isAppearanceLightNavigationBars = !darkMode
-            // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
-    } else {
-        var systemUiVisibility = window.decorView.systemUiVisibility
-        systemUiVisibility = if (darkMode) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            } else {
-                systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-            }
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-            } else {
-                systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+fun Activity.statusBarDarkMode(darkMode: Boolean = true) {
+    when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+            WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+                controller.isAppearanceLightStatusBars = !darkMode
+                controller.isAppearanceLightNavigationBars = !darkMode
+                // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         }
-        window.decorView.systemUiVisibility = systemUiVisibility
+        else -> {
+            var systemUiVisibility = window.decorView.systemUiVisibility
+            systemUiVisibility = if (darkMode) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                } else {
+                    systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                }
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                } else {
+                    systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                }
+            }
+            window.decorView.systemUiVisibility = systemUiVisibility
+        }
     }
 }
 
@@ -187,37 +190,26 @@ fun View.addStatusBarMargin(remove: Boolean = false) {
     layoutParams = lp
 }
 
-/**
- * 创建假的透明栏
- */
-private fun Context.setTranslucentView(container: ViewGroup, color: Int) {
-    var simulateStatusBar: View? = container.findViewById(android.R.id.custom)
-    if (simulateStatusBar == null && color != 0) {
-        simulateStatusBar = View(container.context)
-        simulateStatusBar.id = android.R.id.custom
-        val lp = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, statusBarHeight)
-        container.addView(simulateStatusBar, lp)
-    }
-    simulateStatusBar?.setBackgroundColor(color)
-}
-
 // </editor-fold>
 
 // <editor-fold desc="ActionBar">
 
 /**
- * 设置ActionBar的背景颜色
+ * Set the color of ActionBar by color int.
  */
 fun AppCompatActivity.setActionBarBackground(@ColorInt color: Int) {
     supportActionBar?.setBackgroundDrawable(ColorDrawable(color))
 }
 
+/**
+ * Set the color of ActionBar by color resource.
+ */
 fun AppCompatActivity.setActionBarBackgroundRes(@ColorRes colorRes: Int) {
     supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, colorRes)))
 }
 
 /**
- * 设置ActionBar的背景颜色为透明
+ * Transparent ActionBar.
  */
 fun AppCompatActivity.setActionBarTransparent() {
     supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))

@@ -3,11 +3,12 @@ package com.leovp.demo.basiccomponents.examples.animation
 import android.os.Bundle
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.androidbase.exts.android.startActivity
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityAnimationBinding
 import com.leovp.log.base.ITAG
 
-class AnimationActivity : BaseDemonstrationActivity<ActivityAnimationBinding>() {
+class AnimationActivity : BaseDemonstrationActivity<ActivityAnimationBinding>(R.layout.activity_animation) {
 
     override fun getTagName(): String = ITAG
 

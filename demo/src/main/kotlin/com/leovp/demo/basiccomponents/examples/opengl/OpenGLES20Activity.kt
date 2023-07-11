@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.leovp.androidbase.exts.android.startActivity
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L11DynamicPointRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L12U1BallRenderer
@@ -32,7 +33,7 @@ import com.leovp.log.base.ITAG
 import kotlinx.parcelize.Parcelize
 
 class OpenGLES20Activity :
-    BaseDemonstrationActivity<ActivityOpenGles20Binding>(),
+    BaseDemonstrationActivity<ActivityOpenGles20Binding>(R.layout.activity_open_gles20),
     AdapterView.OnItemClickListener {
     override fun getTagName(): String = ITAG
 

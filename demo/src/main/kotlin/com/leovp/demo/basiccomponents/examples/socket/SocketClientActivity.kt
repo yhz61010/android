@@ -9,6 +9,7 @@ import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ExponentRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivitySocketClientBinding
 import com.leovp.json.toJsonString
@@ -21,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBinding>() {
+class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBinding>(R.layout.activity_socket_client) {
     override fun getTagName(): String = ITAG
 
     private val cs = CoroutineScope(Dispatchers.IO)

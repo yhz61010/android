@@ -8,6 +8,7 @@ import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circleprogressbar.CircleProgressbar
 import com.leovp.circleprogressbar.base.DefaultOnClickListener
 import com.leovp.circleprogressbar.base.State
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCircleProgressbarBinding
 import com.leovp.log.LogContext
@@ -18,7 +19,7 @@ import kotlin.concurrent.thread
  * Author: Michael Leo
  * Date: 2021/9/30 14:07
  */
-class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgressbarBinding>() {
+class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(R.layout.activity_circle_progressbar) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding {

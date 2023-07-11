@@ -8,6 +8,7 @@ import com.leovp.android.exts.toast
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityNetworkMonitorBinding
 import com.leovp.json.toJsonString
@@ -26,7 +27,7 @@ import java.util.*
  * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
  * ```
  */
-class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorBinding>() {
+class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorBinding>(R.layout.activity_network_monitor) {
 
     override fun getTagName(): String = ITAG
 

@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.LayoutRes
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
@@ -34,6 +35,9 @@ import org.greenrobot.eventbus.ThreadMode
 /**
  * This class has already enabled Custom Language feature.
  *
+ * Attention: If you use _navigation component_ in your activity,
+ * **DO NOT** assign [layoutResId] in your constructor.
+ *
  * Usage:
  * ```
  * class YourActivity : BaseActivity<YourActivityBinding>({
@@ -53,8 +57,8 @@ import org.greenrobot.eventbus.ThreadMode
  * Author: Michael Leo
  * Date: 2022/6/28 16:35
  */
-abstract class BaseActivity<B : ViewBinding>(init: (ActivityConfig.() -> Unit)? = null) :
-    AppCompatActivity() {
+abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, init: (ActivityConfig.() -> Unit)? = null) :
+    AppCompatActivity(layoutResId) {
     abstract fun getTagName(): String
 
     @Suppress("WeakerAccess")

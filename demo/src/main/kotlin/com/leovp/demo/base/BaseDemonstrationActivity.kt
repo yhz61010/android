@@ -1,6 +1,7 @@
 package com.leovp.demo.base
 
 import android.os.Bundle
+import androidx.annotation.LayoutRes
 import androidx.viewbinding.ViewBinding
 import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseActivity
@@ -11,7 +12,7 @@ import com.leovp.log.LogContext
  * Date: 20-6-17 上午11:14
  */
 abstract class BaseDemonstrationActivity<B : ViewBinding>
-(init: (ActivityConfig.() -> Unit)? = null) : BaseActivity<B>(init) {
+(@LayoutRes layoutResId: Int = 0, init: (ActivityConfig.() -> Unit)? = null) : BaseActivity<B>(layoutResId, init) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")

@@ -9,7 +9,7 @@ import com.leovp.demo.databinding.ActivityFfmpegH264Binding
 import com.leovp.log.base.ITAG
 import com.leovp.opengl.ui.LeoGLSurfaceView
 
-class FFMpegH264Activity : BaseDemonstrationActivity<ActivityFfmpegH264Binding>() {
+class FFMpegH264Activity : BaseDemonstrationActivity<ActivityFfmpegH264Binding>(R.layout.activity_ffmpeg_h264) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityFfmpegH264Binding {

@@ -23,7 +23,7 @@ import org.greenrobot.eventbus.EventBus
  * - If you set language in `zh_CN`, you should create `values-zh-rCN` folder in `values` folder.
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  */
-class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>() {
+class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>(R.layout.activity_change_app_language) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityChangeAppLanguageBinding {

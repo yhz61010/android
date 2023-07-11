@@ -2,12 +2,13 @@ package com.leovp.demo.basiccomponents.examples
 
 import android.content.res.Configuration
 import android.os.Bundle
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivitySaveInstanceStateBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class SaveInstanceStateActivity : BaseDemonstrationActivity<ActivitySaveInstanceStateBinding>() {
+class SaveInstanceStateActivity : BaseDemonstrationActivity<ActivitySaveInstanceStateBinding>(R.layout.activity_save_instance_state) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivitySaveInstanceStateBinding {

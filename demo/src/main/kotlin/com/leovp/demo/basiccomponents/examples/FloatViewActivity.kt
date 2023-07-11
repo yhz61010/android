@@ -18,7 +18,7 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.*
 
-class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() {
+class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.layout.activity_float_view) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityFloatViewBinding {
@@ -222,6 +222,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>() 
                 R.id.rbTouchable -> {
                     FloatView.with("floatView_touchable").touchable = true
                 }
+
                 R.id.rbNoneTouchable -> {
                     FloatView.with("floatView_touchable").touchable = false
                 }

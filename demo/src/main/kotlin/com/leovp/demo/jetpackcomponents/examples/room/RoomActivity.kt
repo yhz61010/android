@@ -22,7 +22,7 @@ import com.leovp.demo.databinding.ActivityRoomBinding
 import com.leovp.demo.jetpackcomponents.examples.room.entity.Word
 import com.leovp.log.base.ITAG
 
-class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>() {
+class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.activity_room) {
 
     override fun getTagName(): String = ITAG
 

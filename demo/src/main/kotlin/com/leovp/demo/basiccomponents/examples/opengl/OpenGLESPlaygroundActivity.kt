@@ -8,6 +8,7 @@ import android.widget.ImageView
 import com.leovp.android.exts.createFile
 import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.L8U1FilterRenderer
 import com.leovp.demo.basiccomponents.examples.opengl.renderers.baseL7.L7BaseRenderer
@@ -18,7 +19,7 @@ import com.leovp.opengl.BaseRenderer
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
-class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>() {
+class OpenGLESPlaygroundActivity : BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>(R.layout.activity_open_glesplayground) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGlesplaygroundBinding {

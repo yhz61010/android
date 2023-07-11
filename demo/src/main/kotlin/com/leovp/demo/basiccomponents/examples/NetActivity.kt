@@ -4,11 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import com.leovp.android.exts.setOnSingleClickListener
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityNetBinding
 import com.leovp.log.base.ITAG
 
-class NetActivity : BaseDemonstrationActivity<ActivityNetBinding>() {
+class NetActivity : BaseDemonstrationActivity<ActivityNetBinding>(R.layout.activity_net) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetBinding {

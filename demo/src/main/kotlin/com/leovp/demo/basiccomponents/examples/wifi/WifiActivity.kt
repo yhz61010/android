@@ -9,12 +9,12 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.leovp.android.exts.toast
 import com.leovp.android.exts.wifiManager
 import com.leovp.androidbase.utils.device.WifiUtil
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.wifi.base.WifiAdapter
 import com.leovp.demo.basiccomponents.examples.wifi.base.WifiModel
@@ -42,7 +42,7 @@ import com.leovp.log.base.ITAG
  * The same throttling limits from Android 9 apply.
  * There is a new developer option to toggle the throttling off for local testing (under Developer Options > Networking > Wi-Fi scan throttling).
  */
-class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>() {
+class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.activity_wifi) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityWifiBinding {
@@ -53,7 +53,6 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>() {
     private val wifi: WifiUtil by lazy { WifiUtil.getInstance(this) }
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
-        @RequiresApi(Build.VERSION_CODES.M)
         override fun onReceive(context: Context, intent: Intent) {
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (success) {

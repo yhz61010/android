@@ -16,7 +16,7 @@
     </style>
 
     <style name="ActivityThemeActionBarOverlay" parent="AppTheme">
-        <!-- Add me in order to work on Pixel/Xiaomi and etc. -->
+        <!-- Add me in order to use for support library -->
         <item name="windowActionBarOverlay">true</item>
         <item name="android:windowActionBarOverlay">true</item>
         <!-- <item name="android:statusBarColor">@android:color/transparent</item> -->

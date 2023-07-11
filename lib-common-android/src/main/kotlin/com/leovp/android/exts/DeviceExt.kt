@@ -19,7 +19,6 @@ import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Size
-import android.util.TypedValue
 import android.view.Display
 import android.view.Surface
 import android.view.WindowInsets
@@ -98,15 +97,15 @@ val Context.screenAvailableResolution: Size
             val bounds = metrics.bounds
             Size(bounds.width() - insetsWidth, bounds.height() - insetsHeight)
         } else {
-            //            val display = wm.defaultDisplay
-            //            val size = Point()
-            //            display.getSize(size)
-            //            size
+            // val display = wm.defaultDisplay
+            // val size = Point()
+            // display.getSize(size)
+            // size
 
-            //            val display = wm.defaultDisplay
-            //            val displayMetrics = DisplayMetrics()
-            //            display.getMetrics(displayMetrics)
-            //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
+            // val display = wm.defaultDisplay
+            // val displayMetrics = DisplayMetrics()
+            // display.getMetrics(displayMetrics)
+            // return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
             val displayMetrics = resources.displayMetrics
             return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
@@ -115,7 +114,7 @@ val Context.screenAvailableResolution: Size
 val Context.screenRealResolution: Size
     get() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            //        this.display?.getRealSize(size)
+            // this.display?.getRealSize(size)
             val bounds = windowManager.currentWindowMetrics.bounds
             Size(bounds.width(), bounds.height())
         } else {
@@ -212,27 +211,6 @@ fun Context.getScreenSize(surfaceRotation: Int, screenSize: Size = screenRealRes
         )
     }
 }
-
-val Context.statusBarHeight
-    @SuppressLint("DiscouragedApi", "InternalInsetResource")
-    get(): Int {
-        var result = 0
-        val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = this.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
-    }
-
-val Activity.actionBarHeight
-    get(): Int {
-        val tv = TypedValue()
-        var actionBarHeight = 0
-        if (this.theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
-        }
-        return actionBarHeight
-    }
 
 val Context.isFullScreenDevice get(): Boolean = screenRatio >= 1.97f
 

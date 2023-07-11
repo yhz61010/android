@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 
-class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareMasterBinding>() {
+class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareMasterBinding>(R.layout.activity_screen_share_master) {
     override fun getTagName(): String = ITAG
 
     companion object {

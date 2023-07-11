@@ -1,6 +1,7 @@
 package com.leovp.demo.basiccomponents.examples.adb
 
 import android.os.Bundle
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.adb.base.LocalServerSocket
 import com.leovp.demo.databinding.ActivityAdbCommunicationBinding
@@ -11,7 +12,7 @@ import kotlin.concurrent.thread
 /**
  * https://juejin.cn/post/6844903746464399367
  */
-class AdbCommunication : BaseDemonstrationActivity<ActivityAdbCommunicationBinding>() {
+class AdbCommunication : BaseDemonstrationActivity<ActivityAdbCommunicationBinding>(R.layout.activity_adb_communication) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAdbCommunicationBinding {

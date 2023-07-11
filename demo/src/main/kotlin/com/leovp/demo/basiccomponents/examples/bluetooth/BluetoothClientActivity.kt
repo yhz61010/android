@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBluetoothClientBinding
 import com.leovp.json.toJsonString
@@ -43,7 +44,7 @@ import com.leovp.log.base.ITAG
  * @see <a href="https://www.jianshu.com/p/a27f3ca027e3">BLE Develop</a>
  * @see <a href="https://www.jianshu.com/p/71116665fd08">FAQ</a>
  */
-class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClientBinding>() {
+class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClientBinding>(R.layout.activity_bluetooth_client) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothClientBinding {

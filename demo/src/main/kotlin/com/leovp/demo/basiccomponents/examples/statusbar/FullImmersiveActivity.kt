@@ -2,8 +2,8 @@ package com.leovp.demo.basiccomponents.examples.statusbar
 
 import android.graphics.Color
 import android.os.Bundle
-import android.util.TypedValue
 import androidx.core.content.ContextCompat
+import com.leovp.android.exts.actionBarHeight
 import com.leovp.android.exts.addStatusBarMargin
 import com.leovp.android.exts.getDimenInPixel
 import com.leovp.android.exts.immersive
@@ -79,20 +79,11 @@ class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBin
 
     private fun restoreMargin() {
         binding.tvBaseColor.topMargin = getDimenInPixel("default_margin")
-        binding.tvBaseColor.topMargin += getStatusBarHeight()
+        binding.tvBaseColor.topMargin += actionBarHeight
     }
 
     private fun resetProperMargin() {
         restoreMargin()
         binding.tvBaseColor.addStatusBarMargin()
-    }
-
-    private fun getStatusBarHeight(): Int {
-        val tv = TypedValue()
-        var actionBarHeight = 0
-        if (this.theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
-        }
-        return actionBarHeight
     }
 }

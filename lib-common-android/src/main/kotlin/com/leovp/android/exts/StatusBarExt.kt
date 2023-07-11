@@ -2,7 +2,14 @@
 
 package com.leovp.android.exts
 
+/**
+ * Author: Michael Leo
+ * Date: 2023/7/10 14:12
+ */
+
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.View
@@ -11,7 +18,6 @@ import android.view.WindowManager
 import android.widget.RelativeLayout
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -53,18 +59,21 @@ fun Activity.immersive(v: View, darkMode: Boolean? = null) {
  * @param darkMode Whether to use dark mode or not.
  */
 fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boolean? = null) {
-    // Set the color of status bar.
-    window.statusBarColor = color
-
     // Allow content to extend into status bar.
     WindowCompat.setDecorFitsSystemWindows(window, false)
 
-    // // Check WindowCompat.setDecorFitsSystemWindows method.
+    // Set the color of status bar.
+    window.statusBarColor = color
+
+    // According the document, when set _statusBarColor_, we need also do the following step:
+    // 1. Set WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag.
+    // 2. Unset WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS flag.
+    // However, it still works if I don't do that.
+    //
     // if (Color.TRANSPARENT == color) {
     //     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
     //         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
     //         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-    //         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
     //     }
     // }
 
@@ -77,6 +86,7 @@ fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boole
     // to ensure proper rendering and interaction.
     ViewCompat.requestApplyInsets(window.decorView)
 
+    // Check WindowCompat.getInsetsController method in [statusBarDarkMode] method.
     if (darkMode != null) {
         // Set the text color of status bar.
         statusBarDarkMode(darkMode)
@@ -214,27 +224,17 @@ fun View.addStatusBarMargin(remove: Boolean = false) {
 
 // </editor-fold>
 
-// <editor-fold desc="ActionBar">
+// <editor-fold desc="Other utilities">
 
-/**
- * Set the color of ActionBar by color int.
- */
-fun AppCompatActivity.setActionBarBackground(@ColorInt color: Int) {
-    supportActionBar?.setBackgroundDrawable(ColorDrawable(color))
-}
-
-/**
- * Set the color of ActionBar by color resource.
- */
-fun AppCompatActivity.setActionBarBackgroundRes(@ColorRes colorRes: Int) {
-    supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, colorRes)))
-}
-
-/**
- * Transparent ActionBar.
- */
-fun AppCompatActivity.setActionBarTransparent() {
-    supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-}
+val Context.statusBarHeight
+    @SuppressLint("DiscouragedApi", "InternalInsetResource")
+    get(): Int {
+        var result = 0
+        val resourceId = this.resources.getIdentifier("status_bar_height", "dimen", "android")
+        if (resourceId > 0) {
+            result = this.resources.getDimensionPixelSize(resourceId)
+        }
+        return result
+    }
 
 // </editor-fold>

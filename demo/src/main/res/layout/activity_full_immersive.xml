@@ -57,11 +57,11 @@
         app:layout_constraintTop_toBottomOf="@+id/tvBaseColor" />
 
     <Button
-        android:id="@+id/btnRestore"
+        android:id="@+id/btnRestoreWithDark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin"
-        android:text="Exit immersive"
+        android:text="Exit immersive with Dark Mode"
         app:layout_constraintStart_toStartOf="@+id/btnTranslucent"
         app:layout_constraintTop_toBottomOf="@+id/btnTranslucent" />
 
@@ -73,6 +73,23 @@
         android:text="Translucent"
         app:layout_constraintStart_toStartOf="@+id/btnMagentaDark"
         app:layout_constraintTop_toBottomOf="@+id/btnMagentaDark" />
+
+    <Button
+        android:id="@+id/btnRestoreWithLight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Exit immersive with Light Mode"
+        app:layout_constraintStart_toStartOf="@+id/btnRestoreWithDark"
+        app:layout_constraintTop_toBottomOf="@+id/btnRestoreWithDark" />
+
+    <Button
+        android:id="@+id/btnRestore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Exit immersive without mode"
+        app:layout_constraintStart_toStartOf="@+id/btnRestoreWithLight" app:layout_constraintTop_toBottomOf="@+id/btnRestoreWithLight" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

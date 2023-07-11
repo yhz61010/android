@@ -4,13 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
 /**
  * Usage:
  * ```
- * class YourFragment : BaseFragment<YourFragmentBinding>() {
+ * class YourFragment : BaseFragment<YourFragmentBinding>(R.layout.fragment_your_layout) {
  *    override fun getTagName(): String = "LogTag"
  *
  *    override fun getViewBinding(inflater: LayoutInflater,
@@ -25,7 +26,7 @@ import androidx.viewbinding.ViewBinding
  * Author: Michael Leo
  * Date: 2022/6/28 15:46
  */
-abstract class BaseFragment<B : ViewBinding> : Fragment() {
+abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Fragment(layoutResId) {
     abstract fun getTagName(): String
 
     @Suppress("WeakerAccess", "unused")

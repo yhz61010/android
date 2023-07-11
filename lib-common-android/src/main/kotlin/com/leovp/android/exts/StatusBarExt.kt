@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
-//<editor-fold desc="Set status bar color">
+// <editor-fold desc="Set status bar color">
 /** Set status bar color by color int. */
 fun Activity.statusBarColor(@ColorInt color: Int) {
     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
@@ -28,7 +28,7 @@ fun Activity.statusBarColor(@ColorInt color: Int) {
 /** Set status bar color by resource id. */
 fun Activity.statusBarColorRes(@ColorRes colorRes: Int) = statusBarColor(ContextCompat.getColor(this, colorRes))
 
-//</editor-fold>
+// </editor-fold>
 
 // <editor-fold desc="Immersive status bar">
 
@@ -99,8 +99,7 @@ fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) = imm
 
 // </editor-fold>
 
-
-//<editor-fold desc="dark mode">
+// <editor-fold desc="dark mode">
 /**
  * 开关状态栏暗色模式, 并不会透明状态栏, 只是单纯的状态栏文字变暗色调.
  *
@@ -133,7 +132,7 @@ fun Activity.darkMode(darkMode: Boolean = true) {
     }
 }
 
-//</editor-fold>
+// </editor-fold>
 
 // <editor-fold desc="padding and margin">
 
@@ -156,8 +155,10 @@ fun View.addStatusBarPadding(remove: Boolean = false) {
     if (remove) {
         if (paddingTop < statusBarHeight) return
         setPadding(
-            paddingLeft, paddingTop - statusBarHeight,
-            paddingRight, paddingBottom
+            paddingLeft,
+            paddingTop - statusBarHeight,
+            paddingRight,
+            paddingBottom
         )
     } else {
         setPadding(paddingLeft, paddingTop + statusBarHeight, paddingRight, paddingBottom)
@@ -182,7 +183,6 @@ fun View.addStatusBarMargin(remove: Boolean = false) {
     layoutParams = lp
 }
 
-
 /**
  * 创建假的透明栏
  */
@@ -197,9 +197,9 @@ private fun Context.setTranslucentView(container: ViewGroup, color: Int) {
     simulateStatusBar?.setBackgroundColor(color)
 }
 
-//</editor-fold>
+// </editor-fold>
 
-//<editor-fold desc="ActionBar">
+// <editor-fold desc="ActionBar">
 
 /**
  * 设置ActionBar的背景颜色
@@ -219,4 +219,4 @@ fun AppCompatActivity.setActionBarTransparent() {
     supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 }
 
-//</editor-fold>
+// </editor-fold>

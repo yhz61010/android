@@ -28,7 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>() {
+class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.layout.activity_java_mail) {
     override fun getTagName(): String = ITAG
 
     companion object {

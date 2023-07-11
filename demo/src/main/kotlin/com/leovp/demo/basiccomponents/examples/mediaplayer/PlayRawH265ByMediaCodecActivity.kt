@@ -21,7 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity<ActivityPlayVideoBinding>() {
+class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity<ActivityPlayVideoBinding>(R.layout.activity_play_video) {
 
     override fun getTagName(): String = ITAG
 

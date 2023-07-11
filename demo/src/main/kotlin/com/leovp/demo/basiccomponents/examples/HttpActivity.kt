@@ -33,7 +33,7 @@ import retrofit2.http.Path
 import retrofit2.http.QueryMap
 import retrofit2.http.Streaming
 
-class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>() {
+class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>(R.layout.activity_http) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityHttpBinding {

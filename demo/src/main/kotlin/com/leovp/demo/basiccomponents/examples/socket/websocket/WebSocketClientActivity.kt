@@ -10,6 +10,7 @@ import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityWebsocketClientBinding
 import com.leovp.json.toJsonString
@@ -31,7 +32,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClientBinding>() {
+class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClientBinding>(R.layout.activity_websocket_client) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketClientBinding {

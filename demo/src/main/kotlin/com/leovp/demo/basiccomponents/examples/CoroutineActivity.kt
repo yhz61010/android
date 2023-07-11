@@ -1,6 +1,7 @@
 package com.leovp.demo.basiccomponents.examples
 
 import android.os.Bundle
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCoroutineBinding
 import com.leovp.log.LogContext
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
-class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>() {
+class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.layout.activity_coroutine) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCoroutineBinding {

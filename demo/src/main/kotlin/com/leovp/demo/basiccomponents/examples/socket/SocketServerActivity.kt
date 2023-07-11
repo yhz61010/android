@@ -9,6 +9,7 @@ import com.leovp.android.utils.NetworkUtil
 import com.leovp.basenetty.framework.server.BaseNettyServer
 import com.leovp.basenetty.framework.server.BaseServerChannelInboundHandler
 import com.leovp.basenetty.framework.server.ServerConnectListener
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivitySocketServerBinding
 import com.leovp.log.LogContext
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 21-1-25 上午11:43
  */
-class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBinding>() {
+class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBinding>(R.layout.activity_socket_server) {
     override fun getTagName(): String = ITAG
 
     companion object {

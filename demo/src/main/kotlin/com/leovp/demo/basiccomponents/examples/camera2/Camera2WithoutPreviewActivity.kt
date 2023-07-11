@@ -13,6 +13,7 @@ import com.hjq.permissions.XXPermissions
 import com.leovp.android.exts.toast
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.utils.getPreviewOutputSize
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCamera2WithoutPreviewBinding
 import com.leovp.log.LogContext
@@ -20,7 +21,8 @@ import com.leovp.log.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class Camera2WithoutPreviewActivity : BaseDemonstrationActivity<ActivityCamera2WithoutPreviewBinding>() {
+class Camera2WithoutPreviewActivity :
+    BaseDemonstrationActivity<ActivityCamera2WithoutPreviewBinding>(R.layout.activity_camera2_without_preview) {
     override fun getTagName(): String = ITAG
 
     companion object {

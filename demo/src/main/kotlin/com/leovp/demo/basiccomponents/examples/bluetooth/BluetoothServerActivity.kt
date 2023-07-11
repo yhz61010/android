@@ -18,6 +18,7 @@ import androidx.annotation.RequiresPermission
 import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.device.BluetoothUtil
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityBluetoothServerBinding
 import com.leovp.json.toJsonString
@@ -33,7 +34,7 @@ import java.util.*
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
-class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServerBinding>() {
+class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServerBinding>(R.layout.activity_bluetooth_server) {
     override fun getTagName(): String = ITAG
 
     companion object {

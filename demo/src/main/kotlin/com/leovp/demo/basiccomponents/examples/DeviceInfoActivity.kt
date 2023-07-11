@@ -10,6 +10,7 @@ import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.androidbase.utils.notch.INotchScreen
 import com.leovp.androidbase.utils.notch.NotchScreenManager
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDeviceInfoBinding
 import com.leovp.json.toJsonString
@@ -18,7 +19,7 @@ import com.leovp.log.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>() {
+class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(R.layout.activity_device_info) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityDeviceInfoBinding {

@@ -16,7 +16,7 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityFullImmersiveBinding
 import com.leovp.log.base.ITAG
 
-class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBinding>() {
+class FullImmersiveActivity : BaseDemonstrationActivity<ActivityFullImmersiveBinding>(R.layout.activity_full_immersive) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityFullImmersiveBinding {

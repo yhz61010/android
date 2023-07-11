@@ -6,12 +6,13 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import com.leovp.androidbase.utils.Watermark
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityWatermarkBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class WatermarkActivity : BaseDemonstrationActivity<ActivityWatermarkBinding>() {
+class WatermarkActivity : BaseDemonstrationActivity<ActivityWatermarkBinding>(R.layout.activity_watermark) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityWatermarkBinding {

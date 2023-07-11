@@ -22,6 +22,7 @@ import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.utils.device.BluetoothUtil
 import com.leovp.androidbase.utils.device.ScanDeviceCallback
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.bluetooth.base.DeviceAdapter
 import com.leovp.demo.basiccomponents.examples.bluetooth.base.DeviceModel
@@ -31,7 +32,7 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
 @SuppressLint("SetTextI18n")
-class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBinding>() {
+class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBinding>(R.layout.activity_bluetooth_scan) {
 
     override fun getTagName(): String = ITAG
 

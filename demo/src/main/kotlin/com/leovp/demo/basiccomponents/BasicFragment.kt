@@ -66,7 +66,7 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import kotlin.concurrent.thread
 
-class BasicFragment : BaseFragment<FragmentBasicBinding>() {
+class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic) {
 
     override fun getTagName() = ITAG
 

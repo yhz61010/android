@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import com.leovp.androidbase.exts.android.startActivity
 import com.leovp.androidbase.framework.BaseFragment
 import com.leovp.demo.ColorBaseAdapter
+import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentJetpackBinding
 import com.leovp.demo.jetpackcomponents.examples.camerax.CameraXDemoActivity
 import com.leovp.demo.jetpackcomponents.examples.navigation.NavigationMainActivity
@@ -16,7 +17,7 @@ import com.leovp.demo.jetpackcomponents.examples.room.RoomActivity
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class JetpackFragment : BaseFragment<FragmentJetpackBinding>() {
+class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_jetpack) {
 
     override fun getTagName(): String = ITAG
 

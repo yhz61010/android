@@ -17,6 +17,7 @@ import com.leovp.audio.base.AudioType
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.opus.OpusFilePlayer
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.audio.receiver.AudioReceiver
 import com.leovp.demo.basiccomponents.examples.audio.sender.AudioSender
@@ -32,7 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>() {
+class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.activity_audio) {
     override fun getTagName(): String = ITAG
 
     companion object {

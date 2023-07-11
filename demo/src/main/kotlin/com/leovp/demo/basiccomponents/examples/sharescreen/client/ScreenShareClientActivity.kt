@@ -32,6 +32,7 @@ import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.asByteAndForceToBytes
 import com.leovp.bytes.toBytesLE
 import com.leovp.bytes.toHexString
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.MediaProjectionService
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
@@ -59,7 +60,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareClientBinding>() {
+class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareClientBinding>(R.layout.activity_screen_share_client) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -218,6 +219,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
                 }
             }
+
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
@@ -269,13 +271,16 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                             it.get(decodedData)
                             LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexString()}]")
                         }
+
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
+
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
+
                         else -> {
                             // Do nothing
                         }
@@ -476,6 +481,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                                 sps = H264Util.getSps(dataArray)
                                 pps = H264Util.getPps(dataArray)
                             }
+
                             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                                 vps = H265Util.getVps(dataArray)
                                 sps = H265Util.getSps(dataArray)
@@ -594,6 +600,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 touchDownRawY = event.rawY
                 touchDownStartTime = SystemClock.currentThreadTimeMillis()
             }
+
             MotionEvent.ACTION_MOVE -> Unit
             MotionEvent.ACTION_UP -> {
                 touchUpRawX = event.rawX

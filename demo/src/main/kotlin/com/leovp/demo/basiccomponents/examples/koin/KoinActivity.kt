@@ -2,6 +2,7 @@ package com.leovp.demo.basiccomponents.examples.koin
 
 import android.os.Bundle
 import com.leovp.android.exts.toast
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityKoinBinding
 import com.leovp.log.LogContext
@@ -10,7 +11,7 @@ import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 
-class KoinActivity : BaseDemonstrationActivity<ActivityKoinBinding>() {
+class KoinActivity : BaseDemonstrationActivity<ActivityKoinBinding>(R.layout.activity_koin) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityKoinBinding {

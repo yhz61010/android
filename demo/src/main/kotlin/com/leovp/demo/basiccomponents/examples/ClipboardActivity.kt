@@ -3,12 +3,13 @@ package com.leovp.demo.basiccomponents.examples
 import android.os.Bundle
 import android.view.View
 import com.leovp.androidbase.utils.system.ClipboardUtil
+import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityClipboardBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class ClipboardActivity : BaseDemonstrationActivity<ActivityClipboardBinding>() {
+class ClipboardActivity : BaseDemonstrationActivity<ActivityClipboardBinding>(R.layout.activity_clipboard) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityClipboardBinding {

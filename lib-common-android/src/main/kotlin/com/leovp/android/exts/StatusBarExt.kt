@@ -77,7 +77,7 @@ fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boole
  * Turn off status bar's immersive mode.
  */
 @Suppress("DEPRECATION")
-fun Activity.immersiveExit() {
+fun Activity.immersiveExit(darkMode: Boolean? = null) {
     // On Android API 30 or above (R, Android 11), turn off status bar's immersive mode needs the following setting.
     // This method has already done the compatibility
     WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -90,6 +90,10 @@ fun Activity.immersiveExit() {
     val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
     window.statusBarColor = typedArray.getColor(0, 0)
     typedArray.recycle()
+
+    if (darkMode != null) {
+        darkMode(darkMode)
+    }
 }
 
 /**

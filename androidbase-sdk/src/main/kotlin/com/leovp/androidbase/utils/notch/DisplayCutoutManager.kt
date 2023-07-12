@@ -16,29 +16,20 @@ import com.leovp.androidbase.utils.notch.impl.XiaoMiDisplayCutout
 import com.leovp.kotlin.utils.SingletonHolder
 
 /**
- * Example1: Allow to render on notch area
+ * Example1: Allow to render on display cutout area.
  * ```kotlin
- * NotchScreenManager.getInstance(activity).setDisplayInNotch()
+ * NotchScreenManager.getInstance(activity).fillDisplayCutout()
  * ```
  *
- * Example2:
- * Get notch information
+ * Example2: Get display cutout information.
  * ```kotlin
- * DisplayCutoutManager.getInstance(activity).getNotchInfo(object : INotchScreen.NotchScreenCallback {
- *     override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
- *         LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
- *         notchScreenInfo.notchRects?.let {
- *             val halfScreenWidth = screenRealResolution.x / 2
- *             if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
- *                 LogContext.log.i(TAG, "Notch in Middle")
- *             } else if (halfScreenWidth < it[0].left) {
- *                 LogContext.log.i(TAG, "Notch in Right")
- *             } else {
- *                 LogContext.log.i(TAG, "Notch in Left")
- *             }
- *         }
- *     }
- * })
+ * DisplayCutoutManager.getInstance(this).getDisplayCutoutInfo { info ->
+ *     LogContext.log.i(TAG, "notchScreenInfo: ${info.toJsonString()}")
+ *     binding.tv2.text = "notchScreenInfo: ${info.toJsonString()}"
+ *
+ *     LogContext.log.i(TAG, "Notch in ${info.pos}")
+ *     binding.tv2.text = "Notch in ${info.pos}"
+ * }
  * ```
  *
  * Author: Michael Leo

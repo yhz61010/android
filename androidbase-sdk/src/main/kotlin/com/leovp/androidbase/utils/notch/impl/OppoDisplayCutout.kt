@@ -7,18 +7,19 @@ import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import com.leovp.android.exts.isPortrait
 import com.leovp.android.utils.DeviceProp
-import com.leovp.androidbase.utils.notch.INotchScreen
-import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
+import com.leovp.androidbase.utils.notch.DisplayCutout
 
 @RequiresApi(Build.VERSION_CODES.O)
-class OppoNotchScreen : INotchScreen {
-    override fun hasNotch(activity: Activity): Boolean {
-        return runCatching { activity.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism") }.getOrDefault(false)
+internal class OppoDisplayCutout : DisplayCutout {
+    override fun supportDisplayCutout(activity: Activity): Boolean {
+        return runCatching {
+            activity.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism")
+        }.getOrDefault(false)
     }
 
-    override fun setDisplayInNotch(activity: Activity) = Unit
+    override fun fillDisplayCutout(activity: Activity) = Unit
 
-    override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
+    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
         runCatching {
             val notchPosition = notchPosition
             if (!TextUtils.isEmpty(notchPosition)) {

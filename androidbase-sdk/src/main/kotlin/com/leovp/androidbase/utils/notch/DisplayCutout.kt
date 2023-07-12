@@ -12,7 +12,7 @@ interface DisplayCutout {
     fun cutoutAreaRect(activity: Activity, callback: CutoutAreaRectCallback)
 
     fun interface CutoutAreaRectCallback {
-        fun onResult(rect: List<Rect>?)
+        fun onResult(rects: List<Rect>?)
     }
 
     fun interface DisplayCutoutInfoCallback {
@@ -24,5 +24,5 @@ interface DisplayCutout {
     }
 
     @Keep
-    data class DisplayCutoutInfo(var support: Boolean = false, var pos: CutoutPosition? = null, var rect: List<Rect>? = null)
+    data class DisplayCutoutInfo(var support: Boolean = false, var positions: List<CutoutPosition>? = null, var rects: List<Rect>? = null)
 }

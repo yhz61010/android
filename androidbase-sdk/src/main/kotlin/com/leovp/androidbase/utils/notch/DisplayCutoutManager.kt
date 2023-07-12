@@ -24,11 +24,7 @@ import com.leovp.kotlin.utils.SingletonHolder
  * Example2: Get display cutout information.
  * ```kotlin
  * DisplayCutoutManager.getInstance(this).getDisplayCutoutInfo { info ->
- *     LogContext.log.i(TAG, "notchScreenInfo: ${info.toJsonString()}")
- *     binding.tv2.text = "notchScreenInfo: ${info.toJsonString()}"
- *
- *     LogContext.log.i(TAG, "Notch in ${info.pos}")
- *     binding.tv2.text = "Notch in ${info.pos}"
+ *     LogContext.log.i(TAG, "Display cutout information: ${info.toJsonString()}")
  * }
  * ```
  *
@@ -47,18 +43,21 @@ class DisplayCutoutManager private constructor(private val activity: Activity) {
     fun getDisplayCutoutInfo(infoCallback: DisplayCutout.DisplayCutoutInfoCallback) {
         val cutoutInfo = DisplayCutout.DisplayCutoutInfo()
         if (displayCutout?.supportDisplayCutout(activity) == true) {
-            displayCutout?.cutoutAreaRect(activity) { rect ->
-                if (!rect.isNullOrEmpty()) {
+            displayCutout?.cutoutAreaRect(activity) { rects ->
+                if (!rects.isNullOrEmpty()) {
                     cutoutInfo.support = true
-                    cutoutInfo.rect = rect
-
+                    cutoutInfo.rects = rects
+                    val positions: MutableList<DisplayCutout.CutoutPosition> = ArrayList()
+                    cutoutInfo.positions = positions
                     val halfScreenWidth = activity.getScreenWidth() / 2
-                    if (rect[0].left < halfScreenWidth && halfScreenWidth < rect[0].right) {
-                        cutoutInfo.pos = DisplayCutout.CutoutPosition.MIDDLE
-                    } else if (halfScreenWidth < rect[0].left) {
-                        cutoutInfo.pos = DisplayCutout.CutoutPosition.RIGHT
-                    } else {
-                        cutoutInfo.pos = DisplayCutout.CutoutPosition.LEFT
+                    for( rect in rects) {
+                        if (rect.left < halfScreenWidth && halfScreenWidth < rect.right) {
+                            positions.add(DisplayCutout.CutoutPosition.MIDDLE)
+                        } else if (halfScreenWidth < rect.left) {
+                            positions.add(DisplayCutout.CutoutPosition.RIGHT)
+                        } else {
+                            positions.add(DisplayCutout.CutoutPosition.LEFT)
+                        }
                     }
                 }
                 infoCallback.onResult(cutoutInfo)

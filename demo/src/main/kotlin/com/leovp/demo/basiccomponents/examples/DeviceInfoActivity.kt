@@ -36,21 +36,23 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         LogContext.log.i(TAG, deviceInfo)
 
         DisplayCutoutManager.getInstance(this).getDisplayCutoutInfo { info ->
-            LogContext.log.i(TAG, "notchScreenInfo: ${info.toJsonString()}")
-            binding.tv2.text = "notchScreenInfo: ${info.toJsonString()}"
-
-            LogContext.log.i(TAG, "Notch in ${info.pos}")
-            binding.tv2.text = "Notch in ${info.pos}"
+            LogContext.log.i(TAG, "Display cutout information: ${info.toJsonString()}")
+            val cutoutRect = info.rects
+            var cutoutStr = ""
+            if (cutoutRect != null) {
+                for ((i, rect) in cutoutRect.withIndex()) {
+                    cutoutStr += "Display cutout[$i] in ${info.positions?.get(i)}   ${rect.right - rect.left}x${rect.bottom - rect.top}\n"
+                }
+                binding.tv2.text = cutoutStr
+            } else {
+                binding.tv2.text = "Display cutout information: ${info.toJsonString()}"
+            }
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
             for (index in 0 until DeviceUtil.getInstance(this@DeviceInfoActivity).cpuCoreCount) {
-                val coreInfo =
-                    DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
-                LogContext.log.i(
-                    TAG,
-                    "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}"
-                )
+                val coreInfo = DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
+                LogContext.log.i(TAG, "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}")
             }
         }
 
@@ -59,18 +61,12 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         sb.append("\n")
         LogContext.log.i(TAG, "=====> AVC <===============================")
         H264Util.getAvcCodec().forEach {
-            LogContext.log.i(
-                TAG,
-                "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
-            )
+            LogContext.log.i(TAG, "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
         H264Util.getAvcCodec(false).forEach {
-            LogContext.log.i(
-                TAG,
-                "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
-            )
+            LogContext.log.i(TAG, "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
@@ -78,18 +74,12 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         sb.append("\n")
         LogContext.log.i(TAG, "=====> HEVC <==============================")
         H265Util.getHevcCodec().forEach {
-            LogContext.log.i(
-                TAG,
-                "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
-            )
+            LogContext.log.i(TAG, "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }
         H265Util.getHevcCodec(false).forEach {
-            LogContext.log.i(
-                TAG,
-                "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
-            )
+            LogContext.log.i(TAG, "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}")
             sb.append(it.name.padEnd(25))
             sb.append("\n")
         }

@@ -3,13 +3,11 @@ package com.leovp.demo.basiccomponents.examples
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
-import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
-import com.leovp.androidbase.utils.notch.INotchScreen
-import com.leovp.androidbase.utils.notch.NotchScreenManager
+import com.leovp.androidbase.utils.notch.DisplayCutoutManager
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDeviceInfoBinding
@@ -26,6 +24,7 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         return ActivityDeviceInfoBinding.inflate(layoutInflater)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -36,27 +35,13 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 
-        NotchScreenManager.getInstance(this)
-            .getNotchInfo(object : INotchScreen.NotchScreenCallback {
-                @SuppressLint("SetTextI18n")
-                override fun onResult(notchScreenInfo: INotchScreen.NotchScreenInfo) {
-                    LogContext.log.i(TAG, "notchScreenInfo: ${notchScreenInfo.toJsonString()}")
-                    binding.tv2.text = "notchScreenInfo: ${notchScreenInfo.toJsonString()}"
-                    notchScreenInfo.notchRects?.let {
-                        val halfScreenWidth = screenRealResolution.width / 2
-                        if (it[0].left < halfScreenWidth && halfScreenWidth < it[0].right) {
-                            LogContext.log.i(TAG, "Notch in Middle")
-                            binding.tv2.text = "Notch in Middle"
-                        } else if (halfScreenWidth < it[0].left) {
-                            LogContext.log.i(TAG, "Notch in Right")
-                            binding.tv2.text = "Notch in Right"
-                        } else {
-                            LogContext.log.i(TAG, "Notch in Left")
-                            binding.tv2.text = "Notch in Left"
-                        }
-                    }
-                }
-            })
+        DisplayCutoutManager.getInstance(this).getDisplayCutoutInfo { info ->
+            LogContext.log.i(TAG, "notchScreenInfo: ${info.toJsonString()}")
+            binding.tv2.text = "notchScreenInfo: ${info.toJsonString()}"
+
+            LogContext.log.i(TAG, "Notch in ${info.pos}")
+            binding.tv2.text = "Notch in ${info.pos}"
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             for (index in 0 until DeviceUtil.getInstance(this@DeviceInfoActivity).cpuCoreCount) {

@@ -6,13 +6,12 @@ import android.os.Build
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import com.leovp.android.exts.calculateNotchRect
-import com.leovp.androidbase.utils.notch.INotchScreen
-import com.leovp.androidbase.utils.notch.INotchScreen.NotchSizeCallback
+import com.leovp.androidbase.utils.notch.DisplayCutout
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Suppress("unused")
-class HuaweiNotchScreen : INotchScreen {
-    override fun hasNotch(activity: Activity): Boolean {
+internal class HuaweiDisplayCutout : DisplayCutout {
+    override fun supportDisplayCutout(activity: Activity): Boolean {
         return runCatching {
             val cl = activity.classLoader
             val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")
@@ -21,7 +20,7 @@ class HuaweiNotchScreen : INotchScreen {
         }.getOrDefault(false)
     }
 
-    override fun setDisplayInNotch(activity: Activity) {
+    override fun fillDisplayCutout(activity: Activity) {
         runCatching {
             val window = activity.window
             val layoutParams = window.attributes
@@ -34,7 +33,7 @@ class HuaweiNotchScreen : INotchScreen {
         }.onFailure { it.printStackTrace() }
     }
 
-    override fun getNotchRect(activity: Activity, callback: NotchSizeCallback) {
+    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
         runCatching {
             val cl = activity.classLoader
             val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")

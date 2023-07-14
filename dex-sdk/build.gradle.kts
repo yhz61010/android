@@ -7,6 +7,8 @@ plugins {
 
 android {
     namespace = "com.leovp.dex"
+
+    @Suppress ("UnstableApiUsage")
     buildFeatures {
         aidl = true
     }

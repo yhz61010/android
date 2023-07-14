@@ -7,6 +7,8 @@ plugins {
 
 android {
     namespace = "com.leovp.reflection"
+
+    @Suppress ("UnstableApiUsage")
     buildFeatures {
         aidl = true
     }

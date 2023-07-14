@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.leovp.ffmpeg.video"
 
+    @Suppress ("UnstableApiUsage")
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }

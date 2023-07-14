@@ -35,7 +35,7 @@ jacoco {
     toolVersion = rootProject.libs.versions.jacoco.get()
 }
 
-val detektFormatting = libs.detekt.formatting
+private val detektFormatting = libs.detekt.formatting
 
 // all projects = root project + sub projects
 allprojects {
@@ -128,7 +128,7 @@ subprojects {
 // }
 
 /**
- * Configure to eliminate the following warnning:
+ * Configure to eliminate the following warning:
  * ```
  * 'compileReleaseJavaWithJavac' task (current target is 1.8) and 'compileReleaseKotlin'
  * task (current target is 11) jvm target compatibility should be set to the same Java version.

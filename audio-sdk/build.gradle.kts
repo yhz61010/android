@@ -10,11 +10,13 @@ android {
     namespace = "com.leovp.audio"
 
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    @Suppress ("UnstableApiUsage")
     buildFeatures {
         // Generate BuildConfig.java file
         buildConfig = true
     }
 
+    @Suppress ("UnstableApiUsage")
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }

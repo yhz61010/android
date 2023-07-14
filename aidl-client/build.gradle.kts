@@ -8,6 +8,7 @@ android {
     namespace = "com.leovp.aidl.client"
 
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    @Suppress ("UnstableApiUsage")
     buildFeatures {
         aidl = true
         // Generate BuildConfig.java file
@@ -51,9 +52,6 @@ android {
             "RtlCompat",
             "RtlEnabled"
         )
-    }
-    buildFeatures {
-        aidl = true
     }
 }
 

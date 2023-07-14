@@ -21,6 +21,7 @@ android {
         }
     }
 
+    @Suppress ("UnstableApiUsage")
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }

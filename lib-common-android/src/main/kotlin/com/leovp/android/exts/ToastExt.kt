@@ -124,6 +124,34 @@ class LeoToast private constructor(private val ctx: Context) {
     }
 }
 
+// ==============================
+
+fun Application.toast(
+    @StringRes resId: Int,
+    longDuration: Boolean = false,
+    // origin: Boolean = false,
+    debug: Boolean = false,
+    // textColor: String? = null,
+    // bgColor: String? = null,
+    // error: Boolean = false
+) {
+    toast(getString(resId), longDuration, true, debug, null, null, false)
+}
+
+fun Application.toast(
+    msg: String?,
+    longDuration: Boolean = false,
+    // origin: Boolean = false,
+    debug: Boolean = false,
+    // textColor: String? = null,
+    // bgColor: String? = null,
+    // error: Boolean = false
+) {
+    toast(msg, longDuration, true, debug, null, null, false)
+}
+
+// ==============================
+
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
  * @param textColor Text hex color value with prefix '#'. Example: "#ffffff".
@@ -250,6 +278,7 @@ private fun showToast(
                     .show()
                 mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() }, if (longDuration) 3500 else 2000)
             }
+
             else -> {
                 toast?.cancel()
 
@@ -340,6 +369,7 @@ private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: In
                 0
             }
         }
+
         else -> 0
     }
     //    Log.e("LEO-float-view", "curScreenOrientation=$orientation viewWidth=$viewWidth")

@@ -400,6 +400,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 // Android method is the fastest.
                 bitmap.flipRotate(mirror, false, 0f)
             }
+
             90 -> { // Samsung by native // Pixel by Android
                 // On Samsung, native method is faster than android method.
                 // On Google Pixel, android method is faster than native method.
@@ -415,12 +416,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             getBitmapAndFree()!!
                         }
                     }
+
                     else -> {
                         val imageRotate = if (mirror) 270f else 90f
                         bitmap.flipRotate(mirror, false, imageRotate)
                     }
                 }
             }
+
             180 -> { // by native
                 // Native method is the fastest.
                 BitmapProcessor(bitmap).run {
@@ -429,6 +432,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     getBitmapAndFree()!!
                 }
             }
+
             else -> /* 270 */ { // Samsung by native // Pixel by Android
                 // On Samsung, native method is faster than android method.
                 // On Google Pixel, android method is faster than native method.
@@ -444,6 +448,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             getBitmapAndFree()!!
                         }
                     }
+
                     else -> {
                         val imageRotate = if (mirror) 90f else 270f
                         bitmap.flipRotate(mirror, false, imageRotate)
@@ -562,11 +567,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             // ====================
 
             override fun onFling(
-                e1: MotionEvent,
+                e1: MotionEvent?,
                 e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
+                if (e1 == null) return false
+
                 val deltaX = e1.x - e2.x
                 val deltaXAbs = abs(deltaX)
                 if (isScaling) return true
@@ -670,10 +677,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             LogContext.log.i(
                 logTag,
                 "FACE RETOUCH: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing,
-                    ExtensionMode.FACE_RETOUCH
-                )
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing,
+                        ExtensionMode.FACE_RETOUCH
+                    )
                 }"
             )
             LogContext.log.i(
@@ -743,10 +750,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     incRatioBinding.btnRatio16v9.visibility = View.VISIBLE
                     return@forEach
                 }
+
                 "4:3" -> {
                     incRatioBinding.btnRatio4v3.visibility = View.VISIBLE
                     return@forEach
                 }
+
                 "1:1" -> {
                     incRatioBinding.btnRatio1v1.visibility = View.VISIBLE
                     return@forEach
@@ -776,18 +785,21 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(64f)
             }
+
             CameraRatio.R4v3 -> {
                 ratioBtn?.visibility = View.VISIBLE
                 ratioBtn?.setImageResource(R.drawable.ic_ratio_4v3)
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(74f)
             }
+
             CameraRatio.R1v1 -> {
                 ratioBtn?.visibility = View.VISIBLE
                 ratioBtn?.setImageResource(R.drawable.ic_ratio_1v1)
                 updatePreviewViewLayoutParams(previewView, ratio)
                 previewView.topMargin = resources.dp2px(112f)
             }
+
             CameraRatio.RFull -> {
                 ratioBtn?.visibility = View.VISIBLE
                 ratioBtn?.setImageResource(R.drawable.ic_ratio_full)
@@ -828,6 +840,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     CameraSelector.DEFAULT_FRONT_CAMERA
                 }
             }
+
             hasBackCamera() -> CameraSelector.DEFAULT_BACK_CAMERA
             hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
             else -> {
@@ -889,35 +902,35 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
+                        .joinToString(",")
                 }
  Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                    .joinToString(",")
+                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
+                        .joinToString(",")
                 }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                    ","
-                ) { "${it.profile}/${it.level}" }
+                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
+                        ","
+                    ) { "${it.profile}/${it.level}" }
                 }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
+                    highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
                 }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
-                allCameraSupportSize?.joinToString(",") {
-                    "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
-                }
+                    allCameraSupportSize?.joinToString(",") {
+                        "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
+                    }
                 }
                 """.trimIndent()
                 LogContext.log.i(logTag, cameraParametersString)

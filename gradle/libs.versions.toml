@@ -2,31 +2,32 @@
 #===================
 #===== Project =====
 #===================
-compile-sdk = "33"
+compile-sdk = "34"
 min-sdk = "23"
-target-sdk = "33"
+target-sdk = "34"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.10"
+leo-version = "5.12.11"
 
 #===================
 #===== Compile =====
 #===================
-agp = "8.0.2"
-kotlin = "1.8.22"
+agp = "8.1.0"
+kotlin = "1.9.0"
+ksp = "1.9.0-1.0.13"
 
 #=================================
 #===== Android dependencies ======
 #=================================
-coroutines = "1.7.1"
+coroutines = "1.7.2"
 material = "1.9.0"
 appcompat = "1.6.1"
 activity-ktx = "1.7.2"
-fragment-ktx = "1.6.0"
+fragment-ktx = "1.6.1"
 core-ktx = "1.10.1"
 multidex = "2.0.1"
 preference = "1.2.0"
-recyclerview = "1.3.0"
+recyclerview = "1.3.1"
 constraintlayout = "2.1.4"
 coordinatorlayout = "1.2.0"
 navigation = "2.6.0"
@@ -38,15 +39,15 @@ android-support-annotation = "28.0.0"
 cardview = "1.0.0"
 viewpager2 = "1.0.0"
 swiperefreshlayout = "1.1.0"
-room = "2.5.1" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.3.0-alpha07"
+room = "2.5.2" # 2.4.2 has compilation error with Kotlin 1.7.0
+camera = "1.3.0-beta02"
 exifinterface = "1.3.6"
 
 #===========================
 #===== Android Compose =====
 #===========================
-compose = "1.2.0"
-androidx-activity-compose = "1.5.1"
+compose = "1.4.3"
+androidx-activity-compose = "1.7.2"
 compose-compilerextension = "1.2.0"
 
 #=======================
@@ -66,7 +67,7 @@ glide = "4.15.1"
 glide-transformations = "4.3.0"
 square-okhttp = "4.11.0"
 square-retrofit2 = "2.9.0"
-square-moshi = "1.3.10"
+square-moshi = "1.12.0"
 rxjava2 = "2.2.21"
 rxjava2-android = "2.1.1"
 rxjava3 = "3.1.5"
@@ -178,7 +179,7 @@ lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmo
 #===== Android Room ========
 #===========================
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
-# kapt
+# ksp
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 # optional - Kotlin Extensions and Coroutines support for Room
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -220,7 +221,7 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
-# kapt(libs.glide.compiler)
+# ksp(libs.glide.compiler)
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 glide-okhttp3 = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 # https://github.com/wasabeef/glide-transformations
@@ -430,7 +431,7 @@ powermock = [
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
 navigation = { id = "androidx.navigation.safeargs.kotlin", version.ref = "navigation" }

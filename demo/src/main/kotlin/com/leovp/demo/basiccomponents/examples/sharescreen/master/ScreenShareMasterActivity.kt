@@ -174,12 +174,14 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         binding.txtInfo.text = NetworkUtil.getIp()[0]
 
         serviceIntent = Intent(this, MediaProjectionService::class.java)
+        val serviceIntentRef = serviceIntent
+        requireNotNull(serviceIntentRef) { "MediaProjectionService intent can't be null." }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
+            startForegroundService(serviceIntentRef)
         } else {
-            startService(serviceIntent)
+            startService(serviceIntentRef)
         }
-        bindService(serviceIntent, serviceConn, Service.BIND_AUTO_CREATE)
+        bindService(serviceIntentRef, serviceConn, Service.BIND_AUTO_CREATE)
 
         binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -240,23 +242,23 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
     }
 
     private fun startManageDrawOverlaysPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${applicationContext.packageName}")
-            ).let {
-                simpleActivityLauncher.launch(it) {
-                    if (canDrawOverlays) {
-                        if (FloatView.default().exist()) {
-                            FloatView.removeAll()
-                            createFloatView()
-                        }
-                    } else {
-                        toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${applicationContext.packageName}")
+        ).let {
+            simpleActivityLauncher.launch(it) {
+                if (canDrawOverlays) {
+                    if (FloatView.default().exist()) {
+                        FloatView.removeAll()
+                        createFloatView()
                     }
+                } else {
+                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
                 }
             }
         }
+        // }
     }
 
     override fun onDestroy() {
@@ -388,6 +390,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                             currentRealResolution.height / clientScreenInfo!!.height.toFloat() * touchBean.y
                         EventBus.getDefault().post(touchBean)
                     }
+
                     CMD_TOUCH_DRAG -> EventBus.getDefault().post(cmdBean.touchBean!!)
                     CMD_TOUCH_BACK -> AccessibilityUtil.clickBackKey()
                     CMD_TOUCH_HOME -> AccessibilityUtil.clickHomeKey()
@@ -417,24 +420,29 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                                         it.moveTo(calX, calY)
                                     } to Paint(pathPaint)
                                 )
+
                                 ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()?.first?.lineTo(
                                     calX,
                                     calY
                                 )
+
                                 ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()?.first?.lineTo(
                                     calX,
                                     calY
                                 )
+
                                 ScreenShareClientActivity.TouchType.CLEAR -> {
                                     userPath.clear()
                                     fingerPaintView?.clear()
                                     return@withContext
                                 }
+
                                 ScreenShareClientActivity.TouchType.UNDO -> {
                                     fingerPaintView?.undo()
                                     userPath = fingerPaintView?.getPaths()!!
                                     return@withContext
                                 }
+
                                 else -> throw IllegalArgumentException(
                                     "Unknown touch type[${paintBean.touchType}]"
                                 )

@@ -196,6 +196,9 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
         val appMetaData2: String? = application.getMetaData("app_meta_data")
         LogContext.log.w(ITAG, "appMetaData2=$appMetaData2")
 
+        val leoCustomKey: String = application.getMetaData("com.leovp.custom.key") ?: ""
+        LogContext.log.w(ITAG, "com.leovp.custom.key=$leoCustomKey")
+
         val actApplication = application
         val actApplicationCtx = applicationContext as Application
         val amApplication = ApplicationManager.application

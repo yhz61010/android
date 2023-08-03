@@ -1,4 +1,3 @@
-
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.dsl.BaseFlavor
@@ -40,7 +39,7 @@ plugins {
     // alias(libs.plugins.vcu)
     jacoco
 
-    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.ksp) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.navigation) apply false
 }
@@ -121,7 +120,6 @@ allprojects {
 
 subprojects {
     apply(plugin = rootProject.libs.plugins.kotlin.android.get().pluginId)
-    apply(plugin = rootProject.libs.plugins.kotlin.kapt.get().pluginId)
 
     plugins.withId(rootProject.libs.plugins.android.application.get().pluginId) {
         // println("displayName=$displayName, name=$name, group=$group")
@@ -188,7 +186,7 @@ fun Project.configureBase(): BaseExtension {
             }
         }
         compileOptions {
-            setDefaultJavaVersion(jdkVersion)
+            // setDefaultJavaVersion(jdkVersion)
             sourceCompatibility = jdkVersion
             targetCompatibility = jdkVersion
         }

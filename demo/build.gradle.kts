@@ -1,4 +1,3 @@
-
 import android.annotation.SuppressLint
 import java.io.ByteArrayOutputStream
 import java.util.Properties
@@ -8,6 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.navigation)
 
+    // Add ksp only if you use ksp() in dependencies {}
+    alias(libs.plugins.ksp)
     alias(libs.plugins.android.junit5)
 
     alias(libs.plugins.sonarqube)
@@ -270,7 +271,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.bundles.lifecycle.simple)
     implementation(libs.bundles.room)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     implementation(projects.androidbaseSdk)
     implementation(projects.logSdk)
@@ -305,7 +306,7 @@ dependencies {
     implementation(projects.adpcmImaQtCodecH264HevcDecoderSdk)
 
     implementation(libs.glide)
-    kapt(libs.glide.compiler)
+    ksp(libs.glide.compiler)
 
     implementation(libs.bundles.java.mail)
     implementation(libs.mars.xlog)

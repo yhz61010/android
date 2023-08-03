@@ -184,6 +184,7 @@
         <property android:name="android.content.MEDIA_CAPABILITIES" android:resource="@xml/media_capabilities" />
 
         <meta-data android:name="app_meta_data" android:value="aabb_app_meta_data" />
+        <meta-data android:name="com.leovp.custom.key" android:value="${LEO_CUSTOM_KEY}"/>
     </application>
 
 </manifest>

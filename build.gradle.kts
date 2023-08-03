@@ -1,8 +1,11 @@
+
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val customGroup = "com.leovp"
@@ -10,6 +13,17 @@ val customGroup = "com.leovp"
 // val jdkVersion: JavaVersion by rootProject.extra
 val jdkVersion: JavaVersion by extra { JavaVersion.VERSION_11 }
 val useResourcePrefix = false
+
+/**
+ * Reads the properties in local.properties that is used in the AndroidManifest or gradle file.
+ *
+ * You can use it in subproject like this:
+ * val localProperties: Properties by rootProject.extra
+ *
+ * Don't forget to import the following package:
+ * import java.util.Properties
+ */
+val localProperties: Properties by extra { gradleLocalProperties(rootProject.rootDir) }
 
 // =====================================
 

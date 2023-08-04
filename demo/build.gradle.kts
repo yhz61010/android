@@ -45,7 +45,9 @@ android {
         }
 
         // You can use this property in AndroidManifest as meta-data.
-        manifestPlaceholders["LEO_CUSTOM_KEY"] = localProperties.getProperty("leo.custom.key", "")
+        manifestPlaceholders += mapOf(
+            "LEO_CUSTOM_KEY" to localProperties.getProperty("leo.custom.key", "")
+        )
 
         // Connect JUnit 5 to the runner
         testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"

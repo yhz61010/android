@@ -6,7 +6,6 @@ plugins {
 }
 
 android {
-    @Suppress ("UnstableApiUsage")
     ndkVersion = libs.versions.ndk.sdk.get()
 
     namespace = "com.leovp.jpeg"
@@ -14,8 +13,7 @@ android {
     defaultConfig {
         // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
         externalNativeBuild {
-            @Suppress ("UnstableApiUsage")
-            cmake {
+                    cmake {
                 cppFlags += setOf("")
             }
             ndk {
@@ -25,7 +23,6 @@ android {
         }
     }
 
-    @Suppress ("UnstableApiUsage")
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }

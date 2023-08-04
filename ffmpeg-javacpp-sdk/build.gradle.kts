@@ -15,7 +15,6 @@ android {
         }
     }
 
-    @Suppress ("UnstableApiUsage")
     sourceSets {
         getByName("main").jniLibs.srcDirs("src/main/libs")
     }
@@ -24,6 +23,37 @@ android {
         // Publishes "release" build variant with "release" component created by
         // Android Gradle plugin
         singleVariant("release")
+    }
+
+    packaging {
+        resources {
+            pickFirsts += setOf(
+                "META-INF/native-image/linux-x86/jnijavacpp/jni-config.json",
+                "META-INF/native-image/linux-x86/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/linux-x86_64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/linux-x86_64/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/linux-ppc64le/jnijavacpp/jni-config.json",
+                "META-INF/native-image/linux-ppc64le/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/linux-arm64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/linux-arm64/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/linux-armhf/jnijavacpp/jni-config.json",
+                "META-INF/native-image/linux-armhf/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/android-arm/jnijavacpp/jni-config.json",
+                "META-INF/native-image/android-arm/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/android-arm64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/android-arm64/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/android-x86/jnijavacpp/jni-config.json",
+                "META-INF/native-image/android-x86/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/android-x86_64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/android-x86_64/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/macosx-x86_64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/macosx-x86_64/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/windows-x86/jnijavacpp/jni-config.json",
+                "META-INF/native-image/windows-x86/jnijavacpp/reflect-config.json",
+                "META-INF/native-image/windows-x86_64/jnijavacpp/jni-config.json",
+                "META-INF/native-image/windows-x86_64/jnijavacpp/reflect-config.json"
+            )
+        }
     }
 }
 

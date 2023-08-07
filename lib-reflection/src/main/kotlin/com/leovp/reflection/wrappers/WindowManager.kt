@@ -2,11 +2,13 @@
 
 package com.leovp.reflection.wrappers
 
+import android.annotation.TargetApi
 import android.graphics.Point
 import android.os.IInterface
 import android.util.Log
 import android.util.Size
 import android.view.Display
+import android.view.IDisplayFoldListener
 import android.view.IRotationWatcher
 import com.leovp.reflection.ReflectJavaManager
 import java.lang.reflect.Method
@@ -100,16 +102,12 @@ class WindowManager(private val manager: IInterface) {
                 // display parameter added since this commit:
                 // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
                 // API 26 or above
-                cls.getMethod(
-                    "watchRotation",
-                    IRotationWatcher::class.java,
-                    Int::class.javaPrimitiveType
-                ).invoke(manager, rotationWatcher, displayId)
+                cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
+                    .invoke(manager, rotationWatcher, displayId)
             }.onFailure {
                 // NoSuchMethodException
                 // old version
-                cls.getMethod("watchRotation", IRotationWatcher::class.java)
-                    .invoke(manager, rotationWatcher)
+                cls.getMethod("watchRotation", IRotationWatcher::class.java).invoke(manager, rotationWatcher)
             }
         } catch (e: Exception) {
             throw AssertionError(e)
@@ -137,5 +135,15 @@ class WindowManager(private val manager: IInterface) {
             return null
         }
         return Size(out.x, out.y)
+    }
+
+    @TargetApi(29)
+    fun registerDisplayFoldListener(foldListener: IDisplayFoldListener?) {
+        try {
+            val cls: Class<*> = manager.javaClass
+            cls.getMethod("registerDisplayFoldListener", IDisplayFoldListener::class.java).invoke(manager, foldListener)
+        } catch (e: java.lang.Exception) {
+            Log.e(TAG, "Could not register display fold listener", e)
+        }
     }
 }

@@ -2,5 +2,5 @@
 package android.view;
 
 interface IRotationWatcher {
-    void onRotationChanged(int rotation);
+    oneway void onRotationChanged(int rotation);
 }

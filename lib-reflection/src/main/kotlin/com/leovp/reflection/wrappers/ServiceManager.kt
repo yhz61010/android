@@ -19,8 +19,7 @@ object ServiceManager {
 
     init {
         getServiceMethod = try {
-            Class.forName("android.os.ServiceManager")
-                .getDeclaredMethod("getService", String::class.java)
+            Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String::class.java)
         } catch (e: Exception) {
             throw AssertionError(e)
         }

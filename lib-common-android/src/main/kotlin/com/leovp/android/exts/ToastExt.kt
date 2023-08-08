@@ -42,12 +42,18 @@ private val mainHandler = Handler(Looper.getMainLooper())
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
  *
  * ```
- * LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
+ * LeoToast.getInstance(application).init(
+ *     LeoToast.ToastConfig(
+ *         buildConfigInDebug = BuildConfig.DEBUG,
+ *         toastIcon = R.mipmap.ic_launcher_round,
+ *         toastRotationWatcher = LeoToast.getInstance(this)::registerToastRotationWatcher
+ *     )
+ * )
  * ```
  *
- * Don't forget to call `removeToastRotationWatcher()` when you don't need custom toast anymore.
+ * Don't forget to call `removeToastRotationWatcher()` when you don't need it anymore.
  * ```
- * LeoToast.getInstance(ctx).removeToastRotationWatcher()
+ * LeoToast.getInstance(application).removeToastRotationWatcher()
  * ```
  */
 class LeoToast private constructor(private val ctx: Context) {
@@ -59,7 +65,7 @@ class LeoToast private constructor(private val ctx: Context) {
     fun init(config: ToastConfig = ToastConfig()) {
         // Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
         this.config = config
-        registerToastRotationWatcher()
+        config.toastRotationWatcher?.invoke()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             initForegroundComponentForToast(ctx.applicationContext as Application)
         }
@@ -79,28 +85,37 @@ class LeoToast private constructor(private val ctx: Context) {
         var toastIcon: Int? = null,
 
         /** Unit: px */
-        var toastIconSize: Int = 24.px
+        var toastIconSize: Int = 24.px,
+
+        var toastRotationWatcher: (() -> Unit)? = null
     )
 
     private val toastRotationWatcher = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            // Log.e(
-            //     "LEO-float-view",
-            //     "FloatView exist=${FloatView.with(FLOAT_VIEW_TAG).exist()} isDisplaying=${FloatView.with(FLOAT_VIEW_TAG).isDisplaying()}"
-            // )
-            if (FloatView.with(FLOAT_VIEW_TAG).exist() && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()) {
-                mainHandler.post {
-                    runCatching {
-                        FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
-                        val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
-                        val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
-                        // Log.e(
-                        //     "LEO-float-view",
-                        //     "toast onRotationChanged rotation=$rotation viewWidth=$viewWidth vw=$viewWidth"
-                        // )
-                        FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
-                    }.onFailure { it.printStackTrace() }
-                }
+            executeToastRotation(rotation)
+        }
+    }
+
+    /**
+     * If you implements your own toast rotation watcher, call this method in it.
+     */
+    fun executeToastRotation(rotation: Int) {
+        // Log.e(
+        //     "LEO-float-view",
+        //     "FloatView exist=${FloatView.with(FLOAT_VIEW_TAG).exist()} isDisplaying=${FloatView.with(FLOAT_VIEW_TAG).isDisplaying()}"
+        // )
+        if (FloatView.with(FLOAT_VIEW_TAG).exist() && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()) {
+            mainHandler.post {
+                runCatching {
+                    FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
+                    val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
+                    val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
+                    // Log.e(
+                    //     "LEO-float-view",
+                    //     "toast onRotationChanged rotation=$rotation viewWidth=$viewWidth vw=$viewWidth"
+                    // )
+                    FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
+                }.onFailure { it.printStackTrace() }
             }
         }
     }
@@ -114,7 +129,7 @@ class LeoToast private constructor(private val ctx: Context) {
         ForegroundComponent.init(app, delay)
     }
 
-    private fun registerToastRotationWatcher() {
+    fun registerToastRotationWatcher() {
         // Log.e("LEO-toast", "ServiceManager.windowManager=${ServiceManager.windowManager}")
         ServiceManager.windowManager?.registerRotationWatcher(toastRotationWatcher)
     }

@@ -24,6 +24,7 @@ import android.view.Surface
 import android.view.WindowInsets
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
+import androidx.annotation.UiContext
 import com.leovp.android.utils.API
 import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
@@ -608,8 +609,9 @@ fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prev
  * - Surface.ROTATION_270 (90 degrees clockwise)
  */
 val Context.screenSurfaceRotation: Int
-    @Suppress("DEPRECATION") get() {
-        if (this !is Activity && this !is Service) error("Context can be either Activity(Fragment) or Service.")
+    @UiContext
+    get() {
+        if (this !is Activity && this !is Service) error("Context can only be either Activity(Fragment) or Service.")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (this is Service) {
 
@@ -627,6 +629,7 @@ val Context.screenSurfaceRotation: Int
                 display!!.rotation
             }
         } else {
+            @Suppress("DEPRECATION")
             windowManager.defaultDisplay.rotation
         }
     } // =================

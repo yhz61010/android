@@ -598,7 +598,18 @@ fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prev
 }
 
 /**
- * The context can only be either Activity(Fragment) or Service.
+ * The context can only be either Activity(Fragment) or Service.<p>
+ *
+ * **Attention**, on some Android 11+ devices, like Google Pixel 4a(5G) (Android 14),
+ * if you rotate the screen continuously, _context.display?.rotation_ is likely to return incorrect values (always return 0).
+ *
+ * You can also reproduce the issue using the following steps:
+ * 1. With "Auto-rotate" enabled, rotate the screen several times.
+ * 2. Place the phone in its natural orientation. (Portrait mode)
+ * 3. Disable "Auto-rotate" and rotate the phone's orientation again a few times.
+ * 4. Place the phone in its natural orientation. (Portrait mode)
+ * 5. Re-enable "Auto-rotate" and rotate the phone's orientation.
+ * At this point, you will notice that the function consistently returns 0.
  *
  * @return Return the screen rotation(**NOT** device rotation).
  *         The result is one of the following value:

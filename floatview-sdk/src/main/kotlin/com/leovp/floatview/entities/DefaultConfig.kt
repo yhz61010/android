@@ -1,5 +1,6 @@
 package com.leovp.floatview.entities
 
+import android.view.Gravity
 import android.view.View
 import androidx.annotation.Keep
 import com.leovp.floatview.FloatView
@@ -30,12 +31,32 @@ data class DefaultConfig(
      */
     var y: Int = DEFAULT_Y_POS,
 
+    /** The gravity of the float view. (The gravity is used by setting [WindowManager.LayoutParams()]) */
+    var gravity: Int = DEFAULT_GRAVITY,
+
+    /**
+     * Specific the width of the float view.
+     *
+     * If this parameter is `null` and the [fullScreenFloatView] is `false`,
+     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting [WindowManager.LayoutParams()].
+     */
+    var width: Int? = null,
+
+    /**
+     * Specific the height of the float view.
+     *
+     * If this parameter is `null` and the [fullScreenFloatView] is `false`,
+     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting [WindowManager.LayoutParams()].
+     */
+    var height: Int? = null,
+
     internal val globalConfig: GlobalConfig
 ) : IBaseConfig by globalConfig {
     companion object {
         const val DEFAULT_FLOAT_VIEW_TAG = "tag_default_float_view"
         internal const val DEFAULT_X_POS = DEFAULT_EDGE_MARGIN
         internal const val DEFAULT_Y_POS = DEFAULT_EDGE_MARGIN
+        internal const val DEFAULT_GRAVITY = Gravity.TOP or Gravity.START
     }
 
     internal var customView: View? = null

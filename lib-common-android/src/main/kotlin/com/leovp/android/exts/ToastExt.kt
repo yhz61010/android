@@ -6,16 +6,15 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
-import android.view.IRotationWatcher
 import android.view.LayoutInflater
-import android.view.Surface
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
@@ -28,8 +27,6 @@ import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
 import com.leovp.floatview.FloatView
 import com.leovp.kotlin.utils.SingletonHolder
-import com.leovp.reflection.wrappers.ServiceManager
-import kotlin.math.max
 
 /**
  * Author: Michael Leo
@@ -45,15 +42,9 @@ private val mainHandler = Handler(Looper.getMainLooper())
  * LeoToast.getInstance(application).init(
  *     LeoToast.ToastConfig(
  *         buildConfigInDebug = BuildConfig.DEBUG,
- *         toastIcon = R.mipmap.ic_launcher_round,
- *         toastRotationWatcher = LeoToast.getInstance(this)::registerToastRotationWatcher
+ *         toastIcon = R.mipmap.ic_launcher_round
  *     )
  * )
- * ```
- *
- * Don't forget to call `removeToastRotationWatcher()` when you don't need it anymore.
- * ```
- * LeoToast.getInstance(application).removeToastRotationWatcher()
  * ```
  */
 class LeoToast private constructor(private val ctx: Context) {
@@ -65,7 +56,6 @@ class LeoToast private constructor(private val ctx: Context) {
     fun init(config: ToastConfig = ToastConfig()) {
         // Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
         this.config = config
-        config.toastRotationWatcher?.invoke()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             initForegroundComponentForToast(ctx.applicationContext as Application)
         }
@@ -86,39 +76,7 @@ class LeoToast private constructor(private val ctx: Context) {
 
         /** Unit: px */
         var toastIconSize: Int = 24.px,
-
-        var toastRotationWatcher: (() -> Unit)? = null
     )
-
-    private val toastRotationWatcher = object : IRotationWatcher.Stub() {
-        override fun onRotationChanged(rotation: Int) {
-            executeToastRotation(rotation)
-        }
-    }
-
-    /**
-     * If you implements your own toast rotation watcher, call this method in it.
-     */
-    fun executeToastRotation(rotation: Int) {
-        // Log.e(
-        //     "LEO-float-view",
-        //     "FloatView exist=${FloatView.with(FLOAT_VIEW_TAG).exist()} isDisplaying=${FloatView.with(FLOAT_VIEW_TAG).isDisplaying()}"
-        // )
-        if (FloatView.with(FLOAT_VIEW_TAG).exist() && FloatView.with(FLOAT_VIEW_TAG).isDisplaying()) {
-            mainHandler.post {
-                runCatching {
-                    FloatView.with(FLOAT_VIEW_TAG).screenOrientation = rotation
-                    val viewWidth = FloatView.with(FLOAT_VIEW_TAG).floatViewWidth
-                    val toastPos = calculateToastPosition(ctx, rotation, viewWidth)
-                    // Log.e(
-                    //     "LEO-float-view",
-                    //     "toast onRotationChanged rotation=$rotation viewWidth=$viewWidth vw=$viewWidth"
-                    // )
-                    FloatView.with(FLOAT_VIEW_TAG).setPosition(toastPos.x, toastPos.y)
-                }.onFailure { it.printStackTrace() }
-            }
-        }
-    }
 
     /**
      * **Attention:**
@@ -128,41 +86,6 @@ class LeoToast private constructor(private val ctx: Context) {
     private fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
         ForegroundComponent.init(app, delay)
     }
-
-    fun registerToastRotationWatcher() {
-        // Log.e("LEO-toast", "ServiceManager.windowManager=${ServiceManager.windowManager}")
-        ServiceManager.windowManager?.registerRotationWatcher(toastRotationWatcher)
-    }
-
-    fun removeToastRotationWatcher() {
-        ServiceManager.windowManager?.removeRotationWatcher(toastRotationWatcher)
-    }
-}
-
-// ==============================
-
-fun Application.toast(
-    @StringRes resId: Int,
-    longDuration: Boolean = false,
-    // origin: Boolean = false,
-    debug: Boolean = false,
-    // textColor: String? = null,
-    // bgColor: String? = null,
-    // error: Boolean = false
-) {
-    toast(getString(resId), longDuration, true, debug, null, null, false)
-}
-
-fun Application.toast(
-    msg: String?,
-    longDuration: Boolean = false,
-    // origin: Boolean = false,
-    debug: Boolean = false,
-    // textColor: String? = null,
-    // bgColor: String? = null,
-    // error: Boolean = false
-) {
-    toast(msg, longDuration, true, debug, null, null, false)
 }
 
 // ==============================
@@ -233,7 +156,7 @@ private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
  */
 @SuppressLint("InflateParams")
 private fun showToast(
-    ctx: Context?,
+    ctx: Context,
     msg: String?,
     longDuration: Boolean = false,
     origin: Boolean,
@@ -242,7 +165,6 @@ private fun showToast(
     bgColor: String?,
     error: Boolean
 ) {
-    if (ctx == null) return
     val toastCfg = LeoToast.getInstance(ctx).config
 
     if ((debug && !toastCfg.buildConfigInDebug)) {
@@ -254,7 +176,7 @@ private fun showToast(
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
     runCatching {
         when {
-            origin -> Toast.makeText(ctx, message, duration).show()
+            origin || ctx is Application -> Toast.makeText(ctx, message, duration).show()
             API.ABOVE_R -> {
                 runCatching {
                     if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
@@ -273,22 +195,21 @@ private fun showToast(
                 //     Toast.makeText(ctx, message, duration).show()
                 // }
                 mainHandler.removeCallbacksAndMessages(null)
-                // Log.e("LEO-float-view", "ctx.screenSurfaceRotation=${ctx.screenSurfaceRotation} ctx.screenWidth=${ctx.screenWidth}")
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
-                val currentScreenOrientation = ctx.screenSurfaceRotation
                 FloatView.with(ctx)
                     .layout(R.layout.toast_layout) { v ->
                         decorateToast(ctx, v, message, textColor, bgColor, error)
                     }
-                    .meta { viewWidth, _ ->
+                    .meta { viewWidth, viewHeight ->
+                        Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
                         tag = FLOAT_VIEW_TAG
+                        gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                         enableAlphaAnimation = true
                         enableDrag = false
                         systemWindow = ctx.canDrawOverlays
-                        val toastPos = calculateToastPosition(ctx, currentScreenOrientation, viewWidth)
-                        x = toastPos.x
-                        y = toastPos.y
-                        screenOrientation = currentScreenOrientation
+                        // val toastPos = calculateToastPosition(ctx, viewWidth)
+                        // x = toastPos.x
+                        // y = toastPos.y
                     }
                     .show()
                 mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() }, if (longDuration) 3500 else 2000)
@@ -352,8 +273,9 @@ private fun decorateToast(
         R.drawable.toast_bg_normal,
         null
     )!!
+    val containerViewGroup: LinearLayout = rootView.findViewById(R.id.ll_container)
     if (!error && bgColor == null) { // without error and without bgColor
-        rootView.background = defaultBgDrawable
+        containerViewGroup.background = defaultBgDrawable
         tv.setTextColor(Color.parseColor(textColor ?: TOAST_NORMAL_TEXT_COLOR_NORMAL))
     } else {
         // - with error and with bgColor
@@ -363,36 +285,8 @@ private fun decorateToast(
         tv.setTextColor(Color.parseColor(textColor ?: TOAST_NORMAL_TEXT_COLOR_WHITE))
 
         val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
-        rootView.background = customDrawableWrapper
+        containerViewGroup.background = customDrawableWrapper
         val defBgColor = bgColor ?: TOAST_ERROR_BG_COLOR
         DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
     }
-}
-
-private fun calculateToastPosition(ctx: Context, orientation: Int, viewWidth: Int): Point {
-    val toastMaxWidth = ctx.resources.getDimensionPixelSize(R.dimen.toast_max_width)
-    val toastMargin = ctx.resources.getDimensionPixelSize(R.dimen.toast_layout_margin_horizontal)
-    val toastFinalWidth = toastMaxWidth + toastMargin
-    val scrAvailSz = ctx.getScreenSize(orientation, ctx.screenAvailableResolution)
-    val scrSz = ctx.getScreenSize(orientation, ctx.screenRealResolution)
-    val widthDiff = when {
-        ctx.isGoogle -> {
-            if (Surface.ROTATION_90 == orientation) {
-                (max(scrSz.width, scrSz.height) - max(scrAvailSz.width, scrAvailSz.height)) /
-                    (if (ctx.navigationBarHeight > 0) 1 else 2)
-            } else {
-                0
-            }
-        }
-
-        else -> 0
-    }
-    //    Log.e("LEO-float-view", "curScreenOrientation=$orientation viewWidth=$viewWidth")
-    val vw = if (viewWidth >= toastFinalWidth) toastFinalWidth else viewWidth
-    //    Log.e("LEO-float-view", "scrAvailSz=$scrAvailSz viewWidth=$viewWidth vw=$vw " +
-    //            "toastMaxWidth=$toastMaxWidth toastMargin=$toastMargin toastFinalWidth=$toastFinalWidth " +
-    //            "statusBarHeight=${ctx.statusBarHeight} widthDiff=$widthDiff navigationHeight=${ctx.navigationBarHeight}")
-    val x = (scrAvailSz.width - vw) / 2 + widthDiff
-    val y = scrAvailSz.height - if (isPortrait(orientation)) 60.px else 88.px // 128 / 104
-    return Point(x, y)
 }

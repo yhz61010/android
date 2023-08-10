@@ -9,9 +9,7 @@
     android:elevation="2dp"
     android:gravity="center_vertical"
     android:maxWidth="@dimen/toast_max_width"
-    android:orientation="horizontal"
-    android:paddingHorizontal="20dp"
-    android:paddingVertical="16dp">
+    android:orientation="horizontal">
 
     <!-- android:lineHeight="20sp" -->
     <TextView
@@ -21,6 +19,8 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="3"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp"
         android:textSize="14sp"
         android:textStyle="normal"
         tools:text="Hello Michael Leo.\nThis is the second line.\nThis is the last line."

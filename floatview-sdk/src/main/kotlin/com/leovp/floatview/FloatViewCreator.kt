@@ -48,7 +48,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
         config.customView = view.also { handle?.invoke(it) }
     }
 
-    //    fun meta(init: DefaultConfig.() -> Unit): FloatViewCreator = apply { config.init() }
+    // fun meta(init: DefaultConfig.() -> Unit): FloatViewCreator = apply { config.init() }
 
     fun meta(init: DefaultConfig.(viewWidth: Int, viewHeight: Int) -> Unit): FloatViewCreator {
         val customView: View? = config.customView
@@ -56,14 +56,15 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
             if (customView == null) {
                 config.init(DefaultConfig.DEFAULT_X_POS, DefaultConfig.DEFAULT_Y_POS)
             } else {
-                customView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-                // customView.layout(0, 0, customView.measuredWidth, customView.measuredHeight)
-                config.init(customView.measuredWidth, customView.measuredHeight)
+                // customView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                // // customView.layout(0, 0, customView.measuredWidth, customView.measuredHeight)
+                // config.init(customView.measuredWidth, customView.measuredHeight)
+                config.init(DefaultConfig.DEFAULT_X_POS, DefaultConfig.DEFAULT_Y_POS)
             }
         }
     }
 
-    //        fun asFloatView(): FloatView = floatingView
+    // fun asFloatView(): FloatView = floatingView
 
     /**
      * If the [DefaultConfig#touchable] is `false`, this listener will not be triggered.
@@ -87,18 +88,4 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
         build()
         FloatViewManager.show(config.tag)
     }
-
-    //    /**
-    //     * Get the view height before rendering.
-    //     * @param view The View to measure.
-    //     * @return The height of the view.
-    //     */
-    //    private fun getViewHeight(view: View): Int {
-    //        val deviceWidth = context.screenWidth
-    //        val widthMeasureSpec =
-    //                View.MeasureSpec.makeMeasureSpec(deviceWidth, View.MeasureSpec.AT_MOST)
-    //        val heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    //        view.measure(widthMeasureSpec, heightMeasureSpec)
-    //        return view.measuredHeight
-    //    }
 }

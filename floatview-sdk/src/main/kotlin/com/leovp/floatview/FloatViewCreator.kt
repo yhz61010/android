@@ -56,10 +56,9 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
             if (customView == null) {
                 config.init(DefaultConfig.DEFAULT_X_POS, DefaultConfig.DEFAULT_Y_POS)
             } else {
-                // customView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-                // // customView.layout(0, 0, customView.measuredWidth, customView.measuredHeight)
-                // config.init(customView.measuredWidth, customView.measuredHeight)
-                config.init(DefaultConfig.DEFAULT_X_POS, DefaultConfig.DEFAULT_Y_POS)
+                customView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                // customView.layout(0, 0, customView.measuredWidth, customView.measuredHeight)
+                config.init(customView.measuredWidth, customView.measuredHeight)
             }
         }
     }
@@ -88,4 +87,18 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
         build()
         FloatViewManager.show(config.tag)
     }
+
+    //    /**
+    //     * Get the view height before rendering.
+    //     * @param view The View to measure.
+    //     * @return The height of the view.
+    //     */
+    //    private fun getViewHeight(view: View): Int {
+    //        val deviceWidth = context.screenWidth
+    //        val widthMeasureSpec =
+    //                View.MeasureSpec.makeMeasureSpec(deviceWidth, View.MeasureSpec.AT_MOST)
+    //        val heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    //        view.measure(widthMeasureSpec, heightMeasureSpec)
+    //        return view.measuredHeight
+    //    }
 }

@@ -6,6 +6,7 @@ import android.graphics.Point
 import android.util.Size
 import android.view.View
 import androidx.annotation.Keep
+import androidx.annotation.MainThread
 import com.leovp.floatview.framework.FloatViewManager
 
 /**
@@ -128,6 +129,25 @@ class FloatViewAttribute(private val tag: String) {
         get() = FloatViewManager.getConfig(tag)?.dockEdge ?: DockEdge.NONE
         set(value) {
             FloatViewManager.getFloatViewImpl(tag)?.updateAutoDock(value)
+        }
+
+    /**
+     * You must set the proper screen orientation to float view.
+     * Otherwise, the float view may display at unexpected position on Android 12+
+     * when your app in background or the float view is just created after screen orientation changed.
+     *
+     * Available values:
+     * - Surface.ROTATION_0
+     * - Surface.ROTATION_90
+     * - Surface.ROTATION_180
+     * - Surface.ROTATION_270
+     */
+    var screenOrientation: Int
+        get() = FloatViewManager.getConfig(tag)?.screenOrientation ?: -1
+
+        @MainThread set(value) {
+            // Log.e("LEO-float-view", "$tag screenOrientation rotation=$value")
+            FloatViewManager.getFloatViewImpl(tag)?.updateScreenOrientation(value)
         }
 
     val floatViewWidth: Int = FloatViewManager.getFloatViewWidth(tag)

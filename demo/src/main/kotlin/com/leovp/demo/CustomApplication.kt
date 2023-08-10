@@ -50,8 +50,7 @@ class CustomApplication : BaseApplication() {
         LeoToast.getInstance(this).init(
             LeoToast.ToastConfig(
                 buildConfigInDebug = BuildConfig.DEBUG,
-                toastIcon = R.mipmap.ic_launcher_round,
-                toastRotationWatcher = LeoToast.getInstance(this)::registerToastRotationWatcher
+                toastIcon = R.mipmap.ic_launcher_round
             )
         )
 

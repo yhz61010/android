@@ -40,11 +40,6 @@ class MainActivity : AppCompatActivity() {
         bindService(serviceConnection)
     }
 
-    override fun onDestroy() {
-        LeoToast.getInstance(this).removeToastRotationWatcher()
-        super.onDestroy()
-    }
-
     private fun bindService(serviceConnection: ServiceConnection) {
         // Intent action is configured in AndroidManifest.xml
         val intent = Intent("service.name")

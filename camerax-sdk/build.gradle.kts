@@ -21,7 +21,7 @@ dependencies {
     api(libs.androidx.appcompat)
 
     api(libs.android.material)
-    api(libs.kotlin.coroutines)
+    api(libs.kotlin.coroutines.core)
     api(libs.androidx.concurrent.futures.ktx)
     api(libs.androidx.constraintlayout)
     // Lifecycles only (without ViewModel or LiveData)

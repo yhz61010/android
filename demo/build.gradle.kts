@@ -325,7 +325,7 @@ dependencies {
     implementation(libs.free.reflection)
 
     // Net - dependencies - Start
-    implementation(libs.kotlin.coroutines)
+    implementation(libs.bundles.kotlin.coroutines)
     implementation(libs.square.okhttp)
     implementation(libs.net)
     // Net - dependencies - End

@@ -19,7 +19,7 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
     api(libs.androidx.annotation)
-    api(libs.kotlin.coroutines)
+    api(libs.kotlin.coroutines.core)
     api(libs.androidx.appcompat)
 
     implementation(projects.logSdk)

@@ -253,7 +253,7 @@ fun Project.configureApplication(): BaseExtension = configureBase().apply {
     }
     buildTypes {
         getByName("release") {
-            isShrinkResources = true
+            isShrinkResources = false
             isMinifyEnabled = true
         }
 

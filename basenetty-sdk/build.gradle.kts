@@ -23,7 +23,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     api(libs.netty.codec.http)
 
-    api(libs.kotlin.coroutines)
+    api(libs.kotlin.coroutines.core)
 
     // No need to use this library when adding pipeline however we indeed need its library.
     // So what's the magic?

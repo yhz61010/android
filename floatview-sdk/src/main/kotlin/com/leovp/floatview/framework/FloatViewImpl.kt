@@ -35,6 +35,7 @@ import com.leovp.floatview.utils.statusBarHeight
 import kotlin.math.abs
 import kotlin.math.max
 
+
 /**
  * Author: Michael Leo
  * Date: 2021/8/30 10:56
@@ -606,7 +607,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             currentDeviceOrientation = ctx.getDeviceOrientation(degree, currentDeviceOrientation)
             if (currentDeviceOrientation > -1) {
                 SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS[currentDeviceOrientation]?.let { rotation ->
-                    if (rotation != lastScrOri) config.customView?.post { updateScreenOrientation(rotation) }
+                    val screenOrientation = ctx.screenSurfaceRotation
+                    // Log.e("LEO-float-view", "=====> device_rotation=$rotation  screen_rotation=$screenOrientation")
+                    if (rotation != lastScrOri) config.customView?.post { updateScreenOrientation(screenOrientation) }
                 }
             }
         }

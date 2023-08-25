@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
+import android.view.Surface
 import android.view.View
 import android.widget.TextView
 import com.leovp.android.exts.setOnSingleClickListener
@@ -44,6 +45,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 immersiveMode = true
                 x = 50
                 y = 220
+                screenOrientation = Surface.ROTATION_0
             }
             .listener(object : FloatView.TouchEventListener {
                 override fun touchDown(view: View, x: Int, y: Int): Boolean {
@@ -83,6 +85,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 edgeMargin = 20
                 x = 100
                 y = 600
+                screenOrientation = Surface.ROTATION_0
             }
             .show()
 
@@ -99,6 +102,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 immersiveMode = true
                 y = 900
                 stickyEdge = StickyEdge.RIGHT
+                screenOrientation = Surface.ROTATION_0
             }
             .show()
 
@@ -115,6 +119,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 immersiveMode = true
                 y = 900
                 dockEdge = DockEdge.LEFT
+                screenOrientation = Surface.ROTATION_0
             }
             .show()
 
@@ -138,6 +143,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 immersiveMode = true
                 touchable = false
                 enableDrag = false
+                screenOrientation = Surface.ROTATION_0
             }
             .listener(object : FloatView.TouchEventListener {
                 override fun touchDown(view: View, x: Int, y: Int): Boolean {

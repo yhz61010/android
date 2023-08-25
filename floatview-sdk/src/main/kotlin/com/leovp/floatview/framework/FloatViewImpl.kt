@@ -3,7 +3,6 @@ package com.leovp.floatview.framework
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
@@ -23,9 +22,7 @@ import androidx.core.view.children
 import com.leovp.floatview.entities.DefaultConfig
 import com.leovp.floatview.entities.DockEdge
 import com.leovp.floatview.entities.StickyEdge
-import com.leovp.floatview.utils.SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS
 import com.leovp.floatview.utils.canDrawOverlays
-import com.leovp.floatview.utils.getDeviceOrientation
 import com.leovp.floatview.utils.getScreenSize
 import com.leovp.floatview.utils.isGoogle
 import com.leovp.floatview.utils.screenAvailableResolution
@@ -596,22 +593,18 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     // }
 
     // ====================
-    private var currentDeviceOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
     inner class DeviceOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
         override fun onOrientationChanged(degree: Int) {
             if (degree == ORIENTATION_UNKNOWN) {
                 return
             }
 
-            currentDeviceOrientation = ctx.getDeviceOrientation(degree, currentDeviceOrientation)
-            if (currentDeviceOrientation > -1) {
-                SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS[currentDeviceOrientation]?.let { rotation ->
-                    val screenOrientation = ctx.screenSurfaceRotation
-                    // Log.e("LEO-float-view", "=====> device_rotation=$rotation  screen_rotation=$screenOrientation")
-                    if (rotation != lastScrOri) config.customView?.post { updateScreenOrientation(screenOrientation) }
-                }
+            val screenOrientation = ctx.screenSurfaceRotation
+            if (lastScrOri != screenOrientation) {
+                // Log.e("LEO-float-view", "=====> screen_rotation=$screenOrientation")
+                config.customView?.post { updateScreenOrientation(screenOrientation) }
             }
+            lastScrOri = screenOrientation
         }
     }
 }

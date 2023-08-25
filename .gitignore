@@ -87,3 +87,5 @@ lint/tmp/
 /**/detekt-baseline.xml
 
 **/.DS_Store
+
+.DS_Store

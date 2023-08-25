@@ -78,7 +78,7 @@
             android:screenOrientation="fullUser" />
         <activity android:name=".basiccomponents.AppSettingsActivity" android:exported="true" />
         <activity android:name=".basiccomponents.examples.CircleProgressbarActivity" android:configChanges="orientation|screenSize" />
-        <activity android:name=".basiccomponents.examples.FloatViewActivity" />
+        <activity android:name=".basiccomponents.examples.FloatViewActivity" android:configChanges="orientation|screenSize" />
         <activity android:name=".basiccomponents.examples.socket.eventbusbridge.EventBusBridgeClientActivity" />
         <activity android:name=".basiccomponents.examples.ToastActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize" />

@@ -17,7 +17,6 @@ android {
 
 dependencies {
     api(libs.androidx.core.ktx)
-    api(projects.libReflection)
 }
 
 afterEvaluate {

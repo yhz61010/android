@@ -18,7 +18,7 @@ class OrientationService : BaseService() {
 
     private val screenRotationChanged: IRotationWatcher.Stub = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            LogContext.log.w(ITAG, "Device rotation changed to ${rotation.surfaceRotationName}")
+            LogContext.log.w(ITAG, "Reflection: Device rotation changed to ${rotation.surfaceRotationName}")
         }
     }
 
@@ -62,6 +62,8 @@ class OrientationService : BaseService() {
 
     override fun onBind(intent: Intent): IBinder? = null
 
+    private var lastScreenSurfaceRotation = -1
+
     inner class ServiceOrientationListener(ctx: Context) : OrientationEventListener(ctx) {
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(degree: Int) {
@@ -70,11 +72,14 @@ class OrientationService : BaseService() {
                 return
             }
 
-            val ssr = screenSurfaceRotation
-            LogContext.log.w(ITAG, "=====> ssr=$ssr")
-
             // Use parameter degree to determine the device orientation.
             LogContext.log.i(ITAG, "=====> In Service: rotation=$degree")
+
+            val ssr = screenSurfaceRotation
+            if (lastScreenSurfaceRotation != ssr) {
+                LogContext.log.w(ITAG, "=====> Current screen rotation=${ssr.surfaceRotationName}")
+            }
+            lastScreenSurfaceRotation = ssr
         }
     }
 }

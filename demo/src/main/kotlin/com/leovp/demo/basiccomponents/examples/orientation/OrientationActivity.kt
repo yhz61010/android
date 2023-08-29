@@ -4,9 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.IRotationWatcher
 import android.view.OrientationEventListener
 import com.leovp.android.exts.getDeviceOrientation
@@ -55,18 +53,6 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
         super.onDestroy()
     }
 
-    /** @return
-     * [Configuration.ORIENTATION_PORTRAIT],
-     * [Configuration.ORIENTATION_LANDSCAPE]
-     *
-     * constants based on the current phone screen pixel relations.
-     */
-    private fun getScreenOrientation(): Int {
-        val dm: DisplayMetrics = resources.displayMetrics // Screen rotation effected
-        //        LogContext.log.w(ITAG, "dm size: ${dm.widthPixels}x${dm.heightPixels}")
-        return if (dm.widthPixels > dm.heightPixels) Configuration.ORIENTATION_LANDSCAPE else Configuration.ORIENTATION_PORTRAIT
-    }
-
     inner class DeviceOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(degree: Int) {
@@ -82,20 +68,12 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             binding.tvSurfaceRotation.text =
                 "${screenSurfaceRotation.surfaceRotationLiteralName}($screenSurfaceRotation) " +
-                screenSurfaceRotation.surfaceRotationName
+                    screenSurfaceRotation.surfaceRotationName
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
-            val screenPortraitOrLandscape = getScreenOrientation()
-            val screenPortraitOrLandscapeName =
-                if (Configuration.ORIENTATION_PORTRAIT == screenPortraitOrLandscape) {
-                    "Portrait"
-                } else {
-                    "Landscape"
-                }
             LogContext.log.w(
                 "Device Orientation=${currentDeviceOrientation.screenOrientationName} " +
-                    "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} " +
-                    "screenPortraitOrLandscape=$screenPortraitOrLandscapeName"
+                    "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} "
             )
             binding.tvDeviceOrientation.text = currentDeviceOrientation.screenOrientationName
         }

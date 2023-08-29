@@ -1,6 +1,7 @@
 // IRotationWatcher.aidl
+
 package android.view;
 
-interface IRotationWatcher {
-    oneway void onRotationChanged(int rotation);
+oneway interface IRotationWatcher {
+    void onRotationChanged(int rotation);
 }

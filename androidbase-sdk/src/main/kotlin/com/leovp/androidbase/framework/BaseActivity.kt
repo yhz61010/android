@@ -27,8 +27,8 @@ import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_FRAMEWORK
-import java.util.*
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_FRAMEWORK
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

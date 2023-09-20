@@ -1,6 +1,6 @@
 package com.leovp.log
 
-import com.leovp.log.base.ILog
+import com.leovp.log.base.AbsLog
 
 /**
  *  You can implement your log wrapper by implement `ILog` or else the default log wrapper `LLog` will be used.
@@ -27,12 +27,12 @@ object LogContext {
             log.enableLog = value
         }
 
-    lateinit var log: ILog
+    lateinit var log: AbsLog
         private set
 
     fun isLogInitialized(): Boolean = ::log.isInitialized
 
-    fun setLogImpl(log: ILog) {
+    fun setLogImpl(log: AbsLog) {
         LogContext.log = log
     }
 }

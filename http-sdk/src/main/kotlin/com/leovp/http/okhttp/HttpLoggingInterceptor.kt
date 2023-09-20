@@ -1,7 +1,7 @@
 package com.leovp.http.okhttp
 
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers

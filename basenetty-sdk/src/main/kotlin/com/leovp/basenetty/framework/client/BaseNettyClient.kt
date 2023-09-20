@@ -8,8 +8,8 @@ import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
 import com.leovp.network.SslUtils
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
@@ -290,16 +290,19 @@ abstract class BaseNettyClient protected constructor(
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
+
                 ClientConnectStatus.RELEASING -> {
                     LogContext.log.w(tag, "===== Releasing now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
+
                 ClientConnectStatus.DISCONNECTING -> {
                     LogContext.log.w(tag, "===== Disconnecting now. DO NOT connect and stop processing. =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
+
                 else -> LogContext.log.i(tag, "===== Prepare to connect to server =====")
             }
             connectStatus.set(ClientConnectStatus.CONNECTING)
@@ -642,6 +645,7 @@ abstract class BaseNettyClient protected constructor(
                     LogContext.log.i(cmdTag, if (showContent) "$cmdMsg=$cmd" else cmdMsg, fullOutput = fullOutput)
                 }
             }
+
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
@@ -656,6 +660,7 @@ abstract class BaseNettyClient protected constructor(
                     LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
+
             else -> throw IllegalArgumentException("Command must be either String or ByteArray")
         }
 

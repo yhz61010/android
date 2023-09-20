@@ -13,7 +13,7 @@ import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_SYSTEM
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_SYSTEM
 
 /**
  * 纹理加载助手类

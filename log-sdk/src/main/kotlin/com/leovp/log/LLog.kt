@@ -1,13 +1,13 @@
 package com.leovp.log
 
 import android.util.Log
-import com.leovp.log.base.ILog
+import com.leovp.log.base.AbsLog
 
 /**
  * Author: Michael Leo
  * Date: 20-6-15 下午7:16
  */
-class LLog(tagPrefix: String) : ILog(tagPrefix) {
+class LLog(tagPrefix: String) : AbsLog(tagPrefix) {
 
     override fun printVerbLog(tag: String, message: String, outputType: Int) {
         Log.v(tag, if (outputType == -1) message else "[$outputType]$message")

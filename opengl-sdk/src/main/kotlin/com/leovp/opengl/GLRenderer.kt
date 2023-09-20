@@ -5,7 +5,7 @@ package com.leovp.opengl
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog
+import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_SYSTEM
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_STRIDE_IN_FLOAT
 import com.leovp.opengl.util.VerticesUtil
@@ -68,7 +68,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     //  Called once to set up the view's OpenGL ES environment.
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        LogContext.log.w(tag, "=====> GLRenderer onSurfaceCreated()", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.w(tag, "=====> GLRenderer onSurfaceCreated()", outputType = OUTPUT_TYPE_SYSTEM)
         // Set the background frame color
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。
         // 这里不会立刻刷新，只有在 GLES20.glClear 调用时使用该颜色值才刷新。
@@ -79,7 +79,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 生成纹理句柄
         GLES20.glGenTextures(THREE_PLANAR, planarTextureIntBuffer)
         checkGlError("glGenTextures")
-        LogContext.log.d(tag, "=====> GLProgram created", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(tag, "=====> GLProgram created", outputType = OUTPUT_TYPE_SYSTEM)
     }
 
     private fun createCustomFloatBuffer(
@@ -97,7 +97,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.w(
             tag,
             "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
-            outputType = ILog.OUTPUT_TYPE_SYSTEM
+            outputType = OUTPUT_TYPE_SYSTEM
         )
         super.onSurfaceChanged(gl, width, height)
 
@@ -112,7 +112,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
             pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, outputWidth, outputHeight)
         }
         hasVisibility = true
-        LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = OUTPUT_TYPE_SYSTEM)
     }
 
     //  Called for each redraw of the view.
@@ -143,7 +143,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
                 runCatching {
                     drawTexture(mvpMatrix, yuv420Type)
-                }.onFailure { LogContext.log.e(tag, it, outputType = ILog.OUTPUT_TYPE_SYSTEM) }
+                }.onFailure { LogContext.log.e(tag, it, outputType = OUTPUT_TYPE_SYSTEM) }
             }
         }
     }
@@ -157,7 +157,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.i(
             tag,
             "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight",
-            outputType = ILog.OUTPUT_TYPE_SYSTEM
+            outputType = OUTPUT_TYPE_SYSTEM
         )
         if (width > 0 && height > 0) {
             // 调整比例

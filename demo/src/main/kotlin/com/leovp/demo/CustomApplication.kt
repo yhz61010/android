@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.util.Log
 import com.leovp.android.exts.LeoToast
 import com.leovp.android.ui.ForegroundComponent
-import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseApplication
 import com.leovp.demo.basiccomponents.examples.koin.Car
 import com.leovp.demo.basiccomponents.examples.koin.Engine
@@ -69,14 +68,16 @@ class CustomApplication : BaseApplication() {
         // https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
         RxJavaPlugins.setErrorHandler { }
 
-        // LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
-        LogContext.setLogImpl(LLog(TAG_PREFIX))
         PrefContext.setPrefImpl(LPref(this))
     }
 
     override fun attachBaseContext(base: Context) {
         Log.i("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
-        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
+
+        // LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        LogContext.setLogImpl(LLog(TAG_PREFIX))
+
+        super.attachBaseContext(base)
         Reflection.unseal(base)
     }
 

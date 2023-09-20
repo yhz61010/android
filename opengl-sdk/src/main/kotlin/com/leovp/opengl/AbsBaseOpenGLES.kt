@@ -2,7 +2,7 @@ package com.leovp.opengl
 
 import android.opengl.GLES20
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog
+import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_SYSTEM
 import com.leovp.opengl.util.checkGlError
 import com.leovp.opengl.util.compileShader
 import com.leovp.opengl.util.linkProgram
@@ -54,7 +54,7 @@ abstract class AbsBaseOpenGLES {
      */
     fun makeProgram(vertexShaderId: Int, fragmentShaderId: Int) {
         programObjId = linkProgram(vertexShaderId, fragmentShaderId)
-        LogContext.log.i(tag, "makeProgram() programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.i(tag, "makeProgram() programObjId=$programObjId", outputType = OUTPUT_TYPE_SYSTEM)
         if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
 
         GLES20.glUseProgram(programObjId)

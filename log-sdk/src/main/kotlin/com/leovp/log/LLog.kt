@@ -7,10 +7,7 @@ import com.leovp.log.base.ILog
  * Author: Michael Leo
  * Date: 20-6-15 下午7:16
  */
-class LLog(private val prefix: String) : ILog {
-    override fun getTagName(tag: String) = "$prefix-$tag"
-
-    override var enableLog: Boolean = true
+class LLog(tagPrefix: String) : ILog(tagPrefix) {
 
     override fun printVerbLog(tag: String, message: String, outputType: Int) {
         Log.v(tag, if (outputType == -1) message else "[$outputType]$message")

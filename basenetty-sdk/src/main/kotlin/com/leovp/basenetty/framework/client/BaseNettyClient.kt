@@ -8,8 +8,8 @@ import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog
 import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
+import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
 import com.leovp.network.SslUtils
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
@@ -163,7 +163,7 @@ abstract class BaseNettyClient protected constructor(
         this.headers?.let {
             if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v", outputType = ILog.OUTPUT_TYPE_HTTP_HEADER_COOKIE)
+                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v", outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE)
                 headers.add(k, v)
             }
         }

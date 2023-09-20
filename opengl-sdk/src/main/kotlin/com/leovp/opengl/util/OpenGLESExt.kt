@@ -2,7 +2,7 @@ package com.leovp.opengl.util
 
 import android.opengl.GLES20
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog
+import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_SYSTEM
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
 
@@ -123,7 +123,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
     // 在 OpenGL 中，都是通过整型值去作为 OpenGL 对象的引用。之后进行操作的时候都是将这个整型值传回给 OpenGL 进行操作。
     // 返回值 0 代表着创建对象失败。
     if (shaderId == GLES20.GL_FALSE) { // Failed
-        LogContext.log.e(TAG, "Could not create new shader[$type].", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "Could not create new shader[$type].", outputType = OUTPUT_TYPE_SYSTEM)
         return GLES20.GL_FALSE
     }
 
@@ -134,7 +134,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
     // 4. 编译着色器对象
     GLES20.glCompileShader(shaderId)
 
-    //    LogContext.log.i(TAG, "Results of compiling.\n${GLES20.glGetShaderInfoLog(shaderId)}", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+    //    LogContext.log.i(TAG, "Results of compiling.\n${GLES20.glGetShaderInfoLog(shaderId)}", outputType = OUTPUT_TYPE_SYSTEM)
 
     // 5. 获取编译状态：OpenGL 将想要获取的值放入长度为1的数组的首位
     val compileStatus = IntArray(1)
@@ -142,7 +142,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
 
     // 6.验证编译状态
     if (compileStatus[0] != GLES20.GL_TRUE) { // Failed
-        LogContext.log.e(TAG, "Compilation of shader[$type] failed.", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "Compilation of shader[$type] failed.", outputType = OUTPUT_TYPE_SYSTEM)
         // 如果编译失败，则删除创建的着色器对象
         GLES20.glDeleteShader(shaderId)
 
@@ -161,13 +161,13 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
     // 1. 创建一个 OpenGL ES 程序对象
     // Create empty OpenGL ES Program
     val programObjId = GLES20.glCreateProgram()
-    LogContext.log.i(TAG, "linkProgram() programObjId=$programObjId", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+    LogContext.log.i(TAG, "linkProgram() programObjId=$programObjId", outputType = OUTPUT_TYPE_SYSTEM)
 
     // 2. 检查创建状态
     checkGlError("glCreateProgram")
     // 返回值 0 代表着创建对象失败。
     if (programObjId == GLES20.GL_FALSE) { // Failed
-        LogContext.log.e(TAG, "Could not create new program.", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "Could not create new program.", outputType = OUTPUT_TYPE_SYSTEM)
         return GLES20.GL_FALSE
     }
 
@@ -192,7 +192,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
             TAG,
             "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)} " +
                 "linkStatus=${linkStatus[0]}",
-            outputType = ILog.OUTPUT_TYPE_SYSTEM
+            outputType = OUTPUT_TYPE_SYSTEM
         )
         // 链接失败则删除程序对象
         GLES20.glDeleteProgram(programObjId)
@@ -212,7 +212,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
 fun checkGlError(op: String): Int {
     var error: Int = GLES20.glGetError()
     while (error != GLES20.GL_NO_ERROR) {
-        LogContext.log.e(TAG, "checkGlError. $op: glError $error", outputType = ILog.OUTPUT_TYPE_SYSTEM)
+        LogContext.log.e(TAG, "checkGlError. $op: glError $error", outputType = OUTPUT_TYPE_SYSTEM)
         error = GLES20.glGetError()
     }
     return error
@@ -232,7 +232,7 @@ fun validateProgram(programObjectId: Int): Boolean {
         TAG,
         "Results of validating program: ${validateStatus[0]}\n" +
             "Log:${GLES20.glGetProgramInfoLog(programObjectId)}",
-        outputType = ILog.OUTPUT_TYPE_SYSTEM
+        outputType = OUTPUT_TYPE_SYSTEM
     )
     return validateStatus[0] != 0
 }

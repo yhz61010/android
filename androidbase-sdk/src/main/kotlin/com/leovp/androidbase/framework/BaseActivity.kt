@@ -1,6 +1,7 @@
 package com.leovp.androidbase.framework
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -36,7 +37,7 @@ import org.greenrobot.eventbus.ThreadMode
  * This class has already enabled Custom Language feature.
  *
  * Attention: If you use _navigation component_ in your activity,
- * **DO NOT** assign [layoutResId] in your constructor.
+ * **DO NOT** assign _layoutResId_ in your constructor.
  *
  * Usage:
  * ```
@@ -127,6 +128,7 @@ abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, in
         super.onRestart()
     }
 
+    @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent?) {
         LogContext.log.i(tag, "=====> onNewIntent <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
         super.onNewIntent(intent)

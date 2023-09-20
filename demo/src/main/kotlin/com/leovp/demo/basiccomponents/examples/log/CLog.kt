@@ -2,7 +2,7 @@ package com.leovp.demo.basiccomponents.examples.log
 
 import android.content.Context
 import com.leovp.demo.BuildConfig
-import com.leovp.log.base.ILog
+import com.leovp.log.base.AbsLog
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
 import java.io.File
@@ -12,7 +12,7 @@ import java.io.File
  * Date: 20-4-20 上午11:39
  */
 @Suppress("unused")
-class CLog : ILog("LEO") {
+class CLog : AbsLog("LEO") {
     private val debugMode = BuildConfig.DEBUG
 
     override fun printVerbLog(tag: String, message: String, outputType: Int) {

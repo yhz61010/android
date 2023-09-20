@@ -2,7 +2,7 @@ package com.leovp.opengl.util
 
 import android.opengl.GLES20
 import com.leovp.log.LogContext
-import com.leovp.log.base.ILog.Companion.OUTPUT_TYPE_SYSTEM
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_SYSTEM
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
 

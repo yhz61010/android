@@ -33,6 +33,8 @@ import org.json.JSONObject;
 /**
  * <a href="https://github.com/rayworks/DroidCast">DroidCast</a>
  * <p>
+ * <a href="https://developer.aliyun.com/article/1124691">Android 13 截屏流程</a>
+ * <p>
  * Author: Michael Leo
  * Date: 2022/1/19 09:01
  */

@@ -13,6 +13,7 @@ import com.leovp.dex.util.CmnUtil;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Author: Michael Leo
@@ -45,7 +46,55 @@ public final class SurfaceControl {
         try {
             Method declaredMethod;
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+
+                // Android 14+
+                // https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android14-release/packages/SystemUI/src/com/android/systemui/screenshot/ImageCaptureImpl.kt#40
+                // https://stackoverflow.com/a/55174537
+                //
+                // val captureArgs = CaptureArgs.Builder()
+                //     .setSourceCrop(crop)
+                //     .build()
+                // val syncScreenCapture = ScreenCapture.createSyncCaptureListener()
+                // windowManager.captureDisplay(displayId, captureArgs, syncScreenCapture)
+                // val buffer = syncScreenCapture.getBuffer() // ScreenshotHardwareBuffer extends HardwareBuffer
+                // val bitmap = buffer?.asBitmap()
+
+                // android.window.ScreenCapture$CaptureArgs
+                // android.window.ScreenCapture
+                //      |-> public static SynchronousScreenCaptureListener createSyncCaptureListener()
+                //          android.window.ScreenCapture$SynchronousScreenCaptureListener
+                // getService("window", "android.view.IWindowManager")
+                // android.window.ScreenCapture$ScreenshotHardwareBuffer
+
+                final Class<?> innerBuilderClass = Class.forName("android.window.ScreenCapture$CaptureArgs$Builder");
+                Constructor<?> captureArgsBuilderConstructor = innerBuilderClass.getDeclaredConstructor();
+                Object captureArgsBuilder = captureArgsBuilderConstructor.newInstance();
+                final Method buildMethod = innerBuilderClass.getDeclaredMethod("build");
+                Object captureArgs = buildMethod.invoke(captureArgsBuilder);
+
+                final Class<?> screenCaptureClass = Class.forName("android.window.ScreenCapture");
+                Method createSyncCaptureListenerMethod = screenCaptureClass.getDeclaredMethod("createSyncCaptureListener");
+                Object syncScreenCapture = createSyncCaptureListenerMethod.invoke(null);
+
+                // https://stackoverflow.com/a/55174537
+                Class<?> serviceManager = Class.forName("android.os.ServiceManager");
+                Method serviceMethod = serviceManager.getMethod("getService", String.class);
+                IBinder binder = (IBinder) serviceMethod.invoke(null, "window");
+                Class<?> windowManagerStub = Class.forName("android.view.IWindowManager").getClasses()[0];
+                Object windowManager = windowManagerStub.getMethod("asInterface", IBinder.class).invoke(null, binder);
+                Method captureDisplayMethod = Arrays.stream(windowManagerStub.getMethods()).filter(method -> "captureDisplay".equals(method.getName())).findFirst().orElse(null);
+                if (captureDisplayMethod != null) {
+                    captureDisplayMethod.invoke(windowManager, 0, captureArgs, syncScreenCapture);
+                }
+
+                final Class<?> createSyncCaptureListenerClass = Class.forName("android.window.ScreenCapture$SynchronousScreenCaptureListener");
+                Method bufferMethod = createSyncCaptureListenerClass.getDeclaredMethod("getBuffer");
+                final Object buffer = bufferMethod.invoke(syncScreenCapture);
+                final Class<?> bufferClass = Class.forName("android.window.ScreenCapture$ScreenshotHardwareBuffer");
+                final Method asBitmapMethod = bufferClass.getDeclaredMethod("asBitmap");
+                bitmap = buffer == null ? null : (Bitmap) asBitmapMethod.invoke(buffer);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
                 // See: ScreenshotController#captureScreenshot
 //            final IBinder displayToken = SurfaceControl.getPhysicalDisplayToken(
 //                    physicalAddress.getPhysicalDisplayId());

@@ -5,9 +5,8 @@ package com.leovp.android.utils.shell
 import android.util.Log
 import androidx.annotation.Keep
 import java.io.BufferedReader
-import java.io.DataOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -29,7 +28,7 @@ object ShellUtil {
     private val LINE_SEP = System.getProperty("line.separator")!!
 
     /**
-     * Check whether has root permission.
+     * Check root permission.
      *
      * @return root for true otherwise false
      */
@@ -44,58 +43,38 @@ object ShellUtil {
     fun execCmd(commands: List<String>, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
         var result = -1
         if (commands.isEmpty()) {
-            return CommandResult(result, "", "")
+            return CommandResult(result, "", "Command is empty.")
         }
-        var successMsg: StringBuilder? = null
-        var errorMsg: StringBuilder? = null
-        val process: Process
-        try {
-            process = Runtime.getRuntime().exec(if (isRoot) SU_BIN else SH_BIN)
-        } catch (e: Exception) {
-            Log.e(TAG, "execCmd exception. Message: ${e.message}")
-            return CommandResult(
-                result,
-                "",
-                e.toString()
-            )
+        // Check root environment if available.
+        val pb = ProcessBuilder(if (isRoot) SU_BIN else SH_BIN)
+        val process = runCatching { pb.start() }.getOrElse { e ->
+            return CommandResult(result, "", e.toString())
         }
 
-        DataOutputStream(process.outputStream).use {
+        // StandardCharsets.UTF_8
+        OutputStreamWriter(process.outputStream, "UTF-8").use { osw ->
             for (command in commands) {
-                it.write(command.toByteArray())
-                it.writeBytes(LINE_SEP)
-                it.flush()
+                osw.write(command)
+                osw.appendLine()
             }
-            it.writeBytes(CMD_EXIT + LINE_SEP)
-            it.flush()
+            osw.write(CMD_EXIT)
+            osw.appendLine()
+            osw.flush()
         }
 
+        val successMsg: StringBuilder = StringBuilder()
+        val errorMsg: StringBuilder = StringBuilder()
         result = process.waitFor()
         if (isNeedResultMsg) {
-            successMsg = StringBuilder()
-            errorMsg = StringBuilder()
-            BufferedReader(InputStreamReader(process.inputStream, StandardCharsets.UTF_8)).use { successResult ->
-                var line: String?
-                if (successResult.readLine().also { line = it } != null) {
-                    successMsg.append(line)
-                    while (successResult.readLine().also { line = it } != null) {
-                        successMsg.append(LINE_SEP).append(line)
-                    }
-                }
+            process.inputStream.bufferedReader().use { br ->
+                br.useLines { seq -> successMsg.append(seq.toList().joinToString(LINE_SEP)) }
             }
 
-            BufferedReader(InputStreamReader(process.errorStream, StandardCharsets.UTF_8)).use { errorResult ->
-                var line: String?
-                if (errorResult.readLine().also { line = it } != null) {
-                    errorMsg.append(line)
-                    while (errorResult.readLine().also { line = it } != null) {
-                        errorMsg.append(LINE_SEP).append(line)
-                    }
-                }
+            process.errorStream.bufferedReader(StandardCharsets.UTF_8).use { br ->
+                br.useLines { seq -> errorMsg.append(seq.toList().joinToString(LINE_SEP)) }
             }
         }
-
-        process.destroy()
+        // process.destroy()
 
         return CommandResult(
             result,

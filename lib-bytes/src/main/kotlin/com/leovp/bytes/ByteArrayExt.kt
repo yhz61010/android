@@ -118,7 +118,7 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toInt().to
 
 /**
  * Attention.
- * This method is little bit slow so be aware that if you use it in loop.
+ * This method is a little bit slow so be aware that if you use it in loop.
  */
 // fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
 

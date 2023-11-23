@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# shellcheck disable=SC2034
 FFMPEG_FOLDER=ffmpeg-6.0
 NDK_PATH=~/Library/Android/sdk/ndk/25.2.9519653
 # linux-x86_64
 HOST_TAG=darwin-x86_64
 MIN_SDK_VER=23
+PKG_CONFIG_PATH=$(which pkg-config | sed 's/pkg-config$//' )
 
 # ==================================
 
@@ -13,7 +15,8 @@ SYSROOT=${TOOLCHAINS}/sysroot
 
 # ==================================
 
+echo "-> Current working directory=$(pwd)"
 rm -rf prebuilt
-rm -rf ../../libs
-rm -rf ../../obj
+rm -rf ../libs
+rm -rf ../obj
 

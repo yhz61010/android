@@ -70,7 +70,7 @@ function build_one
 
     make clean
     # shellcheck disable=SC2046
-    make -j$(nproc)
+    make -j $(nproc)
     make install
     popd || exit
 }

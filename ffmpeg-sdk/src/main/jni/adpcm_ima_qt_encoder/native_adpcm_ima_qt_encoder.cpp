@@ -52,10 +52,10 @@ void encodedAudioCallback(uint8_t *encodedAudioData, int decodedAudioLength) {
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"init",       "(III)I",               (void *) init},
-        {"release",    "()V",                  (void *) release},
-        {"encode",     "([B)V",                (void *) encode},
-        {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
+        {(char*)"init",       (char*)"(III)I",               (void *) init},
+        {(char*)"release",    (char*)"()V",                  (void *) release},
+        {(char*)"encode",     (char*)"([B)V",                (void *) encode},
+        {(char*)"getVersion", (char*)"()Ljava/lang/String;", (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {

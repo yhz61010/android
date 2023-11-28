@@ -52,11 +52,11 @@ JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobjec
 // =============================
 
 static JNINativeMethod methods[] = {
-        {"init",       "(II)I",                (void *) init},
-        {"release",    "()V",                  (void *) release},
-        {"chunkSize",  "()I",                  (void *) chunkSize},
-        {"decode",     "([B)[B",               (void *) decode},
-        {"getVersion", "()Ljava/lang/String;", (void *) getVersion},
+        {(char*)"init",       (char*)"(II)I",                (void *) init},
+        {(char*)"release",    (char*)"()V",                  (void *) release},
+        {(char*)"chunkSize",  (char*)"()I",                  (void *) chunkSize},
+        {(char*)"decode",     (char*)"([B)[B",               (void *) decode},
+        {(char*)"getVersion", (char*)"()Ljava/lang/String;", (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {

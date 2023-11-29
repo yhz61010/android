@@ -28,7 +28,7 @@ object YuvUtil {
     const val SCALE_FILTER_BOX = 3 // Highest quality.
 
     /**
-     * Maybe the [convertToI420] method is what you want. Otherwise I find a way to get [pixelStrideUV] automatically.
+     * Maybe the [convertToI420] method is what you want unless you find a way to get [pixelStrideUV] automatically.
      *
      * @param pixelStrideUV How can I get this parameter automatically?
      *                      1: I420

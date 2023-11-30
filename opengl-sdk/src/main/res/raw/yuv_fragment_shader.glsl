@@ -11,6 +11,7 @@
  * https://stackoverflow.com/a/37414763
  * https://github.com/kenneycode/OpenGLES2.0SamplesForAndroid/blob/0864ee22db/app/src/main/java/com/kenneycode/samples/renderer/SampleVertexShaderRenderer.kt
  * https://blog.csdn.net/junzia/article/details/68952183
+ * https://stackoverflow.com/q/60066025
  */
 
 // 定义所有浮点数据类型的默认精度。
@@ -43,4 +44,20 @@ void main() {
     color.a = 1.0;
     // gl_FragColor：GL中默认定义的输出变量，决定了当前片段的最终颜色
     gl_FragColor = color;
+
+    // 以 I420 转 RGB 为例，以上代码等同于如下方法。
+//    float r,g,b;
+//    float y,u,v;
+//
+//    y = texture2D(samplerY, v_TexCoord).r - 16./255.;
+//    u = texture2D(samplerU, v_TexCoord).r - 128./255.;
+//    v = texture2D(samplerV, v_TexCoord).r - 128./255.;
+//
+//    float fYmul = y * 1.164;
+//
+//    r = fYmul + v * 1.596;
+//    g = fYmul - u * 0.392 - v * 0.813;
+//    b = fYmul + u * 2.017;
+//
+//    gl_FragColor = vec4(r, g, b, 1.0);
 }

@@ -12,6 +12,7 @@
  * https://github.com/kenneycode/OpenGLES2.0SamplesForAndroid/blob/0864ee22db/app/src/main/java/com/kenneycode/samples/renderer/SampleVertexShaderRenderer.kt
  * https://blog.csdn.net/junzia/article/details/68952183
  * https://stackoverflow.com/q/60066025
+ * https://blog.csdn.net/ericbar/article/details/80509887
  */
 
 // 定义所有浮点数据类型的默认精度。

@@ -12,6 +12,11 @@ LOCAL_MODULE := libavutil
 LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavutil.so
 include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libswscale
+LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libswscale.so
+include $(PREBUILT_SHARED_LIBRARY)
+
 #include $(CLEAR_VARS)
 #LOCAL_MODULE := libswresample
 #LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libswresample.so
@@ -31,11 +36,6 @@ include $(PREBUILT_SHARED_LIBRARY)
 #LOCAL_MODULE := libavformat
 #LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libavformat.so
 #include $(PREBUILT_SHARED_LIBRARY)
-#
-#include $(CLEAR_VARS)
-#LOCAL_MODULE := libswscale
-#LOCAL_SRC_FILES := $(MY_PREBUILT)/lib/libswscale.so
-#include $(PREBUILT_SHARED_LIBRARY)
 
 # ==================================
 
@@ -50,7 +50,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/h264_hevc_decoder
 # The following libraries will be generated in src/main/lib folder
 #LOCAL_SHARED_LIBRARIES := libavdevice libavcodec libavfilter libavformat libavutil libswresample libswscale
-LOCAL_SHARED_LIBRARIES := libavcodec libavutil
+LOCAL_SHARED_LIBRARIES := libavcodec libavutil libswscale
 LOCAL_DISABLE_FORMAT_STRING_CHECKS := true
 LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
 include $(BUILD_SHARED_LIBRARY)

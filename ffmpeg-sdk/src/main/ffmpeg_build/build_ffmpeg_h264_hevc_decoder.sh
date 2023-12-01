@@ -50,7 +50,6 @@ function build_one
         --disable-x86asm \
         --disable-inline-asm \
         --disable-swresample \
-        --disable-swscale \
         --disable-avfilter \
         --disable-avdevice \
         --disable-avformat \
@@ -65,8 +64,9 @@ function build_one
     #--enable-mediacodec \
     #--enable-decoder=h264,h264_mediacodec,hevc,hevc_mediacodec \
 
+    #--disable-swscale \
     #--disable-avformat \
-    #    --enable-encoder=adpcm_ima_qt \
+    #--enable-encoder=adpcm_ima_qt \
 
     make clean
     # shellcheck disable=SC2046

@@ -50,7 +50,6 @@ function build_one
         --disable-x86asm \
         --disable-inline-asm \
         --disable-swresample \
-        --disable-swscale \
         --disable-avfilter \
         --disable-avdevice \
         --disable-avformat \
@@ -61,6 +60,10 @@ function build_one
         --enable-shared \
         --enable-small \
         --enable-pic
+
+    # Actually, we don't use it at all. Just to make compilation is the same as others.
+    # If you do want to disable it, DO NOT format to remove [libswscale] in [Android.mk].
+    #--disable-swscale \
 
     make clean
     # shellcheck disable=SC2046

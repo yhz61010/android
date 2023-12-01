@@ -50,7 +50,6 @@ function build_one
         --disable-x86asm \
         --disable-inline-asm \
         --disable-swresample \
-        --disable-swscale \
         --disable-avfilter \
         --disable-avdevice \
         --disable-avformat \
@@ -63,6 +62,7 @@ function build_one
         --enable-small \
         --enable-pic
 
+    #--disable-swscale \
     #--enable-mediacodec \
     #--enable-decoder=adpcm_ima_qt,h264,h264_mediacodec,hevc,hevc_mediacodec \
 

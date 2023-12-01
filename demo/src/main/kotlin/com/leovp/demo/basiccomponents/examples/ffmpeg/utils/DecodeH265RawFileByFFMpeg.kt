@@ -277,7 +277,7 @@ class DecodeH265RawFileByFFMpeg {
                                         } else {
                                             BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
                                         }
-                                    glSurfaceView.render(it.yuvBytes, yuv420Type)
+                                    glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
                                 }
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.w(

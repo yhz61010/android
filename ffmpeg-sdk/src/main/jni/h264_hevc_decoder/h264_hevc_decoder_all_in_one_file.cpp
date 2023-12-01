@@ -8,6 +8,7 @@ extern "C" {
 
 #include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
 #include <libavcodec/jni.h>
 
 //#define GET_ARRAY_LEN(array, len) {len = (sizeof(array) / sizeof(array[0]));}
@@ -17,6 +18,28 @@ AVCodecContext *ctx = nullptr;
 AVFrame *frame = nullptr;
 AVPacket *pkt = nullptr;
 
+struct SwsContext *convertCxt = nullptr;
+AVFrame *bmpFrame = nullptr;
+AVPixelFormat bmpFormat = AV_PIX_FMT_NONE;
+
+// 把已经废除的格式转换成新的格式，防止报 "deprecated pixel format used, make sure you did set range correctly" 错误
+AVPixelFormat convertDeprecatedFormat(enum AVPixelFormat format)
+{
+    switch (format)
+    {
+        case AV_PIX_FMT_YUVJ420P:
+            return AV_PIX_FMT_YUV420P;
+        case AV_PIX_FMT_YUVJ422P:
+            return AV_PIX_FMT_YUV422P;
+        case AV_PIX_FMT_YUVJ444P:
+            return AV_PIX_FMT_YUV444P;
+        case AV_PIX_FMT_YUVJ440P:
+            return AV_PIX_FMT_YUV440P;
+        default:
+            return format;
+    }
+}
+
 /**
  * @param spsByteArray The data start with separator like 0x0, 0x0, 0x0, 0x01
  * @param ppsByteArray NOT Used. The data start with separator like 0x0, 0x0, 0x0, 0x01
@@ -24,7 +47,8 @@ AVPacket *pkt = nullptr;
 JNIEXPORT jobject JNICALL init(JNIEnv *env, __attribute__((unused)) jobject obj,
                                jbyteArray vpsByteArray,
                                jbyteArray spsByteArray, jbyteArray ppsByteArray,
-                               jbyteArray prefixSeiByteArray, jbyteArray suffixSeiByteArray) {
+                               jbyteArray prefixSeiByteArray, jbyteArray suffixSeiByteArray,
+                               jint rgbType) {
     LOGE("H264 & HEVC decoder init.");
 
     AVCodecID codecId = AV_CODEC_ID_H264;
@@ -130,6 +154,33 @@ JNIEXPORT jobject JNICALL init(JNIEnv *env, __attribute__((unused)) jobject obj,
     frame = av_frame_alloc();
     pkt = av_packet_alloc();
 
+    switch(rgbType) {
+        case 1:
+            bmpFormat = AV_PIX_FMT_BGRA;
+            break;
+        case 2:
+            bmpFormat = AV_PIX_FMT_RGBA;
+            break;
+        case 3:
+            bmpFormat = AV_PIX_FMT_ARGB;
+            break;
+        case 4:
+            bmpFormat = AV_PIX_FMT_ABGR;
+            break;
+        case 5:
+            bmpFormat = AV_PIX_FMT_BGR24;
+            break;
+        case 6:
+            bmpFormat = AV_PIX_FMT_RGB24;
+            break;
+        default:
+            bmpFormat = AV_PIX_FMT_NONE;
+            break;
+    }
+    if (AV_PIX_FMT_NONE != bmpFormat) {
+        bmpFrame = av_frame_alloc();
+    }
+
     return returnObj;
 }
 
@@ -146,6 +197,15 @@ JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute_
         av_packet_free(&pkt);
         pkt = nullptr;
     }
+    if (bmpFrame != nullptr) {
+        av_frame_free(&bmpFrame);
+        bmpFrame = nullptr;
+    }
+    if (convertCxt != nullptr) {
+        sws_freeContext(convertCxt);
+        convertCxt = nullptr;
+    }
+
     LOGE("H264 & HEVC decoder released!");
 }
 
@@ -166,13 +226,32 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject ob
         return nullptr;
     }
 
-    int image_buffer_size = av_image_get_buffer_size((AVPixelFormat) frame->format, frame->width, frame->height, 32);
+    auto format = (AVPixelFormat) frame->format;
+    if (AV_PIX_FMT_NONE != bmpFormat) {
+        format = bmpFormat;
+    }
+    int image_buffer_size = av_image_get_buffer_size(format, frame->width, frame->height, 32);
     auto *image_byte_buffer = av_malloc(image_buffer_size);
-    int written_image_bytes = av_image_copy_to_buffer((uint8_t *) image_byte_buffer, image_buffer_size,
+
+    int written_image_bytes = 0;
+    if (AV_PIX_FMT_NONE != bmpFormat) {
+        AVPixelFormat yuvFmt = convertDeprecatedFormat(ctx->pix_fmt);
+        // LOGE("YUV Format: %d  Bitmap format: %d", yuvFmt, bmpFormat);
+        convertCxt = sws_getContext(
+                frame->width, frame->height, yuvFmt,
+                frame->width, frame->height, bmpFormat,
+                SWS_POINT, nullptr, nullptr, nullptr);
+        av_image_fill_arrays(bmpFrame->data, bmpFrame->linesize, (uint8_t *)image_byte_buffer,
+                             bmpFormat, frame->width, frame->height, 1);
+        sws_scale(convertCxt, frame->data, frame->linesize, 0, frame->height, bmpFrame->data, bmpFrame->linesize);
+        written_image_bytes = image_buffer_size;
+    } else {
+        written_image_bytes = av_image_copy_to_buffer((uint8_t *) image_byte_buffer, image_buffer_size,
                                                       (const uint8_t *const *) frame->data, (const int *) frame->linesize,
                                                       (AVPixelFormat) frame->format, frame->width, frame->height, 1);
+    }
 
-//    LOGE("written_image_bytes=%d - %d  |  %dx%d", written_image_bytes, frame->format, frame->width, frame->height);
+//  LOGE("written_image_bytes=%d - %d  |  %dx%d", written_image_bytes, frame->format, frame->width, frame->height);
 
     jbyteArray out_byte_array = env->NewByteArray(written_image_bytes);
     env->SetByteArrayRegion(out_byte_array, 0, written_image_bytes, reinterpret_cast<const jbyte *>(image_byte_buffer));
@@ -200,10 +279,10 @@ JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobjec
 // =============================
 
 static JNINativeMethod methods[] = {
-        {(char*)"init",       (char*)"([B[B[B[B[B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodeVideoInfo;", (void *) init},
-        {(char*)"release",    (char*)"()V",                                                                  (void *) release},
-        {(char*)"decode",     (char*)"([B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodedVideoFrame;",       (void *) decode},
-        {(char*)"getVersion", (char*)"()Ljava/lang/String;",                                                 (void *) getVersion},
+        {(char*)"init",      (char*)"([B[B[B[B[BI)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodeVideoInfo;",(void *) init},
+        {(char*)"release",   (char*)"()V",                                                                  (void *) release},
+        {(char*)"decode",    (char*)"([B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodedVideoFrame;",       (void *) decode},
+        {(char*)"getVersion",(char*)"()Ljava/lang/String;",                                                 (void *) getVersion},
 };
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

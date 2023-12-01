@@ -60,7 +60,7 @@ class DecodeH264RawFileByFFMpeg {
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray): H264HevcDecoder.DecodeVideoInfo {
         val videoInfo: H264HevcDecoder.DecodeVideoInfo =
-            videoDecoder.init(null, sps, pps, null, null)
+            videoDecoder.init(null, sps, pps, null, null, H264HevcDecoder.RgbType.AV_PIX_FMT_NONE)
         LogContext.log.w(TAG, "Decoded videoInfo=${videoInfo.toJsonString()}")
         return videoInfo
     }
@@ -168,7 +168,9 @@ class DecodeH264RawFileByFFMpeg {
                                     } else {
                                         BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
                                     }
-                                    glSurfaceView.render(it.yuvBytes, yuv420Type)
+                                    glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
+
+                                    // it.yuvOrRgbBytes.toBitmapFromBytes(it.width, it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.bmp"))
                                 }
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.w(

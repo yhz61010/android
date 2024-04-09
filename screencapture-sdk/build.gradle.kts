@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.sonarqube)
     jacoco
-    `maven-publish`
+    id("maven-publish")
 }
 
 android {

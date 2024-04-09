@@ -22,7 +22,7 @@ val useResourcePrefix = false
  * Don't forget to import the following package:
  * import java.util.Properties
  */
-val localProperties: Properties by extra { gradleLocalProperties(rootProject.rootDir) }
+val localProperties: Properties by extra { gradleLocalProperties(rootProject.rootDir, providers) }
 
 // =====================================
 

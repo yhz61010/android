@@ -3,7 +3,6 @@ package com.leovp.floatview.utils
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.hardware.display.DisplayManager
 import android.os.Build
 import android.provider.Settings
@@ -13,7 +12,6 @@ import android.view.Display
 import android.view.Surface
 import android.view.WindowInsets
 import android.view.WindowManager
-import androidx.annotation.IntRange
 import kotlin.math.max
 import kotlin.math.min
 
@@ -159,133 +157,133 @@ internal val isGoogle: Boolean get() = "Google".equals(Build.MANUFACTURER, ignor
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - -1 means unknown or the orientation is not changed.
  */
-internal fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int {
-    return when {
-        isNormalPortrait(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        isReversePortrait(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        isNormalLandscape(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        isReverseLandscape(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        else -> -1
-    }
-}
+// internal fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int {
+//     return when {
+//         isNormalPortrait(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//         isReversePortrait(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+//         isNormalLandscape(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//         isReverseLandscape(degree, prevOrientation) -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+//         else -> -1
+//     }
+// }
 
-/**
- * Only if the device is just in **Normal Portrait** mode, `true` will be returned.
- *
- * @param prevOrientation The previous orientation value:
- * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
- * - Any other value will be ignored.
- */
-internal fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+// /**
+//  * Only if the device is just in **Normal Portrait** mode, `true` will be returned.
+//  *
+//  * @param prevOrientation The previous orientation value:
+//  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+//  * - Any other value will be ignored.
+//  */
+// internal fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+//
+//     // If device is already in normal portrait mode, the wide range is:
+//     // [300, 359], [0, 60]
+//
+//     // The narrow range is used to check the device real orientation.
+//     // [330, 359], [0, 30]
+//
+//     return if (Surface.ROTATION_0 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
+//         (degree in 301..359) || (degree in 0 until 60) // wide range
+//     } else {
+//         (degree in 330..359) || (degree in 0..30) // narrow range
+//     }
+//
+//     //    val ssr = screenSurfaceRotation
+//     //    return if (Surface.ROTATION_0 == ssr || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
+//     //        if (Surface.ROTATION_270 == ssr || Surface.ROTATION_90 == ssr)
+//     //            Surface.ROTATION_270 == ssr && degree == 60
+//     //        else if (300 == ssr || Surface.ROTATION_0 == ssr) true
+//     //        else
+//     //            (degree in 301..359) || (degree in 0..60) // wide range
+//     //    } else
+//     //        (degree in 330..359) || (degree in 0..30) // narrow range
+// }
 
-    // If device is already in normal portrait mode, the wide range is:
-    // [300, 359], [0, 60]
+// /**
+//  * Only if the device is just in **Normal Landscape** mode, `true` will be returned.
+//  *
+//  * @param prevOrientation The previous orientation value:
+//  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+//  * - Any other value will be ignored.
+//  */
+// internal fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+//
+//     // If device is already in normal landscape mode, the wide range is:
+//     // [210, 270], [270, 330]
+//
+//     // The narrow range is used to check the device real orientation.
+//     // [240, 270], [270, 300]
+//
+//     return if (Surface.ROTATION_90 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == prevOrientation) {
+//         degree in 211 until 330 // wide range
+//     } else {
+//         degree in 240..300 // narrow range
+//     }
+// }
 
-    // The narrow range is used to check the device real orientation.
-    // [330, 359], [0, 30]
+// /**
+//  * Only if the device is just in **Reverse Landscape** mode, `true` will be returned.
+//  *
+//  * @param prevOrientation The previous orientation value:
+//  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+//  * - Any other value will be ignored.
+//  */
+// internal fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+//
+//     // If device is already in reverse landscape mode, the wide range is:
+//     // [30, 90], [90, 150]
+//
+//     // The narrow range is used to check the device real orientation.
+//     // [60, 90], [90, 120]
+//
+//     return if (Surface.ROTATION_270 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation) {
+//         degree in 31 until 150 // wide range
+//     } else {
+//         degree in 60..120 // narrow range
+//     }
+// }
 
-    return if (Surface.ROTATION_0 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
-        (degree in 301..359) || (degree in 0 until 60) // wide range
-    } else {
-        (degree in 330..359) || (degree in 0..30) // narrow range
-    }
-
-    //    val ssr = screenSurfaceRotation
-    //    return if (Surface.ROTATION_0 == ssr || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
-    //        if (Surface.ROTATION_270 == ssr || Surface.ROTATION_90 == ssr)
-    //            Surface.ROTATION_270 == ssr && degree == 60
-    //        else if (300 == ssr || Surface.ROTATION_0 == ssr) true
-    //        else
-    //            (degree in 301..359) || (degree in 0..60) // wide range
-    //    } else
-    //        (degree in 330..359) || (degree in 0..30) // narrow range
-}
-
-/**
- * Only if the device is just in **Normal Landscape** mode, `true` will be returned.
- *
- * @param prevOrientation The previous orientation value:
- * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
- * - Any other value will be ignored.
- */
-internal fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
-    // If device is already in normal landscape mode, the wide range is:
-    // [210, 270], [270, 330]
-
-    // The narrow range is used to check the device real orientation.
-    // [240, 270], [270, 300]
-
-    return if (Surface.ROTATION_90 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == prevOrientation) {
-        degree in 211 until 330 // wide range
-    } else {
-        degree in 240..300 // narrow range
-    }
-}
-
-/**
- * Only if the device is just in **Reverse Landscape** mode, `true` will be returned.
- *
- * @param prevOrientation The previous orientation value:
- * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
- * - Any other value will be ignored.
- */
-internal fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
-    // If device is already in reverse landscape mode, the wide range is:
-    // [30, 90], [90, 150]
-
-    // The narrow range is used to check the device real orientation.
-    // [60, 90], [90, 120]
-
-    return if (Surface.ROTATION_270 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation) {
-        degree in 31 until 150 // wide range
-    } else {
-        degree in 60..120 // narrow range
-    }
-}
-
-/**
- * Only if the device is just in **Reverse Portrait** mode, `true` will be returned.
- *
- * @param prevOrientation The previous orientation value:
- * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
- * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
- * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
- * - Any other value will be ignored.
- */
-internal fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
-    // If device is already in reverse portrait mode, the wide range is:
-    // [120, 180], [180, 240]
-
-    // The narrow range is used to check the device real orientation.
-    // [150, 180], [180, 210]
-
-    return if (Surface.ROTATION_180 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
-        degree in 121 until 240 // wide range
-    } else {
-        degree in 150..210 // narrow range
-    }
-
-    //    val ssr = screenSurfaceRotation
-    //    return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
-    //        if (Surface.ROTATION_180 == ssr && degree == 240) true
-    //        else if (Surface.ROTATION_90 == ssr) false
-    //        else degree in 121 until 240 // wide range
-    //    } else
-    //        degree in 150..210 // narrow range
-}
+// /**
+//  * Only if the device is just in **Reverse Portrait** mode, `true` will be returned.
+//  *
+//  * @param prevOrientation The previous orientation value:
+//  * - ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+//  * - ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+//  * - Any other value will be ignored.
+//  */
+// internal fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+//
+//     // If device is already in reverse portrait mode, the wide range is:
+//     // [120, 180], [180, 240]
+//
+//     // The narrow range is used to check the device real orientation.
+//     // [150, 180], [180, 210]
+//
+//     return if (Surface.ROTATION_180 == screenSurfaceRotation || ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+//         degree in 121 until 240 // wide range
+//     } else {
+//         degree in 150..210 // narrow range
+//     }
+//
+//     //    val ssr = screenSurfaceRotation
+//     //    return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+//     //        if (Surface.ROTATION_180 == ssr && degree == 240) true
+//     //        else if (Surface.ROTATION_90 == ssr) false
+//     //        else degree in 121 until 240 // wide range
+//     //    } else
+//     //        degree in 150..210 // narrow range
+// }
 
 /**
  * - Surface.ROTATION_0 (no rotation)
@@ -293,8 +291,8 @@ internal fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int
  * - Surface.ROTATION_180
  * - Surface.ROTATION_270 (90 degrees clockwise)
  */
-internal val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS =
-    mapOf(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
-        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE to Surface.ROTATION_90,
-        ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT to Surface.ROTATION_180,
-        ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270)
+// internal val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS =
+//     mapOf(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
+//         ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE to Surface.ROTATION_90,
+//         ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT to Surface.ROTATION_180,
+//         ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270)

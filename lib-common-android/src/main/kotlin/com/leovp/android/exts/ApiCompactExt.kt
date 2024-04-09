@@ -86,13 +86,11 @@ inline fun <reified O : PackageItemInfo> Context.getCompatContextInfo(flags: Int
         is Activity -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             pm.getActivityInfo(this.componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
         } else {
-            @Suppress("DEPRECATION")
             pm.getActivityInfo(this.componentName, flags)
         } as O // ActivityInfo
         is Application -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             pm.getApplicationInfo(this.getPackageName(), PackageManager.ApplicationInfoFlags.of(flags.toLong()))
         } else {
-            @Suppress("DEPRECATION")
             pm.getApplicationInfo(this.getPackageName(), flags)
         } as O // ApplicationInfo
         is Service -> {
@@ -100,7 +98,6 @@ inline fun <reified O : PackageItemInfo> Context.getCompatContextInfo(flags: Int
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 pm.getServiceInfo(cn, PackageManager.ComponentInfoFlags.of(flags.toLong()))
             } else {
-                @Suppress("DEPRECATION")
                 pm.getServiceInfo(cn, flags)
             } as O // ServiceInfo
         }
@@ -119,7 +116,6 @@ fun BroadcastReceiver.getCompatContextInfo(ctx: Context, flags: Int): ActivityIn
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         pm.getReceiverInfo(cn, PackageManager.ComponentInfoFlags.of(flags.toLong()))
     } else {
-        @Suppress("DEPRECATION")
         pm.getReceiverInfo(cn, flags)
     }
 }
@@ -133,7 +129,6 @@ fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): P
             PackageManager.PackageInfoFlags.of(flags.toLong())
         )
     } else {
-        @Suppress("DEPRECATION")
         this.packageManager.getPackageArchiveInfo(archiveFilePath, flags)
     }
 }
@@ -154,7 +149,6 @@ fun Context.queryCompactIntentActivities(intent: Intent, flags: Int): List<Resol
             PackageManager.ResolveInfoFlags.of(flags.toLong())
         )
     } else {
-        @Suppress("DEPRECATION")
         this.packageManager.queryIntentActivities(intent, flags)
     }
 }
@@ -166,7 +160,6 @@ fun Context.getCompactPackageInfo(packageName: String, flags: Int): PackageInfo 
             PackageManager.PackageInfoFlags.of(flags.toLong())
         )
     } else {
-        @Suppress("DEPRECATION")
         this.packageManager.getPackageInfo(packageName, flags)
     }
 }

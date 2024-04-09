@@ -6,12 +6,6 @@ import android.os.Build
 import androidx.annotation.ChecksSdkIntAtLeast
 
 object API {
-    /** Android 5.1 */
-    const val L_MR1 = Build.VERSION_CODES.LOLLIPOP_MR1
-
-    /** Android 6.0 */
-    const val M = Build.VERSION_CODES.M
-
     /** Android 7.0 */
     const val N = Build.VERSION_CODES.N
 
@@ -42,27 +36,10 @@ object API {
     /** Android 13 */
     const val TIRAMISU = Build.VERSION_CODES.TIRAMISU
 
+    /** Android 14 */
+    const val UPSIDE_DOWN_CAKE = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
     // ==============================
-
-    /** Android >= 5.1 */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP_MR1)
-    val ABOVE_L_MR1 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
-
-    /** Android >= 6.0 */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.M)
-    val ABOVE_M = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-
-    /** Android >= 7.0 */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-    val ABOVE_N = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-
-    /** Android >= 7.1 */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N_MR1)
-    val ABOVE_N_MR1 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1
-
-    /** Android >= 8.0 */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
-    val ABOVE_O = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
     /** Android >= 8.1 */
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O_MR1)
@@ -91,4 +68,8 @@ object API {
     /** Android >= 13 */
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
     val ABOVE_TIRAMISU = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    /** Android >= 14 */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    val ABOVE_UPSIDE_DOWN_CAKE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 }

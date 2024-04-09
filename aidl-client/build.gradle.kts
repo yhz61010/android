@@ -7,17 +7,23 @@ plugins {
 android {
     namespace = "com.leovp.aidl.client"
 
+    // If the sdk is stable, remove the following line.
+    compileSdkPreview = "VanillaIceCream"
+
+    defaultConfig {
+        // If the sdk is stable, remove the following line.
+        targetSdkPreview = "VanillaIceCream"
+
+        versionCode = 1
+        versionName = "1.0"
+        multiDexEnabled = true
+    }
+
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
     buildFeatures {
         aidl = true
         // Generate BuildConfig.java file
         buildConfig = true
-    }
-
-    defaultConfig {
-        versionCode = 1
-        versionName = "1.0"
-        multiDexEnabled = true
     }
 
     val releaseSigning = signingConfigs.create("releaseSigning") {
@@ -37,9 +43,9 @@ android {
             signingConfig = releaseSigning
         }
 
-//        getByName("release") {
-//            signingConfig = releaseSigning
-//        }
+        //        getByName("release") {
+        //            signingConfig = releaseSigning
+        //        }
     }
 
     lint {

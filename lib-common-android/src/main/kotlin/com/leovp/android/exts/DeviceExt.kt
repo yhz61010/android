@@ -23,13 +23,11 @@ import android.view.Display
 import android.view.Surface
 import android.view.WindowInsets
 import androidx.annotation.IntRange
-import androidx.annotation.RequiresApi
 import androidx.annotation.UiContext
-import com.leovp.android.utils.API
 import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.kotlin.exts.round
-import java.util.*
+import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -350,21 +348,21 @@ fun getUniqueIdByMediaDrm(): ByteArray? {
 }
 
 @SuppressLint("HardwareIds")
-@RequiresApi(Build.VERSION_CODES.O)
 fun Context.getAndroidId(): String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 
 @SuppressLint("HardwareIds")
 fun Context.getUniqueID(): String {
-    return if (!API.ABOVE_O) {
-        val uid: ByteArray? = getUniqueIdByMediaDrm()
-        if (uid != null) {
-            android.util.Base64.encodeToString(uid, android.util.Base64.NO_WRAP)
-        } else {
-            getUuid()
-        }
-    } else {
-        Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-    }
+    // return if (!API.ABOVE_O) {
+    //     val uid: ByteArray? = getUniqueIdByMediaDrm()
+    //     if (uid != null) {
+    //         android.util.Base64.encodeToString(uid, android.util.Base64.NO_WRAP)
+    //     } else {
+    //         getUuid()
+    //     }
+    // } else {
+    //     Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+    // }
+    return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 }
 
 fun getImei(ctx: Context): String? {

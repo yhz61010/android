@@ -244,7 +244,7 @@ fun Project.configureBase(): BaseExtension {
  * You just need to add your custom properties as you wish.
  *
  * **Attention**:
- * The default value of `applicationId` is `namespace`.
+ * The default value of `applicationId` is equal to the value of `namespace`.
  */
 fun Project.configureApplication(): BaseExtension = configureBase().apply {
     defaultConfig {

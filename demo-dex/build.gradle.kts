@@ -5,15 +5,21 @@ plugins {
 android {
     namespace = "com.leovp.dexdemo"
 
+    // If the sdk is stable, remove the following line.
+    compileSdkPreview = "VanillaIceCream"
+
+    defaultConfig {
+        // If the sdk is stable, remove the following line.
+        targetSdkPreview = "VanillaIceCream"
+
+        versionCode = 1
+        versionName = "1.0"
+    }
+
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
     buildFeatures {
         // Generate BuildConfig.java file
         buildConfig = true
-    }
-
-    defaultConfig {
-        versionCode = 1
-        versionName = "1.0"
     }
 
     buildTypes {

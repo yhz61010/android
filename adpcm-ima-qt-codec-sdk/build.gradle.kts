@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.sonarqube)
-    `maven-publish`
+    id("maven-publish")
 }
 
 android {

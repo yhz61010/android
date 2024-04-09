@@ -84,11 +84,10 @@ val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null
  *  For instance: [PackageManager.GET_ACTIVITIES], [PackageManager.GET_CONFIGURATIONS] and etc.
  */
 fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): PackageInfo {
-    return if (Build.VERSION.SDK_INT >= 33) {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val infoFlags = PackageManager.PackageInfoFlags.of(value.toLong())
         packageManager.getPackageInfo(pkgName, infoFlags)
     } else {
-        @Suppress("DEPRECATION")
         packageManager.getPackageInfo(pkgName, value)
     }
 }
@@ -103,7 +102,7 @@ fun Context.getApplicationSignatures(
     return runCatching {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // New signature
-            val sig = getPackageInfo(PackageManager.GET_SIGNING_CERTIFICATES, pkgName).signingInfo
+            val sig = getPackageInfo(PackageManager.GET_SIGNING_CERTIFICATES, pkgName).signingInfo ?: return emptyList()
             if (sig.hasMultipleSigners()) {
                 // Send all with apkContentsSigners
                 sig.apkContentsSigners.map {
@@ -121,7 +120,7 @@ fun Context.getApplicationSignatures(
             }
         } else {
             @Suppress("DEPRECATION")
-            val sig = getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures
+            val sig = getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures ?: return emptyList()
             sig.map {
                 val digest = MessageDigest.getInstance(algorithm)
                 digest.update(it.toByteArray())
@@ -194,22 +193,16 @@ val Context.midiManager get() = getSystemService(Context.MIDI_SERVICE) as MidiMa
 val Context.networkStatusManager get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
 val Context.carrierConfigManager get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
 val Context.systemHealthManager
-    @RequiresApi(API.N)
     get() = getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
 val Context.hardwarePropertiesManager
-    @RequiresApi(API.N)
     get() = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
 val Context.shortcutManager
-    @RequiresApi(API.N_MR1)
     get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 val Context.storageStatsManager
-    @RequiresApi(API.O)
     get() = getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
 val Context.companionDeviceManager
-    @RequiresApi(API.O)
     get() = getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
 val Context.textClassificationManager
-    @RequiresApi(API.O)
     get() = getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
 val Context.euiccManager
     @RequiresApi(API.P)

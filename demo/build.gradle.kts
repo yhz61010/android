@@ -20,20 +20,13 @@ val localProperties: Properties by rootProject.extra
 android {
     namespace = "com.leovp.demo"
 
-    // https://developer.android.com/studio/build/build-variants
-    flavorDimensions += listOf("default")
-
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-    buildFeatures {
-        dataBinding = true
-        // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
-        // viewBinding = true
-        aidl = true
-        // Generate BuildConfig.java file
-        buildConfig = true
-    }
+    // If the sdk is stable, remove the following line.
+    compileSdkPreview = "VanillaIceCream"
 
     defaultConfig {
+        // If the sdk is stable, remove the following line.
+        targetSdkPreview = "VanillaIceCream"
+
         versionCode = 15
         versionName = "1.5"
         multiDexEnabled = true
@@ -51,6 +44,19 @@ android {
 
         // Connect JUnit 5 to the runner
         testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"
+    }
+
+    // https://developer.android.com/studio/build/build-variants
+    flavorDimensions += listOf("default")
+
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    buildFeatures {
+        dataBinding = true
+        // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
+        // viewBinding = true
+        aidl = true
+        // Generate BuildConfig.java file
+        buildConfig = true
     }
 
     val releaseSigning = signingConfigs.create("releaseSigning") {
@@ -72,9 +78,9 @@ android {
             signingConfig = releaseSigning
         }
 
-//        getByName("release") {
-//            signingConfig = releaseSigning
-//        }
+        //        getByName("release") {
+        //            signingConfig = releaseSigning
+        //        }
     }
 
     productFlavors {
@@ -88,11 +94,11 @@ android {
             versionNameSuffix = "-dev"
         }
 
-//        create("prod") {
-//            dimension = "version"
-// //            applicationIdSuffix = ".prod"
-// //            versionNameSuffix = "-prod"
-//        }
+        //        create("prod") {
+        //            dimension = "version"
+        // //            applicationIdSuffix = ".prod"
+        // //            versionNameSuffix = "-prod"
+        //        }
     }
 
     packaging {

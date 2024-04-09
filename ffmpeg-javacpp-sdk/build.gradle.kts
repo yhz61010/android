@@ -64,7 +64,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.bytedeco/ffmpeg
     implementation(libs.bytedeco.ffmpeg) {
         artifact {
-            classifier = "android-arm"
+            classifier = "android-arm64"
         }
     }
     implementation(libs.bytedeco.ffmpeg)
@@ -73,7 +73,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.bytedeco/javacpp
     implementation(libs.bytedeco.javacpp) {
         artifact {
-            classifier = "android-arm"
+            classifier = "android-arm64"
         }
     }
     implementation(libs.bytedeco.javacpp)

@@ -74,7 +74,7 @@ class CustomApplication : BaseApplication() {
     override fun attachBaseContext(base: Context) {
         Log.i("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
 
-        // LogContext.setLogImp(CLog().apply { init(this@CustomApplication) })
+        // LogContext.setLogImpl(CLog().apply { init(this@CustomApplication) })
         LogContext.setLogImpl(LLog(TAG_PREFIX))
 
         super.attachBaseContext(base)

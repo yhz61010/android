@@ -5,13 +5,7 @@ plugins {
 android {
     namespace = "com.leovp.dexdemo"
 
-    // If the sdk is stable, remove the following line.
-    compileSdkPreview = "VanillaIceCream"
-
     defaultConfig {
-        // If the sdk is stable, remove the following line.
-        targetSdkPreview = "VanillaIceCream"
-
         versionCode = 1
         versionName = "1.0"
     }

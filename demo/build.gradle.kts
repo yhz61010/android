@@ -20,13 +20,7 @@ val localProperties: Properties by rootProject.extra
 android {
     namespace = "com.leovp.demo"
 
-    // If the sdk is stable, remove the following line.
-    compileSdkPreview = "VanillaIceCream"
-
     defaultConfig {
-        // If the sdk is stable, remove the following line.
-        targetSdkPreview = "VanillaIceCream"
-
         versionCode = 15
         versionName = "1.5"
         multiDexEnabled = true

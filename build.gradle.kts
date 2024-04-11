@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val customGroup = "com.leovp"
 // You can use it in subproject like this:
 // val jdkVersion: JavaVersion by rootProject.extra
-val jdkVersion: JavaVersion by extra { JavaVersion.VERSION_11 }
+val jdkVersion: JavaVersion by extra { JavaVersion.VERSION_17 }
 val useResourcePrefix = false
 
 /**

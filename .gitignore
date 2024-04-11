@@ -91,3 +91,4 @@ lint/tmp/
 .DS_Store
 /.idea/migrations.xml
 /libwebp/
+/.idea/deploymentTargetSelector.xml

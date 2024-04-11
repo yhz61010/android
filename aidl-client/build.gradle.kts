@@ -7,13 +7,7 @@ plugins {
 android {
     namespace = "com.leovp.aidl.client"
 
-    // If the sdk is stable, remove the following line.
-    compileSdkPreview = "VanillaIceCream"
-
     defaultConfig {
-        // If the sdk is stable, remove the following line.
-        targetSdkPreview = "VanillaIceCream"
-
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true

@@ -2,13 +2,10 @@ package com.leovp.androidbase.utils.notch.impl
 
 import android.app.Activity
 import android.graphics.Rect
-import android.os.Build
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Suppress("unused")
 internal class HuaweiDisplayCutout : DisplayCutout {
     override fun supportDisplayCutout(activity: Activity): Boolean {

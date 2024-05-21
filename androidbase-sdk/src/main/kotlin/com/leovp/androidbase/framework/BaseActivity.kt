@@ -129,7 +129,7 @@ abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, in
     }
 
     @SuppressLint("MissingSuperCall")
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         LogContext.log.i(tag, "=====> onNewIntent <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
         super.onNewIntent(intent)
         setIntent(intent)

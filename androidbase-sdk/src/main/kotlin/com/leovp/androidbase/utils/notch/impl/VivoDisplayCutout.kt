@@ -6,14 +6,11 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.densityDpi
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
 /** vivo will not render on notch */
-@RequiresApi(Build.VERSION_CODES.O)
 internal class VivoDisplayCutout : DisplayCutout {
 
     @SuppressLint("PrivateApi")
@@ -22,7 +19,7 @@ internal class VivoDisplayCutout : DisplayCutout {
         return runCatching {
             val cls = Class.forName("android.util.FtFeature")
             val hideMethod = cls.getMethod("isFtFeatureSupport", Int::class.javaPrimitiveType)
-            val obj = cls.newInstance()
+            val obj = cls.getDeclaredConstructor().newInstance()
             hideMethod.invoke(obj, mask) as Boolean
         }.getOrDefault(false)
     }

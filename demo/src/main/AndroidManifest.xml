@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> <!-- Request legacy Bluetooth permissions on older devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
@@ -40,8 +41,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        tools:targetApi="n">
+        android:theme="@style/AppTheme">
         <activity android:name=".basiccomponents.examples.statusbar.FullImmersiveActivity"
             android:exported="false"
             android:theme="@style/ActivityThemeActionBarOverlay" />
@@ -55,8 +55,7 @@
             android:rotationAnimation="seamless"
             android:screenOrientation="userPortrait"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
-            tools:ignore="LockedOrientationActivity"
-            tools:targetApi="O">
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
 
             <!-- Declare notch support -->
             <meta-data android:name="android.notch_support" android:value="true" />
@@ -74,8 +73,7 @@
         <activity android:name=".basiccomponents.examples.koin.KoinActivity" android:exported="false" />
         <activity android:name=".basiccomponents.examples.orientation.OrientationActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
-            android:exported="true"
-            android:screenOrientation="fullUser" />
+            android:exported="true" />
         <activity android:name=".basiccomponents.AppSettingsActivity" android:exported="true" />
         <activity android:name=".basiccomponents.examples.CircleProgressbarActivity" android:configChanges="orientation|screenSize" />
         <activity android:name=".basiccomponents.examples.FloatViewActivity" android:configChanges="orientation|screenSize" />
@@ -184,7 +182,7 @@
         <property android:name="android.content.MEDIA_CAPABILITIES" android:resource="@xml/media_capabilities" />
 
         <meta-data android:name="app_meta_data" android:value="aabb_app_meta_data" />
-        <meta-data android:name="com.leovp.custom.key" android:value="${LEO_CUSTOM_KEY}"/>
+        <meta-data android:name="com.leovp.custom.key" android:value="${LEO_CUSTOM_KEY}" />
     </application>
 
 </manifest>

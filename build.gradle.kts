@@ -1,3 +1,4 @@
+
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.dsl.BaseFlavor
@@ -5,12 +6,13 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 val customGroup = "com.leovp"
 // You can use it in subproject like this:
 // val jdkVersion: JavaVersion by rootProject.extra
 val jdkVersion: JavaVersion by extra { JavaVersion.VERSION_17 }
+val kotlinApiVersion by extra { org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9 }
 val useResourcePrefix = false
 
 /**
@@ -152,9 +154,11 @@ fun Project.configureCompileVersion() {
         targetCompatibility = jdkVersion.toString()
     }
 
-    tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = jdkVersion.toString()
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(jdkVersion.toString()))
+            apiVersion.set(kotlinApiVersion)
+            languageVersion.set(kotlinApiVersion)
         }
     }
 }
@@ -201,7 +205,7 @@ fun Project.configureBase(): BaseExtension {
 
         buildFeatures.viewBinding = true
         // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-        // Add this line as needed
+        // Add this line if necessary
         // buildFeatures.buildConfig = true
 
         // turn off checking the given issue id's

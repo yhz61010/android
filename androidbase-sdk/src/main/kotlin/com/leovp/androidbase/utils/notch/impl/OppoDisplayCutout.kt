@@ -2,14 +2,11 @@ package com.leovp.androidbase.utils.notch.impl
 
 import android.app.Activity
 import android.graphics.Rect
-import android.os.Build
 import android.text.TextUtils
-import androidx.annotation.RequiresApi
 import com.leovp.android.exts.isPortrait
 import com.leovp.android.utils.DeviceProp
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class OppoDisplayCutout : DisplayCutout {
     override fun supportDisplayCutout(activity: Activity): Boolean {
         return runCatching {

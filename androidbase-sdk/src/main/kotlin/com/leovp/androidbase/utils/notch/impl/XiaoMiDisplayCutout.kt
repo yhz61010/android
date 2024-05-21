@@ -2,15 +2,12 @@ package com.leovp.androidbase.utils.notch.impl
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import android.view.Window
-import androidx.annotation.RequiresApi
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.getDimenInPixel
 import com.leovp.android.utils.DeviceProp
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class XiaoMiDisplayCutout : DisplayCutout {
     override fun supportDisplayCutout(activity: Activity): Boolean {
         return runCatching {

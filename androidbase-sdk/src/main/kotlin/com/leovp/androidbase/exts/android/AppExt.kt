@@ -7,7 +7,6 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Process
 import com.leovp.android.exts.inputMethodManager
@@ -27,15 +26,15 @@ private const val TAG = "AppExt"
 fun Context.installApk(file: File) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val downloadedApkUri = FileDocumentUtil.getFileUri(this, file)
-            intent.setDataAndType(downloadedApkUri, "application/vnd.android.package-archive")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        } else {
-            intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        val downloadedApkUri = FileDocumentUtil.getFileUri(this, file)
+        intent.setDataAndType(downloadedApkUri, "application/vnd.android.package-archive")
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        // } else {
+        //     intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
+        //     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // }
         startActivity(intent)
     } catch (e: Exception) {
         LogContext.log.e(TAG, "installApk exception.")

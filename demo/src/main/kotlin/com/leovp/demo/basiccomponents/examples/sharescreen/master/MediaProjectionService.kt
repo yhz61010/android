@@ -2,7 +2,6 @@ package com.leovp.demo.basiccomponents.examples.sharescreen.master
 
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
@@ -81,7 +80,7 @@ class MediaProjectionService : Service() {
                 try {
                     videoH26xOs.write(data)
                 } catch (e: Exception) {
-                    LogContext.log.e("onDataUpdate error")
+                    LogContext.log.e("onDataUpdate error", e)
                 }
             }
             //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
@@ -117,7 +116,7 @@ class MediaProjectionService : Service() {
                 )
                 videoH26xOs = BufferedOutputStream(FileOutputStream(videoH26xFile))
             } catch (e: Exception) {
-                LogContext.log.e(TAG, "setDebugInfo() exception.")
+                LogContext.log.e(TAG, "setDebugInfo() exception.", e)
             }
         }
     }
@@ -163,11 +162,11 @@ class MediaProjectionService : Service() {
                     this@MediaProjectionService,
                     SystemClock.elapsedRealtime().toInt(),
                     Intent(this@MediaProjectionService, BasicFragment::class.java),
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    } else {
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                    }
+                    // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    // } else {
+                    //     PendingIntent.FLAG_UPDATE_CURRENT
+                    // }
 
                 )
                 cancelOnClick = false
@@ -200,7 +199,7 @@ class MediaProjectionService : Service() {
     fun startScreenShare(setting: ScreenShareSetting) {
         LogContext.log.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
-        mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
 
         screenProcessor = ScreenCapture.Builder(
@@ -237,8 +236,8 @@ class MediaProjectionService : Service() {
             try {
                 videoH26xOs.flush()
                 videoH26xOs.closeQuietly()
-            } catch (e: java.lang.Exception) {
-                LogContext.log.e(TAG, "stopScreenShare() exception.")
+            } catch (e: Exception) {
+                LogContext.log.e(TAG, "stopScreenShare() exception.", e)
             }
         }
 

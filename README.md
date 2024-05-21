@@ -1,11 +1,11 @@
 [](https://)[![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-1.9.0-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.1.0-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.1.1-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.4.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-8.7-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/AndroidStudio-Flamingo|2022.3.1-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/2024.1.1_Canary_6-green)](https://developer.android.com/studio)
 [![BuildJavaVersion](https://img.shields.io/badge/BuildJDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-[![CompatibilityJavaVersion](https://img.shields.io/badge/CompatibilityJDK-11-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
+[![CompatibilityJavaVersion](https://img.shields.io/badge/CompatibilityJDK-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)

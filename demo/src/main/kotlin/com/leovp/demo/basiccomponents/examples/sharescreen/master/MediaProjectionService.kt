@@ -33,10 +33,32 @@ import java.io.FileOutputStream
 import okhttp3.internal.closeQuietly
 
 /**
+ * On Android 14 or above, check the following blog:
+ * https://stackoverflow.com/questions/77307867/screen-capture-mediaprojection-on-android-14
+ *
+ * On Android 14 or above, when you do screen capture, you **MUST** follow the correct steps:
+ * 1. Create your own ScreenCaptureService.
+ * 2. Request permission to capture screen.
+ * 3. If permission is granted, then start your foreground service by calling `startForeground`.
+ *
+ * Please note that, request permission first, then start your your foreground service by calling `startForeground`.
+ * Make sure you run in correct steps, otherwise, your app will crash.
+ *
+ * > The app must set the foregroundServiceType attribute to
+ * > FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION in the element of the app's manifest file.
+ * > For an app targeting SDK version U or later,
+ * > the user must have granted the app with the permission to start a projection,
+ * > before the app starts a foreground service with the type
+ * > android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION.
+ * > Additionally, the app must have started the foreground service with that type before calling
+ * > this API here, or else it'll receive a SecurityException from this API call,
+ * > unless it's a privileged app.
+ *
  * Android Q+(Android 10+) MediaProjection must be used in Service and with android:foregroundServiceType="mediaProjection" permission.
  * Example:
  * <pre>
  * <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+ * <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" android:minSdkVersion="34" />
  *
  * <service
  *  android:name=".MediaProjectionService"
@@ -98,7 +120,7 @@ class MediaProjectionService : Service() {
         serviceThread = HandlerThread("service-thread")
         serviceThread.start()
         serviceHandler = Handler(serviceThread.looper)
-        startForeground()
+        // startForeground()
     }
 
     private fun setDebugInfo() {
@@ -147,7 +169,8 @@ class MediaProjectionService : Service() {
         super.onDestroy()
     }
 
-    private fun startForeground() {
+    // https://stackoverflow.com/questions/77307867/screen-capture-mediaprojection-on-android-14
+    fun startForegroundNotification() {
         val notify = Notify.with(this)
             .alerting("update-app-notification") {
                 channelName = "Foreground service channel name"

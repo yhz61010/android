@@ -1,7 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.sharescreen.master
 
 import android.annotation.SuppressLint
-import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -11,7 +10,6 @@ import android.graphics.Path
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -49,7 +47,6 @@ import com.leovp.json.toJsonString
 import com.leovp.json.toObject
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import com.leovp.screencapture.screenrecord.ScreenCapture.BY_IMAGE_2_H26x
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
@@ -141,8 +138,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     LogContext.log.w(ITAG, "Prepare to record...")
+
                     startServer()
                     checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
+                    // https://stackoverflow.com/questions/77307867/screen-capture-mediaprojection-on-android-14
+                    mediaProjectService?.startForegroundNotification()
                     mediaProjectService?.setData(
                         result.resultCode,
                         result.data
@@ -171,17 +171,17 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 }
             }
 
-        binding.txtInfo.text = NetworkUtil.getIp()[0]
-
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         val serviceIntentRef = serviceIntent
         requireNotNull(serviceIntentRef) { "MediaProjectionService intent can't be null." }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntentRef)
-        } else {
-            startService(serviceIntentRef)
-        }
-        bindService(serviceIntentRef, serviceConn, Service.BIND_AUTO_CREATE)
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(serviceIntentRef)
+        // } else {
+        //     startService(serviceIntentRef)
+        // }
+        bindService(serviceIntentRef, serviceConn, BIND_AUTO_CREATE)
+
+        binding.txtInfo.text = NetworkUtil.getIp()[0]
 
         binding.toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -227,7 +227,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 fullScreenFloatView = true
             }
             .layout(R.layout.component_screen_share_float_canvas) { v ->
-                fingerPaintView = v.findViewById(R.id.finger) as? FingerPaintView
+                fingerPaintView = v.findViewById(R.id.finger)
             }.build()
     }
 
@@ -359,12 +359,12 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) {
             LogContext.log.w(ITAG, "onClientConnected: ${clientChannel.remoteAddress()}")
             cs.launch {
+                mediaProjectService?.triggerIFrame()
                 webSocketServerHandler.sendVideoData(
                     clientChannel,
                     CMD_GRAPHIC_CSD,
                     mediaProjectService?.vpsSpsPps!!
                 )
-                mediaProjectService?.triggerIFrame()
                 this@ScreenShareMasterActivity.clientChannel = clientChannel
             }
         }
@@ -489,7 +489,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }
 
-    fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onScreenshotClick(@Suppress("unused") view: View) {
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
         Handler(Looper.getMainLooper()).postDelayed({
@@ -506,7 +506,7 @@ data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var keyFrameRate = 8
     var iFrameInterval = 4
 
-    /** Only used in [BY_IMAGE_2_H26x] mode */
+    /** Only used in `ScreenCapture.BY_IMAGE_2_H26X` mode */
     @Suppress("unused")
     var sampleSize: Int = 1
 }

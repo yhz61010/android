@@ -20,7 +20,6 @@ import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.ByteUtil
-import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.basenetty.framework.base.decoder.CustomSocketByteStreamDecoder
@@ -34,6 +33,7 @@ import com.leovp.bytes.toBytesLE
 import com.leovp.bytes.toHexString
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.basiccomponents.examples.log.w
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.MediaProjectionService
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
@@ -209,29 +209,29 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
 
-                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
-                    LogContext.log.w(ITAG, "Use decoder: c2.android.avc.decoder")
-                    // c2.android.avc.decoder       latency: 170ms(130ms ~ 200ms)
-                    // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
-                    MediaCodec.createByCodecName("c2.android.avc.decoder")
-                } else {
-                    // Hardware decoder             latency: 100ms(60ms ~ 120ms)
-                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-                }
+                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+                //     LogContext.log.w(ITAG, "Use decoder: c2.android.avc.decoder")
+                //     // c2.android.avc.decoder       latency: 170ms(130ms ~ 200ms)
+                //     // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
+                //     MediaCodec.createByCodecName("c2.android.avc.decoder")
+                // } else {
+                // Hardware decoder             latency: 100ms(60ms ~ 120ms)
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                // }
             }
 
             ScreenRecordMediaCodecStrategy.EncodeType.H265 -> {
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
-                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
-                    LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
-                    // c2.android.hevc.decoder       latency: 60ms(0ms ~ 70ms)
-                    MediaCodec.createByCodecName("c2.android.hevc.decoder")
-                } else {
-                    // Hardware decoder             latency: 100ms
-                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-                }
+                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+                //     LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
+                //     // c2.android.hevc.decoder       latency: 60ms(0ms ~ 70ms)
+                //     MediaCodec.createByCodecName("c2.android.hevc.decoder")
+                // } else {
+                // Hardware decoder             latency: 100ms
+                MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                // }
             }
         }
 
@@ -599,6 +599,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 touchDownRawX = event.rawX
                 touchDownRawY = event.rawY
                 touchDownStartTime = SystemClock.currentThreadTimeMillis()
+                // d(tag) { "-----> ACTION_DOWN at $touchDownStartTime" }
             }
 
             MotionEvent.ACTION_MOVE -> Unit
@@ -606,26 +607,29 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 touchUpRawX = event.rawX
                 touchUpRawY = event.rawY
                 touchUpStartTime = SystemClock.currentThreadTimeMillis()
+                // d(tag) { "-----> ACTION_UP at $touchUpStartTime" }
 
                 if (abs(touchUpRawX - touchDownRawX) <= CLICK_THRESHOLD && abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD) {
-                    LogContext.log.w("Accept as click")
+                    w(tag) { "Accept as click" }
                     webSocketClientHandler?.sendTouchData(TouchType.DOWN, touchUpRawX, touchDownRawY)
                     return super.dispatchTouchEvent(event)
                 }
             }
         }
 
+        val duration = touchUpStartTime - touchDownStartTime
         LogContext.log.w(
-            "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) " +
-                "duration=${touchUpStartTime - touchDownStartTime}ms"
+            "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) duration=${duration}ms"
         )
-        webSocketClientHandler?.sendDragData(
-            touchDownRawX,
-            touchDownRawY,
-            touchUpRawX,
-            touchUpRawY,
-            touchUpStartTime - touchDownStartTime
-        )
+        if (duration > 0) {
+            webSocketClientHandler?.sendDragData(
+                touchDownRawX,
+                touchDownRawY,
+                touchUpRawX,
+                touchUpRawY,
+                touchUpStartTime - touchDownStartTime
+            )
+        }
         return super.dispatchTouchEvent(event)
     }
 }

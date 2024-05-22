@@ -88,7 +88,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
             setting.height, // 800 1024 1280
             setting.dpi,
             null,
-            ScreenCapture.BY_IMAGE_2_H26x,
+            ScreenCapture.BY_IMAGE_2_H26X,
             screenDataListener
         )
             .setEncodeType(VIDEO_ENCODE_TYPE)

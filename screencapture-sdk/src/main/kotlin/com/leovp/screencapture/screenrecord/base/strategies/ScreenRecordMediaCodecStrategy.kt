@@ -165,16 +165,16 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                setInteger(MediaFormat.KEY_LATENCY, 0)
-            }
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setInteger(MediaFormat.KEY_LATENCY, 0)
+            // }
             // Set the encoder priority to realtime.
             setInteger(MediaFormat.KEY_PRIORITY, 0x00)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
-                @Suppress("unchecked")
-                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
-            }
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
+            @Suppress("unchecked")
+            setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
+            // }
             //            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
             // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
             // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
@@ -221,6 +221,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         outputFormat = h26xEncoder?.outputFormat // option B
         h26xEncoder?.setCallback(mediaCodecCallback)
         val surface = h26xEncoder!!.createInputSurface()
+        registerCallbackAboveAndroid14()
         virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
             "screen-record",
             builder.width,
@@ -327,6 +328,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                     TAG,
                     "Found SPS/PPS=${vpsSpsPpsBuf?.toHexString()}"
                 )
+
                 EncodeType.H265 -> LogContext.log.w(
                     TAG,
                     "Found VPS/SPS/PPS=${vpsSpsPpsBuf?.toHexString()}"
@@ -373,6 +375,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         // TODO PixelFormat.RGBA_8888 is a wrong constant? Using ImageFormat instead.
         val imageReader: ImageReader =
             ImageReader.newInstance(finalWidth, finalHeight, PixelFormat.RGBA_8888, 3)
+        registerCallbackAboveAndroid14()
         val virtualDisplayForImageReader: VirtualDisplay? =
             builder.mediaProjection!!.createVirtualDisplay(
                 "screen-record",
@@ -395,6 +398,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 runCatching { virtualDisplayForImageReader?.release() }.onFailure { it.printStackTrace() }
             }.also { image.close() }
         }, null)
+    }
+
+    private fun registerCallbackAboveAndroid14() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            builder.mediaProjection!!.registerCallback(object : MediaProjection.Callback() {}, null)
+        }
     }
 
     enum class EncodeType {

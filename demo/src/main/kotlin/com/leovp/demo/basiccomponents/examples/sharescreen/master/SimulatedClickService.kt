@@ -4,10 +4,8 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
-import android.os.Build
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
-import androidx.annotation.RequiresApi
 import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.demo.basiccomponents.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.json.toJsonString
@@ -39,20 +37,21 @@ class SimulatedClickService : AccessibilityService() {
     @Subscribe(threadMode = ThreadMode.POSTING)
     fun onReceiveEvent(touchBean: ScreenShareClientActivity.TouchBean) {
         LogContext.log.i(TAG, "onReceiveEvent: ${touchBean.toJsonString()}")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            when (touchBean.touchType) {
-                ScreenShareClientActivity.TouchType.DRAG -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        dispatchGestureDrag(touchBean.x, touchBean.y, touchBean.dstX, touchBean.dstY, touchBean.duration)
-                    } else {
-                        LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
-                    }
-                }
-                else -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        when (touchBean.touchType) {
+            ScreenShareClientActivity.TouchType.DRAG -> {
+                // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                dispatchGestureDrag(touchBean.x, touchBean.y, touchBean.dstX, touchBean.dstY, touchBean.duration)
+                // } else {
+                //     LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
+                // }
             }
-        } else {
-            LogContext.log.w(TAG, "Simulate click only available as of Android 7.0")
+
+            else -> dispatchGestureClick(touchBean.x.toInt(), touchBean.y.toInt())
         }
+        // } else {
+        //     LogContext.log.w(TAG, "Simulate click only available as of Android 7.0")
+        // }
     }
 
     // Attention: this callback is calling from main thread.
@@ -73,7 +72,6 @@ class SimulatedClickService : AccessibilityService() {
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     private fun dispatchGestureClick(x: Int, y: Int) {
         val path = Path()
         path.moveTo(x.toFloat(), y.toFloat())
@@ -83,7 +81,6 @@ class SimulatedClickService : AccessibilityService() {
     }
 
     // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun dispatchGestureDrag(srcX: Float, srcY: Float, dstX: Float, dstY: Float, duration: Long) {
         val dragPath = Path().apply {
             moveTo(srcX, srcY)
@@ -96,7 +93,6 @@ class SimulatedClickService : AccessibilityService() {
 
     // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
     @Suppress("unused")
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun doRightThenDownDrag() {
         val dragRightPath = Path().apply {
             moveTo(200f, 200f)

@@ -206,9 +206,9 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
         LogContext.log.e(ITAG, "actApplicationCtx=$actApplicationCtx")
         LogContext.log.e(ITAG, "amApplication=$amApplication")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            LogContext.log.i(ITAG, "Android ID=${getAndroidId()}")
-        }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        LogContext.log.i(ITAG, "Android ID=${getAndroidId()}")
+        // }
 
         LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexString(true, "")}")
         LogContext.log.i(ITAG, "uid=${getUniqueID()}")
@@ -217,7 +217,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
 
         @Suppress("DEPRECATION")
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay
-        LogContext.log.i(ITAG, "fps=${display?.refreshRate}")
+        LogContext.log.i(ITAG, "refresh rate=${display?.refreshRate}")
 
         LogContext.log.i(ITAG, "xdpi=$xdpi")
         LogContext.log.i(ITAG, "ydpi=$ydpi")

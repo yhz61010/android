@@ -489,7 +489,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }
 
-    fun onScreenshotClick(@Suppress("unused") view: View) {
+    fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.w("Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
         Handler(Looper.getMainLooper()).postDelayed({

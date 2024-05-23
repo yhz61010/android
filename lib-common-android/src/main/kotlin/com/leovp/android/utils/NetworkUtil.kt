@@ -416,7 +416,7 @@ object NetworkUtil {
             TelephonyManager.NETWORK_TYPE_CDMA,
             TelephonyManager.NETWORK_TYPE_EDGE,
             TelephonyManager.NETWORK_TYPE_GPRS,
-            TelephonyManager.NETWORK_TYPE_IDEN,
+            // TelephonyManager.NETWORK_TYPE_IDEN,
             TelephonyManager.NETWORK_TYPE_GSM -> "2G"
 
             TelephonyManager.NETWORK_TYPE_EHRPD,

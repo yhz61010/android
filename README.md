@@ -1,20 +1,20 @@
-[](https://)[![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
+[![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-8.4.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-8.7-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/2024.1.1_Canary_6-green)](https://developer.android.com/studio)
-[![BuildJavaVersion](https://img.shields.io/badge/BuildJDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-[![CompatibilityJavaVersion](https://img.shields.io/badge/CompatibilityJDK-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
+[![Android Studio](https://img.shields.io/badge/Android%20Studio-Koala%20Feature%20Drop%20|%202024.1.2%20Canary%202-green)](https://developer.android.com/studio)
+[![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Compatibility Java Version](https://img.shields.io/badge/Compatibility%20Java%20-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 
 # Attention
-
-Starting with Android 14, apps with a targetSdkVersion lower than 23 (Android 6) can't be installed.
-So the min sdk of this project is 23 (Android 6) too.
+Project configurations:
+- `minSdk` is `26` (Android 8.0)
+- `targetSdk` is `34` (Android 14)
 
 # How to import?
 

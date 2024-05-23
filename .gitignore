@@ -92,3 +92,4 @@ lint/tmp/
 /.idea/migrations.xml
 /libwebp/
 /.idea/deploymentTargetSelector.xml
+/.kotlin/

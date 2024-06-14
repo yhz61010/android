@@ -230,6 +230,10 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject ob
     if (AV_PIX_FMT_NONE != bmpFormat) {
         format = bmpFormat;
     }
+//    LOGE("-----> frame_format: %s(%d)  ctx->pix_fmt: %s(%d)",
+//        av_get_pix_fmt_name(format), format,
+//        av_get_pix_fmt_name(ctx->pix_fmt), ctx->pix_fmt
+//    );
     int image_buffer_size = av_image_get_buffer_size(format, frame->width, frame->height, 32);
     auto *image_byte_buffer = av_malloc(image_buffer_size);
 
@@ -237,12 +241,23 @@ JNIEXPORT jobject JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject ob
     if (AV_PIX_FMT_NONE != bmpFormat) {
         AVPixelFormat yuvFmt = convertDeprecatedFormat(ctx->pix_fmt);
         // LOGE("YUV Format: %d  Bitmap format: %d", yuvFmt, bmpFormat);
+
+        // struct SwsContext *sws_getContext(int srcW, int srcH, enum AVPixelFormat srcFormat,
+        //                                   int dstW, int dstH, enum AVPixelFormat dstFormat,
+        //                                   int flags, SwsFilter *srcFilter,
+        //                                   SwsFilter *dstFilter, const double *param);
         convertCxt = sws_getContext(
                 frame->width, frame->height, yuvFmt,
                 frame->width, frame->height, bmpFormat,
                 SWS_POINT, nullptr, nullptr, nullptr);
+        // int av_image_fill_arrays(uint8_t *dst_data[4], int dst_linesize[4],
+        //                          const uint8_t *src,
+        //                          enum AVPixelFormat pix_fmt, int width, int height, int align);
         av_image_fill_arrays(bmpFrame->data, bmpFrame->linesize, (uint8_t *)image_byte_buffer,
-                             bmpFormat, frame->width, frame->height, 1);
+                             format, frame->width, frame->height, 1);
+        // int sws_scale(struct SwsContext *c, const uint8_t *const srcSlice[],
+        //               const int srcStride[], int srcSliceY, int srcSliceH,
+        //               uint8_t *const dst[], const int dstStride[]);
         sws_scale(convertCxt, frame->data, frame->linesize, 0, frame->height, bmpFrame->data, bmpFrame->linesize);
         written_image_bytes = image_buffer_size;
     } else {

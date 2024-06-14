@@ -21,4 +21,3 @@ echo "-> Current working directory=$(pwd)"
 rm -rf prebuilt
 rm -rf ../libs
 rm -rf ../obj
-

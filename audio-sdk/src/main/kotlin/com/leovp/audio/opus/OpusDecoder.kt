@@ -2,6 +2,7 @@
 
 package com.leovp.audio.opus
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
@@ -21,16 +22,24 @@ import java.util.concurrent.ArrayBlockingQueue
 class OpusDecoder(
     sampleRate: Int,
     channelCount: Int,
+    audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     val csd0: ByteArray,
     val csd1: ByteArray,
     val csd2: ByteArray,
     private val callback: IDecodeCallback
-) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount) {
+) : BaseMediaCodecAsynchronous(
+    codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
+    sampleRate = sampleRate,
+    channelCount = channelCount,
+    audioFormat = audioFormat,
+) {
     companion object {
         private const val TAG = "OpusDe"
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
+
+    private var frameCount: Long = 0
 
     val queueSize: Int get() = queue.size
 
@@ -45,6 +54,11 @@ class OpusDecoder(
         // format.setInteger(MediaFormat.KEY_COMPLEXITY, 3)
     }
 
+    override fun start() {
+        frameCount = 0
+        super.start()
+    }
+
     override fun onInputData(inBuf: ByteBuffer): Int {
         return queue.poll()?.let {
             inBuf.put(it)
@@ -53,7 +67,14 @@ class OpusDecoder(
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+        frameCount++
         callback.onDecoded(outBuf.toByteArray())
+    }
+
+    // timeUsPerFrame = 1_000_000L / sampleRate * 1024
+    // presentationTimeUs = totalFrames * timeUsPerFrame
+    override fun computePresentationTimeUs(): Long {
+        return frameCount * (1_000_000L / sampleRate * 1024)
     }
 
     fun decode(rawData: ByteArray) {

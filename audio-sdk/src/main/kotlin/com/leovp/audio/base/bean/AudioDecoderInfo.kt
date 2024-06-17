@@ -21,7 +21,11 @@ import androidx.annotation.Keep
  * ```
  */
 @Keep
-data class AudioDecoderInfo(val sampleRate: Int, val channelConfig: Int, val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT) {
+data class AudioDecoderInfo(
+    val sampleRate: Int,
+    val channelConfig: Int,
+    val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
+) {
     val channelCount: Int = when (channelConfig) {
         AudioFormat.CHANNEL_OUT_MONO -> 1
         AudioFormat.CHANNEL_OUT_STEREO -> 2

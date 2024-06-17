@@ -2,6 +2,7 @@
 
 package com.leovp.audio.aac
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
@@ -20,13 +21,17 @@ class AacEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
+    audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val callback: IEncodeCallback
-) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, true) {
+) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, audioFormat, true) {
     companion object {
         private const val TAG = "AacEn"
     }
 
     val queue = ArrayBlockingQueue<ByteArray>(64)
+
+    /** The total bytes of audio data. */
+    private var totalPcmBytes: Long = 0
 
     var csd0: ByteArray? = null
         private set
@@ -37,10 +42,15 @@ class AacEncoder(
         // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
     }
 
+    override fun start() {
+        totalPcmBytes = 0
+        super.start()
+    }
+
     override fun onInputData(inBuf: ByteBuffer): Int {
         return queue.poll()?.let {
             inBuf.put(it)
-            it.size
+            it.size.also { size -> totalPcmBytes += size }
         } ?: 0
     }
 
@@ -191,5 +201,11 @@ class AacEncoder(
             96000 -> 0
             else -> -1
         }
+    }
+
+    // presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate / channelCount
+    override fun computePresentationTimeUs(): Long {
+        // LogContext.log.d(TAG, "totalPcmBytes=$totalPcmBytes")
+        return 1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
     }
 }

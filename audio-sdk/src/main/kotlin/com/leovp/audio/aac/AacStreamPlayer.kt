@@ -50,6 +50,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         audioDecoder = AacDecoder(
             audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelCount,
+            audioDecoderInfo.audioFormat,
             csd0,
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {

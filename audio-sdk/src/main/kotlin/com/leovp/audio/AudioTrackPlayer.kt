@@ -164,8 +164,8 @@ class AudioTrackPlayer(
         if (audioTrack.playState == PLAYSTATE_STOPPED) {
             return
         }
-        LogContext.log.w(TAG, "stop()")
         pause()
+        LogContext.log.w(TAG, "stop()")
         runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.stop() }.onFailure { it.printStackTrace() }
     }
 
@@ -173,8 +173,8 @@ class AudioTrackPlayer(
         if (audioTrack.state == STATE_UNINITIALIZED) {
             return
         }
-        LogContext.log.w(TAG, "release()")
         stop()
+        LogContext.log.w(TAG, "release()")
         runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.release() }.onFailure { it.printStackTrace() }
     }
 }

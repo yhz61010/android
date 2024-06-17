@@ -1,5 +1,6 @@
 package com.leovp.audio.mediacodec
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
@@ -17,6 +18,7 @@ abstract class BaseMediaCodec(
     private val codecName: String,
     protected open val sampleRate: Int,
     protected open val channelCount: Int,
+    protected open val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val isEncoding: Boolean = false
 ) : IAudioMediaCodec {
     companion object {
@@ -27,7 +29,6 @@ abstract class BaseMediaCodec(
     internal lateinit var codec: MediaCodec
 
     protected val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
-    private var frameCount: Long = 0
 
     abstract fun setFormatOptions(format: MediaFormat)
 
@@ -49,7 +50,9 @@ abstract class BaseMediaCodec(
      */
     open fun release() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        flush() // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
+        flush()
+
+        // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
         // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
         runCatching { codec.release() }.onFailure { it.printStackTrace() }
         ioScope.cancel()
@@ -81,20 +84,20 @@ abstract class BaseMediaCodec(
         setMediaCodecOptions(codec)
     }
 
-    /**
-     * Calculate PTS.
-     * Actually, it doesn't make any error if you return 0 directly.
-     *
-     * @return The calculated presentation time in microseconds.
-     */
-    private fun computePresentationTimeUs(
-        frameIndex: Long,
-        sampleRate: Int
-    ): Long { // LogContext.log.d(TAG, "computePresentationTimeUs=${frameIndex * 1_000_000L / sampleRate}")
-        return frameIndex * 1_000_000L / sampleRate
-    }
+    protected fun getBytesPerSample(): Int {
+        return when (audioFormat) {
+            AudioFormat.ENCODING_PCM_8BIT -> 1
 
-    override fun getPresentationTimeUs(): Long {
-        return computePresentationTimeUs(++frameCount, sampleRate)
+            AudioFormat.ENCODING_PCM_16BIT,
+            AudioFormat.ENCODING_IEC61937,
+            AudioFormat.ENCODING_DEFAULT -> 2
+
+            AudioFormat.ENCODING_PCM_24BIT_PACKED -> 3
+
+            AudioFormat.ENCODING_PCM_FLOAT,
+            AudioFormat.ENCODING_PCM_32BIT -> 4
+
+            else -> throw IllegalArgumentException("Bad audio format $audioFormat")
+        }
     }
 }

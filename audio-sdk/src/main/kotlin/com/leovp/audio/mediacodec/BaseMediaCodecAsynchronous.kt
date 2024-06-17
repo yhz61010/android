@@ -2,6 +2,7 @@
 
 package com.leovp.audio.mediacodec
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import java.nio.ByteBuffer
@@ -10,8 +11,14 @@ import java.nio.ByteBuffer
  * Author: Michael Leo
  * Date: 2023/4/25 16:39
  */
-abstract class BaseMediaCodecAsynchronous(codecName: String, sampleRate: Int, channelCount: Int, isEncoding: Boolean = false) :
-    BaseMediaCodec(codecName, sampleRate, channelCount, isEncoding) {
+abstract class BaseMediaCodecAsynchronous(
+    codecName: String,
+    sampleRate: Int,
+    channelCount: Int,
+    audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
+    isEncoding: Boolean = false,
+) :
+    BaseMediaCodec(codecName, sampleRate, channelCount, audioFormat, isEncoding) {
     companion object {
         private const val TAG = "MediaCodecAsync"
     }
@@ -29,7 +36,12 @@ abstract class BaseMediaCodecAsynchronous(codecName: String, sampleRate: Int, ch
                 // Fill inputBuffer with valid data.
                 val size = onInputData(inputBuf)
                 // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
-                codec.queueInputBuffer(index, 0, size, getPresentationTimeUs(), 0)
+                val pts = computePresentationTimeUs()
+                if (pts < 0) {
+                    codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                } else {
+                    codec.queueInputBuffer(index, 0, size, pts, 0)
+                }
             }.onFailure { it.printStackTrace() }
         }
 

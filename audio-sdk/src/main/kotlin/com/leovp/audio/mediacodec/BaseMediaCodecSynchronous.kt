@@ -2,6 +2,7 @@
 
 package com.leovp.audio.mediacodec
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
@@ -12,8 +13,14 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 2023/5/4 10:18
  */
-abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, channelCount: Int, isEncoding: Boolean = false) :
-    BaseMediaCodec(codecName, sampleRate, channelCount, isEncoding) {
+abstract class BaseMediaCodecSynchronous(
+    codecName: String,
+    sampleRate: Int,
+    channelCount: Int,
+    audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
+    isEncoding: Boolean = false,
+) :
+    BaseMediaCodec(codecName, sampleRate, channelCount, audioFormat, isEncoding) {
     companion object {
         private const val TAG = "MediaCodecSync"
     }
@@ -40,11 +47,12 @@ abstract class BaseMediaCodecSynchronous(codecName: String, sampleRate: Int, cha
                 // Fill inputBuffer with valid data.
                 val size = onInputData(inputBuf)
                 // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
-                if (size < 0) {
-                    codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                val pts = computePresentationTimeUs()
+                if (pts < 0) {
                     isFinish = true
+                    codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                 } else {
-                    codec.queueInputBuffer(inputIndex, 0, size, getPresentationTimeUs(), 0)
+                    codec.queueInputBuffer(inputIndex, 0, size, pts, 0)
                 }
             }
 

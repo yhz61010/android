@@ -16,7 +16,7 @@ ndk-build clean
 ndk-build
 
 # Copy new so files to [adpcm-ima-qt-codec-h264-hevc-decoder-sdk] module.
-cp ../libs/armeabi-v7a/*.so ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/armeabi-v7a/
-cp ../libs/arm64-v8a/*.so   ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/arm64-v8a/
-cp ../libs/x86/*.so         ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/x86/
-cp ../libs/x86_64/*.so      ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/x86_64/
+rsync -avh --exclude='libc++_shared.so' ../libs/armeabi-v7a/*.so ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/armeabi-v7a/
+rsync -avh --exclude='libc++_shared.so' ../libs/arm64-v8a/*.so   ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/arm64-v8a/
+rsync -avh --exclude='libc++_shared.so' ../libs/x86/*.so         ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/x86/
+rsync -avh --exclude='libc++_shared.so' ../libs/x86_64/*.so      ../../../../adpcm-ima-qt-codec-h264-hevc-decoder-sdk/src/main/libs/x86_64/

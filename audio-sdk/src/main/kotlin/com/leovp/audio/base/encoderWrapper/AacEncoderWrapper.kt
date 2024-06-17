@@ -12,10 +12,11 @@ import com.leovp.audio.base.iters.OutputCallback
  */
 class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
     private var encoder = AacEncoder(
-        encoderInfo.sampleRate,
-        encoderInfo.channelCount,
-        encoderInfo.bitrate,
-        object : IEncodeCallback {
+        sampleRate = encoderInfo.sampleRate,
+        channelCount = encoderInfo.channelCount,
+        bitrate = encoderInfo.bitrate,
+        audioFormat = encoderInfo.audioFormat,
+        callback = object : IEncodeCallback {
             override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                 outputCallback.output(encodedBytes, isConfig, isKeyFrame)
             }

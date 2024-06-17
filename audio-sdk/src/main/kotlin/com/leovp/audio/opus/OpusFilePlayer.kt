@@ -65,12 +65,13 @@ class OpusFilePlayer(
         LogContext.log.w(TAG, "csd1=${opusCsd.csd1.readLongLE()} ${opusCsd.csd1.toHexString()}")
         LogContext.log.w(TAG, "csd2=${opusCsd.csd2.readLongLE()} ${opusCsd.csd2.toHexString()}")
         decoder = OpusDecoder(
-            audioDecoderInfo.sampleRate,
-            audioDecoderInfo.channelCount,
-            opusCsd.csd0,
-            opusCsd.csd1,
-            opusCsd.csd2,
-            object : IDecodeCallback {
+            sampleRate = audioDecoderInfo.sampleRate,
+            channelCount = audioDecoderInfo.channelCount,
+            audioFormat = audioDecoderInfo.audioFormat,
+            csd0 = opusCsd.csd0,
+            csd1 = opusCsd.csd1,
+            csd2 = opusCsd.csd2,
+            callback = object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     queue.put(pcmData)
                     // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}] pcm[${pcmData.size}]")

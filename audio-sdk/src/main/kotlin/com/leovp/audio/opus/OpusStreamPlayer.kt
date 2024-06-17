@@ -55,6 +55,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         audioDecoder = OpusDecoder(
             audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelCount,
+            audioDecoderInfo.audioFormat,
             csd0,
             csd1,
             csd2,

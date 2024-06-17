@@ -23,14 +23,22 @@ import java.util.concurrent.ArrayBlockingQueue
 class AacDecoder(
     sampleRate: Int,
     channelCount: Int,
+    audioFormat: Int,
     private val csd0: ByteArray,
     private val callback: IDecodeCallback
-) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount) {
+) : BaseMediaCodecSynchronous(
+    codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
+    sampleRate = sampleRate,
+    channelCount = channelCount,
+    audioFormat = audioFormat,
+) {
     companion object {
         private const val TAG = "AacDe"
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
+
+    private var frameCount: Long = 0
 
     val queueSize: Int get() = queue.size
 
@@ -67,6 +75,11 @@ class AacDecoder(
         format.setByteBuffer("csd-0", csd0BB)
     }
 
+    override fun start() {
+        frameCount = 0
+        super.start()
+    }
+
     override fun onInputData(inBuf: ByteBuffer): Int {
         return queue.take().let {
             inBuf.put(it)
@@ -76,12 +89,19 @@ class AacDecoder(
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
+        frameCount++
         callback.onDecoded(outBuf.toByteArray())
     }
 
     fun decode(aacData: ByteArray) {
         // LogContext.log.e(TAG, "--->>> decode[${aacData.size}] queue[${queue.size}]")
         queue.offer(aacData)
+    }
+
+    // timeUsPerFrame = 1_000_000L / sampleRate * 1024
+    // presentationTimeUs = totalFrames * timeUsPerFrame
+    override fun computePresentationTimeUs(): Long {
+        return frameCount * (1_000_000L / sampleRate * 1024)
     }
 
     override fun stop() {

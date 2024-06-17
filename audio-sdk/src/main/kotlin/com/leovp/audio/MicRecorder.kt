@@ -74,11 +74,12 @@ class MicRecorder(
             // MediaRecorder.AudioSource.VOICE_COMMUNICATION
             // MediaRecorder.AudioSource.CAMCORDER
             // MediaRecorder.AudioSource.VOICE_COMMUNICATION
-            audioSource,
-            encoderInfo.sampleRate,
-            encoderInfo.channelConfig,
-            encoderInfo.audioFormat,
-            bufferSizeInBytes
+
+            /* audioSource = */ audioSource,
+            /* sampleRateInHz = */ encoderInfo.sampleRate,
+            /* channelConfig = */ encoderInfo.channelConfig,
+            /* audioFormat = */ encoderInfo.audioFormat,
+            /* bufferSizeInBytes = */ bufferSizeInBytes
         )
         // https://blog.csdn.net/lavender1626/article/details/80394253
         initAdvancedFeatures()
@@ -158,7 +159,10 @@ class MicRecorder(
                 audioRecord.release()
                 LogContext.log.w(TAG, "Recording released.")
             }
-        }.onFailure { it.printStackTrace(); stopResult = false }
+        }.onFailure {
+            stopResult = false
+            it.printStackTrace()
+        }
         encodeWrapper?.release()
         callback.onStop(stopResult)
     }

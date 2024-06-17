@@ -2,6 +2,7 @@
 
 package com.leovp.audio.opus
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
@@ -21,22 +22,24 @@ import java.util.concurrent.ArrayBlockingQueue
  * https://datatracker.ietf.org/doc/html/rfc6716
  *
  * - Opus supports bitrates: 6kbit/s ~ 510 kbit/s
- * - Opus supports frame size in milliseconds: 2.5, 5, 10, 20, 40, 60 (20 ms frames are a good choice for most applications)
+ * - Opus supports frame size in milliseconds: 2.5ms, 5ms, 10ms, 20ms, 40ms, 60ms (20ms frames are a good choice for most applications)
  * - Opus supports sample rate: 8kHz, 12kHz, 16kHz, 24kHz, 48Khz
  *
  * Attention:
- * Anyway, in practice, on the devices I tested on, opus encoder by MediaCodec _ONLY_ supports 48kHz as sample rate
+ * Anyway, in practice, on the devices I tested, opus encoder by MediaCodec _ONLY_ supports 48kHz as sample rate
  * and the frame size seems like 960 samples (20ms). Most important, all the above parameters are not configurable.
  *
- * We use 48kHz, stereo as example, the samples of each frame size are as following:
+ * We use 48kHz as example:
+ * The samples per millisecond:
  * 48000 samples / 1000ms = 48 samples/ms
  *
- * 48 samples/ms * 2 ch * 2.5 ms =  240 samples
- * 48 samples/ms * 2 ch *  5 ms  =  480 samples
- * 48 samples/ms * 2 ch * 10 ms  =  960 samples
- * 48 samples/ms * 2 ch * 20 ms  = 1920 samples
- * 48 samples/ms * 2 ch * 40 ms  = 3840 samples
- * 48 samples/ms * 2 ch * 60 ms  = 5760 samples
+ * The total samples for each frame size in milliseconds are as following:
+ * 48 samples/ms * 2.5 ms =  120 samples
+ * 48 samples/ms *   5 ms =  240 samples
+ * 48 samples/ms *  10 ms =  480 samples
+ * 48 samples/ms *  20 ms =  960 samples
+ * 48 samples/ms *  40 ms = 1920 samples
+ * 48 samples/ms *  60 ms = 3840 samples
  *
  * Encode:
  * ```pseudocode
@@ -146,13 +149,23 @@ class OpusEncoder(
     sampleRate: Int,
     channelCount: Int,
     private val bitrate: Int,
+    audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val callback: IEncodeCallback
-) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_OPUS, sampleRate, channelCount, true) {
+) : BaseMediaCodecAsynchronous(
+    codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
+    sampleRate = sampleRate,
+    channelCount = channelCount,
+    audioFormat = audioFormat,
+    isEncoding = true,
+) {
     companion object {
         private const val TAG = "OpusEn"
     }
 
     val queue = ArrayBlockingQueue<ByteArray>(64)
+
+    /** The total bytes of audio data. */
+    private var totalPcmBytes: Long = 0
 
     var csd0: ByteArray? = null
         private set
@@ -166,10 +179,15 @@ class OpusEncoder(
         // format.setInteger(MediaFormat.KEY_COMPLEXITY, 3)
     }
 
+    override fun start() {
+        totalPcmBytes = 0
+        super.start()
+    }
+
     override fun onInputData(inBuf: ByteBuffer): Int {
         return queue.poll()?.let {
             inBuf.put(it)
-            it.size
+            it.size.also { size -> totalPcmBytes += size }
         } ?: 0
     }
 
@@ -186,6 +204,10 @@ class OpusEncoder(
             outBuf.flip()
         }
         callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)
+    }
+
+    override fun computePresentationTimeUs(): Long {
+        return 1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
     }
 
     override fun stop() {

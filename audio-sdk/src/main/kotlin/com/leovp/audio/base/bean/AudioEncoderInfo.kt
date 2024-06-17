@@ -20,6 +20,8 @@ import androidx.annotation.Keep
  *              AudioFormat.ENCODING_PCM_8BIT(0x3)
  *              AudioFormat.ENCODING_PCM_FLOAT(0x4)
  * ```
+ *
+ * @param bitrate Used for AAC/OPUS or other encoders. It is not applicable to the PCM format.
  */
 @Keep
 data class AudioEncoderInfo(

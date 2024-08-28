@@ -93,3 +93,4 @@ lint/tmp/
 /libwebp/
 /.idea/deploymentTargetSelector.xml
 /.kotlin/
+/.idea/runConfigurations.xml

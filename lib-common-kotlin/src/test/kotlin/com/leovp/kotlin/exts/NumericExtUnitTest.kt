@@ -10,7 +10,7 @@ import org.junit.jupiter.api.assertThrows
  * Author: Michael Leo
  * Date: 2022/5/30 09:22
  */
-class NumericExtKtTest {
+class NumericExtUnitTest {
 
     @Test
     fun gcdTest() {

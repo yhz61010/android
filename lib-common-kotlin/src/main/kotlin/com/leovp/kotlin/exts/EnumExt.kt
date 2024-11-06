@@ -10,11 +10,12 @@ package com.leovp.kotlin.exts
 /**
  * Usage:
  * ```
- * enum class Type(val value: Int) {
- *      DOWN(0), UP(1), MOVE(2)
+ * enum class TouchType(val touchVal: Int) {
+ *     DOWN(0), UP(1), MOVE(2)
  * }
- * val typeDown = Type::value findBy 0
- * assertEquals(Type.DOWN, typeDown)
+ *
+ * val typeDown = TouchType::touchVal findBy 0
+ * assertEquals(TouchType.DOWN, typeDown)
  * ```
  * https://www.baeldung.com/kotlin/enum-find-by-value
  */

@@ -9,7 +9,7 @@ package com.leovp.kotlin.exts
 // https://stackoverflow.com/a/4009247/1685062
 
 /**
- * Compute the greatest common divistor of two values.
+ * Compute the greatest common divisor of two values.
  * @param a one value
  * @param b another value
  * @return the greatest common divisor of a and b

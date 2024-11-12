@@ -2,9 +2,9 @@
 #===================
 #===== Project =====
 #===================
-compile-sdk = "34"
+compile-sdk = "35"
 min-sdk = "26"
-target-sdk = "34"
+target-sdk = "35"
 ndk-sdk = "25.2.9519653"
 
 leo-version = "5.12.40"
@@ -12,48 +12,48 @@ leo-version = "5.12.40"
 #===================
 #===== Compile =====
 #===================
-agp = "8.4.1"
-kotlin = "2.0.0"
-ksp = "2.0.0-1.0.21"
+agp = "8.7.2"
+kotlin = "2.0.21"
+ksp = "2.0.21-1.0.27"
 
 #=================================
 #===== Android dependencies ======
 #=================================
-coroutines = "1.8.1"
+coroutines = "1.9.0"
 material = "1.12.0"
-appcompat = "1.6.1"
-activity-ktx = "1.9.0"
-fragment-ktx = "1.7.1"
-core-ktx = "1.13.1"
+appcompat = "1.7.0"
+activity-ktx = "1.9.3"
+fragment-ktx = "1.8.5"
+core-ktx = "1.15.0"
 multidex = "2.0.1"
 preference = "1.2.1"
 recyclerview = "1.3.2"
-constraintlayout = "2.1.4"
+constraintlayout = "2.2.0"
 coordinatorlayout = "1.2.0"
-navigation = "2.7.7"
-concurrent-futures-ktx = "1.1.0"
-lifecycle = "2.8.0"
+navigation = "2.8.3"
+concurrent-futures-ktx = "1.2.0"
+lifecycle = "2.8.7"
 android-annotation = "4.1.1.4"
-androidx-annotation = "1.8.0"
+androidx-annotation = "1.9.1"
 #android-support-annotation = "28.0.0"
 cardview = "1.0.0"
 viewpager2 = "1.1.0"
 swiperefreshlayout = "1.1.0"
 room = "2.6.1" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.3.3"
+camera = "1.4.0"
 exifinterface = "1.3.7"
 
 #===========================
 #===== Android Compose =====
 #===========================
-compose = "1.6.7"
-androidx-activity-compose = "1.9.0"
+compose = "1.7.5"
+androidx-activity-compose = "1.9.3"
 #compose-compilerextension = "1.2.0"
 
 #=======================
 #===== Third party =====
 #=======================
-detekt = "1.23.6"
+detekt = "1.23.7"
 dokka = "1.7.10"
 # ktlint = "0.49.0"
 ktlint-gradle = "12.1.1"
@@ -61,9 +61,9 @@ benmanes = "0.51.0"
 #vcu = "0.7.0"
 jacoco = "0.8.12"
 # The version should be the same as server.
-sonarqube = "5.0.0.4638"
+sonarqube = "5.1.0.4882"
 
-coil = "2.6.0"
+coil = "2.7.0"
 glide = "4.16.0"
 glide-transformations = "4.3.0"
 square-okhttp = "4.12.0"
@@ -77,17 +77,17 @@ gson = "2.11.0"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
-mmkv = "1.3.5"
+mmkv = "2.0.0"
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
-fasterxml = "2.17.1" # 2.14.3
-xx-permissions = "18.63"
+fasterxml = "2.18.1" # 2.14.3
+xx-permissions = "20.0"
 bson = "2.15.1" # As of 2.13.0, you need to add fasterxml jackson manually.
-free-reflection = "3.2.0"
+free-reflection = "3.2.2"
 flyco-tablayout = "2.2.0"
 srl = "2.0.5"
 netty = "4.1.108.Final"
-koin = "3.5.6"
+koin = "4.0.0"
 bytedeco-ffmpeg = "6.1.1-1.5.10"
 bytedeco-javacpp = "1.5.10"
 material-dialogs = "3.3.0"
@@ -97,22 +97,22 @@ jzlib = "1.1.3"
 androidasync = "3.1.0"
 net = "3.6.4"
 subsampling-scale-image-view = "3.10.0"
-mannodermaus-android-junit5 = "1.10.0.0"
-mannodermaus-junit5 = "1.4.0"
+mannodermaus-android-junit5 = "1.11.2.0"
+mannodermaus-junit5 = "1.6.0"
 
 #================
 #===== Test =====
 #================
-jupiter = "5.10.2" # JUnit 5
-androidx-test = "1.5.0"
-androidx-test-runner = "1.5.2"
-androidx-test-ext = "1.1.5"
-espresso-core = "3.5.1"
+jupiter = "5.11.3" # JUnit 5
+androidx-test = "1.6.1"
+androidx-test-runner = "1.6.2"
+androidx-test-ext = "1.2.1"
+espresso-core = "3.6.1"
 kluent = "1.73"
-mockk = "1.13.11"
+mockk = "1.13.13"
 arch = "2.2.0"
 powermock-version = "2.0.9"
-robolectric-version = "4.12.2"
+robolectric-version = "4.13"
 
 #===================#===================#===================#===================
 #===================#===================#===================#===================

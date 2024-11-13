@@ -37,7 +37,7 @@ class MicRecorder(
     val callback: RecordCallback,
     type: AudioType = AudioType.PCM,
     audioSource: Int = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-    recordMinBufferRatio: Int = 1
+    recordMinBufferRatio: Int = 1,
 ) {
     companion object {
         private const val TAG = "MicRec"
@@ -69,17 +69,16 @@ class MicRecorder(
         )
         LogContext.log.w(TAG, "encodeWrapper=$encodeWrapper")
 
+        // MediaRecorder.AudioSource.MIC
+        // MediaRecorder.AudioSource.VOICE_COMMUNICATION
+        // MediaRecorder.AudioSource.CAMCORDER
+        // MediaRecorder.AudioSource.VOICE_COMMUNICATION
         audioRecord = AudioRecord(
-            // MediaRecorder.AudioSource.MIC
-            // MediaRecorder.AudioSource.VOICE_COMMUNICATION
-            // MediaRecorder.AudioSource.CAMCORDER
-            // MediaRecorder.AudioSource.VOICE_COMMUNICATION
-
-            /* audioSource = */ audioSource,
-            /* sampleRateInHz = */ encoderInfo.sampleRate,
-            /* channelConfig = */ encoderInfo.channelConfig,
-            /* audioFormat = */ encoderInfo.audioFormat,
-            /* bufferSizeInBytes = */ bufferSizeInBytes
+            audioSource,
+            encoderInfo.sampleRate,
+            encoderInfo.channelConfig,
+            encoderInfo.audioFormat,
+            bufferSizeInBytes
         )
         // https://blog.csdn.net/lavender1626/article/details/80394253
         initAdvancedFeatures()
@@ -153,7 +152,10 @@ class MicRecorder(
                 LogContext.log.i(TAG, "Stopping recording...")
                 audioRecord.stop()
             }
-        }.onFailure { it.printStackTrace(); stopResult = false }
+        }.onFailure {
+            it.printStackTrace()
+            stopResult = false
+        }
         runCatching {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
                 audioRecord.release()

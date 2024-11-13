@@ -41,10 +41,14 @@ internal val sdf11 = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
 internal val sdf12 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault())
 
 @SuppressLint("ConstantLocale")
-internal val sdf13 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss (z)", Locale.getDefault()).apply { timeZone = TimeZone.getDefault() }
+internal val sdf13 = SimpleDateFormat("yyyy/MM/dd HH:mm:ss (z)", Locale.getDefault()).apply {
+    timeZone = TimeZone.getDefault()
+}
 
 @SuppressLint("ConstantLocale")
-internal val sdf14 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss (z)", Locale.getDefault()).apply { timeZone = TimeZone.getDefault() }
+internal val sdf14 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss (z)", Locale.getDefault()).apply {
+    timeZone = TimeZone.getDefault()
+}
 
 @SuppressLint("ConstantLocale")
 internal val sdf15 = SimpleDateFormat("HHmmss", Locale.getDefault())

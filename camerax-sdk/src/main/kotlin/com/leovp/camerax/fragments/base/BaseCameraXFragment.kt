@@ -114,7 +114,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     abstract fun getViewBinding(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): B
 
     // An instance of a helper function to work with Shared Preferences
@@ -136,7 +136,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
-    protected val cameraManager: CameraManager by lazy { requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager }
+    protected val cameraManager: CameraManager by lazy {
+        requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    }
     protected var displayId: Int = -1
 
     /**
@@ -175,7 +177,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
@@ -216,7 +218,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         viewFinder: PreviewView,
         imageCapture: ImageCapture,
         startTimestamp: Long,
-        onImageSaved: (savedImage: CaptureImage.ImageBytes?, exc: Exception?) -> Unit
+        onImageSaved: (savedImage: CaptureImage.ImageBytes?, exc: Exception?) -> Unit,
     ) {
         imageCapture.takePicture(
             cameraExecutor,
@@ -307,7 +309,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         imageCapture: ImageCapture,
         outputDirectory: File,
         startTimestamp: Long,
-        onImageSaved: (savedImage: CaptureImage.ImageUri?, exc: Exception?) -> Unit
+        onImageSaved: (savedImage: CaptureImage.ImageUri?, exc: Exception?) -> Unit,
     ) {
         // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
@@ -393,7 +395,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private fun adjustBitmapRotation(
         bitmap: Bitmap,
         mirror: Boolean,
-        cameraSensorOrientationDegree: Int
+        cameraSensorOrientationDegree: Int,
     ): Bitmap {
         return when (cameraSensorOrientationDegree) {
             0 -> { // by android
@@ -570,7 +572,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 e1: MotionEvent?,
                 e2: MotionEvent,
                 velocityX: Float,
-                velocityY: Float
+                velocityY: Float,
             ): Boolean {
                 if (e1 == null) return false
 
@@ -623,7 +625,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         left: () -> Unit = {},
         right: () -> Unit = {},
         up: () -> Unit = {},
-        down: () -> Unit = {}
+        down: () -> Unit = {},
     ) {
         swipeCallback = object : SwipeCallback {
             override fun onUpSwipe() {
@@ -656,7 +658,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     protected fun checkForHdrExtensionAvailability(
         hasHdr: Boolean,
-        callback: (isHdrAvailable: Boolean) -> Unit
+        callback: (isHdrAvailable: Boolean) -> Unit,
     ) {
         // Create a Vendor Extension for HDR
         val extensionsManagerFuture =
@@ -736,7 +738,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         incRatioBinding: IncRatioOptionsBinding,
         ratio: CameraRatio,
         previewView: PreviewView,
-        ratioBtn: ImageButton? = null
+        ratioBtn: ImageButton? = null,
     ) {
         val metrics = requireContext().screenRealResolution
 
@@ -775,7 +777,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun updateRatioUI(
         ratio: CameraRatio,
         previewView: PreviewView,
-        ratioBtn: ImageButton? = null
+        ratioBtn: ImageButton? = null,
     ) {
         ratioBtn?.visibility = View.GONE
         when (ratio) {
@@ -864,7 +866,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     protected fun outputCameraParameters(
-        camSelector: CameraSelector/*, desiredVideoWidth: Int, desiredVideoHeight: Int*/
+        camSelector: CameraSelector,/*, desiredVideoWidth: Int, desiredVideoHeight: Int*/
     ) =
         runCatching {
             if (cameraProvider?.hasCamera(camSelector) == true) {
@@ -1051,7 +1053,7 @@ Supported profile/level for HEVC=${
 
         internal fun getOutputPictureDirectory(
             context: Context,
-            parentFolder: String = BASE_FOLDER_NAME
+            parentFolder: String = BASE_FOLDER_NAME,
         ): File {
             return File(
                 context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -1063,7 +1065,7 @@ Supported profile/level for HEVC=${
 
         internal fun getOutputVideoDirectory(
             context: Context,
-            parentFolder: String = BASE_FOLDER_NAME
+            parentFolder: String = BASE_FOLDER_NAME,
         ): File {
             return File(
                 context.getExternalFilesDir(Environment.DIRECTORY_MOVIES),

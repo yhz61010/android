@@ -6,13 +6,28 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 val customGroup = "com.leovp"
-// You can use it in subproject like this:
-// val jdkVersion: JavaVersion by rootProject.extra
-val jdkVersion: JavaVersion by extra { JavaVersion.VERSION_17 }
-val kotlinApiVersion by extra { org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9 }
+
+/**
+ * You can use it in subproject like this:
+ * ```kotlin
+ * val javaVersion: JavaVersion by rootProject.extra
+ * ```
+ */
+val javaVersion: JavaVersion by extra {
+    // JavaVersion.VERSION_17
+    // We should use integer value for toVersion() in this case.
+    JavaVersion.toVersion(libs.versions.javaVersion.get().toInt())
+}
+val jvmTargetVersion by extra {
+    org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.jvmVersion.get())
+}
+val kotlinVersion by extra {
+    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
+    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlinVersion.get())
+}
+
 val useResourcePrefix = false
 
 /**
@@ -24,6 +39,7 @@ val useResourcePrefix = false
  * Don't forget to import the following package:
  * import java.util.Properties
  */
+@Suppress("unused")
 val localProperties: Properties by extra { gradleLocalProperties(rootProject.rootDir, providers) }
 
 // =====================================
@@ -104,9 +120,7 @@ allprojects {
         useJUnitPlatform()
     }
 
-    afterEvaluate {
-        configureCompileVersion()
-    }
+    configureCompileTasks()
 
     //    configurations.all {
     //        resolutionStrategy.eachDependency {
@@ -148,18 +162,26 @@ subprojects {
  * task (current target is 11) jvm target compatibility should be set to the same Java version.
  * ```
  */
-fun Project.configureCompileVersion() {
+fun Project.configureCompileTasks() {
     tasks.withType<JavaCompile>().configureEach {
-        sourceCompatibility = jdkVersion.toString()
-        targetCompatibility = jdkVersion.toString()
+        sourceCompatibility = javaVersion.toString()
+        targetCompatibility = javaVersion.toString()
+        // Enable warning for deprecated APIs
+        options.compilerArgs.add("-Xlint:deprecation")
     }
 
-    tasks.withType<KotlinJvmCompile>().configureEach {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(jdkVersion.toString()))
-            apiVersion.set(kotlinApiVersion)
-            languageVersion.set(kotlinApiVersion)
+            jvmTarget.set(jvmTargetVersion)
+            apiVersion.set(kotlinVersion)
+            languageVersion.set(kotlinVersion)
+
+            // Enable support for experimental features
+            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
         }
+        // compilerOptions.jvmTarget.set(jvmTargetVersion)
+        // compilerOptions.apiVersion.set(kotlinVersion)
+        // compilerOptions.languageVersion.set(kotlinVersion)
     }
 }
 
@@ -191,8 +213,8 @@ fun Project.configureBase(): BaseExtension {
         }
         compileOptions {
             // setDefaultJavaVersion(jdkVersion)
-            sourceCompatibility = jdkVersion
-            targetCompatibility = jdkVersion
+            sourceCompatibility = javaVersion
+            targetCompatibility = javaVersion
         }
         buildTypes {
             getByName("release") {
@@ -289,7 +311,7 @@ fun Project.configureLibrary(): BaseExtension = configureBase().apply {
 
 // Target version of the generated JVM bytecode. It is used for type resolution.
 tasks.withType<Detekt>().configureEach {
-    jvmTarget = jdkVersion.toString()
+    jvmTarget = jvmTargetVersion.target
 
     reports {
         // observe findings in your browser with structure and code snippets
@@ -351,6 +373,7 @@ fun isNonStable(version: String): Boolean {
 // --------------------------------------
 
 /** Takes value from Gradle project property and sets it as build config property. */
+@Suppress("unused")
 fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
     val propertyValue = project.properties[gradlePropertyName] as? String
     checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
@@ -362,6 +385,7 @@ fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
 fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.uppercase() }
 
 /** Adds a new field to the generated BuildConfig class. */
+@Suppress("unused")
 fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
     // Create String that holds Java String Array code
     val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })

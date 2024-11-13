@@ -377,7 +377,7 @@ naming:
     minimumVariableNameLength: 1
   VariableNaming:
     active: true
-    variablePattern: '[`a-z][`A-Za-z0-9]*'
+    variablePattern: '[`a-z][`_A-Za-z0-9]*'
     privateVariablePattern: '(_)?[`a-z][`A-Za-z0-9]*'
     excludeClassPattern: '$^'
     ignoreOverridden: true

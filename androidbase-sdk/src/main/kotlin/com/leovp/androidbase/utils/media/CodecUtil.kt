@@ -10,6 +10,7 @@ import android.os.Build
 import com.leovp.androidbase.exts.kotlin.TreeElement
 import com.leovp.androidbase.exts.kotlin.printTree
 import com.leovp.log.LogContext
+import java.util.Locale
 
 /**
  * Author: Michael Leo
@@ -72,6 +73,7 @@ object CodecUtil {
             // val isDecoder = !isEncoder
             val str = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 String.format(
+                    Locale.getDefault(),
                     "name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
                     mediaCodecInfo.name,
                     mediaCodecInfo.isEncoder,
@@ -108,7 +110,11 @@ object CodecUtil {
                         CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar -> colorFormatName = "YUV420PackedSemiPlanar"
                         CodecCapabilities.COLOR_FormatYUV420Planar -> colorFormatName = "YUV420Planar"
                     }
-                    val strText = String.format("colorFormat: %s (%s)", colorFormat.toString().padStart(10, ' '), colorFormatName)
+                    val strText = String.format(
+                        Locale.getDefault(),
+                        "colorFormat: %s (%s)", colorFormat.toString().padStart(10, ' '),
+                        colorFormatName
+                    )
                     // LogContext.log.i(ITAG, str)
                     val lv3Element = TreeElement(strText, null)
                     lv3List.add(lv3Element)

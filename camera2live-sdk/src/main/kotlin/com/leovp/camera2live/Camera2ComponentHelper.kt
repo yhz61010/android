@@ -73,7 +73,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class Camera2ComponentHelper(
     private val context: FragmentActivity,
     private var lensFacing: Int,
-    private val cameraView: View? = null
+    private val cameraView: View? = null,
 ) {
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
@@ -183,7 +183,7 @@ class Camera2ComponentHelper(
         bitrate: Int,
         frameRate: Int,
         iFrameInterval: Int,
-        bitrateMode: Int
+        bitrateMode: Int,
     ) {
         cameraEncoder =
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
@@ -292,9 +292,11 @@ class Camera2ComponentHelper(
                 LogContext.log.w(TAG, "swapDimension set true")
                 swapDimension = true
             }
+
             Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
                 swapDimension = true
             }
+
             else -> LogContext.log.e(
                 TAG,
                 "Display rotation is invalid: $deviceRotation"
@@ -559,7 +561,7 @@ class Camera2ComponentHelper(
     private suspend fun openCamera(
         manager: CameraManager,
         cameraId: String,
-        handler: Handler? = null
+        handler: Handler? = null,
     ): CameraDevice = suspendCancellableCoroutine { cont ->
         manager.openCamera(
             cameraId,
@@ -604,7 +606,7 @@ class Camera2ComponentHelper(
     private suspend fun createCaptureSession(
         device: CameraDevice,
         targets: List<Surface>,
-        handler: Handler? = null
+        handler: Handler? = null,
     ): CameraCaptureSession = suspendCoroutine { cont ->
         val stateCallback = object : CameraCaptureSession.StateCallback() {
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
@@ -845,7 +847,7 @@ class Camera2ComponentHelper(
                     session: CameraCaptureSession,
                     request: CaptureRequest,
                     timestamp: Long,
-                    frameNumber: Long
+                    frameNumber: Long,
                 ) {
                     super.onCaptureStarted(session, request, timestamp, frameNumber)
                     cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
@@ -855,7 +857,7 @@ class Camera2ComponentHelper(
                 override fun onCaptureCompleted(
                     session: CameraCaptureSession,
                     request: CaptureRequest,
-                    result: TotalCaptureResult
+                    result: TotalCaptureResult,
                 ) {
                     super.onCaptureCompleted(session, request, result)
                     val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
@@ -1222,7 +1224,7 @@ class Camera2ComponentHelper(
         val metadata: CaptureResult?,
         val orientation: Int,
         val mirrored: Boolean,
-        val format: Int
+        val format: Int,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

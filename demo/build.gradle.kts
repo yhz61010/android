@@ -21,8 +21,8 @@ android {
     namespace = "com.leovp.demo"
 
     defaultConfig {
-        versionCode = 21
-        versionName = "2.1"
+        versionCode = 22
+        versionName = "2.2"
         multiDexEnabled = true
 
         ndk {

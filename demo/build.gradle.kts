@@ -164,10 +164,10 @@ android {
     }
 
     /*
-    * DSL element "dexOptions" is obsolete and should be removed.
-    * It will be removed in version 8.0 of the Android Gradle plugin.
-    * Using it has no effect, and the AndroidGradle plugin optimizes dexing automatically.
-    */
+     * DSL element "dexOptions" is obsolete and should be removed.
+     * It will be removed in version 8.0 of the Android Gradle plugin.
+     * Using it has no effect, and the AndroidGradle plugin optimizes dexing automatically.
+     */
     //    dexOptions {
     //        jumboMode = true
     //        javaMaxHeapSize = "4g"

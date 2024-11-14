@@ -32,7 +32,7 @@ abstract class WordRoomDatabase : RoomDatabase() {
 
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
-            INSTANCE?.let { database ->
+            instance?.let { database ->
                 scope.launch {
                     populateDatabase(database.wordDao())
                 }
@@ -58,15 +58,12 @@ abstract class WordRoomDatabase : RoomDatabase() {
         // Singleton prevents multiple instances of database opening at the
         // same time.
         @Volatile
-        private var INSTANCE: WordRoomDatabase? = null
+        private var instance: WordRoomDatabase? = null
 
-        fun getDatabase(
-            context: Context,
-            scope: CoroutineScope
-        ): WordRoomDatabase {
+        fun getDatabase(context: Context, scope: CoroutineScope): WordRoomDatabase {
             // if the INSTANCE is not null, then return it,
             // if it is, then create the database
-            return INSTANCE ?: synchronized(this) {
+            return instance ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WordRoomDatabase::class.java,
@@ -74,7 +71,7 @@ abstract class WordRoomDatabase : RoomDatabase() {
                 )
                     .addCallback(WordDatabaseCallback(scope))
                     .build()
-                INSTANCE = instance
+                Companion.instance = instance
                 // return instance
                 instance
             }

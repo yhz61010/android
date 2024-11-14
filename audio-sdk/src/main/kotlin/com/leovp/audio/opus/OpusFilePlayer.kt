@@ -40,12 +40,12 @@ class OpusFilePlayer(
 ) {
     companion object {
         private const val TAG = "OpusFilePlayer"
-        const val startCode = "|leo|"
+        const val START_CODE = "|leo|"
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
 
-    private val startCodeSize = startCode.length
+    private val startCodeSize = START_CODE.length
     private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("opus-file-player"))
 
     private val audioTrackPlayer: AudioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, usage = usage, contentType = contentType)
@@ -200,7 +200,7 @@ class OpusFilePlayer(
         if (offset < 0) {
             return false
         }
-        return bb.readBytes(startCodeSize, offset).decodeToString() == startCode
+        return bb.readBytes(startCodeSize, offset).decodeToString() == START_CODE
     }
 
     private fun findStartCode(startPos: Long): Long {

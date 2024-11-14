@@ -21,11 +21,7 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): FragmentForNavFirstBinding {
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentForNavFirstBinding {
         return FragmentForNavFirstBinding.inflate(inflater, container, false)
     }
 
@@ -40,11 +36,7 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
     //        }
     //    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         super.onCreateView(inflater, container, savedInstanceState)
         LogContext.log.w("FragmentForNavFirst")
         binding.gotoSecondActivity.setOnSingleClickListener {

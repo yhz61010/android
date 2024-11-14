@@ -96,5 +96,7 @@ class WifiUtil private constructor(private val ctx: Context) {
 }
 
 enum class WifiEncType {
-    WEP, WPA, OPEN
+    WEP,
+    WPA,
+    OPEN
 }

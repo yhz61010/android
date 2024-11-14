@@ -25,7 +25,7 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
             // com.leovp.yuv_sdk.YuvUtil.SCALE_FILTER_NONE)
             // com.leovp.yuv_sdk.YuvUtil.rotateI420(scaleI420, width / 2, height / 2,
             // com.leovp.yuv_sdk.YuvUtil.Rotate_90)
-            com.leovp.yuv.YuvUtil.rotateI420(yuvData, width, height, com.leovp.yuv.YuvUtil.Rotate_90)
+            com.leovp.yuv.YuvUtil.rotateI420(yuvData, width, height, com.leovp.yuv.YuvUtil.ROTATE_90)
         } else {
             // LENS_FACING_FRONT
             // YuvUtil.yuvRotate90(YuvUtil.yuvFlipHorizontal(yuvData, width, height), width, height)
@@ -39,7 +39,7 @@ class EncoderStrategyYuv420P : IDataProcessStrategy {
                 width,
                 height,
                 true,
-                com.leovp.yuv.YuvUtil.Rotate_270
+                com.leovp.yuv.YuvUtil.ROTATE_270
             )!!
             // com.leovp.yuv_sdk.YuvUtil.android420ToI420(yuvData, 1, width, height, true,
             // com.leovp.yuv_sdk.YuvUtil.Rotate_270)!!

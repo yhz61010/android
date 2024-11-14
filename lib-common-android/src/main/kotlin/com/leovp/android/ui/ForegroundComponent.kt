@@ -109,9 +109,10 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                     Log.e(TAG, "onActivityResumed() exception")
                 }
             }
-        } /*else {
-            LogContext.log.i(TAG, "Still FG")
-        }*/
+        }
+        // else {
+        //     LogContext.log.i(TAG, "Still FG")
+        // }
     }
 
     override fun onActivityPaused(activity: Activity) {
@@ -140,9 +141,11 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                             e.printStackTrace()
                         }
                     }
-                } /*else {
-                LogContext.log.i(TAG, "Still BG")
-            }*/
+                }
+
+            // else {
+            //     LogContext.log.i(TAG, "Still BG")
+            // }
             }.also { checkRunnable = it },
             becameBackgroundDelay
         )
@@ -177,10 +180,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
          * @param application The application object
          * @return an initialised Foreground instance
          */
-        fun init(
-            application: Application,
-            becameBackgroundDelay: Long = CHECK_DELAY
-        ): ForegroundComponent {
+        fun init(application: Application, becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
             if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
                     if (instance == null) {

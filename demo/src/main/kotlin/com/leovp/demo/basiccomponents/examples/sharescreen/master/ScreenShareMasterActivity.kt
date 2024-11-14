@@ -371,12 +371,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
         var clientScreenInfo: Size? = null
         var userPath: MutableList<Pair<Path, Paint>> = mutableListOf()
-        override fun onReceivedData(
-            netty: BaseNettyServer,
-            clientChannel: Channel,
-            data: Any?,
-            action: Int
-        ) {
+        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
                 val stringData = data as String

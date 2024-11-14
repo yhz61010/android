@@ -281,10 +281,11 @@ class ReflectManager private constructor() {
                 val modifiersField = field.javaClass.getDeclaredField("modifiers")
                 modifiersField.isAccessible = true
                 modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
-            } /*.onFailure {
-                // runs in android will happen
-                field.isAccessible = true
-            }*/
+            }
+            // .onFailure {
+            //     // runs in android will happen
+            //     field.isAccessible = true
+            // }
         }
         return field
     }

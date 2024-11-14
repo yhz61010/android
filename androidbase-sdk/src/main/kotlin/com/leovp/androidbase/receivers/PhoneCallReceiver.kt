@@ -54,20 +54,10 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
     // Derived classes should override these to respond to specific events of interest
     protected abstract fun onIncomingCallReceived(ctx: Context, number: String?, start: Date?)
     protected abstract fun onIncomingCallAnswered(ctx: Context, number: String?, start: Date?)
-    protected abstract fun onIncomingCallEnded(
-        ctx: Context,
-        number: String?,
-        start: Date?,
-        end: Date?
-    )
+    protected abstract fun onIncomingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?)
 
     protected abstract fun onOutgoingCallStarted(ctx: Context, number: String?, start: Date?)
-    protected abstract fun onOutgoingCallEnded(
-        ctx: Context,
-        number: String?,
-        start: Date?,
-        end: Date?
-    )
+    protected abstract fun onOutgoingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?)
 
     protected abstract fun onMissedCall(ctx: Context, number: String?, start: Date?)
 

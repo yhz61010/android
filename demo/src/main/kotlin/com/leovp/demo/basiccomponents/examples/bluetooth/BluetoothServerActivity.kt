@@ -41,13 +41,13 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
         private const val SERVER_NAME = "Leo_BLE_Server"
 
         // Service UUID
-        var SERVICE_UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
+        var serviceUuid = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
 
         // Characteristic UUID for reading
-        var CHARACTERISTIC_READ_UUID = UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb")
+        var characteristicReadUuid = UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb")
 
         // Characteristic UUID for writing
-        var CHARACTERISTIC_WRITE_UUID = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
+        var characteristicWriteUuid = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothServerBinding {
@@ -128,16 +128,16 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private fun addService() {
         val gattService =
-            BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+            BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         // Read only characteristic
         characteristicRead = BluetoothGattCharacteristic(
-            CHARACTERISTIC_READ_UUID,
+            characteristicReadUuid,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
         // Write only characteristic
         val characteristicWrite = BluetoothGattCharacteristic(
-            CHARACTERISTIC_WRITE_UUID,
+            characteristicWriteUuid,
             BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_READ
                 or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_WRITE or BluetoothGattCharacteristic.PERMISSION_READ
@@ -154,11 +154,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
         object : BluetoothGattServerCallback() {
             @SuppressLint("InlinedApi")
             @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-            override fun onConnectionStateChange(
-                device: BluetoothDevice,
-                status: Int,
-                newState: Int
-            ) {
+            override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
                 super.onConnectionStateChange(device, status, newState)
                 connectedDevice = device
                 var state = ""

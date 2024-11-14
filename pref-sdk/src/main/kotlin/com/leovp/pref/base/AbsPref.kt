@@ -78,8 +78,7 @@ abstract class AbsPref {
     /**
      * Get object
      */
-    inline fun <reified T> getObject(key: String): T? =
-        internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
     //    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject()
 
     /**
@@ -108,8 +107,7 @@ abstract class AbsPref {
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
      */
-    fun <T> getObject4Java(key: String): T? =
-        internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    fun <T> getObject4Java(key: String): T? = internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
 
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.

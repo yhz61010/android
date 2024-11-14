@@ -12,7 +12,8 @@ data class GlobalConfig(
     override var stickyEdge: StickyEdge = StickyEdge.NONE,
     override var edgeMargin: Int = DEFAULT_EDGE_MARGIN,
     override var dockEdge: DockEdge = DockEdge.NONE,
-    override var dockAnimDuration: Long = 200, // ms
+    // ms
+    override var dockAnimDuration: Long = 200,
     override var touchToleranceInPx: Int = TOUCH_TOLERANCE_IN_PX,
     override var enableAlphaAnimation: Boolean = ENABLE_ALPHA_ANIMATION,
     override var screenOrientation: Int = -1

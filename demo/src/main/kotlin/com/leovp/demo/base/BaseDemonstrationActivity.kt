@@ -11,8 +11,10 @@ import com.leovp.log.LogContext
  * Author: Michael Leo
  * Date: 20-6-17 上午11:14
  */
-abstract class BaseDemonstrationActivity<B : ViewBinding>
-(@LayoutRes layoutResId: Int = 0, init: (ActivityConfig.() -> Unit)? = null) : BaseActivity<B>(layoutResId, init) {
+abstract class BaseDemonstrationActivity<B : ViewBinding>(
+    @LayoutRes layoutResId: Int = 0,
+    init: (ActivityConfig.() -> Unit)? = null
+) : BaseActivity<B>(layoutResId, init) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")

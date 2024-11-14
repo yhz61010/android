@@ -12,10 +12,7 @@ import kotlinx.coroutines.async
  * Date: 2020/9/3 下午4:23
  */
 @DelicateCoroutinesApi
-suspend inline fun <R> withCancellableContext(
-    context: CoroutineContext,
-    crossinline block: CoroutineScope.() -> R
-): R {
+suspend inline fun <R> withCancellableContext(context: CoroutineContext, crossinline block: CoroutineScope.() -> R): R {
     val job = GlobalScope.async(context) {
         runCatching(block)
     }

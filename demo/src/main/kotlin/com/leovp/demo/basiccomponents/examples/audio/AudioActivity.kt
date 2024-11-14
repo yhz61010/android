@@ -87,7 +87,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 }
 
                 override fun onDenied(denied: MutableList<String>, never: Boolean) {
-                    toast("Deny record permission"); finish()
+                    toast("Deny record permission")
+                    finish()
                 }
             })
 
@@ -176,7 +177,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 AudioType.OPUS -> {
                     LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
                     runCatching {
-                        opusOs?.write(OpusFilePlayer.startCode.encodeToByteArray())
+                        opusOs?.write(OpusFilePlayer.START_CODE.encodeToByteArray())
                         opusOs?.write(data)
                     }.onFailure { it.printStackTrace() }
                 }

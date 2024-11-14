@@ -101,8 +101,7 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
         return "$name private talk: $content"
     }
 
-    override fun toString(): String =
-        "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
+    override fun toString(): String = "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
 }
 
 open class Person(name: String, sex: Char, age: Int) : Creature() {

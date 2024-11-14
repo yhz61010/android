@@ -36,7 +36,7 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
             // com.leovp.yuv_sdk.YuvUtil.i420ToNv21(rotateI420, height, width)
 
             // or Step 2.3
-            val rotateI420 = com.leovp.yuv.YuvUtil.rotateI420(i420Bytes, width, height, com.leovp.yuv.YuvUtil.Rotate_90)
+            val rotateI420 = com.leovp.yuv.YuvUtil.rotateI420(i420Bytes, width, height, com.leovp.yuv.YuvUtil.ROTATE_90)
             com.leovp.yuv.YuvUtil.i420ToNv12(rotateI420, height, width)
         } else {
             // Front lens
@@ -48,7 +48,8 @@ class EncoderStrategyYuv420Sp : IDataProcessStrategy {
                     YuvUtil.mirrorNv21(i420Bytes, width, height)
                     YuvUtil.rotateYUV420Degree270(i420Bytes, width, height)
                 }
-                else -> /* 270 */ YuvUtil.rotateYUVDegree270AndMirror(i420Bytes, width, height)
+                // 270
+                else -> YuvUtil.rotateYUVDegree270AndMirror(i420Bytes, width, height)
             }
         }
     }

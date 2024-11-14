@@ -74,7 +74,7 @@ object AudioCodecUtil {
         Each "section" is prefixed by a 64-bit ID and a 64-bit length.
 
         <https://developer.android.com/reference/android/media/MediaCodec#CSD>
-        */
+         */
         if (buffer.remaining() < 16) {
             LogContext.log.e(TAG, "Not enough data in OPUS config packet")
             return null

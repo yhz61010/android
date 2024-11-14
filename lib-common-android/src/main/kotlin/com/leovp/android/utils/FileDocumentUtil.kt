@@ -45,28 +45,18 @@ object FileDocumentUtil {
      * </provider>
      * ```
      */
-    fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(
-        context,
-        "${context.applicationContext.packageName}.fileprovider",
-        file
-    )
+    fun getFileUri(context: Context, file: File): Uri =
+        FileProvider.getUriForFile(context, "${context.applicationContext.packageName}.fileprovider", file)
 
     @SuppressLint("NewApi", "ObsoleteSdkInt")
-    fun getFileRealPath(
-        context: Context,
-        uri: Uri
-    ): String? {
-        return when {
-            // ExternalStorageProvider
+    fun getFileRealPath(context: Context, uri: Uri): String? {
+        return when { // ExternalStorageProvider
             isExternalStorageDocument(uri) -> {
                 val docId = DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":").toTypedArray()
-                //                val type = split[0]
+                val split = docId.split(":").toTypedArray() //                val type = split[0]
                 getPathFromExtSD(split).takeIf { it.isNotBlank() }
-            }
-            // DownloadsProvider
-            isDownloadsDocument(uri) -> getDownloadsDocumentRealPath(context, uri)
-            // MediaProvider
+            } // DownloadsProvider
+            isDownloadsDocument(uri) -> getDownloadsDocumentRealPath(context, uri) // MediaProvider
             isMediaDocument(uri) -> {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray()
@@ -78,30 +68,26 @@ object FileDocumentUtil {
                     "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 }
                 if (contentUri == null) return null
-                val selection = "_id=?"
-                // DocumentProvider
+                val selection = "_id=?" // DocumentProvider
                 val selectionArgs: Array<String> = arrayOf(split[1])
-                return getDataColumn(
-                    context,
-                    contentUri,
-                    selection,
-                    selectionArgs
-                )
+                return getDataColumn(context, contentUri, selection, selectionArgs)
             }
+
             isGoogleDriveUri(uri) -> {
                 getDriveFilePath(context, uri)
             }
+
             isWhatsAppFile(uri) -> {
                 getFilePathForWhatsApp(context, uri)
             }
+
             "content".equals(uri.scheme, ignoreCase = true) -> {
                 if (isGooglePhotosUri(uri)) {
                     uri.lastPathSegment
                 }
                 if (isGoogleDriveUri(uri)) {
                     getDriveFilePath(context, uri)
-                }
-                // return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                } // return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 // // return getFilePathFromURI(context,uri);
                 //     copyFileToInternalStorage(context,
                 //         uri,
@@ -111,9 +97,11 @@ object FileDocumentUtil {
                 // }
                 getDataColumn(context, uri, null, null)
             }
+
             "file".equals(uri.scheme, ignoreCase = true) -> {
                 uri.path
             }
+
             else -> null
         }
     }
@@ -122,17 +110,10 @@ object FileDocumentUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             var cursor: Cursor? = null
             try {
-                cursor = context.contentResolver.query(
-                    uri,
-                    arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
-                    null,
-                    null,
-                    null
-                )
+                cursor = context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
                 if (cursor != null && cursor.moveToFirst()) {
                     val fileName = cursor.getString(0)
-                    val path = Environment.getExternalStorageDirectory()
-                        .toString() + "/Download/" + fileName
+                    val path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
                     if (!TextUtils.isEmpty(path)) {
                         return path
                     }
@@ -151,15 +132,15 @@ object FileDocumentUtil {
                 )
                 for (contentUriPrefix in contentUriPrefixesToTry) {
                     return try {
-                        val contentUri =
-                            ContentUris.withAppendedId(
-                                Uri.parse(contentUriPrefix),
-                                java.lang.Long.valueOf(id)
-                            )
+                        val contentUri = ContentUris.withAppendedId(
+                            Uri.parse(contentUriPrefix),
+                            java.lang.Long.valueOf(id)
+                        )
                         getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
                         // In Android 8 and Android P the id is not a number
-                        uri.path!!.replaceFirst("^/document/raw:".toRegex(), "")
+                        uri.path!!
+                            .replaceFirst("^/document/raw:".toRegex(), "")
                             .replaceFirst("^raw:".toRegex(), "")
                     }
                 }
@@ -186,9 +167,11 @@ object FileDocumentUtil {
     fun resourceToUri(context: Context, resId: Int): Uri? {
         return Uri.parse(
             ContentResolver.SCHEME_ANDROID_RESOURCE +
-                "://" + context.resources.getResourcePackageName(resId) +
-                "/" + context.resources.getResourceTypeName(resId) +
-                "/" + context.resources.getResourceEntryName(resId)
+                "://" +
+                context.resources.getResourcePackageName(resId) +
+                "/" + context.resources.getResourceTypeName(
+                resId
+            ) + "/" + context.resources.getResourceEntryName(resId)
         )
     }
 
@@ -223,19 +206,19 @@ object FileDocumentUtil {
     }
 
     private fun getDriveFilePath(context: Context, uri: Uri): String {
-        context
-            .contentResolver
+        context.contentResolver
             .query(uri, null, null, null, null)?.use { cursor ->
+
                 /*
                  * Get the column indexes of the data in the Cursor,
                  * move to the first row in the Cursor, get the data,
                  * and display cursor.
                  */
+                // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                //            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
                 cursor.moveToFirst()
+                // val size = cursor.getLong(sizeIndex).toString()
                 val name = cursor.getString(nameIndex)
-                //            val size = cursor.getLong(sizeIndex).toString()
                 val file = File(context.cacheDir, name)
 
                 context.contentResolver.openInputStream(uri).use { inputStream ->
@@ -262,27 +245,26 @@ object FileDocumentUtil {
      * @param newDirName if you want to create a directory, you can set this variable
      * @return
      */
-    private fun copyFileToInternalStorage(
-        context: Context,
-        uri: Uri,
-        @Suppress("SameParameterValue") newDirName: String
-    ): String {
+    private fun copyFileToInternalStorage(context: Context, uri: Uri, @Suppress("SameParameterValue") newDirName: String,): String {
         context.contentResolver.query(
             uri,
             arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
             null,
             null,
             null
-        )?.use { cursor -> /*
+        )?.use { cursor ->
+
+            /*
              * Get the column indexes of the data in the Cursor,
              *     * move to the first row in the Cursor, get the data,
              *     * and display it.
-             * */
+             *
+             */
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            //            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
             cursor.moveToFirst()
+            // val size = cursor.getLong(sizeIndex).toString()
             val name = cursor.getString(nameIndex)
-            //            val size = cursor.getLong(sizeIndex).toString()
             val output: File = if (newDirName != "") {
                 val dir = File(context.filesDir.toString() + "/" + newDirName)
                 if (!dir.exists()) {
@@ -353,13 +335,9 @@ object FileDocumentUtil {
             "com.google.android.apps.docs.storage.legacy" == uri.authority
     }
 
-    private fun getDataColumn(
-        context: Context,
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<String>?
-    ): String? {
-        // MediaStore.Images.Media.DATA // MediaStore.Images.Media._ID
+    private fun getDataColumn(context: Context, uri: Uri, selection: String?, selectionArgs: Array<String>?): String? {
+        // MediaStore.Images.Media.DATA
+        // MediaStore.Images.Media._ID
         val column = MediaStore.Images.Media.DATA
         val projection = arrayOf(column)
         context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use {

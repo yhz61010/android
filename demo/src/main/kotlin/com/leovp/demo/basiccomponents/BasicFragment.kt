@@ -70,11 +70,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
 
     override fun getTagName() = ITAG
 
-    override fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): FragmentBasicBinding {
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentBasicBinding {
         return FragmentBasicBinding.inflate(inflater, container, false)
     }
 

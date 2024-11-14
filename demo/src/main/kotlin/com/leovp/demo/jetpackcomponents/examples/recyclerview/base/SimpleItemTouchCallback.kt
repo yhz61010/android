@@ -20,7 +20,8 @@ import com.leovp.log.base.ITAG
 
 abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.SimpleCallback(
     ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-    ItemTouchHelper.LEFT/* or ItemTouchHelper.UP or ItemTouchHelper.DOWN*/
+    // or ItemTouchHelper.UP or ItemTouchHelper.DOWN
+    ItemTouchHelper.LEFT
 ) {
     private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_outline_delete_forever)!!
     private val intrinsicWidth = deleteIcon.intrinsicWidth
@@ -49,11 +50,7 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
         }
     }
 
-    override fun onMove(
-        recyclerView: RecyclerView,
-        viewHolder: RecyclerView.ViewHolder,
-        target: RecyclerView.ViewHolder
-    ): Boolean {
+    override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
@@ -71,7 +68,7 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
         dX: Float,
         dY: Float,
         actionState: Int,
-        isCurrentlyActive: Boolean
+        isCurrentlyActive: Boolean,
     ) {
         if (actionState != ItemTouchHelper.ACTION_STATE_SWIPE) {
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)

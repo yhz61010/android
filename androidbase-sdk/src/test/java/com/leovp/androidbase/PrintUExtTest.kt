@@ -18,18 +18,18 @@ class PrintUExtTest {
 
     @Test
     fun testTreePrint() {
-        val level3_1 = TreeElement("level3_1", null)
-        val level3_2 = TreeElement("level3_2", null)
-        val level3_3 = TreeElement("level3_1", null)
-        val level3 = arrayListOf(level3_1, level3_2, level3_3)
+        val level3Sub1 = TreeElement("level3_1", null)
+        val level3Sub2 = TreeElement("level3_2", null)
+        val level3Sub3 = TreeElement("level3_1", null)
+        val level3 = arrayListOf(level3Sub1, level3Sub2, level3Sub3)
 
-        val level2_1 = TreeElement("level2_1", level3)
-        val level2_2 = TreeElement("level2_2", level3)
-        val level2 = arrayListOf(level2_1, level2_2)
+        val level2Sub1 = TreeElement("level2_1", level3)
+        val level2Sub2 = TreeElement("level2_2", level3)
+        val level2 = arrayListOf(level2Sub1, level2Sub2)
 
-        val level1_1 = TreeElement("level1_1", level2)
-        val level1_2 = TreeElement("level1_2", level2)
-        val level1 = arrayListOf(level1_1, level1_2)
+        val level1Sub1 = TreeElement("level1_1", level2)
+        val level1Sub2 = TreeElement("level1_2", level2)
+        val level1 = arrayListOf(level1Sub1, level1Sub2)
 
         val root = TreeElement("root", level1)
 

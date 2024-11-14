@@ -212,7 +212,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
             null,
             false,
             DefaultHttpHeaders(),
-            1024 * 1024 /*5 * 65536*/
+            // 5 * 65536
+            1024 * 1024
         )
         channelPromise = ctx.newPromise()
         handshaker?.handshake(ctx.channel())

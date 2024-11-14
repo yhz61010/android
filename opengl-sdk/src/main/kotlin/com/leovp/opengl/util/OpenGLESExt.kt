@@ -32,14 +32,22 @@ fun textureYUV(imageData: ByteBuffer, width: Int, height: Int, texture: Int) {
     // 获得纹理对象后，其每个像素的 r,g,b,a 值都为相同，为加载图像的像素亮度，在这里就是YUV某一平面的分量值
     GLES20.glTexImage2D(
         GLES20.GL_TEXTURE_2D,
-        0, // 指定要 Mipmap 的等级
-        GLES20.GL_LUMINANCE, // GPU 内部格式，告诉 OpenGL 内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
-        width, // 加载的纹理宽度。最好为2的次幂
-        height, // 加载的纹理高度。最好为2的次幂
-        0, // 纹理边框
-        GLES20.GL_LUMINANCE, // 数据的像素格式 亮度，灰度图
-        GLES20.GL_UNSIGNED_BYTE, // 一个像素点存储的数据类型
-        imageData // 纹理的数据
+        // 指定要 Mipmap 的等级
+        0,
+        // GPU 内部格式，告诉 OpenGL 内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
+        GLES20.GL_LUMINANCE,
+        // 加载的纹理宽度。最好为2的次幂
+        width,
+        // 加载的纹理高度。最好为2的次幂
+        height,
+        // 纹理边框
+        0,
+        // 数据的像素格式 亮度，灰度图
+        GLES20.GL_LUMINANCE,
+        // 一个像素点存储的数据类型
+        GLES20.GL_UNSIGNED_BYTE,
+        // 纹理的数据
+        imageData
     )
 }
 
@@ -58,14 +66,22 @@ fun textureNV12(imageData: ByteBuffer, width: Int, height: Int, texture: Int) {
     GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
     GLES20.glTexImage2D(
         GLES20.GL_TEXTURE_2D,
-        0, // 指定要 Mipmap 的等级
-        GLES20.GL_LUMINANCE_ALPHA, // GPU 内部格式，告诉OpenGL内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
-        width, // 加载的纹理宽度。最好为2的次幂
-        height, // 加载的纹理高度。最好为2的次幂
-        0, // 纹理边框
-        GLES20.GL_LUMINANCE_ALPHA, // 数据的像素格式 亮度，灰度图
-        GLES20.GL_UNSIGNED_BYTE, // 一个像素点存储的数据类型
-        imageData // 纹理的数据
+        // 指定要 Mipmap 的等级
+        0,
+        // GPU 内部格式，告诉OpenGL内部用什么格式存储和使用这个纹理数据。亮度，灰度图（这里就是只取一个亮度的颜色通道的意思，因这里只取yuv其中一个分量）
+        GLES20.GL_LUMINANCE_ALPHA,
+        // 加载的纹理宽度。最好为2的次幂
+        width,
+        // 加载的纹理高度。最好为2的次幂
+        height,
+        // 纹理边框
+        0,
+        // 数据的像素格式 亮度，灰度图
+        GLES20.GL_LUMINANCE_ALPHA,
+        // 一个像素点存储的数据类型
+        GLES20.GL_UNSIGNED_BYTE,
+        // 纹理的数据
+        imageData
     )
 }
 

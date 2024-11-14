@@ -49,11 +49,7 @@ fun Bitmap.toBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmapFromBytes(
-    width: Int,
-    height: Int,
-    config: Bitmap.Config = Bitmap.Config.ARGB_8888
-): Bitmap? {
+fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     return runCatching {
         Bitmap.createBitmap(width, height, config).also {
             it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
@@ -99,11 +95,7 @@ fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap 
  * Using this method will only reduce the bitmap file size NOT the bitmap size loaded in memory.
  * It's better to release the source bitmap by calling Bitmap.recycle() after calling this method.
  */
-fun Bitmap.compressBitmap(
-    quality: Int = 100,
-    sampleSize: Int = 1,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
-): Bitmap {
+fun Bitmap.compressBitmap(quality: Int = 100, sampleSize: Int = 1, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG): Bitmap {
     val compressedBmpOS = ByteArrayOutputStream()
     this.compress(imgType, quality, compressedBmpOS)
     val opt = BitmapFactory.Options()
@@ -119,11 +111,7 @@ fun Bitmap.compressBitmap(
 /**
  * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
  */
-fun Bitmap.writeToFile(
-    outputFile: File,
-    quality: Int = 100,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
-) {
+fun Bitmap.writeToFile(outputFile: File, quality: Int = 100, imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG) {
     val outputStream = FileOutputStream(outputFile)
     outputStream.use {
         this.compress(imgType, quality, outputStream)
@@ -131,8 +119,7 @@ fun Bitmap.writeToFile(
     }
 }
 
-fun File?.getBitmap(): Bitmap? =
-    if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
+fun File?.getBitmap(): Bitmap? = if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
 
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
@@ -161,12 +148,7 @@ fun Bitmap.flipVertical(x: Float = width / 2f, y: Float = height / 2f): Bitmap {
  * @param x The center x position of image.
  * @param y The center y position of image.
  */
-fun Bitmap.flip(
-    horizontal: Boolean,
-    vertical: Boolean,
-    x: Float = width / 2f,
-    y: Float = height / 2f
-): Bitmap {
+fun Bitmap.flip(horizontal: Boolean, vertical: Boolean, x: Float = width / 2f, y: Float = height / 2f): Bitmap {
     val matrix = Matrix().apply {
         postScale(if (horizontal) -1f else 1f, if (vertical) -1f else 1f, x, y)
     }
@@ -179,13 +161,7 @@ fun Bitmap.flip(
  * @param x The center x position of image.
  * @param y The center y position of image.
  */
-fun Bitmap.flipRotate(
-    horizontal: Boolean,
-    vertical: Boolean,
-    degrees: Float,
-    x: Float = width / 2f,
-    y: Float = height / 2f
-): Bitmap {
+fun Bitmap.flipRotate(horizontal: Boolean, vertical: Boolean, degrees: Float, x: Float = width / 2f, y: Float = height / 2f): Bitmap {
     val matrix = Matrix().apply {
         postScale(
             if (horizontal) -1f else 1f,

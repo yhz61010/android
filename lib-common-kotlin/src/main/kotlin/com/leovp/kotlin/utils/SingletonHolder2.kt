@@ -30,6 +30,8 @@ open class SingletonHolder2<out T, in A, in B>(creator: (A, B) -> T) {
     private var instance: T? = null
 
     fun getInstance(arg1: A, arg2: B): T = instance ?: synchronized(this) {
-        val inst = instance ?: creator!!(arg1, arg2).also { instance = it }; creator = null; inst
+        val inst = instance ?: creator!!(arg1, arg2).also { instance = it }
+        creator = null
+        inst
     }
 }

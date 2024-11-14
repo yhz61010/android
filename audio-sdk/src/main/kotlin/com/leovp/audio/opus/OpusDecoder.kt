@@ -31,7 +31,7 @@ class OpusDecoder(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,
     channelCount = channelCount,
-    audioFormat = audioFormat,
+    audioFormat = audioFormat
 ) {
     companion object {
         private const val TAG = "OpusDe"

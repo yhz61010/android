@@ -71,7 +71,8 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
         binding.navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
-            .permission(Permission.MANAGE_EXTERNAL_STORAGE,
+            .permission(
+                Permission.MANAGE_EXTERNAL_STORAGE,
                 Permission.CAMERA,
                 Permission.RECORD_AUDIO,
                 Permission.ACCESS_FINE_LOCATION,
@@ -79,7 +80,8 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
                 Permission.SYSTEM_ALERT_WINDOW,
                 Permission.BLUETOOTH_ADVERTISE,
                 Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN)
+                Permission.BLUETOOTH_SCAN
+            )
             .request(object : OnPermissionCallback {
                 override fun onGranted(granted: MutableList<String>, all: Boolean) {
                 }
@@ -88,8 +90,10 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
                 }
             })
 
-        LogContext.log.i("real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
-            "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight")
+        LogContext.log.i(
+            "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
+            "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
+        )
 
         LogContext.log.i(ITAG, "===================================")
         val info = getPackageInfo()

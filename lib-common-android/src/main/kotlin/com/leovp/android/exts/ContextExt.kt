@@ -95,10 +95,7 @@ fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): Packa
 /**
  * @param algorithm "SHA", "SHA-1", "SHA-256", "MD5" and etc. Default value is "SHA2-56"
  */
-fun Context.getApplicationSignatures(
-    pkgName: String = packageName,
-    algorithm: String = "SHA-256"
-): List<ByteArray> {
+fun Context.getApplicationSignatures(pkgName: String = packageName, algorithm: String = "SHA-256"): List<ByteArray> {
     return runCatching {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // New signature
@@ -144,8 +141,7 @@ val Context.isPortrait get() = this.resources.configuration.orientation == Confi
 val Context.isLandscape get() = this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
 // val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
-fun Context.sharedPrefs(name: String): SharedPreferences =
-    this.getSharedPreferences(name, Activity.MODE_PRIVATE)
+fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, Activity.MODE_PRIVATE)
 
 val Context.accessibilityManager get() = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 val Context.accountManager get() = getSystemService(Context.ACCOUNT_SERVICE) as AccountManager

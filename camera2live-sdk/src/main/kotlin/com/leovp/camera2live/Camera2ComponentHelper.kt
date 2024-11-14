@@ -177,14 +177,7 @@ class Camera2ComponentHelper(
         encodeListener = listener
     }
 
-    private fun initCameraEncoder(
-        width: Int,
-        height: Int,
-        bitrate: Int,
-        frameRate: Int,
-        iFrameInterval: Int,
-        bitrateMode: Int,
-    ) {
+    private fun initCameraEncoder(width: Int, height: Int, bitrate: Int, frameRate: Int, iFrameInterval: Int, bitrateMode: Int,) {
         cameraEncoder =
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
@@ -463,7 +456,8 @@ class Camera2ComponentHelper(
         imageReader = ImageReader.newInstance(
             selectedSizeFromCamera.width,
             selectedSizeFromCamera.height,
-            ImageFormat.YUV_420_888 /*ImageFormat.JPEG*/,
+            /*ImageFormat.JPEG*/
+            ImageFormat.YUV_420_888,
             IMAGE_BUFFER_SIZE
         )
     }
@@ -528,8 +522,7 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    fun initializeCamera(previewWidth: Int, previewHeight: Int) =
-        context.lifecycleScope.launch(Dispatchers.Main) {
+    fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
             LogContext.log.i(
                 TAG,
                 "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
@@ -558,11 +551,8 @@ class Camera2ComponentHelper(
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    private suspend fun openCamera(
-        manager: CameraManager,
-        cameraId: String,
-        handler: Handler? = null,
-    ): CameraDevice = suspendCancellableCoroutine { cont ->
+    private suspend fun openCamera(manager: CameraManager, cameraId: String, handler: Handler? = null,): CameraDevice =
+        suspendCancellableCoroutine { cont ->
         manager.openCamera(
             cameraId,
             object : CameraDevice.StateCallback() {
@@ -843,22 +833,13 @@ class Camera2ComponentHelper(
         session.capture(
             captureRequest.build(),
             object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    timestamp: Long,
-                    frameNumber: Long,
-                ) {
+                override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long,) {
                     super.onCaptureStarted(session, request, timestamp, frameNumber)
                     cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
                         ?.post(animationTask)
                 }
 
-                override fun onCaptureCompleted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    result: TotalCaptureResult,
-                ) {
+                override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult,) {
                     super.onCaptureCompleted(session, request, result)
                     val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
                     LogContext.log.d(TAG, "Capture result received: $resultTimestamp")

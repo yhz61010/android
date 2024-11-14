@@ -206,7 +206,7 @@ object ShellUtil {
                 /*
                 Samsung 9350: /dev/block/dm-0 on /system type ext4 (ro,seclabel,relatime,norecovery)
                 Nexus 6(root): /dev/block/mmcblk0p41 on /system type ext4 (ro,seclabel,relatime,data=ordered)
-                */
+                 */
                 val params = line!!.split(" ".toRegex()).toTypedArray()
                 // cmd:
                 // mount -o rw,remount /system

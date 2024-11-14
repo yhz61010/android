@@ -106,18 +106,25 @@ object SslUtils {
     val customVerifier = HostnameVerifier { hostname, _ ->
         requireNotNull(hostnames) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
         hostnames!!.contains(hostname)
-        //        else {
-        //            val hv = HttpsURLConnection.getDefaultHostnameVerifier()
-        //            hv.verify(this.hostname, session)
-        //        }
+        // else {
+        //     val hv = HttpsURLConnection.getDefaultHostnameVerifier()
+        //     hv.verify(this.hostname, session)
+        // }
     }
 
-    fun createSocketFactory(protocol: String, km: Array<KeyManager>? = null, tm: Array<TrustManager>? = null): SSLSocketFactory =
-        SSLContext.getInstance(protocol).apply { init(km, tm/*trustAllCerts*/, SecureRandom()) }.socketFactory
+    fun createSocketFactory(protocol: String, km: Array<KeyManager>? = null, tm: Array<TrustManager>? = null,): SSLSocketFactory =
+        SSLContext.getInstance(protocol).apply {
+            init(
+                km,
+                // trustAllCerts
+                tm,
+                SecureRandom()
+            )
+        }.socketFactory
 
     fun systemDefaultTrustManager(): X509TrustManager {
         return runCatching {
-            val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
             trustManagerFactory.init(null as KeyStore?)
             val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
             check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
@@ -138,18 +145,27 @@ object SslUtils {
             val trustMgrFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
                 init(keyStore)
             }
+
             //        val kmf: KeyManagerFactory = KeyManagerFactory.getInstance("X509")
             //        kmf.init(keyStore, null)
             // "TLSv1.1", "TLSv1.2", "TLSv1.3", "DTLSv1.2" or "DTLSv1.3"
             // It's better not to use "TLS"
             // For okhttp library:
-            //            val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-            //                .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
-            //                .build()
+            // val spec: ConnectionSpec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+            //     .tlsVersions(TlsVersion.TLS_1_2)  // Compliant
+            //     .build()
             val sslContext = SSLContext.getInstance(PROTOCOL)
-            sslContext.init(null/*kmf.keyManagers*/, trustMgrFactory.trustManagers, SecureRandom())
+            sslContext.init(
+                // kmf.keyManagers
+                null,
+                trustMgrFactory.trustManagers,
+                SecureRandom()
+            )
 
-            Pair<SSLContext, X509TrustManager>(sslContext, trustMgrFactory.trustManagers[0] as X509TrustManager)
+            Pair<SSLContext, X509TrustManager>(
+                sslContext,
+                trustMgrFactory.trustManagers[0] as X509TrustManager
+            )
         }.getOrThrow()
     }
 }

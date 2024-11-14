@@ -156,7 +156,7 @@ class OpusEncoder(
     sampleRate = sampleRate,
     channelCount = channelCount,
     audioFormat = audioFormat,
-    isEncoding = true,
+    isEncoding = true
 ) {
     companion object {
         private const val TAG = "OpusEn"

@@ -26,8 +26,10 @@ class AudioTrackPlayer(
     ctx: Context,
     audioDecoderInfo: AudioDecoderInfo,
     mode: Int = MODE_STREAM,
-    usage: Int = AudioAttributes.USAGE_MEDIA, // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC, // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+    usage: Int = AudioAttributes.USAGE_MEDIA,
+    // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
     minPlayBufferSizeRatio: Int = 1
 ) {
     companion object {

@@ -46,7 +46,10 @@ class FingerPaintView @JvmOverloads constructor(
     }
 
     private enum class BrushType {
-        BLUR, /*EMBOSS,*/ NORMAL
+        BLUR,
+
+        /*EMBOSS,*/
+        NORMAL
     }
 
     var touchEventCallback: TouchEventCallback? = null

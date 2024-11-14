@@ -16,17 +16,43 @@ import com.leovp.circleprogressbar.base.State
 class CancelState(view: View) : State(view) {
     override fun status(): Type = Type.STATE_CANCEL
 
-    override fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?) {
+    override fun setAttributes(
+        context: Context,
+        attrs: AttributeSet?,
+        attr: TypedArray?,
+        @ColorInt defColor: Int,
+        defDrawable: Drawable?,
+    ) {
         if (attrs != null && attr != null) {
-            val iconResId = attr.getResourceId(R.styleable.CircleProgressbar_cancelIconDrawable, R.drawable.ic_default_cancel)
+            val iconResId = attr.getResourceId(
+                R.styleable.CircleProgressbar_cancelIconDrawable,
+                R.drawable.ic_default_cancel
+            )
             internalIcon = context.getDrawable(iconResId)!!
-            iconTint = attr.getColor(R.styleable.CircleProgressbar_cancelIconTintColor, DEF_ICON_TINT)
-            width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_cancelIconWidth, getIcon().minimumWidth)
-            height = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_cancelIconHeight, getIcon().minimumHeight)
+            iconTint = attr.getColor(
+                R.styleable.CircleProgressbar_cancelIconTintColor,
+                DEF_ICON_TINT
+            )
+            width = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_cancelIconWidth,
+                getIcon().minimumWidth
+            )
+            height = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_cancelIconHeight,
+                getIcon().minimumHeight
+            )
 
-            val backgroundResId = attr.getResourceId(R.styleable.CircleProgressbar_cancelBackgroundDrawable, -1)
-            backgroundDrawable = if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
-            backgroundColor = attr.getColor(R.styleable.CircleProgressbar_cancelBackgroundColor, defColor)
+            val backgroundResId = attr.getResourceId(
+                R.styleable.CircleProgressbar_cancelBackgroundDrawable,
+                -1
+            )
+
+            backgroundDrawable =
+                if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
+            backgroundColor = attr.getColor(
+                R.styleable.CircleProgressbar_cancelBackgroundColor,
+                defColor
+            )
         } else {
             internalIcon = context.getDrawable(R.drawable.ic_default_cancel)!!
             width = getIcon().minimumWidth

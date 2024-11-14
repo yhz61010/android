@@ -64,7 +64,9 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
 
     fun rotateBitmap180() = bitmapByteBuffer?.let { rotateBitmap180(it) }
 
-    fun cropBitmap(left: Int, top: Int, right: Int, bottom: Int) = bitmapByteBuffer?.let { cropBitmap(it, left, top, right, bottom) }
+    fun cropBitmap(left: Int, top: Int, right: Int, bottom: Int) = bitmapByteBuffer?.let {
+        cropBitmap(it, left, top, right, bottom)
+    }
 
     val bitmap: Bitmap? get() = bitmapByteBuffer?.let { getBitmapFromSavedBitmapData(it) }
     fun getBitmapAndFree(): Bitmap? {

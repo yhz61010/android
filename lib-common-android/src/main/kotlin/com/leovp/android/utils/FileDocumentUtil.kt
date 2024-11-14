@@ -110,7 +110,10 @@ object FileDocumentUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             var cursor: Cursor? = null
             try {
-                cursor = context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+                cursor = context.contentResolver.query(
+                    uri,
+                    arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null
+                )
                 if (cursor != null && cursor.moveToFirst()) {
                     val fileName = cursor.getString(0)
                     val path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
@@ -245,7 +248,11 @@ object FileDocumentUtil {
      * @param newDirName if you want to create a directory, you can set this variable
      * @return
      */
-    private fun copyFileToInternalStorage(context: Context, uri: Uri, @Suppress("SameParameterValue") newDirName: String,): String {
+    private fun copyFileToInternalStorage(
+        context: Context,
+        uri: Uri,
+        @Suppress("SameParameterValue") newDirName: String,
+    ): String {
         context.contentResolver.query(
             uri,
             arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),

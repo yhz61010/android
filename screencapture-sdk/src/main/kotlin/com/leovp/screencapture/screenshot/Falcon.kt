@@ -68,7 +68,10 @@ object Falcon {
      * @param activity WeakReference<Activity> of which the screenshot will be taken.
      * @return Bitmap of what is displayed in activity.
      */
-    fun takeScreenshotBitmap(activity: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
+    fun takeScreenshotBitmap(
+        activity: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888,
+    ): Bitmap? {
         return try {
             takeBitmapUnchecked(activity, config)
         } catch (e: Exception) {
@@ -82,7 +85,10 @@ object Falcon {
     //endregion
     //region Methods
     @Throws(InterruptedException::class)
-    private fun takeBitmapUnchecked(weakAct: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
+    private fun takeBitmapUnchecked(
+        weakAct: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888,
+    ): Bitmap {
         val viewRoots = getRootViews(weakAct)
         if (viewRoots.isEmpty()) {
             throw UnableToTakeScreenshotException("Unable to capture any view data in $weakAct")
@@ -109,7 +115,11 @@ object Falcon {
     }
 
     @Throws(InterruptedException::class)
-    private fun drawRootsToBitmapOtherThread(weakAct: WeakReference<Activity>, viewRoots: List<ViewRootData>, bitmap: Bitmap) {
+    private fun drawRootsToBitmapOtherThread(
+        weakAct: WeakReference<Activity>,
+        viewRoots: List<ViewRootData>,
+        bitmap: Bitmap,
+    ) {
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
@@ -130,7 +140,9 @@ object Falcon {
 
     private fun drawRootToBitmap(config: ViewRootData, bitmap: Bitmap) {
         // now only dim supported
-        if (config.layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND == WindowManager.LayoutParams.FLAG_DIM_BEHIND) {
+        if (config.layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            == WindowManager.LayoutParams.FLAG_DIM_BEHIND
+        ) {
             val dimCanvas = Canvas(bitmap)
             val alpha = (255 * config.layoutParams.dimAmount).toInt()
             dimCanvas.drawARGB(alpha, 0, 0, 0)
@@ -167,11 +179,10 @@ object Falcon {
         }
         val rootObjects = getFieldValue("mRoots", globalWindowManager)
         val paramsObject = getFieldValue("mParams", globalWindowManager)
-        val roots: Array<Any>
         val params: Array<WindowManager.LayoutParams>
 
         //  There was a change to ArrayList implementation in 4.4
-        roots = (rootObjects as List<Any>).toTypedArray()
+        val roots: Array<Any> = (rootObjects as List<Any>).toTypedArray()
         val paramsList = paramsObject as List<WindowManager.LayoutParams>
         params = paramsList.toTypedArray()
 
@@ -269,12 +280,13 @@ object Falcon {
         var currentClass: Class<*>? = clazz
         while (currentClass != Any::class.java) {
             runCatching {
-                for (field in currentClass!!.declaredFields) {
+                val refCurrentClass: Class<*> = currentClass!!
+                for (field in refCurrentClass.declaredFields) {
                     if (name == field.name) {
                         return field
                     }
                 }
-                currentClass = currentClass!!.superclass
+                currentClass = refCurrentClass.superclass
             }.onFailure { return null }
         }
         LogContext.log.e(TAG, "Field $name not found for class $clazz")
@@ -311,7 +323,11 @@ object Falcon {
         }
     }
 
-    class ViewRootData(val view: View, val winFrame: Rect, val layoutParams: WindowManager.LayoutParams) {
+    class ViewRootData(
+        val view: View,
+        val winFrame: Rect,
+        val layoutParams: WindowManager.LayoutParams,
+    ) {
         val isDialogType: Boolean
             get() = layoutParams.type == WindowManager.LayoutParams.TYPE_APPLICATION
 

@@ -37,7 +37,8 @@ object MD5Util {
         }.getOrDefault("")
     }
 
-    fun checkMd5(md5: String, targetFile: File, bufferSize: Int = 256 shl 10) = calculateFileMd5(targetFile, bufferSize).let {
+    fun checkMd5(md5: String, targetFile: File, bufferSize: Int = 256 shl 10) =
+        calculateFileMd5(targetFile, bufferSize).let {
         if (TextUtils.isEmpty(it)) false else it.equals(md5, ignoreCase = true)
     }
 

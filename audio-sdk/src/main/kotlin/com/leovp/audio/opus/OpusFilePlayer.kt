@@ -36,7 +36,7 @@ class OpusFilePlayer(
     // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
     usage: Int = AudioAttributes.USAGE_MEDIA,
     // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
 ) {
     companion object {
         private const val TAG = "OpusFilePlayer"
@@ -48,7 +48,8 @@ class OpusFilePlayer(
     private val startCodeSize = START_CODE.length
     private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("opus-file-player"))
 
-    private val audioTrackPlayer: AudioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, usage = usage, contentType = contentType)
+    private val audioTrackPlayer: AudioTrackPlayer =
+        AudioTrackPlayer(ctx, audioDecoderInfo, usage = usage, contentType = contentType)
     private var decoder: OpusDecoder? = null
 
     // private var cb: (() -> Unit)? = null
@@ -124,7 +125,8 @@ class OpusFilePlayer(
                     }
                     LogContext.log.e(
                         TAG,
-                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged maxFrameSize=$maxFrameSize frame=$frame"
+                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged " +
+                            "maxFrameSize=$maxFrameSize frame=$frame"
                     )
                     delay(delayMs)
                 } catch (e: EOFException) {

@@ -50,7 +50,11 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
         }
     }
 
-    override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+    override fun onMove(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+    ): Boolean {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
             // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1

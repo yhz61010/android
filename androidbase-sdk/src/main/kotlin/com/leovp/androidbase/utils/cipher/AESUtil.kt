@@ -338,11 +338,13 @@ object AESUtil {
     // ==============================================================
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun generateKeyBySHA512(): SecretKey = PBKDF2Util.generateKeyWithSHA512(SystemClock.elapsedRealtimeNanos().toString())
+    fun generateKeyBySHA512(): SecretKey =
+        PBKDF2Util.generateKeyWithSHA512(SystemClock.elapsedRealtimeNanos().toString())
 
     fun generateKeyBySHA1(): SecretKey = PBKDF2Util.generateKeyWithSHA1(SystemClock.elapsedRealtimeNanos().toString())
 
-    fun generateKey(): SecretKey = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) generateKeyBySHA512() else generateKeyBySHA1()
+    fun generateKey(): SecretKey =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) generateKeyBySHA512() else generateKeyBySHA1()
 
     // ==============================================================
 

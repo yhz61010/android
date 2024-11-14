@@ -90,20 +90,30 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                         vpsSpsPpsBytes = encodedBytes.copyOf()
                         //                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
                     }
+
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
                         //                        LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                     }
+
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                         // Do nothing
                     }
+
                     MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                         // Do nothing
                     }
+
                     else -> {
                         // Do nothing
                     }
                 }
-                screenshotHandler.post { builder.screenDataListener.onDataUpdate(encodedBytes, info.flags, info.presentationTimeUs) }
+                screenshotHandler.post {
+                    builder.screenDataListener.onDataUpdate(
+                        encodedBytes,
+                        info.flags,
+                        info.presentationTimeUs
+                    )
+                }
             }
             codec.releaseOutputBuffer(outputBufferId, false)
         }
@@ -124,7 +134,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         val width: Int,
         val height: Int,
         val dpi: Int,
-        val screenDataListener: ScreenDataListener
+        val screenDataListener: ScreenDataListener,
     ) {
         var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
             private set
@@ -145,7 +155,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         var iFrameInterval = 1
             private set
 
-        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) = apply { this.encodeType = encodeType }
+        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
+            apply { this.encodeType = encodeType }
+
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setQuality(quality: Int) = apply { this.quality = quality }
         fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
@@ -155,7 +167,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         fun build(): Screenshot2H26xStrategy {
-            LogContext.log.w(TAG, "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize")
+            LogContext.log.w(
+                TAG,
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize"
+            )
             return Screenshot2H26xStrategy(this)
         }
     }

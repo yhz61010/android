@@ -79,7 +79,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var videoOutFile: File? = null
     private var videoOutUri: Uri? = null
 
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentVideoBinding {
+    override fun getViewBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): FragmentVideoBinding {
         val rootBinding = FragmentVideoBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
         incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
@@ -218,7 +222,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             )
         LogContext.log.w(
             logTag,
-            "cameraSelector=${if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"} Selected quality=$selectedQuality"
+            "cameraSelector=${
+                if (lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA) {
+                    "Front"
+                } else {
+                    "Back"
+                }
+            } Selected quality=$selectedQuality"
         )
 
         incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
@@ -421,7 +431,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         val hasGrid = prefs.getBoolean(KEY_GRID, false)
         binding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
-        binding.btnMicrophone.setImageResource(if (audioEnabled) R.drawable.ic_microphone_on else R.drawable.ic_microphone_off)
+        binding.btnMicrophone.setImageResource(
+            if (audioEnabled) {
+            R.drawable.ic_microphone_on
+        } else {
+            R.drawable.ic_microphone_off
+        }
+        )
         binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }
         binding.btnFlash.setOnClickListener { toggleFlash() }
 
@@ -495,19 +511,19 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     /** Turns on or off the flashlight */
     private fun toggleFlash() = binding.btnFlash.toggleButton(
-            flag = flashMode == ImageCapture.FLASH_MODE_ON,
-            rotationAngle = 360f,
-            firstIcon = R.drawable.ic_flash_off,
-            secondIcon = R.drawable.ic_flash_on
-        ) { flag ->
-            LogContext.log.w(
-                logTag,
-                "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash"
-            )
-            torchEnabled = flag
-            flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
-            camera?.cameraControl?.enableTorch(flag)
-        }
+        flag = flashMode == ImageCapture.FLASH_MODE_ON,
+        rotationAngle = 360f,
+        firstIcon = R.drawable.ic_flash_off,
+        secondIcon = R.drawable.ic_flash_on
+    ) { flag ->
+        LogContext.log.w(
+            logTag,
+            "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash"
+        )
+        torchEnabled = flag
+        flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+        camera?.cameraControl?.enableTorch(flag)
+    }
 
     private fun showResolutionLayer() = binding.llResolution.circularReveal(binding.btnResolution)
 
@@ -577,18 +593,22 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                 binding.tvRecTime.text =
                     getString(R.string.record_default_time, s / 3600, (s % 3600) / 60, s % 60)
             }
+
             is VideoRecordEvent.Start -> {
                 soundManager.playCameraStartSound()
                 showUI(RecordUiState.RECORDING, event.getNameString())
             }
+
             is VideoRecordEvent.Finalize -> {
                 soundManager.playCameraStopSound()
                 showUI(RecordUiState.FINALIZED, event.getNameString())
             }
+
             is VideoRecordEvent.Pause -> {
                 binding.icRedDot.clearAnimation()
                 binding.btnSwitchCamera.setImageResource(R.drawable.ic_resume)
             }
+
             is VideoRecordEvent.Resume -> {
                 binding.icRedDot.startAnimation(blinkAnim)
                 binding.btnSwitchCamera.setImageResource(R.drawable.ic_pause)
@@ -646,6 +666,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.btnGallery.setImageResource(R.drawable.ic_photo)
                     resetSwitchCameraIcon()
                 }
+
                 RecordUiState.RECORDING -> {
                     it.tvRecTime.text = getString(R.string.record_default_time, 0, 0, 0)
                     it.llRecLayer.visibility = View.VISIBLE
@@ -660,6 +681,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     it.btnRatio.visibility = View.GONE
                     it.btnMicrophone.visibility = View.GONE
                 }
+
                 RecordUiState.FINALIZED -> {
                     it.llRecLayer.visibility = View.GONE
                     it.btnGallery.visibility = View.VISIBLE

@@ -21,7 +21,11 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentForNavFirstBinding {
+    override fun getViewBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): FragmentForNavFirstBinding {
         return FragmentForNavFirstBinding.inflate(inflater, container, false)
     }
 

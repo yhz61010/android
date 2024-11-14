@@ -16,7 +16,13 @@ import com.leovp.circleprogressbar.base.State
 class IdleState(view: View) : State(view) {
     override fun status(): Type = Type.STATE_IDLE
 
-    override fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?) {
+    override fun setAttributes(
+        context: Context,
+        attrs: AttributeSet?,
+        attr: TypedArray?,
+        @ColorInt defColor: Int,
+        defDrawable: Drawable?
+    ) {
         if (attrs != null && attr != null) {
             val iconResId = attr.getResourceId(R.styleable.CircleProgressbar_idleIconDrawable, R.drawable.ic_default_idle)
             internalIcon = context.getDrawable(iconResId)!!

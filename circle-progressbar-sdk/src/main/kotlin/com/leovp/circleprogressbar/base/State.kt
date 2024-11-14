@@ -57,13 +57,7 @@ abstract class State(private val view: View) {
             view.invalidate()
         }
 
-    abstract fun setAttributes(
-        context: Context,
-        attrs: AttributeSet?,
-        attr: TypedArray?,
-        @ColorInt defColor: Int,
-        defDrawable: Drawable?
-    )
+    abstract fun setAttributes(context: Context, attrs: AttributeSet?, attr: TypedArray?, @ColorInt defColor: Int, defDrawable: Drawable?)
 
     companion object {
         val DEF_BG_COLOR = Color.parseColor("#018786")

@@ -76,11 +76,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private lateinit var incPreviewGridBinding: IncPreviewGridBinding
     private lateinit var incRatioBinding: IncRatioOptionsBinding
 
-    override fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): FragmentCameraBinding {
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentCameraBinding {
         val rootBinding = FragmentCameraBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
         incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
@@ -150,11 +146,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         relativeOrientation = null
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
@@ -698,15 +690,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
      * Show timer selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showSelectTimerLayer() =
-        cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
+    private fun showSelectTimerLayer() = cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
 
     /**
      * Show flashlight selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showFlashLayer() =
-        cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
+    private fun showFlashLayer() = cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {

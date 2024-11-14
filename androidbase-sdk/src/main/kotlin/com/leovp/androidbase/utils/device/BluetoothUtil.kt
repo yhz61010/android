@@ -73,11 +73,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Set pin
      */
-    fun setPin(
-        bluetoothClass: Class<out BluetoothDevice>,
-        device: BluetoothDevice,
-        str: String
-    ): Boolean {
+    fun setPin(bluetoothClass: Class<out BluetoothDevice>, device: BluetoothDevice, str: String): Boolean {
         runCatching {
             val removeBondMethod = bluetoothClass.getDeclaredMethod("setPin", ByteArray::class.java)
             return removeBondMethod.invoke(device, str.toByteArray()) as Boolean
@@ -151,8 +147,7 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     // Bluetooth Low Energy
-    fun isSupportBle(pm: PackageManager): Boolean =
-        pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    fun isSupportBle(pm: PackageManager): Boolean = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     var isEnabled: Boolean = bluetoothAdapter.isEnabled
         private set

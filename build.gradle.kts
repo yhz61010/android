@@ -102,6 +102,7 @@ allprojects {
     ktlint {
         verbose.set(true)
         android.set(true)
+        ignoreFailures.set(false)
 
         // Uncomment below line and run .\gradlew ktlintCheck to see check ktlint experimental rules
         // enableExperimentalRules.set(true)

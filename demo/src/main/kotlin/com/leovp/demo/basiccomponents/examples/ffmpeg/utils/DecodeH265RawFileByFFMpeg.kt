@@ -173,8 +173,7 @@ class DecodeH265RawFileByFFMpeg {
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
-        videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 

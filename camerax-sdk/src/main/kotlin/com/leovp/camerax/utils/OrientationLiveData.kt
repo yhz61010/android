@@ -31,7 +31,10 @@ import com.leovp.android.exts.isReversePortrait
  * rotation relative to sensor orientation, i.e., allows user to see camera
  * frames with the expected orientation.
  */
-internal class OrientationLiveData(private val context: Context, characteristics: CameraCharacteristics) : LiveData<Int>() {
+internal class OrientationLiveData(
+    private val context: Context,
+    characteristics: CameraCharacteristics,
+) : LiveData<Int>() {
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
@@ -80,8 +83,13 @@ internal class OrientationLiveData(private val context: Context, characteristics
             }
 
             // Reverse device orientation for front-facing cameras
-            val sign =
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT) 1 else -1
+            val sign = if (characteristics.get(CameraCharacteristics.LENS_FACING)
+                == CameraCharacteristics.LENS_FACING_FRONT
+            ) {
+                    1
+                } else {
+                    -1
+                }
 
             // Calculate desired JPEG orientation relative to camera orientation to make
             // the image upright relative to the device orientation

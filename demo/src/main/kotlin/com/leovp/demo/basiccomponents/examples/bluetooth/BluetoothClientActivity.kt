@@ -44,7 +44,8 @@ import com.leovp.log.base.ITAG
  * @see <a href="https://www.jianshu.com/p/a27f3ca027e3">BLE Develop</a>
  * @see <a href="https://www.jianshu.com/p/71116665fd08">FAQ</a>
  */
-class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClientBinding>(R.layout.activity_bluetooth_client) {
+class BluetoothClientActivity :
+    BaseDemonstrationActivity<ActivityBluetoothClientBinding>(R.layout.activity_bluetooth_client) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothClientBinding {
@@ -99,12 +100,15 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                             LogContext.log.w("STATE_CONNECTED")
                             gatt!!.discoverServices()
                         }
+
                         BluetoothProfile.STATE_CONNECTING -> {
                             LogContext.log.w("STATE_CONNECTING")
                         }
+
                         BluetoothProfile.STATE_DISCONNECTED -> {
                             LogContext.log.w("STATE_DISCONNECTED")
                         }
+
                         BluetoothProfile.STATE_DISCONNECTING -> {
                             LogContext.log.w("STATE_DISCONNECTING")
                         }
@@ -128,7 +132,10 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                 // Receive data
                 @Deprecated("Deprecated in Java. Since Android 13.")
                 @Suppress("DEPRECATION")
-                override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                override fun onCharacteristicChanged(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                ) {
                     super.onCharacteristicChanged(gatt, characteristic)
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         val data = String(characteristic.value)
@@ -142,7 +149,11 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
 
                 // Receive data
                 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-                override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
+                override fun onCharacteristicChanged(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    value: ByteArray,
+                ) {
                     super.onCharacteristicChanged(gatt, characteristic, value)
                     val data = String(value)
                     LogContext.log.w(
@@ -153,7 +164,11 @@ class BluetoothClientActivity : BaseDemonstrationActivity<ActivityBluetoothClien
                 }
 
                 // SENT callback
-                override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+                override fun onCharacteristicWrite(
+                    gatt: BluetoothGatt,
+                    characteristic: BluetoothGattCharacteristic,
+                    status: Int,
+                ) {
                     LogContext.log.w(
                         "onCharacteristicWrite characteristic=" +
                             "${characteristic.toJsonString()} status=$status"

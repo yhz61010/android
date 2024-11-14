@@ -114,7 +114,13 @@ fun feedTextureWithImageData(
  * @param width YUV 图片宽度
  * @param height YUV 图片高度
  */
-fun feedTextureWithImageData(yPlane: ByteBuffer, uvPlane: ByteBuffer, width: Int, height: Int, planarTexture: IntBuffer) {
+fun feedTextureWithImageData(
+    yPlane: ByteBuffer,
+    uvPlane: ByteBuffer,
+    width: Int,
+    height: Int,
+    planarTexture: IntBuffer
+) {
     // 根据YUV编码的特点，获得不同平面的基址
     textureYUV(yPlane, width, height, planarTexture[0])
     textureNV12(uvPlane, width / 2, height / 2, planarTexture[1])

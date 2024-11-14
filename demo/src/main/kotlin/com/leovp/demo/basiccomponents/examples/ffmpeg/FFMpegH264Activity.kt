@@ -25,7 +25,8 @@ class FFMpegH264Activity : BaseDemonstrationActivity<ActivityFfmpegH264Binding>(
         glSurfaceView = findViewById(R.id.glSurfaceView)
         glSurfaceView.setKeepRatio(true)
         //        glSurfaceView.updateDimension(screenWidth, getScreenAvailableHeight())
-        val rawFileFullPath = saveRawResourceToFile(R.raw.tears_400_x264_raw, getExternalFilesDir(null)!!.absolutePath, "h264.h264")
+        val rawFileFullPath =
+            saveRawResourceToFile(R.raw.tears_400_x264_raw, getExternalFilesDir(null)!!.absolutePath, "h264.h264")
         decodeObjByFFMpeg.init(rawFileFullPath, glSurfaceView)
         decodeObjByFFMpeg.startDecoding()
     }

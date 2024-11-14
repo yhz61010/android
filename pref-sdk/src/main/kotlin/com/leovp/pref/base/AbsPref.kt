@@ -33,7 +33,10 @@ abstract class AbsPref {
             is Boolean -> internalPutBool(key, v)
             is Float -> internalPutFloat(key, v)
             is String? -> internalPutString(key, v)
-            is Set<*> -> throw IllegalArgumentException("Use putSet(key: String, v: Set<String>?) instead.")
+            is Set<*> -> throw IllegalArgumentException(
+                "Use putSet(key: String, v: Set<String>?) instead."
+            )
+
             else -> internalPutString(key, v.toJsonString())
         }
     }
@@ -59,7 +62,10 @@ abstract class AbsPref {
             Boolean::class.java -> internalPutBool(key, v as Boolean)
             Float::class.java -> internalPutFloat(key, v as Float)
             String::class.java -> internalPutString(key, v as String?)
-            Set::class.java -> throw IllegalArgumentException("Use putSet(key: String, v: Set<String>?) instead.")
+            Set::class.java -> throw IllegalArgumentException(
+                "Use putSet(key: String, v: Set<String>?) instead."
+            )
+
             else -> internalPutString(key, v.toJsonString())
         }
     }
@@ -78,8 +84,9 @@ abstract class AbsPref {
     /**
      * Get object
      */
-    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
-    //    inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject()
+    inline fun <reified T> getObject(key: String): T? =
+        internalGetString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    // inline fun <reified T> getObject(key: String): T? = internalGetString(key, null)?.toObject()
 
     /**
      * Get value which type is following list:
@@ -94,9 +101,19 @@ abstract class AbsPref {
             is Long -> internalGetLong(key, default) as T
             is Boolean -> internalGetBool(key, default) as T
             is Float -> internalGetFloat(key, default) as T
-            is String -> throw IllegalArgumentException("Use getString(key: String, default: String? = null) instead.")
-            is Set<*> -> throw IllegalArgumentException("Use getStringSet(key: String, default: Set<String>? = null) instead.")
-            else -> throw IllegalArgumentException("To get object use getObject(key: String) instead.")
+            is String ->
+                throw IllegalArgumentException(
+                    "Use getString(key: String, default: String? = null) instead."
+                )
+
+            is Set<*> ->
+                throw IllegalArgumentException(
+                    "Use getStringSet(key: String, default: Set<String>? = null) instead."
+                )
+
+            else -> throw IllegalArgumentException(
+                "To get object use getObject(key: String) instead."
+            )
         }
     }
 
@@ -125,9 +142,17 @@ abstract class AbsPref {
             Long::class.java -> internalGetLong(key, default as Long) as T
             Boolean::class.java -> internalGetBool(key, default as Boolean) as T
             Float::class.java -> internalGetFloat(key, default as Float) as T
-            String::class.java -> throw IllegalArgumentException("Use getString(key: String, default: String? = null) instead.")
-            Set::class.java -> throw IllegalArgumentException("Use getStringSet(key: String, default: Set<String>? = null) instead.")
-            else -> throw IllegalArgumentException("To get object use getObject4Java(key: String, clazz: Class<T>) instead.")
+            String::class.java -> throw IllegalArgumentException(
+                "Use getString(key: String, default: String? = null) instead."
+            )
+
+            Set::class.java -> throw IllegalArgumentException(
+                "Use getStringSet(key: String, default: Set<String>? = null) instead."
+            )
+
+            else -> throw IllegalArgumentException(
+                "To get object use getObject4Java(key: String, clazz: Class<T>) instead."
+            )
         }
     }
 

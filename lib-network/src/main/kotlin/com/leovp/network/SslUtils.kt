@@ -112,8 +112,11 @@ object SslUtils {
         // }
     }
 
-    fun createSocketFactory(protocol: String, km: Array<KeyManager>? = null, tm: Array<TrustManager>? = null,): SSLSocketFactory =
-        SSLContext.getInstance(protocol).apply {
+    fun createSocketFactory(
+        protocol: String,
+        km: Array<KeyManager>? = null,
+        tm: Array<TrustManager>? = null,
+    ): SSLSocketFactory = SSLContext.getInstance(protocol).apply {
             init(
                 km,
                 // trustAllCerts

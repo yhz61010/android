@@ -21,7 +21,11 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentJetpackBinding {
+    override fun getViewBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): FragmentJetpackBinding {
         return FragmentJetpackBinding.inflate(inflater, container, false)
     }
 

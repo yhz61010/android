@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
-import android.os.Build
 import android.util.Log
 import android.util.Size
 import android.view.IRotationWatcher
@@ -89,7 +88,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         return Size(curScreenOrientationSize.width, curScreenOrientationSize.height - finalHeightNecessaryOffset)
     }
 
-    private var lastScrOri = context.screenSurfaceRotation.takeIf { config.screenOrientation == -1 } ?: config.screenOrientation
+    private var lastScrOri = context.screenSurfaceRotation.takeIf {
+        config.screenOrientation == -1
+    } ?: config.screenOrientation
     private var screenOrientSz: Size = getScreenOrientationSize(lastScrOri)
 
     @SuppressLint("ClickableViewAccessibility")
@@ -110,9 +111,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 //     "ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
                 touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
+
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_CANCEL,
-            MotionEvent.ACTION_OUTSIDE -> {
+            MotionEvent.ACTION_OUTSIDE,
+                -> {
                 // view.performClick()
                 // Log.e("LEO-FV",
                 //     "ACTION_UP isPressed=${view.isPressed} " +
@@ -124,8 +127,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 if (!consumeIsAlwaysFalse && config.dockEdge != DockEdge.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.dockEdge)
                 }
-                touchConsumedByMove = config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
+                touchConsumedByMove =
+                    config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
             }
+
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = event.rawX.toInt() - lastX
                 val deltaY = event.rawY.toInt() - lastY
@@ -148,8 +153,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     isClickGesture = true
                     touchConsumedByMove = false
                 }
-                touchConsumedByMove = config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
+                touchConsumedByMove =
+                    config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
             }
+
             else -> Unit
         }
         if (consumeIsAlwaysFalse) touchConsumedByMove = false
@@ -164,21 +171,25 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
+
             StickyEdge.LEFT -> {
                 layoutParams.x = getFloatViewLeftMinMargin()
                 layoutParams.y += deltaY
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
+
             StickyEdge.RIGHT -> {
                 layoutParams.x = getFloatViewRightMaxMargin()
                 layoutParams.y += deltaY
                 layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
             }
+
             StickyEdge.TOP -> {
                 layoutParams.x += deltaX
                 layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
                 layoutParams.y = getFloatViewTopMinMargin()
             }
+
             StickyEdge.BOTTOM -> {
                 layoutParams.x += deltaX
                 layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
@@ -206,6 +217,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
                     }
                 }
+
                 DockEdge.TOP_BOTTOM -> {
                     if (floatViewCenterY <= screenOrientSz.height / 2) {
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
@@ -213,6 +225,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
                     }
                 }
+
                 DockEdge.FULL -> {
                     if (floatViewCenterX <= screenOrientSz.width / 2) { // On left screen
                         if (floatViewCenterY <= screenOrientSz.height / 2) { // On top screen // Top left
@@ -223,7 +236,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             }
-                        } else { // On bottom screen // Bottom left
+                        } else {
+                            // On bottom screen // Bottom left
                             if (left <= screenOrientSz.height - getFloatViewBottomLeftPos().y) { // Animate to left
                                 animateDirectionForDockFull = DockEdge.LEFT
                                 ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
@@ -235,7 +249,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     } else { // On right screen
                         if (floatViewCenterY <= screenOrientSz.height / 2) { // On top screen // Top right
                             // Animate to top
-                            if (getFloatViewTopRightPos().y - getTopHeightOffset() <= screenOrientSz.width - getFloatViewTopRightPos().x) {
+                            if (getFloatViewTopRightPos().y - getTopHeightOffset()
+                                <= screenOrientSz.width - getFloatViewTopRightPos().x
+                            ) {
                                 animateDirectionForDockFull = DockEdge.TOP
                                 ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
                             } else { // Animate to right
@@ -264,19 +280,24 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     DockEdge.NONE -> Unit
                     DockEdge.LEFT,
                     DockEdge.RIGHT,
-                    DockEdge.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
+                    DockEdge.LEFT_RIGHT,
+                        -> layoutParams.x = it.animatedValue as Int
 
                     DockEdge.TOP,
                     DockEdge.BOTTOM,
-                    DockEdge.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
+                    DockEdge.TOP_BOTTOM,
+                        -> layoutParams.y = it.animatedValue as Int
 
                     DockEdge.FULL -> {
                         when (animateDirectionForDockFull) {
                             DockEdge.LEFT,
-                            DockEdge.RIGHT -> layoutParams.x = it.animatedValue as Int
+                            DockEdge.RIGHT,
+                                -> layoutParams.x = it.animatedValue as Int
 
                             DockEdge.TOP,
-                            DockEdge.BOTTOM -> layoutParams.y = it.animatedValue as Int
+                            DockEdge.BOTTOM,
+                                -> layoutParams.y = it.animatedValue as Int
+
                             else -> Unit
                         }
                     }
@@ -375,15 +396,19 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     private fun getFloatViewLeftMinMargin(): Int = config.edgeMargin
-    private fun getFloatViewRightMaxMargin(): Int = screenOrientSz.width - (config.customView?.width ?: 0) - config.edgeMargin
+    private fun getFloatViewRightMaxMargin(): Int =
+        screenOrientSz.width - (config.customView?.width ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopMinMargin(): Int = getTopHeightOffset() + config.edgeMargin
-    private fun getFloatViewBottomMaxMargin(): Int = screenOrientSz.height - (config.customView?.height ?: 0) - config.edgeMargin
+    private fun getFloatViewBottomMaxMargin(): Int =
+        screenOrientSz.height - (config.customView?.height ?: 0) - config.edgeMargin
 
     private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
-    private fun getFloatViewTopRightPos(): Point = Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)
+    private fun getFloatViewTopRightPos(): Point =
+        Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)
 
-    private fun getFloatViewBottomLeftPos(): Point = Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
+    private fun getFloatViewBottomLeftPos(): Point =
+        Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
 
     private fun getFloatViewBottomRightPos(): Point = Point(
         layoutParams.x + (config.customView?.width ?: 0),
@@ -409,19 +434,23 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 // However the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+
+                // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             if (config.systemWindow && context.canDrawOverlays) {
-                type = when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    else -> {
-                        @Suppress("DEPRECATION")
-                        WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
-                        // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                        // android.view.WindowManager${WindowManager.BadTokenException}:
-                        // Unable to add window -- token null is not valid; is your activity running?
-                    }
-                }
+                type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+
+                // type = when {
+                //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                //     else -> {
+                //         @Suppress("DEPRECATION")
+                //         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                //         // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
+                //         // android.view.WindowManager${WindowManager.BadTokenException}:
+                //         // Unable to add window -- token null is not valid; is your activity running?
+                //     }
+                // }
             }
 
             gravity = config.gravity // Default value: Gravity.TOP or Gravity.START
@@ -482,14 +511,16 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     @Suppress("unused")
-    private fun getResourceEntryName(@IdRes id: Int): String = runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
+    private fun getResourceEntryName(@IdRes id: Int): String =
+        runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
     fun show() {
         runCatching {
             if (config.systemWindow && !context.canDrawOverlays) {
                 Log.w(
                     TAG,
-                    "FloatView tag=${config.tag} is setting as SystemWindow. However, app doesn't have [DrawOverlays] permission."
+                    "FloatView tag=${config.tag} is setting as SystemWindow. " +
+                        "However, app doesn't have [DrawOverlays] permission."
                 )
             }
 

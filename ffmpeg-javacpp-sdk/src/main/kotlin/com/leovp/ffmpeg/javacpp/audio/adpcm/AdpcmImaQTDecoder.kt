@@ -66,7 +66,8 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
             bpLeft.get(leftChunkBytes)
 
             val bpRight: BytePointer = frame.extended_data(1)
-            val rightChunkBytes = ByteArray(frame.linesize(0)) // "0" is not typo. Check its document.
+            // "0" is not typo. Check its document.
+            val rightChunkBytes = ByteArray(frame.linesize(0))
             bpRight.get(rightChunkBytes)
 
             return leftChunkBytes to rightChunkBytes
@@ -86,8 +87,9 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
     companion object {
         private const val ENCODED_CHUNKS_SIZE = 34
 
-        fun getSampleFormatName(fmt: Int): String? =
-            avutil.av_get_sample_fmt_name(fmt).let { ptr -> return if (ptr != null && !ptr.isNull) ptr.string else null }
+        fun getSampleFormatName(fmt: Int): String? = avutil.av_get_sample_fmt_name(fmt).let { ptr ->
+                return if (ptr != null && !ptr.isNull) ptr.string else null
+            }
 
         fun isAvSampleInPlanar(fmt: Int): Boolean = avutil.av_sample_fmt_is_planar(fmt) == 1
     }

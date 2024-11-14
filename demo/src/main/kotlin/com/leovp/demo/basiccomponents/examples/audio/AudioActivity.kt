@@ -41,8 +41,17 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
         // Check comments in OpusEncoder.kt file.
-        val audioEncoderInfo = AudioEncoderInfo(48000, 128000, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT)
-        val audioDecoderInfo = AudioDecoderInfo(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
+        val audioEncoderInfo = AudioEncoderInfo(
+            48000,
+            128000,
+            AudioFormat.CHANNEL_IN_STEREO,
+            AudioFormat.ENCODING_PCM_16BIT
+        )
+        val audioDecoderInfo = AudioDecoderInfo(
+            48000,
+            AudioFormat.CHANNEL_OUT_STEREO,
+            AudioFormat.ENCODING_PCM_16BIT
+        )
 
         // AudioAttributes.USAGE_VOICE_COMMUNICATION
         // AudioAttributes.USAGE_MEDIA
@@ -138,7 +147,12 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         binding.btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                aacFilePlayer = AacFilePlayer(this@AudioActivity, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
+                aacFilePlayer = AacFilePlayer(
+                    this@AudioActivity,
+                    audioDecoderInfo,
+                    AUDIO_ATTR_USAGE,
+                    AUDIO_ATTR_CONTENT_TYPE
+                )
                 aacFilePlayer?.playAac(aacFile) {
                     runOnUiThread { btn.isChecked = false }
                     // LogContext.log.e(TAG, "=====> End callback <=====")
@@ -150,7 +164,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         binding.btnPlayOpus.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                opusFilePlayer = OpusFilePlayer(this@AudioActivity, audioDecoderInfo, AUDIO_ATTR_USAGE, AUDIO_ATTR_CONTENT_TYPE)
+                opusFilePlayer =
+                    OpusFilePlayer(
+                        this@AudioActivity,
+                        audioDecoderInfo,
+                        AUDIO_ATTR_USAGE,
+                        AUDIO_ATTR_CONTENT_TYPE
+                    )
                 opusFilePlayer?.playOpus(opusFile) {
                     runOnUiThread { btn.isChecked = false }
                     // LogContext.log.e(TAG, "=====> End callback <=====")
@@ -170,12 +190,18 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 }.onFailure { it.printStackTrace() }
 
                 AudioType.AAC -> {
-                    LogContext.log.i(TAG, "Get encoded AAC Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
+                    LogContext.log.i(
+                        TAG,
+                        "Get encoded AAC Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
+                    )
                     runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
 
                 AudioType.OPUS -> {
-                    LogContext.log.i(TAG, "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
+                    LogContext.log.i(
+                        TAG,
+                        "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
+                    )
                     runCatching {
                         opusOs?.write(OpusFilePlayer.START_CODE.encodeToByteArray())
                         opusOs?.write(data)

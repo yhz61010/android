@@ -12,7 +12,12 @@ import java.util.*
  * Date: 20-5-13 下午2:04
  */
 
-fun InputStream.toFile(outFileFullPath: String, bufferSize: Int = 256 shl 10, force: Boolean = true, autoCloseInputStream: Boolean = true) {
+fun InputStream.toFile(
+    outFileFullPath: String,
+    bufferSize: Int = 256 shl 10,
+    force: Boolean = true,
+    autoCloseInputStream: Boolean = true
+) {
     val outfile = File(outFileFullPath)
     if (force || !outfile.exists()) {
         outfile.outputStream().use { os ->

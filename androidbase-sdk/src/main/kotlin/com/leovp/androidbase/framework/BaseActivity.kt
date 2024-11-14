@@ -58,7 +58,10 @@ import org.greenrobot.eventbus.ThreadMode
  * Author: Michael Leo
  * Date: 2022/6/28 16:35
  */
-abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, init: (ActivityConfig.() -> Unit)? = null) :
+abstract class BaseActivity<B : ViewBinding>(
+    @LayoutRes layoutResId: Int = 0,
+    init: (ActivityConfig.() -> Unit)? = null
+) :
     AppCompatActivity(layoutResId) {
     abstract fun getTagName(): String
 
@@ -153,7 +156,8 @@ abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, in
         if (networkMonitor != null) {
             LogContext.log.w(
                 tag,
-                "Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor() if you don't need it anymore."
+                "Are you leaking networkMonitor? " +
+                    "Don't forget to call stopTrafficMonitor() if you don't need it anymore."
             )
         }
     }

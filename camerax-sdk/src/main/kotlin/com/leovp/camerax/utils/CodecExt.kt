@@ -30,9 +30,11 @@ internal fun getAllSupportedCodecList(): Array<MediaCodecInfo> =
 internal fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray =
     getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
 
-internal fun getSupportedColorFormatForEncoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
+internal fun getSupportedColorFormatForEncoder(mime: String): IntArray =
+    getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
 
-internal fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
+internal fun getSupportedColorFormatForDecoder(mime: String): IntArray =
+    getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
 
 private fun getSupportedColorFormat(caps: MediaCodecInfo.CodecCapabilities): IntArray = caps.colorFormats
 
@@ -45,7 +47,8 @@ internal fun getSupportedProfileLevelsForEncoder(mime: String): Array<MediaCodec
 internal fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
     getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
 
-private fun getSupportedProfileLevels(caps: MediaCodecInfo.CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
+private fun getSupportedProfileLevels(caps: MediaCodecInfo.CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> =
+    caps.profileLevels
 
 internal fun isSoftwareCodec(codecName: String): Boolean {
     return codecName.startsWith("OMX.google.", ignoreCase = true) ||

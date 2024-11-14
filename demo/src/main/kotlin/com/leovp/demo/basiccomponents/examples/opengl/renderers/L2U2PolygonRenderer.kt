@@ -17,7 +17,9 @@ import kotlin.math.sin
  *
  * 点击屏幕查看效果
  */
-open class L2U2PolygonRenderer(@Suppress("unused") private val ctx: Context) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
+open class L2U2PolygonRenderer(
+    @Suppress("unused") private val ctx: Context
+) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
     override fun getTagName(): String = L2U2PolygonRenderer::class.java.simpleName
 
     private companion object {

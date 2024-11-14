@@ -177,7 +177,14 @@ class Camera2ComponentHelper(
         encodeListener = listener
     }
 
-    private fun initCameraEncoder(width: Int, height: Int, bitrate: Int, frameRate: Int, iFrameInterval: Int, bitrateMode: Int,) {
+    private fun initCameraEncoder(
+        width: Int,
+        height: Int,
+        bitrate: Int,
+        frameRate: Int,
+        iFrameInterval: Int,
+        bitrateMode: Int,
+    ) {
         cameraEncoder =
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
@@ -281,14 +288,16 @@ class Camera2ComponentHelper(
             "cameraSensorOrientation: $cameraSensorOrientation"
         ) // cameraSensorOrientation: 90
         when (deviceRotation) {
-            Surface.ROTATION_0, Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
-                LogContext.log.w(TAG, "swapDimension set true")
-                swapDimension = true
-            }
+            Surface.ROTATION_0, Surface.ROTATION_180 ->
+                if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+                    LogContext.log.w(TAG, "swapDimension set true")
+                    swapDimension = true
+                }
 
-            Surface.ROTATION_90, Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
-                swapDimension = true
-            }
+            Surface.ROTATION_90, Surface.ROTATION_270 ->
+                if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
+                    swapDimension = true
+                }
 
             else -> LogContext.log.e(
                 TAG,
@@ -553,41 +562,41 @@ class Camera2ComponentHelper(
     @RequiresPermission(android.Manifest.permission.CAMERA)
     private suspend fun openCamera(manager: CameraManager, cameraId: String, handler: Handler? = null,): CameraDevice =
         suspendCancellableCoroutine { cont ->
-        manager.openCamera(
-            cameraId,
-            object : CameraDevice.StateCallback() {
-                override fun onOpened(device: CameraDevice) = cont.resume(device)
+            manager.openCamera(
+                cameraId,
+                object : CameraDevice.StateCallback() {
+                    override fun onOpened(device: CameraDevice) = cont.resume(device)
 
-                override fun onDisconnected(device: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
-                    // TODO In some cases, call this method will cause crash
-                    //                context.requireActivity().finish()
-                }
-
-                override fun onClosed(camera: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been closed")
-                    super.onClosed(camera)
-                }
-
-                override fun onError(device: CameraDevice, error: Int) {
-                    val msg = when (error) {
-                        ERROR_CAMERA_DEVICE -> "Fatal (device)"
-                        ERROR_CAMERA_DISABLED -> "Device policy"
-                        ERROR_CAMERA_IN_USE -> "Camera in use"
-                        ERROR_CAMERA_SERVICE -> "Fatal (service)"
-                        ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                        else -> "Unknown"
+                    override fun onDisconnected(device: CameraDevice) {
+                        LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+                        // TODO In some cases, call this method will cause crash
+                        //                context.requireActivity().finish()
                     }
-                    device.close()
-                    val exc =
-                        IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
-                    LogContext.log.e(TAG, exc.message, exc)
-                    if (cont.isActive) cont.resumeWithException(exc)
-                }
-            },
-            handler
-        )
-    }
+
+                    override fun onClosed(camera: CameraDevice) {
+                        LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                        super.onClosed(camera)
+                    }
+
+                    override fun onError(device: CameraDevice, error: Int) {
+                        val msg = when (error) {
+                            ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                            ERROR_CAMERA_DISABLED -> "Device policy"
+                            ERROR_CAMERA_IN_USE -> "Camera in use"
+                            ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                            ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                            else -> "Unknown"
+                        }
+                        device.close()
+                        val exc =
+                            IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
+                        LogContext.log.e(TAG, exc.message, exc)
+                        if (cont.isActive) cont.resumeWithException(exc)
+                    }
+                },
+                handler
+            )
+        }
 
     /**
      * Starts a [CameraCaptureSession] and returns the configured session (as the result of the
@@ -833,13 +842,22 @@ class Camera2ComponentHelper(
         session.capture(
             captureRequest.build(),
             object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long,) {
+                override fun onCaptureStarted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    timestamp: Long,
+                    frameNumber: Long,
+                ) {
                     super.onCaptureStarted(session, request, timestamp, frameNumber)
                     cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
                         ?.post(animationTask)
                 }
 
-                override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult,) {
+                override fun onCaptureCompleted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: TotalCaptureResult,
+                ) {
                     super.onCaptureCompleted(session, request, result)
                     val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
                     LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
@@ -893,9 +911,10 @@ class Camera2ComponentHelper(
                             // Compute EXIF orientation metadata
                             // TODO Maybe you want to use rotation in someday
                             val rotation = 0
-                            //                        val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
+                            // val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
                             val mirrored =
-                                characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
+                                characteristics.get(CameraCharacteristics.LENS_FACING) ==
+                                    CameraCharacteristics.LENS_FACING_FRONT
                             val exifOrientation =
                                 computeExifOrientation(cameraSensorOrientation, mirrored)
                             LogContext.log.d(
@@ -946,7 +965,7 @@ class Camera2ComponentHelper(
             CaptureRequest.CONTROL_AE_MODE_ON
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
-        //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
+        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
         torchOn = runCatching {
             session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -972,7 +991,7 @@ class Camera2ComponentHelper(
             CaptureRequest.CONTROL_AE_MODE_ON
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
-        //                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
+        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
         torchOn = runCatching {
             val captureRequest = capturePreviewRequestBuilder.build()
             session.setRepeatingRequest(captureRequest, null, cameraHandler)

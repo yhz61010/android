@@ -30,26 +30,16 @@ import com.leovp.log.LogContext
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
  */
-abstract class AbsLog(private val tagPrefix: String, private val separator: String = "-"): ILog {
+abstract class AbsLog(private val tagPrefix: String, private val separator: String = "-") : ILog {
 
-    private fun getTagName(tag: String): String = "$tagPrefix${separator}${tag}"
+    private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag"
 
     open var enableLog: Boolean = true
 
-    fun v(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = v(ITAG, message, throwable, fullOutput, outputType)
+    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        v(ITAG, message, throwable, fullOutput, outputType)
 
-    fun v(
-        tag: String,
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun v(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
@@ -59,20 +49,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    fun d(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = d(ITAG, message, throwable, fullOutput, outputType)
+    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        d(ITAG, message, throwable, fullOutput, outputType)
 
-    fun d(
-        tag: String,
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun d(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
@@ -82,20 +62,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    fun i(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = i(ITAG, message, throwable, fullOutput, outputType)
+    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        i(ITAG, message, throwable, fullOutput, outputType)
 
-    fun i(
-        tag: String,
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun i(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
@@ -105,20 +75,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    fun w(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = w(ITAG, message, throwable, fullOutput, outputType)
+    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        w(ITAG, message, throwable, fullOutput, outputType)
 
-    fun w(
-        tag: String,
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun w(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
@@ -128,20 +88,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    fun e(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = e(ITAG, message, throwable, fullOutput, outputType)
+    fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        e(ITAG, message, throwable, fullOutput, outputType)
 
-    fun e(
-        tag: String,
-        message: String? = null,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun e(tag: String, message: String? = null, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
@@ -151,20 +101,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    fun f(
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) = f(ITAG, message, throwable, fullOutput, outputType)
+    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) =
+        f(ITAG, message, throwable, fullOutput, outputType)
 
-    fun f(
-        tag: String,
-        message: String?,
-        throwable: Throwable? = null,
-        fullOutput: Boolean = false,
-        outputType: Int = -1,
-    ) {
+    fun f(tag: String, message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1,) {
         if (LogContext.enableLog) {
             if (fullOutput) {
                 splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
@@ -229,7 +169,12 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     }
 
     enum class LogLevel {
-        VERB, DEBUG, INFO, WARN, ERROR, FATAL
+        VERB,
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+        FATAL
     }
 
     companion object {

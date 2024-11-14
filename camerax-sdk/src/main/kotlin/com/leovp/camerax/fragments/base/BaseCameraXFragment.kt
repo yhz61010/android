@@ -111,11 +111,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /** Generic ViewBinding of the subclasses */
     lateinit var binding: B
 
-    abstract fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): B
+    abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
 
     // An instance of a helper function to work with Shared Preferences
     protected val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
@@ -152,16 +148,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var touchListener: CameraXTouchListener? = null
 
     /** Returns true if the device has an available back camera. False otherwise */
-    protected fun hasBackCamera(): Boolean =
-        cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
+    protected fun hasBackCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
 
     /** Returns true if the device has an available front camera. False otherwise */
-    protected fun hasFrontCamera(): Boolean =
-        cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
+    protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
     // This property will be initialize in updateOrientationLiveData()
-    protected var cameraRotationInDegree = -1
-    //    var deviceOrientationListener: OrientationListener? = null
+    protected var cameraRotationInDegree = -1 //    var deviceOrientationListener: OrientationListener? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         LogContext.log.w(logTag, "=====> onViewCreated <=====")
@@ -174,11 +167,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
@@ -202,8 +191,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     override fun onDestroy() {
         LogContext.log.w(logTag, "=====> onDestroy() <=====")
-        soundManager.release()
-        // Shut down our background executor
+        soundManager.release() // Shut down our background executor
         cameraExecutor.shutdown()
         super.onDestroy()
     }
@@ -224,25 +212,17 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             cameraExecutor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    LogContext.log.w(
-                        logTag,
-                        "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms"
-                    )
+                    LogContext.log.w(logTag, "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms")
 
                     try {
                         showShutterAnimation(viewFinder)
                         soundManager.playShutterSound()
 
-                        val st0 = System.currentTimeMillis()
-                        // For takePicture, the ImageProxy only contains one plane AKA Y plane.
-                        val imageBuffer = image.planes[0].buffer
-                        //                val width = image.width
+                        val st0 = System.currentTimeMillis() // For takePicture, the ImageProxy only contains one plane AKA Y plane.
+                        val imageBuffer = image.planes[0].buffer //                val width = image.width
                         //                val height = image.height
                         val oriImageBytes = imageBuffer.toByteArray()
-                        LogContext.log.i(
-                            logTag,
-                            "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms"
-                        )
+                        LogContext.log.i(logTag, "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
 
                         // DO NOT forget for close Image object
                         image.close()
@@ -250,34 +230,22 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         lifecycleScope.launch(Dispatchers.IO) {
                             val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
                             val st1 = System.currentTimeMillis()
-                            val oriBmp =
-                                BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                            val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-                            val processedBmp =
-                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
                             val finalWidth = processedBmp.width
                             val finalHeight = processedBmp.height
                             val imageBytes: ByteArray = processedBmp.toBytes()
-                            LogContext.log.i(
-                                logTag,
-                                "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms"
-                            )
+                            LogContext.log.i(logTag, "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
 
                             oriBmp.recycledSafety()
                             processedBmp.recycledSafety()
 
                             withContext(Dispatchers.Main) {
-                                onImageSaved(
-                                    CaptureImage.ImageBytes(
-                                        imageBytes,
-                                        finalWidth,
-                                        finalHeight
-                                    ),
-                                    null
-                                )
+                                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight), null)
                             }
                         }
                     } catch (e: Exception) {
@@ -287,11 +255,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
 
                 override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(
-                        logTag,
-                        "ImageCapturedCallback - Photo capture failed: ${exc.message}",
-                        exc
-                    )
+                    LogContext.log.e(logTag, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
                     requireActivity().runOnUiThread { onImageSaved(null, exc) }
                 }
             }
@@ -310,42 +274,31 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputDirectory: File,
         startTimestamp: Long,
         onImageSaved: (savedImage: CaptureImage.ImageUri?, exc: Exception?) -> Unit,
-    ) {
-        // Create output file to hold the image
+    ) { // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
         // Setup image capture metadata
-        val metadata = ImageCapture.Metadata().apply {
-            // Mirror image when using the front camera
+        val metadata = ImageCapture.Metadata().apply { // Mirror image when using the front camera
             isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
         }
 
         // Create output options object which contains file + metadata
         //        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        val outputOptions =
-            ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
 
         // Setup image capture listener which is triggered after photo has been taken
         imageCapture.takePicture(
-            outputOptions,
-            cameraExecutor,
+            outputOptions, cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(
-                        logTag,
-                        "ImageSavedCallback - Photo capture failed: ${exc.message}",
-                        exc
-                    )
+                    LogContext.log.e(logTag, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
                     onImageSaved(null, exc)
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    LogContext.log.w(
-                        logTag,
-                        "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms"
-                    )
+                    LogContext.log.w(logTag, "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms")
                     try {
                         showShutterAnimation(viewFinder)
                         soundManager.playShutterSound()
@@ -370,8 +323,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap file cost=${st2 - st1}ms")
 
-                            val rotatedBmp =
-                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val rotatedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
 
@@ -392,18 +344,16 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         )
     }
 
-    private fun adjustBitmapRotation(
-        bitmap: Bitmap,
-        mirror: Boolean,
-        cameraSensorOrientationDegree: Int,
-    ): Bitmap {
+    private fun adjustBitmapRotation(bitmap: Bitmap, mirror: Boolean, cameraSensorOrientationDegree: Int): Bitmap {
         return when (cameraSensorOrientationDegree) {
-            0 -> { // by android
+            0 -> {
+                // by android
                 // Android method is the fastest.
                 bitmap.flipRotate(mirror, false, 0f)
             }
 
-            90 -> { // Samsung by native // Pixel by Android
+            90 -> {
+                // Samsung by native // Pixel by Android
                 // On Samsung, native method is faster than android method.
                 // On Google Pixel, android method is faster than native method.
                 when {
@@ -426,7 +376,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
             }
 
-            180 -> { // by native
+            180 -> {
+                // by native
                 // Native method is the fastest.
                 BitmapProcessor(bitmap).run {
                     if (mirror) flipBitmapHorizontal()
@@ -435,7 +386,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
             }
 
-            else -> /* 270 */ { // Samsung by native // Pixel by Android
+            else -> {
+                // 270
+                // Samsung by native // Pixel by Android
                 // On Samsung, native method is faster than android method.
                 // On Google Pixel, android method is faster than native method.
                 when {
@@ -480,20 +433,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         //        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())
     }
 
-    private fun showShutterAnimation(viewFinder: PreviewView) {
-        // We can only change the foreground Drawable using API level 23+ API
+    private fun showShutterAnimation(viewFinder: PreviewView) { // We can only change the foreground Drawable using API level 23+ API
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             viewFinder.apply {
-                post {
-                    // Display flash animation to indicate that photo was captured.
-                    foreground =
-                        ColorDrawable(
-                            ResourcesCompat.getColor(
-                                resources,
-                                R.color.camera_flash_layer,
-                                null
-                            )
-                        )
+                post { // Display flash animation to indicate that photo was captured.
+                    foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
                     postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
                 }
             }
@@ -546,15 +490,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                 val factory = viewFinder.meteringPointFactory
                 val point = factory.createPoint(e.x, e.y)
-                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
-                    .build()
+                val action =
+                    FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF).setAutoCancelDuration(5, TimeUnit.SECONDS).build()
                 touchListener?.onStartFocusing(e.rawX, e.rawY)
-                val focusFuture: ListenableFuture<FocusMeteringResult> =
-                    camera.cameraControl.startFocusAndMetering(action)
+                val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
                 focusFuture.addListener({
-                    runCatching {
-                        // Get focus result
+                    runCatching { // Get focus result
                         val result = focusFuture.get() as FocusMeteringResult
                         if (result.isFocusSuccessful) {
                             touchListener?.onFocusSuccess()
@@ -568,12 +509,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
             // ====================
 
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float,
-            ): Boolean {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
                 if (e1 == null) return false
 
                 val deltaX = e1.x - e2.x
@@ -621,12 +557,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     private var swipeCallback: SwipeCallback? = null
 
-    fun setSwipeCallback(
-        left: () -> Unit = {},
-        right: () -> Unit = {},
-        up: () -> Unit = {},
-        down: () -> Unit = {},
-    ) {
+    fun setSwipeCallback(left: () -> Unit = {}, right: () -> Unit = {}, up: () -> Unit = {}, down: () -> Unit = {}) {
         swipeCallback = object : SwipeCallback {
             override fun onUpSwipe() {
                 up()
@@ -656,25 +587,35 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         fun onRightSwipe()
     }
 
-    protected fun checkForHdrExtensionAvailability(
-        hasHdr: Boolean,
-        callback: (isHdrAvailable: Boolean) -> Unit,
-    ) {
+    protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit,) {
         // Create a Vendor Extension for HDR
-        val extensionsManagerFuture =
-            ExtensionsManager.getInstanceAsync(requireContext(), cameraProvider ?: return)
+        val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(
+            requireContext(),
+            cameraProvider ?: return
+        )
         extensionsManagerFuture.addListener({
             val extensionsManager = extensionsManagerFuture.get() ?: return@addListener
-            val isAvailable = extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)
+            val isAvailable = extensionsManager.isExtensionAvailable(
+                lensFacing,
+                ExtensionMode.HDR
+            )
 
             // Check for any extension availability
             LogContext.log.i(
                 logTag,
-                "AUTO: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.AUTO)}"
+                "AUTO: ${
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing, ExtensionMode.AUTO
+                    )
+                }"
             )
             LogContext.log.i(
                 logTag,
-                "HDR: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.HDR)}"
+                "HDR: ${
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing, ExtensionMode.HDR
+                    )
+                }"
             )
             LogContext.log.i(
                 logTag,
@@ -687,15 +628,27 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             )
             LogContext.log.i(
                 logTag,
-                "BOKEH: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.BOKEH)}"
+                "BOKEH: ${
+                extensionsManager.isExtensionAvailable(
+                    lensFacing, ExtensionMode.BOKEH
+                )
+            }"
             )
             LogContext.log.i(
                 logTag,
-                "NIGHT: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NIGHT)}"
+                "NIGHT: ${
+                extensionsManager.isExtensionAvailable(
+                    lensFacing, ExtensionMode.NIGHT
+                )
+            }"
             )
             LogContext.log.i(
                 logTag,
-                "NONE: ${extensionsManager.isExtensionAvailable(lensFacing, ExtensionMode.NONE)}"
+                "NONE: ${
+                extensionsManager.isExtensionAvailable(
+                    lensFacing, ExtensionMode.NONE
+                )
+            }"
             )
 
             // Check if the extension is available on the device
@@ -703,11 +656,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 callback(false)
             } else if (hasHdr) {
                 callback(true)
-                hdrCameraSelector =
-                    extensionsManager.getExtensionEnabledCameraSelector(
-                        lensFacing,
-                        ExtensionMode.HDR
-                    )
+                hdrCameraSelector = extensionsManager.getExtensionEnabledCameraSelector(
+                    lensFacing, ExtensionMode.HDR
+                )
             }
         }, ContextCompat.getMainExecutor(requireContext()))
     }
@@ -717,8 +668,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         galleryButton.let { photoViewButton ->
             photoViewButton.post {
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
-                photoViewButton.load(uri) {
-                    // placeholder(R.drawable.ic_photo)
+                photoViewButton.load(uri) { // placeholder(R.drawable.ic_photo)
                     error(R.drawable.ic_photo)
                     transformations(CircleCropTransformation())
                 }
@@ -743,8 +693,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val metrics = requireContext().screenRealResolution
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraId)
+        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
 
         characteristics.getCameraSupportedSize().forEach {
             when (com.leovp.android.exts.getRatio(it)) {
@@ -763,10 +712,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     return@forEach
                 }
             }
-            if ((it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(
-                    1
-                )
-            ) {
+            if ((it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)) {
                 incRatioBinding.btnRatioFull.visibility = View.VISIBLE
             }
         }
@@ -774,11 +720,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         updateRatioUI(ratio, previewView, ratioBtn)
     }
 
-    protected fun updateRatioUI(
-        ratio: CameraRatio,
-        previewView: PreviewView,
-        ratioBtn: ImageButton? = null,
-    ) {
+    protected fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton? = null) {
         ratioBtn?.visibility = View.GONE
         when (ratio) {
             CameraRatio.R16v9 -> {
@@ -820,8 +762,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val screenMetrics = requireContext().screenRealResolution
         return if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-            val characteristics: CameraCharacteristics =
-                cameraManager.getCameraCharacteristics(cameraId)
+            val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
             getSpecificPreviewOutputSize(
                 requireContext(),
                 screenMetrics.width,
@@ -846,7 +787,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             hasBackCamera() -> CameraSelector.DEFAULT_BACK_CAMERA
             hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
             else -> {
-                LogContext.log.e(logTag, "Error: This device does not have any camera, bailing out")
+                LogContext.log.e(
+                    logTag,
+                    "Error: This device does not have any camera, bailing out"
+                )
+
                 // requireActivity().finish()
                 throw RuntimeException("This device does not have any camera")
             }
@@ -862,41 +807,42 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private fun loadCameraLensFacing(): CameraSelector {
         // Default value: Back camera
         val cameraId = prefs.getString(KEY_LENS_FACING, "0")
-        return if ("0" == cameraId) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
+        return if ("0" == cameraId) {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        } else {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        }
     }
 
     protected fun outputCameraParameters(
-        camSelector: CameraSelector,/*, desiredVideoWidth: Int, desiredVideoHeight: Int*/
-    ) =
-        runCatching {
-            if (cameraProvider?.hasCamera(camSelector) == true) {
-                val cameraId =
-                    if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-                val characteristics: CameraCharacteristics =
-                    cameraManager.getCameraCharacteristics(cameraId)
-                val configMap = characteristics.getConfigMap()
+        camSelector: CameraSelector,
+        // desiredVideoWidth: Int, desiredVideoWidth: Int, desiredVideoHeight: Int
+    ) = runCatching {
+        if (cameraProvider?.hasCamera(camSelector) == true) {
+            val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
+            val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val configMap = characteristics.getConfigMap()
 
-                val isFlashSupported = characteristics.isFlashSupported()
-                // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
-                val hardwareLevel = characteristics.hardwareLevel()
-                // Get camera supported fps. It will be used to create CaptureRequest
-                val cameraSupportedFpsRanges: Array<Range<Int>> =
-                    characteristics.supportedFpsRanges()
-                val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-                val highSpeedVideoSizes = configMap.highSpeedVideoSizes
+            // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
+            val isFlashSupported = characteristics.isFlashSupported()
+            // Get camera supported fps. It will be used to create CaptureRequest
+            val hardwareLevel = characteristics.hardwareLevel()
+            val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.supportedFpsRanges()
+            val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
+            val highSpeedVideoSizes = configMap.highSpeedVideoSizes
 
-                val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
+            val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
 
-                // Calculate ImageReader input preview size from supported size list by camera.
-                // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
-                // Attention: The returned value is in camera orientation. NOT in device orientation.
-                //                    val previewSize: Size =
-                //                            getSpecificPreviewOutputSize(requireContext(),
-                //                                desiredVideoWidth,
-                //                                desiredVideoHeight,
-                //                                characteristics)
+            // Calculate ImageReader input preview size from supported size list by camera.
+            // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
+            // Attention: The returned value is in camera orientation. NOT in device orientation.
+            //                    val previewSize: Size =
+            //                            getSpecificPreviewOutputSize(requireContext(),
+            //                                desiredVideoWidth,
+            //                                desiredVideoHeight,
+            //                                characteristics)
 
-                val cameraParametersString = """Camera Info:
+            val cameraParametersString = """Camera Info:
                cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
          deviceRotation=${requireContext().screenSurfaceRotation}
 cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
@@ -904,41 +850,35 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted()
-                        .joinToString(",")
-                }
+                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
+            }
  Supported color format for HEVC=${
-                    getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted()
-                        .joinToString(",")
-                }
+                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted().joinToString(",")
+            }
 
 Supported profile/level for  AVC=${
-                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                        ","
-                    ) { "${it.profile}/${it.level}" }
-                }
+                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
+            }
 Supported profile/level for HEVC=${
-                    getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(
-                        ","
-                    ) { "${it.profile}/${it.level}" }
-                }
+                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
+            }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                    highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
-                }
+                highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
+            }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
-                    allCameraSupportSize?.joinToString(",") {
-                        "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
-                    }
+                allCameraSupportSize?.joinToString(",") {
+                    "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
                 }
-                """.trimIndent()
-                LogContext.log.i(logTag, cameraParametersString)
-                LogContext.log.i(logTag, "==================================================")
             }
-        }.onFailure { LogContext.log.e(logTag, "outputCameraParameters error.", it) }
+                """.trimIndent()
+            LogContext.log.i(logTag, cameraParametersString)
+            LogContext.log.i(logTag, "==================================================")
+        }
+    }.onFailure { LogContext.log.e(logTag, "outputCameraParameters error.", it) }
 
     protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         getMediaQPlus()
@@ -953,11 +893,7 @@ Supported profile/level for HEVC=${
 
         contentResolver.query(
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(
-                MediaStore.Video.Media._ID,
-                MediaStore.Video.Media.RELATIVE_PATH,
-                MediaStore.Video.Media.DATE_TAKEN
-            ),
+            arrayOf(MediaStore.Video.Media._ID, MediaStore.Video.Media.RELATIVE_PATH, MediaStore.Video.Media.DATE_TAKEN),
             null,
             null,
             "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
@@ -971,8 +907,7 @@ Supported profile/level for HEVC=${
                 val path = cursor.getString(pathColumn)
                 val date = cursor.getLong(dateColumn)
 
-                val contentUri: Uri =
-                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
                 if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, true, date))
@@ -982,11 +917,7 @@ Supported profile/level for HEVC=${
 
         contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(
-                MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.RELATIVE_PATH,
-                MediaStore.Images.Media.DATE_TAKEN
-            ),
+            arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.RELATIVE_PATH, MediaStore.Images.Media.DATE_TAKEN),
             null,
             null,
             "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
@@ -1000,8 +931,7 @@ Supported profile/level for HEVC=${
                 val path = cursor.getString(pathColumn)
                 val date = cursor.getLong(dateColumn)
 
-                val contentUri: Uri =
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
                 if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, false, date))
@@ -1043,34 +973,16 @@ Supported profile/level for HEVC=${
 
         /** Helper function used to create a timestamped file */
         internal fun createFile(baseFolder: File, format: String, extension: String) =
-            File(
-                baseFolder,
-                SimpleDateFormat(
-                    format,
-                    Locale.US
-                ).format(System.currentTimeMillis()) + extension
-            )
+            File(baseFolder, SimpleDateFormat(format, Locale.US).format(System.currentTimeMillis()) + extension)
 
-        internal fun getOutputPictureDirectory(
-            context: Context,
-            parentFolder: String = BASE_FOLDER_NAME,
-        ): File {
-            return File(
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                parentFolder
-            ).also {
+        internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
         }
 
-        internal fun getOutputVideoDirectory(
-            context: Context,
-            parentFolder: String = BASE_FOLDER_NAME,
-        ): File {
-            return File(
-                context.getExternalFilesDir(Environment.DIRECTORY_MOVIES),
-                parentFolder
-            ).also {
+        internal fun getOutputVideoDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
+            return File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
         }

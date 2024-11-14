@@ -61,8 +61,7 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isOnline(ctx: Context): Boolean =
-        isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) ||
+    fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) ||
             isVpnActive(ctx) || isBluetoothActive(ctx)
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -251,10 +250,7 @@ object NetworkUtil {
             val connectivityManager = ctx.connectivityManager
             val networkCallback = object : ConnectivityManager.NetworkCallback() {
                 @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities
-                ) {
+                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                     val wifiInfo: WifiInfo =
                         networkCapabilities.transportInfo as? WifiInfo ?: return
                     if (isWifiActive(ctx)) {
@@ -305,12 +301,7 @@ object NetworkUtil {
     }
 
     @WorkerThread
-    fun isHostReachable(
-        hostname: String?,
-        port: Int,
-        timeoutInMillis: Int,
-        proxyInfo: ProxyInfo? = null
-    ): Boolean {
+    fun isHostReachable(hostname: String?, port: Int, timeoutInMillis: Int, proxyInfo: ProxyInfo? = null): Boolean {
         var connected = false
         runCatching {
             val proxy = if (proxyInfo == null) {

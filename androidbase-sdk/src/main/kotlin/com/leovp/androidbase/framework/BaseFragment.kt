@@ -45,17 +45,9 @@ abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Frag
 
     protected fun getNullableBinding(): B? = _binding
 
-    abstract fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): B
+    abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = getViewBinding(inflater, container, savedInstanceState)
         return binding.root
     }

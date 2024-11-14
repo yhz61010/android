@@ -27,7 +27,13 @@ abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
      * @param width 图像宽度
      * @param height 图像高度
      */
-    protected fun createKeepRatioFloatArray(width: Int, height: Int, keepRatio: Boolean, renderWidth: Int, renderHeight: Int): FloatArray {
+    protected fun createKeepRatioFloatArray(
+        width: Int,
+        height: Int,
+        keepRatio: Boolean,
+        renderWidth: Int,
+        renderHeight: Int
+    ): FloatArray {
         val floatArray: FloatArray =
             if (!keepRatio) {
                 VerticesUtil.VERTICES_COORD

@@ -10,7 +10,10 @@ import com.leovp.audio.base.iters.OutputCallback
  * Author: Michael Leo
  * Date: 20-11-14 上午11:03
  */
-class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback) : AudioEncoderWrapper {
+class AacEncoderWrapper(
+    encoderInfo: AudioEncoderInfo,
+    private val outputCallback: OutputCallback
+) : AudioEncoderWrapper {
     private var encoder = AacEncoder(
         sampleRate = encoderInfo.sampleRate,
         channelCount = encoderInfo.channelCount,

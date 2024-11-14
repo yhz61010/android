@@ -40,7 +40,8 @@ fun String.toBase64(flag: Int = Base64.DEFAULT): String = Base64.encodeToString(
  * (see RFC 3548 section 4) where `-` and `_` are used in place of `+` and '/'.
  */
 @JvmOverloads
-fun String.fromBase64(flag: Int = Base64.DEFAULT): String = Base64.decode(this, flag).toString(Charset.forName("US-ASCII"))
+fun String.fromBase64(flag: Int = Base64.DEFAULT): String =
+    Base64.decode(this, flag).toString(Charset.forName("US-ASCII"))
 
 /**
  * Decode base64 String to ByteArray

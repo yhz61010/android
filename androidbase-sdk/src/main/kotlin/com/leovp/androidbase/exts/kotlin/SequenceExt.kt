@@ -174,4 +174,5 @@ inline fun <T, reified R> Sequence<T>.toArrayList(crossinline transform: (T) -> 
  * val filterList: List<Int> = sequence.filterToArrayList { it > 5 }
  * ```
  */
-inline fun <T> Sequence<T>.filterToArrayList(crossinline predicate: (T) -> Boolean): ArrayList<T> = filterTo(ArrayList(), predicate)
+inline fun <T> Sequence<T>.filterToArrayList(crossinline predicate: (T) -> Boolean): ArrayList<T> =
+    filterTo(ArrayList(), predicate)

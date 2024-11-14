@@ -26,5 +26,9 @@ interface DisplayCutout {
     }
 
     @Keep
-    data class DisplayCutoutInfo(var support: Boolean = false, var positions: List<CutoutPosition>? = null, var rects: List<Rect>? = null)
+    data class DisplayCutoutInfo(
+        var support: Boolean = false,
+        var positions: List<CutoutPosition>? = null,
+        var rects: List<Rect>? = null
+    )
 }

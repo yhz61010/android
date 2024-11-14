@@ -28,7 +28,7 @@ class AudioPlayer(
     usage: Int = AudioAttributes.USAGE_MEDIA,
     // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
     contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
-    minPlayBufferSizeRatio: Int = 1
+    minPlayBufferSizeRatio: Int = 1,
 ) {
     companion object {
         private const val TAG = "AudioPlayer"
@@ -38,7 +38,8 @@ class AudioPlayer(
     private var aacStreamPlayer: AacStreamPlayer? = null
     private var opusStreamPlayer: OpusStreamPlayer? = null
 
-    private val audioTrackPlayer = AudioTrackPlayer(ctx, audioDecoderInfo, mode, usage, contentType, minPlayBufferSizeRatio)
+    private val audioTrackPlayer =
+        AudioTrackPlayer(ctx, audioDecoderInfo, mode, usage, contentType, minPlayBufferSizeRatio)
 
     init {
         when (type) {
@@ -62,7 +63,10 @@ class AudioPlayer(
                             val st = SystemClock.elapsedRealtime()
                             audioTrackPlayer.write(out)
                             if (BuildConfig.DEBUG) {
-                                LogContext.log.d(TAG, "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}")
+                                LogContext.log.d(
+                                    TAG,
+                                    "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}"
+                                )
                             }
                         }
                     }

@@ -35,9 +35,11 @@ object CodecUtil {
     fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray =
         getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
 
-    fun getSupportedColorFormatForEncoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
+    fun getSupportedColorFormatForEncoder(mime: String): IntArray =
+        getSupportedColorFormat(MediaCodec.createEncoderByType(mime), mime)
 
-    fun getSupportedColorFormatForDecoder(mime: String): IntArray = getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
+    fun getSupportedColorFormatForDecoder(mime: String): IntArray =
+        getSupportedColorFormat(MediaCodec.createDecoderByType(mime), mime)
 
     private fun getSupportedColorFormat(caps: CodecCapabilities): IntArray = caps.colorFormats
 
@@ -50,7 +52,8 @@ object CodecUtil {
     fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodecInfo.CodecProfileLevel> =
         getSupportedProfileLevels(MediaCodec.createDecoderByType(mime), mime)
 
-    private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> = caps.profileLevels
+    private fun getSupportedProfileLevels(caps: CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> =
+        caps.profileLevels
 
     fun isSoftwareCodec(codecName: String): Boolean {
         return codecName.startsWith("OMX.google.", ignoreCase = true) ||
@@ -100,12 +103,29 @@ object CodecUtil {
                     var colorFormatName = "unknown"
                     @Suppress("DEPRECATION")
                     when (colorFormat) {
-                        CodecCapabilities.COLOR_FormatYUV420Flexible -> colorFormatName = "YUV420Flexible"
-                        CodecCapabilities.COLOR_FormatSurface -> colorFormatName = "FormatSurface"
-                        CodecCapabilities.COLOR_FormatYUV420SemiPlanar -> colorFormatName = "YUV420SemiPlanar"
-                        CodecCapabilities.COLOR_FormatYUV420PackedPlanar -> colorFormatName = "YUV420PackedPlanar"
-                        CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar -> colorFormatName = "YUV420PackedSemiPlanar"
-                        CodecCapabilities.COLOR_FormatYUV420Planar -> colorFormatName = "YUV420Planar"
+                        CodecCapabilities.COLOR_FormatYUV420Flexible -> {
+                            colorFormatName = "YUV420Flexible"
+                        }
+
+                        CodecCapabilities.COLOR_FormatSurface -> {
+                            colorFormatName = "FormatSurface"
+                        }
+
+                        CodecCapabilities.COLOR_FormatYUV420SemiPlanar -> {
+                            colorFormatName = "YUV420SemiPlanar"
+                        }
+
+                        CodecCapabilities.COLOR_FormatYUV420PackedPlanar -> {
+                            colorFormatName = "YUV420PackedPlanar"
+                        }
+
+                        CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar -> {
+                            colorFormatName = "YUV420PackedSemiPlanar"
+                        }
+
+                        CodecCapabilities.COLOR_FormatYUV420Planar -> {
+                            colorFormatName = "YUV420Planar"
+                        }
                     }
                     val strText = String.format(
                         Locale.getDefault(),

@@ -1,11 +1,11 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.4.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.7-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.1.0--RC-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.8.0--alpha09-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-8.10.2-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/Android%20Studio-Koala%20Feature%20Drop%20|%202024.1.2%20Canary%202-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Koala_Feature_Drop_|_2024.1.2_Canary_2-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-[![Compatibility Java Version](https://img.shields.io/badge/Compatibility%20Java%20-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
+[![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
 
 [![codebeat badge](https://codebeat.co/badges/dad0676b-69a0-4850-9688-cea73ca7fb13)](https://codebeat.co/projects/github-com-yhz61010-android-master)
@@ -14,7 +14,7 @@
 # Attention
 Project configurations:
 - `minSdk` is `26` (Android 8.0)
-- `targetSdk` is `34` (Android 14)
+- `targetSdk` is `35` (Android 15)
 
 # How to import?
 

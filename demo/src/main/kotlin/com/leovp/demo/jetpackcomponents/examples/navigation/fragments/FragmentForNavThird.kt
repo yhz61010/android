@@ -11,11 +11,7 @@ import com.leovp.log.base.ITAG
 class FragmentForNavThird : BaseFragment<FragmentForNavThirdBinding>(R.layout.fragment_for_nav_third) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): FragmentForNavThirdBinding {
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentForNavThirdBinding {
         return FragmentForNavThirdBinding.inflate(inflater, container, false)
     }
 }

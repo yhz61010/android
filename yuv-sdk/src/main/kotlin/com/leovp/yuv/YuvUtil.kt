@@ -17,10 +17,10 @@ object YuvUtil {
     const val NV12 = 3
     const val YUY2 = 4
 
-    const val Rotate_0 = 0 // No rotation.
-    const val Rotate_90 = 90 // Rotate 90 degrees clockwise.
-    const val Rotate_180 = 180 // Rotate 180 degrees.
-    const val Rotate_270 = 270 // Rotate 270 degrees clockwise.
+    const val ROTATE_0 = 0 // No rotation.
+    const val ROTATE_90 = 90 // Rotate 90 degrees clockwise.
+    const val ROTATE_180 = 180 // Rotate 180 degrees.
+    const val ROTATE_270 = 270 // Rotate 270 degrees clockwise.
 
     const val SCALE_FILTER_NONE = 0 // Point sample; Fastest.
     const val SCALE_FILTER_LINEAR = 1 // Filter horizontally only.
@@ -40,7 +40,7 @@ object YuvUtil {
         width: Int,
         height: Int,
         verticallyFlip: Boolean,
-        degree: Int = Rotate_0
+        degree: Int = ROTATE_0
     ): ByteArray?
 
     /**
@@ -73,7 +73,7 @@ object YuvUtil {
         width: Int,
         height: Int,
         verticallyFlip: Boolean,
-        degree: Int = Rotate_0
+        degree: Int = ROTATE_0
     ): ByteArray?
 
     /**
@@ -141,7 +141,7 @@ object YuvUtil {
 
     external fun nv21ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
-    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int, degree: Int = Rotate_0): ByteArray
+    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int, degree: Int = ROTATE_0): ByteArray
 
     // --------------------
 

@@ -20,11 +20,7 @@ class PhotoFragment internal constructor() : Fragment() {
     private var mediaFile: File? = null
     private var mc: MediaController? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val args = arguments ?: throw IllegalAccessException("Arguments can't be null.")
         mediaFile = args.getString(FILE_NAME_KEY)?.let {
             isVideo = it.endsWith(VIDEO_EXTENSION, true)

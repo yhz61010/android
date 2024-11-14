@@ -19,12 +19,7 @@ object EventBus {
     private val replyHandlers: ConcurrentMap<String, EventBusHandler> = ConcurrentHashMap()
 
     /** same as `request` */
-    fun send(
-        address: String,
-        message: Any? = null,
-        headers: Map<String, Any>? = null,
-        handler: EventBusHandler? = null
-    ): Map<String, Any> {
+    fun send(address: String, message: Any? = null, headers: Map<String, Any>? = null, handler: EventBusHandler? = null): Map<String, Any> {
         return constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
     }
 

@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test
 class EnumExtUnitTest {
 
     enum class TouchType(val touchVal: Int) {
-        DOWN(0), UP(1), MOVE(2)
+        DOWN(0),
+        UP(1),
+        MOVE(2)
     }
 
     enum class ColorName(val shortName: String) {

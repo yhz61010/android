@@ -62,11 +62,7 @@ class LeoTextureView @JvmOverloads constructor(
 
     var videoOutputFormatChangeEvent: VideoOutputFormatChangeEvent? = null
 
-    override fun onSurfaceTextureAvailable(
-        pSurfaceTexture: SurfaceTexture,
-        width: Int,
-        height: Int
-    ) {
+    override fun onSurfaceTextureAvailable(pSurfaceTexture: SurfaceTexture, width: Int, height: Int) {
         LogContext.log.i(TAG, "onSurfaceTextureAvailable() width=$width height=$height")
         mySurfaceTexture?.let { setSurfaceTexture(it) }
         this.surface = Surface(pSurfaceTexture)

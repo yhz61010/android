@@ -79,11 +79,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var videoOutFile: File? = null
     private var videoOutUri: Uri? = null
 
-    override fun getViewBinding(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): FragmentVideoBinding {
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentVideoBinding {
         val rootBinding = FragmentVideoBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
         incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
@@ -160,8 +156,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private suspend fun setUpCamera() {
         configCamera()
         touchListener = object : CameraXTouchListener {
-            override fun onStartFocusing(x: Float, y: Float) =
-                binding.focusView.startFocus(x.toInt(), y.toInt())
+            override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
 
             override fun onFocusSuccess() = binding.focusView.focusSuccess()
 
@@ -269,13 +264,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             camProvider.unbindAll()
 
             camera = camProvider.bindToLifecycle(
-                viewLifecycleOwner, // current lifecycle owner
-                lensFacing, // either front or back facing
-                videoCapture, // video capture use case
-                preview // camera preview use case
+                // current lifecycle owner
+                viewLifecycleOwner,
+                // either front or back facing
+                lensFacing,
+                // video capture use case
+                videoCapture,
+                // camera preview use case
+                preview
             )
 
-            val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
+            val hasFlash = camera?.cameraInfo?.hasFlashUnit() == true
             val cameraName =
                 if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
             LogContext.log.i(logTag, "$cameraName camera support flash: $hasFlash")
@@ -302,10 +301,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * to VideoRecordEvent for the current recording status.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun startRecording(
-        saveInGallery: Boolean = true,
-        baseFolderName: String = BASE_FOLDER_NAME
-    ) {
+    private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
         val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION)
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
@@ -498,8 +494,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     /** Turns on or off the flashlight */
-    private fun toggleFlash() =
-        binding.btnFlash.toggleButton(
+    private fun toggleFlash() = binding.btnFlash.toggleButton(
             flag = flashMode == ImageCapture.FLASH_MODE_ON,
             rotationAngle = 360f,
             firstIcon = R.drawable.ic_flash_off,

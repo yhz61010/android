@@ -31,14 +31,12 @@ fun ByteArray.readShortLE(index: Int = 0): Short = (
     (this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)
     ).toShort()
 
-fun ByteArray.readInt(index: Int = 0): Int =
-    this[3 + index].toInt() and 0xFF or
+fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or
         (this[2 + index].toInt() and 0xFF shl 8) or
         (this[1 + index].toInt() and 0xFF shl 16) or
         (this[0 + index].toInt() and 0xFF shl 24)
 
-fun ByteArray.readIntLE(index: Int = 0): Int =
-    this[index].toInt() and 0xFF or
+fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or
         (this[index + 1].toInt() and 0xFF shl 8) or
         (this[index + 2].toInt() and 0xFF shl 16) or
         (this[index + 3].toInt() and 0xFF shl 24)
@@ -61,13 +59,11 @@ fun ByteArray.readLongLE(index: Int = 0): Long {
 
 // =============================================
 
-fun Short.toBytes(): ByteArray =
-    ByteArray(Short.SIZE_BYTES).also {
+fun Short.toBytes(): ByteArray = ByteArray(Short.SIZE_BYTES).also {
         for (i in it.indices) it[i] = (this.toInt() ushr ((Short.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
     }
 
-fun Short.toBytesLE(): ByteArray =
-    ByteArray(Short.SIZE_BYTES).also {
+fun Short.toBytesLE(): ByteArray = ByteArray(Short.SIZE_BYTES).also {
         for (i in it.indices) it[i] = ((this.toInt() ushr i * 8) and 0xFF).toByte()
     }
 
@@ -102,8 +98,7 @@ fun Int.toBytesLE(): ByteArray = ByteArray(Int.SIZE_BYTES).also {
     for (i in it.indices) it[i] = ((this ushr (i * 8)) and 0xFF).toByte()
 }
 
-fun Long.toBytes(): ByteArray =
-    ByteArray(Long.SIZE_BYTES).also {
+fun Long.toBytes(): ByteArray = ByteArray(Long.SIZE_BYTES).also {
         for (i in it.indices) it[i] = (this ushr ((Long.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
     }
 

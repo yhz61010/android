@@ -30,11 +30,9 @@ internal fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap {
     return get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
 }
 
-internal fun CameraCharacteristics.isFlashSupported(): Boolean =
-    get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
+internal fun CameraCharacteristics.isFlashSupported(): Boolean = get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
 
-internal fun CameraCharacteristics.hardwareLevel(): Int =
-    get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
+internal fun CameraCharacteristics.hardwareLevel(): Int = get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
 
 internal fun CameraCharacteristics.hardwareLevelName(): String {
     return when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
@@ -49,8 +47,7 @@ internal fun CameraCharacteristics.hardwareLevelName(): String {
 internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
     get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
 
-internal fun CameraCharacteristics.cameraSensorOrientation(): Int =
-    get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+internal fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
 /**
  * @return Return the screen rotation(**NOT** device rotation).

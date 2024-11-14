@@ -280,8 +280,7 @@ val Calendar.week
 
 /** Get week name */
 @JvmOverloads
-fun Calendar.week(locale: Locale = Locale.getDefault()): String =
-    SimpleDateFormat("E", locale).format(time)
+fun Calendar.week(locale: Locale = Locale.getDefault()): String = SimpleDateFormat("E", locale).format(time)
 
 /**
  * Set the Calendar to the date that first day of the week

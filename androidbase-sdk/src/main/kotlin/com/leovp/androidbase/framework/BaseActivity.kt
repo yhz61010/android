@@ -228,10 +228,7 @@ abstract class BaseActivity<B : ViewBinding>(@LayoutRes layoutResId: Int = 0, in
     }
 
     @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
-    fun startTrafficNetwork(
-        domain: String,
-        callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null
-    ) {
+    fun startTrafficNetwork(domain: String, callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null) {
         if (networkMonitor?.get() != null) {
             LogContext.log.w(tag, "networkMonitor had already existed! Do NOT create it again!")
             return

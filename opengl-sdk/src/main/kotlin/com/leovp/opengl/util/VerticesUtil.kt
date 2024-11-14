@@ -23,13 +23,17 @@ object VerticesUtil {
      */
     val VERTICES_COORD = floatArrayOf(
         -1.0f,
-        -1.0f, // lb
-        1.0f,
-        -1.0f, // rb
+        // lb
         -1.0f,
-        1.0f, // lt
         1.0f,
-        1.0f // rt
+        // rb
+        -1.0f,
+        -1.0f,
+        // lt
+        1.0f,
+        1.0f,
+        // rt
+        1.0f
     )
 
     /**
@@ -55,13 +59,17 @@ object VerticesUtil {
      */
     val TEX_COORD = floatArrayOf(
         0.0f,
-        1.0f, // lb
+        // lb
         1.0f,
-        1.0f, // rb
+        1.0f,
+        // rb
+        1.0f,
         0.0f,
-        0.0f, // lt
+        // lt
+        0.0f,
         1.0f,
-        0.0f // rt
+        // rt
+        0.0f
     )
 
     // ===============================
@@ -129,7 +137,10 @@ object VerticesUtil {
     )
 
     enum class Rotation {
-        NORMAL, ROTATION_90, ROTATION_180, ROTATION_270;
+        NORMAL,
+        ROTATION_90,
+        ROTATION_180,
+        ROTATION_270;
 
         companion object {
             fun getRotation(rotation: Int): Rotation {
@@ -160,6 +171,7 @@ object VerticesUtil {
                 verticesArray[4],
                 verticesArray[5]
             )
+
             Rotation.ROTATION_180 -> floatArrayOf(
                 verticesArray[6],
                 verticesArray[7],
@@ -170,6 +182,7 @@ object VerticesUtil {
                 verticesArray[0],
                 verticesArray[1]
             )
+
             Rotation.ROTATION_270 -> floatArrayOf(
                 verticesArray[4],
                 verticesArray[5],
@@ -180,6 +193,7 @@ object VerticesUtil {
                 verticesArray[2],
                 verticesArray[3]
             )
+
             else -> verticesArray
         }
     }

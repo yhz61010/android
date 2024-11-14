@@ -95,11 +95,7 @@ class GalleryFragment internal constructor() : Fragment() {
         LogContext.log.d(TAG, "mediaList=$mediaList")
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _fragmentGalleryBinding = FragmentGalleryBinding.inflate(inflater, container, false)
         return fragmentGalleryBinding.root
     }

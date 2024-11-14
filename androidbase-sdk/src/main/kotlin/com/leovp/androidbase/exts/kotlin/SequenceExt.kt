@@ -151,8 +151,7 @@ inline fun <T> Sequence<T>.toCharArray(crossinline transform: (T) -> Char): Char
  * val intList: List<Int> = sequence.toArrayList()
  * ```
  */
-fun <T> Sequence<T>.toArrayList(): ArrayList<T> =
-    ArrayList<T>().apply { for (item in this@toArrayList) add(item) }
+fun <T> Sequence<T>.toArrayList(): ArrayList<T> = ArrayList<T>().apply { for (item in this@toArrayList) add(item) }
 
 /**
  * Applies the given [transform] function to each element of a new ArrayList.
@@ -175,5 +174,4 @@ inline fun <T, reified R> Sequence<T>.toArrayList(crossinline transform: (T) -> 
  * val filterList: List<Int> = sequence.filterToArrayList { it > 5 }
  * ```
  */
-inline fun <T> Sequence<T>.filterToArrayList(crossinline predicate: (T) -> Boolean): ArrayList<T> =
-    filterTo(ArrayList(), predicate)
+inline fun <T> Sequence<T>.filterToArrayList(crossinline predicate: (T) -> Boolean): ArrayList<T> = filterTo(ArrayList(), predicate)

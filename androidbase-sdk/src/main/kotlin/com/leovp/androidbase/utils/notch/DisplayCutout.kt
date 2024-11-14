@@ -20,7 +20,9 @@ interface DisplayCutout {
     }
 
     enum class CutoutPosition {
-        LEFT, MIDDLE, RIGHT
+        LEFT,
+        MIDDLE,
+        RIGHT
     }
 
     @Keep

@@ -55,11 +55,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             //            LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
         }
 
-        override fun onOutputBufferAvailable(
-            codec: MediaCodec,
-            outputBufferId: Int,
-            info: MediaCodec.BufferInfo
-        ) {
+        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
             runCatching {
                 //                    LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
@@ -126,8 +122,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
-        fun setGoogleEncoder(useGoogleEncoder: Boolean) =
-            apply { this.useGoogleEncoder = useGoogleEncoder }
+        fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
 
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
@@ -306,12 +301,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendThread = null
     }
 
-    private fun onSendAvcFrame(
-        bb: ByteBuffer,
-        flags: Int,
-        bufferSize: Int,
-        presentationTimeUs: Long
-    ) {
+    private fun onSendAvcFrame(bb: ByteBuffer, flags: Int, bufferSize: Int, presentationTimeUs: Long) {
         //        var naluIndex = 4
         //        if (bb[2].toInt() == 0x01) {
         //            naluIndex = 3

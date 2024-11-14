@@ -24,32 +24,17 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean {
 // ============================================================================
 
 /** Launch a Activity */
-fun Context.startActivity(
-    cls: Class<*>,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) {
+fun Context.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
     this.startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity */
-fun Context.startActivity(
-    kcls: KClass<*>,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) =
+fun Context.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity */
-fun Context.startActivity(
-    clsStr: String,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) =
+fun Context.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity */
@@ -64,32 +49,17 @@ inline fun <reified T : Context> Context.startActivity(
 // --------------------
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(
-    cls: Class<*>,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) {
+fun Fragment.startActivity(cls: Class<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
     val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
     startActivity(if (extras == null) intent else extras(intent), options)
 }
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(
-    kcls: KClass<*>,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) =
+fun Fragment.startActivity(kcls: KClass<*>, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(kcls.java, extras, flags, options)
 
 /** Launch a Activity in Fragment */
-fun Fragment.startActivity(
-    clsStr: String,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null
-) =
+fun Fragment.startActivity(clsStr: String, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
     startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity in Fragment */

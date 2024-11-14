@@ -12,7 +12,8 @@ private val classDirectoriesTree = fileTree("${project.buildDir}") {
     include(
         "**/classes/**/main/**",
         "**/intermediates/classes/debug/**",
-        "**/intermediates/javac/debug/*/classes/**", // Android Gradle Plugin 3.2.x support.
+        // Android Gradle Plugin 3.2.x support.
+        "**/intermediates/javac/debug/*/classes/**",
         "**/tmp/kotlin-classes/debug/**"
     )
     exclude(
@@ -24,8 +25,10 @@ private val classDirectoriesTree = fileTree("${project.buildDir}") {
         "**/*Test*.*",
         "android/**/*.*",
         "**/models/**",
-        "**/*\$Lambda$*.*", // Jacoco can not handle several "$" in class name.
-        "**/*\$inlined$*.*" // Kotlin specific, Jacoco can not handle several "$" in class name.
+        // Jacoco can not handle several "$" in class name.
+        "**/*\$Lambda$*.*",
+        // Kotlin specific, Jacoco can not handle several "$" in class name.
+        "**/*\$inlined$*.*"
     )
 }
 

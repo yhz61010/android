@@ -75,6 +75,5 @@ interface ScreenProcessor {
                 it.supportedTypes.indexOfFirst { type -> type.equals(mimeType, true) } > -1
             }
 
-    fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> =
-        getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
+    fun getHevcCodec(encoder: Boolean = true): List<MediaCodecInfo> = getCodecListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC, encoder)
 }

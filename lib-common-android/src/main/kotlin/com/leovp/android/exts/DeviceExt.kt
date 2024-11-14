@@ -118,7 +118,8 @@ val Context.screenRealResolution: Size
             Size(bounds.width(), bounds.height())
         } else {
             val displayMetrics = DisplayMetrics()
-            @Suppress("DEPRECATION") windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
             Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
@@ -184,8 +185,10 @@ fun Context.getScreenHeight(surfaceRotation: Int = screenSurfaceRotation, screen
 fun Context.getScreenSize(surfaceRotation: Int = screenSurfaceRotation, screenSize: Size = screenRealResolution): Size {
     return when (surfaceRotation) {
         Surface.ROTATION_0, Surface.ROTATION_180 -> Size(min(screenSize.width, screenSize.height), max(screenSize.width, screenSize.height))
-        Surface.ROTATION_90, Surface.ROTATION_270 -> Size(max(screenSize.width, screenSize.height),
-            min(screenSize.width, screenSize.height))
+        Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
+            max(screenSize.width, screenSize.height),
+            min(screenSize.width, screenSize.height)
+        )
 
         else -> Size(min(screenSize.width, screenSize.height), max(screenSize.width, screenSize.height))
     }
@@ -333,7 +336,6 @@ fun getUuid(): String = UUID.randomUUID().toString()
 // making it unique per app, the design of DRM systems does not allow much to do against it.
 // Maybe in the future apps should require permissions to access DRM services.
 fun getUniqueIdByMediaDrm(): ByteArray? {
-
     // val COMMON_PSSH_UUID = UUID(0x1077EFECC0B24D02L, -0x531cc3e1ad1d04b5L)
     // val CLEARKEY_UUID = UUID(-0x1d8e62a7567a4c37L, 0x781AB030AF78D30EL)
     // val WIDEVINE_UUID = UUID(-0x121074568629b532L, -0x5c37d8232ae2de13L)
@@ -468,7 +470,6 @@ fun isLandscape(surfaceRotation: Int): Boolean = Surface.ROTATION_90 == surfaceR
  * - Any other value will be ignored.
  */
 fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
     // If device is already in normal portrait mode, the wide range is:
     // [300, 359], [0, 60]
 
@@ -503,7 +504,6 @@ fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrie
  * - Any other value will be ignored.
  */
 fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
     // If device is already in normal landscape mode, the wide range is:
     // [210, 270], [270, 330]
 
@@ -528,7 +528,6 @@ fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - Any other value will be ignored.
  */
 fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
     // If device is already in reverse landscape mode, the wide range is:
     // [30, 90], [90, 150]
 
@@ -553,7 +552,6 @@ fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOr
  * - Any other value will be ignored.
  */
 fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-
     // If device is already in reverse portrait mode, the wide range is:
     // [120, 180], [180, 240]
 
@@ -668,10 +666,12 @@ val DEGREE_TO_SURFACE_ROTATION =
  * - Surface.ROTATION_270 (90 degrees clockwise)
  */
 val SCREEN_ORIENTATION_TO_SURFACE_ORIENTATIONS =
-    mapOf(SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
+    mapOf(
+        SCREEN_ORIENTATION_PORTRAIT to Surface.ROTATION_0,
         SCREEN_ORIENTATION_LANDSCAPE to Surface.ROTATION_90,
         SCREEN_ORIENTATION_REVERSE_PORTRAIT to Surface.ROTATION_180,
-        SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270)
+        SCREEN_ORIENTATION_REVERSE_LANDSCAPE to Surface.ROTATION_270
+    )
 
 val Int.screenOrientationName: String
     get() = when (this) {

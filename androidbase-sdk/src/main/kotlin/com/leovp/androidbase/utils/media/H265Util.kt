@@ -179,17 +179,18 @@ object H265Util {
 
     fun isSei(data: ByteArray): Boolean {
         val naluType: Int = getNaluType(data)
-        return NALU_TYPE_PREFIX_SEI == naluType /* 39 */ || NALU_TYPE_SUFFIX_SEI == naluType /* 40 */
+        // 39 // 40
+        return NALU_TYPE_PREFIX_SEI == naluType || NALU_TYPE_SUFFIX_SEI == naluType
     }
 
     fun isPrefixSei(data: ByteArray): Boolean {
         val naluType: Int = getNaluType(data)
-        return NALU_TYPE_PREFIX_SEI == naluType /* 39 */
+        return NALU_TYPE_PREFIX_SEI == naluType // 39
     }
 
     fun isSuffixSei(data: ByteArray): Boolean {
         val naluType: Int = getNaluType(data)
-        return NALU_TYPE_SUFFIX_SEI == naluType /* 40 */
+        return NALU_TYPE_SUFFIX_SEI == naluType // 40
     }
 
     /**

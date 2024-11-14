@@ -121,10 +121,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
     private fun getConnectivityMarshmallowManagerCallback(): ConnectivityManager.NetworkCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities
-                ) {
+                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                     if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                         networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     ) {
@@ -168,8 +165,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    private fun getNetworkType(): String =
-        NetworkUtil.getNetworkTypeName(context) ?: NetworkUtil.TYPE_OTHER
+    private fun getNetworkType(): String = NetworkUtil.getNetworkTypeName(context) ?: NetworkUtil.TYPE_OTHER
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun updateConnection() {

@@ -81,7 +81,15 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
 
     @Keep
     enum class TouchType {
-        DOWN, MOVE, UP, CLEAR, UNDO, DRAG, HOME, BACK, RECENT
+        DOWN,
+        MOVE,
+        UP,
+        CLEAR,
+        UNDO,
+        DRAG,
+        HOME,
+        BACK,
+        RECENT
     }
 
     private var vps: ByteArray? = null

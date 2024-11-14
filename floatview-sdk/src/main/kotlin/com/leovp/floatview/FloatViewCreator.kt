@@ -37,8 +37,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
 
     private var config = DefaultConfig(globalConfig = FloatView.globalConfig.copy())
 
-    fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator =
-        apply {
+    fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
             config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
                 handle?.invoke(it)
             }
@@ -70,8 +69,7 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
      * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom layer.
      * So the float layer itself can not be touched anymore.
      */
-    fun listener(touchListener: FloatView.TouchEventListener): FloatViewCreator =
-        apply { config.touchEventListener = touchListener }
+    fun listener(touchListener: FloatView.TouchEventListener): FloatViewCreator = apply { config.touchEventListener = touchListener }
 
     /**
      * Create float view but don't add it to the window manager.

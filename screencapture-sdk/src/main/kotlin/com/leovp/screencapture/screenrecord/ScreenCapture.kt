@@ -54,8 +54,7 @@ object ScreenCapture {
         // ==================================================
         // ===== Common For H26x
         // ==================================================
-        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
-            apply { this.encodeType = encodeType }
+        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) = apply { this.encodeType = encodeType }
 
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }

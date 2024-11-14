@@ -217,7 +217,10 @@ class LangUtil private constructor(private val ctx: Context) {
         // Use commit() instead of apply(), because sometimes we kill the application process
         // immediately that prevents apply() from finishing
         // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
-        pref.edit().run { putString(PREF_KEY_LANGUAGE, language.toString()); commit() }
+        pref.edit().run {
+            putString(PREF_KEY_LANGUAGE, language.toString())
+            commit()
+        }
         currentAppLang = language
     }
 

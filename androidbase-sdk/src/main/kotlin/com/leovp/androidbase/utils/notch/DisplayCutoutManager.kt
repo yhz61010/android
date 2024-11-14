@@ -50,7 +50,7 @@ class DisplayCutoutManager private constructor(private val activity: Activity) {
                     val positions: MutableList<DisplayCutout.CutoutPosition> = ArrayList()
                     cutoutInfo.positions = positions
                     val halfScreenWidth = activity.getScreenWidth() / 2
-                    for(rect in rects) {
+                    for (rect in rects) {
                         if (rect.left < halfScreenWidth && halfScreenWidth < rect.right) {
                             positions.add(DisplayCutout.CutoutPosition.MIDDLE)
                         } else if (halfScreenWidth < rect.left) {

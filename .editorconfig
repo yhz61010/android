@@ -19,6 +19,7 @@ ktlint_standard_no-wildcard-imports = disabled
 
 [*.{kt,kts}]
 ktlint_code_style = android_studio
+ktlint_function_naming_ignore_when_annotated_with = Composable
 ktlint_standard_indent = disabled
 ktlint_standard_spacing-between-declarations-with-annotations = disabled
 ij_kotlin_allow_trailing_comma = true

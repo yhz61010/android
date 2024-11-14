@@ -87,7 +87,10 @@ val Context.screenAvailableResolution: Size
 
             // Gets all excluding insets
             val windowInsets = metrics.windowInsets
-            val insets = windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+            val insets = windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.navigationBars()
+                or WindowInsets.Type.displayCutout()
+            )
 
             val insetsWidth = insets.right + insets.left
             val insetsHeight = insets.top + insets.bottom
@@ -113,7 +116,9 @@ val Context.screenAvailableResolution: Size
 
 val Context.screenRealResolution: Size
     get() {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // this.display?.getRealSize(size)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+
+            // this.display?.getRealSize(size)
             val bounds = windowManager.currentWindowMetrics.bounds
             Size(bounds.width(), bounds.height())
         } else {
@@ -144,7 +149,10 @@ val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
  * @return The screen width in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
  */
-fun Context.getScreenWidth(surfaceRotation: Int = screenSurfaceRotation, screenSize: Size = screenRealResolution): Int {
+fun Context.getScreenWidth(
+    surfaceRotation: Int = screenSurfaceRotation,
+    screenSize: Size = screenRealResolution,
+): Int {
     return when (surfaceRotation) {
         Surface.ROTATION_0, Surface.ROTATION_180 -> min(screenSize.width, screenSize.height)
         Surface.ROTATION_90, Surface.ROTATION_270 -> max(screenSize.width, screenSize.height)
@@ -163,7 +171,10 @@ fun Context.getScreenWidth(surfaceRotation: Int = screenSurfaceRotation, screenS
  * @return The screen height in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
  */
-fun Context.getScreenHeight(surfaceRotation: Int = screenSurfaceRotation, screenSize: Size = screenRealResolution): Int {
+fun Context.getScreenHeight(
+    surfaceRotation: Int = screenSurfaceRotation,
+    screenSize: Size = screenRealResolution,
+): Int {
     return when (surfaceRotation) {
         Surface.ROTATION_0, Surface.ROTATION_180 -> max(screenSize.width, screenSize.height)
         Surface.ROTATION_90, Surface.ROTATION_270 -> min(screenSize.width, screenSize.height)
@@ -182,9 +193,16 @@ fun Context.getScreenHeight(surfaceRotation: Int = screenSurfaceRotation, screen
  * @return The screen size in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
  */
-fun Context.getScreenSize(surfaceRotation: Int = screenSurfaceRotation, screenSize: Size = screenRealResolution): Size {
+fun Context.getScreenSize(
+    surfaceRotation: Int = screenSurfaceRotation,
+    screenSize: Size = screenRealResolution,
+): Size {
     return when (surfaceRotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180 -> Size(min(screenSize.width, screenSize.height), max(screenSize.width, screenSize.height))
+        Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
+            min(screenSize.width, screenSize.height),
+            max(screenSize.width, screenSize.height)
+        )
+
         Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
             max(screenSize.width, screenSize.height),
             min(screenSize.width, screenSize.height)
@@ -265,7 +283,8 @@ val Context.isNavigationBarShown
 /**
  * In some devices(Like Google Pixel), although I've selected [Gesture navigation],
  * the real height of navigation bar is still the same as the height of [2/3-button navigation].
- * In order to get the exactly height of navigation bar, I can not use the value which get from `navigation_bar_height`.
+ * In order to get the exactly height of navigation bar,
+ * I can not use the value which get from `navigation_bar_height`.
  *
  * ```
  * ⎸             ⎸
@@ -286,12 +305,12 @@ val Context.isNavigationBarShown
 val Context.navigationBarHeight
     get(): Int {
 
-        //        var result = 0
-        //        val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-        //        if (resourceId > 0) {
-        //            result = this.resources.getDimensionPixelSize(resourceId)
-        //        }
-        //        return result
+        // var result = 0
+        // val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        // if (resourceId > 0) {
+        //     result = this.resources.getDimensionPixelSize(resourceId)
+        // }
+        // return result
 
         return screenRealHeight - screenAvailableHeight
     }
@@ -350,7 +369,9 @@ fun getUniqueIdByMediaDrm(): ByteArray? {
 }
 
 @SuppressLint("HardwareIds")
-fun Context.getAndroidId(): String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+fun Context.getAndroidId(): String = Settings.Secure.getString(
+    contentResolver, Settings.Secure.ANDROID_ID
+)
 
 @SuppressLint("HardwareIds")
 fun Context.getUniqueID(): String {
@@ -416,16 +437,19 @@ fun isProbablyAnEmulator(): Boolean {
 }
 
 fun Context.isTablet(): Boolean {
-    return (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE
+    return (
+        resources.configuration.screenLayout
+        and Configuration.SCREENLAYOUT_SIZE_MASK
+    ) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 }
 
 // ================================
 
-fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     return isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
 }
 
-fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     return isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
 }
 
@@ -442,7 +466,8 @@ fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevO
  * - Surface.ROTATION_180,
  * - Surface.ROTATION_270.
  */
-fun isPortrait(surfaceRotation: Int): Boolean = Surface.ROTATION_0 == surfaceRotation || Surface.ROTATION_180 == surfaceRotation
+fun isPortrait(surfaceRotation: Int): Boolean =
+    Surface.ROTATION_0 == surfaceRotation || Surface.ROTATION_180 == surfaceRotation
 
 /**
  * **Attention:**
@@ -455,7 +480,8 @@ fun isPortrait(surfaceRotation: Int): Boolean = Surface.ROTATION_0 == surfaceRot
  * - Surface.ROTATION_180,
  * - Surface.ROTATION_270.
  */
-fun isLandscape(surfaceRotation: Int): Boolean = Surface.ROTATION_90 == surfaceRotation || Surface.ROTATION_270 == surfaceRotation
+fun isLandscape(surfaceRotation: Int): Boolean =
+    Surface.ROTATION_90 == surfaceRotation || Surface.ROTATION_270 == surfaceRotation
 
 // ---------------
 
@@ -469,14 +495,16 @@ fun isLandscape(surfaceRotation: Int): Boolean = Surface.ROTATION_90 == surfaceR
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     // If device is already in normal portrait mode, the wide range is:
     // [300, 359], [0, 60]
 
     // The narrow range is used to check the device real orientation.
     // [330, 359], [0, 30]
 
-    return if (Surface.ROTATION_0 == screenSurfaceRotation || SCREEN_ORIENTATION_PORTRAIT == prevOrientation) {
+    return if (Surface.ROTATION_0 == screenSurfaceRotation ||
+        SCREEN_ORIENTATION_PORTRAIT == prevOrientation
+    ) {
         (degree in 301..359) || (degree in 0 until 60) // wide range
     } else {
         (degree in 330..359) || (degree in 0..30) // narrow range
@@ -503,14 +531,16 @@ fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrie
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     // If device is already in normal landscape mode, the wide range is:
     // [210, 270], [270, 330]
 
     // The narrow range is used to check the device real orientation.
     // [240, 270], [270, 300]
 
-    return if (Surface.ROTATION_90 == screenSurfaceRotation || SCREEN_ORIENTATION_LANDSCAPE == prevOrientation) {
+    return if (Surface.ROTATION_90 == screenSurfaceRotation ||
+        SCREEN_ORIENTATION_LANDSCAPE == prevOrientation
+    ) {
         degree in 211 until 330 // wide range
     } else {
         degree in 240..300 // narrow range
@@ -527,14 +557,16 @@ fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     // If device is already in reverse landscape mode, the wide range is:
     // [30, 90], [90, 150]
 
     // The narrow range is used to check the device real orientation.
     // [60, 90], [90, 120]
 
-    return if (Surface.ROTATION_270 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation) {
+    return if (Surface.ROTATION_270 == screenSurfaceRotation ||
+        SCREEN_ORIENTATION_REVERSE_LANDSCAPE == prevOrientation
+    ) {
         degree in 31 until 150 // wide range
     } else {
         degree in 60..120 // narrow range
@@ -551,26 +583,28 @@ fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOr
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
     // If device is already in reverse portrait mode, the wide range is:
     // [120, 180], [180, 240]
 
     // The narrow range is used to check the device real orientation.
     // [150, 180], [180, 210]
 
-    return if (Surface.ROTATION_180 == screenSurfaceRotation || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+    return if (Surface.ROTATION_180 == screenSurfaceRotation ||
+        SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation
+    ) {
         degree in 121 until 240 // wide range
     } else {
         degree in 150..210 // narrow range
     }
 
-    //    val ssr = screenSurfaceRotation
-    //    return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
-    //        if (Surface.ROTATION_180 == ssr && degree == 240) true
-    //        else if (Surface.ROTATION_90 == ssr) false
-    //        else degree in 121 until 240 // wide range
-    //    } else
-    //        degree in 150..210 // narrow range
+    // val ssr = screenSurfaceRotation
+    // return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+    //     if (Surface.ROTATION_180 == ssr && degree == 240) true
+    //     else if (Surface.ROTATION_90 == ssr) false
+    //     else degree in 121 until 240 // wide range
+    // } else
+    //     degree in 150..210 // narrow range
 }
 
 // ---------------
@@ -583,7 +617,7 @@ fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - -1 means unknown or the orientation is not changed.
  */
-fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int {
+fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Int {
     return when {
         isNormalPortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_PORTRAIT
         isReversePortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
@@ -618,7 +652,9 @@ fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prev
 val Context.screenSurfaceRotation: Int
     @UiContext
     get() {
-        if (this !is Activity && this !is Service) error("Context can only be either Activity(Fragment) or Service.")
+        if (this !is Activity && this !is Service) {
+            error("Context can only be either Activity(Fragment) or Service.")
+        }
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (this is Service) {
 
@@ -647,8 +683,12 @@ val Context.screenSurfaceRotation: Int
  * - Surface.ROTATION_180
  * - Surface.ROTATION_270 (90 degrees clockwise)
  */
-val SURFACE_ROTATION_TO_DEGREE =
-    mapOf(Surface.ROTATION_0 to 0, Surface.ROTATION_90 to 90, Surface.ROTATION_180 to 180, Surface.ROTATION_270 to 270)
+val SURFACE_ROTATION_TO_DEGREE = mapOf(
+    Surface.ROTATION_0 to 0,
+    Surface.ROTATION_90 to 90,
+    Surface.ROTATION_180 to 180,
+    Surface.ROTATION_270 to 270
+)
 
 /**
  * - Surface.ROTATION_0 (no rotation)
@@ -656,8 +696,12 @@ val SURFACE_ROTATION_TO_DEGREE =
  * - Surface.ROTATION_180
  * - Surface.ROTATION_270 (90 degrees clockwise)
  */
-val DEGREE_TO_SURFACE_ROTATION =
-    mapOf(0 to Surface.ROTATION_0, 90 to Surface.ROTATION_90, 180 to Surface.ROTATION_180, 270 to Surface.ROTATION_270)
+val DEGREE_TO_SURFACE_ROTATION = mapOf(
+    0 to Surface.ROTATION_0,
+    90 to Surface.ROTATION_90,
+    180 to Surface.ROTATION_180,
+    270 to Surface.ROTATION_270
+)
 
 /**
  * - Surface.ROTATION_0 (no rotation)

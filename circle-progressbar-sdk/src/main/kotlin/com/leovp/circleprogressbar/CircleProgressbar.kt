@@ -311,9 +311,14 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     fun removeAllOnClickListeners() = internalClickListeners.clear()
 
     fun addOnStateChangedListeners(listener: OnStateChangedListener): Boolean =
-        if (!internalOnStateChangedListeners.contains(listener)) internalOnStateChangedListeners.add(listener) else false
+        if (!internalOnStateChangedListeners.contains(listener)) {
+            internalOnStateChangedListeners.add(listener)
+        } else {
+            false
+        }
 
-    fun removeOnStateChangedListener(listener: OnStateChangedListener): Boolean = internalOnStateChangedListeners.remove(listener)
+    fun removeOnStateChangedListener(listener: OnStateChangedListener): Boolean =
+        internalOnStateChangedListeners.remove(listener)
 
     private fun callStateChangedListener(newState: State.Type) {
         for (listener in internalOnStateChangedListeners) listener.onStateChanged(newState)
@@ -343,8 +348,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (!internalCancelable &&
             (
                 currState == State.Type.STATE_INDETERMINATE ||
-                currState == State.Type.STATE_DETERMINATE
-            )
+                    currState == State.Type.STATE_DETERMINATE
+                )
         ) {
             return
         }
@@ -382,17 +387,25 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     private fun drawStaticState(canvas: Canvas, state: State) {
         val bgDrawable: Drawable? =
-            if (internalDefaultBgDrawable != state.backgroundDrawable) state.backgroundDrawable else internalDefaultBgDrawable
+            if (internalDefaultBgDrawable != state.backgroundDrawable) {
+                state.backgroundDrawable
+            } else {
+                internalDefaultBgDrawable
+            }
         setBgDrawable(
             canvas,
             bgDrawable,
-            if (internalDefaultBgColor != state.backgroundColor) state.backgroundColor else internalDefaultBgColor
+            if (internalDefaultBgColor != state.backgroundColor) {
+                state.backgroundColor
+            } else {
+                internalDefaultBgColor
+            }
         )
         state.getIcon().setTint(state.iconTint)
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
 
-    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
+    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float,) {
         require(State.Type.STATE_INDETERMINATE == currState || State.Type.STATE_DETERMINATE == currState) {
             "Illegal state. Current state=$currState"
         }
@@ -414,7 +427,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun setProgressText(canvas: Canvas) {
         internalProgressTextPaint.color = internalProgressTextColor
         internalProgressTextPaint.textSize = internalProgressTextSize.toFloat()
-        val baseLineY: Float = abs(internalProgressTextPaint.ascent() + internalProgressTextPaint.descent()) / 2
+        val baseLineY: Float = abs(
+            internalProgressTextPaint.ascent() +
+            internalProgressTextPaint.descent()
+        ) / 2
         canvas.drawText(
             "$internalCurrProgress%",
             width.toFloat() / 2,

@@ -16,7 +16,9 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * 基础框架
  */
-class L1U1BasicSkeletonRenderer(@Suppress("unused") private val ctx: Context) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
+class L1U1BasicSkeletonRenderer(
+    @Suppress("unused") private val ctx: Context
+) : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
     override fun getTagName(): String = L1U1BasicSkeletonRenderer::class.java.simpleName
 
     private companion object {

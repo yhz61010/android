@@ -185,5 +185,6 @@ object PcmToWavUtil {
     }
 
     @Throws(IOException::class)
-    private fun copy(source: InputStream, output: OutputStream, bufferSize: Int = TRANSFER_BUFFER_SIZE) = source.copyTo(output, bufferSize)
+    private fun copy(source: InputStream, output: OutputStream, bufferSize: Int = TRANSFER_BUFFER_SIZE) =
+        source.copyTo(output, bufferSize)
 }

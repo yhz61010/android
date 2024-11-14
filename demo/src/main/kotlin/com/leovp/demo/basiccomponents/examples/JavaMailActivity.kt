@@ -56,7 +56,12 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
     // smtp port 25, ssl port 465
     // pop3 port 110, ssl port 995
     // imap port 143, ssl port 993
-    private fun getServerProperties(protocol: String, mailHost: String, port: Int, enableSsl: Boolean = false): Properties {
+    private fun getServerProperties(
+        protocol: String,
+        mailHost: String,
+        port: Int,
+        enableSsl: Boolean = false
+    ): Properties {
         return Properties().apply {
             setProperty("mail.transport.protocol", protocol)
             setProperty("mail.$protocol.host", mailHost)

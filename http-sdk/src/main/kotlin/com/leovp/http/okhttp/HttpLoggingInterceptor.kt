@@ -116,9 +116,14 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
         val connection = chain.connection()
         val protocol = connection?.protocol() ?: Protocol.HTTP_1_1
         var hasBoundary = false
-        logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+        logger.log(
+            "──────────────────────────────────────────────────────────────────────────────────────────────────"
+        )
         var requestStartMessage = "--> ${request.method} ${request.url} $protocol"
-        if (!logHeaders && hasRequestBody) requestStartMessage = "$requestStartMessage (${requestBody?.contentLength()}-byte body)"
+        if (!logHeaders && hasRequestBody) {
+            requestStartMessage =
+            "$requestStartMessage (${requestBody?.contentLength()}-byte body)"
+        }
         logger.log(requestStartMessage)
         if (logHeaders) {
             if (hasRequestBody) {
@@ -138,8 +143,13 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             for (i in 0 until headers.size) {
                 val name = headers.name(i)
                 // Skip headers from the request body as they are explicitly logged above.
-                if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(name, ignoreCase = true)) {
-                    logger.log("$name: ${headers.value(i)}", outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE)
+                if (!"Content-Type".equals(name, ignoreCase = true) &&
+                    !"Content-Length".equals(name, ignoreCase = true)
+                ) {
+                    logger.log(
+                        "$name: ${headers.value(i)}",
+                        outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE
+                    )
                 }
             }
             if (!logBody || !hasRequestBody) {
@@ -147,7 +157,9 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             } else if (bodyEncoded(request.headers)) {
                 logger.log("--> END ${request.method} (encoded body omitted)")
             } else if (hasBoundary) {
-                logger.log("--> END ${request.method} (Found boundary ${requestBody?.contentLength()}-byte body omitted)")
+                logger.log(
+                    "--> END ${request.method} (Found boundary ${requestBody?.contentLength()}-byte body omitted)"
+                )
             } else {
                 val buffer = Buffer()
                 requestBody?.writeTo(buffer)
@@ -164,31 +176,45 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                     logger.log("--> END ${request.method} (binary ${requestBody?.contentLength()}-byte body omitted)")
                 }
             }
-            logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+            logger.log(
+                "──────────────────────────────────────────────────────────────────────────────────────────────────"
+            )
         }
         val startNs = System.nanoTime()
         val response: Response = try {
             chain.proceed(request)
         } catch (e: Exception) {
-            logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+            logger.log(
+                "──────────────────────────────────────────────────────────────────────────────────────────────────"
+            )
             logger.log("<-- HTTP FAILED: $e")
-            logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+            logger.log(
+                "──────────────────────────────────────────────────────────────────────────────────────────────────"
+            )
             throw e
         }
         val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
-        logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+        logger.log(
+            "──────────────────────────────────────────────────────────────────────────────────────────────────"
+        )
         val responseBody = response.body
         val contentLength = responseBody?.contentLength() ?: -1
         val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
         logger.log(
-            "<-- ${response.code} ${response.message} ${response.request.url} (${tookMs}ms${if (!logHeaders) " , $bodySize body" else ""})"
+            "<-- ${response.code} ${response.message} ${response.request.url} " +
+                "(${tookMs}ms${if (!logHeaders) " , $bodySize body" else ""})"
         )
         if (logHeaders) {
             val headers = response.headers
             var hasInlineFile = false
             for (i in 0 until headers.size) {
-                logger.log("${headers.name(i)}: ${headers.value(i)}", outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE)
-                if ("Content-Disposition".contentEquals(headers.name(i)) && headers.value(i).startsWith("inline; filename")) {
+                logger.log(
+                    "${headers.name(i)}: ${headers.value(i)}",
+                    outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE
+                )
+                if ("Content-Disposition".contentEquals(headers.name(i)) &&
+                    headers.value(i).startsWith("inline; filename")
+                ) {
                     hasInlineFile = true
                 }
             }
@@ -218,7 +244,9 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                 logger.log("<-- END HTTP (${buffer?.size}-byte body)")
             }
         }
-        logger.log("─────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+        logger.log(
+            "──────────────────────────────────────────────────────────────────────────────────────────────────"
+        )
         return response
     }
 

@@ -126,7 +126,8 @@ fun Activity.immersiveExit(darkMode: Boolean? = null) {
 /**
  * Set immersive color of status bar by resource id.
  */
-fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) = immersive(ContextCompat.getColor(this, color), darkMode)
+fun Activity.immersiveRes(@ColorRes color: Int, darkMode: Boolean? = null) =
+    immersive(ContextCompat.getColor(this, color), darkMode)
 
 // </editor-fold>
 

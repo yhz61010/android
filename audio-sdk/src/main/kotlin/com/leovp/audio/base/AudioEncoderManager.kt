@@ -12,7 +12,11 @@ import com.leovp.audio.base.iters.OutputCallback
  * Date: 20-11-14 下午3:58
  */
 object AudioEncoderManager {
-    fun getWrapper(type: AudioType, encoderInfo: AudioEncoderInfo, outputCallback: OutputCallback): AudioEncoderWrapper? {
+    fun getWrapper(
+        type: AudioType,
+        encoderInfo: AudioEncoderInfo,
+        outputCallback: OutputCallback
+    ): AudioEncoderWrapper? {
         return when (type) {
             AudioType.PCM -> null
             AudioType.COMPRESSED_PCM -> CompressedPcmEncoderWrapper(encoderInfo, outputCallback)

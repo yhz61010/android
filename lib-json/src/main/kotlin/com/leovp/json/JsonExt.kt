@@ -43,12 +43,14 @@ annotation class ExcludeDeserialize
  */
 val gson: Gson
     get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
-        override fun shouldSkipField(f: FieldAttributes) = (f.annotations.find { it is Exclude } as? Exclude)?.serialize == true ||
+        override fun shouldSkipField(f: FieldAttributes) =
+            (f.annotations.find { it is Exclude } as? Exclude)?.serialize == true ||
                 f.annotations.find { it is ExcludeSerialize } != null
 
         override fun shouldSkipClass(clazz: Class<*>?) = false
     }).addDeserializationExclusionStrategy(object : ExclusionStrategy {
-        override fun shouldSkipField(f: FieldAttributes) = (f.annotations.find { it is Exclude } as? Exclude)?.deserialize == true ||
+        override fun shouldSkipField(f: FieldAttributes) =
+            (f.annotations.find { it is Exclude } as? Exclude)?.deserialize == true ||
                 f.annotations.find { it is ExcludeDeserialize } != null
 
         override fun shouldSkipClass(clazz: Class<*>?) = false

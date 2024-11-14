@@ -70,7 +70,8 @@ object PBKDF2Util {
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): SecretKey = generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey =
+        generateKeyWithSHA512(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]
@@ -137,7 +138,8 @@ object PBKDF2Util {
         salt: String,
         iterations: Int = DEFAULT_ITERATIONS,
         @IntRange(from = 128, to = 256) outputKeyLengthInBits: Int = DEFAULT_SALT_LENGTH shl 3
-    ): SecretKey = generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
+    ): SecretKey =
+        generateKeyWithSHA1(plainPassphrase.toCharArray(), salt.toByteArray(), iterations, outputKeyLengthInBits)
 
     /**
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call [SecretKey#encoded]

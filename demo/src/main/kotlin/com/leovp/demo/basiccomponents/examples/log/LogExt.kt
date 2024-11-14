@@ -8,7 +8,13 @@ import com.leovp.log.LogContext
  * Date: 2023/9/19 16:08
  */
 
-inline fun d(tag: String = "", throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1, generateMsg: () -> Any?) {
+inline fun d(
+    tag: String = "",
+    throwable: Throwable? = null,
+    fullOutput: Boolean = false,
+    outputType: Int = -1,
+    generateMsg: () -> Any?
+) {
     if (BuildConfig.DEBUG) {
         val ret = generateMsg()
         if (ret is String?) {

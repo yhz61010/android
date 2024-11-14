@@ -76,7 +76,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private lateinit var incPreviewGridBinding: IncPreviewGridBinding
     private lateinit var incRatioBinding: IncRatioOptionsBinding
 
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): FragmentCameraBinding {
+    override fun getViewBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): FragmentCameraBinding {
         val rootBinding = FragmentCameraBinding.inflate(inflater, container, false)
         // https://stackoverflow.com/a/64858848/1685062
         incPreviewGridBinding = IncPreviewGridBinding.bind(rootBinding.root)
@@ -125,7 +129,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private val functionKeyObserver = Observer<Int> { keyCode ->
         when (keyCode) {
             // When the volume up/down button is pressed, simulate a shutter button click
-            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
+            }
             KeyEvent.KEYCODE_UNKNOWN -> Unit
         }
     }
@@ -485,8 +491,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
         _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
 
-        _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(requireContext().layoutInflater, binding.root, true)
-        _cameraUiContainerBottomBinding = CameraUiContainerBottomBinding.inflate(requireContext().layoutInflater, binding.root, true)
+        _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
+            requireContext().layoutInflater,
+            binding.root,
+            true
+        )
+        _cameraUiContainerBottomBinding =
+            CameraUiContainerBottomBinding.inflate(requireContext().layoutInflater, binding.root, true)
 
         incRatioBinding = IncRatioOptionsBinding.bind(cameraUiContainerTopBinding.root)
 
@@ -530,7 +541,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             cameraUiContainerBottomBinding.photoViewButton.setOnClickListener {
                 // Only navigate when the gallery has photos
                 if (true == outputPictureDirectory.listFiles()?.isNotEmpty()) {
-                    navController.navigate(CameraFragmentDirections.actionCameraToGallery(outputPictureDirectory.absolutePath))
+                    navController.navigate(
+                        CameraFragmentDirections.actionCameraToGallery(outputPictureDirectory.absolutePath)
+                    )
                 }
             }
         } else {
@@ -676,11 +689,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }
+
             CameraTimer.S10 -> for (i in CameraTimer.S10.delay downTo 1) {
                 soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
                 delay(1000)
             }
+
             else -> Unit
         }
         cameraUiContainerTopBinding.tvCountDown.text = ""
@@ -690,13 +705,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
      * Show timer selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showSelectTimerLayer() = cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
+    private fun showSelectTimerLayer() =
+        cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
 
     /**
      * Show flashlight selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showFlashLayer() = cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
+    private fun showFlashLayer() =
+        cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {
@@ -787,7 +804,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             observe(viewLifecycleOwner) { cameraRotation ->
                 LogContext.log.i(
                     logTag,
-                    "$cameraName cameraSensorOrientation changed to: $cameraRotation-${DEGREE_TO_SURFACE_ROTATION[cameraRotation]}"
+                    "$cameraName cameraSensorOrientation changed to: " +
+                        "$cameraRotation-${DEGREE_TO_SURFACE_ROTATION[cameraRotation]}"
                 )
                 cameraRotationInDegree = cameraRotation
                 // deviceOrientationListener?.invoke(cameraRotation)

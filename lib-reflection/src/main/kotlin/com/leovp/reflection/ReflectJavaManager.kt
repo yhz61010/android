@@ -15,7 +15,10 @@ import kotlin.reflect.KClass
 /**
  * https://dwz.win/azW6
  */
-class ReflectJavaManager private constructor(private var type: Class<*>, private var obj: Any? = type) {
+class ReflectJavaManager private constructor(
+    private var type: Class<*>,
+    private var obj: Any? = type,
+) {
     companion object {
         /**
          * Reflect the class.
@@ -27,7 +30,11 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
          */
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectJavaManager {
             try {
-                val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
+                val clazz = if (classLoader == null) {
+                    Class.forName(className)
+                } else {
+                    Class.forName(className, true, classLoader)
+                }
                 return reflect(clazz)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
@@ -65,7 +72,10 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
          * @return The single [ReflectJavaManager] instance.
          */
         fun reflect(obj: Any?): ReflectJavaManager {
-            return ReflectJavaManager(if (obj == null) Any::class.java else obj::class.java, obj)
+            return ReflectJavaManager(
+                if (obj == null) Any::class.java else obj::class.java,
+                obj
+            )
         }
 
         /**
@@ -75,7 +85,10 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
             return when (string.length) {
                 0 -> ""
                 1 -> string.lowercase(Locale.getDefault())
-                else -> string.substring(0, 1).lowercase(Locale.getDefault()) + string.substring(1)
+                else ->
+                    string
+                    .substring(0, 1)
+                    .lowercase(Locale.getDefault()) + string.substring(1)
             }
         }
     }
@@ -98,7 +111,9 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         } catch (e: NoSuchMethodException) {
             val list = mutableListOf<Constructor<*>>()
             for (constructor in type().declaredConstructors) {
-                if (match(constructor.parameterTypes, types)) list.add(constructor)
+                if (match(constructor.parameterTypes, types)) {
+                    list.add(constructor)
+                }
             }
             if (list.isEmpty()) {
                 throw ReflectException(e)
@@ -130,7 +145,13 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
                     if (types1[i] == types2[i]) {
                         type1 = wrapper(types1[i])
                         type2 = wrapper(types2[i])
-                        return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+                        return@Comparator if (type2 != null &&
+                            type1?.isAssignableFrom(type2) == true
+                        ) {
+                                1
+                            } else {
+                                -1
+                            }
                     }
                 }
                 0
@@ -140,7 +161,10 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
 
     private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager {
         return try {
-            ReflectJavaManager(constructor.declaringClass, accessible(constructor)!!.newInstance(*args))
+            ReflectJavaManager(
+                constructor.declaringClass,
+                accessible(constructor)!!.newInstance(*args)
+            )
         } catch (e: Exception) {
             throw ReflectException(e)
         }
@@ -295,14 +319,19 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         }
         do {
             requireNotNull(objType)
-            for (method in objType.declaredMethods) if (isSimilarSignature(method, name, types)) methods.add(method)
+            for (method in objType.declaredMethods) {
+                if (isSimilarSignature(method, name, types)) methods.add(method)
+            }
             if (methods.isNotEmpty()) {
                 sortMethods(methods)
                 return methods[0]
             }
             objType = objType.superclass
         } while (objType != null)
-        throw NoSuchMethodException("No similar method $name with params ${types.contentToString()} could be found on type ${type()}.")
+        throw NoSuchMethodException(
+            "No similar method $name with params " +
+            "${types.contentToString()} could be found on type ${type()}."
+        )
     }
 
     private fun sortMethods(methods: List<Method>) {
@@ -317,7 +346,13 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
                     if (types1[i] != types2[i]) {
                         type1 = wrapper(types1[i])
                         type2 = wrapper(types2[i])
-                        return@Comparator if (type2 != null && type1?.isAssignableFrom(type2) == true) 1 else -1
+                        return@Comparator if (type2 != null &&
+                            type1?.isAssignableFrom(type2) == true
+                        ) {
+                                1
+                            } else {
+                                -1
+                            }
                     }
                 }
                 0
@@ -328,7 +363,7 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
     private fun isSimilarSignature(
         possiblyMatchingMethod: Method,
         desiredMethodName: String,
-        desiredParamTypes: Array<Class<*>?>
+        desiredParamTypes: Array<Class<*>?>,
     ): Boolean {
         return possiblyMatchingMethod.name == desiredMethodName &&
             match(possiblyMatchingMethod.parameterTypes, desiredParamTypes)
@@ -406,7 +441,10 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
                 throw e
             }
         }
-        return Proxy.newProxyInstance(proxyType.classLoader, arrayOf<Class<*>>(proxyType), handler) as P
+        return Proxy.newProxyInstance(
+            proxyType.classLoader,
+            arrayOf<Class<*>>(proxyType), handler
+        ) as P
     }
 
     private fun type(): Class<*> {

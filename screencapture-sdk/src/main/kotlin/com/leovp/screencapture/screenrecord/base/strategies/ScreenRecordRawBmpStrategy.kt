@@ -35,7 +35,7 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
         val height: Int,
         val dpi: Int,
         val mediaProjection: MediaProjection?,
-        val screenDataListener: ScreenDataListener
+        val screenDataListener: ScreenDataListener,
     ) {
         var fps = 20F
             private set
@@ -51,7 +51,9 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
     @SuppressLint("InlinedApi", "WrongConstant")
     @Throws(Exception::class)
     override fun onInit() {
-        imageReader = ImageReader.newInstance(builder.width, builder.height, PixelFormat.RGBA_8888, IMAGE_BUFFER_SIZE).apply {
+        imageReader = ImageReader.newInstance(
+            builder.width, builder.height, PixelFormat.RGBA_8888, IMAGE_BUFFER_SIZE
+        ).apply {
             setOnImageAvailableListener({ reader ->
                 runCatching {
                     val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener

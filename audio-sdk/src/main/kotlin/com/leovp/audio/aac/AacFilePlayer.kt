@@ -24,13 +24,18 @@ class AacFilePlayer(
     // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
     usage: Int = AudioAttributes.USAGE_MEDIA,
     // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC
-) : BaseMediaCodecSynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, audioDecodeInfo.sampleRate, audioDecodeInfo.channelCount) {
+    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+) : BaseMediaCodecSynchronous(
+    MediaFormat.MIMETYPE_AUDIO_AAC,
+    audioDecodeInfo.sampleRate,
+    audioDecodeInfo.channelCount
+) {
     companion object {
         private const val TAG = "AacFilePlayer"
     }
 
-    private val audioTrackPlayer: AudioTrackPlayer = AudioTrackPlayer(ctx, audioDecodeInfo, usage = usage, contentType = contentType)
+    private val audioTrackPlayer: AudioTrackPlayer =
+        AudioTrackPlayer(ctx, audioDecodeInfo, usage = usage, contentType = contentType)
 
     private var mediaFormat: MediaFormat? = null
     private var mime: String? = null

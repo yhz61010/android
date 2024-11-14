@@ -42,7 +42,8 @@ class GZipUtilTest {
         // println(compressedBytes.toHexStringLE(true,""))
         // println("=====")
         assertEquals(
-            "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
+            "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081" +
+                "A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
                 "8E1950C66F35AD802D373D0953D86F2B434C4DFB4BF3F235960723E000000",
             compressedBytes.toHexString(true, "")
         )
@@ -51,7 +52,8 @@ class GZipUtilTest {
 
     @Test
     fun decompress() {
-        val byteString = "1F8B08000000000000FF15C9C10980300C40D155FE04DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
+        val byteString = "1F8B08000000000000FF15C9C10980300C40D155FE0" +
+            "4DDC1A37717081A9A824D8A0D8ADB8BEFFA564C6E45382E955E589" +
             "8E1950C66F35AD802D373D0953D86F2B434C4DFB4BF3F235960723E000000"
         val decompressString: String = GZipUtil.decompress(byteString.hexToByteArray())!!
         assertEquals(constString, decompressString)

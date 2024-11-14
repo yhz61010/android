@@ -55,7 +55,12 @@ internal fun getDisplaySmartSize(designSize: Size): SmartSize {
  * - [android.view.TextureView]
  * @param format an image format from either `ImageFormat` or `PixelFormat`
  */
-fun <T> getPreviewOutputSize(designSize: Size, characteristics: CameraCharacteristics, targetClass: Class<T>, format: Int? = null): Size {
+fun <T> getPreviewOutputSize(
+    designSize: Size,
+    characteristics: CameraCharacteristics,
+    targetClass: Class<T>,
+    format: Int? = null
+): Size {
     val smartSize = getDisplaySmartSize(designSize)
     // Find which is smaller: designSize or 1080p
     val hdScreen = smartSize.long >= SIZE_1080P.long || smartSize.short >= SIZE_1080P.short

@@ -1,5 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.wifi
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -53,6 +54,7 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
     private val wifi: WifiUtil by lazy { WifiUtil.getInstance(this) }
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
+        @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
         override fun onReceive(context: Context, intent: Intent) {
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (success) {
@@ -63,6 +65,7 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         }
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initView()
@@ -72,15 +75,16 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         LogContext.log.e(ITAG, "current ssid=${wifi.getCurrentSsid()}")
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     private fun initData() {
         val previousScanResults: List<ScanResult>? = wifiManager.scanResults
         if (previousScanResults?.isEmpty() == true) {
-            LogContext.log.w("Scan automatically.")
+            LogContext.log.w(tag, "Scan automatically.")
             toast("Scan automatically.")
             @Suppress("DEPRECATION")
             doScan()
         } else {
-            LogContext.log.w("Found previously scan results.")
+            LogContext.log.w(tag, "Found previously scan results.")
             toast("Found previously scan results.")
             previousScanResults?.let { scanSuccess(it) }
         }
@@ -107,10 +111,11 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         }
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     private fun scanSuccess(results: List<ScanResult>) {
         val wifiList: MutableList<WifiModel> = mutableListOf()
         results.forEachIndexed { index, scanResult ->
-            LogContext.log.i("Result=${scanResult.toJsonString()}")
+            LogContext.log.i(tag, "Result=${scanResult.toJsonString()}")
             val ssid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 scanResult.wifiSsid.toString()
             } else {
@@ -137,8 +142,9 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         adapter?.clearAndAddList(mergedWifiList)
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     private fun scanFailure() {
-        LogContext.log.w("scanFailure")
+        LogContext.log.w(tag, "scanFailure")
         toast("scanFailure")
         // handle failure: new scan did NOT succeed
         // consider using old scan results: these are the OLD results!
@@ -151,15 +157,16 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         unregisterReceiver(wifiScanReceiver)
     }
 
-    @RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_WIFI_STATE])
-    fun onSetWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    fun onSetWifiClick(@Suppress("unused") view: View) {
         val ssid = binding.etWifiName.text.toString()
         val pwd = binding.etWifiPwd.text.toString()
         wifi.connectWifi(ssid, pwd)
     }
 
-    fun onScanWifiClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        LogContext.log.w("Scan manually.")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    fun onScanWifiClick(@Suppress("unused") view: View) {
+        LogContext.log.w(tag, "Scan manually.")
         toast("Scan manually.")
         adapter?.clear()
         @Suppress("DEPRECATION")
@@ -172,6 +179,7 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
      * https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
      */
     @Deprecated("WifiManager#startScan() was deprecated in API level 28(Android 9).")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     private fun doScan() {
         // https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
         @Suppress("DEPRECATION")

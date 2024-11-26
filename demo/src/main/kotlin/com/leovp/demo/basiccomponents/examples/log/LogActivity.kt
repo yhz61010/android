@@ -27,12 +27,12 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        LogContext.log.v("Hello v", outputType = 1)
-        LogContext.log.d("Hello d", outputType = 2)
-        LogContext.log.i("Hello i", outputType = 3)
-        LogContext.log.w("Hello w", outputType = 4)
-        LogContext.log.e("Hello e with fullOutput", fullOutput = true, outputType = 5)
-        LogContext.log.f("Hello f", outputType = 6)
+        LogContext.log.v(TAG, "Hello v", outputType = 1)
+        LogContext.log.d(TAG, "Hello d", outputType = 2)
+        LogContext.log.i(TAG, "Hello i", outputType = 3)
+        LogContext.log.w(TAG, "Hello w", outputType = 4)
+        LogContext.log.e(TAG, "Hello e with fullOutput", fullOutput = true, outputType = 5)
+        LogContext.log.f(TAG, "Hello f", outputType = 6)
 
         LogContext.log.v(TAG, "Hello v", Exception("exception-v"), outputType = 7)
         LogContext.log.d(TAG, "Hello d", Exception("exception-d"), outputType = 8)
@@ -41,17 +41,9 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
 
-        LogContext.log.w(
-            ITAG,
-            "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}",
-            outputType = 13
-        )
-
-        LogContext.enableLog = false
-        LogContext.log.w(ITAG, "This log will NOT be outputted", outputType = 14)
-
-        LogContext.enableLog = true
-        LogContext.log.w(ITAG, "This log will be outputted", outputType = 15)
+        w(TAG, outputType = 13) {
+            "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}"
+        }
 
         val sb = StringBuilder()
         for (i in 0 until 1000) {

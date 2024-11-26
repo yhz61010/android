@@ -15,6 +15,7 @@ import android.os.Build
 import androidx.annotation.RequiresPermission
 import com.leovp.kotlin.utils.SingletonHolder
 import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -118,16 +119,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
             // Get all methods
             val hideMethod: Array<Method> = clsShow.methods
             hideMethod.forEachIndexed { index, method ->
-                if (LogContext.enableLog) {
-                    LogContext.log.d("Method[$index] name: ${method.name}")
-                }
+                LogContext.log.d(ITAG, "Method[$index] name: ${method.name}")
             }
             // Get all const values
             val allFields: Array<Field> = clsShow.fields
             allFields.forEachIndexed { index, field ->
-                if (LogContext.enableLog) {
-                    LogContext.log.d("Field[$index] name: ${field.name}")
-                }
+                LogContext.log.d(ITAG, "Field[$index] name: ${field.name}")
             }
         }.onFailure { it.printStackTrace() }
     }

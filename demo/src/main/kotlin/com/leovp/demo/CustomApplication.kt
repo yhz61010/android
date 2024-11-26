@@ -14,6 +14,7 @@ import com.leovp.demo.basiccomponents.examples.koin.MySimplePresenter
 import com.leovp.demo.basiccomponents.examples.koin.Wheel
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
+import com.leovp.log.base.AbsLog.LogLevel
 import com.leovp.pref.LPref
 import com.leovp.pref.PrefContext
 import io.reactivex.plugins.RxJavaPlugins
@@ -54,7 +55,7 @@ class CustomApplication : BaseApplication() {
         )
 
         startKoin {
-            //            androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)
+            // androidLogger(if (buildConfigInDebug) Level.DEBUG else Level.INFO)
             androidContext(this@CustomApplication)
             modules(appModules)
         }
@@ -72,10 +73,16 @@ class CustomApplication : BaseApplication() {
     }
 
     override fun attachBaseContext(base: Context) {
-        Log.i("$TAG_PREFIX-Application", "=====> attachBaseContext setLocale()")
+        Log.i("$TAG_PREFIX-App", "=====> attachBaseContext setLocale()")
 
-        // LogContext.setLogImpl(CLog().apply { init(this@CustomApplication) })
-        LogContext.setLogImpl(LLog(TAG_PREFIX))
+        // LogContext.setLogImpl(
+        //     CLog(tagPrefix = TAG_PREFIX, enableLog = true, logLevel = LogLevel.VERB).apply {
+        //         init(this@CustomApplication)
+        //     }
+        // )
+        LogContext.setLogImpl(
+            LLog(tagPrefix = TAG_PREFIX, enableLog = true, logLevel = LogLevel.VERB)
+        )
 
         super.attachBaseContext(base)
         Reflection.unseal(base)
@@ -83,6 +90,6 @@ class CustomApplication : BaseApplication() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        Log.i("LEO-Application", "=====> onConfigurationChanged setLocale()")
+        Log.i("$TAG_PREFIX-App", "=====> onConfigurationChanged setLocale()")
     }
 }

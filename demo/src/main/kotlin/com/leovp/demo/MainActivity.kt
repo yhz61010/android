@@ -91,6 +91,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
             })
 
         LogContext.log.i(
+            tag,
             "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
             "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
         )

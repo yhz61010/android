@@ -57,12 +57,12 @@ class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgre
 
         binding.vCustomInd.setOnClickListener {
             toast("Default OnClickListener")
-            LogContext.log.w("Default OnClickListener")
+            LogContext.log.w(ITAG, "Default OnClickListener")
         }
         binding.vCustomInd.setOnClickListener(object : DefaultOnClickListener() {
             override fun onCancelButtonClick(view: View) {
                 toast("Custom click listener Cancel.")
-                LogContext.log.w("Custom click listener Cancel.")
+                LogContext.log.w(ITAG, "Custom click listener Cancel.")
             }
         })
 
@@ -72,23 +72,23 @@ class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgre
         binding.vCustomIdle.setOnClickListener(object : DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 toast("Click Upload Idle.")
-                LogContext.log.w("Click Upload Idle.")
+                LogContext.log.w(ITAG, "Click Upload Idle.")
             }
         })
 
         binding.vDownload.addOnClickListener(object : DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
-                LogContext.log.i("onIdleButtonClick")
+                LogContext.log.i(ITAG, "onIdleButtonClick")
                 toast("onIdleButtonClick")
             }
 
             override fun onCancelButtonClick(view: View) {
-                LogContext.log.i("onCancelButtonClick")
+                LogContext.log.i(ITAG, "onCancelButtonClick")
                 toast("onCancelButtonClick")
             }
 
             override fun onFinishButtonClick(view: View) {
-                LogContext.log.i("onFinishButtonClick")
+                LogContext.log.i(ITAG, "onFinishButtonClick")
                 toast("onFinishButtonClick")
             }
         })
@@ -104,7 +104,7 @@ class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgre
                     else -> "Unknown"
                 }
                 toast("Current state=$stateName")
-                LogContext.log.w("Current state=$stateName")
+                LogContext.log.w(ITAG, "Current state=$stateName")
             }
         })
     }

@@ -64,7 +64,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             super.onStartSuccess(settingsInEffect)
-            LogContext.log.w("onStartSuccess=${settingsInEffect.toJsonString()}")
+            LogContext.log.w(ITAG, "onStartSuccess=${settingsInEffect.toJsonString()}")
             addService()
         }
     }
@@ -167,7 +167,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     state = "Disconnected"
                 }
-                LogContext.log.w("onConnectionStateChange device=$device status=$status newState=$state")
+                LogContext.log.w(ITAG, "onConnectionStateChange device=$device status=$status newState=$state")
             }
 
             @SuppressLint("InlinedApi")
@@ -191,7 +191,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
                     value
                 )
                 val data = String(value)
-                LogContext.log.w("Received message=$data")
+                LogContext.log.w(ITAG, "Received message=$data")
                 toast("Received message=$data")
                 // Response message
                 bluetoothGattServer?.sendResponse(
@@ -207,7 +207,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
 
     @SuppressLint("InlinedApi")
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    fun onSendClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onSendClick(@Suppress("unused") view: View) {
         val msg = binding.etMsg.text.toString()
         sendData(msg)
         binding.etMsg.setText("")
@@ -235,7 +235,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
                 )
             }
 
-            LogContext.log.w("Send message to client: $msg")
+            LogContext.log.w(ITAG, "Send message to client: $msg")
         }.onFailure { it.printStackTrace() }
     }
 }

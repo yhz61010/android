@@ -50,35 +50,36 @@ class Car(val engine: Engine, val wheels: List<Wheel>) {
     }
 
     fun drive() {
-        LogContext.log.i("Drive mode")
+        LogContext.log.i(ITAG, "Drive mode")
         for (wheel in wheels) {
             wheel.turn()
         }
     }
 
+    @Suppress("unused")
     fun park() {
-        LogContext.log.i("Park mode")
+        LogContext.log.i(ITAG, "Park mode")
         for (wheel in wheels) wheel.stop()
     }
 }
 
 class Engine(val name: String, val type: String) {
     fun start() {
-        LogContext.log.i("Engine started")
+        LogContext.log.i(ITAG, "Engine started")
     }
 
     fun stop() {
-        LogContext.log.i("Engine stopped")
+        LogContext.log.i(ITAG, "Engine stopped")
     }
 }
 
 class Wheel(val identity: String) {
     fun turn() {
-        LogContext.log.i("Wheel $identity has turned.")
+        LogContext.log.i(ITAG, "Wheel $identity has turned.")
     }
 
     fun stop() {
-        LogContext.log.i("Wheel $identity has stopped.")
+        LogContext.log.i(ITAG, "Wheel $identity has stopped.")
     }
 }
 

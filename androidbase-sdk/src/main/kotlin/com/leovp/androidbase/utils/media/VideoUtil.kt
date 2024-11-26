@@ -12,19 +12,24 @@ import com.leovp.log.LogContext
  * Date: 2021/5/13 5:25 PM
  */
 object VideoUtil {
+    const val TAG = "VideoUtil"
+
     fun setBitrateDynamically(mediaCodec: MediaCodec, bitrate: Int) {
         kotlin.runCatching {
             val param = Bundle()
             param.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bitrate)
             mediaCodec.setParameters(param)
-        }.onFailure { if (LogContext.enableLog) LogContext.log.e("setBitrateDynamically error", it) }
+        }.onFailure { LogContext.log.e(TAG, "setBitrateDynamically error", it) }
     }
 
     fun sendIdrFrameByManual(mediaCodec: MediaCodec) {
-        LogContext.log.w("sendIdrFrameByManual()") //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
+        LogContext.log.w(TAG, "sendIdrFrameByManual()")
+
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // 23
         val param = Bundle()
         param.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
-        mediaCodec.setParameters(param) //        }
+        mediaCodec.setParameters(param)
+        //  }
     }
 
     @Suppress("unused")

@@ -61,7 +61,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
             binding.tvOrientationDegree.text = degree.toString()
             binding.tvScreenWidth.text = ctx.screenWidth.toString()
             if (degree == ORIENTATION_UNKNOWN) {
-                LogContext.log.w("ORIENTATION_UNKNOWN")
+                LogContext.log.w(tag, "ORIENTATION_UNKNOWN")
                 binding.tvDeviceOrientation.text = "ORIENTATION_UNKNOWN"
                 return
             }
@@ -72,6 +72,7 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
             LogContext.log.w(
+                tag,
                 "Device Orientation=${currentDeviceOrientation.screenOrientationName} " +
                     "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} "
             )

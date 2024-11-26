@@ -2,6 +2,7 @@ package com.leovp.http.retrofit.base
 
 import com.leovp.http.okhttp.HttpLoggingInterceptor
 import com.leovp.log.LogContext
+import com.leovp.log.base.AbsLog
 import com.leovp.network.SslUtils
 import java.util.concurrent.TimeUnit
 import okhttp3.Interceptor
@@ -28,7 +29,8 @@ open class BaseHttpRequest {
 
         if (SslUtils.certificateInputStream == null) {
             httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
-            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory(SslUtils.PROTOCOL), SslUtils.systemDefaultTrustManager())
+            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory(SslUtils.PROTOCOL),
+                SslUtils.systemDefaultTrustManager())
         } else {
             httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
             requireNotNull(SslUtils.certificateInputStream) {
@@ -71,7 +73,11 @@ open class BaseHttpRequest {
             // .addHeader("Content-Type", "application/json")
             headerMap?.let {
                 for ((k, v) in headerMap) {
-                    if (LogContext.enableLog) LogContext.log.d("Assign cookie: $k=$v")
+                    LogContext.log.d(
+                        TAG,
+                        "Assign cookie: $k=$v",
+                        outputType = AbsLog.OUTPUT_TYPE_HTTP_HEADER,
+                    )
                     build.addHeader(k, v)
                 }
             }
@@ -80,6 +86,8 @@ open class BaseHttpRequest {
     }
 
     companion object {
+        private const val TAG = "HTTP"
+
         // Timeout explanation
         // https://futurestud.io/tutorials/retrofit-2-customize-network-timeouts
         private const val DEFAULT_CONNECTION_TIMEOUT_IN_MS = 30_000L

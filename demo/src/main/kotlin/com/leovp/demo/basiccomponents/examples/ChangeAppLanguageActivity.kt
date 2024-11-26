@@ -36,15 +36,19 @@ class ChangeAppLanguageActivity : BaseDemonstrationActivity<ActivityChangeAppLan
         super.onCreate(savedInstanceState)
         title = getString(R.string.act_title_change_app_lang)
         val itemList = resources.getStringArray(R.array.lang_list)
-        LogContext.log.w("itemList=${itemList.toJsonString()}")
+        LogContext.log.w(tag, "itemList=${itemList.toJsonString()}")
         val itemCodeList = resources.getStringArray(R.array.lang_code_list)
 
         LogContext.log.i(
+            tag,
             "Default language: ${langUtil.getDefaultDisplayLanguage()}" +
                 "[${langUtil.getDefaultLanguageCountryCode()}][${langUtil.getDefaultLanguageFullCode()}]"
         )
-        LogContext.log.i("Device locale: ${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]")
-        LogContext.log.i("========================================================")
+        LogContext.log.i(
+            tag,
+            "Device locale: ${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]"
+        )
+        LogContext.log.i(tag, "========================================================")
 
         binding.btnSelectLang.setOnSingleClickListener {
             MaterialAlertDialogBuilder(this)

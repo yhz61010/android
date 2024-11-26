@@ -10,6 +10,7 @@ import com.leovp.androidbase.utils.system.AccessibilityUtil
 import com.leovp.demo.basiccomponents.examples.sharescreen.client.ScreenShareClientActivity
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -22,13 +23,13 @@ import org.greenrobot.eventbus.ThreadMode
 class SimulatedClickService : AccessibilityService() {
 
     override fun onCreate() {
-        LogContext.log.i("onCreate()")
+        LogContext.log.i(ITAG, "onCreate()")
         super.onCreate()
         EventBus.getDefault().register(this)
     }
 
     override fun onDestroy() {
-        LogContext.log.i("onDestroy()")
+        LogContext.log.i(ITAG, "onDestroy()")
         EventBus.getDefault().unregister(this)
         super.onDestroy()
     }

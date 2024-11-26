@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.PowerManager
 import android.os.SystemClock
 import androidx.annotation.RawRes
@@ -50,14 +49,14 @@ class KeepAlive(
     private var mediaPlayer: MediaPlayer? = null
     private val keepAliveArgumentReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveArgumentReceiver()")
+            LogContext.log.d(TAG, "KeepAliveArgumentReceiver()")
             callback()
         }
     }
 
     fun start() {
         release()
-        if (LogContext.enableLog) LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
+        LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
         runCatching {
             mediaPlayer = MediaPlayer.create(app, undeadAudioResId).apply {
                 setWakeMode(app, PowerManager.PARTIAL_WAKE_LOCK)
@@ -78,11 +77,11 @@ class KeepAlive(
             app,
             0,
             intent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
+            // } else {
+            //     PendingIntent.FLAG_UPDATE_CURRENT
+            // }
         )
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent)
     }
@@ -97,7 +96,7 @@ class KeepAlive(
 
     internal class KeepAliveReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (LogContext.enableLog) LogContext.log.d(TAG, "KeepAliveReceiver")
+            LogContext.log.d(TAG, "KeepAliveReceiver")
             LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(INTENT_KEEP_ALIVE_RECEIVER))
         }
     }

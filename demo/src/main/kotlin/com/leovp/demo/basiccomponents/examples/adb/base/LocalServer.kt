@@ -1,6 +1,7 @@
 package com.leovp.demo.basiccomponents.examples.adb.base
 
 import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import java.io.InputStream
 import java.net.ServerSocket
 import java.net.Socket
@@ -20,15 +21,15 @@ class LocalServer {
             val serverSocket = ServerSocket(8888)
             // Blocking
             val client: Socket = serverSocket.accept()
-            LogContext.log.i("Client connected!")
+            LogContext.log.i(ITAG, "Client connected!")
             while (true) {
                 if (!client.isConnected) {
-                    LogContext.log.i("client.isConnected=false")
+                    LogContext.log.i(ITAG, "client.isConnected=false")
                     return@thread
                 }
                 val inputStream: InputStream = client.getInputStream()
                 val result: String = inputStream.reader().readText()
-                LogContext.log.i("serverSocket rcv=$result")
+                LogContext.log.i(ITAG, "serverSocket rcv=$result")
             }
         }
     }

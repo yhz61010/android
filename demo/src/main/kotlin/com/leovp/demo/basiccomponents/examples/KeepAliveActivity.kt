@@ -19,17 +19,17 @@ class KeepAliveActivity : BaseDemonstrationActivity<ActivityKeepAliveBinding>(R.
 
     private val keepAlive: KeepAlive by lazy {
         KeepAlive(application, R.raw.single_note30, 0.05f) {
-            if (LogContext.enableLog) LogContext.log.i("KeepAliveActivity Time up!!!")
+            LogContext.log.i(ITAG, "KeepAliveActivity Time up!!!")
             toast("KeepAliveActivity Time up!!!")
         }
     }
 
-    fun onKeepAliveClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onKeepAliveClick(@Suppress("unused") view: View) {
         toast("Start KeepAlive")
         keepAlive.start()
     }
 
-    fun onStopClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onStopClick(@Suppress("unused") view: View) {
         toast("Stop KeepAlive")
         keepAlive.release()
     }

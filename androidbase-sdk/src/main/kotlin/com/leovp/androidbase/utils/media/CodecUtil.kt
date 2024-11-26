@@ -17,6 +17,8 @@ import java.util.Locale
  * Date: 20-5-20 上午9:48
  */
 object CodecUtil {
+    private const val TAG = "CodecUtil"
+
     // MediaCodecList.ALL_CODECS
     fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> =
         MediaCodecList(MediaCodecList.REGULAR_CODECS)
@@ -140,7 +142,7 @@ object CodecUtil {
         } // root for
 
         val root = TreeElement("MediaCodec", lv1List)
-        printTree(root, "", true) { LogContext.log.i(it) }
+        printTree(root, "", true) { LogContext.log.i(TAG, it) }
     }
 
     // ==========

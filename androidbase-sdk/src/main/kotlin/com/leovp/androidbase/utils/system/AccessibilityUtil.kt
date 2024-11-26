@@ -61,7 +61,7 @@ object AccessibilityUtil {
         }.onFailure { it.printStackTrace() }
         val packageName: String = accessibilityService.packageName
         val serviceCanonicalName = "$packageName/${accessibilityService.javaClass.canonicalName}"
-        LogContext.log.d("serviceCanonicalName: $serviceCanonicalName")
+        LogContext.log.d(TAG, "serviceCanonicalName: $serviceCanonicalName")
         if (accessibilityEnabled == 1) {
             val settingValue: String? = Settings.Secure.getString(
                 accessibilityService.applicationContext.contentResolver,

@@ -1,7 +1,6 @@
 package com.leovp.log.base
 
 import android.util.Log
-import com.leovp.log.LogContext
 
 /**
  * Inherit this class and just implement `printXXXLog` methods.
@@ -9,35 +8,21 @@ import com.leovp.log.LogContext
  * The `outputType` parameter in `printXXXLog` methods is just the handy parameter for you to identify the log output type.
  * So that you can control how to output the log. For example, just output some logs on console or send some logs to server.
  *
- * It's better to add some useful extensions in your custom log implementation
- * in order to omit the log codes in release mode.
- *
- * For example:
- * ```
- * inline fun debugLog(
- *     tag: String = "DEBUG",
- *     fullOutput: Boolean = false,
- *     outputType: Int = -1,
- *     generateMsg: () -> String?
- * ) {
- *     // The 'if' condition must be a static final boolean value.
- *     if (BuildConfig.DEBUG) {
- *         LogContext.log.d(tag, generateMsg(), fullOutput = fullOutput, outputType = outputType)
- *     }
- * }
- * ```
- *
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
  */
 abstract class AbsLog(private val tagPrefix: String, private val separator: String = "-") : ILog {
 
+    abstract var logLevel: LogLevel
+
     private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag"
 
-    open var enableLog: Boolean = true
-
-    fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        v(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("v(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     v(ITAG, message, throwable, fullOutput, outputType)
 
     fun v(
         tag: String,
@@ -46,17 +31,19 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        d(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("d(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     d(ITAG, message, throwable, fullOutput, outputType)
 
     fun d(
         tag: String,
@@ -65,17 +52,19 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        i(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("i(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     i(ITAG, message, throwable, fullOutput, outputType)
 
     fun i(
         tag: String,
@@ -84,17 +73,19 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        w(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("w(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     w(ITAG, message, throwable, fullOutput, outputType)
 
     fun w(
         tag: String,
@@ -103,36 +94,40 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        e(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("e(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     e(ITAG, message, throwable, fullOutput, outputType)
 
     fun e(
         tag: String,
-        message: String? = null,
+        message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
-    fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
-        f(ITAG, message, throwable, fullOutput, outputType)
+    // @Deprecated(
+    //     message = "Use the function with the 'tag' parameter.",
+    //     replaceWith = ReplaceWith("f(TAG, message, throwable, fullOutput, outputType)"),
+    // )
+    // fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    //     f(ITAG, message, throwable, fullOutput, outputType)
 
     fun f(
         tag: String,
@@ -141,12 +136,10 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         fullOutput: Boolean = false,
         outputType: Int = -1,
     ) {
-        if (LogContext.enableLog) {
-            if (fullOutput) {
-                splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
-            } else {
-                printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
-            }
+        if (fullOutput) {
+            splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
+        } else {
+            printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
         }
     }
 
@@ -217,7 +210,8 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         private const val MAX_LENGTH = 2000
         const val OUTPUT_TYPE_SYSTEM = 0x20211009
         const val OUTPUT_TYPE_CLIENT_COMMAND = OUTPUT_TYPE_SYSTEM + 1
-        const val OUTPUT_TYPE_HTTP_HEADER_COOKIE = OUTPUT_TYPE_SYSTEM + 2
+        const val OUTPUT_TYPE_HTTP_HEADER = OUTPUT_TYPE_SYSTEM + 2
         const val OUTPUT_TYPE_FRAMEWORK = OUTPUT_TYPE_SYSTEM + 3
+        const val OUTPUT_TYPE_HTTP = OUTPUT_TYPE_SYSTEM + 4
     }
 }

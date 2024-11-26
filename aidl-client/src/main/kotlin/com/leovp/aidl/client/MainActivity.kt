@@ -1,7 +1,6 @@
 package com.leovp.aidl.client
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
@@ -13,6 +12,8 @@ import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.toast
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
+import com.leovp.log.base.AbsLog
+import com.leovp.log.base.ITAG
 
 class MainActivity : AppCompatActivity() {
     private var remoteService: ILocalLogService? = null
@@ -23,16 +24,18 @@ class MainActivity : AppCompatActivity() {
 
         LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
 
-        LogContext.setLogImpl(LLog("LEO-AIDL-CLIENT"))
+        LogContext.setLogImpl(
+            LLog(tagPrefix = "LEO-AIDL-CLIENT", enableLog = true, logLevel = AbsLog.LogLevel.VERB)
+        )
 
         val serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                LogContext.log.i("onServiceConnected")
+                LogContext.log.i(ITAG, "onServiceConnected")
                 remoteService = ILocalLogService.Stub.asInterface(service)
             }
 
             override fun onServiceDisconnected(name: ComponentName) {
-                LogContext.log.i("onServiceDisconnected")
+                LogContext.log.i(ITAG, "onServiceDisconnected")
                 remoteService = null
             }
         }
@@ -45,14 +48,14 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent("service.name")
         // It's necessary on Android 5.0+
         intent.setPackage("com.leovp.demo.dev")
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
     }
 
-    fun onSendClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onSendClick(@Suppress("unused") view: View) {
         remoteService?.writeLog(packageName, LocalLog("INFO", "Message from client side."))
     }
 
-    fun onReceiveClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onReceiveClick(@Suppress("unused") view: View) {
         toast("Get from remote service: ${remoteService?.getLogCount("dummy value")}")
     }
 }

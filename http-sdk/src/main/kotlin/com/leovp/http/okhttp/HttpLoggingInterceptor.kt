@@ -1,7 +1,7 @@
 package com.leovp.http.okhttp
 
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers
@@ -148,7 +148,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                 ) {
                     logger.log(
                         "$name: ${headers.value(i)}",
-                        outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE
+                        outputType = OUTPUT_TYPE_HTTP_HEADER
                     )
                 }
             }
@@ -210,7 +210,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             for (i in 0 until headers.size) {
                 logger.log(
                     "${headers.name(i)}: ${headers.value(i)}",
-                    outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE
+                    outputType = OUTPUT_TYPE_HTTP_HEADER
                 )
                 if ("Content-Disposition".contentEquals(headers.name(i)) &&
                     headers.value(i).startsWith("inline; filename")

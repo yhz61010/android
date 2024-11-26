@@ -104,7 +104,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                 it.screenDataUpdateListener = object : ScreenDataUpdateListener {
                     @SuppressLint("SetTextI18n")
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
-                        LogContext.log.d("onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs")
+                        LogContext.log.d(
+                            tag,
+                            "onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs",
+                        )
                         if (clientChannel != null) {
                             runOnUiThread {
                                 binding.txtInfo.text =
@@ -233,11 +236,11 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        LogContext.log.i("onConfigurationChanged: ${newConfig.toJsonString()}")
+        LogContext.log.i(tag, "onConfigurationChanged: ${newConfig.toJsonString()}")
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            LogContext.log.i("Running in LANDSCAPE")
+            LogContext.log.i(tag, "Running in LANDSCAPE")
         } else {
-            LogContext.log.i("Running in PORTRAIT")
+            LogContext.log.i(tag, "Running in PORTRAIT")
         }
     }
 
@@ -484,8 +487,8 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
         cs.launch { if (::webSocketServer.isInitialized) webSocketServer.stopServer() }
     }
 
-    fun onScreenshotClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        LogContext.log.w("Click Screenshot button.")
+    fun onScreenshotClick(@Suppress("unused") view: View) {
+        LogContext.log.w(tag, "Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
         Handler(Looper.getMainLooper()).postDelayed({
             mediaProjectService?.takeScreenshot(screenWidth, screenRealHeight)

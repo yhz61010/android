@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import com.leovp.log.LLog;
 import com.leovp.log.LogContext;
+import com.leovp.log.base.AbsLog;
 import com.leovp.pref.LPref;
 import com.leovp.pref.PrefContext;
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +42,7 @@ public class Pref4JavaTest {
     public void setUp() {
         stopKoin(); // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out;
-        LogContext.INSTANCE.setLogImpl(new LLog("LEO"));
+        LogContext.INSTANCE.setLogImpl(new LLog("LEO", true, AbsLog.LogLevel.DEBUG));
     }
 
     @AfterEach

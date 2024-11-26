@@ -68,7 +68,7 @@ class OrientationService : BaseService() {
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(degree: Int) {
             if (degree == ORIENTATION_UNKNOWN) {
-                LogContext.log.w("ORIENTATION_UNKNOWN")
+                LogContext.log.w(ITAG, "ORIENTATION_UNKNOWN")
                 return
             }
 

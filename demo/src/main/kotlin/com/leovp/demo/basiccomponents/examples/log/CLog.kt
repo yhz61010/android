@@ -1,7 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.log
 
 import android.content.Context
-import com.leovp.demo.BuildConfig
 import com.leovp.log.base.AbsLog
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
@@ -12,8 +11,11 @@ import java.io.File
  * Date: 20-4-20 上午11:39
  */
 @Suppress("unused")
-class CLog : AbsLog("LEO") {
-    private val debugMode = BuildConfig.DEBUG
+class CLog(
+    tagPrefix: String,
+    private val enableLog: Boolean = true,
+    override var logLevel: LogLevel,
+) : AbsLog(tagPrefix) {
 
     override fun printVerbLog(tag: String, message: String, outputType: Int) {
         Log.v(tag, message)
@@ -59,10 +61,17 @@ class CLog : AbsLog("LEO") {
 
         val logDir = getLogDir(context, "xlog").absolutePath
         val cacheDir = getLogDir(context, "x-cache-dir").absolutePath
-        val defaultLogLevel = if (debugMode) Xlog.LEVEL_VERBOSE else Xlog.LEVEL_INFO
+        val defaultLogLevel = when (logLevel) {
+            LogLevel.VERB -> Xlog.LEVEL_VERBOSE
+            LogLevel.DEBUG -> Xlog.LEVEL_DEBUG
+            LogLevel.INFO -> Xlog.LEVEL_INFO
+            LogLevel.WARN -> Xlog.LEVEL_WARNING
+            LogLevel.ERROR -> Xlog.LEVEL_ERROR
+            LogLevel.FATAL -> Xlog.LEVEL_FATAL
+        }
 
         Log.setLogImp(Xlog())
-        Log.setConsoleLogOpen(debugMode)
+        Log.setConsoleLogOpen(enableLog)
         Log.appenderOpen(defaultLogLevel, Xlog.AppednerModeAsync, cacheDir, logDir, "main", 0)
 
         //        // Now, there is no way to use this XLogConfig. Probably this is a Xlog bug.

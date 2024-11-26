@@ -1,10 +1,8 @@
 package com.leovp.demo.basiccomponents.examples
 
 import android.media.MediaCodec
-import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import com.leovp.android.exts.densityDpi
 import com.leovp.android.exts.getBaseDirString
@@ -59,7 +57,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    // @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -72,7 +70,7 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
             }
         )
         videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
-        LogContext.log.i("dstFile=${dstFile.absolutePath}")
+        LogContext.log.i(tag, "dstFile=${dstFile.absolutePath}")
 
         val screenInfo = application.screenAvailableResolution
         val setting = ScreenShareSetting(
@@ -110,11 +108,11 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
         }
     }
 
-    fun onShowToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onShowToastClick(@Suppress("unused") view: View) {
         toast("Custom Toast")
     }
 
-    fun onShowDialogClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onShowDialogClick(@Suppress("unused") view: View) {
         AlertDialog.Builder(this)
             .setTitle("Title")
             .setMessage("This is a dialog")

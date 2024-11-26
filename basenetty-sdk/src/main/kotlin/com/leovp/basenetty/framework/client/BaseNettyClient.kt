@@ -9,7 +9,7 @@ import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER_COOKIE
+import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER
 import com.leovp.network.SslUtils
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
@@ -161,9 +161,9 @@ abstract class BaseNettyClient protected constructor(
 
     internal fun setHeaders(headers: DefaultHttpHeaders) {
         this.headers?.let {
-            if (LogContext.enableLog) LogContext.log.i(tag, "Prepare to set headers...")
+            LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                if (LogContext.enableLog) LogContext.log.i(tag, "Cookie: $k=$v", outputType = OUTPUT_TYPE_HTTP_HEADER_COOKIE)
+                LogContext.log.i(tag, "Cookie: $k=$v", outputType = OUTPUT_TYPE_HTTP_HEADER)
                 headers.add(k, v)
             }
         }

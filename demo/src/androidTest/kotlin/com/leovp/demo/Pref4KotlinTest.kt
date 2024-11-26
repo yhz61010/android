@@ -6,6 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.leovp.json.toJsonString
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
+import com.leovp.log.base.AbsLog.LogLevel
+import com.leovp.log.base.ITAG
 import com.leovp.pref.LPref
 import com.leovp.pref.PrefContext
 import org.junit.jupiter.api.AfterEach
@@ -37,7 +39,7 @@ class Pref4KotlinTest {
     fun setUp() {
         stopKoin() // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out
-        LogContext.setLogImpl(LLog("LEO"))
+        LogContext.setLogImpl(LLog(tagPrefix = "LEO", enableLog = true, logLevel = LogLevel.VERB))
     }
 
     @AfterEach
@@ -70,10 +72,10 @@ class Pref4KotlinTest {
         assertEquals(10, PrefContext.pref.get("int", 0))
         assertEquals(3.14f, PrefContext.pref.get("float", 0f))
         val mapIntObj: Map<String, Int>? = PrefContext.pref.getObject("object_int")
-        LogContext.log.d("mapIntObj=${mapIntObj.toJsonString()}")
+        LogContext.log.d(ITAG, "mapIntObj=${mapIntObj.toJsonString()}")
         assertEquals(mapOf("k_int1" to 1, "k_int2" to 2), mapIntObj)
         val mapFloatObj: Map<String, Float>? = PrefContext.pref.getObject("object_float")
-        LogContext.log.d("mapFloatObj=${mapFloatObj.toJsonString()}")
+        LogContext.log.d(ITAG, "mapFloatObj=${mapFloatObj.toJsonString()}")
         assertEquals(mapOf("k_float1" to 11.1f, "k_float2" to 22.2f), mapFloatObj)
         assertEquals("<null string>", PrefContext.pref.getString("null_str", "<null string>"))
         assertEquals("<null object>", PrefContext.pref.getString("null_obj", "<null object>"))

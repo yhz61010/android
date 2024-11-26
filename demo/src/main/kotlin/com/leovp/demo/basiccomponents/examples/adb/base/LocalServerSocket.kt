@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples.adb.base
 import android.net.LocalServerSocket
 import android.net.LocalSocket
 import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import java.io.InputStream
 
 /**
@@ -18,20 +19,20 @@ import java.io.InputStream
  */
 class LocalServerSocket {
     fun startServer(name: String) {
-        LogContext.log.i("startServer($name)")
+        LogContext.log.i(ITAG, "startServer($name)")
         val serverSocket = LocalServerSocket(name)
-        LogContext.log.i("LocalServerSocket created!")
+        LogContext.log.i(ITAG, "LocalServerSocket created!")
         // Blocking
         val client: LocalSocket = serverSocket.accept()
-        LogContext.log.i("Client connected!")
+        LogContext.log.i(ITAG, "Client connected!")
         while (true) {
             if (!client.isConnected) {
-                LogContext.log.i("isConnected=false")
+                LogContext.log.i(ITAG, "isConnected=false")
                 return
             }
             val inputStream: InputStream = client.inputStream
             val result: String = inputStream.reader().readText()
-            LogContext.log.i("ServerSocket rcv=$result")
+            LogContext.log.i(ITAG, "ServerSocket rcv=$result")
         }
     }
 }

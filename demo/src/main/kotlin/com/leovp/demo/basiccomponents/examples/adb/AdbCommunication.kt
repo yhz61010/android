@@ -23,12 +23,12 @@ class AdbCommunication : BaseDemonstrationActivity<ActivityAdbCommunicationBindi
         super.onCreate(savedInstanceState)
 
         thread {
-            LogContext.log.i("LocalServer starting...")
+            LogContext.log.i(ITAG, "LocalServer starting...")
             val server = LocalServerSocket()
             //            val server = LocalServer()
-            LogContext.log.i("LocalServer created.")
+            LogContext.log.i(ITAG, "LocalServer created.")
             server.startServer("local_name")
-            LogContext.log.i("LocalServer started!")
+            LogContext.log.i(ITAG, "LocalServer started!")
         }
     }
 }

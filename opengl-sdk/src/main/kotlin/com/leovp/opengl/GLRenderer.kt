@@ -143,7 +143,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
                 runCatching {
                     drawTexture(mvpMatrix, yuv420Type)
-                }.onFailure { LogContext.log.e(tag, it, outputType = OUTPUT_TYPE_SYSTEM) }
+                }.onFailure { LogContext.log.e(tag, "drawTexture() error.", it, outputType = OUTPUT_TYPE_SYSTEM) }
             }
         }
     }

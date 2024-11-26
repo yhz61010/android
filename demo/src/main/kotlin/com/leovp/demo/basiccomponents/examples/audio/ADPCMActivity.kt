@@ -37,7 +37,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
 
     private var player: AudioPlayer? = null
 
-    fun onEncodeToADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onEncodeToADPCMClick(@Suppress("unused") view: View) {
         val inputStream = resources.openRawResource(R.raw.raw_pcm_44100_2ch_s16le)
         val pcmData = inputStream.readBytes()
         inputStream.close()
@@ -59,10 +59,12 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         }
     }
 
-    fun onPlayADPCMClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onPlayADPCMClick(@Suppress("unused") view: View) {
         val decoderInfo =
             AudioDecoderInfo(
                 AUDIO_SAMPLE_RATE,
+
+                @Suppress("SENSELESS_COMPARISON")
                 if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT
             )
@@ -70,7 +72,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
 
         val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
         thread {
-            //            val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
+            // val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
             val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
             val inputStream = FileInputStream(inFile)
             val musicBytes = inputStream.readBytes()
@@ -80,11 +82,10 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                 val chunk = musicBytes.copyOfRange(i, i + chunkSize)
                 val st = SystemClock.elapsedRealtimeNanos()
                 val pcmBytes = adpcmQT.decode(chunk)
-                if (LogContext.enableLog) {
-                    LogContext.log.i(
-                        "PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
-                    )
-                }
+                LogContext.log.i(
+                    ITAG,
+                    "PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
+                )
                 player?.play(pcmBytes)
             }
             adpcmQT.release()

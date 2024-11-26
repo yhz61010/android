@@ -97,20 +97,20 @@ class BluetoothClientActivity :
                     super.onConnectionStateChange(gatt, status, newState)
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {
-                            LogContext.log.w("STATE_CONNECTED")
+                            LogContext.log.w(ITAG, "STATE_CONNECTED")
                             gatt!!.discoverServices()
                         }
 
                         BluetoothProfile.STATE_CONNECTING -> {
-                            LogContext.log.w("STATE_CONNECTING")
+                            LogContext.log.w(ITAG, "STATE_CONNECTING")
                         }
 
                         BluetoothProfile.STATE_DISCONNECTED -> {
-                            LogContext.log.w("STATE_DISCONNECTED")
+                            LogContext.log.w(ITAG, "STATE_DISCONNECTED")
                         }
 
                         BluetoothProfile.STATE_DISCONNECTING -> {
-                            LogContext.log.w("STATE_DISCONNECTING")
+                            LogContext.log.w(ITAG, "STATE_DISCONNECTING")
                         }
                     }
                 }
@@ -118,7 +118,7 @@ class BluetoothClientActivity :
                 @SuppressLint("InlinedApi")
                 @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
                 override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    LogContext.log.w("onServicesDiscovered status=$status")
+                    LogContext.log.w(ITAG, "onServicesDiscovered status=$status")
                     super.onServicesDiscovered(gatt, status)
                     // Set characteristics
                     val service = bluetoothGatt!!.getService(BluetoothServerActivity.serviceUuid)
@@ -126,7 +126,7 @@ class BluetoothClientActivity :
                         service.getCharacteristic(BluetoothServerActivity.characteristicReadUuid)
                     val successFlag =
                         bluetoothGatt!!.setCharacteristicNotification(characteristic, true)
-                    LogContext.log.w("setCharacteristicNotification b=$successFlag")
+                    LogContext.log.w(ITAG, "setCharacteristicNotification b=$successFlag")
                 }
 
                 // Receive data
@@ -140,6 +140,7 @@ class BluetoothClientActivity :
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         val data = String(characteristic.value)
                         LogContext.log.w(
+                            ITAG,
                             "onCharacteristicChanged Below Android 13 characteristic=" +
                                 "${characteristic.toJsonString()} data=$data"
                         )
@@ -157,6 +158,7 @@ class BluetoothClientActivity :
                     super.onCharacteristicChanged(gatt, characteristic, value)
                     val data = String(value)
                     LogContext.log.w(
+                        ITAG,
                         "onCharacteristicChanged Above Android 13 characteristic=" +
                             "${characteristic.toJsonString()} data=$data"
                     )
@@ -170,11 +172,12 @@ class BluetoothClientActivity :
                     status: Int,
                 ) {
                     LogContext.log.w(
+                        ITAG,
                         "onCharacteristicWrite characteristic=" +
                             "${characteristic.toJsonString()} status=$status"
                     )
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-                        LogContext.log.w("Sent successfully.")
+                        LogContext.log.w(ITAG, "Sent successfully.")
                     }
                     super.onCharacteristicWrite(gatt, characteristic, status)
                 }
@@ -184,7 +187,7 @@ class BluetoothClientActivity :
 
     @SuppressLint("InlinedApi")
     @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-    fun onSendClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onSendClick(@Suppress("unused") view: View) {
         val msg = binding.etMsg.text.toString()
         sendData(msg)
         binding.etMsg.setText("")
@@ -215,6 +218,6 @@ class BluetoothClientActivity :
             bluetoothGatt!!.writeCharacteristic(characteristic)
         }
 
-        LogContext.log.w("Send message to server=$msg")
+        LogContext.log.w(ITAG, "Send message to server=$msg")
     }
 }

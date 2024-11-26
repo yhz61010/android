@@ -21,7 +21,6 @@ import com.leovp.image.compressBitmap
 import com.leovp.image.writeToFile
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
-import com.leovp.log.base.ITAG
 import com.leovp.screencapture.screenrecord.ScreenCapture
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
@@ -102,7 +101,7 @@ class MediaProjectionService : Service() {
                 try {
                     videoH26xOs.write(data)
                 } catch (e: Exception) {
-                    LogContext.log.e("onDataUpdate error", e)
+                    LogContext.log.e(TAG, "onDataUpdate error", e)
                 }
             }
             //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
@@ -115,7 +114,7 @@ class MediaProjectionService : Service() {
     }
 
     override fun onCreate() {
-        LogContext.log.i(ITAG, "=====> onCreate <=====")
+        LogContext.log.i(TAG, "=====> onCreate <=====")
         super.onCreate()
         serviceThread = HandlerThread("service-thread")
         serviceThread.start()
@@ -127,7 +126,7 @@ class MediaProjectionService : Service() {
         if (outputH26xFile) {
             try {
                 val baseFolder = File(getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media")
-                LogContext.log.w(ITAG, "Output H.26x file path=$baseFolder")
+                LogContext.log.w(TAG, "Output H.26x file path=$baseFolder")
                 baseFolder.mkdirs()
                 videoH26xFile = File(
                     baseFolder,
@@ -144,28 +143,28 @@ class MediaProjectionService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder {
-        LogContext.log.i(ITAG, "=====> onBind <=====")
+        LogContext.log.i(TAG, "=====> onBind <=====")
         return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        LogContext.log.i(ITAG, "=====> onStartCommand <=====")
+        LogContext.log.i(TAG, "=====> onStartCommand <=====")
         return START_STICKY
     }
 
     override fun onRebind(intent: Intent?) {
-        LogContext.log.i(ITAG, "=====> onRebind <=====")
+        LogContext.log.i(TAG, "=====> onRebind <=====")
         super.onRebind(intent)
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        LogContext.log.w(ITAG, "=====> onUnbind <=====")
+        LogContext.log.w(TAG, "=====> onUnbind <=====")
         stopScreenShare()
         return false
     }
 
     override fun onDestroy() {
-        LogContext.log.w(ITAG, "=====> onDestroy <=====")
+        LogContext.log.w(TAG, "=====> onDestroy <=====")
         super.onDestroy()
     }
 
@@ -220,7 +219,7 @@ class MediaProjectionService : Service() {
      * This method must be following `setData()` method
      */
     fun startScreenShare(setting: ScreenShareSetting) {
-        LogContext.log.i(ITAG, "startScreenShare: ${setting.toJsonString()}")
+        LogContext.log.i(TAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
         mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
@@ -254,7 +253,7 @@ class MediaProjectionService : Service() {
     }
 
     fun stopScreenShare() {
-        LogContext.log.w(ITAG, "stopScreenShare")
+        LogContext.log.w(TAG, "stopScreenShare")
         if (outputH26xFile) {
             try {
                 videoH26xOs.flush()
@@ -265,36 +264,36 @@ class MediaProjectionService : Service() {
         }
 
         serviceHandler.post {
-            LogContext.log.w(ITAG, "screenProcessor onStop()")
+            LogContext.log.w(TAG, "screenProcessor onStop()")
             screenProcessor?.onStop()
         }
     }
 
     fun onReleaseScreenShare() {
-        LogContext.log.w(ITAG, "onReleaseScreenShare()")
+        LogContext.log.w(TAG, "onReleaseScreenShare()")
         stopScreenShare()
         serviceHandler.post {
-            LogContext.log.w(ITAG, "onReleaseScreenShare onRelease()")
+            LogContext.log.w(TAG, "onReleaseScreenShare onRelease()")
             screenProcessor?.onRelease()
         }
     }
 
     @Suppress("WeakerAccess")
     fun triggerIFrame() {
-        LogContext.log.w(ITAG, "triggerIFrame()")
+        LogContext.log.w(TAG, "triggerIFrame()")
         val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h26xEncoder
         encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
     }
 
     fun takeScreenshot(width: Int?, height: Int?) {
-        LogContext.log.w("Prepare to call takeScreenshot($width, $height)...")
+        LogContext.log.w(TAG, "Prepare to call takeScreenshot($width, $height)...")
         screenProcessor?.takeScreenshot(width, height) { bmp ->
             val compressedBmp = bmp.compressBitmap()
             bmp.recycle()
             val jpegFile = File(this@MediaProjectionService.getBaseDirString("screenshot"), "screenshot.jpg")
             compressedBmp.writeToFile(jpegFile)
             compressedBmp.recycle()
-            LogContext.log.w("onScreenshot[${jpegFile.length()}]")
+            LogContext.log.w(TAG, "onScreenshot[${jpegFile.length()}]")
             toast("Screenshot saved[${jpegFile.length()}]")
         }
     }

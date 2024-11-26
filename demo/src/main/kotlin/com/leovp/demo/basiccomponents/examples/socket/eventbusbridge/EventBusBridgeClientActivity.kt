@@ -50,16 +50,16 @@ class EventBusBridgeClientActivity :
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
-            LogContext.log.w("===== onConnected =====")
+            LogContext.log.w(ITAG, "===== onConnected =====")
             webSocketHandler?.sendTest(netty)
         }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
-            LogContext.log.e("===== onFailed =====")
+            LogContext.log.e(ITAG, "===== onFailed =====")
         }
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
-            LogContext.log.w("===== onDisconnected =====")
+            LogContext.log.w(ITAG, "===== onDisconnected =====")
         }
     }
 
@@ -95,7 +95,7 @@ class EventBusBridgeClientActivity :
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy,
-        headers: Map<String, String>? = null
+        headers: Map<String, String>? = null,
     ) : BaseNettyClient(webSocketUri, connectionListener, false, retryStrategy, headers) {
 
         override fun getTagName() = "ebr-s"
@@ -117,7 +117,8 @@ class EventBusBridgeClientActivity :
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             when (msg) {
                 is BinaryWebSocketFrame,
-                is ContinuationWebSocketFrame -> {
+                is ContinuationWebSocketFrame,
+                    -> {
                     val receivedByteBuf = (msg as WebSocketFrame).content().retain()
 
                     val receivedBytes = ByteBufUtil.getBytes(receivedByteBuf)
@@ -129,17 +130,17 @@ class EventBusBridgeClientActivity :
                     totalFrameData.compareAndSet(savedByteArray, totalByteArray)
 
                     if (msg.isFinalFragment) {
-                        //                    if (LogContext.enableLog) LogContext.log.w(TAG, "Found FinalFragment.")
+                        // if (LogContext.enableLog) LogContext.log.w(TAG, "Found FinalFragment.")
                         totalByteArray = totalFrameData.get()
                         totalFrameData.set(ByteArray(0))
                         receivedByteBuf.release()
                     } else {
-                        //                    if (LogContext.enableLog) LogContext.log.d(TAG, "Found ContinuationWebSocketFrame.")
+                        // if (LogContext.enableLog) LogContext.log.d(TAG, "Found ContinuationWebSocketFrame.")
                         receivedByteBuf.release()
                         return
                     }
 
-                    if (LogContext.enableLog) LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
+                    LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
                     // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
                     //   replyAddress?.let { replyAddress ->
@@ -156,7 +157,7 @@ class EventBusBridgeClientActivity :
                     //   }
                 }
 
-                else -> if (LogContext.enableLog) LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
+                else -> LogContext.log.i(TAG, "Invalid message type=[${msg::class.simpleName}]")
             }
         }
 

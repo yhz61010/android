@@ -4,6 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.leovp.demo.basiccomponents.examples.pref.MMKVPref
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
+import com.leovp.log.base.ITAG
 import com.leovp.pref.PrefContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -43,10 +44,10 @@ class Pref4KotlinAndroidTest {
         assertEquals(10, PrefContext.pref.get("mmkv_int", 0))
         assertEquals(3.14f, PrefContext.pref.get("mmkv_float", 0f))
         val mapIntObj: Map<String, Int>? = PrefContext.pref.getObject("mmkv_object_int")
-        LogContext.log.d("mapIntObj=${mapIntObj.toJsonString()}")
+        LogContext.log.d(ITAG, "mapIntObj=${mapIntObj.toJsonString()}")
         assertEquals(mapOf("k_int1" to 1, "k_int2" to 2), mapIntObj)
         val mapFloatObj: Map<String, Float>? = PrefContext.pref.getObject("mmkv_object_float")
-        LogContext.log.d("mapFloatObj=${mapFloatObj.toJsonString()}")
+        LogContext.log.d(ITAG, "mapFloatObj=${mapFloatObj.toJsonString()}")
         assertEquals(mapOf("k_float1" to 11.1f, "k_float2" to 22.2f), mapFloatObj)
         assertEquals("<null string>", PrefContext.pref.getString("mmkv_null_str", "<null string>"))
         assertEquals("<null object>", PrefContext.pref.getString("mmkv_null_obj", "<null object>"))

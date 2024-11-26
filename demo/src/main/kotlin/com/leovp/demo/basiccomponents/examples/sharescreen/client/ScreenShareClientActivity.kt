@@ -173,11 +173,19 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
             newWidth = (screenInfo.width * ratio).toInt()
             newHeight = screenInfo.width
             // If remote screen is still in portrait, do like this to preserve the video dimension.
-            LogContext.log.w("Running in LANDSCAPE ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
+            LogContext.log.w(
+                ITAG,
+                "Running in LANDSCAPE ${screenInfo.toJsonString()} " +
+                    "SurfaceView size=$newWidth x $newHeight(ratio=$ratio)"
+            )
         } else {
             newWidth = screenInfo.width
             newHeight = screenInfo.height
-            LogContext.log.w("Running in PORTRAIT ${screenInfo.toJsonString()} SurfaceView size=$newWidth x $newHeight(ratio=$ratio)")
+            LogContext.log.w(
+                ITAG,
+                "Running in PORTRAIT ${screenInfo.toJsonString()} " +
+                    "SurfaceView size=$newWidth x $newHeight(ratio=$ratio)"
+            )
         }
         binding.surfaceView.holder.setFixedSize(newWidth, newHeight)
     }
@@ -194,7 +202,8 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
     }
 
     private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
-        LogContext.log.w(ITAG, "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}")
+        LogContext.log.w(ITAG,
+            "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}")
         this.vps = vps
         this.sps = sps
         this.pps = pps
@@ -260,7 +269,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                     inputBuffer?.put(it)
                 }
                 codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 LogContext.log.e(tag, "onInputBufferAvailable() exception.")
             }
         }
@@ -320,7 +329,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         webSocketUri: URI,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         trustAllServers: Boolean,
-        retryStrategy: RetryStrategy
+        retryStrategy: RetryStrategy,
     ) :
         BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "ScreenShareClientActivity"
@@ -371,7 +380,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
 
         fun sendDragData(x: Float, y: Float, dstX: Float, dstY: Float, duration: Long): Boolean {
             val touchBean = TouchBean(TouchType.DRAG, x, y, dstX, dstY, duration)
-            val touchArray = CmdBean(ScreenShareMasterActivity.CMD_TOUCH_DRAG, null, null, touchBean).toJsonString().encodeToByteArray()
+            val touchArray =
+                CmdBean(ScreenShareMasterActivity.CMD_TOUCH_DRAG, null, null, touchBean).toJsonString()
+                    .encodeToByteArray()
             val cId = ScreenShareMasterActivity.CMD_TOUCH_DRAG.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
@@ -447,7 +458,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         val y: Float = 0f,
         val paintColor: Int = 0,
         val paintStyle: Paint.Style = Paint.Style.STROKE,
-        val strokeWidth: Float = 0f
+        val strokeWidth: Float = 0f,
     )
 
     @Keep
@@ -457,7 +468,7 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         var y: Float = 0f,
         var dstX: Float = 0f,
         var dstY: Float = 0f,
-        var duration: Long = 0
+        var duration: Long = 0,
     )
 
     private fun connectToServer() {
@@ -569,23 +580,23 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
         cs.launch { webSocketClient?.release() }
     }
 
-    fun onClearClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onClearClick(@Suppress("unused") view: View) {
         binding.finger.clear()
     }
 
-    fun onUndoClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onUndoClick(@Suppress("unused") view: View) {
         binding.finger.undo()
     }
 
-    fun onRecentClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onRecentClick(@Suppress("unused") view: View) {
         webSocketClientHandler?.sendTouchData(TouchType.RECENT, 0f, 0f)
     }
 
-    fun onBackClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onBackClick(@Suppress("unused") view: View) {
         webSocketClientHandler?.sendTouchData(TouchType.BACK, 0f, 0f)
     }
 
-    fun onHomeClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onHomeClick(@Suppress("unused") view: View) {
         webSocketClientHandler?.sendTouchData(TouchType.HOME, 0f, 0f)
     }
 
@@ -627,7 +638,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
 
         val duration = touchUpStartTime - touchDownStartTime
         LogContext.log.w(
-            "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) duration=${duration}ms"
+            tag,
+            "Drag from ($touchDownRawX x $touchDownRawY) to ($touchUpRawX x $touchUpRawY) " +
+                "duration=${duration}ms"
         )
         if (duration > 0) {
             webSocketClientHandler?.sendDragData(

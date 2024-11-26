@@ -80,7 +80,7 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun onEnableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val enable = bluetooth.enable()
-        LogContext.log.i("Enable=$enable")
+        LogContext.log.i(tag, "Enable=$enable")
         toast("Enable=$enable")
     }
 
@@ -88,15 +88,15 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
     @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
     fun onDisableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val disable = bluetooth.disable()
-        LogContext.log.i("Disable=$disable")
+        LogContext.log.i(tag, "Disable=$disable")
         toast("Disable=$disable")
     }
 
-    fun onScanClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onScanClick(@Suppress("unused") view: View) {
         startActivity<BluetoothScanActivity>()
     }
 
-    fun onGotoServerSideClick(@Suppress("UNUSED_PARAMETER") view: View) {
+    fun onGotoServerSideClick(@Suppress("unused") view: View) {
         startActivity<BluetoothServerActivity>()
     }
 }

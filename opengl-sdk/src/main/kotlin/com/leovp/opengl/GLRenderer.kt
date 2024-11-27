@@ -5,7 +5,7 @@ package com.leovp.opengl
 import android.content.Context
 import android.opengl.GLES20
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_SYSTEM
+import com.leovp.log.base.LogOutType
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_POS_COMPONENT_COUNT
 import com.leovp.opengl.util.GLConstants.TWO_DIMEN_STRIDE_IN_FLOAT
 import com.leovp.opengl.util.VerticesUtil
@@ -68,18 +68,23 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     //  Called once to set up the view's OpenGL ES environment.
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        LogContext.log.w(tag, "=====> GLRenderer onSurfaceCreated()", outputType = OUTPUT_TYPE_SYSTEM)
+        LogContext.log.w(
+            tag,
+            "=====> GLRenderer onSurfaceCreated()",
+            outputType = LogOutType.FRAMEWORK,
+        )
         // Set the background frame color
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。
         // 这里不会立刻刷新，只有在 GLES20.glClear 调用时使用该颜色值才刷新。
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        makeProgram(context.readAssetsFileAsString(R.raw.yuv_vertex_shader), context.readAssetsFileAsString(R.raw.yuv_fragment_shader))
+        makeProgram(context.readAssetsFileAsString(R.raw.yuv_vertex_shader),
+            context.readAssetsFileAsString(R.raw.yuv_fragment_shader))
 
         // 生成纹理句柄
         GLES20.glGenTextures(THREE_PLANAR, planarTextureIntBuffer)
         checkGlError("glGenTextures")
-        LogContext.log.d(tag, "=====> GLProgram created", outputType = OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(tag, "=====> GLProgram created", outputType = LogOutType.FRAMEWORK)
     }
 
     private fun createCustomFloatBuffer(
@@ -87,9 +92,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         videoHeight: Int,
         keepRatio: Boolean,
         renderWidth: Int,
-        renderHeight: Int
+        renderHeight: Int,
     ): FloatBuffer {
-        return createFloatBuffer(createKeepRatioFloatArray(videoWidth, videoHeight, keepRatio, renderWidth, renderHeight))
+        return createFloatBuffer(createKeepRatioFloatArray(videoWidth,
+            videoHeight,
+            keepRatio,
+            renderWidth,
+            renderHeight))
     }
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
@@ -97,7 +106,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.w(
             tag,
             "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
-            outputType = OUTPUT_TYPE_SYSTEM
+            outputType = LogOutType.FRAMEWORK,
         )
         super.onSurfaceChanged(gl, width, height)
 
@@ -112,7 +121,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
             pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, outputWidth, outputHeight)
         }
         hasVisibility = true
-        LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = OUTPUT_TYPE_SYSTEM)
+        LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = LogOutType.FRAMEWORK)
     }
 
     //  Called for each redraw of the view.
@@ -143,7 +152,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
                 runCatching {
                     drawTexture(mvpMatrix, yuv420Type)
-                }.onFailure { LogContext.log.e(tag, "drawTexture() error.", it, outputType = OUTPUT_TYPE_SYSTEM) }
+                }.onFailure {
+                    LogContext.log.e(
+                        tag,
+                        "drawTexture() error.", it,
+                        outputType = LogOutType.FRAMEWORK,
+                    )
+                }
             }
         }
     }
@@ -157,7 +172,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         LogContext.log.i(
             tag,
             "setVideoDimension width=${width}x$height render size=${renderWidth}x$renderHeight",
-            outputType = OUTPUT_TYPE_SYSTEM
+            outputType = LogOutType.FRAMEWORK,
         )
         if (width > 0 && height > 0) {
             // 调整比例
@@ -229,14 +244,24 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
             //   normalized: 表示是否进行归一化。
             //   stride: 表示stride（跨距），在数组表示多种属性的时候使用到。数组中每个顶点相关属性占的Byte值。
             //   ptr: 表示所传入的顶点数组地址
-            GLES20.glVertexAttribPointer(it, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMEN_STRIDE_IN_FLOAT, pointCoord)
+            GLES20.glVertexAttribPointer(it,
+                TWO_DIMEN_POS_COMPONENT_COUNT,
+                GLES20.GL_FLOAT,
+                false,
+                TWO_DIMEN_STRIDE_IN_FLOAT,
+                pointCoord)
             // 通知 GL 程序使用指定的顶点属性索引
             GLES20.glEnableVertexAttribArray(it)
         }
 
         // 传纹理坐标给 fragment shader
         aTexCoordLocation = getAttrib("a_TexCoord").also {
-            GLES20.glVertexAttribPointer(it, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, TWO_DIMEN_STRIDE_IN_FLOAT, texVertices)
+            GLES20.glVertexAttribPointer(it,
+                TWO_DIMEN_POS_COMPONENT_COUNT,
+                GLES20.GL_FLOAT,
+                false,
+                TWO_DIMEN_STRIDE_IN_FLOAT,
+                texVertices)
             GLES20.glEnableVertexAttribArray(it)
         }
 
@@ -282,7 +307,9 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
         // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,
+            0,
+            VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT)
         GLES20.glFinish()
 
         GLES20.glDisableVertexAttribArray(aPositionLocation)

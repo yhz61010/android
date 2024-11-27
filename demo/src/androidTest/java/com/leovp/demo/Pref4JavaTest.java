@@ -1,29 +1,29 @@
 package com.leovp.demo;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.koin.core.context.DefaultContextExtKt.stopKoin;
 import android.app.Application;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import com.leovp.log.LLog;
 import com.leovp.log.LogContext;
-import com.leovp.log.base.AbsLog;
+import com.leovp.log.base.LogLevel;
 import com.leovp.pref.LPref;
 import com.leovp.pref.PrefContext;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowLog;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import static org.koin.core.context.DefaultContextExtKt.stopKoin;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLog;
 
 /**
  * Author: Michael Leo
@@ -42,7 +42,7 @@ public class Pref4JavaTest {
     public void setUp() {
         stopKoin(); // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out;
-        LogContext.INSTANCE.setLogImpl(new LLog("LEO", true, AbsLog.LogLevel.DEBUG));
+        LogContext.INSTANCE.setLogImpl(new LLog("LEO", LogLevel.DEBUG, true));
     }
 
     @AfterEach

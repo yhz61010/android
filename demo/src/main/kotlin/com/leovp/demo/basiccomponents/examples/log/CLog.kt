@@ -2,6 +2,8 @@ package com.leovp.demo.basiccomponents.examples.log
 
 import android.content.Context
 import com.leovp.log.base.AbsLog
+import com.leovp.log.base.LogLevel
+import com.leovp.log.base.LogOutType
 import com.tencent.mars.xlog.Log
 import com.tencent.mars.xlog.Xlog
 import java.io.File
@@ -13,32 +15,32 @@ import java.io.File
 @Suppress("unused")
 class CLog(
     tagPrefix: String,
-    private val enableLog: Boolean = true,
-    override var logLevel: LogLevel,
-) : AbsLog(tagPrefix) {
+    logLevel: LogLevel = LogLevel.VERB,
+    enableLog: Boolean = true,
+) : AbsLog(tagPrefix = tagPrefix, separator = "-", logLevel = logLevel, enableLog = enableLog) {
 
-    override fun printVerbLog(tag: String, message: String, outputType: Int) {
-        Log.v(tag, message)
+    override fun printVerbLog(tag: String, message: String, outputType: LogOutType) {
+        Log.v(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
-    override fun printDebugLog(tag: String, message: String, outputType: Int) {
-        Log.d(tag, message)
+    override fun printDebugLog(tag: String, message: String, outputType: LogOutType) {
+        Log.d(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
-    override fun printInfoLog(tag: String, message: String, outputType: Int) {
-        Log.i(tag, message)
+    override fun printInfoLog(tag: String, message: String, outputType: LogOutType) {
+        Log.i(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
-    override fun printWarnLog(tag: String, message: String, outputType: Int) {
-        Log.w(tag, message)
+    override fun printWarnLog(tag: String, message: String, outputType: LogOutType) {
+        Log.w(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
-    override fun printErrorLog(tag: String, message: String, outputType: Int) {
-        Log.e(tag, message)
+    override fun printErrorLog(tag: String, message: String, outputType: LogOutType) {
+        Log.e(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
-    override fun printFatalLog(tag: String, message: String, outputType: Int) {
-        Log.f(tag, message)
+    override fun printFatalLog(tag: String, message: String, outputType: LogOutType) {
+        Log.f(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
     }
 
     // ==============================
@@ -71,7 +73,7 @@ class CLog(
         }
 
         Log.setLogImp(Xlog())
-        Log.setConsoleLogOpen(enableLog)
+        Log.setConsoleLogOpen(true)
         Log.appenderOpen(defaultLogLevel, Xlog.AppednerModeAsync, cacheDir, logDir, "main", 0)
 
         //        // Now, there is no way to use this XLogConfig. Probably this is a Xlog bug.

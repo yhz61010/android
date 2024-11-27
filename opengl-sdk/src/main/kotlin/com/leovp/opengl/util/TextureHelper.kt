@@ -13,7 +13,7 @@ import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_SYSTEM
+import com.leovp.log.base.LogOutType
 
 /**
  * 纹理加载助手类
@@ -42,7 +42,11 @@ object TextureHelper {
         GLES20.glGenTextures(1, textureObjectIds, 0)
 
         if (textureObjectIds[0] == 0) {
-            LogContext.log.w(TAG, "Could not generate a new OpenGL texture object.", outputType = OUTPUT_TYPE_SYSTEM)
+            LogContext.log.w(
+                TAG,
+                "Could not generate a new OpenGL texture object.",
+                outputType = LogOutType.FRAMEWORK,
+            )
             return bean
         }
 
@@ -52,7 +56,11 @@ object TextureHelper {
         val bitmap = BitmapFactory.decodeResource(context.resources, resourceId, options)
 
         if (bitmap == null) {
-            LogContext.log.w(TAG, "Resource ID $resourceId could not be decoded.", outputType = OUTPUT_TYPE_SYSTEM)
+            LogContext.log.w(
+                TAG,
+                "Resource ID $resourceId could not be decoded.",
+                outputType = LogOutType.FRAMEWORK,
+            )
             // 加载 Bitmap 资源失败，删除纹理 Id
             GLES20.glDeleteTextures(1, textureObjectIds, 0)
             return bean

@@ -12,7 +12,6 @@ import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.toast
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog
 import com.leovp.log.base.ITAG
 
 class MainActivity : AppCompatActivity() {
@@ -25,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
 
         LogContext.setLogImpl(
-            LLog(tagPrefix = "LEO-AIDL-CLIENT", enableLog = true, logLevel = AbsLog.LogLevel.VERB)
+            LLog(tagPrefix = "LEO-AIDL-CLIENT")
         )
 
         val serviceConnection = object : ServiceConnection {

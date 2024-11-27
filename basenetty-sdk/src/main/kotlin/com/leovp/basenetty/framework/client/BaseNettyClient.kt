@@ -8,8 +8,7 @@ import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_CLIENT_COMMAND
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER
+import com.leovp.log.base.LogOutType
 import com.leovp.network.SslUtils
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
@@ -86,7 +85,7 @@ abstract class BaseNettyClient protected constructor(
     val connectionListener: ClientConnectListener<BaseNettyClient>,
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     private val headers: Map<String, String>? = null,
-    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
 ) : BaseNetty {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
@@ -98,7 +97,7 @@ abstract class BaseNettyClient protected constructor(
         certInputStream: InputStream,
         retryStrategy: RetryStrategy = ConstantRetry(),
         headers: Map<String, String>? = null,
-        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
     ) : this(
         webSocketUri.host,
         if (webSocketUri.port == -1) {
@@ -117,7 +116,8 @@ abstract class BaseNettyClient protected constructor(
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
-        LogContext.log.w(tag, "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+        LogContext.log.w(tag,
+            "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
     }
 
     protected constructor(
@@ -126,7 +126,7 @@ abstract class BaseNettyClient protected constructor(
         trustAllServers: Boolean,
         retryStrategy: RetryStrategy = ConstantRetry(),
         headers: Map<String, String>? = null,
-        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
     ) : this(
         webSocketUri.host,
         if (webSocketUri.port == -1) {
@@ -163,7 +163,7 @@ abstract class BaseNettyClient protected constructor(
         this.headers?.let {
             LogContext.log.i(tag, "Prepare to set headers...")
             for ((k, v) in it) {
-                LogContext.log.i(tag, "Cookie: $k=$v", outputType = OUTPUT_TYPE_HTTP_HEADER)
+                LogContext.log.i(tag, "Cookie: $k=$v", outputType = LogOutType.HTTP_HEADER)
                 headers.add(k, v)
             }
         }
@@ -226,7 +226,9 @@ abstract class BaseNettyClient protected constructor(
                             if (trustAllServers) {
                                 LogContext.log.w(tag, "Working in wss INSECURE mode")
                                 val sslCtx: SslContext =
-                                    SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                                    SslContextBuilder.forClient()
+                                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                        .build()
                                 addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
                             } else {
                                 if (certificateInputStream == null) {
@@ -247,7 +249,8 @@ abstract class BaseNettyClient protected constructor(
                                     //                                }
                                     //                                addFirst("ssl", SslHandler(sslEngine))
 
-                                    val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
+                                    val sslCtx: SslContext =
+                                        SslContextBuilder.forClient().trustManager(sslContextPair.second).build()
                                     addFirst("ssl", sslCtx.newHandler(socketChannel.alloc(), host, port))
 
                                     //                                val sslEngine = SSLContext.getDefault().createSSLEngine().apply { useClientMode = true }
@@ -285,7 +288,8 @@ abstract class BaseNettyClient protected constructor(
         synchronized(this) {
             when (connectStatus.get()) {
                 ClientConnectStatus.CONNECTING,
-                ClientConnectStatus.CONNECTED -> {
+                ClientConnectStatus.CONNECTED,
+                    -> {
                     LogContext.log.w(tag, "===== Connecting or already connected =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
@@ -358,7 +362,9 @@ abstract class BaseNettyClient protected constructor(
                     } else {
                         LogContext.log.i(tag, "=====> Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
-                        connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, "Connect failed")
+                        connectionListener.onFailed(this,
+                            ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
+                            "Connect failed")
                         cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
                         //                        LogContext.log.e(tag, "=====> CHK2 <=====")
                         doRetry()
@@ -588,7 +594,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "The command is null. Stop processing.",
-                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+                outputType = LogOutType.CLIENT_COMMAND,
             )
             return false
         }
@@ -597,7 +603,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "Socket is not connected. Can not send command.",
-                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+                outputType = LogOutType.CLIENT_COMMAND,
             )
             return false
         }
@@ -605,7 +611,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "Can not execute cmd because of Channel is not active.",
-                outputType = OUTPUT_TYPE_CLIENT_COMMAND
+                outputType = LogOutType.CLIENT_COMMAND,
             )
             return false
         }
@@ -626,7 +632,7 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder
+        byteOrder: ByteOrder,
     ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTag, cmd)) {
             return false
@@ -695,7 +701,7 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         cmdTag,
         cmdDesc,
@@ -717,7 +723,7 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         cmdTag,
         cmdDesc,

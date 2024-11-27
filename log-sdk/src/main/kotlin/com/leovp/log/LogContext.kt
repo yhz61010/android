@@ -1,19 +1,21 @@
 package com.leovp.log
 
 import com.leovp.log.base.AbsLog
+import com.leovp.log.base.LogLevel
 
 /**
  *  You can implement your log wrapper by implement `ILog` or use the default log wrapper `AbsLog`.
  *
  * `LLog` is the wrapper of Android default log.
  *
- * After implementing your log wrapper, you must initialize it ASAP.
- * For example in `Application` by calling `LogContext.setLogImpl()`:
+ * After implementing your log wrapper,
+ * you must initialize it ASAP by calling `LogContext.setLogImpl()`:
+ *
  * Assume that `CLog` is your custom log wrapper.
  * ```kotlin
  * LogContext.setLogImpl(
- *     CLog(tagPrefix = TAG_PREFIX, enableLog = true, logLevel = LogLevel.VERB).apply {
- *         init(this@CustomApplication)
+ *     CLog(tagPrefix = TAG_PREFIX, logLevel = LogLevel.VERB, enableLog = true).apply {
+ *         init(context)
  *     }
  * )
  * ```
@@ -21,7 +23,7 @@ import com.leovp.log.base.AbsLog
  * The default implementation is like this below:
  * ```kotlin
  * LogContext.setLogImpl(
- *     LLog(tagPrefix = "LEO", enableLog = true, logLevel = LogLevel.VERB)
+ *     LLog(tagPrefix = TAG_PREFIX, logLevel = LogLevel.VERB, enableLog = true)
  * )
  * ```
  *
@@ -33,7 +35,7 @@ import com.leovp.log.base.AbsLog
  *     tag: String = "",
  *     throwable: Throwable? = null,
  *     fullOutput: Boolean = false,
- *     outputType: Int = -1,
+ *     outputType: LogOutType = LogOutType.COMMON,
  *     generateMsg: () -> Any?
  * ) {
  *     // The 'if' condition must be a static final boolean value.
@@ -67,7 +69,7 @@ object LogContext {
         private set
 
     @Suppress("unused")
-    val logLevel: AbsLog.LogLevel
+    val logLevel: LogLevel
         get() = if (isLogInitialized()) {
             log.logLevel
         } else {

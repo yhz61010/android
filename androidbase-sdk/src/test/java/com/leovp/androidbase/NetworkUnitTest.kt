@@ -4,7 +4,6 @@ import android.util.Log
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.LogLevel
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -23,7 +22,7 @@ class NetworkUnitTest {
     @BeforeEach
     fun setUp() {
         ShadowLog.stream = System.out
-        LogContext.setLogImpl(LLog(tagPrefix = "LEO", enableLog = true, logLevel = LogLevel.VERB))
+        LogContext.setLogImpl(LLog(tagPrefix = "LEO"))
     }
 
     @Test

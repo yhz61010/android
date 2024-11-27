@@ -12,9 +12,6 @@ import com.leovp.demo.basiccomponents.examples.koin.HelloRepository
 import com.leovp.demo.basiccomponents.examples.koin.HelloRepositoryImpl
 import com.leovp.demo.basiccomponents.examples.koin.MySimplePresenter
 import com.leovp.demo.basiccomponents.examples.koin.Wheel
-import com.leovp.log.LLog
-import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.LogLevel
 import com.leovp.pref.LPref
 import com.leovp.pref.PrefContext
 import io.reactivex.plugins.RxJavaPlugins
@@ -29,7 +26,7 @@ import org.koin.dsl.module
  */
 class CustomApplication : BaseApplication() {
     companion object {
-        private const val TAG_PREFIX = "LEO"
+        const val TAG_PREFIX = "LEO"
     }
 
     private val appModules = module {
@@ -74,16 +71,6 @@ class CustomApplication : BaseApplication() {
 
     override fun attachBaseContext(base: Context) {
         Log.i("$TAG_PREFIX-App", "=====> attachBaseContext setLocale()")
-
-        // LogContext.setLogImpl(
-        //     CLog(tagPrefix = TAG_PREFIX, enableLog = true, logLevel = LogLevel.VERB).apply {
-        //         init(this@CustomApplication)
-        //     }
-        // )
-        LogContext.setLogImpl(
-            LLog(tagPrefix = TAG_PREFIX, enableLog = true, logLevel = LogLevel.VERB)
-        )
-
         super.attachBaseContext(base)
         Reflection.unseal(base)
     }

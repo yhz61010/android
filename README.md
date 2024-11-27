@@ -1,7 +1,7 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.1.0--RC-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.8.0--alpha09-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.10.2-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.1.0--RC2-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.9.0--alpha03-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-8.11.1-green)](https://gradle.org)
 
 [![Android Studio](https://img.shields.io/badge/Android_Studio-Koala_Feature_Drop_|_2024.1.2_Canary_2-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)

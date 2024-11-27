@@ -48,6 +48,6 @@ value class LogOutType(val type: Int) {
         FRAMEWORK -> "FRAMEWORK"
         HTTP -> "HTTP"
         COMMON -> "COMMON"
-        else -> this.toString()
+        else -> this.type.toString()
     }
 }

@@ -18,9 +18,16 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
     private fun init(sampleRate: Int, channel: Int): Boolean {
         val codec = avcodec.avcodec_find_decoder(avcodec.AV_CODEC_ID_ADPCM_IMA_QT)
         ctx = avcodec.avcodec_alloc_context3(codec).apply {
-            channels(channel)
+            val ch = if (channel == 1) {
+                avutil.AV_CHANNEL_LAYOUT_MONO
+            } else {
+                avutil.AV_CHANNEL_LAYOUT_STEREO
+            }
+            ch_layout(ch)
             sample_rate(sampleRate)
-            channel_layout(avutil.av_get_default_channel_layout(channel))
+            // Old version
+            // channels(channel)
+            // channel_layout(avutil.av_get_default_channel_layout(channel))
         }
 
         return avcodec.avcodec_open2(ctx, codec, null as AVDictionary?) >= 0
@@ -88,8 +95,8 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
         private const val ENCODED_CHUNKS_SIZE = 34
 
         fun getSampleFormatName(fmt: Int): String? = avutil.av_get_sample_fmt_name(fmt).let { ptr ->
-                return if (ptr != null && !ptr.isNull) ptr.string else null
-            }
+            return if (ptr != null && !ptr.isNull) ptr.string else null
+        }
 
         fun isAvSampleInPlanar(fmt: Int): Boolean = avutil.av_sample_fmt_is_planar(fmt) == 1
     }

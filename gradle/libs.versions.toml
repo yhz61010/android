@@ -7,18 +7,20 @@ min-sdk = "26"
 target-sdk = "35"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.44"
+leo-version = "5.12.46"
 
 #===================
 #===== Compile =====
 #===================
-agp = "8.8.0-alpha09"
-kotlin = "2.1.0-RC"
-ksp = "2.1.0-RC-1.0.27"
+agp = "8.9.0-alpha03"
+kotlin = "2.1.0-RC2"
+ksp = "2.1.0-RC2-1.0.28"
+kotlin-language = "2.1"
+kotlin-api = "2.1"
+kotlin-apidemo = "1.9"
 
 javaVersion = "17"
 jvmVersion = "17"
-kotlinVersion = "1.9"
 
 #=================================
 #===== Android dependencies ======
@@ -34,7 +36,7 @@ preference = "1.2.1"
 recyclerview = "1.3.2"
 constraintlayout = "2.2.0"
 coordinatorlayout = "1.2.0"
-navigation = "2.8.3"
+navigation = "2.8.4"
 concurrent-futures-ktx = "1.2.0"
 lifecycle = "2.8.7"
 android-annotation = "4.1.1.4"
@@ -43,7 +45,7 @@ androidx-annotation = "1.9.1"
 cardview = "1.0.0"
 viewpager2 = "1.1.0"
 swiperefreshlayout = "1.1.0"
-room = "2.6.1" # 2.4.2 has compilation error with Kotlin 1.7.0
+room = "2.7.0-alpha11" # 2.4.2 has compilation error with Kotlin 1.7.0
 camera = "1.4.0"
 exifinterface = "1.3.7"
 
@@ -60,12 +62,12 @@ androidx-activity-compose = "1.9.3"
 detekt = "1.23.7"
 dokka = "1.7.10"
 # ktlint = "0.49.0"
-ktlint-gradle = "12.1.1"
+ktlint-gradle = "12.1.2"
 benmanes = "0.51.0"
 #vcu = "0.7.0"
 jacoco = "0.8.12"
 # The version should be the same as server.
-sonarqube = "5.1.0.4882"
+sonarqube = "6.0.0.5145"
 
 coil = "2.7.0"
 glide = "4.16.0"
@@ -81,7 +83,7 @@ gson = "2.11.0"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
-mmkv = "2.0.0"
+mmkv = "2.0.1"
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
 fasterxml = "2.18.1" # 2.14.3
@@ -92,8 +94,8 @@ flyco-tablayout = "2.2.0"
 srl = "2.0.5"
 netty = "4.1.108.Final"
 koin = "4.0.0"
-bytedeco-ffmpeg = "6.1.1-1.5.10"
-bytedeco-javacpp = "1.5.10"
+bytedeco-ffmpeg = "7.1-1.5.11"
+bytedeco-javacpp = "1.5.11"
 material-dialogs = "3.3.0"
 android-animations = "2.4"
 java-mail = "1.6.7"
@@ -116,7 +118,7 @@ kluent = "1.73"
 mockk = "1.13.13"
 arch = "2.2.0"
 powermock-version = "2.0.9"
-robolectric-version = "4.13"
+robolectric-version = "4.14.1"
 
 #===================#===================#===================#===================
 #===================#===================#===================#===================
@@ -227,6 +229,7 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
 # ksp(libs.glide.compiler)
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 glide-okhttp3 = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
@@ -434,9 +437,11 @@ powermock = [
 #===================#===================#===================#===================
 
 [plugins]
+# Equivalent agp - com.android.tools.build:gradle
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-library = { id = "com.android.library", version.ref = "agp" }
+# Equivalent kgp - org.jetbrains.kotlin:kotlin-gradle-plugin
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 

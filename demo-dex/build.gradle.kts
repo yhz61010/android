@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -28,6 +29,16 @@ android {
             isMinifyEnabled = false
         }
     }
+
+    packaging {
+        resources {
+            excludes += setOf("META-INF/androidx.emoji2_emoji2.version")
+        }
+    }
+    // or
+    // packagingOptions.resources.excludes += setOf(
+    //     "META-INF/androidx.emoji2_emoji2.version"
+    // )
 
     applicationVariants.all {
         val variant = this

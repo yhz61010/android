@@ -23,9 +23,13 @@ val javaVersion: JavaVersion by extra {
 val jvmTargetVersion by extra {
     org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.jvmVersion.get())
 }
-val kotlinVersion by extra {
-    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1
-    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlinVersion.get())
+val kotlinApiVersion by extra {
+    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.api.get())
+}
+val kotlinLanguageVersion by extra {
+    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.language.get())
 }
 
 val useResourcePrefix = false
@@ -48,8 +52,8 @@ val localProperties: Properties by extra { gradleLocalProperties(rootProject.roo
 plugins {
     // https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.android.library) apply false
 
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint.gradle)
@@ -174,12 +178,14 @@ fun Project.configureCompileTasks() {
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(jvmTargetVersion)
-            apiVersion.set(kotlinVersion)
-            languageVersion.set(kotlinVersion)
+            languageVersion.set(kotlinLanguageVersion)
+            apiVersion.set(kotlinApiVersion)
 
             // Enable support for experimental features
-            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+            // freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+            optIn.add("kotlin.RequiresOptIn")
         }
+
         // compilerOptions.jvmTarget.set(jvmTargetVersion)
         // compilerOptions.apiVersion.set(kotlinVersion)
         // compilerOptions.languageVersion.set(kotlinVersion)

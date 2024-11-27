@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
-import java.util.*
+import java.util.LinkedList
 
 /**
  * Author: Michael Leo
@@ -128,9 +128,7 @@ object ActivityReflect {
                 }
             }
         }
-        if (topActivity != null) {
-            list.addFirst(topActivity)
-        }
+        topActivity?.let { list.addFirst(it) }
         return list
     }
 

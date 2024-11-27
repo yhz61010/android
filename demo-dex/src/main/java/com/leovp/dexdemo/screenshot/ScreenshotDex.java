@@ -239,7 +239,11 @@ public class ScreenshotDex {
                     contentType = IMAGE_PNG;
                     break;
                 case WEBP:
-                    compressFormat = Bitmap.CompressFormat.WEBP;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        compressFormat = Bitmap.CompressFormat.WEBP_LOSSLESS;
+                    } else {
+                        compressFormat = Bitmap.CompressFormat.WEBP;
+                    }
                     contentType = IMAGE_WEBP;
                     break;
 

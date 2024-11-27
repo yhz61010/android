@@ -2,7 +2,7 @@ package com.leovp.http.retrofit.base
 
 import com.leovp.http.okhttp.HttpLoggingInterceptor
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog
+import com.leovp.log.base.LogOutType
 import com.leovp.network.SslUtils
 import java.util.concurrent.TimeUnit
 import okhttp3.Interceptor
@@ -76,7 +76,7 @@ open class BaseHttpRequest {
                     LogContext.log.d(
                         TAG,
                         "Assign cookie: $k=$v",
-                        outputType = AbsLog.OUTPUT_TYPE_HTTP_HEADER,
+                        outputType = LogOutType.HTTP_HEADER,
                     )
                     build.addHeader(k, v)
                 }

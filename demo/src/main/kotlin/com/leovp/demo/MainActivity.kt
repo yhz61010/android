@@ -33,7 +33,9 @@ import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.androidbase.utils.media.CodecUtil.printMediaCodecsList
 import com.leovp.androidbase.utils.network.ConnectionLiveData
 import com.leovp.bytes.toHexString
+import com.leovp.demo.CustomApplication.Companion.TAG_PREFIX
 import com.leovp.demo.base.BaseDemonstrationActivity
+import com.leovp.demo.basiccomponents.examples.log.CLog
 import com.leovp.demo.databinding.ActivityMainBinding
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
@@ -58,8 +60,19 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
     private val connectionLiveData by lazy { ConnectionLiveData(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        LogContext.setLogImpl(
+            CLog(tagPrefix = TAG_PREFIX).apply {
+                init(this@MainActivity)
+            }
+        )
+        // LogContext.setLogImpl(
+        //     LLog(tagPrefix = TAG_PREFIX, logLevel = LogLevel.VERB, enableLog = true)
+        // )
+
         super.onCreate(savedInstanceState)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
 
         // val navController = findNavController(R.id.nav_host_fragment_activity_main)
         val navController = navHostFragment.navController
@@ -93,7 +106,7 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
         LogContext.log.i(
             tag,
             "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
-            "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
+                "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
         )
 
         LogContext.log.i(ITAG, "===================================")

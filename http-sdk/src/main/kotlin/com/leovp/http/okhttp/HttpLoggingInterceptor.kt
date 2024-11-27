@@ -1,7 +1,7 @@
 package com.leovp.http.okhttp
 
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_HTTP_HEADER
+import com.leovp.log.base.LogOutType
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers
@@ -15,7 +15,7 @@ import okio.Buffer
  * Author: Michael Leo
  * Date: 20-5-27 下午8:41
  */
-class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEFAULT) : Interceptor {
+class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Interceptor {
     enum class Level {
         /**
          * No logs.
@@ -82,14 +82,14 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
     }
 
     interface Logger {
-        fun log(message: String?, outputType: Int = -1)
+        fun log(message: String?, outputType: LogOutType = LogOutType.COMMON)
 
         companion object {
             /**
              * A [Logger] defaults output appropriate for the current platform.
              */
             val DEFAULT: Logger = object : Logger {
-                override fun log(message: String?, outputType: Int) {
+                override fun log(message: String?, outputType: LogOutType) {
                     LogContext.log.w(TAG, message, outputType = outputType)
                 }
             }
@@ -148,7 +148,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                 ) {
                     logger.log(
                         "$name: ${headers.value(i)}",
-                        outputType = OUTPUT_TYPE_HTTP_HEADER
+                        outputType = LogOutType.HTTP_HEADER
                     )
                 }
             }
@@ -210,7 +210,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
             for (i in 0 until headers.size) {
                 logger.log(
                     "${headers.name(i)}: ${headers.value(i)}",
-                    outputType = OUTPUT_TYPE_HTTP_HEADER
+                    outputType = LogOutType.HTTP_HEADER
                 )
                 if ("Content-Disposition".contentEquals(headers.name(i)) &&
                     headers.value(i).startsWith("inline; filename")
@@ -269,7 +269,7 @@ class HttpLoggingInterceptor constructor(private val logger: Logger = Logger.DEF
                 val byteCount = if (buffer.size < 64) buffer.size else 64
                 buffer.copyTo(prefix, 0, byteCount)
                 for (i in 0..15) {
-                    if (prefix.exhausted()) {
+                    if (prefix.exhausted() || i >= prefix.size) {
                         break
                     }
                     val codePoint = prefix.readUtf8CodePoint()

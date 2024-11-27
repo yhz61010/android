@@ -27,7 +27,7 @@ import com.leovp.androidbase.utils.network.NetworkMonitor
 import com.leovp.androidbase.utils.ui.BetterActivityResult
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.Companion.OUTPUT_TYPE_FRAMEWORK
+import com.leovp.log.base.LogOutType
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 import org.greenrobot.eventbus.Subscribe
@@ -60,7 +60,7 @@ import org.greenrobot.eventbus.ThreadMode
  */
 abstract class BaseActivity<B : ViewBinding>(
     @LayoutRes layoutResId: Int = 0,
-    init: (ActivityConfig.() -> Unit)? = null
+    init: (ActivityConfig.() -> Unit)? = null,
 ) :
     AppCompatActivity(layoutResId) {
     abstract fun getTagName(): String
@@ -86,7 +86,7 @@ abstract class BaseActivity<B : ViewBinding>(
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        LogContext.log.w(tag, "=====> onCreate <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onCreate <=====", outputType = LogOutType.FRAMEWORK)
         if (defaultConfig.fullscreen) requestFullScreenBeforeSetContentView()
         onCreateBeginning()
         super.onCreate(savedInstanceState)
@@ -116,42 +116,42 @@ abstract class BaseActivity<B : ViewBinding>(
         LogContext.log.w(
             tag,
             "=====> onConfigurationChanged <=====",
-            outputType = OUTPUT_TYPE_FRAMEWORK
+            outputType = LogOutType.FRAMEWORK
         )
         super.onConfigurationChanged(newConfig)
     }
 
     override fun onStart() {
-        LogContext.log.w(tag, "=====> onStart <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onStart <=====", outputType = LogOutType.FRAMEWORK)
         super.onStart()
     }
 
     override fun onRestart() {
-        LogContext.log.w(tag, "=====> onRestart <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onRestart <=====", outputType = LogOutType.FRAMEWORK)
         super.onRestart()
     }
 
     @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent) {
-        LogContext.log.i(tag, "=====> onNewIntent <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.i(tag, "=====> onNewIntent <=====", outputType = LogOutType.FRAMEWORK)
         super.onNewIntent(intent)
         setIntent(intent)
     }
 
     override fun onResume() {
-        LogContext.log.w(tag, "=====> onResume <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onResume <=====", outputType = LogOutType.FRAMEWORK)
         super.onResume()
         if (defaultConfig.fullscreen) requestFullScreenAfterVisible()
         if (defaultConfig.hideNavigationBar) hideNavigationBar()
     }
 
     override fun onPause() {
-        LogContext.log.w(tag, "=====> onPause <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onPause <=====", outputType = LogOutType.FRAMEWORK)
         super.onPause()
     }
 
     override fun onStop() {
-        LogContext.log.w(tag, "=====> onStop <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onStop <=====", outputType = LogOutType.FRAMEWORK)
         super.onStop()
         if (networkMonitor != null) {
             LogContext.log.w(
@@ -163,7 +163,7 @@ abstract class BaseActivity<B : ViewBinding>(
     }
 
     override fun onDestroy() {
-        LogContext.log.w(tag, "=====> onDestroy <=====", outputType = OUTPUT_TYPE_FRAMEWORK)
+        LogContext.log.w(tag, "=====> onDestroy <=====", outputType = LogOutType.FRAMEWORK)
         stopTrafficMonitor()
         // EventBus.getDefault().unregister(this)
         super.onDestroy()
@@ -192,7 +192,7 @@ abstract class BaseActivity<B : ViewBinding>(
                 tag,
                 "dispatchTouchEvent() exception.",
                 e,
-                outputType = OUTPUT_TYPE_FRAMEWORK
+                outputType = LogOutType.FRAMEWORK
             )
         }
         return ret
@@ -216,12 +216,12 @@ abstract class BaseActivity<B : ViewBinding>(
         var fullscreen: Boolean = false,
         var hideNavigationBar: Boolean = false,
         var autoHideSoftKeyboard: Boolean = true,
-        var trafficConfig: TrafficConfig = TrafficConfig()
+        var trafficConfig: TrafficConfig = TrafficConfig(),
     )
 
     data class TrafficConfig(
         var allowToOutputDefaultWifiTrafficInfo: Boolean = false,
-        var frequencyInSecond: Int = 3
+        var frequencyInSecond: Int = 3,
     )
 
     // ==============================

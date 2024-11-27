@@ -8,6 +8,7 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityLogBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.log.base.LogOutType
 
 /**
  * Check the [LogContext] documents to learn how to initialize your custom log wrapper.
@@ -27,21 +28,21 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        LogContext.log.v(TAG, "Hello v", outputType = 1)
-        LogContext.log.d(TAG, "Hello d", outputType = 2)
-        LogContext.log.i(TAG, "Hello i", outputType = 3)
-        LogContext.log.w(TAG, "Hello w", outputType = 4)
-        LogContext.log.e(TAG, "Hello e with fullOutput", fullOutput = true, outputType = 5)
-        LogContext.log.f(TAG, "Hello f", outputType = 6)
+        LogContext.log.v(TAG, "Hello v", outputType = LogOutType(1))
+        LogContext.log.d(TAG, "Hello d", outputType = LogOutType(2))
+        LogContext.log.i(TAG, "Hello i", outputType = LogOutType(3))
+        LogContext.log.w(TAG, "Hello w", outputType = LogOutType(4))
+        LogContext.log.e(TAG, "Hello e with fullOutput", fullOutput = true, outputType = LogOutType(5))
+        LogContext.log.f(TAG, "Hello f", outputType = LogOutType(6))
 
-        LogContext.log.v(TAG, "Hello v", Exception("exception-v"), outputType = 7)
-        LogContext.log.d(TAG, "Hello d", Exception("exception-d"), outputType = 8)
-        LogContext.log.i(TAG, "Hello i", Exception("exception-i"), outputType = 9)
-        LogContext.log.w(TAG, "Hello w", Exception("exception-w"), outputType = 10)
-        LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = 11)
-        LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = 12)
+        LogContext.log.v(TAG, "Hello v", Exception("exception-v"), outputType = LogOutType(7))
+        LogContext.log.d(TAG, "Hello d", Exception("exception-d"), outputType = LogOutType(8))
+        LogContext.log.i(TAG, "Hello i", Exception("exception-i"), outputType = LogOutType(9))
+        LogContext.log.w(TAG, "Hello w", Exception("exception-w"), outputType = LogOutType(10))
+        LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = LogOutType(11))
+        LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = LogOutType(12))
 
-        w(TAG, outputType = 13) {
+        w(TAG, outputType = LogOutType(13)) {
             "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}"
         }
 
@@ -52,12 +53,12 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
             sb.append(" | ")
         }
         val string = sb.toString()
-        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = 16)
+        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = LogOutType(16))
         LogContext.log.w(
             TAG,
             "Long Log[${string.length}][full]=$string",
             fullOutput = true,
-            outputType = 17
+            outputType = LogOutType(17),
         )
 
         if (LogContext.isLogInitialized()) {

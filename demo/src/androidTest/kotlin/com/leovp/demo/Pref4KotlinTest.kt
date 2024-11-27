@@ -6,7 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.leovp.json.toJsonString
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
-import com.leovp.log.base.AbsLog.LogLevel
 import com.leovp.log.base.ITAG
 import com.leovp.pref.LPref
 import com.leovp.pref.PrefContext
@@ -39,7 +38,7 @@ class Pref4KotlinTest {
     fun setUp() {
         stopKoin() // To remove 'A Koin Application has already been started'
         ShadowLog.stream = System.out
-        LogContext.setLogImpl(LLog(tagPrefix = "LEO", enableLog = true, logLevel = LogLevel.VERB))
+        LogContext.setLogImpl(LLog(tagPrefix = "LEO"))
     }
 
     @AfterEach

@@ -1,9 +1,11 @@
+
 import android.annotation.SuppressLint
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.navigation)
 
@@ -15,14 +17,18 @@ plugins {
     jacoco
 }
 
+val kotlinApiDemoVersion by extra {
+    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.apidemo.get())
+}
 val localProperties: Properties by rootProject.extra
 
 android {
     namespace = "com.leovp.demo"
 
     defaultConfig {
-        versionCode = 23
-        versionName = "2.3"
+        versionCode = 24
+        versionName = "2.4"
         multiDexEnabled = true
 
         ndk {
@@ -124,7 +130,10 @@ android {
             )
         }
         resources {
-            excludes += setOf("META-INF/atomicfu.kotlin_module")
+            excludes += setOf(
+                "META-INF/atomicfu.kotlin_module",
+                "META-INF/androidx.emoji2_emoji2.version",
+            )
             pickFirsts += setOf(
                 "META-INF/NOTICE",
                 "META-INF/NOTICE.md",
@@ -199,12 +208,30 @@ android {
             "RtlEnabled"
         )
     }
+
+    // This configuration will override the global setting which is configured in root build.gradle.kts.
+    // https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            apiVersion.set(kotlinApiDemoVersion)
+        }
+    }
 }
 
 // 获取当前分支的提交总次数
 fun gitCommitCount(): Int {
-    //    val cmd = 'git rev-list HEAD --first-parent --count'
+    // val cmd = 'git rev-list HEAD --first-parent --count'
     val cmd = "git rev-list HEAD --count"
+
+    // // Inject ExecOperations
+    // val execOperations = project.objects.newInstance(ExecOperations::class.java)
+    // // Execute external command using execOperations
+    // return runCatching {
+    //     execOperations.exec {
+    //         commandLine(cmd.trim().split(' '))
+    //     }.toString().trim().toInt()
+    //     // You must trim() the result. Because the result of command has a suffix '\n'.
+    // }.getOrDefault(0)
 
     val stdout = ByteArrayOutputStream()
     runCatching {
@@ -234,8 +261,18 @@ fun gitCommitCount(): Int {
 
 fun gitVersionTag(): String {
     // https://stackoverflow.com/a/4916591/1685062
-    //    val cmd = "git describe --tags"
+    // val cmd = "git describe --tags"
     val cmd = "git describe --always"
+
+    // // Inject ExecOperations
+    // val execOperations = project.objects.newInstance(ExecOperations::class.java)
+    // // Execute external command using execOperations
+    // var versionTag = runCatching {
+    //     execOperations.exec {
+    //         commandLine(cmd.trim().split(' '))
+    //     }.toString().trim()
+    //     // You must trim() the result. Because the result of command has a suffix '\n'.
+    // }.getOrDefault("NA")
 
     val stdout = ByteArrayOutputStream()
     runCatching {
@@ -305,7 +342,7 @@ dependencies {
     implementation(projects.adpcmImaQtCodecH264HevcDecoderSdk)
 
     implementation(libs.glide)
-    ksp(libs.glide.compiler)
+    ksp(libs.glide.ksp)
 
     implementation(libs.bundles.java.mail)
     implementation(libs.mars.xlog)

@@ -11,9 +11,12 @@ import android.util.Log
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
  */
-abstract class AbsLog(private val tagPrefix: String, private val separator: String = "-") : ILog {
-
-    abstract var logLevel: LogLevel
+abstract class AbsLog(
+    private val tagPrefix: String,
+    private val separator: String = "-",
+    val logLevel: LogLevel = LogLevel.VERB,
+    val enableLog: Boolean = true,
+) : ILog {
 
     private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag"
 
@@ -21,7 +24,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("v(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     v(ITAG, message, throwable, fullOutput, outputType)
 
     fun v(
@@ -29,12 +32,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.VERB >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -42,7 +47,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("d(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     d(ITAG, message, throwable, fullOutput, outputType)
 
     fun d(
@@ -50,12 +55,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.DEBUG >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -63,7 +70,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("i(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     i(ITAG, message, throwable, fullOutput, outputType)
 
     fun i(
@@ -71,12 +78,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.INFO >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -84,7 +93,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("w(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     w(ITAG, message, throwable, fullOutput, outputType)
 
     fun w(
@@ -92,12 +101,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.WARN >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -105,7 +116,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("e(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     e(ITAG, message, throwable, fullOutput, outputType)
 
     fun e(
@@ -113,12 +124,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.ERROR >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -126,7 +139,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("f(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: Int = -1) =
+    // fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
     //     f(ITAG, message, throwable, fullOutput, outputType)
 
     fun f(
@@ -134,12 +147,14 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         message: String?,
         throwable: Throwable? = null,
         fullOutput: Boolean = false,
-        outputType: Int = -1,
+        outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (fullOutput) {
-            splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
-        } else {
-            printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
+        if (LogLevel.FATAL >= logLevel && enableLog) {
+            if (fullOutput) {
+                splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
+            } else {
+                printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
+            }
         }
     }
 
@@ -177,7 +192,12 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    private fun splitOutputMessage(logLevel: LogLevel, tag: String, message: String, outputType: Int) {
+    private fun splitOutputMessage(
+        logLevel: LogLevel,
+        tag: String,
+        message: String,
+        outputType: LogOutType = LogOutType.COMMON,
+    ) {
         if (message.length > MAX_LENGTH) {
             outputLog(logLevel, tag, message.substring(0, MAX_LENGTH), outputType)
             splitOutputMessage(logLevel, tag, message.substring(MAX_LENGTH), outputType)
@@ -186,7 +206,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    private fun outputLog(logLevel: LogLevel, tag: String, message: String, outputType: Int) {
+    private fun outputLog(logLevel: LogLevel, tag: String, message: String, outputType: LogOutType) {
         when (logLevel) {
             LogLevel.VERB -> printVerbLog(tag, message, outputType)
             LogLevel.DEBUG -> printDebugLog(tag, message, outputType)
@@ -197,21 +217,7 @@ abstract class AbsLog(private val tagPrefix: String, private val separator: Stri
         }
     }
 
-    enum class LogLevel {
-        VERB,
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR,
-        FATAL
-    }
-
     companion object {
         private const val MAX_LENGTH = 2000
-        const val OUTPUT_TYPE_SYSTEM = 0x20211009
-        const val OUTPUT_TYPE_CLIENT_COMMAND = OUTPUT_TYPE_SYSTEM + 1
-        const val OUTPUT_TYPE_HTTP_HEADER = OUTPUT_TYPE_SYSTEM + 2
-        const val OUTPUT_TYPE_FRAMEWORK = OUTPUT_TYPE_SYSTEM + 3
-        const val OUTPUT_TYPE_HTTP = OUTPUT_TYPE_SYSTEM + 4
     }
 }

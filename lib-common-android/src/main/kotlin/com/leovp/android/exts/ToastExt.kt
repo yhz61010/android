@@ -10,7 +10,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -201,7 +200,7 @@ private fun showToast(
                         decorateToast(ctx, v, message, textColor, bgColor, error)
                     }
                     .meta { viewWidth, viewHeight ->
-                        Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
+                        // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
                         tag = FLOAT_VIEW_TAG
                         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                         enableAlphaAnimation = true

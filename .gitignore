@@ -94,3 +94,4 @@ lint/tmp/
 /.idea/deploymentTargetSelector.xml
 /.kotlin/
 /.idea/runConfigurations.xml
+/.idea/modules.xml

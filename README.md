@@ -18,7 +18,7 @@ Project configurations:
 
 # How to import?
 
-## For TOML
+## For Kotlin (build.gradle.kts)
 
 Add the library you need. For example:
 
@@ -33,7 +33,7 @@ Import that library in your module `build.gradle.kts` file:
 implementation(libs.leo.androidbase)
 ```
 
-## For Gradle
+## For Groovy (build.gradle)
 
 ```
 dependencies {

@@ -32,6 +32,7 @@ import com.leovp.demo.basiccomponents.examples.RecordSingleAppScreenActivity
 import com.leovp.demo.basiccomponents.examples.SaveInstanceStateActivity
 import com.leovp.demo.basiccomponents.examples.TakeScreenshotActivity
 import com.leovp.demo.basiccomponents.examples.ToastActivity
+import com.leovp.demo.basiccomponents.examples.ViewStubActivity
 import com.leovp.demo.basiccomponents.examples.WatermarkActivity
 import com.leovp.demo.basiccomponents.examples.accessibility.AccessibilityActivity
 import com.leovp.demo.basiccomponents.examples.adb.AdbCommunication
@@ -116,6 +117,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Finger Paint", FingerPaintActivity::class.java),
             Pair("Watermark", WatermarkActivity::class.java),
             Pair("Preference", PrefActivity::class.java),
+            Pair("ViewStub", ViewStubActivity::class.java),
             Pair("Java Mail", JavaMailActivity::class.java),
             Pair("Bluetooth", BluetoothActivity::class.java),
             Pair("Wifi", WifiActivity::class.java),

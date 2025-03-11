@@ -95,3 +95,4 @@ lint/tmp/
 /.kotlin/
 /.idea/runConfigurations.xml
 /.idea/modules.xml
+/.idea/AndroidProjectSystem.xml

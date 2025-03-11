@@ -13,7 +13,7 @@
 
 # Attention
 Project configurations:
-- `minSdk` is `26` (Android 8.0)
+- `minSdk` is `25` (Android 7.1.1)
 - `targetSdk` is `35` (Android 15)
 
 # How to import?

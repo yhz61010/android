@@ -12,12 +12,11 @@ leo-version = "5.12.49"
 #===================
 #===== Compile =====
 #===================
-agp = "8.9.0"
-kotlin = "2.1.0"
-ksp = "2.1.0-1.0.29"
-kotlin-language = "2.1"
-kotlin-api = "2.1"
-kotlin-apidemo = "1.9"
+agp = "8.9.1"
+kotlin = "2.1.10"
+ksp = "2.1.10-1.0.31"
+#kotlin-language = "2.1"
+#kotlin-api = "2.1"
 
 javaVersion = "17"
 jvmVersion = "17"
@@ -25,18 +24,18 @@ jvmVersion = "17"
 #=================================
 #===== Android dependencies ======
 #=================================
-coroutines = "1.9.0"
+coroutines = "1.10.1"
 material = "1.12.0"
 appcompat = "1.7.0"
-activity-ktx = "1.9.3"
-fragment-ktx = "1.8.5"
+activity-ktx = "1.10.1"
+fragment-ktx = "1.8.6"
 core-ktx = "1.15.0"
 multidex = "2.0.1"
 preference = "1.2.1"
-recyclerview = "1.3.2"
-constraintlayout = "2.2.0"
-coordinatorlayout = "1.2.0"
-navigation = "2.8.4"
+recyclerview = "1.4.0"
+constraintlayout = "2.2.1"
+coordinatorlayout = "1.3.0"
+navigation = "2.8.9"
 concurrent-futures-ktx = "1.2.0"
 lifecycle = "2.8.7"
 android-annotation = "4.1.1.4"
@@ -45,21 +44,21 @@ androidx-annotation = "1.9.1"
 cardview = "1.0.0"
 viewpager2 = "1.1.0"
 swiperefreshlayout = "1.1.0"
-room = "2.7.0-alpha11" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.4.0"
-exifinterface = "1.3.7"
+room = "2.7.0-rc03" # 2.4.2 has compilation error with Kotlin 1.7.0
+camera = "1.4.2"
+exifinterface = "1.4.0"
 
 #===========================
 #===== Android Compose =====
 #===========================
-compose = "1.7.5"
-androidx-activity-compose = "1.9.3"
+compose = "1.7.8"
+androidx-activity-compose = "1.10.1"
 #compose-compilerextension = "1.2.0"
 
 #=======================
 #===== Third party =====
 #=======================
-detekt = "1.23.7"
+detekt = "1.23.8"
 dokka = "1.7.10"
 # ktlint = "0.49.0"
 ktlint-gradle = "12.1.2"
@@ -83,7 +82,7 @@ gson = "2.11.0"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
-mmkv = "2.0.1"
+mmkv = "2.1.0"
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
 fasterxml = "2.18.2" # 2.14.3
@@ -103,19 +102,19 @@ jzlib = "1.1.3"
 androidasync = "3.1.0"
 net = "3.7.0"
 subsampling-scale-image-view = "3.10.0"
-mannodermaus-android-junit5 = "1.11.2.0"
-mannodermaus-junit5 = "1.6.0"
+mannodermaus-android-junit5 = "1.12.0.0"
+mannodermaus-junit5 = "1.7.0"
 
 #================
 #===== Test =====
 #================
-jupiter = "5.11.3" # JUnit 5
+jupiter = "5.12.1" # JUnit 5
 androidx-test = "1.6.1"
 androidx-test-runner = "1.6.2"
 androidx-test-ext = "1.2.1"
 espresso-core = "3.6.1"
 kluent = "1.73"
-mockk = "1.13.13"
+mockk = "1.13.17"
 arch = "2.2.0"
 powermock-version = "2.0.9"
 robolectric-version = "4.14.1"

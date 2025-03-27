@@ -17,10 +17,10 @@ plugins {
     jacoco
 }
 
-val kotlinApiDemoVersion by extra {
-    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.apidemo.get())
-}
+// val kotlinApiDemoVersion by extra {
+//     // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+//     org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.apidemo.get())
+// }
 val localProperties: Properties by rootProject.extra
 
 android {
@@ -211,11 +211,11 @@ android {
 
     // This configuration will override the global setting which is configured in root build.gradle.kts.
     // https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
-        compilerOptions {
-            apiVersion.set(kotlinApiDemoVersion)
-        }
-    }
+    // tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+    //     compilerOptions {
+    //         apiVersion.set(kotlinApiDemoVersion)
+    //     }
+    // }
 }
 
 // 获取当前分支的提交总次数

@@ -23,14 +23,14 @@ val javaVersion: JavaVersion by extra {
 val jvmTargetVersion by extra {
     org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(libs.versions.jvmVersion.get())
 }
-val kotlinApiVersion by extra {
-    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.api.get())
-}
-val kotlinLanguageVersion by extra {
-    // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-    org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.language.get())
-}
+// val kotlinApiVersion by extra {
+//     // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+//     org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.api.get())
+// }
+// val kotlinLanguageVersion by extra {
+//     // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+//     org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.language.get())
+// }
 
 val useResourcePrefix = false
 
@@ -178,8 +178,8 @@ fun Project.configureCompileTasks() {
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(jvmTargetVersion)
-            languageVersion.set(kotlinLanguageVersion)
-            apiVersion.set(kotlinApiVersion)
+            // languageVersion.set(kotlinLanguageVersion)
+            // apiVersion.set(kotlinApiVersion)
 
             // Enable support for experimental features
             // freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")

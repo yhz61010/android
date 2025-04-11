@@ -24,6 +24,7 @@ abstract class AbsPref {
      * - Long
      * - Boolean
      * - Float
+     * - String
      * - Object except Set
      */
     inline fun <reified T : Any> put(key: String, v: T?) {
@@ -53,6 +54,7 @@ abstract class AbsPref {
      * - Long
      * - Boolean
      * - Float
+     * - String
      * - Object except Set
      */
     fun <T> put4Java(key: String, v: T?, clazz: Class<T>) {

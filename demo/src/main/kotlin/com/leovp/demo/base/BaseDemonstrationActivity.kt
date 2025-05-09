@@ -6,6 +6,7 @@ import androidx.viewbinding.ViewBinding
 import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.log.LogContext
+import org.greenrobot.eventbus.EventBus
 
 /**
  * Author: Michael Leo
@@ -19,6 +20,7 @@ abstract class BaseDemonstrationActivity<B : ViewBinding>(
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")
         super.onCreate(savedInstanceState)
+        EventBus.getDefault().register(this)
         title = intent.getStringExtra("title")
         //        simpleActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
         //            toast("Result in BaseActivity: ${result.resultCode}")
@@ -36,4 +38,9 @@ abstract class BaseDemonstrationActivity<B : ViewBinding>(
     //            else -> super.onOptionsItemSelected(item)
     //        }
     //    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
 }

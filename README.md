@@ -1,9 +1,9 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.1.0-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.9.0-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.11.1-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.1.21-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-8.10.0-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-8.14-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/Android_Studio-Meerkat_|_2024.3.1-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Meerkat_Feature_Drop_|_2024.3.2-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
@@ -14,7 +14,7 @@
 # Attention
 Project configurations:
 - `minSdk` is `25` (Android 7.1.1)
-- `targetSdk` is `35` (Android 15)
+- `targetSdk` is `36` (Android 16 - Baklava)
 
 # How to import?
 

@@ -222,7 +222,9 @@ class MediaProjectionService : Service() {
         LogContext.log.i(TAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
         mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
+        val mediaProjectionRef = mediaProjectionManager.getMediaProjection(resultCode, data)
+        requireNotNull(mediaProjectionRef) { "MediaProjection can't be null" }
+        mediaProjection = mediaProjectionRef
 
         screenProcessor = ScreenCapture.Builder(
             setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]

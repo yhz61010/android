@@ -2,9 +2,9 @@
 #===================
 #===== Project =====
 #===================
-compile-sdk = "35"
+compile-sdk = "36"
 min-sdk = "25"
-target-sdk = "35"
+target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
 leo-version = "5.12.49"
@@ -12,9 +12,9 @@ leo-version = "5.12.49"
 #===================
 #===== Compile =====
 #===================
-agp = "8.9.1"
-kotlin = "2.1.10"
-ksp = "2.1.10-1.0.31"
+agp = "8.10.0"
+kotlin = "2.1.21"
+ksp = "2.1.21-2.0.1"
 #kotlin-language = "2.1"
 #kotlin-api = "2.1"
 
@@ -29,29 +29,29 @@ material = "1.12.0"
 appcompat = "1.7.0"
 activity-ktx = "1.10.1"
 fragment-ktx = "1.8.6"
-core-ktx = "1.15.0"
+core-ktx = "1.16.0"
 multidex = "2.0.1"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 constraintlayout = "2.2.1"
 coordinatorlayout = "1.3.0"
-navigation = "2.8.9"
+navigation = "2.9.0"
 concurrent-futures-ktx = "1.2.0"
-lifecycle = "2.8.7"
+lifecycle = "2.9.0"
 android-annotation = "4.1.1.4"
 androidx-annotation = "1.9.1"
 #android-support-annotation = "28.0.0"
 cardview = "1.0.0"
 viewpager2 = "1.1.0"
 swiperefreshlayout = "1.1.0"
-room = "2.7.0-rc03" # 2.4.2 has compilation error with Kotlin 1.7.0
+room = "2.7.1" # 2.4.2 has compilation error with Kotlin 1.7.0
 camera = "1.4.2"
-exifinterface = "1.4.0"
+exifinterface = "1.4.1"
 
 #===========================
 #===== Android Compose =====
 #===========================
-compose = "1.7.8"
+compose = "1.8.1"
 androidx-activity-compose = "1.10.1"
 #compose-compilerextension = "1.2.0"
 
@@ -78,11 +78,11 @@ rxjava2 = "2.2.21"
 rxjava2-android = "2.1.1"
 rxjava3 = "3.1.5"
 rxjava3-android = "3.0.0"
-gson = "2.11.0"
+gson = "2.12.1"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
-mmkv = "2.1.0"
+mmkv = "2.2.1"
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
 fasterxml = "2.18.2" # 2.14.3

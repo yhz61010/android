@@ -13,16 +13,22 @@ pluginManagement {
      * look for its dependencies.
      */
     repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-
-        // Google 官方插件镜像（通过阿里云镜像）
         maven { url = uri("https://maven.aliyun.com/repository/google") }
-        // 阿里云的 Gradle 插件镜像
-        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
-        // 腾讯云的 Gradle 插件镜像
+        // Tencent Gradle mirrors
         maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/gradle-plugins/") }
+        maven { url = uri("https://mirrors.tuna.tsinghua.edu.cn/maven") }
+        // AliYun Gradle mirrors
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+
+        gradlePluginPortal()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
     }
 
     resolutionStrategy {
@@ -40,8 +46,8 @@ pluginManagement {
             //                    useModule(navigationCoordinates)
             //                }
             //                "de.mannodermaus.android-junit5" -> {
-            //                    val androidJnit5Coordinates: String by settings
-            //                    useModule(androidJnit5Coordinates) // navigationVersion
+            //                    val androidJunit5Coordinates: String by settings
+            //                    useModule(androidJunit5Coordinates) // navigationVersion
             //                }
             //            }
         }
@@ -64,13 +70,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     @Suppress("UnstableApiUsage")
     repositories {
-        google()
-        mavenCentral {
-            isAllowInsecureProtocol = true
-        }
         maven("https://jitpack.io")
 
-        // 腾讯云/阿里云 maven 镜像聚合了：central、jcenter、google、gradle-plugin
         maven("https://maven.aliyun.com/repository/public")
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/central")
@@ -82,6 +83,11 @@ dependencyResolutionManagement {
         maven("https://maven.java.net/content/groups/public/")
         // https://github.com/airbnb/lottie/blob/master/android-compose.md
         maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+
+        google()
+        mavenCentral {
+            isAllowInsecureProtocol = true
+        }
     }
 }
 

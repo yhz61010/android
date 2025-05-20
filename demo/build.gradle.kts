@@ -1,6 +1,4 @@
-
 import android.annotation.SuppressLint
-import java.io.ByteArrayOutputStream
 import java.util.Properties
 
 plugins {
@@ -51,6 +49,7 @@ android {
 
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
     buildFeatures {
+        //noinspection DataBindingWithoutKapt
         dataBinding = true
         // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
         // viewBinding = true
@@ -219,29 +218,16 @@ android {
 }
 
 // 获取当前分支的提交总次数
-fun gitCommitCount(): Int {
-    // val cmd = 'git rev-list HEAD --first-parent --count'
+fun gitCommitCount(): String {
+    //    val cmd = 'git rev-list HEAD --first-parent --count'
     val cmd = "git rev-list HEAD --count"
 
-    // // Inject ExecOperations
-    // val execOperations = project.objects.newInstance(ExecOperations::class.java)
-    // // Execute external command using execOperations
-    // return runCatching {
-    //     execOperations.exec {
-    //         commandLine(cmd.trim().split(' '))
-    //     }.toString().trim().toInt()
-    //     // You must trim() the result. Because the result of command has a suffix '\n'.
-    // }.getOrDefault(0)
-
-    val stdout = ByteArrayOutputStream()
-    runCatching {
-        exec {
+    return runCatching {
+        // You must trim() the result. Because the result of command has a suffix '\n'.
+        providers.exec {
             commandLine = cmd.trim().split(' ')
-            standardOutput = stdout
-        }
-    }.getOrDefault(0)
-    // You must trim() the result. Because the result of command has a suffix '\n'.
-    return stdout.toString().trim().toInt()
+        }.standardOutput.asText.get().trim()
+    }.getOrDefault("NA")
 }
 
 // 使用commit的哈希值作为版本号也是可以的，获取最新的一次提交的哈希值的前七个字符
@@ -258,42 +244,27 @@ fun gitCommitCount(): Int {
  * ga935b078    ：开头 g 为 git 的缩写，在多种管理工具并存的环境中很有用处
  * a935b078     ：当前分支最新的 commitID 前几位
  */
-
 fun gitVersionTag(): String {
     // https://stackoverflow.com/a/4916591/1685062
-    // val cmd = "git describe --tags"
+    //    val cmd = "git describe --tags"
     val cmd = "git describe --always"
 
-    // // Inject ExecOperations
-    // val execOperations = project.objects.newInstance(ExecOperations::class.java)
-    // // Execute external command using execOperations
-    // var versionTag = runCatching {
-    //     execOperations.exec {
-    //         commandLine(cmd.trim().split(' '))
-    //     }.toString().trim()
-    //     // You must trim() the result. Because the result of command has a suffix '\n'.
-    // }.getOrDefault("NA")
-
-    val stdout = ByteArrayOutputStream()
-    runCatching {
-        exec {
+    val versionTag = runCatching {
+        // You must trim() the result. Because the result of command has a suffix '\n'.
+        providers.exec {
             commandLine = cmd.trim().split(' ')
-            standardOutput = stdout
-        }
-    }.getOrDefault(null) ?: return "NA"
-    var versionTag = stdout.toString().trim()
+        }.standardOutput.asText.get().trim()
+    }.getOrDefault("NA")
 
     val regex = "-(\\d+)-g".toRegex()
     val matcher: MatchResult? = regex.matchEntire(versionTag)
 
     val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
-    versionTag = if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
+    return if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
         versionTag.substring(0, matcherGroup0.range.first) + "." + matcherGroup0.value
     } else {
         versionTag
     }
-
-    return versionTag
 }
 
 dependencies {

@@ -1,4 +1,3 @@
-
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.dsl.BaseFlavor
@@ -340,7 +339,7 @@ tasks.withType<Detekt>().configureEach {
  * Note that this task is intended to run locally (not on CI), because on CI we prefer to have parallel execution
  * and separate reports for each of the checks (multiple statuses eg. on github PR page).
  */
-task("staticCheck") {
+tasks.register("staticCheck", fun Task.() {
     group = "verification"
 
     afterEvaluate {
@@ -361,7 +360,7 @@ task("staticCheck") {
         // By defining Gradle dependency all dependent tasks will run before this "empty" task
         dependsOn(taskDependencies)
     }
-}
+})
 
 // https://github.com/ben-manes/gradle-versions-plugin
 tasks.withType<DependencyUpdatesTask> {

@@ -33,7 +33,6 @@ import com.leovp.bytes.toBytesLE
 import com.leovp.bytes.toHexString
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
-import com.leovp.demo.basiccomponents.examples.log.w
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.MediaProjectionService
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity
 import com.leovp.demo.basiccomponents.examples.sharescreen.master.ScreenShareMasterActivity.Companion.CMD_DEVICE_SCREEN_INFO
@@ -46,6 +45,7 @@ import com.leovp.drawonscreen.FingerPaintView
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.log.base.w
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext

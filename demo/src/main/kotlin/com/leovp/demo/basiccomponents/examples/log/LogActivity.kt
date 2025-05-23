@@ -9,6 +9,7 @@ import com.leovp.demo.databinding.ActivityLogBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.log.base.LogOutType
+import com.leovp.log.base.w
 
 /**
  * Check the [LogContext] documents to learn how to initialize your custom log wrapper.
@@ -42,8 +43,10 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = LogOutType(11))
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = LogOutType(12))
 
-        w(TAG, outputType = LogOutType(13)) {
-            "2Device Info:\n${DeviceUtil.getInstance(this).getDeviceInfo()}"
+        w {
+            tag = TAG
+            outputType = LogOutType(13)
+            message = "2Device Info:\n${DeviceUtil.getInstance(this@LogActivity).getDeviceInfo()}"
         }
 
         val sb = StringBuilder()

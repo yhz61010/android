@@ -134,7 +134,10 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchCameraBtn.isEnabled = true
                     binding.ivShotRecord.isEnabled = true
                 }
-                LogContext.log.d(TAG, "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}")
+                LogContext.log.d(
+                    TAG,
+                    "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}"
+                )
             }
         }
 

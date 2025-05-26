@@ -19,7 +19,8 @@ import kotlin.concurrent.thread
  * Author: Michael Leo
  * Date: 2021/9/30 14:07
  */
-class CircleProgressbarActivity : BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(R.layout.activity_circle_progressbar) {
+class CircleProgressbarActivity :
+    BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(R.layout.activity_circle_progressbar) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding {

@@ -33,7 +33,10 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             realHeight = max(width, height)
             aspectRatio = realHeight.toFloat() / realWidth.toFloat()
         }
-        LogContext.log.d(TAG, "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth realHeight=$realHeight ")
+        LogContext.log.d(
+            TAG,
+            "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth realHeight=$realHeight "
+        )
 
         holder.setFixedSize(realWidth, realHeight)
         requestLayout()

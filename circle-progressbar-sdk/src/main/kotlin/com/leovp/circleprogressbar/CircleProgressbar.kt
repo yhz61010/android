@@ -405,7 +405,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
 
-    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float,) {
+    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
         require(State.Type.STATE_INDETERMINATE == currState || State.Type.STATE_DETERMINATE == currState) {
             "Illegal state. Current state=$currState"
         }
@@ -427,10 +427,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun setProgressText(canvas: Canvas) {
         internalProgressTextPaint.color = internalProgressTextColor
         internalProgressTextPaint.textSize = internalProgressTextSize.toFloat()
-        val baseLineY: Float = abs(
-            internalProgressTextPaint.ascent() +
-            internalProgressTextPaint.descent()
-        ) / 2
+        val baseLineY: Float = abs(internalProgressTextPaint.ascent() + internalProgressTextPaint.descent()) / 2
         canvas.drawText(
             "$internalCurrProgress%",
             width.toFloat() / 2,

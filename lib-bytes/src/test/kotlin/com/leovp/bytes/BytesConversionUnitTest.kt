@@ -358,14 +358,14 @@ class BytesConversionUnitTest {
         assertArrayEquals(
             byteArrayOf(
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF.toByte(),
-            0xFF.toByte()
+                0xFF.toByte()
             ),
             65535L.toBytes()
         )
         assertArrayEquals(
             byteArrayOf(
                 0xFF.toByte(), 0xFF.toByte(),
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             ),
             65535L.toBytesLE()
         )
@@ -418,9 +418,9 @@ class BytesConversionUnitTest {
         assertArrayEquals(
             byteArrayOf(
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xE2.toByte(),
-            0x40
+                0x40
             ),
-                123456L.toBytes()
+            123456L.toBytes()
         )
         assertArrayEquals(
             byteArrayOf(0x40, 0xE2.toByte(), 0x01, 0x00, 0x00, 0x00, 0x00, 0x00),
@@ -447,16 +447,16 @@ class BytesConversionUnitTest {
         assertArrayEquals(
             byteArrayOf(
                 0x00, 0x00, 0x00, 0x00, 0x49, 0x96.toByte(),
-            0x02, 0xD2.toByte()
+                0x02, 0xD2.toByte()
             ),
-                1234567890L.toBytes()
+            1234567890L.toBytes()
         )
         assertArrayEquals(
             byteArrayOf(
                 0xD2.toByte(), 0x02, 0x96.toByte(),
-            0x49, 0x00, 0x00, 0x00, 0x00
+                0x49, 0x00, 0x00, 0x00, 0x00
             ),
-                1234567890L.toBytesLE()
+            1234567890L.toBytesLE()
         )
 
         assertArrayEquals(
@@ -464,28 +464,28 @@ class BytesConversionUnitTest {
                 0x00, 0x00, 0x70, 0x48, 0x86.toByte(),
                 0x0D, 0xDF.toByte(), 0x79.toByte()
             ),
-                    123456789012345L.toBytes()
+            123456789012345L.toBytes()
         )
         assertArrayEquals(
             byteArrayOf(
                 0x79, 0xDF.toByte(), 0x0D, 0x86.toByte(),
-            0x48, 0x70, 0x00, 0x00
+                0x48, 0x70, 0x00, 0x00
             ),
-                123456789012345L.toBytesLE()
+            123456789012345L.toBytesLE()
         )
         assertArrayEquals(
             byteArrayOf(
                 0x12, 0xD8.toByte(), 0x51, 0x4D, 0x4F, 0x3A,
-            0xD7.toByte(), 0x54
+                0xD7.toByte(), 0x54
             ),
-                1357924680135792468L.toBytes()
+            1357924680135792468L.toBytes()
         )
         assertArrayEquals(
             byteArrayOf(
                 0x54, 0xD7.toByte(), 0x3A, 0x4F, 0X4D, 0x51,
-            0xD8.toByte(), 0x12
+                0xD8.toByte(), 0x12
             ),
-                1357924680135792468L.toBytesLE()
+            1357924680135792468L.toBytesLE()
         )
     }
 

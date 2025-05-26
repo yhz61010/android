@@ -9,7 +9,7 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityJavaMailBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import java.util.*
+import java.util.Properties
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
 import javax.mail.Address
@@ -60,7 +60,7 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
         protocol: String,
         mailHost: String,
         port: Int,
-        enableSsl: Boolean = false
+        enableSsl: Boolean = false,
     ): Properties {
         return Properties().apply {
             setProperty("mail.transport.protocol", protocol)
@@ -84,7 +84,7 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
         port: Int,
         userName: String? = null,
         pwd: String? = null,
-        enableSsl: Boolean = false
+        enableSsl: Boolean = false,
     ): Session {
         return Session.getInstance(
             getServerProperties(protocol, mailHost, port, enableSsl),
@@ -240,7 +240,10 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
 
                     // print out details of each message
                     val truncatedContentType = if (contentType.length > 15) 15 else contentType.length
-                    LogContext.log.i(ITAG, "Message(${contentType.substring(0, truncatedContentType)}) #" + (i + 1) + ":")
+                    LogContext.log.i(
+                        ITAG,
+                        "Message(${contentType.substring(0, truncatedContentType)}) #" + (i + 1) + ":"
+                    )
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")
                     // LogContext.log.i(ITAG, "CC: $ccList")

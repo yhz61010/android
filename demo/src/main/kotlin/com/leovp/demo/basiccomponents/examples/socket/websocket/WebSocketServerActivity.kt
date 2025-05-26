@@ -26,7 +26,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @SuppressLint("SetTextI18n")
-class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServerBinding>(R.layout.activity_websocket_server) {
+class WebSocketServerActivity :
+    BaseDemonstrationActivity<ActivityWebsocketServerBinding>(R.layout.activity_websocket_server) {
 
     override fun getTagName(): String = ITAG
 
@@ -66,7 +67,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
             LogContext.log.i(tag, "onClientConnected: ${clientChannel.remoteAddress()}")
             toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
-                binding.txtResponse.text = "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -76,7 +78,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
             runOnUiThread {
                 binding.txtResponse.text =
                     "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"
-                    binding.sv.fullScroll(View.FOCUS_DOWN)
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
             webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
@@ -85,7 +87,8 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
             LogContext.log.w(tag, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
-                binding.txtResponse.text = "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -96,7 +99,7 @@ class WebSocketServerActivity : BaseDemonstrationActivity<ActivityWebsocketServe
             runOnUiThread {
                 binding.txtResponse.text =
                     "${binding.txtResponse.text}\nStart failed $code $msg"
-                    binding.sv.fullScroll(View.FOCUS_DOWN)
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
     }

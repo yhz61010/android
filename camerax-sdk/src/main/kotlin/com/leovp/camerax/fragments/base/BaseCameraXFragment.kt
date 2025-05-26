@@ -88,7 +88,7 @@ import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -212,15 +212,19 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             cameraExecutor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    LogContext.log.w(logTag, "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms")
+                    LogContext.log.w(
+                        logTag,
+                        "Capture image bytes cost=${System.currentTimeMillis() - startTimestamp}ms"
+                    )
 
                     try {
                         showShutterAnimation(viewFinder)
                         soundManager.playShutterSound()
 
-                        val st0 = System.currentTimeMillis() // For takePicture, the ImageProxy only contains one plane AKA Y plane.
-                        val imageBuffer = image.planes[0].buffer //                val width = image.width
-                        //                val height = image.height
+                        // For takePicture, the ImageProxy only contains one plane AKA Y plane.
+                        val st0 = System.currentTimeMillis()
+                        val imageBuffer = image.planes[0].buffer // val width = image.width
+                        //  val height = image.height
                         val oriImageBytes = imageBuffer.toByteArray()
                         LogContext.log.i(logTag, "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
 
@@ -433,7 +437,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         //        return bitmap.flipRotate(mirror, false, imageRotationDegree.toFloat())
     }
 
-    private fun showShutterAnimation(viewFinder: PreviewView) { // We can only change the foreground Drawable using API level 23+ API
+    private fun showShutterAnimation(viewFinder: PreviewView) {
+        // We can only change the foreground Drawable using API level 23+ API
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             viewFinder.apply {
                 post { // Display flash animation to indicate that photo was captured.
@@ -491,9 +496,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 val factory = viewFinder.meteringPointFactory
                 val point = factory.createPoint(e.x, e.y)
                 val action =
-                    FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF).setAutoCancelDuration(5, TimeUnit.SECONDS).build()
+                    FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                        .setAutoCancelDuration(5, TimeUnit.SECONDS).build()
                 touchListener?.onStartFocusing(e.rawX, e.rawY)
-                val focusFuture: ListenableFuture<FocusMeteringResult> = camera.cameraControl.startFocusAndMetering(action)
+                val focusFuture: ListenableFuture<FocusMeteringResult> =
+                    camera.cameraControl.startFocusAndMetering(action)
                 focusFuture.addListener({
                     runCatching { // Get focus result
                         val result = focusFuture.get() as FocusMeteringResult
@@ -587,7 +594,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         fun onRightSwipe()
     }
 
-    protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit,) {
+    protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit) {
         // Create a Vendor Extension for HDR
         val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(
             requireContext(),
@@ -629,26 +636,26 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             LogContext.log.i(
                 logTag,
                 "BOKEH: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing, ExtensionMode.BOKEH
-                )
-            }"
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing, ExtensionMode.BOKEH
+                    )
+                }"
             )
             LogContext.log.i(
                 logTag,
                 "NIGHT: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing, ExtensionMode.NIGHT
-                )
-            }"
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing, ExtensionMode.NIGHT
+                    )
+                }"
             )
             LogContext.log.i(
                 logTag,
                 "NONE: ${
-                extensionsManager.isExtensionAvailable(
-                    lensFacing, ExtensionMode.NONE
-                )
-            }"
+                    extensionsManager.isExtensionAvailable(
+                        lensFacing, ExtensionMode.NONE
+                    )
+                }"
             )
 
             // Check if the extension is available on the device
@@ -874,7 +881,7 @@ Supported profile/level for HEVC=${
                     "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
                 }
             }
-                """.trimIndent()
+            """.trimIndent()
             LogContext.log.i(logTag, cameraParametersString)
             LogContext.log.i(logTag, "==================================================")
         }
@@ -893,7 +900,11 @@ Supported profile/level for HEVC=${
 
         contentResolver.query(
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Video.Media._ID, MediaStore.Video.Media.RELATIVE_PATH, MediaStore.Video.Media.DATE_TAKEN),
+            arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.RELATIVE_PATH,
+                MediaStore.Video.Media.DATE_TAKEN
+            ),
             null,
             null,
             "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
@@ -917,7 +928,11 @@ Supported profile/level for HEVC=${
 
         contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.RELATIVE_PATH, MediaStore.Images.Media.DATE_TAKEN),
+            arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.RELATIVE_PATH,
+                MediaStore.Images.Media.DATE_TAKEN
+            ),
             null,
             null,
             "${MediaStore.Images.Media.DISPLAY_NAME} ASC"

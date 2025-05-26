@@ -9,12 +9,12 @@ import java.io.File
  * Date: 2023/6/21 08:50
  */
 
-data class TreeElement(val name: String, var children: List<TreeElement>?)
-
 private const val BOX_DRAWING_CHAR_LAST = "└── "
 private const val BOX_DRAWING_CHAR_MIDDLE = "├── "
 private const val BOX_DRAWING_CHAR_SPACE = "    "
 private const val BOX_DRAWING_CHAR_LINE = "│   "
+
+data class TreeElement(val name: String, var children: List<TreeElement>?)
 
 /**
  * printTree(root, "", true) { LogContext.log.i(it) }

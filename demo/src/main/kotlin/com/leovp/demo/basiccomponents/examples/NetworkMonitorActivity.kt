@@ -15,7 +15,7 @@ import com.leovp.json.toJsonString
 import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import java.util.*
+import java.util.Locale
 
 /**
  * Author: Michael Leo
@@ -27,7 +27,8 @@ import java.util.*
  * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
  * ```
  */
-class NetworkMonitorActivity : BaseDemonstrationActivity<ActivityNetworkMonitorBinding>(R.layout.activity_network_monitor) {
+class NetworkMonitorActivity :
+    BaseDemonstrationActivity<ActivityNetworkMonitorBinding>(R.layout.activity_network_monitor) {
 
     override fun getTagName(): String = ITAG
 

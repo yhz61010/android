@@ -24,7 +24,7 @@ import com.leovp.demo.databinding.ActivityBluetoothServerBinding
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import java.util.*
+import java.util.UUID
 
 /**
  *  Need following permissions:
@@ -34,7 +34,8 @@ import java.util.*
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
-class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServerBinding>(R.layout.activity_bluetooth_server) {
+class BluetoothServerActivity :
+    BaseDemonstrationActivity<ActivityBluetoothServerBinding>(R.layout.activity_bluetooth_server) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -179,7 +180,7 @@ class BluetoothServerActivity : BaseDemonstrationActivity<ActivityBluetoothServe
                 preparedWrite: Boolean,
                 responseNeeded: Boolean,
                 offset: Int,
-                value: ByteArray
+                value: ByteArray,
             ) {
                 super.onCharacteristicWriteRequest(
                     device,

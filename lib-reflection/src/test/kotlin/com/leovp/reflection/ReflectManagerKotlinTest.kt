@@ -330,7 +330,10 @@ class ReflectManagerKotlinTest {
         }
         assertIs<ReflectManager.ReflectException>(exception3)
 
-        val dcTwoArg: DataClassTwoArg = ReflectManager.reflect(DataClassTwoArg::class).newInstance("argument11", 1010).get()
+        val dcTwoArg: DataClassTwoArg = ReflectManager
+            .reflect(DataClassTwoArg::class)
+            .newInstance("argument11", 1010)
+            .get()
         ReflectManager.reflect(dcTwoArg).property("arg1", "aagg1")
         assertEquals("aagg1", ReflectManager.reflect(dcTwoArg).property("arg1").get())
         ReflectManager.reflect(dcTwoArg).property("num", 8080)

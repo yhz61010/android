@@ -41,10 +41,12 @@ class MovableFloatingActionButton(
             val parentHeight = viewParent.height
             var newX = motionEvent.rawX + dX
             newX = max(0f, newX) // Don't allow the FAB past the left hand side of the parent
-            newX = min((parentWidth - viewWidth).toFloat(), newX) // Don't allow the FAB past the right hand side of the parent
+            // Don't allow the FAB past the right hand side of the parent
+            newX = min((parentWidth - viewWidth).toFloat(), newX)
             var newY = motionEvent.rawY + dY
             newY = max(0f, newY) // Don't allow the FAB past the top of the parent
-            newY = min((parentHeight - viewHeight).toFloat(), newY) // Don't allow the FAB past the bottom of the parent
+            // Don't allow the FAB past the bottom of the parent
+            newY = min((parentHeight - viewHeight).toFloat(), newY)
             view.animate()
                 .x(newX)
                 .y(newY)

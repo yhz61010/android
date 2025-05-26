@@ -93,17 +93,20 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
             LogContext.log.e(TAG, "csd0 is null. Can not play!")
             return
         }
-        val latencyInMs = (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
+        val latencyInMs =
+            (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
         LogContext.log.d(
             TAG,
             "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
                 "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
         )
-        if ((audioDecoder?.queueSize ?: 0) >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
+        val auDecQueueSize = audioDecoder?.queueSize ?: 0
+        if (auDecQueueSize >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(
                 TAG,
-                "Drop[${dropFrameTimes.get()}]|full[${audioDecoder?.queueSize ?: 0}] latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
+                "Drop[${dropFrameTimes.get()}]|full[${audioDecoder?.queueSize ?: 0}] " +
+                    "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
             runCatching { audioDecoder?.flush() }.getOrNull()

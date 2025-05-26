@@ -123,7 +123,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         } else {
             LogContext.log.e(tag, "Caught socket exception! DO NOT fire ClientConnectListener#onDisconnected() method!")
             netty.connectStatus.set(ClientConnectStatus.FAILED)
-            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION, "Socket Exception")
+            netty.connectionListener.onFailed(
+                netty,
+                ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION,
+                "Socket Exception"
+            )
             // When network lost, you will go into here.
             //            LogContext.log.e(tag, "=====> CHK13 <=====")
             netty.doRetry()
@@ -173,7 +177,12 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             //            netty.doRetry()
         } else {
             netty.connectStatus.set(ClientConnectStatus.FAILED)
-            netty.connectionListener.onFailed(netty, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, "Unexpected error", cause)
+            netty.connectionListener.onFailed(
+                netty,
+                ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
+                "Unexpected error",
+                cause
+            )
         }
     }
 

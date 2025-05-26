@@ -61,4 +61,4 @@ internal fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCh
 internal val Context.screenSurfaceRotation: Int
     @Suppress("DEPRECATION")
     get() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display!!.rotation else windowManager.defaultDisplay.rotation
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display.rotation else windowManager.defaultDisplay.rotation

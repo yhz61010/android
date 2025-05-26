@@ -156,8 +156,10 @@ class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>(R.layout.act
                 }
             }
         val service = ApiService.getService("http://temp.leovp.com", CommonService::class.java)
+        val pdfFile = "%E6%96%B0%E4%B8%9C%E6%96%B9%E6%89%98%E4%B8%9A%E8%80%83%E8%AF%95%E5%AE%98" +
+            "%E6%96%B9%E6%8C%87%E5%8D%97.pdf"
         ApiSubscribe.subscribe(
-            service.downloadFile("%E6%96%B0%E4%B8%9C%E6%96%B9%E6%89%98%E4%B8%9A%E8%80%83%E8%AF%95%E5%AE%98%E6%96%B9%E6%8C%87%E5%8D%97.pdf"),
+            service.downloadFile(pdfFile),
             NoProgressObserver(observer)
         )
     }

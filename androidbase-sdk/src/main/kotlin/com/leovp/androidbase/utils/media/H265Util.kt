@@ -155,7 +155,9 @@ object H265Util {
     const val NALU_TYPE_BLA_N_LP = 18 // 0x12
     const val NALU_TYPE_IDR_W_RADL = 19 // 0x13
     const val NALU_TYPE_IDR_N_LP = 20 // 0x14
-    const val NALU_TYPE_CRA_NUT = 21 // 0x15 // 22(RSV_IRAP_VCL22) and 23(RSV_IRAP_VCL23) Reserved IRAP VCL NAL unit types
+
+    // 0x15 // 22(RSV_IRAP_VCL22) and 23(RSV_IRAP_VCL23) Reserved IRAP VCL NAL unit types
+    const val NALU_TYPE_CRA_NUT = 21
 
     fun isIdrFrame(data: ByteArray): Boolean {
         return (16..23).contains(getNaluType(data))
@@ -217,7 +219,11 @@ object H265Util {
                 // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
                 // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
                 for (i in 4 until data.size) {
-                    if (data[i].toInt() == 0 && data[i + 1].toInt() == 0 && data[i + 2].toInt() == 0 && data[i + 3].toInt() == 1) {
+                    if (data[i].toInt() == 0 &&
+                        data[i + 1].toInt() == 0 &&
+                        data[i + 2].toInt() == 0 &&
+                        data[i + 3].toInt() == 1
+                    ) {
                         val vps = ByteArray(i)
                         System.arraycopy(data, 0, vps, 0, i)
                         return vps
@@ -373,7 +379,11 @@ object H265Util {
                     "${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
-        return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
+        return if (data[0].toInt() != 0x0 ||
+            data[1].toInt() != 0x0 &&
+            data[2].toInt() != 0x0 ||
+            data[3].toInt() != 0x1
+        ) {
             if (DEBUG) LogContext.log.d(TAG, "Not valid H265 data.")
             -1
         } else {

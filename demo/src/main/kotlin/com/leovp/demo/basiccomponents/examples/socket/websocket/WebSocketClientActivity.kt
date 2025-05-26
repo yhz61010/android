@@ -32,7 +32,8 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClientBinding>(R.layout.activity_websocket_client) {
+class WebSocketClientActivity :
+    BaseDemonstrationActivity<ActivityWebsocketClientBinding>(R.layout.activity_websocket_client) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketClientBinding {
@@ -51,7 +52,8 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
         val webSocketClient = WebSocketClientDemo(
             URI(binding.etSvrIp.text.toString()),
             connectionListener,
-            false, // assets.open("cert/websocket.org.crt")
+            // assets.open("cert/websocket.org.crt")
+            false,
             constantRetry
         )
         webSocketClientHandler = WebSocketClientHandlerDemo(webSocketClient)
@@ -177,9 +179,9 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
         connectionListener: ClientConnectListener<BaseNettyClient>,
         trustAllServers: Boolean,
         //        certInputStream: InputStream? = null,
-        retryStrategy: RetryStrategy
+        retryStrategy: RetryStrategy,
     ) :
-        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, /* trustAllServers,*/ retryStrategy) {
+        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "WebSocketClient"
 
         override fun retryProcess(): Boolean {
@@ -196,9 +198,11 @@ class WebSocketClientActivity : BaseDemonstrationActivity<ActivityWebsocketClien
                 is TextWebSocketFrame -> {
                     frame.text()
                 }
+
                 is PongWebSocketFrame -> {
                     frame.content().toString(Charset.forName("UTF-8"))
                 }
+
                 else -> {
                     null
                 }

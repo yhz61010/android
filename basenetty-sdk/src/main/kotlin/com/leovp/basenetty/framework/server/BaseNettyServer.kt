@@ -37,7 +37,7 @@ abstract class BaseNettyServer protected constructor(
     val connectionListener: ServerConnectListener<BaseNettyServer>,
     internal var isWebSocket: Boolean = false,
     internal var webSocketPath: String = "/",
-    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS
+    timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
 ) : BaseNetty {
 
     companion object {
@@ -213,7 +213,7 @@ abstract class BaseNettyServer protected constructor(
         showContent: Boolean,
         showLog: Boolean,
         fullOutput: Boolean,
-        byteOrder: ByteOrder
+        byteOrder: ByteOrder,
     ): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmdTag, cmd)) {
             return false
@@ -232,6 +232,7 @@ abstract class BaseNettyServer protected constructor(
                     LogContext.log.i(cmdTag, if (showContent) "$cmdMsg=$cmd" else cmdMsg, fullOutput = fullOutput)
                 }
             }
+
             is ByteArray -> {
                 isStringCmd = false
                 stringCmd = null
@@ -246,6 +247,7 @@ abstract class BaseNettyServer protected constructor(
                     LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
                 }
             }
+
             else -> throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray")
         }
 
@@ -259,7 +261,13 @@ abstract class BaseNettyServer protected constructor(
                 }
                 clientChannel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
             } else {
-                clientChannel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+                clientChannel.writeAndFlush(
+                    if (isStringCmd) {
+                        TextWebSocketFrame(stringCmd)
+                    } else {
+                        BinaryWebSocketFrame(bytesCmd)
+                    }
+                )
             }
         } else {
             clientChannel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)
@@ -277,7 +285,7 @@ abstract class BaseNettyServer protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = false,
         showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
@@ -294,7 +302,7 @@ abstract class BaseNettyServer protected constructor(
         showContent: Boolean = true,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN
+        byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = true,
         showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder

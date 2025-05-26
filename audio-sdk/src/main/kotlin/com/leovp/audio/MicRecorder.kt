@@ -56,7 +56,10 @@ class MicRecorder(
             encoderInfo.channelConfig,
             encoderInfo.audioFormat
         ) * recordMinBufferRatio
-        LogContext.log.w(TAG, "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes")
+        LogContext.log.w(
+            TAG,
+            "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes"
+        )
 
         encodeWrapper = AudioEncoderManager.getWrapper(
             type,

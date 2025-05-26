@@ -45,7 +45,7 @@ object TextureHelper {
             LogContext.log.w(
                 TAG,
                 "Could not generate a new OpenGL texture object.",
-                outputType = LogOutType.FRAMEWORK,
+                outputType = LogOutType.FRAMEWORK
             )
             return bean
         }
@@ -59,7 +59,7 @@ object TextureHelper {
             LogContext.log.w(
                 TAG,
                 "Resource ID $resourceId could not be decoded.",
-                outputType = LogOutType.FRAMEWORK,
+                outputType = LogOutType.FRAMEWORK
             )
             // 加载 Bitmap 资源失败，删除纹理 Id
             GLES20.glDeleteTextures(1, textureObjectIds, 0)

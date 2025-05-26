@@ -148,7 +148,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
         LogContext.log.e(
             TAG,
             "Could not create new shader[$type].",
-            outputType = LogOutType.FRAMEWORK,
+            outputType = LogOutType.FRAMEWORK
         )
         return GLES20.GL_FALSE
     }
@@ -171,7 +171,7 @@ fun compileShader(type: Int, shaderCode: String): Int {
         LogContext.log.e(
             TAG,
             "Compilation of shader[$type] failed.",
-            outputType = LogOutType.FRAMEWORK,
+            outputType = LogOutType.FRAMEWORK
         )
         // 如果编译失败，则删除创建的着色器对象
         GLES20.glDeleteShader(shaderId)
@@ -194,7 +194,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
     LogContext.log.i(
         TAG,
         "linkProgram() programObjId=$programObjId",
-        outputType = LogOutType.FRAMEWORK,
+        outputType = LogOutType.FRAMEWORK
     )
 
     // 2. 检查创建状态
@@ -226,7 +226,7 @@ fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
             TAG,
             "Could not link program: ${GLES20.glGetProgramInfoLog(programObjId)} " +
                 "linkStatus=${linkStatus[0]}",
-            outputType = LogOutType.FRAMEWORK,
+            outputType = LogOutType.FRAMEWORK
         )
         // 链接失败则删除程序对象
         GLES20.glDeleteProgram(programObjId)
@@ -249,7 +249,7 @@ fun checkGlError(op: String): Int {
         LogContext.log.e(
             TAG,
             "checkGlError. $op: glError $error",
-            outputType = LogOutType.FRAMEWORK,
+            outputType = LogOutType.FRAMEWORK
         )
         error = GLES20.glGetError()
     }
@@ -270,7 +270,7 @@ fun validateProgram(programObjectId: Int): Boolean {
         TAG,
         "Results of validating program: ${validateStatus[0]}\n" +
             "Log:${GLES20.glGetProgramInfoLog(programObjectId)}",
-        outputType = LogOutType.FRAMEWORK,
+        outputType = LogOutType.FRAMEWORK
     )
     return validateStatus[0] != 0
 }

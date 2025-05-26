@@ -33,7 +33,9 @@ internal val Context.screenAvailableResolution: Size
             // Gets all excluding insets
             val windowInsets = metrics.windowInsets
             val insets =
-                windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout())
+                windowInsets.getInsetsIgnoringVisibility(
+                    WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
+                )
 
             val insetsWidth = insets.right + insets.left
             val insetsHeight = insets.top + insets.bottom
@@ -89,16 +91,16 @@ internal val Context.screenRealResolution: Size
  */
 internal fun Context.getScreenSize(rotation: Int, screenSize: Size = screenRealResolution): Size {
     return when (rotation) {
-        Surface.ROTATION_0,
-        Surface.ROTATION_180 -> Size(
+        Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
             min(screenSize.width, screenSize.height),
             max(screenSize.width, screenSize.height)
         )
-        Surface.ROTATION_90,
-        Surface.ROTATION_270 -> Size(
+
+        Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
             max(screenSize.width, screenSize.height),
             min(screenSize.width, screenSize.height)
         )
+
         else -> Size(
             min(screenSize.width, screenSize.height),
             max(screenSize.width, screenSize.height)
@@ -130,7 +132,7 @@ internal val Context.screenSurfaceRotation: Int
             // So we need to get screen rotation from `DisplayManager`.
             (getSystemService(Context.DISPLAY_SERVICE) as DisplayManager).getDisplay(Display.DEFAULT_DISPLAY).rotation
         } else {
-            display!!.rotation
+            display.rotation
         }
     } else {
         (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation

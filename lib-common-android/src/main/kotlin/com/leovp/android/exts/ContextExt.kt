@@ -195,10 +195,13 @@ val Context.hardwarePropertiesManager
 val Context.shortcutManager
     get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 val Context.storageStatsManager
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
 val Context.companionDeviceManager
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
 val Context.textClassificationManager
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = getSystemService(Context.TEXT_CLASSIFICATION_SERVICE) as TextClassificationManager
 val Context.euiccManager
     @RequiresApi(API.P)

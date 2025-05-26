@@ -104,7 +104,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             for (listener in listeners) {
                 try {
                     listener.onBecameForeground()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
                     Log.e(TAG, "onActivityResumed() exception")
                 }
@@ -143,9 +143,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                     }
                 }
 
-            // else {
-            //     LogContext.log.i(TAG, "Still BG")
-            // }
+                // else {
+                //     LogContext.log.i(TAG, "Still BG")
+                // }
             }.also { checkRunnable = it },
             becameBackgroundDelay
         )
@@ -193,7 +193,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         }
 
         fun get(): ForegroundComponent {
-            checkNotNull(instance) { "ForegroundComponent is not initialised - invoke at least once with parameterised init/get" }
+            checkNotNull(instance) {
+                "ForegroundComponent is not initialised - invoke at least once with parameterised init/get"
+            }
             return instance!!
         }
     }

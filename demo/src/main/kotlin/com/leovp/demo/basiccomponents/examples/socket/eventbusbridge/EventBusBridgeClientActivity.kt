@@ -24,7 +24,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.net.URI
@@ -116,10 +115,9 @@ class EventBusBridgeClientActivity :
 
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             when (msg) {
-                is BinaryWebSocketFrame,
-                is ContinuationWebSocketFrame,
-                    -> {
-                    val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+                is BinaryWebSocketFrame, is ContinuationWebSocketFrame -> {
+//                    val receivedByteBuf = (msg as WebSocketFrame).content().retain()
+                    val receivedByteBuf = msg.content().retain()
 
                     val receivedBytes = ByteBufUtil.getBytes(receivedByteBuf)
                     // val showDebugData = if (receivedBytes.size >= 80) receivedBytes.toHexStringLE().substring(0, 80) else receivedBytes.toHexStringLE()

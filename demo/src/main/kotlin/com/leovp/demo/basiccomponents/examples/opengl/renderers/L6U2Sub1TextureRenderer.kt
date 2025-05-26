@@ -132,7 +132,14 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
         textureBeanBeauty = TextureHelper.loadTexture(ctx, R.drawable.beauty)
 
         // 加载纹理坐标
-        GLES20.glVertexAttribPointer(aTexCoordLocation, TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, texVertexBuffer)
+        GLES20.glVertexAttribPointer(
+            aTexCoordLocation,
+            TWO_DIMEN_TEX_VERTEX_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            texVertexBuffer
+        )
         GLES20.glEnableVertexAttribArray(aTexCoordLocation)
 
         // 开启纹理透明混合，这样才能绘制透明图片

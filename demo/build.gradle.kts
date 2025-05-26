@@ -131,7 +131,7 @@ android {
         resources {
             excludes += setOf(
                 "META-INF/atomicfu.kotlin_module",
-                "META-INF/androidx.emoji2_emoji2.version",
+                "META-INF/androidx.emoji2_emoji2.version"
             )
             pickFirsts += setOf(
                 "META-INF/NOTICE",

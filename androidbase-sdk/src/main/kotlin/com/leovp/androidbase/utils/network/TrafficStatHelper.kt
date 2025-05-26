@@ -25,7 +25,8 @@ import java.io.RandomAccessFile
  * Date: 19-8-30 下午1:38
  */
 class TrafficStatHelper private constructor(val ctx: Context) {
-    private val uid = (ctx.applicationContext as Application).getCompatContextInfo<ApplicationInfo>(PackageManager.GET_META_DATA).uid
+    private val uid =
+        (ctx.applicationContext as Application).getCompatContextInfo<ApplicationInfo>(PackageManager.GET_META_DATA).uid
 
     /**
      * The data will be sent in every *freq* second(s)

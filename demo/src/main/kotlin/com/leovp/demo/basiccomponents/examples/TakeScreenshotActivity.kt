@@ -11,7 +11,8 @@ import com.leovp.log.base.ITAG
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.io.File
 
-class TakeScreenshotActivity : BaseDemonstrationActivity<ActivityTakeScreenshotBinding>(R.layout.activity_take_screenshot) {
+class TakeScreenshotActivity :
+    BaseDemonstrationActivity<ActivityTakeScreenshotBinding>(R.layout.activity_take_screenshot) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityTakeScreenshotBinding {

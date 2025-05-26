@@ -44,7 +44,14 @@ class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBin
         AccessibilityUtil.clickById("$id:id/sw1")
         AccessibilityUtil.scrollForwardById("$id:id/list")
         Handler(Looper.getMainLooper()).postDelayed({
-            val touchBean = ScreenShareClientActivity.TouchBean(ScreenShareClientActivity.TouchType.DRAG, 500F, 1400F, 500F, 800F, 500L)
+            val touchBean = ScreenShareClientActivity.TouchBean(
+                ScreenShareClientActivity.TouchType.DRAG,
+                500F,
+                1400F,
+                500F,
+                800F,
+                500L
+            )
             EventBus.getDefault().post(touchBean)
         }, 1000)
         Handler(Looper.getMainLooper()).postDelayed({

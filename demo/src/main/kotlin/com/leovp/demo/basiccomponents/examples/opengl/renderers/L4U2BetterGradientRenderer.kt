@@ -88,14 +88,28 @@ class L4U2BetterGradientRenderer(@Suppress("unused") private val ctx: Context) :
         // 4. 指定当被访问时，固定点数据值是否应该被归一化(GL_TRUE)或者直接转换为固定点值(GL_FALSE)(只有使用整数数据时)
         // 5. 指定连续顶点属性之间的偏移量。如果为0，那么顶点属性会被理解为：它们是紧密排列在一起的。初始值为0。
         // 6. 数据缓冲区
-        GLES20.glVertexAttribPointer(aPositionLocation, TWO_DIMEN_POS_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, vertexData)
+        GLES20.glVertexAttribPointer(
+            aPositionLocation,
+            TWO_DIMEN_POS_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            STRIDE,
+            vertexData
+        )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
         // 将数组的初始读取位置右移 2 位，所以数组读取的顺序是 r1, g1, b1, x2, y2, r2, g2, b2...
         vertexData.position(TWO_DIMEN_POS_COMPONENT_COUNT)
         // RGB_COLOR_COMPONENT_COUNT：从数组中每次读取 3 个向量
         // STRIDE：每次读取间隔是 (2 个位置 + 3 个颜色值) * Float 占的 Byte 位
-        GLES20.glVertexAttribPointer(aColorLocation, RGB_COLOR_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, vertexData)
+        GLES20.glVertexAttribPointer(
+            aColorLocation,
+            RGB_COLOR_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            STRIDE,
+            vertexData
+        )
         GLES20.glEnableVertexAttribArray(aColorLocation)
     }
 

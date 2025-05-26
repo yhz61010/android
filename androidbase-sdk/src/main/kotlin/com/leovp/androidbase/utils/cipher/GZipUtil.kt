@@ -12,7 +12,9 @@ object GZipUtil {
      * @return The compressed data are stored in little endian.
      */
     fun compress(str: String, charset: Charset = StandardCharsets.UTF_8): ByteArray =
-        ByteArrayOutputStream().also { baos -> GZIPOutputStream(baos).bufferedWriter(charset).use { gos -> gos.write(str) } }.toByteArray()
+        ByteArrayOutputStream().also { baos ->
+            GZIPOutputStream(baos).bufferedWriter(charset).use { gos -> gos.write(str) }
+        }.toByteArray()
 
     /**
      * @param data Byte order: Little endian
@@ -22,7 +24,9 @@ object GZipUtil {
 
     /**
      * @param data Byte order: Little endian
+     *
+     * GZIP_MAGIC: 0x8b1f - in big endian
      */
     fun isGzip(data: ByteArray): Boolean =
-        ((data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)) and 0xFFFF == GZIPInputStream.GZIP_MAGIC // 0x8b1f - in big endian
+        ((data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)) and 0xFFFF == GZIPInputStream.GZIP_MAGIC
 }

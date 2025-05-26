@@ -130,7 +130,10 @@ class DecodeH264RawFileByFFMpeg {
         if (offSet < 0) {
             return false
         }
-        return bb[offSet].toInt() == 0 && bb[offSet + 1].toInt() == 0 && bb[offSet + 2].toInt() == 0 && bb[offSet + 3].toInt() == 1
+        return bb[offSet].toInt() == 0 &&
+            bb[offSet + 1].toInt() == 0 &&
+            bb[offSet + 2].toInt() == 0 &&
+            bb[offSet + 3].toInt() == 1
     }
 
     fun close() {
@@ -174,7 +177,8 @@ class DecodeH264RawFileByFFMpeg {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.w(
                                     TAG,
-                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms][render cost=${(st3 - st2) / 1000}us] " +
+                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms]" +
+                                        "[render cost=${(st3 - st2) / 1000}us] " +
                                         "${decodeFrame?.width}x${decodeFrame?.height}"
                                 )
                             } catch (e: Exception) {

@@ -66,17 +66,17 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
                 return
             }
 
-            binding.tvSurfaceRotation.text =
-                "${screenSurfaceRotation.surfaceRotationLiteralName}($screenSurfaceRotation) " +
-                    screenSurfaceRotation.surfaceRotationName
+            val surRotationLiteral = screenSurfaceRotation.surfaceRotationLiteralName
+            val surRotationName = screenSurfaceRotation.surfaceRotationName
+            binding.tvSurfaceRotation.text = "$surRotationLiteral($screenSurfaceRotation) $surRotationName"
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
+            val screenOrientationName = currentDeviceOrientation.screenOrientationName
             LogContext.log.w(
                 tag,
-                "Device Orientation=${currentDeviceOrientation.screenOrientationName} " +
-                    "screenSurfaceRotation=${screenSurfaceRotation.surfaceRotationName} "
+                "Device Orientation=$screenOrientationName screenSurfaceRotation=$surRotationName "
             )
-            binding.tvDeviceOrientation.text = currentDeviceOrientation.screenOrientationName
+            binding.tvDeviceOrientation.text = screenOrientationName
         }
     }
 }

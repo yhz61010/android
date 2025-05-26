@@ -21,10 +21,11 @@ class ErrorState(view: View) : State(view) {
         attrs: AttributeSet?,
         attr: TypedArray?,
         @ColorInt defColor: Int,
-        defDrawable: Drawable?
+        defDrawable: Drawable?,
     ) {
         if (attrs != null && attr != null) {
-            val iconResId = attr.getResourceId(R.styleable.CircleProgressbar_errorIconDrawable, R.drawable.ic_default_error)
+            val iconResId =
+                attr.getResourceId(R.styleable.CircleProgressbar_errorIconDrawable, R.drawable.ic_default_error)
             internalIcon = context.getDrawable(iconResId)!!
             iconTint = attr.getColor(R.styleable.CircleProgressbar_errorIconTintColor, DEF_ICON_TINT)
             width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_errorIconWidth, getIcon().minimumWidth)

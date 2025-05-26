@@ -212,8 +212,9 @@ object YuvUtil {
     // The input imageBytes is in YYYYYYYYUVUV(NV12)
     // Return data in YYYYYYYYUVUV(NV12)
     fun rotateYUV420Degree90(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        // Rotate the Y luma
         val yuv =
-            ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3) // Rotate the Y luma
+            ByteArray(imageWidth * imageHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) shr 3)
         var i = 0
         for (x in 0 until imageWidth) {
             for (y in imageHeight - 1 downTo 0) {

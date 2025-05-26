@@ -117,13 +117,13 @@ object SslUtils {
         km: Array<KeyManager>? = null,
         tm: Array<TrustManager>? = null,
     ): SSLSocketFactory = SSLContext.getInstance(protocol).apply {
-            init(
-                km,
-                // trustAllCerts
-                tm,
-                SecureRandom()
-            )
-        }.socketFactory
+        init(
+            km,
+            // trustAllCerts
+            tm,
+            SecureRandom()
+        )
+    }.socketFactory
 
     fun systemDefaultTrustManager(): X509TrustManager {
         return runCatching {

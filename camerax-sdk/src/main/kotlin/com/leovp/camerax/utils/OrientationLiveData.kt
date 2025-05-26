@@ -86,10 +86,10 @@ internal class OrientationLiveData(
             val sign = if (characteristics.get(CameraCharacteristics.LENS_FACING)
                 == CameraCharacteristics.LENS_FACING_FRONT
             ) {
-                    1
-                } else {
-                    -1
-                }
+                1
+            } else {
+                -1
+            }
 
             // Calculate desired JPEG orientation relative to camera orientation to make
             // the image upright relative to the device orientation

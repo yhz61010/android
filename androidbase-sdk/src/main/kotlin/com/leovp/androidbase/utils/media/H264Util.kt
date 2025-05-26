@@ -160,7 +160,12 @@ object H264Util {
                     "${data[2].toHexString()},${data[3].toHexString()},${data[4].toHexString()}"
             )
         }
-        return if (data[0].toInt() != 0x0 || data[1].toInt() != 0x0 && data[2].toInt() != 0x0 || data[3].toInt() != 0x1) {
+        return if (
+            data[0].toInt() != 0x0 ||
+            data[1].toInt() != 0x0 &&
+            data[2].toInt() != 0x0 ||
+            data[3].toInt() != 0x1
+        ) {
             LogContext.log.d(TAG, "Not valid H264 data.")
             -1
         } else {

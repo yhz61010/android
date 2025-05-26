@@ -53,7 +53,7 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
     override fun onMove(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder,
-        target: RecyclerView.ViewHolder
+        target: RecyclerView.ViewHolder,
     ): Boolean {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
@@ -83,7 +83,13 @@ abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.Simpl
         val isCanceled = dX == 0f && !isCurrentlyActive
 
         if (isCanceled) {
-            clearCanvas(c, itemView.right + dX, itemView.top.toFloat(), itemView.right.toFloat(), itemView.bottom.toFloat())
+            clearCanvas(
+                c,
+                itemView.right + dX,
+                itemView.top.toFloat(),
+                itemView.right.toFloat(),
+                itemView.bottom.toFloat()
+            )
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
             return
         }

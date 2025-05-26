@@ -51,7 +51,11 @@ class ReflectManager private constructor() {
         @Suppress("unused")
         fun reflect(className: String, classLoader: ClassLoader? = null): ReflectManager {
             try {
-                val clazz = if (classLoader == null) Class.forName(className) else Class.forName(className, true, classLoader)
+                val clazz = if (classLoader == null) {
+                    Class.forName(className)
+                } else {
+                    Class.forName(className, true, classLoader)
+                }
                 return reflect(clazz.kotlin)
             } catch (le: LinkageError) {
                 throw ReflectException(le)
@@ -251,7 +255,9 @@ class ReflectManager private constructor() {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = actualTypes[i]?.javaObjectType
                 val declaredType: Class<*>? = declaredTypes[i]?.kotlin?.javaObjectType
-                if (actualTypes[i] == Unit::class.java || (actualType != null && declaredType?.isAssignableFrom(actualType) == true)) {
+                if (actualTypes[i] == Unit::class.java ||
+                    (actualType != null && declaredType?.isAssignableFrom(actualType) == true)
+                ) {
                     continue
                 }
                 return false
@@ -356,11 +362,14 @@ class ReflectManager private constructor() {
         obj: Any?,
         functions: Collection<KFunction<*>>,
         name: String,
-        vararg args: Any? = arrayOfNulls<Any>(0)
+        vararg args: Any? = arrayOfNulls<Any>(0),
     ): ReflectManager? {
         val types = getArgsType(*args)
         functions.firstOrNull { func ->
-            func.name == name && matchArgsType(func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(), types)
+            func.name == name && matchArgsType(
+                func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(),
+                types
+            )
         }?.let { func ->
             if (!func.isAccessible) func.isAccessible = true
             return if (func.returnType == unitType) {

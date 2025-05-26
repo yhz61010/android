@@ -104,7 +104,9 @@ object AccessibilityUtil {
         //        }
         nodesInfo?.let { list ->
             for (node in list) {
-                if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+                if (node.isEnabled) {
+                    return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+                }
             }
         }
         return false

@@ -122,21 +122,21 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         var requestStartMessage = "--> ${request.method} ${request.url} $protocol"
         if (!logHeaders && hasRequestBody) {
             requestStartMessage =
-            "$requestStartMessage (${requestBody?.contentLength()}-byte body)"
+                "$requestStartMessage (${requestBody.contentLength()}-byte body)"
         }
         logger.log(requestStartMessage)
         if (logHeaders) {
             if (hasRequestBody) {
                 // Request body headers are only present when installed as a network interceptor. Force
                 // them to be included (when available) so there values are known.
-                requestBody?.contentType()?.let {
+                requestBody.contentType()?.let {
                     logger.log("Content-Type: $it")
                     if (it.toString().contains("boundary=")) {
                         hasBoundary = true
                     }
                 }
-                if ((requestBody?.contentLength() ?: -1) != -1L) {
-                    logger.log("Content-Length: ${requestBody?.contentLength()}")
+                if (requestBody.contentLength() != -1L) {
+                    logger.log("Content-Length: ${requestBody.contentLength()}")
                 }
             }
             val headers = request.headers
@@ -158,22 +158,22 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 logger.log("--> END ${request.method} (encoded body omitted)")
             } else if (hasBoundary) {
                 logger.log(
-                    "--> END ${request.method} (Found boundary ${requestBody?.contentLength()}-byte body omitted)"
+                    "--> END ${request.method} (Found boundary ${requestBody.contentLength()}-byte body omitted)"
                 )
             } else {
                 val buffer = Buffer()
-                requestBody?.writeTo(buffer)
+                requestBody.writeTo(buffer)
                 var charset = DEFAULT_CHARSET
-                requestBody?.contentType()?.also {
+                requestBody.contentType()?.also {
                     charset = it.charset(DEFAULT_CHARSET)!!
                 }
                 logger.log("")
                 if (isPlaintext(buffer)) {
                     val content = buffer.readString(charset)
                     logger.log(content)
-                    logger.log("--> END ${request.method} (${requestBody?.contentLength()}-byte body)")
+                    logger.log("--> END ${request.method} (${requestBody.contentLength()}-byte body)")
                 } else {
-                    logger.log("--> END ${request.method} (binary ${requestBody?.contentLength()}-byte body omitted)")
+                    logger.log("--> END ${request.method} (binary ${requestBody.contentLength()}-byte body omitted)")
                 }
             }
             logger.log(

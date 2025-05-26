@@ -32,7 +32,8 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
 @SuppressLint("SetTextI18n")
-class BluetoothScanActivity : BaseDemonstrationActivity<ActivityBluetoothScanBinding>(R.layout.activity_bluetooth_scan) {
+class BluetoothScanActivity :
+    BaseDemonstrationActivity<ActivityBluetoothScanBinding>(R.layout.activity_bluetooth_scan) {
 
     override fun getTagName(): String = ITAG
 

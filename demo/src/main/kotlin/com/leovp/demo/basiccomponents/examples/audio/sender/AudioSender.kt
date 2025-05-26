@@ -93,7 +93,12 @@ class AudioSender {
             object : MicRecorder.RecordCallback {
                 override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
                     recAudioQueue.offer(data)
-                    if (BuildConfig.DEBUG) LogContext.log.d(TAG, "mic rec data[${data.size}] queue=${recAudioQueue.size}")
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.d(
+                            TAG,
+                            "mic rec data[${data.size}] queue=${recAudioQueue.size}"
+                        )
+                    }
                 }
 
                 override fun onStop(stopResult: Boolean) {

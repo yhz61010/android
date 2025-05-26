@@ -21,7 +21,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity<ActivityPlayVideoBinding>(R.layout.activity_play_video) {
+class PlayRawH265ByMediaCodecActivity :
+    BaseDemonstrationActivity<ActivityPlayVideoBinding>(R.layout.activity_play_video) {
 
     override fun getTagName(): String = ITAG
 
@@ -45,7 +46,11 @@ class PlayRawH265ByMediaCodecActivity : BaseDemonstrationActivity<ActivityPlayVi
             override fun surfaceCreated(holder: SurfaceHolder) {
                 uiScope.launch {
                     val rawFileFullPath = withContext(Dispatchers.IO) {
-                        saveRawResourceToFile(R.raw.tears_400_x265_raw, getExternalFilesDir(null)!!.absolutePath, "h265.h265")
+                        saveRawResourceToFile(
+                            R.raw.tears_400_x265_raw,
+                            getExternalFilesDir(null)!!.absolutePath,
+                            "h265.h265"
+                        )
                     }
                     decoderManager.init(rawFileFullPath, 1920, 800, surface)
                     // In order to fix the SurfaceView blink problem,

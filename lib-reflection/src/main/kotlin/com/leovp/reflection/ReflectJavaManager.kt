@@ -9,8 +9,34 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Proxy
-import java.util.*
+import java.util.Collections
+import java.util.Locale
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Byte
+import kotlin.Char
+import kotlin.Comparator
+import kotlin.Double
+import kotlin.Exception
+import kotlin.Float
+import kotlin.Int
+import kotlin.Long
+import kotlin.RuntimeException
+import kotlin.Short
+import kotlin.String
+import kotlin.Suppress
+import kotlin.Throwable
+import kotlin.Throws
+import kotlin.Unit
+import kotlin.arrayOf
+import kotlin.arrayOfNulls
+import kotlin.getOrElse
+import kotlin.hashCode
 import kotlin.reflect.KClass
+import kotlin.requireNotNull
+import kotlin.runCatching
+import kotlin.toString
 
 /**
  * https://dwz.win/azW6
@@ -87,8 +113,8 @@ class ReflectJavaManager private constructor(
                 1 -> string.lowercase(Locale.getDefault())
                 else ->
                     string
-                    .substring(0, 1)
-                    .lowercase(Locale.getDefault()) + string.substring(1)
+                        .substring(0, 1)
+                        .lowercase(Locale.getDefault()) + string.substring(1)
             }
         }
     }
@@ -148,10 +174,10 @@ class ReflectJavaManager private constructor(
                         return@Comparator if (type2 != null &&
                             type1?.isAssignableFrom(type2) == true
                         ) {
-                                1
-                            } else {
-                                -1
-                            }
+                            1
+                        } else {
+                            -1
+                        }
                     }
                 }
                 0
@@ -330,7 +356,7 @@ class ReflectJavaManager private constructor(
         } while (objType != null)
         throw NoSuchMethodException(
             "No similar method $name with params " +
-            "${types.contentToString()} could be found on type ${type()}."
+                "${types.contentToString()} could be found on type ${type()}."
         )
     }
 
@@ -349,10 +375,10 @@ class ReflectJavaManager private constructor(
                         return@Comparator if (type2 != null &&
                             type1?.isAssignableFrom(type2) == true
                         ) {
-                                1
-                            } else {
-                                -1
-                            }
+                            1
+                        } else {
+                            -1
+                        }
                     }
                 }
                 0

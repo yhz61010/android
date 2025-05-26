@@ -532,35 +532,35 @@ class Camera2ComponentHelper(
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
     fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
-            LogContext.log.i(
+        LogContext.log.i(
+            TAG,
+            "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
+        )
+        this@Camera2ComponentHelper.previewWidth = previewWidth
+        this@Camera2ComponentHelper.previewHeight = previewHeight
+        initializeParameters()
+
+        // Open the selected camera
+        camera = openCamera(cameraManager, cameraId, cameraHandler)
+
+        if (enableTakePhotoFeature) {
+            val st = SystemClock.elapsedRealtime()
+            setImageReaderForPhoto(previewWidth, previewHeight)
+            LogContext.log.d(
                 TAG,
-                "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
+                "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
             )
-            this@Camera2ComponentHelper.previewWidth = previewWidth
-            this@Camera2ComponentHelper.previewHeight = previewHeight
-            initializeParameters()
-
-            // Open the selected camera
-            camera = openCamera(cameraManager, cameraId, cameraHandler)
-
-            if (enableTakePhotoFeature) {
-                val st = SystemClock.elapsedRealtime()
-                setImageReaderForPhoto(previewWidth, previewHeight)
-                LogContext.log.d(
-                    TAG,
-                    "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
-                )
-                setPreviewRepeatingRequest()
-                LogContext.log.d(
-                    TAG,
-                    "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
-                )
-            }
+            setPreviewRepeatingRequest()
+            LogContext.log.d(
+                TAG,
+                "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
+            )
         }
+    }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    private suspend fun openCamera(manager: CameraManager, cameraId: String, handler: Handler? = null,): CameraDevice =
+    private suspend fun openCamera(manager: CameraManager, cameraId: String, handler: Handler? = null): CameraDevice =
         suspendCancellableCoroutine { cont ->
             manager.openCamera(
                 cameraId,

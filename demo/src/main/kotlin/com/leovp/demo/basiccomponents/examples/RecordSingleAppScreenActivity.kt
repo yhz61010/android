@@ -44,14 +44,21 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
             when (flags) {
                 MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(
                     ITAG,
-                    "Get $VIDEO_ENCODE_TYPE data[${data.size}]=${data.toHexString()} presentationTimeUs=$presentationTimeUs"
+                    "Get $VIDEO_ENCODE_TYPE data[${data.size}]=${data.toHexString()} " +
+                        "presentationTimeUs=$presentationTimeUs"
                 )
 
                 MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-                    LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data Key-Frame[${data.size}] presentationTimeUs=$presentationTimeUs")
+                    LogContext.log.i(
+                        ITAG,
+                        "Get $VIDEO_ENCODE_TYPE data Key-Frame[${data.size}] presentationTimeUs=$presentationTimeUs"
+                    )
                 }
 
-                else -> LogContext.log.i(ITAG, "Get $VIDEO_ENCODE_TYPE data[${data.size}] presentationTimeUs=$presentationTimeUs")
+                else -> LogContext.log.i(
+                    ITAG,
+                    "Get $VIDEO_ENCODE_TYPE data[${data.size}] presentationTimeUs=$presentationTimeUs"
+                )
             }
             videoH26xOsForDebug.write(data)
         }
@@ -82,8 +89,10 @@ class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreensh
         setting.fps = 5f
 
         val screenProcessor = ScreenCapture.Builder(
-            setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            setting.height, // 800 1024 1280
+            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
+            setting.width,
+            // 800 1024 1280
+            setting.height,
             setting.dpi,
             null,
             ScreenCapture.BY_IMAGE_2_H26X,

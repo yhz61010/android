@@ -1,7 +1,6 @@
 package com.leovp.demo.jetpackcomponents.examples.room
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -62,7 +61,7 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
                 override fun onMove(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
+                    target: RecyclerView.ViewHolder,
                 ): Boolean {
                     return false
                 }
@@ -83,7 +82,11 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
 
         val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {
-            newWordActivityLauncher.launch(Intent(this, NewWordActivity::class.java).apply { putExtra("title", "New Word") })
+            newWordActivityLauncher.launch(
+                Intent(this, NewWordActivity::class.java).apply {
+                    putExtra("title", "New Word")
+                }
+            )
         }
     }
 
@@ -91,7 +94,7 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
         this,
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             result.data?.getStringExtra(NewWordActivity.EXTRA_REPLY)?.let {
                 val word = Word(it)
                 wordViewModel.insert(word)

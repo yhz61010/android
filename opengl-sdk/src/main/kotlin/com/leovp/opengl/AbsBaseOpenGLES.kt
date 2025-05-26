@@ -57,7 +57,7 @@ abstract class AbsBaseOpenGLES {
         LogContext.log.i(
             tag,
             "makeProgram() programObjId=$programObjId",
-            outputType = LogOutType.FRAMEWORK,
+            outputType = LogOutType.FRAMEWORK
         )
         if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
 

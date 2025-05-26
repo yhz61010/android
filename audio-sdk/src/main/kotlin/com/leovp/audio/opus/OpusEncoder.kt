@@ -150,7 +150,7 @@ class OpusEncoder(
     channelCount: Int,
     private val bitrate: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
-    private val callback: IEncodeCallback
+    private val callback: IEncodeCallback,
 ) : BaseMediaCodecAsynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,
@@ -199,8 +199,16 @@ class OpusEncoder(
             csd1 = opusCsd?.csd1
             csd2 = opusCsd?.csd2
             LogContext.log.w(TAG, "csd0[${csd0?.size}] HEX[${csd0?.toHexString()}]")
-            LogContext.log.w(TAG, "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} HEX[${csd1?.toHexString()}]")
-            LogContext.log.w(TAG, "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} HEX[${csd2?.toHexString()}]")
+            LogContext.log.w(
+                TAG,
+                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} " +
+                    "HEX[${csd1?.toHexString()}]"
+            )
+            LogContext.log.w(
+                TAG,
+                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} " +
+                    "HEX[${csd2?.toHexString()}]"
+            )
             outBuf.flip()
         }
         callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)

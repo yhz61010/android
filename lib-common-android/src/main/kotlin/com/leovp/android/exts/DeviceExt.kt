@@ -88,8 +88,7 @@ val Context.screenAvailableResolution: Size
             // Gets all excluding insets
             val windowInsets = metrics.windowInsets
             val insets = windowInsets.getInsetsIgnoringVisibility(
-                WindowInsets.Type.navigationBars()
-                or WindowInsets.Type.displayCutout()
+                WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
             )
 
             val insetsWidth = insets.right + insets.left
@@ -439,17 +438,17 @@ fun isProbablyAnEmulator(): Boolean {
 fun Context.isTablet(): Boolean {
     return (
         resources.configuration.screenLayout
-        and Configuration.SCREENLAYOUT_SIZE_MASK
-    ) >= Configuration.SCREENLAYOUT_SIZE_LARGE
+            and Configuration.SCREENLAYOUT_SIZE_MASK
+        ) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 }
 
 // ================================
 
-fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     return isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
 }
 
-fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     return isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
 }
 
@@ -495,7 +494,7 @@ fun isLandscape(surfaceRotation: Int): Boolean =
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     // If device is already in normal portrait mode, the wide range is:
     // [300, 359], [0, 60]
 
@@ -531,7 +530,7 @@ fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrie
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     // If device is already in normal landscape mode, the wide range is:
     // [210, 270], [270, 330]
 
@@ -557,7 +556,7 @@ fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     // If device is already in reverse landscape mode, the wide range is:
     // [30, 90], [90, 150]
 
@@ -583,7 +582,7 @@ fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOr
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Boolean {
+fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
     // If device is already in reverse portrait mode, the wide range is:
     // [120, 180], [180, 240]
 
@@ -617,7 +616,7 @@ fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - -1 means unknown or the orientation is not changed.
  */
-fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1,): Int {
+fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int {
     return when {
         isNormalPortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_PORTRAIT
         isReversePortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_PORTRAIT

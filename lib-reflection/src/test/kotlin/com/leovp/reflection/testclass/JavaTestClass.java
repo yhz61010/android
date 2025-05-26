@@ -1,6 +1,7 @@
 package com.leovp.reflection.testclass;
 
 import androidx.annotation.NonNull;
+import kotlin.Suppress;
 
 /**
  * Author: Michael Leo
@@ -63,14 +64,11 @@ public class JavaTestClass {
         public String openField = "Open Field";
 
         public String getSexInString() {
-            switch (sex) {
-                case 'M':
-                    return "Male";
-                case 'F':
-                    return "Female";
-                default:
-                    return "NA";
-            }
+            return switch (sex) {
+                case 'M' -> "Male";
+                case 'F' -> "Female";
+                default -> "NA";
+            };
         }
 
         JavaPerson(String name, char sex) {

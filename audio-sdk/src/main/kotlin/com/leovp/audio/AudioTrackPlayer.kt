@@ -30,7 +30,7 @@ class AudioTrackPlayer(
     usage: Int = AudioAttributes.USAGE_MEDIA,
     // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
     contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
-    minPlayBufferSizeRatio: Int = 1
+    minPlayBufferSizeRatio: Int = 1,
 ) {
     companion object {
         private const val TAG = "AudioTrackPlayer"
@@ -45,7 +45,10 @@ class AudioTrackPlayer(
             audioDecoderInfo.channelConfig,
             audioDecoderInfo.audioFormat
         ) * minPlayBufferSizeRatio
-        LogContext.log.w(TAG, "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize")
+        LogContext.log.w(
+            TAG,
+            "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize"
+        )
         // val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder()
             // AudioAttributes.USAGE_MEDIA
@@ -64,7 +67,13 @@ class AudioTrackPlayer(
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
         // audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, sessionId)
-        audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, AudioManager.AUDIO_SESSION_ID_GENERATE)
+        audioTrack = AudioTrack(
+            audioAttributesBuilder.build(),
+            audioFormat,
+            minBufferSize,
+            mode,
+            AudioManager.AUDIO_SESSION_ID_GENERATE
+        )
         // ctx.useBuildInSpeaker(true)
     }
 
@@ -177,6 +186,10 @@ class AudioTrackPlayer(
         }
         stop()
         LogContext.log.w(TAG, "release()")
-        runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.release() }.onFailure { it.printStackTrace() }
+        runCatching {
+            if (audioTrack.state == STATE_INITIALIZED) {
+                audioTrack.release()
+            }
+        }.onFailure { it.printStackTrace() }
     }
 }

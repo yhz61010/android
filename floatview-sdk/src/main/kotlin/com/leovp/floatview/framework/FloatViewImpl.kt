@@ -112,10 +112,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
 
-            MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL,
-            MotionEvent.ACTION_OUTSIDE,
-                -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                 // view.performClick()
                 // Log.e("LEO-FV",
                 //     "ACTION_UP isPressed=${view.isPressed} " +
@@ -278,25 +275,15 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             }?.addUpdateListener {
                 when (dockEdge) {
                     DockEdge.NONE -> Unit
-                    DockEdge.LEFT,
-                    DockEdge.RIGHT,
-                    DockEdge.LEFT_RIGHT,
-                        -> layoutParams.x = it.animatedValue as Int
+                    DockEdge.LEFT, DockEdge.RIGHT, DockEdge.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
 
-                    DockEdge.TOP,
-                    DockEdge.BOTTOM,
-                    DockEdge.TOP_BOTTOM,
-                        -> layoutParams.y = it.animatedValue as Int
+                    DockEdge.TOP, DockEdge.BOTTOM, DockEdge.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
 
                     DockEdge.FULL -> {
                         when (animateDirectionForDockFull) {
-                            DockEdge.LEFT,
-                            DockEdge.RIGHT,
-                                -> layoutParams.x = it.animatedValue as Int
+                            DockEdge.LEFT, DockEdge.RIGHT -> layoutParams.x = it.animatedValue as Int
 
-                            DockEdge.TOP,
-                            DockEdge.BOTTOM,
-                                -> layoutParams.y = it.animatedValue as Int
+                            DockEdge.TOP, DockEdge.BOTTOM -> layoutParams.y = it.animatedValue as Int
 
                             else -> Unit
                         }

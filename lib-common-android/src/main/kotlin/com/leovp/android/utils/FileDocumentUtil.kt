@@ -16,6 +16,7 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.leovp.android.exts.fileExists
 import java.io.File
 import java.io.FileOutputStream
@@ -168,14 +169,12 @@ object FileDocumentUtil {
     }
 
     fun resourceToUri(context: Context, resId: Int): Uri? {
-        return Uri.parse(
-            ContentResolver.SCHEME_ANDROID_RESOURCE +
-                "://" +
-                context.resources.getResourcePackageName(resId) +
-                "/" + context.resources.getResourceTypeName(
-                resId
-            ) + "/" + context.resources.getResourceEntryName(resId)
-        )
+        return (
+            ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                context.resources.getResourcePackageName(resId) + "/" +
+                context.resources.getResourceTypeName(resId) + "/" +
+                context.resources.getResourceEntryName(resId)
+            ).toUri()
     }
 
     private fun getPathFromExtSD(pathData: Array<String>): String {

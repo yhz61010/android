@@ -49,7 +49,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         LogContext.log.w(
             TAG,
             "Supported image format for avc encoder: ${
-            CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
+                CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
             }"
         )
 
@@ -84,7 +84,7 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     Size(
                         DESIGNED_CAMERA_SIZE.width,
                         DESIGNED_CAMERA_SIZE.height
-                    )/*cameraView.display*/,
+                    ),
                     camera2Helper.characteristics,
                     SurfaceHolder::class.java
                 )

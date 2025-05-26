@@ -116,8 +116,10 @@ abstract class BaseNettyClient protected constructor(
     ) {
         this.webSocketUri = webSocketUri
         this.certificateInputStream = certInputStream
-        LogContext.log.w(tag,
-            "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}")
+        LogContext.log.w(
+            tag,
+            "WebSocket mode. Uri=$webSocketUri host=$host port=$port retry_strategy=${retryStrategy::class.simpleName}"
+        )
     }
 
     protected constructor(
@@ -239,7 +241,8 @@ abstract class BaseNettyClient protected constructor(
                                 } else {
                                     LogContext.log.w(tag, "Working in wss self-signed SECURE mode")
                                     requireNotNull(certificateInputStream) {
-                                        "In WSS Secure mode, you must set server certificate by calling SslUtils.certificateInputStream."
+                                        "In WSS Secure mode, you must set server certificate by calling " +
+                                            "SslUtils.certificateInputStream."
                                     }
 
                                     val sslContextPair = SslUtils.getSSLContext(getCertificateInputStream()!!)
@@ -287,9 +290,7 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.i(tag, "===== connect() current state=${connectStatus.get().name} =====")
         synchronized(this) {
             when (connectStatus.get()) {
-                ClientConnectStatus.CONNECTING,
-                ClientConnectStatus.CONNECTED,
-                    -> {
+                ClientConnectStatus.CONNECTING, ClientConnectStatus.CONNECTED -> {
                     LogContext.log.w(tag, "===== Connecting or already connected =====")
                     cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
@@ -362,9 +363,11 @@ abstract class BaseNettyClient protected constructor(
                     } else {
                         LogContext.log.i(tag, "=====> Connect failed <=====")
                         connectStatus.set(ClientConnectStatus.FAILED)
-                        connectionListener.onFailed(this,
+                        connectionListener.onFailed(
+                            this,
                             ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
-                            "Connect failed")
+                            "Connect failed"
+                        )
                         cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
                         //                        LogContext.log.e(tag, "=====> CHK2 <=====")
                         doRetry()
@@ -387,7 +390,8 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
             //            connectStatus.set(ClientConnectStatus.FAILED)
             //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-            cont.resume(ClientConnectStatus.FAILED) // This exception will trigger handlerRemoved(), so we retry at that time.
+            // This exception will trigger handlerRemoved(), so we retry at that time.
+            cont.resume(ClientConnectStatus.FAILED)
 
             //            LogContext.log.e(tag, "=====> CHK3 <=====")
             //            doRetry()
@@ -395,7 +399,8 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
             //            connectStatus.set(ClientConnectStatus.FAILED)
             //            connectionListener.onFailed(this, ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
-            cont.resume(ClientConnectStatus.FAILED) // This exception will trigger handlerRemoved(), so we retry at that time.
+            // This exception will trigger handlerRemoved(), so we retry at that time.
+            cont.resume(ClientConnectStatus.FAILED)
 
             //            LogContext.log.e(tag, "=====> CHK4 <=====")
             //            doRetry()
@@ -413,7 +418,8 @@ abstract class BaseNettyClient protected constructor(
     suspend fun disconnectManually(): ClientConnectStatus = suspendCancellableCoroutine { cont ->
         LogContext.log.w(tag, "===== disconnectManually() current state=${connectStatus.get().name} =====")
         synchronized(this) {
-            if (ClientConnectStatus.DISCONNECTED == connectStatus.get() || ClientConnectStatus.UNINITIALIZED == connectStatus.get()) {
+            val connStatus = connectStatus.get()
+            if (ClientConnectStatus.DISCONNECTED == connStatus || ClientConnectStatus.UNINITIALIZED == connStatus) {
                 LogContext.log.w(tag, "Socket is not connected or already disconnected or not initialized.")
                 cont.resume(connectStatus.get())
                 return@suspendCancellableCoroutine
@@ -594,7 +600,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "The command is null. Stop processing.",
-                outputType = LogOutType.CLIENT_COMMAND,
+                outputType = LogOutType.CLIENT_COMMAND
             )
             return false
         }
@@ -603,7 +609,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "Socket is not connected. Can not send command.",
-                outputType = LogOutType.CLIENT_COMMAND,
+                outputType = LogOutType.CLIENT_COMMAND
             )
             return false
         }
@@ -611,7 +617,7 @@ abstract class BaseNettyClient protected constructor(
             LogContext.log.e(
                 cmdTag,
                 "Can not execute cmd because of Channel is not active.",
-                outputType = LogOutType.CLIENT_COMMAND,
+                outputType = LogOutType.CLIENT_COMMAND
             )
             return false
         }
@@ -684,7 +690,13 @@ abstract class BaseNettyClient protected constructor(
                 }
                 channel.writeAndFlush(PingWebSocketFrame(pingByteBuf))
             } else {
-                channel.writeAndFlush(if (isStringCmd) TextWebSocketFrame(stringCmd) else BinaryWebSocketFrame(bytesCmd))
+                channel.writeAndFlush(
+                    if (isStringCmd) {
+                        TextWebSocketFrame(stringCmd)
+                    } else {
+                        BinaryWebSocketFrame(bytesCmd)
+                    }
+                )
             }
         } else {
             channel.writeAndFlush(if (isStringCmd) "$stringCmd\n" else bytesCmd)

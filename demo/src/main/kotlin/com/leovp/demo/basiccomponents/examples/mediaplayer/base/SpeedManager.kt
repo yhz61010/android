@@ -74,7 +74,8 @@ class SpeedManager {
             }
             val desiredUsec = mPrevMonoUsec + frameDelta // when we want to wake up
             var nowUs = System.nanoTime() / 1000
-            while (nowUs < desiredUsec - 100 /*&& mState == RUNNING*/) {
+            /*&& mState == RUNNING*/
+            while (nowUs < desiredUsec - 100) {
                 // Sleep until it's time to wake up.  To be responsive to "stop" commands
                 // we're going to wake up every half a second even if the sleep is supposed
                 // to be longer (which should be rare).  The alternative would be

@@ -102,10 +102,10 @@ object ZipUtil {
         zipFilePath: String,
         @IntRange(0, 9) compressionLevel: Int = 6,
     ) {
-        if (sourceFilePathList.isEmpty()) throw IllegalArgumentException("Source files list cannot be empty")
+        require(sourceFilePathList.isNotEmpty())
         val srcFileList: List<File> = when (T::class) {
             String::class -> sourceFilePathList.map { File(it as String) }
-            File::class -> sourceFilePathList.map { it as File}
+            File::class -> sourceFilePathList.map { it as File }
             else -> throw IllegalArgumentException("Unsupported type: ${T::class}")
         }
 

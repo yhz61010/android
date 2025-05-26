@@ -61,7 +61,7 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
             TAG,
             "Long Log[${string.length}][full]=$string",
             fullOutput = true,
-            outputType = LogOutType(17),
+            outputType = LogOutType(17)
         )
 
         if (LogContext.isLogInitialized()) {

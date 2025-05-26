@@ -5,7 +5,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.math.BigInteger
 import java.security.MessageDigest
-import java.util.*
+import java.util.Locale
 
 /**
  * Author: Michael Leo
@@ -39,8 +39,8 @@ object MD5Util {
 
     fun checkMd5(md5: String, targetFile: File, bufferSize: Int = 256 shl 10) =
         calculateFileMd5(targetFile, bufferSize).let {
-        if (TextUtils.isEmpty(it)) false else it.equals(md5, ignoreCase = true)
-    }
+            if (TextUtils.isEmpty(it)) false else it.equals(md5, ignoreCase = true)
+        }
 
     fun calculateFileMd5(file: File, bufferSize: Int = 256 shl 10): String {
         if (!file.isFile) {

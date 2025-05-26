@@ -21,7 +21,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private val bitrate: Int,
     private val frameRate: Int,
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
-    private val bitrateMode: Int = DEFAULT_BITRATE_MODE
+    private val bitrateMode: Int = DEFAULT_BITRATE_MODE,
 ) {
     val queue = ConcurrentLinkedQueue<ByteArray>()
     private var dataUpdateCallback: CallbackListener? = null
@@ -103,7 +103,13 @@ class CameraAvcEncoder @JvmOverloads constructor(
                     inputBuffer?.clear()
                     val data = queue.poll()?.also { inputBuffer?.put(it) }
 
-                    codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++mFrameCount), 0)
+                    codec.queueInputBuffer(
+                        inputBufferId,
+                        0,
+                        data?.size ?: 0,
+                        computePresentationTimeUs(++mFrameCount),
+                        0
+                    )
                 } catch (e: Exception) {
                     LogContext.log.v(TAG, "You can ignore this error safely.", e)
                 }
@@ -123,13 +129,16 @@ class CameraAvcEncoder @JvmOverloads constructor(
                             csd = encodedBytes.copyOf()
                             LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexString()}]")
                         }
+
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
+
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
                             // Do nothing
                         }
+
                         else -> {
                             // Do nothing
                         }

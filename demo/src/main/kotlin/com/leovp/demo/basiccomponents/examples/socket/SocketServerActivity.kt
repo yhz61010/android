@@ -70,7 +70,8 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             LogContext.log.i(tag, "onClientConnected: ${clientChannel.remoteAddress()}")
             toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
-                binding.txtResponse.text = "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -80,7 +81,7 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             runOnUiThread {
                 binding.txtResponse.text =
                     "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"
-                    binding.sv.fullScroll(View.FOCUS_DOWN)
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
             socketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
         }
@@ -89,7 +90,8 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             LogContext.log.w(tag, "onClientDisconnected: ${clientChannel.remoteAddress()}")
             toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
-                binding.txtResponse.text = "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                binding.txtResponse.text =
+                    "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -100,7 +102,7 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             runOnUiThread {
                 binding.txtResponse.text =
                     "${binding.txtResponse.text}\nStart failed $code $msg"
-                    binding.sv.fullScroll(View.FOCUS_DOWN)
+                binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
     }

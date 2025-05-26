@@ -79,7 +79,7 @@ class Camera2WithoutPreviewActivity :
 
             // Selects appropriate preview size and configures camera surface
             val previewSize = getPreviewOutputSize(
-                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)/*cameraView.display*/,
+                Size(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height),
                 characteristics,
                 SurfaceHolder::class.java
             ) // To ensure that size is set, initialize camera in the view's thread

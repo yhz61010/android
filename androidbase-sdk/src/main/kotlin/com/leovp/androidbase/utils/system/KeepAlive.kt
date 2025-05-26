@@ -36,7 +36,7 @@ class KeepAlive(
     private val app: Application,
     @RawRes private val undeadAudioResId: Int,
     private val keepAliveTimeInMin: Float = 25f,
-    val callback: () -> Unit
+    val callback: () -> Unit,
 ) {
     companion object {
         private const val TAG = "KA"
@@ -66,7 +66,8 @@ class KeepAlive(
             }
         }.onFailure { it.printStackTrace() }
 
-        LocalBroadcastManager.getInstance(app).registerReceiver(keepAliveArgumentReceiver, IntentFilter(INTENT_KEEP_ALIVE_RECEIVER))
+        LocalBroadcastManager.getInstance(app)
+            .registerReceiver(keepAliveArgumentReceiver, IntentFilter(INTENT_KEEP_ALIVE_RECEIVER))
 
         val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
         val alarmManager: AlarmManager = ContextCompat.getSystemService(app, AlarmManager::class.java)!!
@@ -78,7 +79,7 @@ class KeepAlive(
             0,
             intent,
             // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             // } else {
             //     PendingIntent.FLAG_UPDATE_CURRENT
             // }

@@ -227,8 +227,10 @@ class MediaProjectionService : Service() {
         mediaProjection = mediaProjectionRef
 
         screenProcessor = ScreenCapture.Builder(
-            setting.width, // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            setting.height, // 800 1024 1280
+            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
+            setting.width,
+            // 800 1024 1280
+            setting.height,
             setting.dpi,
             mediaProjection,
             // BY_IMAGE_2_H26x
@@ -245,7 +247,8 @@ class MediaProjectionService : Service() {
             // For H26x
             .setBitrateMode(setting.bitrateMode)
             .setKeyFrameRate(setting.keyFrameRate)
-            .setIFrameInterval(setting.iFrameInterval) // 20
+            // 20
+            .setIFrameInterval(setting.iFrameInterval)
             // For bitmap
             //          .setSampleSize(2)
             .build().apply {

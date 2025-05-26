@@ -269,7 +269,10 @@ class DecodeH265RawFile {
         if (offSet < 0) {
             return false
         }
-        return bb[offSet].toInt() == 0 && bb[offSet + 1].toInt() == 0 && bb[offSet + 2].toInt() == 0 && bb[offSet + 3].toInt() == 1
+        return bb[offSet].toInt() == 0 &&
+            bb[offSet + 1].toInt() == 0 &&
+            bb[offSet + 2].toInt() == 0 &&
+            bb[offSet + 3].toInt() == 1
     }
 
     fun close() {
@@ -297,7 +300,10 @@ class DecodeH265RawFile {
                             val frame = ByteArray(i - previousStart)
                             System.arraycopy(bytes, previousStart, frame, 0, frame.size)
                             queue.offer(frame)
-                            LogContext.log.w(TAG, "offer queue[${queue.size}] content_size=${frame.size}") //  [${bytes.toHexStringLE()}]
+                            LogContext.log.w(
+                                TAG,
+                                "offer queue[${queue.size}] content_size=${frame.size}"
+                            ) //  [${bytes.toHexStringLE()}]
                             previousStart = i
                             // FIXME We'd better control the FPS by SpeedManager
                             Thread.sleep(32)

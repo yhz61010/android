@@ -433,10 +433,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
         binding.btnMicrophone.setImageResource(
             if (audioEnabled) {
-            R.drawable.ic_microphone_on
-        } else {
-            R.drawable.ic_microphone_off
-        }
+                R.drawable.ic_microphone_on
+            } else {
+                R.drawable.ic_microphone_off
+            }
         )
         binding.btnMicrophone.setOnSingleClickListener { toggleAudio() }
         binding.btnFlash.setOnClickListener { toggleFlash() }

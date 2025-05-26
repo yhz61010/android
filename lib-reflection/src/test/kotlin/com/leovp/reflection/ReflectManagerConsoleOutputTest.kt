@@ -133,7 +133,8 @@ class ReflectManagerConsoleOutputTest {
         val employee = Employee("e2021041910194", DEPT_ID_DEV, Person("Michael", 'M', 38))
         employee.assignSalary(2200, hr)
         assertEquals(
-            "[Leo Group] Employee(Michael[M] is 38 years old.) with ID e2021041910194 works in 1000 departure. Salary: 2200.",
+            "[Leo Group] Employee(Michael[M] is 38 years old.) with ID e2021041910194 " +
+                "works in 1000 departure. Salary: 2200.",
             employee.toString()
         )
 
@@ -150,7 +151,8 @@ class ReflectManagerConsoleOutputTest {
         companyProperty.isAccessible = true
         companyProperty.set(employee, "NEW Company")
         assertEquals(
-            "[NEW Company] Employee(Michael[M] is 38 years old.) with ID e2021041910194 works in 1000 departure. Salary: 2200.",
+            "[NEW Company] Employee(Michael[M] is 38 years old.) with ID e2021041910194 " +
+                "works in 1000 departure. Salary: 2200.",
             employee.toString()
         )
         // val salaryProp = employeeAllProperties.first { it.name == "salary" }

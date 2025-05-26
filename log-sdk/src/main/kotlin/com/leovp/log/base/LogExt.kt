@@ -120,11 +120,7 @@ inline fun e(crossinline config: LogConfig.() -> Unit) {
     )
 }
 
-inline fun e(
-    tag: String,
-    throwable: Throwable? = null,
-    crossinline message: () -> String?,
-) {
+inline fun e(tag: String, throwable: Throwable? = null, crossinline message: () -> String?) {
     e {
         this.tag = tag
         this.throwable = throwable

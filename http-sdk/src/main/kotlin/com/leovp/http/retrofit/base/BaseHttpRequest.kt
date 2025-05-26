@@ -29,8 +29,10 @@ open class BaseHttpRequest {
 
         if (SslUtils.certificateInputStream == null) {
             httpClientBuilder.hostnameVerifier(SslUtils.doNotVerifier)
-            httpClientBuilder.sslSocketFactory(SslUtils.createSocketFactory(SslUtils.PROTOCOL),
-                SslUtils.systemDefaultTrustManager())
+            httpClientBuilder.sslSocketFactory(
+                SslUtils.createSocketFactory(SslUtils.PROTOCOL),
+                SslUtils.systemDefaultTrustManager()
+            )
         } else {
             httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
             requireNotNull(SslUtils.certificateInputStream) {
@@ -76,7 +78,7 @@ open class BaseHttpRequest {
                     LogContext.log.d(
                         TAG,
                         "Assign cookie: $k=$v",
-                        outputType = LogOutType.HTTP_HEADER,
+                        outputType = LogOutType.HTTP_HEADER
                     )
                     build.addHeader(k, v)
                 }

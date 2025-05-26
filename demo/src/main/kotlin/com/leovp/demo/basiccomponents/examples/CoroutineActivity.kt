@@ -184,9 +184,12 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.
     }
 
     suspend fun fetchTwoDocs() = coroutineScope {
-        val deferreds = listOf( // fetch two docs at the same time
-            async { fetchDoc("Book1") }, // async returns a result for the first doc
-            async { fetchDoc("Book2") } // async returns a result for the second doc
+        // fetch two docs at the same time
+        val deferreds = listOf(
+            // async returns a result for the first doc
+            async { fetchDoc("Book1") },
+            // async returns a result for the second doc
+            async { fetchDoc("Book2") }
         )
         LogContext.log.e(ITAG, "All async done - ${Thread.currentThread().name}")
         // use awaitAll to wait for both network requests

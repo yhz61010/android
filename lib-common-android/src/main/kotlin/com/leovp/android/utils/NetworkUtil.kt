@@ -24,7 +24,7 @@ import java.net.NetworkInterface
 import java.net.Proxy
 import java.net.Socket
 import java.net.SocketAddress
-import java.util.*
+import java.util.Locale
 
 /**
  * Author: Michael Leo
@@ -62,7 +62,7 @@ object NetworkUtil {
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) ||
-            isVpnActive(ctx) || isBluetoothActive(ctx)
+        isVpnActive(ctx) || isBluetoothActive(ctx)
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
@@ -220,7 +220,9 @@ object NetworkUtil {
     fun getNetworkGeneration(ctx: Context): String? {
         return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
             return when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+                    getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
+                }
                 // Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> Unit
                 else -> {
                     @Suppress("DEPRECATION")
@@ -403,11 +405,11 @@ object NetworkUtil {
 
     private fun getNetworkGeneration(networkType: Int?): String? {
         return when (networkType) {
+            // TelephonyManager.NETWORK_TYPE_IDEN,
             TelephonyManager.NETWORK_TYPE_1xRTT,
             TelephonyManager.NETWORK_TYPE_CDMA,
             TelephonyManager.NETWORK_TYPE_EDGE,
             TelephonyManager.NETWORK_TYPE_GPRS,
-            // TelephonyManager.NETWORK_TYPE_IDEN,
             TelephonyManager.NETWORK_TYPE_GSM -> "2G"
 
             TelephonyManager.NETWORK_TYPE_EHRPD,
@@ -421,8 +423,7 @@ object NetworkUtil {
             TelephonyManager.NETWORK_TYPE_UMTS,
             TelephonyManager.NETWORK_TYPE_TD_SCDMA -> "3G"
 
-            TelephonyManager.NETWORK_TYPE_LTE,
-            TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
+            TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
 
             TelephonyManager.NETWORK_TYPE_NR -> "5G"
             else -> null

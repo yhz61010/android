@@ -59,7 +59,10 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
                 newWidth = width
                 newHeight = (width / actualRatio).roundToInt()
             }
-            LogContext.log.d(TAG, "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio")
+            LogContext.log.d(
+                TAG,
+                "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio"
+            )
             setMeasuredDimension(newWidth, newHeight)
         }
     }

@@ -60,7 +60,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareClientBinding>(R.layout.activity_screen_share_client) {
+class ScreenShareClientActivity :
+    BaseDemonstrationActivity<ActivityScreenShareClientBinding>(R.layout.activity_screen_share_client) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -202,8 +203,10 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
     }
 
     private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
-        LogContext.log.w(ITAG,
-            "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}")
+        LogContext.log.w(
+            ITAG,
+            "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}"
+        )
         this.vps = vps
         this.sps = sps
         this.pps = pps
@@ -628,7 +631,9 @@ class ScreenShareClientActivity : BaseDemonstrationActivity<ActivityScreenShareC
                 touchUpStartTime = SystemClock.currentThreadTimeMillis()
                 // d(tag) { "-----> ACTION_UP at $touchUpStartTime" }
 
-                if (abs(touchUpRawX - touchDownRawX) <= CLICK_THRESHOLD && abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD) {
+                if (abs(touchUpRawX - touchDownRawX) <= CLICK_THRESHOLD &&
+                    abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD
+                ) {
                     w(tag) { "Accept as click" }
                     webSocketClientHandler?.sendTouchData(TouchType.DOWN, touchUpRawX, touchDownRawY)
                     return super.dispatchTouchEvent(event)

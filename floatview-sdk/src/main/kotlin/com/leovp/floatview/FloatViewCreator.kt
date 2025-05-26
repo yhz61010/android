@@ -38,10 +38,10 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     private var config = DefaultConfig(globalConfig = FloatView.globalConfig.copy())
 
     fun layout(@LayoutRes layoutId: Int, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
-            config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
-                handle?.invoke(it)
-            }
+        config.customView = LayoutInflater.from(context).inflate(layoutId, null).also {
+            handle?.invoke(it)
         }
+    }
 
     fun layout(view: View, handle: ((view: View) -> Unit)? = null): FloatViewCreator = apply {
         config.customView = view.also { handle?.invoke(it) }

@@ -53,14 +53,16 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 
-class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareMasterBinding>(R.layout.activity_screen_share_master) {
+class ScreenShareMasterActivity :
+    BaseDemonstrationActivity<ActivityScreenShareMasterBinding>(R.layout.activity_screen_share_master) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -106,7 +108,7 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                     override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
                         LogContext.log.d(
                             tag,
-                            "onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs",
+                            "onUpdate[${data.size}] flags=$flags presentationTimeUs=$presentationTimeUs"
                         )
                         if (clientChannel != null) {
                             runOnUiThread {
@@ -213,7 +215,10 @@ class ScreenShareMasterActivity : BaseDemonstrationActivity<ActivityScreenShareM
                     //                    LogContext.log.e("currentScreenRotation=$currentScreenRotation lastScreenRotation=$lastScreenRotation")
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation
-                        runOnUiThread { (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)?.changeOrientation() }
+                        runOnUiThread {
+                            (mediaProjectService?.screenProcessor as? ScreenRecordMediaCodecStrategy)
+                                ?.changeOrientation()
+                        }
                     }
                 }
             }

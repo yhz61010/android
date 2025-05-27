@@ -84,7 +84,8 @@ dependencies {
 //     publications {
 //         val customGroup: String by rootProject.extra
 //         // Creates a Maven publication called "release".
-//         create<MavenPublication>("release") {
+//         // name: Module name
+        create<MavenPublication>(name) {
 //             groupId = customGroup
 //             artifactId = "ffmpeg"
 //             version = libs.versions.leo.version.get()

@@ -51,7 +51,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("basenetty-sdk") {
             groupId = customGroup
             artifactId = "basenetty"
             version = libs.versions.leo.version.get()

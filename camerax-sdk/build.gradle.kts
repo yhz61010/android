@@ -67,7 +67,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("camerax-sdk") {
             groupId = customGroup
             artifactId = "camerax"
             version = libs.versions.leo.version.get()

@@ -70,7 +70,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("h264-hevc-decoder-sdk") {
             groupId = customGroup
             artifactId = "h264-hevc-decoder"
             version = libs.versions.leo.version.get()

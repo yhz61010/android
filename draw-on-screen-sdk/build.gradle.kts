@@ -35,7 +35,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("draw-on-screen-sdk") {
             groupId = customGroup
             artifactId = "drawonscreen"
             version = libs.versions.leo.version.get()

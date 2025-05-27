@@ -8,11 +8,11 @@ plugins {
 android {
     namespace = "com.leovp.kotlin"
 
-    publishing {
-        // Publishes "release" build variant with "release" component created by
-        // Android Gradle plugin
-        singleVariant("release")
-    }
+// publishing {
+//         // Publishes "release" build variant with "release" component created by
+//         // Android Gradle plugin
+//         singleVariant("release")
+//     }
 }
 
 dependencies {

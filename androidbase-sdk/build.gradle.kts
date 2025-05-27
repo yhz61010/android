@@ -76,7 +76,7 @@ publishing {
         val mavenGroupId: String by rootProject.extra
         // Creates a Maven publication called "release".
         // name: Module name
-        create<MavenPublication>(name) {
+        create<MavenPublication>("release") {
             groupId = mavenGroupId
             artifactId = "androidbase"
             version = libs.versions.leo.version.get()

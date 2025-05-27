@@ -73,7 +73,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("androidbase-sdk") {
             groupId = customGroup
             artifactId = "androidbase"
             version = libs.versions.leo.version.get()

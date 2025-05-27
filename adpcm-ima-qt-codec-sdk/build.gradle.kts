@@ -69,7 +69,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("adpcm-ima-qt-codec-sdk") {
             groupId = customGroup
             artifactId = "adpcm-ima-qt-codec"
             version = libs.versions.leo.version.get()

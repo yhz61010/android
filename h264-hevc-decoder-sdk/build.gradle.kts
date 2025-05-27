@@ -45,9 +45,7 @@ android {
     publishing {
         // Publishes "release" build variant with "release" component created by
         // Android Gradle plugin
-        singleVariant("release") {
-            withSourcesJar()
-        }
+        singleVariant("release")
     }
 }
 

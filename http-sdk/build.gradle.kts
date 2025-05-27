@@ -43,7 +43,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("http-sdk") {
             groupId = customGroup
             artifactId = "http"
             version = libs.versions.leo.version.get()

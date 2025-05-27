@@ -66,6 +66,18 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
 }
 
+/** When use it: sourceJar.get() */
+//val sourceJar by tasks.registering(Jar::class) {
+//    from(android.sourceSets["main"].java.srcDirs)
+//    archiveClassifier.set("sources")
+//}
+
+/** When use it: tasks.getByName("sourcesJar") */
+// tasks.register<Jar>("sourcesJar") {
+//     from(android.sourceSets["main"].java.srcDirs)
+//     archiveClassifier.set("sources")
+// }
+
 //afterEvaluate {
 //    publishing {
 //        publications {
@@ -75,6 +87,8 @@ dependencies {
 //                groupId = "${rootProject.group}"
 //                artifactId = "ffmpeg"
 //                version = libs.versions.leo.version.get()
+//
+//                artifact(sourceJar.get())
 //            }
 //        }
 //    }

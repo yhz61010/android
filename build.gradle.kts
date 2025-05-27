@@ -6,7 +6,7 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 
-val customGroup = "com.leovp"
+val customGroup = "com.leovp.android"
 
 /**
  * You can use it in subproject like this:

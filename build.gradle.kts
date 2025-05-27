@@ -10,6 +10,10 @@ val customGroup: String by extra {
     "com.leovp.android"
 }
 
+val mavenGroupId: String by extra {
+    "com.leovp"
+}
+
 /**
  * You can use it in subproject like this:
  * ```kotlin

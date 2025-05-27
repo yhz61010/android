@@ -69,10 +69,10 @@ val sourceJar by tasks.registering(Jar::class) {
 
 publishing {
     publications {
-        val customGroup: String by rootProject.extra
+        val mavenGroupId: String by rootProject.extra
         // Creates a Maven publication called "release".
         create<MavenPublication>("release") {
-            groupId = customGroup
+            groupId = mavenGroupId
             artifactId = "adpcm-ima-qt-codec"
             version = libs.versions.leo.version.get()
 

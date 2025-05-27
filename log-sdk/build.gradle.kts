@@ -8,11 +8,11 @@ plugins {
 android {
     namespace = "com.leovp.log"
 
-    publishing {
-        // Publishes "release" build variant with "release" component created by
-        // Android Gradle plugin
-        singleVariant("release")
-    }
+// publishing {
+//         // Publishes "release" build variant with "release" component created by
+//         // Android Gradle plugin
+//         singleVariant("release")
+//     }
 }
 
 dependencies {
@@ -35,8 +35,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        // create<MavenPublication>("release") {
-        create<MavenPublication>("log-sdk") {
+        create<MavenPublication>("release") {
             groupId = customGroup
             artifactId = "log"
             version = libs.versions.leo.version.get()

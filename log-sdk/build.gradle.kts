@@ -35,7 +35,8 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        // create<MavenPublication>("release") {
+        create<MavenPublication>("log-sdk") {
             groupId = customGroup
             artifactId = "log"
             version = libs.versions.leo.version.get()

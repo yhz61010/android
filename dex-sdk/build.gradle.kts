@@ -40,7 +40,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("dex-sdk") {
             groupId = customGroup
             artifactId = "dex"
             version = libs.versions.leo.version.get()

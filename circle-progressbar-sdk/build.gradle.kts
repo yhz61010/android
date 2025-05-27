@@ -36,7 +36,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("circle-progressbar-sdk") {
             groupId = customGroup
             artifactId = "circleprogressbar"
             version = libs.versions.leo.version.get()

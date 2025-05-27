@@ -57,7 +57,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        create<MavenPublication>("camera2live-sdk") {
             groupId = customGroup
             artifactId = "camera2live"
             version = libs.versions.leo.version.get()

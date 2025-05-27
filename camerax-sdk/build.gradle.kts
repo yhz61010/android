@@ -63,17 +63,18 @@ val sourceJar by tasks.registering(Jar::class) {
 //     archiveClassifier.set("sources")
 // }
 
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "${rootProject.group}"
-                artifactId = "camerax"
-                version = libs.versions.leo.version.get()
+publishing {
+    publications {
+        val customGroup: String by rootProject.extra
+        // Creates a Maven publication called "release".
+        create<MavenPublication>("release") {
+            groupId = customGroup
+            artifactId = "camerax"
+            version = libs.versions.leo.version.get()
 
-                artifact(sourceJar.get())
+            artifact(sourceJar.get())
+            afterEvaluate {
+                from(components["release"])
             }
         }
     }

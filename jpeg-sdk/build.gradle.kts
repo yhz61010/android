@@ -13,7 +13,7 @@ android {
     defaultConfig {
         // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
         externalNativeBuild {
-                    cmake {
+            cmake {
                 cppFlags += setOf("")
             }
             ndk {
@@ -47,11 +47,13 @@ android {
         }
     }
 
-// publishing {
-//         // Publishes "release" build variant with "release" component created by
-//         // Android Gradle plugin
-//         singleVariant("release")
-//     }
+    publishing {
+        // Publishes "release" build variant with "release" component created by
+        // Android Gradle plugin
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {

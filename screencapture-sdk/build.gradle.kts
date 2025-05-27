@@ -9,11 +9,11 @@ plugins {
 android {
     namespace = "com.leovp.screencapture"
 
-    publishing {
-        // Publishes "release" build variant with "release" component created by
-        // Android Gradle plugin
-        singleVariant("release")
-    }
+// publishing {
+//         // Publishes "release" build variant with "release" component created by
+//         // Android Gradle plugin
+//         singleVariant("release")
+//     }
 }
 
 dependencies {
@@ -43,7 +43,7 @@ publishing {
     publications {
         val customGroup: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("screencapture-sdk") {
+        create<MavenPublication>("release") {
             groupId = customGroup
             artifactId = "screencapture"
             version = libs.versions.leo.version.get()

@@ -59,7 +59,8 @@ publishing {
     publications {
         val mavenGroupId: String by rootProject.extra
         // Creates a Maven publication called "release".
-        create<MavenPublication>("release") {
+        // name: Module name
+        create<MavenPublication>(name) {
             groupId = mavenGroupId
             artifactId = "camera2live"
             version = libs.versions.leo.version.get()

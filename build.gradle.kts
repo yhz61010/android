@@ -6,12 +6,8 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 
-val customGroup: String by extra {
-    "com.leovp.android"
-}
-
 val mavenGroupId: String by extra {
-    "com.leovp"
+    "com.leovp.android"
 }
 
 /**
@@ -79,7 +75,7 @@ private val detektFormatting = libs.detekt.formatting
 
 // all projects = root project + sub projects
 allprojects {
-    group = customGroup
+    group = mavenGroupId
 
     // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
     apply(plugin = rootProject.libs.plugins.ktlint.gradle.get().pluginId)

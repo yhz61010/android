@@ -38,18 +38,18 @@ val sourceJar by tasks.registering(Jar::class) {
 //     archiveClassifier.set("sources")
 // }
 
-publishing {
-    publications {
-        val mavenGroupId: String by rootProject.extra
-        // Creates a Maven publication called "release".
-        // name: Module name
-        create<MavenPublication>("release") {
-            groupId = mavenGroupId
-            artifactId = "lib-reflection"
-            version = libs.versions.leo.version.get()
+afterEvaluate {
+    publishing {
+        publications {
+            val mavenGroupId: String by rootProject.extra
+            // Creates a Maven publication called "release".
+            // name: Module name
+            create<MavenPublication>("release") {
+                groupId = mavenGroupId
+                artifactId = "lib-reflection"
+                version = libs.versions.leo.version.get()
 
-            artifact(sourceJar.get())
-            afterEvaluate {
+                artifact(sourceJar.get())
                 from(components["release"])
             }
         }

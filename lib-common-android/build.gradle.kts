@@ -21,7 +21,7 @@ dependencies {
     api(libs.androidx.annotation)
 
     api(projects.libCommonKotlin)
-    implementation(projects.floatviewSdk)
+    implementation(projects.floatview)
 }
 
 /** When use it: sourceJar.get() */

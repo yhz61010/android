@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.navigation)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.sonarqube)
     jacoco
@@ -8,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.leovp.camerax"
+    namespace = "com.leovp.opengl"
 
     publishing {
         // Publishes "release" build variant with "release" component created by
@@ -18,37 +17,11 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.appcompat)
+    api(libs.androidx.annotation)
 
-    api(libs.android.material)
-    api(libs.kotlin.coroutines.core)
-    api(libs.androidx.concurrent.futures.ktx)
-    api(libs.androidx.constraintlayout)
-    // Lifecycles only (without ViewModel or LiveData)
-    api(libs.lifecycle.runtime)
-
-    // Navigation library
-    api(libs.androidx.navigation.fragment)
-    api(libs.androidx.navigation.ui)
-
-    // CameraX core library
-    api(libs.bundles.camerax)
-
-    api(projects.libCommonAndroid)
-    api(projects.libCommonKotlin)
-    api(projects.libImage)
-    api(projects.libExif)
-    api(projects.logSdk)
-    api(projects.prefSdk)
-
-    api(libs.coil)
-    api(libs.coil.video)
-
-    api(libs.xx.permissions)
-    api(libs.subsampling.scale.image.view)
-
-    // This is the enhanced version of [subsampling-scale-image-view-androidx]
-    //    implementation "com.github.piasy:BigImageViewer:$bigImageViewerVersion"
+    implementation(projects.log)
+    implementation(projects.libCommonAndroid)
+    implementation(projects.libCommonKotlin)
 }
 
 /** When use it: sourceJar.get() */
@@ -71,7 +44,7 @@ afterEvaluate {
             // name: Module name
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
-                artifactId = "camerax"
+                artifactId = "opengl"
                 version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())

@@ -60,7 +60,7 @@ dependencies {
     implementation(libs.android.material)
     implementation(libs.androidx.multidex)
 
-    implementation(projects.androidbaseSdk)
+    implementation(projects.androidbase)
     implementation(projects.libCommonAndroid)
-    implementation(projects.logSdk)
+    implementation(projects.log)
 }

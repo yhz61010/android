@@ -58,5 +58,5 @@ dependencies {
     implementation(libs.android.material)
     implementation(libs.androidasync)
 
-    implementation(projects.dexSdk)
+    implementation(projects.dex)
 }

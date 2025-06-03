@@ -1,12 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.sonarqube)
     jacoco
     id("maven-publish")
 }
 
 android {
-    namespace = "com.leovp.http"
+    namespace = "com.leovp.basenetty"
 
     publishing {
         // Publishes "release" build variant with "release" component created by
@@ -16,15 +17,22 @@ android {
 }
 
 dependencies {
-    implementation(projects.libNetwork)
-    implementation(projects.logSdk)
+    implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
+    // api(libs.netty.all)
+    // api(libs.netty.handler)
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
+    api(libs.netty.codec.http)
 
-    api(libs.square.okhttp)
-    api(libs.rxjava2.android)
-    api(libs.square.retrofit2)
-    api(libs.square.retrofit2.gson)
-    api(libs.square.retrofit2.converter.scalars)
-    api(libs.square.retrofit2.adapter.rxjava2)
+    api(libs.kotlin.coroutines.core)
+
+    // No need to use this library when adding pipeline however we indeed need its library.
+    // So what's the magic?
+    // https://mvnrepository.com/artifact/com.jcraft/jzlib
+    api(libs.jzlib)
+
+    api(projects.log)
+    api(projects.libBytes)
+    api(projects.libNetwork)
 }
 
 /** When use it: sourceJar.get() */
@@ -47,7 +55,7 @@ afterEvaluate {
             // name: Module name
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
-                artifactId = "http"
+                artifactId = "basenetty"
                 version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())

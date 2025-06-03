@@ -1,19 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.sonarqube)
     jacoco
     id("maven-publish")
 }
 
 android {
-    namespace = "com.leovp.camera2live"
-
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-    buildFeatures {
-        // Generate BuildConfig.java file
-        buildConfig = true
-    }
+    namespace = "com.leovp.http"
 
     publishing {
         // Publishes "release" build variant with "release" component created by
@@ -23,22 +16,15 @@ android {
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
+    implementation(projects.libNetwork)
+    implementation(projects.log)
 
-    api(libs.androidx.appcompat)
-
-    api(projects.androidbaseSdk)
-    api(projects.yuvSdk)
-    api(projects.libExif)
-
-    // ===== The following dependencies are needed in [androidbase-sdk] module =====
-    //    api project(':log-sdk')
-    //    api project(':lib-json')
-    //    api project(':lib-bytes')
-    //    api project(':lib-image')
-    //    api project(':lib-common-android')
-    //    api project(':lib-common-kotlin')
-    // ==============================
+    api(libs.square.okhttp)
+    api(libs.rxjava2.android)
+    api(libs.square.retrofit2)
+    api(libs.square.retrofit2.gson)
+    api(libs.square.retrofit2.converter.scalars)
+    api(libs.square.retrofit2.adapter.rxjava2)
 }
 
 /** When use it: sourceJar.get() */
@@ -61,7 +47,7 @@ afterEvaluate {
             // name: Module name
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
-                artifactId = "camera2live"
+                artifactId = "http"
                 version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())

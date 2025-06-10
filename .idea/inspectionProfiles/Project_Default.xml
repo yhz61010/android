@@ -9,5 +9,6 @@
     <inspection_tool class="ConstantValueMerged" />
     <inspection_tool class="DataFlowIssueMerged" />
     <inspection_tool class="OptionalOfNullableMisuseMerged" />
+    <inspection_tool class="UsePropertyAccessSyntax" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
   </profile>
 </component>

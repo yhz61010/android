@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.android.exts
+package com.leovp.nfc.util
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -129,6 +129,7 @@ inline fun <reified O : PackageItemInfo> Context.getCompatContextInfo(flags: Int
                 pm.getServiceInfo(cn, flags)
             } as O // ServiceInfo
         }
+
         else -> error("Invalid context. $this")
     }
 }

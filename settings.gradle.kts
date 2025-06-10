@@ -119,6 +119,7 @@ include(
     "yuv",
     "jpeg",
     "opengl",
+    "nfc",
 
     "lib-bytes",
     "lib-json",

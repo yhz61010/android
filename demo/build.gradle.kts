@@ -302,6 +302,7 @@ dependencies {
     implementation(projects.libBytes)
     implementation(projects.libImage)
     implementation(projects.libReflection)
+    implementation(projects.nfc)
 
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
     // implementation(projects.ffmpegSdk)

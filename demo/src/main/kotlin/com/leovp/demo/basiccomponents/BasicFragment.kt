@@ -1,12 +1,12 @@
 package com.leovp.demo.basiccomponents
 
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.leovp.androidbase.exts.android.startActivity
@@ -28,6 +28,7 @@ import com.leovp.demo.basiccomponents.examples.JavaMailActivity
 import com.leovp.demo.basiccomponents.examples.KeepAliveActivity
 import com.leovp.demo.basiccomponents.examples.NetActivity
 import com.leovp.demo.basiccomponents.examples.NetworkMonitorActivity
+import com.leovp.demo.basiccomponents.examples.NfcActivity
 import com.leovp.demo.basiccomponents.examples.RecordSingleAppScreenActivity
 import com.leovp.demo.basiccomponents.examples.SaveInstanceStateActivity
 import com.leovp.demo.basiccomponents.examples.TakeScreenshotActivity
@@ -74,7 +75,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
     override fun getViewBinding(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): FragmentBasicBinding {
         return FragmentBasicBinding.inflate(inflater, container, false)
     }
@@ -137,7 +138,8 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("Koin", KoinActivity::class.java),
             Pair("Adb Communication", AdbCommunication::class.java),
             Pair("Bitmap Native Util", BitmapNativeActivity::class.java),
-            Pair("Status Bar", StatusBarActivity::class.java)
+            Pair("Status Bar", StatusBarActivity::class.java),
+            Pair("NFC", NfcActivity::class.java)
         )
 
         val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
@@ -175,24 +177,24 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
 
     companion object {
         val colors = arrayOf(
-            Color.parseColor("#80CBC4"),
-            Color.parseColor("#80DEEA"),
-            Color.parseColor("#81D4FA"),
-            Color.parseColor("#90CAF9"),
-            Color.parseColor("#9FA8DA"),
-            Color.parseColor("#A5D6A7"),
-            Color.parseColor("#B0BEC5"),
-            Color.parseColor("#B39DDB"),
-            Color.parseColor("#BCAAA4"),
-            Color.parseColor("#C5E1A5"),
-            Color.parseColor("#CE93D8"),
-            Color.parseColor("#E6EE9C"),
-            Color.parseColor("#EF9A9A"),
-            Color.parseColor("#F48FB1"),
-            Color.parseColor("#FFAB91"),
-            Color.parseColor("#FFCC80"),
-            Color.parseColor("#FFE082"),
-            Color.parseColor("#FFF59D")
+            "#80CBC4".toColorInt(),
+            "#80DEEA".toColorInt(),
+            "#81D4FA".toColorInt(),
+            "#90CAF9".toColorInt(),
+            "#9FA8DA".toColorInt(),
+            "#A5D6A7".toColorInt(),
+            "#B0BEC5".toColorInt(),
+            "#B39DDB".toColorInt(),
+            "#BCAAA4".toColorInt(),
+            "#C5E1A5".toColorInt(),
+            "#CE93D8".toColorInt(),
+            "#E6EE9C".toColorInt(),
+            "#EF9A9A".toColorInt(),
+            "#F48FB1".toColorInt(),
+            "#FFAB91".toColorInt(),
+            "#FFCC80".toColorInt(),
+            "#FFE082".toColorInt(),
+            "#FFF59D".toColorInt()
         ).toIntArray()
     }
 }

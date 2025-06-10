@@ -1,5 +1,6 @@
 package com.leovp.nfc
 
+import android.Manifest
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -10,6 +11,7 @@ import android.nfc.tech.NfcA
 import android.nfc.tech.NfcB
 import android.nfc.tech.NfcF
 import android.os.Parcelable
+import androidx.annotation.RequiresPermission
 import com.leovp.log.base.LogOutType
 import com.leovp.log.base.e
 import com.leovp.log.base.i
@@ -26,6 +28,7 @@ class NfcReader() {
         val logTypeNfc = LogOutType(hashCode())
     }
 
+    @RequiresPermission(Manifest.permission.NFC)
     fun handleIntent(intent: Intent) {
         val tag = intent.getParcelableExtraOrNull<Parcelable>(NfcAdapter.EXTRA_TAG) as? Tag ?: return
         i {
@@ -143,9 +146,23 @@ class NfcReader() {
         }
     }
 
+    @RequiresPermission(Manifest.permission.NFC)
     private fun readNfcF(nfcF: NfcF) {
         try {
             nfcF.connect()
+            // 构造命令：polling + readWithoutEncryption
+            // val pollingCommand = byteArrayOf(0x00.toByte(), ...) // 指定 System Code
+            // val response = nfcF.transceive(pollingCommand)
+            // Example:
+            // Suica 兼容 FeliCa，读取 balance 的命令一般如下：
+            // val READ_COMMAND = byteArrayOf(
+            //     0x06,                 // Length
+            //     0x00,                 // Command code: Read Without Encryption
+            //     0x01,                 // Number of services
+            //     0x0F, 0x09,           // Service code (little endian)
+            //     0x01,                 // Number of blocks
+            //     0x80.toByte(), 0x00   // Block list
+            // )
             i {
                 this.tag = TAG
                 message = "NfcF tag UID: ${nfcF.tag.id.joinToString(" ") { String.format("%02X", it) }}"

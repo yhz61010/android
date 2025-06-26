@@ -43,7 +43,7 @@ abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Frag
      */
     protected val binding: B get() = _binding!!
 
-    protected fun getNullableBinding(): B? = _binding
+    protected val nullableBinding: B? get() = _binding
 
     abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
 

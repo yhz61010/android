@@ -216,7 +216,7 @@ class BluetoothScanActivity :
                     val device: BluetoothDevice =
                         intent.getParcelableExtraOrNull(BluetoothDevice.EXTRA_DEVICE) ?: return
                     val model = DeviceModel(device, device.name, device.address, null)
-                    LogContext.log.w(ITAG, "Found device: ${model.toJsonString()}")
+                    LogContext.log.w(ITAG, "Found device[${device.name}] ${device.address}")
                     bluetoothDeviceMap[device.address] = model
                     binding.btnDiscovery.text = "Discovery(${bluetoothDeviceMap.size})"
                     val list = bluetoothDeviceMap.values.toMutableList()

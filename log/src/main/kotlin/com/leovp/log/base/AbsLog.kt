@@ -18,7 +18,7 @@ abstract class AbsLog(
     val enableLog: Boolean = true,
 ) : ILog {
 
-    private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag"
+    private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag".take(20)
 
     // @Deprecated(
     //     message = "Use the function with the 'tag' parameter.",

@@ -1,5 +1,6 @@
 package com.leovp.log.base
 
+import android.R.attr.tag
 import com.leovp.log.LogContext
 
 /**
@@ -45,8 +46,7 @@ import com.leovp.log.LogContext
 
 val Any.ITAG: String
     get() {
-        val tag = javaClass.simpleName
-        return if (tag.length <= 23) tag else tag.substring(0, 23)
+        return javaClass.simpleName.take(23)
     }
 
 interface ILogConfig {

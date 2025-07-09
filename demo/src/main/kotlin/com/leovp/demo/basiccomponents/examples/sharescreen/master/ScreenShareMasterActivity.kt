@@ -9,7 +9,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.media.MediaCodecInfo
 import android.media.projection.MediaProjectionManager
-import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -20,6 +20,7 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
+import androidx.core.net.toUri
 import com.leovp.android.exts.canDrawOverlays
 import com.leovp.android.exts.densityDpi
 import com.leovp.android.exts.screenAvailableResolution
@@ -179,11 +180,11 @@ class ScreenShareMasterActivity :
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         val serviceIntentRef = serviceIntent
         requireNotNull(serviceIntentRef) { "MediaProjectionService intent can't be null." }
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        startForegroundService(serviceIntentRef)
-        // } else {
-        //     startService(serviceIntentRef)
-        // }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntentRef)
+        } else {
+            startService(serviceIntentRef)
+        }
         bindService(serviceIntentRef, serviceConn, BIND_AUTO_CREATE)
 
         binding.txtInfo.text = NetworkUtil.getIp()[0]
@@ -253,7 +254,7 @@ class ScreenShareMasterActivity :
         // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Intent(
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.parse("package:${applicationContext.packageName}")
+            "package:${applicationContext.packageName}".toUri()
         ).let {
             simpleActivityLauncher.launch(it) {
                 if (canDrawOverlays) {

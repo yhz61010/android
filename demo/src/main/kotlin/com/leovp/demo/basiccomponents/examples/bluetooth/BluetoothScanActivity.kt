@@ -14,8 +14,9 @@ import android.view.View
 import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
@@ -27,7 +28,6 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.bluetooth.base.DeviceAdapter
 import com.leovp.demo.basiccomponents.examples.bluetooth.base.DeviceModel
 import com.leovp.demo.databinding.ActivityBluetoothScanBinding
-import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
@@ -56,21 +56,23 @@ class BluetoothScanActivity :
         initBluetooth()
 
         XXPermissions.with(this)
-            .permission(
-                Permission.ACCESS_FINE_LOCATION,
-                Permission.ACCESS_COARSE_LOCATION,
-                Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN
+            .permissions(
+                arrayOf(
+                    PermissionLists.getAccessFineLocationPermission(),
+                    PermissionLists.getAccessCoarseLocationPermission(),
+                    PermissionLists.getBluetoothAdvertisePermission(),
+                    PermissionLists.getBluetoothConnectPermission(),
+                    PermissionLists.getBluetoothScanPermission()
+                )
             )
             .request(object : OnPermissionCallback {
                 @SuppressLint("InlinedApi")
                 @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                     doDiscovery()
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                     this@BluetoothScanActivity.toast("Please grant Location permissions.")
                 }
             })

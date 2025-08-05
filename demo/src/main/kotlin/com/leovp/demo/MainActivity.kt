@@ -13,8 +13,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.getAndroidId
 import com.leovp.android.exts.getApplicationSignatures
 import com.leovp.android.exts.getPackageInfo
@@ -84,22 +85,24 @@ class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
         binding.navView.setupWithNavController(navController)
 
         XXPermissions.with(this)
-            .permission(
-                Permission.MANAGE_EXTERNAL_STORAGE,
-                Permission.CAMERA,
-                Permission.RECORD_AUDIO,
-                Permission.ACCESS_FINE_LOCATION,
-                Permission.ACCESS_COARSE_LOCATION,
-                Permission.SYSTEM_ALERT_WINDOW,
-                Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN
+            .permissions(
+                arrayOf(
+                    PermissionLists.getManageExternalStoragePermission(),
+                    PermissionLists.getCameraPermission(),
+                    PermissionLists.getRecordAudioPermission(),
+                    PermissionLists.getAccessFineLocationPermission(),
+                    PermissionLists.getAccessCoarseLocationPermission(),
+                    PermissionLists.getSystemAlertWindowPermission(),
+                    PermissionLists.getBluetoothAdvertisePermission(),
+                    PermissionLists.getBluetoothConnectPermission(),
+                    PermissionLists.getBluetoothScanPermission()
+                )
             )
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                 }
             })
 

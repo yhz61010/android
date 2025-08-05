@@ -6,8 +6,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.startActivity
@@ -41,19 +42,21 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
         super.onCreate(savedInstanceState)
 
         XXPermissions.with(this)
-            .permission(
-                Permission.ACCESS_FINE_LOCATION,
-                Permission.ACCESS_COARSE_LOCATION,
-                Permission.BLUETOOTH_ADVERTISE,
-                Permission.BLUETOOTH_CONNECT,
-                Permission.BLUETOOTH_SCAN
+            .permissions(
+                arrayOf(
+                    PermissionLists.getAccessFineLocationPermission(),
+                    PermissionLists.getAccessCoarseLocationPermission(),
+                    PermissionLists.getBluetoothAdvertisePermission(),
+                    PermissionLists.getBluetoothConnectPermission(),
+                    PermissionLists.getBluetoothScanPermission()
+                )
             )
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                     this@BluetoothActivity.toast("All permissions granted.")
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                     this@BluetoothActivity.toast("Permissions denied.", error = true)
                 }
             })

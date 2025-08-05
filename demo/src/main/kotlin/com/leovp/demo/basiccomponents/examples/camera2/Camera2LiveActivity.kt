@@ -5,8 +5,9 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.addCallback
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.hideNavigationBar
 import com.leovp.android.exts.requestFullScreenAfterVisible
 import com.leovp.android.exts.requestFullScreenBeforeSetContentView
@@ -58,20 +59,21 @@ class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding
             }
         }
 
-        if (XXPermissions.isGranted(this, Permission.CAMERA)) {
+        if (XXPermissions.isGrantedPermission(this, PermissionLists.getCameraPermission())) {
             addFragment()
         } else {
-            XXPermissions.with(this).permission(Permission.CAMERA).request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
-                    toast("Grant camera permission")
-                    addFragment()
-                }
+            XXPermissions.with(this).permission(PermissionLists.getCameraPermission())
+                .request(object : OnPermissionCallback {
+                    override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+                        toast("Grant camera permission")
+                        addFragment()
+                    }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
-                    toast("Deny camera permission")
-                    finish()
-                }
-            })
+                    override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                        toast("Deny camera permission")
+                        finish()
+                    }
+                })
         }
     }
 

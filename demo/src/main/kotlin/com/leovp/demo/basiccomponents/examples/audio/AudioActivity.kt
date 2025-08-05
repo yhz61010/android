@@ -5,8 +5,9 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.createFile
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.NetworkUtil
@@ -89,13 +90,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         super.onCreate(savedInstanceState)
 
         XXPermissions.with(this)
-            .permission(Permission.RECORD_AUDIO)
+            .permission(PermissionLists.getRecordAudioPermission())
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                     toast("Grand recording permission")
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                     toast("Deny record permission")
                     finish()
                 }
@@ -229,9 +230,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     private fun record(type: AudioType) {
         recordType = type
         XXPermissions.with(this)
-            .permission(Permission.RECORD_AUDIO)
+            .permission(PermissionLists.getRecordAudioPermission())
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                     LogContext.log.i(ITAG, "Record type: $type")
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
@@ -243,7 +244,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     micRecorder?.startRecord()
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                     toast("Deny record permission")
                     finish()
                 }

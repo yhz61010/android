@@ -13,13 +13,6 @@ pluginManagement {
      * look for its dependencies.
      */
     repositories {
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        // Tencent Gradle mirrors
-        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/gradle-plugins/") }
-        maven { url = uri("https://mirrors.tuna.tsinghua.edu.cn/maven") }
-        // AliYun Gradle mirrors
-        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
-
         gradlePluginPortal()
         google {
             content {
@@ -29,6 +22,13 @@ pluginManagement {
             }
         }
         mavenCentral()
+
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        // Tencent Gradle mirrors
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/gradle-plugins/") }
+        maven { url = uri("https://mirrors.tuna.tsinghua.edu.cn/maven") }
+        // AliYun Gradle mirrors
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
     }
 
     resolutionStrategy {
@@ -72,13 +72,6 @@ dependencyResolutionManagement {
     repositories {
         maven("https://jitpack.io")
 
-        maven("https://maven.aliyun.com/repository/public")
-        maven("https://maven.aliyun.com/repository/google")
-        maven("https://maven.aliyun.com/repository/central")
-
-        maven("https://mirrors.cloud.tencent.com/gradle/")
-        maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
-
         maven("https://plugins.gradle.org/m2/")
         maven("https://maven.java.net/content/groups/public/")
         // https://github.com/airbnb/lottie/blob/master/android-compose.md
@@ -88,6 +81,13 @@ dependencyResolutionManagement {
         mavenCentral {
             isAllowInsecureProtocol = true
         }
+
+        maven("https://maven.aliyun.com/repository/public")
+        maven("https://maven.aliyun.com/repository/google")
+        maven("https://maven.aliyun.com/repository/central")
+
+        maven("https://mirrors.cloud.tencent.com/gradle/")
+        maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
     }
 }
 
@@ -96,40 +96,41 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(
-    "log",
-    "pref",
-    "http",
-    "floatview",
-    "demo",
-    "demo-dex",
-    "screencapture",
-    "basenetty",
-    "androidbase",
-    "camera2live",
-    "camerax",
-    "audio",
-    "adpcm-ima-qt-codec",
-    "h264-hevc-decoder",
-    "adpcm-ima-qt-codec-h264-hevc-decoder",
-    "draw-on-screen",
-    "aidl-client",
-    "ffmpeg-javacpp",
-    "circle-progressbar",
-    "dex",
-    "yuv",
-    "jpeg",
-    "opengl",
-    "nfc",
+    ":log",
+    ":pref",
+    ":http",
+    ":floatview",
+    ":demo",
+    ":demo-dex",
+    ":screencapture",
+    ":basenetty",
+    ":androidbase",
+    ":camera2live",
+    ":camerax",
+    ":audio",
+    ":adpcm-ima-qt-codec",
+    ":h264-hevc-decoder",
+    ":adpcm-ima-qt-codec-h264-hevc-decoder",
+    ":draw-on-screen",
+    ":aidl-client",
+    ":ffmpeg-javacpp",
+    ":circle-progressbar",
+    ":dex",
+    ":yuv",
+    ":jpeg",
+    ":opengl",
+    ":nfc",
 
-    "lib-bytes",
-    "lib-json",
-    "lib-compress",
-    "lib-image",
-    "lib-exif",
-    "lib-network",
-    "lib-reflection",
-    "lib-common-android",
-    "lib-common-kotlin"
+    ":lib-bytes",
+    ":lib-json",
+    ":lib-compress",
+    ":lib-image",
+    ":lib-exif",
+    ":lib-network",
+    ":lib-reflection",
+    ":lib-common-android",
+    ":lib-common-kotlin",
+    ":lib-mvvm"
 
     // "ffmpeg-sdk"
 )

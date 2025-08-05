@@ -7,7 +7,7 @@ min-sdk = "25"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.67"
+leo-version = "5.12.68"
 
 #===================
 #===== Compile =====
@@ -284,6 +284,7 @@ material-dialogs = { module = "com.afollestad.material-dialogs:input", version.r
 karn-notify = { module = "io.karn:notify", version.ref = "karn-notify" }
 xx-permissions = { module = "com.github.getActivity:XXPermissions", version.ref = "xx-permissions" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
+mmkv-no-version = { module = "com.tencent:mmkv" }
 # In module `build.gradle.kts`
 # dependencies {
 #     implementation(libs.android.animations) {

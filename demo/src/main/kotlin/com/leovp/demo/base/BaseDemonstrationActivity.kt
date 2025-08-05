@@ -1,5 +1,6 @@
 package com.leovp.demo.base
 
+import android.content.Context
 import android.os.Bundle
 import androidx.annotation.LayoutRes
 import androidx.viewbinding.ViewBinding
@@ -7,6 +8,8 @@ import com.leovp.android.utils.LangUtil
 import com.leovp.androidbase.framework.BaseActivity
 import com.leovp.log.LogContext
 import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
 /**
  * Author: Michael Leo
@@ -16,6 +19,10 @@ abstract class BaseDemonstrationActivity<B : ViewBinding>(
     @LayoutRes layoutResId: Int = 0,
     init: (ActivityConfig.() -> Unit)? = null
 ) : BaseActivity<B>(layoutResId, init) {
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogContext.log.i(tag, "onCreate()")
@@ -42,5 +49,13 @@ abstract class BaseDemonstrationActivity<B : ViewBinding>(
     override fun onDestroy() {
         super.onDestroy()
         EventBus.getDefault().unregister(this)
+    }
+
+    class LangChangeEvent
+
+    @Suppress("unused")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onLangChangedEvent(@Suppress("UNUSED_PARAMETER") event: LangChangeEvent) {
+        recreate()
     }
 }

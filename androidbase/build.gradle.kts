@@ -43,8 +43,6 @@ dependencies {
     api(libs.androidx.activity)
     api(libs.androidx.fragment)
 
-    api(libs.eventbus)
-
     androidTestImplementation(libs.bundles.android.test)
     testImplementation(libs.bundles.powermock)
     testImplementation(libs.bundles.test)

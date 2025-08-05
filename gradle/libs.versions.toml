@@ -7,7 +7,7 @@ min-sdk = "25"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.66"
+leo-version = "5.12.67"
 
 #===================
 #===== Compile =====
@@ -47,6 +47,7 @@ swiperefreshlayout = "1.1.0"
 room = "2.7.2" # 2.4.2 has compilation error with Kotlin 1.7.0
 camera = "1.4.2"
 exifinterface = "1.4.1"
+serialization-json = "1.9.0"
 
 #===========================
 #===== Android Compose =====
@@ -308,6 +309,7 @@ free-reflection = { module = "com.github.tiann:FreeReflection", version.ref = "f
 androidasync = { module = "com.koushikdutta.async:androidasync", version.ref = "androidasync" }
 net = { module = "com.github.liangjingkanji:Net", version.ref = "net" }
 subsampling-scale-image-view = { module = "com.davemorrissey.labs:subsampling-scale-image-view-androidx", version.ref = "subsampling-scale-image-view" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }
 
 #================
 #===== Test =====

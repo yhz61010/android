@@ -5,7 +5,6 @@ import com.drake.net.exception.ConvertException
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
 import com.drake.net.request.kType
-import com.leovp.log.base.e
 import java.lang.reflect.Type
 import kotlin.reflect.KType
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -39,11 +38,6 @@ class SerializationConverter : NetConverter {
             return NetConverter.onConvert(succeed, response)
         } catch (e: ConvertException) {
             val code = response.code
-            if (e.cause != null) {
-                e(tag = "onConvert", throwable = e.cause) {
-                    "onConvert exception. Code: $code"
-                }
-            }
             when {
                 code in 200..299 -> {
                     // multiCatch(

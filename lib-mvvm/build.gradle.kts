@@ -20,12 +20,9 @@ dependencies {
 
     api(projects.log)
     api(projects.pref)
-    api(projects.libJson)
 
     // ----------
-    api(libs.mars.xlog)
-    api(libs.karn.notify)
-    api(libs.mmkv)
+    implementation(libs.mmkv.no.version)
     api(libs.serialization.json)
     // Net - dependencies - Start
     api(libs.kotlin.coroutines.android)

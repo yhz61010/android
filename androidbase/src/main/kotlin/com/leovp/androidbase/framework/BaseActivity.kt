@@ -2,7 +2,6 @@ package com.leovp.androidbase.framework
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
@@ -19,7 +18,6 @@ import com.leovp.android.exts.hideNavigationBar
 import com.leovp.android.exts.requestFullScreenAfterVisible
 import com.leovp.android.exts.requestFullScreenBeforeSetContentView
 import com.leovp.android.exts.toast
-import com.leovp.android.utils.LangUtil
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.closeSoftKeyboard
 import com.leovp.androidbase.utils.network.InternetUtil
@@ -30,12 +28,8 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.LogOutType
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 
 /**
- * This class has already enabled Custom Language feature.
- *
  * Attention: If you use _navigation component_ in your activity,
  * **DO NOT** assign _layoutResId_ in your constructor.
  *
@@ -199,17 +193,17 @@ abstract class BaseActivity<B : ViewBinding>(
     }
 
     // ==============================
-    class LangChangeEvent
+    //    class LangChangeEvent
+    //
+    //    @Suppress("unused")
+    //    @Subscribe(threadMode = ThreadMode.MAIN)
+    //    fun onLangChangedEvent(@Suppress("UNUSED_PARAMETER") event: LangChangeEvent) {
+    //        recreate()
+    //    }
 
-    @Suppress("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onLangChangedEvent(@Suppress("UNUSED_PARAMETER") event: LangChangeEvent) {
-        recreate()
-    }
-
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
-    }
+//    override fun attachBaseContext(base: Context) {
+//        super.attachBaseContext(LangUtil.getInstance(base).setAppLanguage(base))
+//    }
     // ==============================
 
     data class ActivityConfig(

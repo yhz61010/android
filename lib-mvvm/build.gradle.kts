@@ -16,9 +16,23 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.core.ktx)
-    api(libs.androidx.annotation)
     api(libs.bundles.lifecycle.simple)
+
+    api(projects.log)
+    api(projects.pref)
+    api(projects.libJson)
+
+    // ----------
+    api(libs.mars.xlog)
+    api(libs.karn.notify)
+    api(libs.mmkv)
+    api(libs.serialization.json)
+    // Net - dependencies - Start
+    api(libs.kotlin.coroutines.android)
+    api(libs.square.okhttp)
+    api(libs.net)
+    // Net - dependencies - End
+    // ----------
 }
 
 /** When use it: sourceJar.get() */

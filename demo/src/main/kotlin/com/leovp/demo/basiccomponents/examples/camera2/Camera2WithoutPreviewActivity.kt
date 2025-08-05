@@ -8,8 +8,9 @@ import android.view.SurfaceHolder
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.lifecycleScope
 import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.Permission
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.toast
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.utils.getPreviewOutputSize
@@ -41,13 +42,13 @@ class Camera2WithoutPreviewActivity :
         super.onCreate(savedInstanceState)
 
         XXPermissions.with(this)
-            .permission(Permission.CAMERA)
+            .permission(PermissionLists.getCameraPermission())
             .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<String>, all: Boolean) {
+                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
                     toast("Grant camera permission")
                 }
 
-                override fun onDenied(denied: MutableList<String>, never: Boolean) {
+                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
                     toast("Deny camera permission")
                     finish()
                 }

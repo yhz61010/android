@@ -141,7 +141,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         updateOrientationLiveData()
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
-        if (!XXPermissions.isGranted(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
+        if (!XXPermissions.isGrantedPermission(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
             navController.navigate(CameraFragmentDirections.actionCameraToPermissions())
         }
     }

@@ -1,6 +1,5 @@
 package com.leovp.log.base
 
-import android.R.attr.tag
 import com.leovp.log.LogContext
 
 /**

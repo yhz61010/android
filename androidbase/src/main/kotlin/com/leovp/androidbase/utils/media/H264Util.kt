@@ -50,11 +50,7 @@ object H264Util {
     private const val NALU_TYPE_NONE_IDR = 1
 
     // NALU_TYPE_IDR and NALU_TYPE_SPS frame are considered as Key frame
-    fun isKeyFrame(data: ByteArray): Boolean {
-        return isIdrFrame(data) || isSps(
-            data
-        )
-    }
+    fun isKeyFrame(data: ByteArray): Boolean = isIdrFrame(data) || isSps(data)
 
     /**
      * Check whether current frame is key frame.
@@ -62,21 +58,19 @@ object H264Util {
      * @param data The video data.
      * @return Whether this frame is key frame.
      */
-    fun isIdrFrame(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101) or 0x25(37)
-    }
+    fun isIdrFrame(data: ByteArray): Boolean = getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101) or 0x25(37)
 
-    fun isNoneIdrFrame(data: ByteArray): Boolean {
-        return getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65) or 0x21(33)
-    }
+    fun isNoneIdrFrame(data: ByteArray): Boolean = getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65) or 0x21(33)
 
-    fun isSps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
+    fun isSps(data: ByteArray): Boolean {
+        // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
         return getNaluType(data) == NALU_TYPE_SPS // 7 0x67(103) or 0x27(39)
     }
 
-    fun isPps(data: ByteArray): Boolean { // 5bits, 7.3.1 NAL unit syntax,
+    fun isPps(data: ByteArray): Boolean {
+        // 5bits, 7.3.1 NAL unit syntax,
         // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
         // 7: NALU_TYPE_SPS, 8: NALU_TYPE_PPS, 5: I Frame, 1: P Frame
         return getNaluType(data) == NALU_TYPE_PPS // 8 0x68(104) or 0x28(40)
@@ -177,14 +171,12 @@ object H264Util {
     fun getNaluType(naluByte: Byte): Int = naluByte.toInt() and 0x1F
 
     @Suppress("unused")
-    fun getNaluTypeName(naluType: Int): String {
-        return when (naluType) {
-            NALU_TYPE_SPS -> "SPS"
-            NALU_TYPE_PPS -> "PPS"
-            NALU_TYPE_IDR -> "I"
-            NALU_TYPE_NONE_IDR -> "B/P"
-            else -> "Unknown"
-        }
+    fun getNaluTypeName(naluType: Int): String = when (naluType) {
+        NALU_TYPE_SPS -> "SPS"
+        NALU_TYPE_PPS -> "PPS"
+        NALU_TYPE_IDR -> "I"
+        NALU_TYPE_NONE_IDR -> "B/P"
+        else -> "Unknown"
     }
 
     fun getNaluTypeName(data: ByteArray): String = getNaluTypeName(getNaluType(data))

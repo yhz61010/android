@@ -16,8 +16,7 @@ class AudioSenderWebSocket(
     connectionListener: ClientConnectListener<BaseNettyClient>,
     trustAllServers: Boolean,
     retryStrategy: RetryStrategy
-) :
-    BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
+) : BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
     override fun getTagName() = "AudioSenderWS"
 
     override fun addLastToPipeline(pipeline: ChannelPipeline) {

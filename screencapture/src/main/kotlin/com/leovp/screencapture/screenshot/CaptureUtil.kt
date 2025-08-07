@@ -26,13 +26,11 @@ object CaptureUtil {
      * Using `window.decorView.rootView` to capture the whole screen
      */
     @Suppress("WeakerAccess")
-    fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-        return runCatching {
-            Bitmap.createBitmap(view.width, view.height, config).also {
-                view.draw(Canvas(it))
-            }
-        }.getOrNull()
-    }
+    fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? = runCatching {
+        Bitmap.createBitmap(view.width, view.height, config).also {
+            view.draw(Canvas(it))
+        }
+    }.getOrNull()
 
     /**
      * **Limitation**
@@ -44,11 +42,9 @@ object CaptureUtil {
      * - Toast
      * - Soft keyboard
      */
-    fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-        return takeScreenshot(win.decorView.rootView, config)
-    }
+    fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
+        takeScreenshot(win.decorView.rootView, config)
 
-    fun takeScreenshot(act: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-        return Falcon.takeScreenshotBitmap(act, config)
-    }
+    fun takeScreenshot(act: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
+        Falcon.takeScreenshotBitmap(act, config)
 }

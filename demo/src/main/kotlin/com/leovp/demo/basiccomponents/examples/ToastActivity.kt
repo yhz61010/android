@@ -54,9 +54,8 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
         }
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityToastBinding {
-        return ActivityToastBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityToastBinding =
+        ActivityToastBinding.inflate(layoutInflater)
 
     fun onAndroidToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
         toast("DEBUG: onClientDisconnected: 127.0.0.1:42542", origin = true)

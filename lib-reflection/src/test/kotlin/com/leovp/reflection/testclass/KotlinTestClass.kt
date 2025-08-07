@@ -2,7 +2,7 @@
 
 package com.leovp.reflection.testclass
 
-import java.util.*
+import java.util.Locale
 
 /**
  * Author: Michael Leo
@@ -24,14 +24,10 @@ class PrivateConstructor private constructor(private val paramA: Int, private va
     private constructor() : this(-1, "NA")
 
     companion object {
-        fun of(paramA: Int, paramB: String): PrivateConstructor {
-            return PrivateConstructor(paramA, paramB)
-        }
+        fun of(paramA: Int, paramB: String): PrivateConstructor = PrivateConstructor(paramA, paramB)
     }
 
-    override fun toString(): String {
-        return "Get a PrivateConstructor with paramA=$paramA paramB=$paramB."
-    }
+    override fun toString(): String = "Get a PrivateConstructor with paramA=$paramA paramB=$paramB."
 }
 
 class HR(employeeId: String, p: Person) : Employee(employeeId, DEPT_ID_HR, p) {
@@ -55,9 +51,7 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
 
         fun sayHi(): String = String.format(Locale.ENGLISH, "%s", "Employee said: Hi.")
 
-        fun globalSay(content: String): String {
-            return "Employee said to global: $content"
-        }
+        fun globalSay(content: String): String = "Employee said to global: $content"
     }
 
     val company: String = COMPANY
@@ -86,20 +80,14 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
         println("The ${assigner.name} assigns salary $newSalary to $name.")
     }
 
-    fun startWorking(): String {
-        return action(
-            "${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.",
-            10
-        )
-    }
+    fun startWorking(): String = action(
+        "${p.name}[$employeeId] starts working at ${System.currentTimeMillis()}.",
+        10
+    )
 
-    fun stopWorking(time: Long): String {
-        return action("${p.name}[$employeeId] stops working at $time.", -10)
-    }
+    fun stopWorking(time: Long): String = action("${p.name}[$employeeId] stops working at $time.", -10)
 
-    private fun privateTalk(content: String): String {
-        return "$name private talk: $content"
-    }
+    private fun privateTalk(content: String): String = "$name private talk: $content"
 
     override fun toString(): String =
         "[$company] Employee($p) with ID $employeeId works in $deptId departure. Salary: $salary."
@@ -117,21 +105,13 @@ open class Person(name: String, sex: Char, age: Int) : Creature() {
 
     private val privateValPropForBaseClass: Int = 20020
 
-    private fun secretMethod(content: String): String {
-        return "$name does [secret method]($content)."
-    }
+    private fun secretMethod(content: String): String = "$name does [secret method]($content)."
 
-    fun say(content: String): String {
-        return "$name says: $content"
-    }
+    fun say(content: String): String = "$name says: $content"
 
-    private fun privateSay(content: String): String {
-        return "$name private says: $content"
-    }
+    private fun privateSay(content: String): String = "$name private says: $content"
 
-    fun action(action: String, exceptResult: Int): String {
-        return "$name do [$action] with exceptResult: $exceptResult."
-    }
+    fun action(action: String, exceptResult: Int): String = "$name do [$action] with exceptResult: $exceptResult."
 
     fun changeName(newName: String) {
         name = newName
@@ -171,7 +151,5 @@ open class Creature {
 class TestClass(var arg1: Int, val arg2: String, private var arg3: String, private val arg4: Int) {
     constructor(arg1: Int, arg3: String) : this(arg1, "-2", arg3, 0)
 
-    override fun toString(): String {
-        return "$arg1 $arg2 $arg3 $arg4"
-    }
+    override fun toString(): String = "$arg1 $arg2 $arg3 $arg4"
 }

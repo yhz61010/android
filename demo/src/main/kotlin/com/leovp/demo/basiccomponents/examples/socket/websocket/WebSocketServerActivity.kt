@@ -35,9 +35,8 @@ class WebSocketServerActivity :
         private const val PORT = 10010
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketServerBinding {
-        return ActivityWebsocketServerBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketServerBinding =
+        ActivityWebsocketServerBinding.inflate(layoutInflater)
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -137,11 +136,12 @@ class WebSocketServerActivity :
 
     // =====================================================
 
-    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(
-        port,
-        connectionListener,
-        true
-    ) {
+    class WebSocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) :
+        BaseNettyServer(
+            port,
+            connectionListener,
+            true
+        ) {
         override fun getTagName() = "WSSA-WS"
     }
 
@@ -158,9 +158,8 @@ class WebSocketServerActivity :
             netty.connectionListener.onReceivedData(netty, ctx.channel(), receivedString)
         }
 
-        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
-            return netty.executeCommand(clientChannel, msg, "responseClientMsg")
-        }
+        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean =
+            netty.executeCommand(clientChannel, msg, "responseClientMsg")
 
         override fun release() {
         }

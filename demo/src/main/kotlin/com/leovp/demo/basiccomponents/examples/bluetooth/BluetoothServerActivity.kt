@@ -51,9 +51,8 @@ class BluetoothServerActivity :
         var characteristicWriteUuid = UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb")
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothServerBinding {
-        return ActivityBluetoothServerBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothServerBinding =
+        ActivityBluetoothServerBinding.inflate(layoutInflater)
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 

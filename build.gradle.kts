@@ -193,84 +193,82 @@ fun Project.configureCompileTasks() {
     }
 }
 
-fun Project.configureBase(): BaseExtension {
-    return extensions.getByName<BaseExtension>("android").apply {
-        if (useResourcePrefix) {
-            val moduleName = name.replace("-", "_")
-            resourcePrefix = "${moduleName}_"
-        }
-        compileSdkVersion(rootProject.libs.versions.compile.sdk.get().toInt())
-        defaultConfig {
-            minSdk = rootProject.libs.versions.min.sdk.get().toInt()
-            targetSdk = rootProject.libs.versions.target.sdk.get().toInt()
-
-            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        }
-        sourceSets.configureEach {
-            // This `name` is just the name for each `source` in `sourceSets`.
-            java.srcDirs("src/$name/kotlin", "src/$name/java")
-        }
-        // sourceSets {
-        //     map { it.java.srcDir("src/${it.name}/kotlin") }
-        // }
-        testOptions {
-            unitTests {
-                isReturnDefaultValues = true
-                isIncludeAndroidResources = true
-            }
-        }
-        compileOptions {
-            // setDefaultJavaVersion(jdkVersion)
-            sourceCompatibility = javaVersion
-            targetCompatibility = javaVersion
-        }
-        buildTypes {
-            getByName("release") {
-                proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
-                )
-            }
-        }
-
-        buildFeatures.viewBinding = true
-        // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-        // Add this line if necessary
-        // buildFeatures.buildConfig = true
-
-        // turn off checking the given issue id's
-        lintOptions.disable += setOf(
-            // "MissingTranslation",
-            // "GoogleAppIndexingWarning",
-            "RtlHardcoded",
-            "RtlCompat",
-            "RtlEnabled"
-        )
-        packagingOptions.resources.pickFirsts += setOf(
-            "META-INF/atomicfu.kotlin_module"
-        )
-        packagingOptions.resources.excludes += setOf(
-            "META-INF/licenses/**",
-            "META-INF/NOTICE*",
-            "META-INF/LICENSE*",
-            "META-INF/DEPENDENCIES*",
-            "META-INF/INDEX.LIST",
-            "META-INF/io.netty.versions.properties",
-            "META-INF/{AL2.0,LGPL2.1}",
-            "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
-            // "**/*.proto",
-            // "**/*.bin",
-            // "**/*.java",
-            // "**/*.properties",
-            // "**/*.version",
-            // "**/*.*_module",
-            // "*.txt",
-            // "kotlin/**",
-            // "kotlinx/**",
-            // "okhttp3/**",
-            // "META-INF/services/**",
-        )
+fun Project.configureBase(): BaseExtension = extensions.getByName<BaseExtension>("android").apply {
+    if (useResourcePrefix) {
+        val moduleName = name.replace("-", "_")
+        resourcePrefix = "${moduleName}_"
     }
+    compileSdkVersion(rootProject.libs.versions.compile.sdk.get().toInt())
+    defaultConfig {
+        minSdk = rootProject.libs.versions.min.sdk.get().toInt()
+        targetSdk = rootProject.libs.versions.target.sdk.get().toInt()
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    sourceSets.configureEach {
+        // This `name` is just the name for each `source` in `sourceSets`.
+        java.srcDirs("src/$name/kotlin", "src/$name/java")
+    }
+    // sourceSets {
+    //     map { it.java.srcDir("src/${it.name}/kotlin") }
+    // }
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+            isIncludeAndroidResources = true
+        }
+    }
+    compileOptions {
+        // setDefaultJavaVersion(jdkVersion)
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+    }
+    buildTypes {
+        getByName("release") {
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    buildFeatures.viewBinding = true
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    // Add this line if necessary
+    // buildFeatures.buildConfig = true
+
+    // turn off checking the given issue id's
+    lintOptions.disable += setOf(
+        // "MissingTranslation",
+        // "GoogleAppIndexingWarning",
+        "RtlHardcoded",
+        "RtlCompat",
+        "RtlEnabled"
+    )
+    packagingOptions.resources.pickFirsts += setOf(
+        "META-INF/atomicfu.kotlin_module"
+    )
+    packagingOptions.resources.excludes += setOf(
+        "META-INF/licenses/**",
+        "META-INF/NOTICE*",
+        "META-INF/LICENSE*",
+        "META-INF/DEPENDENCIES*",
+        "META-INF/INDEX.LIST",
+        "META-INF/io.netty.versions.properties",
+        "META-INF/{AL2.0,LGPL2.1}",
+        "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
+        // "**/*.proto",
+        // "**/*.bin",
+        // "**/*.java",
+        // "**/*.properties",
+        // "**/*.version",
+        // "**/*.*_module",
+        // "*.txt",
+        // "kotlin/**",
+        // "kotlinx/**",
+        // "okhttp3/**",
+        // "META-INF/services/**",
+    )
 }
 
 /**

@@ -10,10 +10,9 @@ import com.leovp.audio.opus.OpusEncoder
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
-class OpusEncoderWrapper(
-    encoderInfo: AudioEncoderInfo,
-    private val outputCallback: OutputCallback
-) : AudioEncoderWrapper {
+class OpusEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback,) :
+    AudioEncoderWrapper {
+
     private val encoder = OpusEncoder(
         sampleRate = encoderInfo.sampleRate,
         channelCount = encoderInfo.channelCount,

@@ -24,11 +24,7 @@ import java.util.concurrent.TimeUnit
  * networkMonitor.stopMonitor()
  * ```
  */
-class NetworkMonitor(
-    private val ctx: Context,
-    private val ip: String,
-    callback: (NetworkMonitorResult) -> Unit
-) {
+class NetworkMonitor(private val ctx: Context, private val ip: String, callback: (NetworkMonitorResult) -> Unit,) {
     companion object {
         private const val TAG = "NM"
     }
@@ -162,6 +158,6 @@ class NetworkMonitor(
         val rssi: Int,
         val wifiScoreIn5: Int,
         val wifiScore: Int,
-        val showWifiSig: Int
+        val showWifiSig: Int,
     )
 }

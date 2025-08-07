@@ -21,9 +21,8 @@ class ViewStubActivity : BaseDemonstrationActivity<ActivityViewStubBinding>(R.la
         // }, 2000)
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityViewStubBinding {
-        return ActivityViewStubBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityViewStubBinding =
+        ActivityViewStubBinding.inflate(layoutInflater)
 
     fun onShowClick(@Suppress("UNUSED_PARAMETER") view: View) {
         // ViewStub.inflate() can be only called once

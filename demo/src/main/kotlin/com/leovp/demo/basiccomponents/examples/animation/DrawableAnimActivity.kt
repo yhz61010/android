@@ -10,9 +10,8 @@ import com.leovp.log.base.ITAG
 class DrawableAnimActivity : BaseDemonstrationActivity<ActivityDrawableAnimBinding>(R.layout.activity_drawable_anim) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDrawableAnimBinding {
-        return ActivityDrawableAnimBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDrawableAnimBinding =
+        ActivityDrawableAnimBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

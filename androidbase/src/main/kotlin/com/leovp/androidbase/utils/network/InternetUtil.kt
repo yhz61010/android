@@ -13,16 +13,14 @@ import kotlin.concurrent.thread
 object InternetUtil {
     private const val TAG = "InternetUtil"
 
-    fun getIpsByHost(host: String): List<String> {
-        return try {
-            val ipAddressArr: ArrayList<String> = ArrayList()
-            InetAddress.getAllByName(host.trim())
-                ?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
-            ipAddressArr
-        } catch (e: Exception) {
-            LogContext.log.e(TAG, "getIpsByName error host=$host. Exception: $e")
-            emptyList()
-        }
+    fun getIpsByHost(host: String): List<String> = try {
+        val ipAddressArr: ArrayList<String> = ArrayList()
+        InetAddress.getAllByName(host.trim())
+            ?.forEach { inetAddr -> inetAddr.hostAddress?.let { addr -> ipAddressArr.add(addr) } }
+        ipAddressArr
+    } catch (e: Exception) {
+        LogContext.log.e(TAG, "getIpsByName error host=$host. Exception: $e")
+        emptyList()
     }
 
     fun getIpsByHost(host: String, callback: (List<String>) -> Unit) {

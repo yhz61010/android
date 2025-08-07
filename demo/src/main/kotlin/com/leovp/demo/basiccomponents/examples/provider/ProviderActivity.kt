@@ -9,7 +9,6 @@ import com.leovp.log.base.ITAG
 class ProviderActivity : BaseDemonstrationActivity<ActivityProviderBinding>(R.layout.activity_provider) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityProviderBinding {
-        return ActivityProviderBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityProviderBinding =
+        ActivityProviderBinding.inflate(layoutInflater)
 }

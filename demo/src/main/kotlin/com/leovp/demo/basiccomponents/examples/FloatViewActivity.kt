@@ -22,9 +22,8 @@ import java.util.*
 class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.layout.activity_float_view) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFloatViewBinding {
-        return ActivityFloatViewBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFloatViewBinding =
+        ActivityFloatViewBinding.inflate(layoutInflater)
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {

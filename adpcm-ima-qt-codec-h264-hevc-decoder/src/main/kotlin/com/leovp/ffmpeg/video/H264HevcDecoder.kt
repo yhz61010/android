@@ -24,9 +24,7 @@ class H264HevcDecoder {
         prefixSei: ByteArray? = null,
         suffixSei: ByteArray? = null,
         rgbType: RgbType = RgbType.AV_PIX_FMT_NONE
-    ): DecodeVideoInfo {
-        return init(vpsBytes, spsBytes, ppsBytes, prefixSei, suffixSei, rgbType.type)
-    }
+    ): DecodeVideoInfo = init(vpsBytes, spsBytes, ppsBytes, prefixSei, suffixSei, rgbType.type)
 
     private external fun init(
         vpsBytes: ByteArray?,

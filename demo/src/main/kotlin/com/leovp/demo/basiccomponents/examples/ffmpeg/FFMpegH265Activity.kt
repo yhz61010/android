@@ -12,9 +12,8 @@ import com.leovp.opengl.ui.LeoGLSurfaceView
 class FFMpegH265Activity : BaseDemonstrationActivity<ActivityFfmpegH265Binding>(R.layout.activity_ffmpeg_h265) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFfmpegH265Binding {
-        return ActivityFfmpegH265Binding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFfmpegH265Binding =
+        ActivityFfmpegH265Binding.inflate(layoutInflater)
 
     private lateinit var glSurfaceView: LeoGLSurfaceView
     private val decodeObjByFFMpeg: DecodeH265RawFileByFFMpeg = DecodeH265RawFileByFFMpeg()

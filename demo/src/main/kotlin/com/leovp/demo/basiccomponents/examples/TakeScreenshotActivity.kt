@@ -15,9 +15,8 @@ class TakeScreenshotActivity :
     BaseDemonstrationActivity<ActivityTakeScreenshotBinding>(R.layout.activity_take_screenshot) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityTakeScreenshotBinding {
-        return ActivityTakeScreenshotBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityTakeScreenshotBinding =
+        ActivityTakeScreenshotBinding.inflate(layoutInflater)
 
     fun onScreenshot(@Suppress("UNUSED_PARAMETER") view: View) {
         val bitmap = CaptureUtil.takeScreenshot(window)

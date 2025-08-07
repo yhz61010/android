@@ -15,7 +15,5 @@ class FragmentForNavForth : BaseFragment<FragmentForNavForthBinding>(R.layout.fr
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): FragmentForNavForthBinding {
-        return FragmentForNavForthBinding.inflate(inflater, container, false)
-    }
+    ): FragmentForNavForthBinding = FragmentForNavForthBinding.inflate(inflater, container, false)
 }

@@ -22,9 +22,8 @@ class AudioCipherActivity : BaseDemonstrationActivity<ActivityAudioCipherBinding
         private const val ENCRYPTED_MP3_FILE_NAME = "encrypted_audio.mp3"
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioCipherBinding {
-        return ActivityAudioCipherBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioCipherBinding =
+        ActivityAudioCipherBinding.inflate(layoutInflater)
 
     private lateinit var secretKey: SecretKey
 

@@ -38,9 +38,7 @@ open class CameraXActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCameraxMainBinding
 
-    open fun getCaptureListener(): CaptureImageListener {
-        return SimpleCaptureImageListener()
-    }
+    open fun getCaptureListener(): CaptureImageListener = SimpleCaptureImageListener()
 
     open fun getOutputCapturedImageStrategy(): CapturedImageStrategy = CapturedImageStrategy.FILE
 

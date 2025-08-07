@@ -15,13 +15,11 @@ object AudioEncoderManager {
     fun getWrapper(
         type: AudioType,
         encoderInfo: AudioEncoderInfo,
-        outputCallback: OutputCallback
-    ): AudioEncoderWrapper? {
-        return when (type) {
-            AudioType.PCM -> null
-            AudioType.COMPRESSED_PCM -> CompressedPcmEncoderWrapper(encoderInfo, outputCallback)
-            AudioType.AAC -> AacEncoderWrapper(encoderInfo, outputCallback)
-            AudioType.OPUS -> OpusEncoderWrapper(encoderInfo, outputCallback)
-        }
+        outputCallback: OutputCallback,
+    ): AudioEncoderWrapper? = when (type) {
+        AudioType.PCM -> null
+        AudioType.COMPRESSED_PCM -> CompressedPcmEncoderWrapper(encoderInfo, outputCallback)
+        AudioType.AAC -> AacEncoderWrapper(encoderInfo, outputCallback)
+        AudioType.OPUS -> OpusEncoderWrapper(encoderInfo, outputCallback)
     }
 }

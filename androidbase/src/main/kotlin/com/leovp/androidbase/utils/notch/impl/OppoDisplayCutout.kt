@@ -8,11 +8,9 @@ import com.leovp.android.utils.DeviceProp
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
 internal class OppoDisplayCutout : DisplayCutout {
-    override fun supportDisplayCutout(activity: Activity): Boolean {
-        return runCatching {
-            activity.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism")
-        }.getOrDefault(false)
-    }
+    override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
+        activity.packageManager.hasSystemFeature("com.oppo.feature.screen.heteromorphism")
+    }.getOrDefault(false)
 
     override fun fillDisplayCutout(activity: Activity) = Unit
 

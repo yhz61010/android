@@ -15,21 +15,19 @@ import java.nio.charset.StandardCharsets
  * Date: 20-7-30 下午7:14
  */
 
-fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): String {
-    return resources.assets.open(
-        if (subdirectory.isNullOrBlank()) {
-            filename
-        } else {
-            "$subdirectory${File.separatorChar}$filename"
-        }
-    )
-        .use {
-            it.readBytes().toString(StandardCharsets.UTF_8)
-        }
-}
+fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): String = resources.assets.open(
+    if (subdirectory.isNullOrBlank()) {
+        filename
+    } else {
+        "$subdirectory${File.separatorChar}$filename"
+    }
+)
+    .use {
+        it.readBytes().toString(StandardCharsets.UTF_8)
+    }
 
-fun Context.readAssetsFileAsString(@RawRes rawId: Int): String {
-    return resources.openRawResource(rawId).use { it.readBytes().toString(StandardCharsets.UTF_8) }
+fun Context.readAssetsFileAsString(@RawRes rawId: Int): String = resources.openRawResource(rawId).use {
+    it.readBytes().toString(StandardCharsets.UTF_8)
 }
 
 fun Context.saveRawResourceToFile(
@@ -52,14 +50,12 @@ fun Context.saveAssetToFile(
     storagePath: String,
     outFileName: String,
     force: Boolean = false,
-): Boolean {
-    return runCatching {
-        assets.open(assetFileName).toFile(File(storagePath, outFileName).absolutePath, force = force)
-        true
-    }.getOrElse {
-        it.printStackTrace()
-        false
-    }
+): Boolean = runCatching {
+    assets.open(assetFileName).toFile(File(storagePath, outFileName).absolutePath, force = force)
+    true
+}.getOrElse {
+    it.printStackTrace()
+    false
 }
 
 // TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()

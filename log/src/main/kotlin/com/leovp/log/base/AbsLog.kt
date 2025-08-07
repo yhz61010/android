@@ -161,9 +161,7 @@ abstract class AbsLog(
     // ==================================================
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun getStackTraceString(t: Throwable?): String {
-        return Log.getStackTraceString(t)
-    }
+    fun getStackTraceString(t: Throwable?): String = Log.getStackTraceString(t)
 
     // Usage: getStackTraceString(Thread.currentThread().getStackTrace())
     @Suppress("unused")

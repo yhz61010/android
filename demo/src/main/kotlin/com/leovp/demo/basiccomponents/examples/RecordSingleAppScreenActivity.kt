@@ -23,18 +23,18 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-class RecordSingleAppScreenActivity : BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>(
-    R.layout.activity_screenshot_record_h264
-) {
+class RecordSingleAppScreenActivity :
+    BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>(
+        R.layout.activity_screenshot_record_h264
+    ) {
     override fun getTagName(): String = ITAG
 
     companion object {
         val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenshotRecordH264Binding {
-        return ActivityScreenshotRecordH264Binding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenshotRecordH264Binding =
+        ActivityScreenshotRecordH264Binding.inflate(layoutInflater)
 
     private lateinit var videoH26xOsForDebug: BufferedOutputStream
 

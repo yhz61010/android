@@ -36,9 +36,8 @@ import retrofit2.http.Streaming
 class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>(R.layout.activity_http) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityHttpBinding {
-        return ActivityHttpBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityHttpBinding =
+        ActivityHttpBinding.inflate(layoutInflater)
 
     interface CommonService {
         @GET("/status/{id}")

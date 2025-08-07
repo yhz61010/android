@@ -63,9 +63,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         const val AUDIO_ATTR_CONTENT_TYPE: Int = AudioAttributes.CONTENT_TYPE_MUSIC
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding {
-        return ActivityAudioBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding =
+        ActivityAudioBinding.inflate(layoutInflater)
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 

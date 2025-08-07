@@ -95,17 +95,15 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         keepRatio: Boolean,
         renderWidth: Int,
         renderHeight: Int,
-    ): FloatBuffer {
-        return createFloatBuffer(
-            createKeepRatioFloatArray(
-                videoWidth,
-                videoHeight,
-                keepRatio,
-                renderWidth,
-                renderHeight
-            )
+    ): FloatBuffer = createFloatBuffer(
+        createKeepRatioFloatArray(
+            videoWidth,
+            videoHeight,
+            keepRatio,
+            renderWidth,
+            renderHeight
         )
-    }
+    )
 
     //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {

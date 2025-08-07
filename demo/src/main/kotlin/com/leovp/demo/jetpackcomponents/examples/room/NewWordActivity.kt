@@ -13,9 +13,8 @@ import com.leovp.log.base.ITAG
 class NewWordActivity : BaseDemonstrationActivity<ActivityNewWordBinding>(R.layout.activity_new_word) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNewWordBinding {
-        return ActivityNewWordBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNewWordBinding =
+        ActivityNewWordBinding.inflate(layoutInflater)
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -69,7 +69,6 @@ class SerializationConverter : NetConverter {
     }
 
     @Suppress("UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
-    fun <R> String.parseBody(succeed: KType): R? {
-        return jsonDecoder.decodeFromString(Json.serializersModule.serializer(succeed), this) as? R
-    }
+    fun <R> String.parseBody(succeed: KType): R? =
+        jsonDecoder.decodeFromString(Json.serializersModule.serializer(succeed), this) as? R
 }

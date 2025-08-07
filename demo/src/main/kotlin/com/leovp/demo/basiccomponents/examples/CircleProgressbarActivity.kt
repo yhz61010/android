@@ -23,9 +23,8 @@ class CircleProgressbarActivity :
     BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(R.layout.activity_circle_progressbar) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding {
-        return ActivityCircleProgressbarBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding =
+        ActivityCircleProgressbarBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

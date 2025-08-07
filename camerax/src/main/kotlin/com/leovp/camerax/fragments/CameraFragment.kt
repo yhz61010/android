@@ -55,7 +55,7 @@ import com.leovp.camerax.utils.getCameraSupportedSize
 import com.leovp.camerax.utils.toggleButton
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
-import java.util.*
+import java.util.Locale
 import kotlin.properties.Delegates
 import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.Dispatchers
@@ -132,6 +132,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 cameraUiContainerBottomBinding.cameraCaptureButton.simulateClick()
             }
+
             KeyEvent.KEYCODE_UNKNOWN -> Unit
         }
     }
@@ -734,7 +735,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private fun updateCameraSwitchButton() {
         runCatching {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled =
-                hasBackCamera() && hasFrontCamera()
+                hasBackCamera() &&
+                hasFrontCamera()
         }.onFailure {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = false
         }

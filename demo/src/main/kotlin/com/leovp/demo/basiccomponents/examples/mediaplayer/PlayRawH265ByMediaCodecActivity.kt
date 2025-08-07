@@ -26,9 +26,8 @@ class PlayRawH265ByMediaCodecActivity :
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPlayVideoBinding {
-        return ActivityPlayVideoBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPlayVideoBinding =
+        ActivityPlayVideoBinding.inflate(layoutInflater)
 
     private val uiScope = CoroutineScope(Dispatchers.Main + Job())
     private val decoderManager = DecodeH265RawFile()

@@ -61,8 +61,11 @@ object NetworkUtil {
      * ```
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) || isCellularActive(ctx) || isEthernetActive(ctx) ||
-        isVpnActive(ctx) || isBluetoothActive(ctx)
+    fun isOnline(ctx: Context): Boolean = isWifiActive(ctx) ||
+        isCellularActive(ctx) ||
+        isEthernetActive(ctx) ||
+        isVpnActive(ctx) ||
+        isBluetoothActive(ctx)
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun isOffline(ctx: Context): Boolean = !isOnline(ctx)
@@ -336,8 +339,8 @@ object NetworkUtil {
     @SuppressLint("HardwareIds", "MissingPermission")
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION])
     @Suppress("DEPRECATION")
-    private fun getMacAddressBeforeAndroidM(ctx: Context): String {
-        return if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+    private fun getMacAddressBeforeAndroidM(ctx: Context): String =
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
             val wifiInf = ctx.wifiManager.connectionInfo
             // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
             // Please check WifiInfo#DEFAULT_MAC_ADDRESS
@@ -345,7 +348,6 @@ object NetworkUtil {
         } else {
             ""
         }
-    }
 
     /**
      * Need following permission
@@ -403,42 +405,38 @@ object NetworkUtil {
         return ifconfig
     }
 
-    private fun getNetworkGeneration(networkType: Int?): String? {
-        return when (networkType) {
-            // TelephonyManager.NETWORK_TYPE_IDEN,
-            TelephonyManager.NETWORK_TYPE_1xRTT,
-            TelephonyManager.NETWORK_TYPE_CDMA,
-            TelephonyManager.NETWORK_TYPE_EDGE,
-            TelephonyManager.NETWORK_TYPE_GPRS,
-            TelephonyManager.NETWORK_TYPE_GSM -> "2G"
+    private fun getNetworkGeneration(networkType: Int?): String? = when (networkType) {
+        // TelephonyManager.NETWORK_TYPE_IDEN,
+        TelephonyManager.NETWORK_TYPE_1xRTT,
+        TelephonyManager.NETWORK_TYPE_CDMA,
+        TelephonyManager.NETWORK_TYPE_EDGE,
+        TelephonyManager.NETWORK_TYPE_GPRS,
+        TelephonyManager.NETWORK_TYPE_GSM -> "2G"
 
-            TelephonyManager.NETWORK_TYPE_EHRPD,
-            TelephonyManager.NETWORK_TYPE_EVDO_0,
-            TelephonyManager.NETWORK_TYPE_EVDO_A,
-            TelephonyManager.NETWORK_TYPE_EVDO_B,
-            TelephonyManager.NETWORK_TYPE_HSDPA,
-            TelephonyManager.NETWORK_TYPE_HSPA,
-            TelephonyManager.NETWORK_TYPE_HSPAP,
-            TelephonyManager.NETWORK_TYPE_HSUPA,
-            TelephonyManager.NETWORK_TYPE_UMTS,
-            TelephonyManager.NETWORK_TYPE_TD_SCDMA -> "3G"
+        TelephonyManager.NETWORK_TYPE_EHRPD,
+        TelephonyManager.NETWORK_TYPE_EVDO_0,
+        TelephonyManager.NETWORK_TYPE_EVDO_A,
+        TelephonyManager.NETWORK_TYPE_EVDO_B,
+        TelephonyManager.NETWORK_TYPE_HSDPA,
+        TelephonyManager.NETWORK_TYPE_HSPA,
+        TelephonyManager.NETWORK_TYPE_HSPAP,
+        TelephonyManager.NETWORK_TYPE_HSUPA,
+        TelephonyManager.NETWORK_TYPE_UMTS,
+        TelephonyManager.NETWORK_TYPE_TD_SCDMA -> "3G"
 
-            TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
+        TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
 
-            TelephonyManager.NETWORK_TYPE_NR -> "5G"
-            else -> null
-        }
+        TelephonyManager.NETWORK_TYPE_NR -> "5G"
+        else -> null
     }
 
-    private fun calculateSignalLevel(rssi: Int, numLevels: Int): Int {
-        return when {
-            rssi <= MIN_RSSI -> 0
-            rssi >= MAX_RSSI -> numLevels - 1
-            else -> {
-                val inputRange = (MAX_RSSI - MIN_RSSI).toFloat()
-                val outputRange = (numLevels - 1).toFloat()
-                ((rssi - MIN_RSSI).toFloat() * outputRange / inputRange).toInt()
-            }
+    private fun calculateSignalLevel(rssi: Int, numLevels: Int): Int = when {
+        rssi <= MIN_RSSI -> 0
+        rssi >= MAX_RSSI -> numLevels - 1
+        else -> {
+            val inputRange = (MAX_RSSI - MIN_RSSI).toFloat()
+            val outputRange = (numLevels - 1).toFloat()
+            ((rssi - MIN_RSSI).toFloat() * outputRange / inputRange).toInt()
         }
     }
 }

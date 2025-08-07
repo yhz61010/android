@@ -22,23 +22,17 @@ object HttpRequest : BaseHttpRequest() {
         builder = getRetrofitBuilder(headerMap)
     }
 
-    fun getRetrofit(baseUrl: String): Retrofit {
-        return builder.baseUrl(baseUrl).build()
-    }
+    fun getRetrofit(baseUrl: String): Retrofit = builder.baseUrl(baseUrl).build()
 
     @Suppress("unused")
-    fun getRetrofit(baseUrl: HttpUrl): Retrofit {
-        return getRetrofit(baseUrl.toString())
-    }
+    fun getRetrofit(baseUrl: HttpUrl): Retrofit = getRetrofit(baseUrl.toString())
 
-    private fun getRetrofitBuilder(headerMap: Map<String, String>? = null): Retrofit.Builder {
-        return Retrofit.Builder()
-            .client(getOkHttpClient(headerMap))
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
+    private fun getRetrofitBuilder(headerMap: Map<String, String>? = null): Retrofit.Builder = Retrofit.Builder()
+        .client(getOkHttpClient(headerMap))
+        .addConverterFactory(ScalarsConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
 //        .addConverterFactory(MoshiConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-    }
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
     fun setReadTimeout(mills: Long) {
         readTimeoutInMs = mills

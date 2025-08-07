@@ -6,6 +6,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.media.Image
+import androidx.core.graphics.createBitmap
+import com.leovp.androidbase.utils.media.YuvUtil.yuvRotate90
 import kotlin.math.roundToInt
 
 /**
@@ -40,10 +42,12 @@ object YuvUtil {
                     channelOffset = 0
                     outputStride = 1
                 }
+
                 1 -> {
                     channelOffset = width * height + 1
                     outputStride = 2
                 }
+
                 2 -> {
                     channelOffset = width * height
                     outputStride = 2
@@ -105,6 +109,7 @@ object YuvUtil {
                     channelOffset = 0
                     outputStride = 1
                 }
+
                 1 -> {
                     if (colorFormat == COLOR_FORMAT_I420) {
                         channelOffset = width * height
@@ -114,6 +119,7 @@ object YuvUtil {
                         outputStride = 2
                     }
                 }
+
                 2 -> {
                     if (colorFormat == COLOR_FORMAT_I420) {
                         channelOffset = (width * height * 1.25).toInt()
@@ -540,9 +546,27 @@ object YuvUtil {
                 y = (66 * r + 129 * g + 25 * b + 128 shr 8) + 16
                 u = (-38 * r - 74 * g + 112 * b + 128 shr 8) + 128
                 v = (112 * r - 94 * g - 18 * b + 128 shr 8) + 128
-                y = if (y < 16) 16 else if (y > 255) 255 else y
-                u = if (u < 0) 0 else if (u > 255) 255 else u
-                v = if (v < 0) 0 else if (v > 255) 255 else v
+                y = if (y < 16) {
+                    16
+                } else if (y > 255) {
+                    255
+                } else {
+                    y
+                }
+                u = if (u < 0) {
+                    0
+                } else if (u > 255) {
+                    255
+                } else {
+                    u
+                }
+                v = if (v < 0) {
+                    0
+                } else if (v > 255) {
+                    255
+                } else {
+                    v
+                }
                 yuv[i * width + j] = y.toByte()
                 yuv[len + (i shr 1) * width + (j and 1.inv()) + 0] = u.toByte()
                 yuv[len + (i shr 1) * width + (j and 1.inv()) + 1] = v.toByte()
@@ -562,14 +586,32 @@ object YuvUtil {
                 var r = (1.164f * (y - 16) + 1.596f * (v - 128)).roundToInt()
                 var g = (1.164f * (y - 16) - 0.813f * (v - 128) - 0.391f * (u - 128)).roundToInt()
                 var b = (1.164f * (y - 16) + 2.018f * (u - 128)).roundToInt()
-                r = if (r < 0) 0 else if (r > 255) 255 else r
-                g = if (g < 0) 0 else if (g > 255) 255 else g
-                b = if (b < 0) 0 else if (b > 255) 255 else b
+                r = if (r < 0) {
+                    0
+                } else if (r > 255) {
+                    255
+                } else {
+                    r
+                }
+                g = if (g < 0) {
+                    0
+                } else if (g > 255) {
+                    255
+                } else {
+                    g
+                }
+                b = if (b < 0) {
+                    0
+                } else if (b > 255) {
+                    255
+                } else {
+                    b
+                }
                 rgba[i * width + j] = -0x1000000 + (b shl 16) + (g shl 8) + r
             }
         }
         return runCatching {
-            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val bmp = createBitmap(width, height)
             bmp.setPixels(rgba, 0, width, 0, 0, width, height)
             bmp
         }.getOrNull()

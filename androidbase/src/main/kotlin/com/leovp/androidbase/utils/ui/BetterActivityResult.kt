@@ -56,8 +56,6 @@ class BetterActivityResult<I, O> private constructor(
             caller: ActivityResultCaller,
             contract: ActivityResultContract<I, O>,
             result: ((O) -> Unit)? = null
-        ): BetterActivityResult<I, O> {
-            return BetterActivityResult(caller, contract, result)
-        }
+        ): BetterActivityResult<I, O> = BetterActivityResult(caller, contract, result)
     }
 }

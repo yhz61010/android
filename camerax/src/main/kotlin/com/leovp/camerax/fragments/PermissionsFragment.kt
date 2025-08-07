@@ -1,6 +1,5 @@
 package com.leovp.camerax.fragments
 
-import android.Manifest
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.Fragment

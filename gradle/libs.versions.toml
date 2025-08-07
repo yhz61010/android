@@ -7,7 +7,7 @@ min-sdk = "25"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.69"
+leo-version = "5.12.70"
 
 #===================
 #===== Compile =====

@@ -23,9 +23,7 @@ object ActivityReflect {
      * @param context The context.
      * @return `true`: yes<br></br>`false`: no
      */
-    fun isActivityAlive(context: Context?): Boolean {
-        return isActivityAlive(getActivityByContext(context))
-    }
+    fun isActivityAlive(context: Context?): Boolean = isActivityAlive(getActivityByContext(context))
 
     /**
      * Return whether the activity is alive.
@@ -33,9 +31,8 @@ object ActivityReflect {
      * @param activity The activity.
      * @return `true`: yes<br></br>`false`: no
      */
-    fun isActivityAlive(activity: Activity?): Boolean {
-        return (activity != null && !activity.isFinishing && !activity.isDestroyed)
-    }
+    fun isActivityAlive(activity: Activity?): Boolean =
+        (activity != null && !activity.isFinishing && !activity.isDestroyed)
 
     fun getActivityByContext(context: Context?): Activity? {
         if (context == null) return null
@@ -132,31 +129,25 @@ object ActivityReflect {
         return list
     }
 
-    private fun getActivityThread(): Any {
-        return runCatching { getActivityThreadInActivityThreadStaticField() }.getOrElse {
-            getActivityThreadInActivityThreadStaticMethod()
-        }
+    private fun getActivityThread(): Any = runCatching { getActivityThreadInActivityThreadStaticField() }.getOrElse {
+        getActivityThreadInActivityThreadStaticMethod()
     }
 
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
-    private fun getActivityThreadInActivityThreadStaticField(): Any {
-        return try {
-            val activityThreadClass = Class.forName("android.app.ActivityThread")
-            val sCurrentActivityThreadField: Field = activityThreadClass.getDeclaredField("sCurrentActivityThread")
-            sCurrentActivityThreadField.isAccessible = true
-            sCurrentActivityThreadField.get(null)
-        } catch (e: Exception) {
-            error(e)
-        }
+    private fun getActivityThreadInActivityThreadStaticField(): Any = try {
+        val activityThreadClass = Class.forName("android.app.ActivityThread")
+        val sCurrentActivityThreadField: Field = activityThreadClass.getDeclaredField("sCurrentActivityThread")
+        sCurrentActivityThreadField.isAccessible = true
+        sCurrentActivityThreadField.get(null)
+    } catch (e: Exception) {
+        error(e)
     }
 
     @SuppressLint("PrivateApi")
-    private fun getActivityThreadInActivityThreadStaticMethod(): Any {
-        return try {
-            val activityThreadClass = Class.forName("android.app.ActivityThread")
-            activityThreadClass.getMethod("currentActivityThread").invoke(null)
-        } catch (e: Exception) {
-            error(e)
-        }
+    private fun getActivityThreadInActivityThreadStaticMethod(): Any = try {
+        val activityThreadClass = Class.forName("android.app.ActivityThread")
+        activityThreadClass.getMethod("currentActivityThread").invoke(null)
+    } catch (e: Exception) {
+        error(e)
     }
 }

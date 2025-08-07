@@ -11,7 +11,9 @@ import javax.microedition.khronos.opengles.GL10
  * Author: Michael Leo
  * Date: 2022/4/2 14:19
  */
-abstract class BaseRenderer : AbsBaseOpenGLES(), GLSurfaceView.Renderer {
+abstract class BaseRenderer :
+    AbsBaseOpenGLES(),
+    GLSurfaceView.Renderer {
     var rendererCallback: RendererCallback? = null
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {

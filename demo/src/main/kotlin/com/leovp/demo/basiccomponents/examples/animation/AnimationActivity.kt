@@ -12,9 +12,8 @@ class AnimationActivity : BaseDemonstrationActivity<ActivityAnimationBinding>(R.
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAnimationBinding {
-        return ActivityAnimationBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAnimationBinding =
+        ActivityAnimationBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

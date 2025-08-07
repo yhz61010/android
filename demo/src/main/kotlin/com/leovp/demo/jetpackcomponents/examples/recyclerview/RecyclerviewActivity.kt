@@ -27,9 +27,8 @@ import com.leovp.log.base.ITAG
 class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>(R.layout.activity_recyclerview) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRecyclerviewBinding {
-        return ActivityRecyclerviewBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRecyclerviewBinding =
+        ActivityRecyclerviewBinding.inflate(layoutInflater)
 
     private lateinit var simpleAdapter: SimpleAdapter
     private lateinit var itemTouchHandler: SimpleItemTouchCallback
@@ -186,11 +185,7 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
 }
 
 @Keep
-data class ItemBean(
-    val id: Long,
-    val title: String,
-    val imageUrl: String
-) : BaseMultipleCheckedItem()
+data class ItemBean(val id: Long, val title: String, val imageUrl: String) : BaseMultipleCheckedItem()
 
 open class BaseMultipleCheckedItem {
     var checked = false

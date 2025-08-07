@@ -20,9 +20,7 @@ class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): FragmentForNavSecondBinding {
-        return FragmentForNavSecondBinding.inflate(inflater, container, false)
-    }
+    ): FragmentForNavSecondBinding = FragmentForNavSecondBinding.inflate(inflater, container, false)
 
     private val args by navArgs<FragmentForNavSecondArgs>()
 

@@ -13,9 +13,8 @@ import com.leovp.log.base.ITAG
 class KeepAliveActivity : BaseDemonstrationActivity<ActivityKeepAliveBinding>(R.layout.activity_keep_alive) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityKeepAliveBinding {
-        return ActivityKeepAliveBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityKeepAliveBinding =
+        ActivityKeepAliveBinding.inflate(layoutInflater)
 
     private val keepAlive: KeepAlive by lazy {
         KeepAlive(application, R.raw.single_note30, 0.05f) {

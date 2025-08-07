@@ -36,9 +36,8 @@ class WebSocketClientActivity :
     BaseDemonstrationActivity<ActivityWebsocketClientBinding>(R.layout.activity_websocket_client) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketClientBinding {
-        return ActivityWebsocketClientBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWebsocketClientBinding =
+        ActivityWebsocketClientBinding.inflate(layoutInflater)
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -180,13 +179,10 @@ class WebSocketClientActivity :
         trustAllServers: Boolean,
         //        certInputStream: InputStream? = null,
         retryStrategy: RetryStrategy,
-    ) :
-        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
+    ) : BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "WebSocketClient"
 
-        override fun retryProcess(): Boolean {
-            return true
-        }
+        override fun retryProcess(): Boolean = true
     }
 
     @ChannelHandler.Sharable
@@ -210,9 +206,7 @@ class WebSocketClientActivity :
             netty.connectionListener.onReceivedData(netty, receivedString)
         }
 
-        fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand(msg, "Send msg to server", "WebSocketCmd")
-        }
+        fun sendMsgToServer(msg: String): Boolean = netty.executeCommand(msg, "Send msg to server", "WebSocketCmd")
 
         override fun release() {
         }

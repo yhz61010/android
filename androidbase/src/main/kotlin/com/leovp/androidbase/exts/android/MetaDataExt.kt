@@ -45,12 +45,10 @@ inline fun <reified T : Any> BroadcastReceiver.getMetaData(ctx: Context, key: St
     return genericMetaDataResult(info, key)
 }
 
-inline fun <reified T : Any> genericMetaDataResult(info: PackageItemInfo, key: String): T? {
-    return when (T::class) {
-        String::class -> info.metaData.getString(key) as? T
-        Int::class -> info.metaData.getInt(key) as? T
-        Boolean::class -> info.metaData.getBoolean(key) as? T
-        Float::class -> info.metaData.getFloat(key) as? T
-        else -> null
-    }
+inline fun <reified T : Any> genericMetaDataResult(info: PackageItemInfo, key: String): T? = when (T::class) {
+    String::class -> info.metaData.getString(key) as? T
+    Int::class -> info.metaData.getInt(key) as? T
+    Boolean::class -> info.metaData.getBoolean(key) as? T
+    Float::class -> info.metaData.getFloat(key) as? T
+    else -> null
 }

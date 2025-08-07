@@ -143,59 +143,54 @@ object VerticesUtil {
         ROTATION_270;
 
         companion object {
-            fun getRotation(rotation: Int): Rotation {
-                return when (rotation) {
-                    0 -> NORMAL
-                    90 -> ROTATION_90
-                    180 -> ROTATION_180
-                    270 -> ROTATION_270
-                    else -> NORMAL
-                }
+            fun getRotation(rotation: Int): Rotation = when (rotation) {
+                0 -> NORMAL
+                90 -> ROTATION_90
+                180 -> ROTATION_180
+                270 -> ROTATION_270
+                else -> NORMAL
             }
         }
     }
 
-    fun rotate(verticesArray: FloatArray, rotation: Int): FloatArray {
-        return rotate(verticesArray, Rotation.getRotation(rotation))
-    }
+    fun rotate(verticesArray: FloatArray, rotation: Int): FloatArray =
+        rotate(verticesArray, Rotation.getRotation(rotation))
 
-    fun rotate(verticesArray: FloatArray, rotation: Rotation): FloatArray {
-        return when (rotation) {
-            Rotation.ROTATION_90 -> floatArrayOf(
-                verticesArray[2],
-                verticesArray[3],
-                verticesArray[6],
-                verticesArray[7],
-                verticesArray[0],
-                verticesArray[1],
-                verticesArray[4],
-                verticesArray[5]
-            )
+    fun rotate(verticesArray: FloatArray, rotation: Rotation): FloatArray = when (rotation) {
+        Rotation.ROTATION_90 -> floatArrayOf(
+            verticesArray[2],
+            verticesArray[3],
+            verticesArray[6],
+            verticesArray[7],
+            verticesArray[0],
+            verticesArray[1],
+            verticesArray[4],
+            verticesArray[5]
+        )
 
-            Rotation.ROTATION_180 -> floatArrayOf(
-                verticesArray[6],
-                verticesArray[7],
-                verticesArray[4],
-                verticesArray[5],
-                verticesArray[2],
-                verticesArray[3],
-                verticesArray[0],
-                verticesArray[1]
-            )
+        Rotation.ROTATION_180 -> floatArrayOf(
+            verticesArray[6],
+            verticesArray[7],
+            verticesArray[4],
+            verticesArray[5],
+            verticesArray[2],
+            verticesArray[3],
+            verticesArray[0],
+            verticesArray[1]
+        )
 
-            Rotation.ROTATION_270 -> floatArrayOf(
-                verticesArray[4],
-                verticesArray[5],
-                verticesArray[0],
-                verticesArray[1],
-                verticesArray[6],
-                verticesArray[7],
-                verticesArray[2],
-                verticesArray[3]
-            )
+        Rotation.ROTATION_270 -> floatArrayOf(
+            verticesArray[4],
+            verticesArray[5],
+            verticesArray[0],
+            verticesArray[1],
+            verticesArray[6],
+            verticesArray[7],
+            verticesArray[2],
+            verticesArray[3]
+        )
 
-            else -> verticesArray
-        }
+        else -> verticesArray
     }
 
     fun flip(verticesArray: FloatArray, isHorizontal: Boolean = false, isVertical: Boolean = false): FloatArray {

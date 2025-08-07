@@ -27,8 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Author: Michael Leo
  * Date: 20-5-15 下午1:54
  */
-class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) :
-    ScreenProcessor {
+class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) : ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
 

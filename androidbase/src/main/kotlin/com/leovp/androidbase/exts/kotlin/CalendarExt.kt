@@ -2,7 +2,10 @@ package com.leovp.androidbase.exts.kotlin
 
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @SuppressLint("ConstantLocale")
 internal val sdf1 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -91,79 +94,57 @@ fun Date.formatToServerDate(): String = sdf3.format(this)
 /**
  * Pattern: HH:mm:ss
  */
-fun Date.formatToTime(): String {
-    return sdf4.format(this)
-}
+fun Date.formatToTime(): String = sdf4.format(this)
 
 /**
  * Pattern: HHmmss
  */
-fun Date.formatToSimpleTime(): String {
-    return sdf15.format(this)
-}
+fun Date.formatToSimpleTime(): String = sdf15.format(this)
 
 /**
  * Pattern: HH:mm
  */
-fun Date.formatToShortTime(): String {
-    return sdf9.format(this)
-}
+fun Date.formatToShortTime(): String = sdf9.format(this)
 
 /**
  * Pattern: HHmm
  */
-fun Date.formatToSimpleShortTime(): String {
-    return sdf16.format(this)
-}
+fun Date.formatToSimpleShortTime(): String = sdf16.format(this)
 
 /**
  * Pattern: dd/MM/yyyy HH:mm:ss
  */
-fun Date.formatToViewDateTime(): String {
-    return sdf5.format(this)
-}
+fun Date.formatToViewDateTime(): String = sdf5.format(this)
 
 /**
  * Pattern: dd/MM/yyyy
  */
-fun Date.formatToViewDate(): String {
-    return sdf6.format(this)
-}
+fun Date.formatToViewDate(): String = sdf6.format(this)
 
 /**
  * Pattern: yyyy/MM/dd
  */
-fun Date.formatToNormalDate(): String {
-    return sdf10.format(this)
-}
+fun Date.formatToNormalDate(): String = sdf10.format(this)
 
 /**
  * Pattern: yyyy/MM/dd HH:mm
  */
-fun Date.formatToNormalShortDateTime(): String {
-    return sdf11.format(this)
-}
+fun Date.formatToNormalShortDateTime(): String = sdf11.format(this)
 
 /**
  * Pattern: yyyy/MM/dd HH:mm:ss
  */
-fun Date.formatToNormalDateTime(): String {
-    return sdf12.format(this)
-}
+fun Date.formatToNormalDateTime(): String = sdf12.format(this)
 
 /**
  * Pattern: yyyy/MM/dd HH:mm:ss (z)
  */
-fun Date.formatToNormalFullDateTime(): String {
-    return sdf13.format(this)
-}
+fun Date.formatToNormalFullDateTime(): String = sdf13.format(this)
 
 /**
  * Pattern: yyyy-MM-dd HH:mm:ss (z)
  */
-fun Date.formatToNormalServerFullDateTime(): String {
-    return sdf14.format(this)
-}
+fun Date.formatToNormalServerFullDateTime(): String = sdf14.format(this)
 
 /**
  * Add field date to current date
@@ -176,29 +157,17 @@ fun Date.add(field: Int, amount: Int): Date {
     }
 }
 
-fun Date.addYears(years: Int): Date {
-    return add(Calendar.YEAR, years)
-}
+fun Date.addYears(years: Int): Date = add(Calendar.YEAR, years)
 
-fun Date.addMonths(months: Int): Date {
-    return add(Calendar.MONTH, months)
-}
+fun Date.addMonths(months: Int): Date = add(Calendar.MONTH, months)
 
-fun Date.addDays(days: Int): Date {
-    return add(Calendar.DAY_OF_MONTH, days)
-}
+fun Date.addDays(days: Int): Date = add(Calendar.DAY_OF_MONTH, days)
 
-fun Date.addHours(hours: Int): Date {
-    return add(Calendar.HOUR_OF_DAY, hours)
-}
+fun Date.addHours(hours: Int): Date = add(Calendar.HOUR_OF_DAY, hours)
 
-fun Date.addMinutes(minutes: Int): Date {
-    return add(Calendar.MINUTE, minutes)
-}
+fun Date.addMinutes(minutes: Int): Date = add(Calendar.MINUTE, minutes)
 
-fun Date.addSeconds(seconds: Int): Date {
-    return add(Calendar.SECOND, seconds)
-}
+fun Date.addSeconds(seconds: Int): Date = add(Calendar.SECOND, seconds)
 
 /**
  * Calendar Extension

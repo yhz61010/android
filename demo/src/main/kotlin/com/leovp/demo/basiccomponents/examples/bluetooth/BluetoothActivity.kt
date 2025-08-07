@@ -30,9 +30,8 @@ import com.leovp.log.base.ITAG
 class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.layout.activity_bluetooth) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothBinding {
-        return ActivityBluetoothBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothBinding =
+        ActivityBluetoothBinding.inflate(layoutInflater)
 
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 

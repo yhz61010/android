@@ -22,9 +22,8 @@ import com.leovp.log.base.w
 class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activity_log) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityLogBinding {
-        return ActivityLogBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityLogBinding =
+        ActivityLogBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -13,10 +13,7 @@ import com.leovp.opengl.BaseRenderer
 import com.leovp.opengl.GLRenderer
 
 // https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
-class LeoGLSurfaceView(
-    context: Context,
-    attributeSet: AttributeSet? = null
-) : GLSurfaceView(context, attributeSet) {
+class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) : GLSurfaceView(context, attributeSet) {
     companion object {
         private const val TAG = "LGLSV"
     }
@@ -32,9 +29,7 @@ class LeoGLSurfaceView(
         touchHelper = TouchHelper(listener)
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return touchHelper?.onTouchEvent(event) ?: performClick()
-    }
+    override fun onTouchEvent(event: MotionEvent): Boolean = touchHelper?.onTouchEvent(event) ?: performClick()
 
     override fun performClick(): Boolean {
         super.performClick()

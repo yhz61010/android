@@ -20,9 +20,7 @@ abstract class WordRoomDatabase : RoomDatabase() {
 
     abstract fun wordDao(): WordDao
 
-    private class WordDatabaseCallback(
-        private val scope: CoroutineScope
-    ) : RoomDatabase.Callback() {
+    private class WordDatabaseCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
 
         //        override fun onCreate(db: SupportSQLiteDatabase) {
         //            super.onCreate(db)

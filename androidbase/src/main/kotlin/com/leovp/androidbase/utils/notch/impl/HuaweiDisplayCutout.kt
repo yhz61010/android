@@ -8,14 +8,12 @@ import com.leovp.androidbase.utils.notch.DisplayCutout
 
 @Suppress("unused")
 internal class HuaweiDisplayCutout : DisplayCutout {
-    override fun supportDisplayCutout(activity: Activity): Boolean {
-        return runCatching {
-            val cl = activity.classLoader
-            val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")
-            val get = hwNotchSizeUtil.getMethod("hasNotchInScreen")
-            get.invoke(hwNotchSizeUtil) as Boolean
-        }.getOrDefault(false)
-    }
+    override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
+        val cl = activity.classLoader
+        val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")
+        val get = hwNotchSizeUtil.getMethod("hasNotchInScreen")
+        get.invoke(hwNotchSizeUtil) as Boolean
+    }.getOrDefault(false)
 
     override fun fillDisplayCutout(activity: Activity) {
         runCatching {

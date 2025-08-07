@@ -130,12 +130,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
     }
 
-    class Builder(
-        val width: Int,
-        val height: Int,
-        val dpi: Int,
-        val screenDataListener: ScreenDataListener,
-    ) {
+    class Builder(val width: Int, val height: Int, val dpi: Int, val screenDataListener: ScreenDataListener,) {
         var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
             private set
 

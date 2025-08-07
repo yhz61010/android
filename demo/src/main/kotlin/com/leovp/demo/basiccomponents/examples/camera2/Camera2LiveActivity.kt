@@ -23,9 +23,8 @@ import com.leovp.log.base.ITAG
 class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding>(R.layout.activity_camera2_live) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2LiveBinding {
-        return ActivityCamera2LiveBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2LiveBinding =
+        ActivityCamera2LiveBinding.inflate(layoutInflater)
 
     private val cameraViewFragment = Camera2LiveFragment()
 

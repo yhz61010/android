@@ -26,9 +26,8 @@ import kotlinx.coroutines.launch
 class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>(R.layout.activity_bitmap_native) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBitmapNativeBinding {
-        return ActivityBitmapNativeBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBitmapNativeBinding =
+        ActivityBitmapNativeBinding.inflate(layoutInflater)
 
     override fun onResume() {
         super.onResume()

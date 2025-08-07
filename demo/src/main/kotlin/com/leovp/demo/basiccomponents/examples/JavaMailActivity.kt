@@ -47,9 +47,8 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
         private const val EMAIL_SMTP_SSL = true
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityJavaMailBinding {
-        return ActivityJavaMailBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityJavaMailBinding =
+        ActivityJavaMailBinding.inflate(layoutInflater)
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -61,21 +60,19 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
         mailHost: String,
         port: Int,
         enableSsl: Boolean = false,
-    ): Properties {
-        return Properties().apply {
-            setProperty("mail.transport.protocol", protocol)
-            setProperty("mail.$protocol.host", mailHost)
-            setProperty("mail.$protocol.port", port.toString())
-            setProperty("mail.$protocol.auth", "true")
-            setProperty("mail.$protocol.ssl.enable", enableSsl.toString())
-            //            setProperty("mail.$protocol.timeout", "10_000")
-            //            setProperty("mail.debug", "true")
+    ): Properties = Properties().apply {
+        setProperty("mail.transport.protocol", protocol)
+        setProperty("mail.$protocol.host", mailHost)
+        setProperty("mail.$protocol.port", port.toString())
+        setProperty("mail.$protocol.auth", "true")
+        setProperty("mail.$protocol.ssl.enable", enableSsl.toString())
+        //            setProperty("mail.$protocol.timeout", "10_000")
+        //            setProperty("mail.debug", "true")
 
-            //        setProperty("mail.smtp.port", "465")
-            //        setProperty("mail.smtp.socketFactory.port", "465")
-            //        setProperty("mail.smtp.socketFactory.fallback", "false")
-            //        setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
-        }
+        //        setProperty("mail.smtp.port", "465")
+        //        setProperty("mail.smtp.socketFactory.port", "465")
+        //        setProperty("mail.smtp.socketFactory.fallback", "false")
+        //        setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
     }
 
     private fun getSession(
@@ -85,20 +82,16 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
         userName: String? = null,
         pwd: String? = null,
         enableSsl: Boolean = false,
-    ): Session {
-        return Session.getInstance(
-            getServerProperties(protocol, mailHost, port, enableSsl),
-            if (userName.isNullOrBlank()) {
-                null
-            } else {
-                object : javax.mail.Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication(userName, pwd)
-                    }
-                }
+    ): Session = Session.getInstance(
+        getServerProperties(protocol, mailHost, port, enableSsl),
+        if (userName.isNullOrBlank()) {
+            null
+        } else {
+            object : javax.mail.Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication = PasswordAuthentication(userName, pwd)
             }
-        )
-    }
+        }
+    )
 
     /**
      * Returns a list of addresses in String format separated by comma

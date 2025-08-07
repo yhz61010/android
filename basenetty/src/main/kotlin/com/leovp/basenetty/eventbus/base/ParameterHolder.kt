@@ -8,9 +8,7 @@ import com.leovp.basenetty.eventbus.handler.EventBusHandler
  * Date: 2022/8/19 17:21
  */
 @Keep
-data class ParameterHolder(
-    val type: String
-) {
+data class ParameterHolder(val type: String) {
     lateinit var address: String
     var message: Any? = null
     var headers: Map<String, Any>? = null

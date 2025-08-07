@@ -22,7 +22,7 @@ import com.leovp.camerax.R
 import com.leovp.camerax.databinding.FragmentGalleryBinding
 import com.leovp.log.LogContext
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 val EXTENSION_WHITELIST = arrayOf("JPG", "MP4")
 
@@ -68,9 +68,8 @@ class GalleryFragment internal constructor() : Fragment() {
         // When you call [Adapter#notifyDataSetChanged] method, you should [containsItem] method
         // to check whether the item exists in List.
         // You'd better to override the [getItemId] method at the same time.
-        override fun containsItem(itemId: Long): Boolean {
-            return mediaList.firstOrNull { it.hashCode().toLong() == itemId } != null
-        }
+        override fun containsItem(itemId: Long): Boolean =
+            mediaList.firstOrNull { it.hashCode().toLong() == itemId } != null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

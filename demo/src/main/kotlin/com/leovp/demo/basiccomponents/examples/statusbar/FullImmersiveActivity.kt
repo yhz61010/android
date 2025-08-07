@@ -20,9 +20,8 @@ class FullImmersiveActivity :
     BaseDemonstrationActivity<ActivityFullImmersiveBinding>(R.layout.activity_full_immersive) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFullImmersiveBinding {
-        return ActivityFullImmersiveBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFullImmersiveBinding =
+        ActivityFullImmersiveBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

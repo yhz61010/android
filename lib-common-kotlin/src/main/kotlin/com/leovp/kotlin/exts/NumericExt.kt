@@ -19,32 +19,26 @@ fun gcd(a: Int, b: Int): Int {
     return if (b == 0) a else gcd(b, a % b)
 }
 
-fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = false): String? {
-    return runCatching {
-        val gcd = gcd(a, b)
-        val firstVal = if (swapResult) b / gcd else a / gcd
-        val secondVal = if (swapResult) a / gcd else b / gcd
-        "$firstVal$delimiters$secondVal"
-    }.getOrElse {
-        // In case getGDC (a recursively looping method) repeats too many times
-        // Log.e(TAG, "Irrational ratio: $a to $b")
-        // throw ArithmeticException("Irrational ratio: $a to $b")
-        null
-    }
+fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = false): String? = runCatching {
+    val gcd = gcd(a, b)
+    val firstVal = if (swapResult) b / gcd else a / gcd
+    val secondVal = if (swapResult) a / gcd else b / gcd
+    "$firstVal$delimiters$secondVal"
+}.getOrElse {
+    // In case getGDC (a recursively looping method) repeats too many times
+    // Log.e(TAG, "Irrational ratio: $a to $b")
+    // throw ArithmeticException("Irrational ratio: $a to $b")
+    null
 }
 
-fun Int.formatDecimalSeparator(): String {
-    return toString()
-        .reversed()
-        .chunked(3)
-        .joinToString(",")
-        .reversed()
-}
+fun Int.formatDecimalSeparator(): String = toString()
+    .reversed()
+    .chunked(3)
+    .joinToString(",")
+    .reversed()
 
-fun Long.formatDecimalSeparator(): String {
-    return toString()
-        .reversed()
-        .chunked(3)
-        .joinToString(",")
-        .reversed()
-}
+fun Long.formatDecimalSeparator(): String = toString()
+    .reversed()
+    .chunked(3)
+    .joinToString(",")
+    .reversed()

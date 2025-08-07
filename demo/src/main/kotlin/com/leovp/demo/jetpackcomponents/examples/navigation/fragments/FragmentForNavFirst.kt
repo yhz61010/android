@@ -25,9 +25,7 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): FragmentForNavFirstBinding {
-        return FragmentForNavFirstBinding.inflate(inflater, container, false)
-    }
+    ): FragmentForNavFirstBinding = FragmentForNavFirstBinding.inflate(inflater, container, false)
 
     //    private var param1: String? = null
     //    private var param2: String? = null

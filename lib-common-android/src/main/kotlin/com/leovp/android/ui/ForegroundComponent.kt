@@ -54,8 +54,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * }
  * ```
  */
-class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) :
-    ActivityLifecycleCallbacks {
+class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) : ActivityLifecycleCallbacks {
     @Suppress("WeakerAccess")
     var isForeground = false
         private set

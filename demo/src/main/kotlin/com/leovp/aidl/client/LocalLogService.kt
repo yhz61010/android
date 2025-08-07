@@ -14,9 +14,7 @@ import kotlinx.coroutines.launch
 
 class LocalLogService : Service() {
 
-    override fun onBind(intent: Intent): IBinder {
-        return binder
-    }
+    override fun onBind(intent: Intent): IBinder = binder
 
     private val binder = object : ILocalLogService.Stub() {
         override fun getLogCount(app: String): Int {

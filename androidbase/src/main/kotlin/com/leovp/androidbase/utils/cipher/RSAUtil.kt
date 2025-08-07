@@ -4,6 +4,7 @@ package com.leovp.androidbase.utils.cipher
 
 import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
+import com.leovp.androidbase.utils.cipher.RSAUtil.getKeyPair
 import com.leovp.bytes.toHexString
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -41,23 +42,21 @@ object RSAUtil {
     private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 11
     private const val MAX_DECRYPT_LEN = KEY_SIZE / 8
 
-    fun getKeyPair(): KeyPair {
-        return KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
-            // initialize(KeyGenParameterSpec.Builder(
-            //     "leo-rsa-keypair",
-            //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-            //     .setDigests(
-            //         KeyProperties.DIGEST_SHA1,
-            //         KeyProperties.DIGEST_SHA256,
-            //         KeyProperties.DIGEST_SHA384,
-            //         KeyProperties.DIGEST_SHA512,
-            //     )
-            //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
-            //     .setKeySize(KEY_SIZE)
-            //     .build())
-            initialize(KEY_SIZE)
-        }.generateKeyPair()
-    }
+    fun getKeyPair(): KeyPair = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
+        // initialize(KeyGenParameterSpec.Builder(
+        //     "leo-rsa-keypair",
+        //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+        //     .setDigests(
+        //         KeyProperties.DIGEST_SHA1,
+        //         KeyProperties.DIGEST_SHA256,
+        //         KeyProperties.DIGEST_SHA384,
+        //         KeyProperties.DIGEST_SHA512,
+        //     )
+        //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+        //     .setKeySize(KEY_SIZE)
+        //     .build())
+        initialize(KEY_SIZE)
+    }.generateKeyPair()
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
@@ -75,9 +74,8 @@ object RSAUtil {
      * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun encrypt(encodedPubKey: ByteArray, plainText: String): ByteArray? {
-        return encrypt(encodedPubKey, plainText.toByteArray())
-    }
+    fun encrypt(encodedPubKey: ByteArray, plainText: String): ByteArray? =
+        encrypt(encodedPubKey, plainText.toByteArray())
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
@@ -95,14 +93,12 @@ object RSAUtil {
      * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun encrypt(encodedPubKey: ByteArray, plainData: ByteArray): ByteArray? {
-        return runCatching {
-            val spec = X509EncodedKeySpec(encodedPubKey)
-            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-            val pubKey = factory.generatePublic(spec)
-            cipherDoFinal(Cipher.ENCRYPT_MODE, pubKey, plainData)
-        }.getOrNull()
-    }
+    fun encrypt(encodedPubKey: ByteArray, plainData: ByteArray): ByteArray? = runCatching {
+        val spec = X509EncodedKeySpec(encodedPubKey)
+        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val pubKey = factory.generatePublic(spec)
+        cipherDoFinal(Cipher.ENCRYPT_MODE, pubKey, plainData)
+    }.getOrNull()
 
     /**
      * Decrypt by private key which can get from [getKeyPair] method.
@@ -120,14 +116,12 @@ object RSAUtil {
      * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun decrypt(encodedPriKey: ByteArray, encryptedData: ByteArray?): ByteArray? {
-        return runCatching {
-            val spec = PKCS8EncodedKeySpec(encodedPriKey)
-            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-            val priKey = factory.generatePrivate(spec)
-            cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
-        }.getOrNull()
-    }
+    fun decrypt(encodedPriKey: ByteArray, encryptedData: ByteArray?): ByteArray? = runCatching {
+        val spec = PKCS8EncodedKeySpec(encodedPriKey)
+        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val priKey = factory.generatePrivate(spec)
+        cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
+    }.getOrNull()
 
     // ----------
 
@@ -147,9 +141,7 @@ object RSAUtil {
      * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? {
-        return sign(encodedPriKey, plainText.toByteArray())
-    }
+    fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? = sign(encodedPriKey, plainText.toByteArray())
 
     /**
      * Signature will encrypt data by private key which can get from [getKeyPair] method.
@@ -167,14 +159,12 @@ object RSAUtil {
      * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun sign(encodedPriKey: ByteArray, plainData: ByteArray): ByteArray? {
-        return runCatching {
-            val spec = PKCS8EncodedKeySpec(encodedPriKey)
-            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-            val priKey = factory.generatePrivate(spec)
-            cipherDoFinal(Cipher.ENCRYPT_MODE, priKey, plainData)
-        }.getOrNull()
-    }
+    fun sign(encodedPriKey: ByteArray, plainData: ByteArray): ByteArray? = runCatching {
+        val spec = PKCS8EncodedKeySpec(encodedPriKey)
+        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val priKey = factory.generatePrivate(spec)
+        cipherDoFinal(Cipher.ENCRYPT_MODE, priKey, plainData)
+    }.getOrNull()
 
     /**
      * Signature will decrypt data by public key which can get from [getKeyPair] method.
@@ -192,32 +182,28 @@ object RSAUtil {
      * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun verify(encodedPubKey: ByteArray, encryptedData: ByteArray?): ByteArray? {
-        return runCatching {
-            val spec = X509EncodedKeySpec(encodedPubKey)
-            val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-            val pubKey = factory.generatePublic(spec)
-            cipherDoFinal(Cipher.DECRYPT_MODE, pubKey, encryptedData)
-        }.getOrNull()
-    }
+    fun verify(encodedPubKey: ByteArray, encryptedData: ByteArray?): ByteArray? = runCatching {
+        val spec = X509EncodedKeySpec(encodedPubKey)
+        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val pubKey = factory.generatePublic(spec)
+        cipherDoFinal(Cipher.DECRYPT_MODE, pubKey, encryptedData)
+    }.getOrNull()
 
     // =====
 
-    private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? {
-        return runCatching {
-            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(opmode, key)
-            cipher.doFinal(data)
-        }.getOrNull()
-    }
+    private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? = runCatching {
+        val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
+        cipher.init(opmode, key)
+        cipher.doFinal(data)
+    }.getOrNull()
 
     // ==========
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
      */
-    fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? {
-        return if (plainText.length > MAX_ENCRYPT_LEN) {
+    fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? =
+        if (plainText.length > MAX_ENCRYPT_LEN) {
             val str1 = plainText.substring(0, MAX_ENCRYPT_LEN)
             val str2 = plainText.substring(MAX_ENCRYPT_LEN)
             """
@@ -227,24 +213,21 @@ object RSAUtil {
         } else {
             encrypt(pubKey, plainText)?.toHexString(true, "")
         }
-    }
 
     /**
      * Decrypt by private key which can get from [getKeyPair] method.
      */
-    fun decryptStringByFragment(priKey: ByteArray, encryptedText: String): String? {
-        return runCatching {
-            val result = StringBuilder()
-            val configParts = encryptedText.split('\n')
-            var decryptedStr: String?
-            for (part in configParts) {
-                decryptedStr = decrypt(priKey, part.hexToByteArray())?.decodeToString()
-                if (decryptedStr == null) {
-                    return null
-                }
-                result.append(decryptedStr)
+    fun decryptStringByFragment(priKey: ByteArray, encryptedText: String): String? = runCatching {
+        val result = StringBuilder()
+        val configParts = encryptedText.split('\n')
+        var decryptedStr: String?
+        for (part in configParts) {
+            decryptedStr = decrypt(priKey, part.hexToByteArray())?.decodeToString()
+            if (decryptedStr == null) {
+                return null
             }
-            result.toString()
-        }.getOrNull()
-    }
+            result.append(decryptedStr)
+        }
+        result.toString()
+    }.getOrNull()
 }

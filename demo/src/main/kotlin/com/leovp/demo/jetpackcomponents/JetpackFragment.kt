@@ -25,9 +25,7 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): FragmentJetpackBinding {
-        return FragmentJetpackBinding.inflate(inflater, container, false)
-    }
+    ): FragmentJetpackBinding = FragmentJetpackBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

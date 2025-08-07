@@ -62,15 +62,12 @@ class SoundManager private constructor(val ctx: Context) {
         }
     }
 
-    private fun playSound(soundId: Int, volume: Float) {
-        soundPool.play(soundId, volume, volume, 1, 0, 1f)
-    }
+    private fun playSound(soundId: Int, volume: Float) = soundPool.play(soundId, volume, volume, 1, 0, 1f)
 
-    private fun getSoundVolume(): Float {
-        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(
+    private fun getSoundVolume(): Float =
+        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(
             AudioManager.STREAM_MUSIC
         )
-    }
 
     companion object : SingletonHolder<SoundManager, Context>(::SoundManager)
 }

@@ -23,9 +23,8 @@ class OpenGLESPlaygroundActivity :
     BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>(R.layout.activity_open_glesplayground) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGlesplaygroundBinding {
-        return ActivityOpenGlesplaygroundBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGlesplaygroundBinding =
+        ActivityOpenGlesplaygroundBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

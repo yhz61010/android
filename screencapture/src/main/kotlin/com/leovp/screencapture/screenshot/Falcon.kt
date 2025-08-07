@@ -71,15 +71,13 @@ object Falcon {
     fun takeScreenshotBitmap(
         activity: WeakReference<Activity>,
         config: Bitmap.Config = Bitmap.Config.ARGB_8888,
-    ): Bitmap? {
-        return try {
-            takeBitmapUnchecked(activity, config)
-        } catch (e: Exception) {
-            val message = ("Unable to take screenshot to bitmap of activity " + activity.javaClass.name)
-            LogContext.log.e(TAG, message, e)
-            //            throw UnableToTakeScreenshotException(message, e)
-            null
-        }
+    ): Bitmap? = try {
+        takeBitmapUnchecked(activity, config)
+    } catch (e: Exception) {
+        val message = ("Unable to take screenshot to bitmap of activity " + activity.javaClass.name)
+        LogContext.log.e(TAG, message, e)
+        //            throw UnableToTakeScreenshotException(message, e)
+        null
     }
 
     //endregion
@@ -261,20 +259,16 @@ object Falcon {
         }
     }
 
-    private fun getFieldValue(fieldName: String, target: Any?): Any? {
-        return runCatching {
-            getFieldValueUnchecked(fieldName, target)
-        }.getOrNull()
-    }
+    private fun getFieldValue(fieldName: String, target: Any?): Any? = runCatching {
+        getFieldValueUnchecked(fieldName, target)
+    }.getOrNull()
 
-    private fun getFieldValueUnchecked(fieldName: String, target: Any?): Any? {
-        return runCatching {
-            findField(fieldName, target?.javaClass)?.let {
-                it.isAccessible = true
-                it[target]
-            }
-        }.getOrNull()
-    }
+    private fun getFieldValueUnchecked(fieldName: String, target: Any?): Any? = runCatching {
+        findField(fieldName, target?.javaClass)?.let {
+            it.isAccessible = true
+            it[target]
+        }
+    }.getOrNull()
 
     private fun findField(name: String, clazz: Class<*>?): Field? {
         var currentClass: Class<*>? = clazz
@@ -313,21 +307,15 @@ object Falcon {
              * Method to avoid multiple wrapping. If there is already our exception,
              * just wrap the cause again
              */
-            private fun extractException(ex: Throwable): Throwable? {
-                return if (ex is UnableToTakeScreenshotException) {
-                    ex.cause
-                } else {
-                    ex
-                }
+            private fun extractException(ex: Throwable): Throwable? = if (ex is UnableToTakeScreenshotException) {
+                ex.cause
+            } else {
+                ex
             }
         }
     }
 
-    class ViewRootData(
-        val view: View,
-        val winFrame: Rect,
-        val layoutParams: WindowManager.LayoutParams,
-    ) {
+    class ViewRootData(val view: View, val winFrame: Rect, val layoutParams: WindowManager.LayoutParams) {
         val isDialogType: Boolean
             get() = layoutParams.type == WindowManager.LayoutParams.TYPE_APPLICATION
 
@@ -337,8 +325,6 @@ object Falcon {
         val windowToken: IBinder?
             get() = layoutParams.token
 
-        fun context(): Context {
-            return view.context
-        }
+        fun context(): Context = view.context
     } //endregion
 }

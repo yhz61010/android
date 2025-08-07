@@ -19,8 +19,7 @@ abstract class BaseMediaCodecSynchronous(
     channelCount: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     isEncoding: Boolean = false,
-) :
-    BaseMediaCodec(codecName, sampleRate, channelCount, audioFormat, isEncoding) {
+) : BaseMediaCodec(codecName, sampleRate, channelCount, audioFormat, isEncoding) {
     companion object {
         private const val TAG = "MediaCodecSync"
     }

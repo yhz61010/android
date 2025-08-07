@@ -12,9 +12,8 @@ class SaveInstanceStateActivity :
     BaseDemonstrationActivity<ActivitySaveInstanceStateBinding>(R.layout.activity_save_instance_state) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySaveInstanceStateBinding {
-        return ActivitySaveInstanceStateBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySaveInstanceStateBinding =
+        ActivitySaveInstanceStateBinding.inflate(layoutInflater)
 
     /**
      * Only you set following property in `AndroidManifest.xml` for activity, this method will be called.

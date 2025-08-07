@@ -11,40 +11,12 @@ import java.lang.reflect.Modifier
 import java.lang.reflect.Proxy
 import java.util.Collections
 import java.util.Locale
-import kotlin.Any
-import kotlin.Array
-import kotlin.Boolean
-import kotlin.Byte
-import kotlin.Char
-import kotlin.Comparator
-import kotlin.Double
-import kotlin.Exception
-import kotlin.Float
-import kotlin.Int
-import kotlin.Long
-import kotlin.RuntimeException
-import kotlin.Short
-import kotlin.String
-import kotlin.Suppress
-import kotlin.Throwable
-import kotlin.Throws
-import kotlin.Unit
-import kotlin.arrayOf
-import kotlin.arrayOfNulls
-import kotlin.getOrElse
-import kotlin.hashCode
 import kotlin.reflect.KClass
-import kotlin.requireNotNull
-import kotlin.runCatching
-import kotlin.toString
 
 /**
  * https://dwz.win/azW6
  */
-class ReflectJavaManager private constructor(
-    private var type: Class<*>,
-    private var obj: Any? = type,
-) {
+class ReflectJavaManager private constructor(private var type: Class<*>, private var obj: Any? = type) {
     companion object {
         /**
          * Reflect the class.
@@ -77,9 +49,7 @@ class ReflectJavaManager private constructor(
          * @param kclass The KClass.
          * @return The single [ReflectJavaManager] instance.
          */
-        fun reflect(kclass: KClass<*>): ReflectJavaManager {
-            return ReflectJavaManager(kclass.java)
-        }
+        fun reflect(kclass: KClass<*>): ReflectJavaManager = ReflectJavaManager(kclass.java)
 
         /**
          * Reflect the class.
@@ -87,9 +57,7 @@ class ReflectJavaManager private constructor(
          * @param clazz The class.
          * @return The single [ReflectJavaManager] instance.
          */
-        fun reflect(clazz: Class<*>): ReflectJavaManager {
-            return ReflectJavaManager(clazz)
-        }
+        fun reflect(clazz: Class<*>): ReflectJavaManager = ReflectJavaManager(clazz)
 
         /**
          * Reflect the class.
@@ -97,25 +65,21 @@ class ReflectJavaManager private constructor(
          * @param obj The object.
          * @return The single [ReflectJavaManager] instance.
          */
-        fun reflect(obj: Any?): ReflectJavaManager {
-            return ReflectJavaManager(
-                if (obj == null) Any::class.java else obj::class.java,
-                obj
-            )
-        }
+        fun reflect(obj: Any?): ReflectJavaManager = ReflectJavaManager(
+            if (obj == null) Any::class.java else obj::class.java,
+            obj
+        )
 
         /**
          * Get the POJO field name of an getter/setter
          */
-        private fun getPOJOFieldName(string: String): String {
-            return when (string.length) {
-                0 -> ""
-                1 -> string.lowercase(Locale.getDefault())
-                else ->
-                    string
-                        .substring(0, 1)
-                        .lowercase(Locale.getDefault()) + string.substring(1)
-            }
+        private fun getPOJOFieldName(string: String): String = when (string.length) {
+            0 -> ""
+            1 -> string.lowercase(Locale.getDefault())
+            else ->
+                string
+                    .substring(0, 1)
+                    .lowercase(Locale.getDefault()) + string.substring(1)
         }
     }
 
@@ -185,15 +149,13 @@ class ReflectJavaManager private constructor(
         )
     }
 
-    private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager {
-        return try {
-            ReflectJavaManager(
-                constructor.declaringClass,
-                accessible(constructor)!!.newInstance(*args)
-            )
-        } catch (e: Exception) {
-            throw ReflectException(e)
-        }
+    private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager = try {
+        ReflectJavaManager(
+            constructor.declaringClass,
+            accessible(constructor)!!.newInstance(*args)
+        )
+    } catch (e: Exception) {
+        throw ReflectException(e)
     }
 
     // ==================================
@@ -207,13 +169,11 @@ class ReflectJavaManager private constructor(
      * @return The single [ReflectJavaManager] instance.
      * @throws [ReflectException] If name of property doesn't exist.
      */
-    fun property(name: String): ReflectJavaManager {
-        return try {
-            val field = getField(name)
-            ReflectJavaManager(field.type, field.get(obj))
-        } catch (e: IllegalAccessException) {
-            throw ReflectException(e)
-        }
+    fun property(name: String): ReflectJavaManager = try {
+        val field = getField(name)
+        ReflectJavaManager(field.type, field.get(obj))
+    } catch (e: IllegalAccessException) {
+        throw ReflectException(e)
     }
 
     /**
@@ -230,14 +190,12 @@ class ReflectJavaManager private constructor(
      * @throws ReflectException If name of property doesn't exist.
      * @return The single [ReflectJavaManager] instance.
      */
-    fun property(name: String, value: Any?): ReflectJavaManager {
-        return try {
-            val field = getField(name)
-            field.set(obj, unwrap(value))
-            this
-        } catch (e: Exception) {
-            throw ReflectException(e)
-        }
+    fun property(name: String, value: Any?): ReflectJavaManager = try {
+        val field = getField(name)
+        field.set(obj, unwrap(value))
+        this
+    } catch (e: Exception) {
+        throw ReflectException(e)
     }
 
     @Throws(IllegalAccessException::class)
@@ -270,9 +228,7 @@ class ReflectJavaManager private constructor(
         }
     }
 
-    private fun unwrap(obj: Any?): Any? {
-        return if (obj is ReflectJavaManager) obj.get() else obj
-    }
+    private fun unwrap(obj: Any?): Any? = if (obj is ReflectJavaManager) obj.get() else obj
 
     // ==================================
     // ============= method =============
@@ -301,18 +257,16 @@ class ReflectJavaManager private constructor(
         }
     }
 
-    private fun method(method: Method, obj: Any?, vararg args: Any?): ReflectJavaManager {
-        return try {
-            accessible(method)
-            if (method.returnType == Void.TYPE) {
-                method.invoke(obj, *args)
-                reflect(obj)
-            } else {
-                reflect(method.invoke(obj, *args))
-            }
-        } catch (e: Exception) {
-            throw ReflectException(e)
+    private fun method(method: Method, obj: Any?, vararg args: Any?): ReflectJavaManager = try {
+        accessible(method)
+        if (method.returnType == Void.TYPE) {
+            method.invoke(obj, *args)
+            reflect(obj)
+        } else {
+            reflect(method.invoke(obj, *args))
         }
+    } catch (e: Exception) {
+        throw ReflectException(e)
     }
 
     @Throws(NoSuchMethodException::class)
@@ -390,10 +344,8 @@ class ReflectJavaManager private constructor(
         possiblyMatchingMethod: Method,
         desiredMethodName: String,
         desiredParamTypes: Array<Class<*>?>,
-    ): Boolean {
-        return possiblyMatchingMethod.name == desiredMethodName &&
-            match(possiblyMatchingMethod.parameterTypes, desiredParamTypes)
-    }
+    ): Boolean = possiblyMatchingMethod.name == desiredMethodName &&
+        match(possiblyMatchingMethod.parameterTypes, desiredParamTypes)
 
     private fun match(declaredTypes: Array<Class<*>?>, actualTypes: Array<Class<*>?>): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
@@ -473,9 +425,7 @@ class ReflectJavaManager private constructor(
         ) as P
     }
 
-    private fun type(): Class<*> {
-        return type
-    }
+    private fun type(): Class<*> = type
 
     private fun wrapper(type: Class<*>?): Class<*>? {
         if (type == null) {
@@ -513,21 +463,13 @@ class ReflectJavaManager private constructor(
      * @return The result.
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(): T {
-        return obj as T
-    }
+    fun <T : Any> get(): T = obj as T
 
-    override fun hashCode(): Int {
-        return obj.hashCode()
-    }
+    override fun hashCode(): Int = obj.hashCode()
 
-    override fun equals(other: Any?): Boolean {
-        return other is ReflectJavaManager && obj == other.get()
-    }
+    override fun equals(other: Any?): Boolean = other is ReflectJavaManager && obj == other.get()
 
-    override fun toString(): String {
-        return obj.toString()
-    }
+    override fun toString(): String = obj.toString()
 
     class ReflectException : RuntimeException {
         constructor(message: String?) : super(message)

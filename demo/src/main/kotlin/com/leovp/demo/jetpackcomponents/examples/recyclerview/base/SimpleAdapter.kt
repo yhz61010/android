@@ -28,9 +28,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Author: Michael Leo
  * Date: 2020/9/11 上午11:24
  */
-class SimpleAdapter(
-    private val dataArray: MutableList<ItemBean>
-) : RecyclerView.Adapter<SimpleAdapter.ItemViewHolder>() {
+class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
+    RecyclerView.Adapter<SimpleAdapter.ItemViewHolder>() {
     companion object {
         const val STYLE_LIST = 1
         const val STYLE_GRID = 2

@@ -16,9 +16,8 @@ class AdbCommunication :
     BaseDemonstrationActivity<ActivityAdbCommunicationBinding>(R.layout.activity_adb_communication) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAdbCommunicationBinding {
-        return ActivityAdbCommunicationBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAdbCommunicationBinding =
+        ActivityAdbCommunicationBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -151,12 +151,10 @@ val Context.screenAvailableHeight: Int get() = screenAvailableResolution.height
 fun Context.getScreenWidth(
     surfaceRotation: Int = screenSurfaceRotation,
     screenSize: Size = screenRealResolution,
-): Int {
-    return when (surfaceRotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180 -> min(screenSize.width, screenSize.height)
-        Surface.ROTATION_90, Surface.ROTATION_270 -> max(screenSize.width, screenSize.height)
-        else -> screenSize.width
-    }
+): Int = when (surfaceRotation) {
+    Surface.ROTATION_0, Surface.ROTATION_180 -> min(screenSize.width, screenSize.height)
+    Surface.ROTATION_90, Surface.ROTATION_270 -> max(screenSize.width, screenSize.height)
+    else -> screenSize.width
 }
 
 /**
@@ -173,12 +171,10 @@ fun Context.getScreenWidth(
 fun Context.getScreenHeight(
     surfaceRotation: Int = screenSurfaceRotation,
     screenSize: Size = screenRealResolution,
-): Int {
-    return when (surfaceRotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180 -> max(screenSize.width, screenSize.height)
-        Surface.ROTATION_90, Surface.ROTATION_270 -> min(screenSize.width, screenSize.height)
-        else -> screenSize.height
-    }
+): Int = when (surfaceRotation) {
+    Surface.ROTATION_0, Surface.ROTATION_180 -> max(screenSize.width, screenSize.height)
+    Surface.ROTATION_90, Surface.ROTATION_270 -> min(screenSize.width, screenSize.height)
+    else -> screenSize.height
 }
 
 /**
@@ -195,20 +191,18 @@ fun Context.getScreenHeight(
 fun Context.getScreenSize(
     surfaceRotation: Int = screenSurfaceRotation,
     screenSize: Size = screenRealResolution,
-): Size {
-    return when (surfaceRotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
-            min(screenSize.width, screenSize.height),
-            max(screenSize.width, screenSize.height)
-        )
+): Size = when (surfaceRotation) {
+    Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
+        min(screenSize.width, screenSize.height),
+        max(screenSize.width, screenSize.height)
+    )
 
-        Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
-            max(screenSize.width, screenSize.height),
-            min(screenSize.width, screenSize.height)
-        )
+    Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
+        max(screenSize.width, screenSize.height),
+        min(screenSize.width, screenSize.height)
+    )
 
-        else -> Size(min(screenSize.width, screenSize.height), max(screenSize.width, screenSize.height))
-    }
+    else -> Size(min(screenSize.width, screenSize.height), max(screenSize.width, screenSize.height))
 }
 
 val Context.isFullScreenDevice get(): Boolean = screenRatio >= 1.97f
@@ -393,13 +387,11 @@ fun getImei(ctx: Context): String? {
     return if (imei0.isNullOrBlank()) imei1 else imei0
 }
 
-fun getImei(ctx: Context, slotId: Int): String? {
-    return runCatching {
-        val manager = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
-        method.invoke(manager, slotId) as String
-    }.getOrNull()
-}
+fun getImei(ctx: Context, slotId: Int): String? = runCatching {
+    val manager = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+    val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
+    method.invoke(manager, slotId) as String
+}.getOrNull()
 
 @SuppressLint("DiscouragedApi")
 fun Context.getDimenInPixel(name: String): Int {
@@ -407,50 +399,44 @@ fun Context.getDimenInPixel(name: String): Int {
     return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else -1
 }
 
-fun isProbablyAnEmulator(): Boolean {
-    return (
-        Build.FINGERPRINT.startsWith("google/sdk_gphone_") &&
-            Build.FINGERPRINT.endsWith(":user/release-keys") &&
-            Build.MANUFACTURER == "Google" &&
-            Build.PRODUCT.startsWith("sdk_gphone_") &&
-            Build.BRAND == "google" &&
-            Build.MODEL.startsWith("sdk_gphone_")
-        ) ||
+fun isProbablyAnEmulator(): Boolean = (
+    Build.FINGERPRINT.startsWith("google/sdk_gphone_") &&
+        Build.FINGERPRINT.endsWith(":user/release-keys") &&
+        Build.MANUFACTURER == "Google" &&
+        Build.PRODUCT.startsWith("sdk_gphone_") &&
+        Build.BRAND == "google" &&
+        Build.MODEL.startsWith("sdk_gphone_")
+    ) ||
 
-        // Android SDK emulator
-        Build.FINGERPRINT.startsWith("generic") ||
-        Build.FINGERPRINT.startsWith("unknown") ||
-        Build.MODEL.contains("google_sdk") ||
-        Build.MODEL.contains("Emulator") ||
-        Build.MODEL.contains("Android SDK built for x86") ||
-        "QC_Reference_Phone" == Build.BOARD ||
+    // Android SDK emulator
+    Build.FINGERPRINT.startsWith("generic") ||
+    Build.FINGERPRINT.startsWith("unknown") ||
+    Build.MODEL.contains("google_sdk") ||
+    Build.MODEL.contains("Emulator") ||
+    Build.MODEL.contains("Android SDK built for x86") ||
+    "QC_Reference_Phone" == Build.BOARD ||
 
-        // bluestacks
-        Build.MANUFACTURER.contains("Genymotion") ||
-        Build.HOST.startsWith("Build") ||
-        // MSI App Player
-        (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
-        Build.PRODUCT == "google_sdk" ||
-        // another Android SDK emulator check
-        DeviceProp.getSystemProperty("ro.kernel.qemu") == "1"
-}
+    // bluestacks
+    Build.MANUFACTURER.contains("Genymotion") ||
+    Build.HOST.startsWith("Build") ||
+    // MSI App Player
+    (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
+    Build.PRODUCT == "google_sdk" ||
+    // another Android SDK emulator check
+    DeviceProp.getSystemProperty("ro.kernel.qemu") == "1"
 
-fun Context.isTablet(): Boolean {
-    return (
-        resources.configuration.screenLayout
-            and Configuration.SCREENLAYOUT_SIZE_MASK
-        ) >= Configuration.SCREENLAYOUT_SIZE_LARGE
-}
+fun Context.isTablet(): Boolean = (
+    resources.configuration.screenLayout
+        and Configuration.SCREENLAYOUT_SIZE_MASK
+    ) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 
 // ================================
 
-fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-    return isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
-}
+fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean =
+    isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
 
-fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
-    return isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
-}
+fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean =
+    isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
 
 // ---------------
 
@@ -616,14 +602,12 @@ fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - -1 means unknown or the orientation is not changed.
  */
-fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int {
-    return when {
-        isNormalPortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_PORTRAIT
-        isReversePortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
-        isNormalLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_LANDSCAPE
-        isReverseLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        else -> -1
-    }
+fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int = when {
+    isNormalPortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_PORTRAIT
+    isReversePortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
+    isNormalLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_LANDSCAPE
+    isReverseLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+    else -> -1
 }
 
 /**

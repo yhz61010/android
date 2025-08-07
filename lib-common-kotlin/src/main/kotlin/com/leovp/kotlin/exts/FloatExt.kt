@@ -13,6 +13,5 @@ fun Double.round(precision: Int = 2, roundingMode: RoundingMode = RoundingMode.H
     return df.format(this).toDouble()
 }
 
-fun Float.round(precision: Int = 2, roundingMode: RoundingMode = RoundingMode.HALF_UP): Float {
-    return this.toDouble().round(precision, roundingMode).toFloat()
-}
+fun Float.round(precision: Int = 2, roundingMode: RoundingMode = RoundingMode.HALF_UP): Float =
+    this.toDouble().round(precision, roundingMode).toFloat()

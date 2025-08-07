@@ -27,9 +27,8 @@ class ChangeAppLanguageActivity :
     BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>(R.layout.activity_change_app_language) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityChangeAppLanguageBinding {
-        return ActivityChangeAppLanguageBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityChangeAppLanguageBinding =
+        ActivityChangeAppLanguageBinding.inflate(layoutInflater)
 
     private val langUtil: LangUtil by lazy { LangUtil.getInstance(this) }
 

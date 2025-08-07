@@ -5,7 +5,7 @@ import android.os.Environment
 import com.leovp.android.utils.shell.ShellUtil
 import java.io.File
 import java.io.FileInputStream
-import java.util.*
+import java.util.Properties
 
 /**
  * Author: Michael Leo
@@ -28,13 +28,11 @@ object DeviceProp {
     }
 
     @SuppressLint("PrivateApi")
-    private fun getSystemPropertyByReflect(key: String): String {
-        return runCatching {
-            Class.forName("android.os.SystemProperties").let {
-                it.getMethod("get", String::class.java).invoke(it, key) as String
-            }
-        }.getOrDefault("")
-    }
+    private fun getSystemPropertyByReflect(key: String): String = runCatching {
+        Class.forName("android.os.SystemProperties").let {
+            it.getMethod("get", String::class.java).invoke(it, key) as String
+        }
+    }.getOrDefault("")
 
     private fun getSystemPropertyByStream(key: String): String {
         return runCatching {

@@ -30,9 +30,8 @@ class Camera2WithoutPreviewActivity :
         private val DESIGNED_CAMERA_SIZE = Camera2ComponentHelper.CAMERA_SIZE_EXTRA
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2WithoutPreviewBinding {
-        return ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2WithoutPreviewBinding =
+        ActivityCamera2WithoutPreviewBinding.inflate(layoutInflater)
 
     private lateinit var camera2Helper: Camera2ComponentHelper
     private var previousLensFacing = CameraMetadata.LENS_FACING_BACK

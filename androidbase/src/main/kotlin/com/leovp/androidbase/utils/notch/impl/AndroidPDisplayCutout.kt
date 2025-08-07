@@ -12,9 +12,7 @@ import com.leovp.androidbase.utils.notch.DisplayCutout
 @RequiresApi(Build.VERSION_CODES.P)
 internal class AndroidPDisplayCutout : DisplayCutout {
     /** Always return _true_. However, you should check notch by the result of [cutoutAreaRect] method. */
-    override fun supportDisplayCutout(activity: Activity): Boolean {
-        return true
-    }
+    override fun supportDisplayCutout(activity: Activity): Boolean = true
 
     /** Note that, calling this method will cause status bar being hidden. */
     override fun fillDisplayCutout(activity: Activity) {

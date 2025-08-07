@@ -34,16 +34,14 @@ class AudioReceiverWebSocketHandler(private val netty: BaseNettyServer) : BaseSe
         }
     }
 
-    fun sendAudioToClient(clientChannel: Channel, audioData: ByteArray): Boolean {
-        return runCatching {
-            val cmd = 1.asByteAndForceToBytes()
-            val protoVer = 1.asByteAndForceToBytes()
+    fun sendAudioToClient(clientChannel: Channel, audioData: ByteArray): Boolean = runCatching {
+        val cmd = 1.asByteAndForceToBytes()
+        val protoVer = 1.asByteAndForceToBytes()
 
-            val contentLen = (cmd.size + protoVer.size + audioData.size).toBytesLE()
-            val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, audioData)
-            netty.executeCommand(clientChannel, command, "sendAudioToClient", "1", false)
-        }.getOrDefault(false)
-    }
+        val contentLen = (cmd.size + protoVer.size + audioData.size).toBytesLE()
+        val command = ByteUtil.mergeBytes(contentLen, cmd, protoVer, audioData)
+        netty.executeCommand(clientChannel, command, "sendAudioToClient", "1", false)
+    }.getOrDefault(false)
 
     override fun release() {
     }

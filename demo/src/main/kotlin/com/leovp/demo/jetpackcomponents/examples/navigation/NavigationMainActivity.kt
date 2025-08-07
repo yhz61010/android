@@ -33,9 +33,8 @@ import com.leovp.log.base.ITAG
 class NavigationMainActivity : BaseActivity<ActivityNavigationMainBinding>() {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNavigationMainBinding {
-        return ActivityNavigationMainBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNavigationMainBinding =
+        ActivityNavigationMainBinding.inflate(layoutInflater)
 
     //    override fun onCreate(savedInstanceState: Bundle?) {
     //        super.onCreate(savedInstanceState)

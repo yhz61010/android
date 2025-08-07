@@ -25,7 +25,7 @@ class AacDecoder(
     channelCount: Int,
     audioFormat: Int,
     private val csd0: ByteArray,
-    private val callback: IDecodeCallback
+    private val callback: IDecodeCallback,
 ) : BaseMediaCodecSynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
     sampleRate = sampleRate,
@@ -80,11 +80,9 @@ class AacDecoder(
         super.start()
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int {
-        return queue.take().let {
-            inBuf.put(it)
-            it.size
-        }
+    override fun onInputData(inBuf: ByteBuffer): Int = queue.take().let {
+        inBuf.put(it)
+        it.size
     }
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
@@ -100,9 +98,7 @@ class AacDecoder(
 
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
-    override fun computePresentationTimeUs(): Long {
-        return frameCount * (1_000_000L / sampleRate * 1024)
-    }
+    override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
 
     override fun stop() {
         queue.clear()

@@ -12,9 +12,8 @@ import com.leovp.log.base.ITAG
 class ClipboardActivity : BaseDemonstrationActivity<ActivityClipboardBinding>(R.layout.activity_clipboard) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityClipboardBinding {
-        return ActivityClipboardBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityClipboardBinding =
+        ActivityClipboardBinding.inflate(layoutInflater)
 
     override fun onResume() {
         super.onResume()

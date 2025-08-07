@@ -19,6 +19,5 @@ package com.leovp.kotlin.exts
  * ```
  * https://www.baeldung.com/kotlin/enum-find-by-value
  */
-inline infix fun <reified E : Enum<E>, V> ((E) -> V).findBy(value: V): E? {
-    return enumValues<E>().firstOrNull { this(it) == value }
-}
+inline infix fun <reified E : Enum<E>, V> ((E) -> V).findBy(value: V): E? =
+    enumValues<E>().firstOrNull { this(it) == value }

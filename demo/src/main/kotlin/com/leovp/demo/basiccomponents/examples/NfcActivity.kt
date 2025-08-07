@@ -78,4 +78,3 @@ class NfcActivity : BaseDemonstrationActivity<ActivityNfcBinding>(R.layout.activ
         nfcAdapter?.enableForegroundDispatch(this, pendingIntent, filters, techList)
     }
 }
-

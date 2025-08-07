@@ -9,11 +9,9 @@ import com.leovp.android.utils.DeviceProp
 import com.leovp.androidbase.utils.notch.DisplayCutout
 
 internal class XiaoMiDisplayCutout : DisplayCutout {
-    override fun supportDisplayCutout(activity: Activity): Boolean {
-        return runCatching {
-            DeviceProp.getSystemProperty("ro.miui.notch").toInt() == 1
-        }.getOrDefault(false)
-    }
+    override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
+        DeviceProp.getSystemProperty("ro.miui.notch").toInt() == 1
+    }.getOrDefault(false)
 
     override fun fillDisplayCutout(activity: Activity) {
         val flag = 0x00000100 or 0x00000200 or 0x00000400

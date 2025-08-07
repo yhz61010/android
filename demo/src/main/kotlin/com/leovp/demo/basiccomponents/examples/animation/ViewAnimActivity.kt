@@ -16,9 +16,8 @@ import com.leovp.log.base.ITAG
 class ViewAnimActivity : BaseDemonstrationActivity<ActivityViewAnimBinding>(R.layout.activity_view_anim) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityViewAnimBinding {
-        return ActivityViewAnimBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityViewAnimBinding =
+        ActivityViewAnimBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

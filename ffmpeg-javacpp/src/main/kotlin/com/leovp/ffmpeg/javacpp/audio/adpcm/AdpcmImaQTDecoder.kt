@@ -37,9 +37,7 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
      * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples).
      * Channel data is interleaved per-chunk.
      */
-    fun chunkSize(): Int {
-        return ENCODED_CHUNKS_SIZE * channel
-    }
+    fun chunkSize(): Int = ENCODED_CHUNKS_SIZE * channel
 
     fun decode(adpcmBytes: ByteArray): Pair<ByteArray, ByteArray>? {
         if (adpcmBytes.size != chunkSize()) {

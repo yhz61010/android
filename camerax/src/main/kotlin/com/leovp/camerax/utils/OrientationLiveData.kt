@@ -31,10 +31,8 @@ import com.leovp.android.exts.isReversePortrait
  * rotation relative to sensor orientation, i.e., allows user to see camera
  * frames with the expected orientation.
  */
-internal class OrientationLiveData(
-    private val context: Context,
-    characteristics: CameraCharacteristics,
-) : LiveData<Int>() {
+internal class OrientationLiveData(private val context: Context, characteristics: CameraCharacteristics,) :
+    LiveData<Int>() {
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {

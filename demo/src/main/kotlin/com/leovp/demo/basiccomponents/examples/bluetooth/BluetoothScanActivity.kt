@@ -37,9 +37,8 @@ class BluetoothScanActivity :
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothScanBinding {
-        return ActivityBluetoothScanBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothScanBinding =
+        ActivityBluetoothScanBinding.inflate(layoutInflater)
 
     private var adapter: DeviceAdapter? = null
     private val bluetoothDeviceMap = mutableMapOf<String, DeviceModel>()

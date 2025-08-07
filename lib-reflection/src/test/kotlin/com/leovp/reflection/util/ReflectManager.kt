@@ -73,9 +73,7 @@ class ReflectManager private constructor() {
          * @return The single [ReflectManager] instance.
          */
         @Suppress("WeakerAccess")
-        fun reflect(kclass: KClass<*>): ReflectManager {
-            return ReflectManager(kclass)
-        }
+        fun reflect(kclass: KClass<*>): ReflectManager = ReflectManager(kclass)
 
         /**
          * Reflect the class.
@@ -84,9 +82,7 @@ class ReflectManager private constructor() {
          * @return The single [ReflectManager] instance.
          */
         @Suppress("WeakerAccess")
-        fun reflect(clazz: Class<*>): ReflectManager {
-            return ReflectManager(clazz.kotlin)
-        }
+        fun reflect(clazz: Class<*>): ReflectManager = ReflectManager(clazz.kotlin)
 
         /**
          * Reflect the class.
@@ -94,9 +90,8 @@ class ReflectManager private constructor() {
          * @param obj The object.
          * @return The single [ReflectManager] instance.
          */
-        fun <T : Any> reflect(obj: T?): ReflectManager {
-            return ReflectManager(if (obj == null) Any::class else obj::class, obj)
-        }
+        fun <T : Any> reflect(obj: T?): ReflectManager =
+            ReflectManager(if (obj == null) Any::class else obj::class, obj)
     }
 
     // =================================
@@ -234,9 +229,7 @@ class ReflectManager private constructor() {
      * @return The result.
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(): T {
-        return obj as T
-    }
+    fun <T : Any> get(): T = obj as T
 
     // ==================================
     // ======== Internal methods ========
@@ -366,10 +359,11 @@ class ReflectManager private constructor() {
     ): ReflectManager? {
         val types = getArgsType(*args)
         functions.firstOrNull { func ->
-            func.name == name && matchArgsType(
-                func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(),
-                types
-            )
+            func.name == name &&
+                matchArgsType(
+                    func.valueParameters.map { it.type.jvmErasure.java }.toTypedArray(),
+                    types
+                )
         }?.let { func ->
             if (!func.isAccessible) func.isAccessible = true
             return if (func.returnType == unitType) {

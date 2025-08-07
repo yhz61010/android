@@ -14,9 +14,8 @@ import org.koin.core.parameter.parametersOf
 class KoinActivity : BaseDemonstrationActivity<ActivityKoinBinding>(R.layout.activity_koin) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityKoinBinding {
-        return ActivityKoinBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityKoinBinding =
+        ActivityKoinBinding.inflate(layoutInflater)
 
     private val firstPresenter: MySimplePresenter by inject()
 

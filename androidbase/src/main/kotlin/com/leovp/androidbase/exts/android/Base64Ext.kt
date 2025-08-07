@@ -5,10 +5,10 @@ package com.leovp.androidbase.exts.android
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Base64
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.drawable.toDrawable
 import com.leovp.android.utils.API
 import com.leovp.image.getBitmap
 import java.io.ByteArrayOutputStream
@@ -175,9 +175,8 @@ fun Drawable.toBase64(imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG
 /**
  * Decode drawable base64 String to Drawable.
  */
-fun String.fromBase64ToDrawable(resources: Resources, flag: Int = Base64.DEFAULT): Drawable? {
-    return runCatching {
-        val drawableBytes = this.fromBase64ToByteArray(flag)
-        BitmapDrawable(resources, BitmapFactory.decodeByteArray(drawableBytes, 0, drawableBytes.size))
-    }.getOrNull()
-}
+fun String.fromBase64ToDrawable(resources: Resources, flag: Int = Base64.DEFAULT): Drawable? = runCatching {
+    val drawableBytes = this.fromBase64ToByteArray(flag)
+//    BitmapDrawable(resources, BitmapFactory.decodeByteArray(drawableBytes, 0, drawableBytes.size))
+    BitmapFactory.decodeByteArray(drawableBytes, 0, drawableBytes.size).toDrawable(resources)
+}.getOrNull()

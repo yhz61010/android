@@ -68,9 +68,8 @@ class ScreenShareClientActivity :
         private const val CLICK_THRESHOLD = 8
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareClientBinding {
-        return ActivityScreenShareClientBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareClientBinding =
+        ActivityScreenShareClientBinding.inflate(layoutInflater)
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -333,8 +332,7 @@ class ScreenShareClientActivity :
         connectionListener: ClientConnectListener<BaseNettyClient>,
         trustAllServers: Boolean,
         retryStrategy: RetryStrategy,
-    ) :
-        BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
+    ) : BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "ScreenShareClientActivity"
 
         override fun addLastToPipeline(pipeline: ChannelPipeline) {

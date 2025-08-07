@@ -459,25 +459,23 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    override fun onSaveInstanceState(): Parcelable {
-        return Bundle().apply {
-            putParcelable(INSTANCE_STATE, super.onSaveInstanceState())
-            //            putSerializable(INSTANCE_IDLE_ITEM, idleItem)
-            //            putSerializable(INSTANCE_FINISH_ITEM, finishItem)
-            //            putSerializable(INSTANCE_ERROR_ITEM, errorItem)
-            //            putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
-            putInt(INSTANCE_MAX_PROGRESS, maxProgress)
-            putInt(INSTANCE_CURRENT_PROGRESS, currentProgress)
-            putSerializable(INSTANCE_CURRENT_STATE, currState)
-            putBoolean(INSTANCE_CANCELABLE, isCancelable)
-            putBoolean(INSTANCE_ENABLE_CLICK, internalEnableClickListener)
-            putInt(INSTANCE_BG_COLOR, defaultBackgroundColor)
-            putInt(INSTANCE_PROGRESS_COLOR, progressColor)
-            putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
-            putBoolean(INSTANCE_SHOW_PROGRESS_TEXT, showProgressText)
-            putInt(INSTANCE_PROGRESS_TEXT_COLOR, progressTextColor)
-            putInt(INSTANCE_PROGRESS_TEXT_SIZE, progressTextSize)
-        }
+    override fun onSaveInstanceState(): Parcelable = Bundle().apply {
+        putParcelable(INSTANCE_STATE, super.onSaveInstanceState())
+        //            putSerializable(INSTANCE_IDLE_ITEM, idleItem)
+        //            putSerializable(INSTANCE_FINISH_ITEM, finishItem)
+        //            putSerializable(INSTANCE_ERROR_ITEM, errorItem)
+        //            putSerializable(INSTANCE_CANCEL_ITEM, cancelItem)
+        putInt(INSTANCE_MAX_PROGRESS, maxProgress)
+        putInt(INSTANCE_CURRENT_PROGRESS, currentProgress)
+        putSerializable(INSTANCE_CURRENT_STATE, currState)
+        putBoolean(INSTANCE_CANCELABLE, isCancelable)
+        putBoolean(INSTANCE_ENABLE_CLICK, internalEnableClickListener)
+        putInt(INSTANCE_BG_COLOR, defaultBackgroundColor)
+        putInt(INSTANCE_PROGRESS_COLOR, progressColor)
+        putInt(INSTANCE_PROGRESS_MARGIN, progressMargin)
+        putBoolean(INSTANCE_SHOW_PROGRESS_TEXT, showProgressText)
+        putInt(INSTANCE_PROGRESS_TEXT_COLOR, progressTextColor)
+        putInt(INSTANCE_PROGRESS_TEXT_SIZE, progressTextSize)
     }
 
     override fun onRestoreInstanceState(state: Parcelable) {

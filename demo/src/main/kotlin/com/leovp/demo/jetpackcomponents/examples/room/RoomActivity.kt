@@ -25,9 +25,8 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRoomBinding {
-        return ActivityRoomBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityRoomBinding =
+        ActivityRoomBinding.inflate(layoutInflater)
 
     private lateinit var wordViewModel: WordViewModel
 
@@ -62,9 +61,7 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
                     target: RecyclerView.ViewHolder,
-                ): Boolean {
-                    return false
-                }
+                ): Boolean = false
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     wordViewModel.delete(adapter.removeAt(viewHolder.bindingAdapterPosition))

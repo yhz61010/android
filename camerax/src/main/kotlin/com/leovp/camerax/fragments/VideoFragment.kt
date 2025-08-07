@@ -371,8 +371,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                         // we are not binding anything here.
                         if (provider.hasCamera(camSelector)) {
                             val camera = provider.bindToLifecycle(requireActivity(), camSelector)
-                            val supportedQualities =
-                                QualitySelector.getSupportedQualities(camera.cameraInfo)
+                            val supportedQualities = QualitySelector.getSupportedQualities(camera.cameraInfo)
                             val camName =
                                 if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
                             LogContext.log.w(

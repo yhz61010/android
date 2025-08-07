@@ -50,11 +50,9 @@ internal fun getSupportedProfileLevelsForDecoder(mime: String): Array<MediaCodec
 private fun getSupportedProfileLevels(caps: MediaCodecInfo.CodecCapabilities): Array<MediaCodecInfo.CodecProfileLevel> =
     caps.profileLevels
 
-internal fun isSoftwareCodec(codecName: String): Boolean {
-    return codecName.startsWith("OMX.google.", ignoreCase = true) ||
-        codecName.startsWith("c2.android.", ignoreCase = true) ||
-        (
-            !codecName.startsWith("OMX.", ignoreCase = true) &&
-                !codecName.startsWith("c2.", ignoreCase = true)
-            )
-}
+internal fun isSoftwareCodec(codecName: String): Boolean = codecName.startsWith("OMX.google.", ignoreCase = true) ||
+    codecName.startsWith("c2.android.", ignoreCase = true) ||
+    (
+        !codecName.startsWith("OMX.", ignoreCase = true) &&
+            !codecName.startsWith("c2.", ignoreCase = true)
+        )

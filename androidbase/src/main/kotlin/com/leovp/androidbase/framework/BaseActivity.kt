@@ -55,8 +55,7 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class BaseActivity<B : ViewBinding>(
     @LayoutRes layoutResId: Int = 0,
     init: (ActivityConfig.() -> Unit)? = null,
-) :
-    AppCompatActivity(layoutResId) {
+) : AppCompatActivity(layoutResId) {
     abstract fun getTagName(): String
 
     @Suppress("WeakerAccess")
@@ -175,7 +174,8 @@ abstract class BaseActivity<B : ViewBinding>(
                 focusView.getLocationOnScreen(focusViewLocationOnScreen)
                 val x = event.rawX + focusView.left - focusViewLocationOnScreen[0]
                 val y = event.rawY + focusView.top - focusViewLocationOnScreen[1]
-                if (defaultConfig.autoHideSoftKeyboard && event.action == MotionEvent.ACTION_DOWN &&
+                if (defaultConfig.autoHideSoftKeyboard &&
+                    event.action == MotionEvent.ACTION_DOWN &&
                     (x < focusView.left || x > focusView.right || y < focusView.top || y > focusView.bottom)
                 ) {
                     closeSoftKeyboard()
@@ -213,10 +213,7 @@ abstract class BaseActivity<B : ViewBinding>(
         var trafficConfig: TrafficConfig = TrafficConfig(),
     )
 
-    data class TrafficConfig(
-        var allowToOutputDefaultWifiTrafficInfo: Boolean = false,
-        var frequencyInSecond: Int = 3,
-    )
+    data class TrafficConfig(var allowToOutputDefaultWifiTrafficInfo: Boolean = false, var frequencyInSecond: Int = 3,)
 
     // ==============================
 

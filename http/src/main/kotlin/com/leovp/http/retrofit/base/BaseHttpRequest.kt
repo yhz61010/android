@@ -68,8 +68,8 @@ open class BaseHttpRequest {
             //                .build();
         }
 
-    private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor {
-        return Interceptor { chain: Interceptor.Chain ->
+    private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor =
+        Interceptor { chain: Interceptor.Chain ->
             val build: Request.Builder = chain.request().newBuilder()
             // Add your other headers here.
             // .addHeader("Content-Type", "application/json")
@@ -85,7 +85,6 @@ open class BaseHttpRequest {
             }
             chain.proceed(build.build())
         }
-    }
 
     companion object {
         private const val TAG = "HTTP"

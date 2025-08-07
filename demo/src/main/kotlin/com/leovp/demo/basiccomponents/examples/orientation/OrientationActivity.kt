@@ -24,9 +24,8 @@ import com.leovp.reflection.wrappers.ServiceManager
 class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>(R.layout.activity_orientation) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOrientationBinding {
-        return ActivityOrientationBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOrientationBinding =
+        ActivityOrientationBinding.inflate(layoutInflater)
 
     private var currentDeviceOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var deviceOrientationEventListener: DeviceOrientationListener? = null

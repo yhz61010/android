@@ -26,7 +26,7 @@ class OpusDecoder(
     val csd0: ByteArray,
     val csd1: ByteArray,
     val csd2: ByteArray,
-    private val callback: IDecodeCallback
+    private val callback: IDecodeCallback,
 ) : BaseMediaCodecAsynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,
@@ -59,12 +59,10 @@ class OpusDecoder(
         super.start()
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int {
-        return queue.poll()?.let {
-            inBuf.put(it)
-            it.size
-        } ?: 0
-    }
+    override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
+        inBuf.put(it)
+        it.size
+    } ?: 0
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         frameCount++
@@ -73,13 +71,9 @@ class OpusDecoder(
 
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
-    override fun computePresentationTimeUs(): Long {
-        return frameCount * (1_000_000L / sampleRate * 1024)
-    }
+    override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
 
-    fun decode(rawData: ByteArray) {
-        queue.offer(rawData)
-    }
+    fun decode(rawData: ByteArray) = queue.offer(rawData)
 
     override fun stop() {
         queue.clear()

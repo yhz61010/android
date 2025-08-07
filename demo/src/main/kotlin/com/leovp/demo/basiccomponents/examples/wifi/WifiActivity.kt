@@ -46,9 +46,8 @@ import com.leovp.log.base.ITAG
 class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.activity_wifi) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWifiBinding {
-        return ActivityWifiBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityWifiBinding =
+        ActivityWifiBinding.inflate(layoutInflater)
 
     private var adapter: WifiAdapter? = null
     private val wifi: WifiUtil by lazy { WifiUtil.getInstance(this) }

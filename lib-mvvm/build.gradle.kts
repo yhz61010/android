@@ -22,7 +22,7 @@ dependencies {
     api(projects.pref)
 
     // ----------
-    implementation(libs.mmkv.no.version)
+    compileOnly(libs.mmkv)
     api(libs.serialization.json)
     // Net - dependencies - Start
     api(libs.kotlin.coroutines.android)

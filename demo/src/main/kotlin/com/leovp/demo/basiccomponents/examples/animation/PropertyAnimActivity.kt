@@ -27,9 +27,8 @@ import kotlin.random.Random
 class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBinding>(R.layout.activity_property_anim) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPropertyAnimBinding {
-        return ActivityPropertyAnimBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPropertyAnimBinding =
+        ActivityPropertyAnimBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

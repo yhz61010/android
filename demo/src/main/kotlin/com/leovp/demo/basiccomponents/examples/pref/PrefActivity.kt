@@ -9,7 +9,6 @@ import com.leovp.log.base.ITAG
 class PrefActivity : BaseDemonstrationActivity<ActivityPrefBinding>(R.layout.activity_pref) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPrefBinding {
-        return ActivityPrefBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityPrefBinding =
+        ActivityPrefBinding.inflate(layoutInflater)
 }

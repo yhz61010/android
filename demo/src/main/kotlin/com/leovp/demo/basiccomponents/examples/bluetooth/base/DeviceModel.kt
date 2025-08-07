@@ -8,11 +8,6 @@ import androidx.annotation.Keep
  * Date: 21-3-3 下午6:14
  */
 @Keep
-data class DeviceModel(
-    var device: BluetoothDevice,
-    var name: String?,
-    var macAddress: String,
-    var rssi: String?
-) {
+data class DeviceModel(var device: BluetoothDevice, var name: String?, var macAddress: String, var rssi: String?) {
     var index: Int = 0
 }

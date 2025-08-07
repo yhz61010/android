@@ -45,18 +45,18 @@ import java.net.Proxy
 import kotlin.concurrent.thread
 import kotlin.math.pow
 
-class MainActivity : BaseDemonstrationActivity<ActivityMainBinding>(init = {
-    trafficConfig.run {
-        allowToOutputDefaultWifiTrafficInfo = true
-        frequencyInSecond = 3
-    }
-}) {
+class MainActivity :
+    BaseDemonstrationActivity<ActivityMainBinding>(init = {
+        trafficConfig.run {
+            allowToOutputDefaultWifiTrafficInfo = true
+            frequencyInSecond = 3
+        }
+    }) {
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityMainBinding {
-        return ActivityMainBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityMainBinding =
+        ActivityMainBinding.inflate(layoutInflater)
 
     private val connectionLiveData by lazy { ConnectionLiveData(this) }
 

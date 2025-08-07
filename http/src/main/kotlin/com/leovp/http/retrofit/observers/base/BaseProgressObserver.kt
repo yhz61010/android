@@ -14,8 +14,7 @@ import retrofit2.HttpException
  * Author: Michael Leo
  * Date: 19-7-24 下午5:22
  */
-abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextListener<T>) :
-    Observer<T> {
+abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextListener<T>) : Observer<T> {
     private var mDisposable: Disposable? = null
     override fun onSubscribe(d: Disposable) {
         LogContext.log.d(javaClass.simpleName, "onSubscribe()")

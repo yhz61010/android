@@ -36,11 +36,7 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
 
     private val lastNetworkType: AtomicReference<String> = AtomicReference(NetworkUtil.TYPE_OFFLINE)
 
-    data class ConnectionStatus(
-        val online: Boolean,
-        val changed: Boolean,
-        val type: String
-    )
+    data class ConnectionStatus(val online: Boolean, val changed: Boolean, val type: String,)
 
     private val connectivityManager: ConnectivityManager =
         context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -61,8 +57,10 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
                 connectivityManager.registerDefaultNetworkCallback(
                     getConnectivityMarshmallowManagerCallback()
                 )
+
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ->
                 marshmallowNetworkAvailableRequest()
+
             else -> lollipopNetworkAvailableRequest() // For above LOLLIPOP or higher
         }
     }
@@ -128,8 +126,10 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
                         val connectionType = when {
                             networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
                                 NetworkUtil.TYPE_WIFI
+
                             networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
                                 NetworkUtil.TYPE_CELLULAR
+
                             else -> NetworkUtil.TYPE_OTHER
                         }
 

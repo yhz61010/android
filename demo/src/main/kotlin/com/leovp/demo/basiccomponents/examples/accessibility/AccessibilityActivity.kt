@@ -19,9 +19,8 @@ import org.greenrobot.eventbus.EventBus
 class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBinding>(R.layout.activity_accessibility) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAccessibilityBinding {
-        return ActivityAccessibilityBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAccessibilityBinding =
+        ActivityAccessibilityBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

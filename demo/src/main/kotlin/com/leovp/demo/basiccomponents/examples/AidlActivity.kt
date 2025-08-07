@@ -9,7 +9,6 @@ import com.leovp.log.base.ITAG
 class AidlActivity : BaseDemonstrationActivity<ActivityAidlBinding>(R.layout.activity_aidl) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAidlBinding {
-        return ActivityAidlBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAidlBinding =
+        ActivityAidlBinding.inflate(layoutInflater)
 }

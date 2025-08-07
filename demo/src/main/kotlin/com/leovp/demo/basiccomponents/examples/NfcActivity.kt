@@ -28,9 +28,8 @@ class NfcActivity : BaseDemonstrationActivity<ActivityNfcBinding>(R.layout.activ
     private var nfcAdapter: NfcAdapter? = null
     private val nfcReader = NfcReader()
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNfcBinding {
-        return ActivityNfcBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNfcBinding =
+        ActivityNfcBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

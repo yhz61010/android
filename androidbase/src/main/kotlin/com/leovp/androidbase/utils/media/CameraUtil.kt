@@ -32,12 +32,14 @@ object CameraUtil {
 
     fun takePhoto(ctx: Activity): Uri? {
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        return runCatching { //            if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
+        return runCatching {
+            // if (takePhotoIntent.resolveActivity(ctx.packageManager) != null) {
             val imageFile = ctx.createImageFile("jpg")
             LogContext.log.i(
                 TAG,
                 "takePhoto Image saved path=${imageFile.absolutePath}"
-            ) //            boolean deleteFlag = imageFile.delete();
+            )
+            //            boolean deleteFlag = imageFile.delete();
             //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
             val imageUri =
                 // Above Android 7.0, we need convert File to Uri through FileProvider.
@@ -94,7 +96,7 @@ object CameraUtil {
         chooserTitle: String,
         multiple: Boolean,
         launcher: BetterActivityResult<Intent, ActivityResult>,
-        callback: (Uri) -> Unit
+        callback: (Uri) -> Unit,
     ) {
         val getIntent = Intent(Intent.ACTION_GET_CONTENT)
         getIntent.type = "image/*"

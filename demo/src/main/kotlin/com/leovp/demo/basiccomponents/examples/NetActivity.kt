@@ -12,9 +12,8 @@ import com.leovp.log.base.ITAG
 class NetActivity : BaseDemonstrationActivity<ActivityNetBinding>(R.layout.activity_net) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetBinding {
-        return ActivityNetBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetBinding =
+        ActivityNetBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

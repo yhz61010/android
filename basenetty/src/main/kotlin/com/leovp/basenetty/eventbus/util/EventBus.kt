@@ -23,24 +23,19 @@ object EventBus {
         address: String,
         message: Any? = null,
         headers: Map<String, Any>? = null,
-        handler: EventBusHandler? = null
-    ): Map<String, Any> {
-        return constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
-    }
+        handler: EventBusHandler? = null,
+    ): Map<String, Any> = constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
 
-    fun publish(address: String, message: Any? = null, headers: Map<String, Any>? = null): Map<String, Any> {
-        return constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
-    }
+    fun publish(address: String, message: Any? = null, headers: Map<String, Any>? = null): Map<String, Any> =
+        constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
 
     /** same as `consumer` */
     fun register(
         address: String,
         headers: Map<String, Any>? = null,
         customFields: Map<String, Any?>? = null,
-        handler: EventBusHandler
-    ): Map<String, Any> {
-        return constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
-    }
+        handler: EventBusHandler,
+    ): Map<String, Any> = constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
 
     fun unregister(address: String, headers: Map<String, Any>? = null): Map<String, Any> {
         handlers.remove(address)
@@ -49,9 +44,8 @@ object EventBus {
 
     // =============================================
 
-    fun processHandlers(address: String, handle: (idx: Int, h: EventBusHandler) -> Unit) {
+    fun processHandlers(address: String, handle: (idx: Int, h: EventBusHandler) -> Unit) =
         handlers[address]?.forEachIndexed { idx, h -> handle(idx, h) }
-    }
 
     fun processReplyHandler(address: String, handle: (h: EventBusHandler) -> Unit) {
         replyHandlers[address]?.let {
@@ -102,7 +96,7 @@ object EventBus {
         message: Any? = null,
         headers: Map<String, Any>? = null,
         customFields: Map<String, Any?>? = null,
-        handler: EventBusHandler? = null
+        handler: EventBusHandler? = null,
     ): Map<String, Any> {
         // LogContext.log.i("constructData", "[$type][$address]")
 
@@ -121,6 +115,7 @@ object EventBus {
                     addReplyHandler(replyAddress, it)
                 }
             }
+
             EventBusAttributes.TYPE_REGISTER -> {
                 customFields?.let { map ->
                     for ((key, value) in map) {
@@ -129,6 +124,7 @@ object EventBus {
                 }
                 handler?.let { addHandler(address, it) }
             }
+
             else -> Unit
         }
         return eventBusObj

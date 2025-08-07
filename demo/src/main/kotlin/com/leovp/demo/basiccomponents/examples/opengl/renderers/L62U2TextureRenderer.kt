@@ -136,22 +136,20 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
     private var textureLocationBeauty: Int = 0
     private var aPositionLocation: Int = 0
 
-    private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
-        return floatArrayOf(
-            // -0.4f, 1.4f,
-            // -0.4f, -0.4f,
-            // 1.4f, -0.4f,
-            // 1.4f, 1.4f
-            -(vertex[2] + 1.0f) / 2.0f,
-            2 - (vertex[3] + 1.0f) / 2.0f,
-            -(vertex[0] + 1.0f) / 2.0f,
-            -(vertex[1] + 1.0f) / 2.0f,
-            2 - (vertex[6] + 1.0f) / 2.0f,
-            -(vertex[7] + 1.0f) / 2.0f,
-            2 - (vertex[4] + 1.0f) / 2.0f,
-            2 - (vertex[5] + 1.0f) / 2.0f
-        )
-    }
+    private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray = floatArrayOf(
+        // -0.4f, 1.4f,
+        // -0.4f, -0.4f,
+        // 1.4f, -0.4f,
+        // 1.4f, 1.4f
+        -(vertex[2] + 1.0f) / 2.0f,
+        2 - (vertex[3] + 1.0f) / 2.0f,
+        -(vertex[0] + 1.0f) / 2.0f,
+        -(vertex[1] + 1.0f) / 2.0f,
+        2 - (vertex[6] + 1.0f) / 2.0f,
+        -(vertex[7] + 1.0f) / 2.0f,
+        2 - (vertex[4] + 1.0f) / 2.0f,
+        2 - (vertex[5] + 1.0f) / 2.0f
+    )
 
     /** 纹理数据 */
     private lateinit var textureBeanFireL: TextureHelper.TextureBean

@@ -168,14 +168,12 @@ object FileDocumentUtil {
         return null
     }
 
-    fun resourceToUri(context: Context, resId: Int): Uri? {
-        return (
-            ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                context.resources.getResourcePackageName(resId) + "/" +
-                context.resources.getResourceTypeName(resId) + "/" +
-                context.resources.getResourceEntryName(resId)
-            ).toUri()
-    }
+    fun resourceToUri(context: Context, resId: Int): Uri? = (
+        ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+            context.resources.getResourcePackageName(resId) + "/" +
+            context.resources.getResourceTypeName(resId) + "/" +
+            context.resources.getResourceEntryName(resId)
+        ).toUri()
 
     private fun getPathFromExtSD(pathData: Array<String>): String {
         val type = pathData[0]
@@ -296,50 +294,37 @@ object FileDocumentUtil {
         return ""
     }
 
-    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String {
-        return copyFileToInternalStorage(context, uri, "whatsapp")
-    }
+    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String =
+        copyFileToInternalStorage(context, uri, "whatsapp")
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
-    private fun isExternalStorageDocument(uri: Uri): Boolean {
-        return "com.android.externalstorage.documents" == uri.authority
-    }
+    private fun isExternalStorageDocument(uri: Uri): Boolean = "com.android.externalstorage.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
-    private fun isDownloadsDocument(uri: Uri): Boolean {
-        return "com.android.providers.downloads.documents" == uri.authority
-    }
+    private fun isDownloadsDocument(uri: Uri): Boolean = "com.android.providers.downloads.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
-    private fun isMediaDocument(uri: Uri): Boolean {
-        return "com.android.providers.media.documents" == uri.authority
-    }
+    private fun isMediaDocument(uri: Uri): Boolean = "com.android.providers.media.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is Google Photos.
      */
-    private fun isGooglePhotosUri(uri: Uri): Boolean {
-        return "com.google.android.apps.photos.content" == uri.authority
-    }
+    private fun isGooglePhotosUri(uri: Uri): Boolean = "com.google.android.apps.photos.content" == uri.authority
 
-    fun isWhatsAppFile(uri: Uri): Boolean {
-        return "com.whatsapp.provider.media" == uri.authority
-    }
+    fun isWhatsAppFile(uri: Uri): Boolean = "com.whatsapp.provider.media" == uri.authority
 
-    private fun isGoogleDriveUri(uri: Uri): Boolean {
-        return "com.google.android.apps.docs.storage" == uri.authority ||
-            "com.google.android.apps.docs.storage.legacy" == uri.authority
-    }
+    private fun isGoogleDriveUri(uri: Uri): Boolean = "com.google.android.apps.docs.storage" == uri.authority ||
+        "com.google.android.apps.docs.storage.legacy" == uri.authority
 
     private fun getDataColumn(context: Context, uri: Uri, selection: String?, selectionArgs: Array<String>?): String? {
         // MediaStore.Images.Media.DATA

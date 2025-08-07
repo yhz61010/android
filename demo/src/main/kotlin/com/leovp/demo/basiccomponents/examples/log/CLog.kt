@@ -13,11 +13,8 @@ import java.io.File
  * Date: 20-4-20 上午11:39
  */
 @Suppress("unused")
-class CLog(
-    tagPrefix: String,
-    logLevel: LogLevel = LogLevel.VERB,
-    enableLog: Boolean = true,
-) : AbsLog(tagPrefix = tagPrefix, separator = "-", logLevel = logLevel, enableLog = enableLog) {
+class CLog(tagPrefix: String, logLevel: LogLevel = LogLevel.VERB, enableLog: Boolean = true,) :
+    AbsLog(tagPrefix = tagPrefix, separator = "-", logLevel = logLevel, enableLog = enableLog) {
 
     override fun printVerbLog(tag: String, message: String, outputType: LogOutType) {
         Log.v(tag, if (outputType == LogOutType.COMMON) message else "[$outputType]$message")
@@ -53,9 +50,8 @@ class CLog(
     }
 
     @Suppress("WeakerAccess")
-    private fun getBaseDirString(ctx: Context, baseFolderName: String): String {
-        return ctx.getExternalFilesDir(null)?.let { it.absolutePath + File.separator + baseFolderName } ?: ""
-    }
+    private fun getBaseDirString(ctx: Context, baseFolderName: String): String =
+        ctx.getExternalFilesDir(null)?.let { it.absolutePath + File.separator + baseFolderName } ?: ""
 
     fun init(context: Context) {
         System.loadLibrary("c++_shared")

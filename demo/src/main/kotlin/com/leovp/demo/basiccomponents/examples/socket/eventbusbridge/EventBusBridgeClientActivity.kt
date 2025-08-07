@@ -38,9 +38,8 @@ class EventBusBridgeClientActivity :
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityEventBusBridgeClientBinding {
-        return ActivityEventBusBridgeClientBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityEventBusBridgeClientBinding =
+        ActivityEventBusBridgeClientBinding.inflate(layoutInflater)
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -181,14 +180,12 @@ class EventBusBridgeClientActivity :
         }
 
         @Suppress("unused")
-        private fun deserializeData(serializedData: ByteArray): JsonNode {
-            return om.readTree(ByteArrayInputStream(serializedData))
-        }
+        private fun deserializeData(serializedData: ByteArray): JsonNode =
+            om.readTree(ByteArrayInputStream(serializedData))
 
         @Suppress("unused")
-        private fun <T> deserializeData(serializedData: ByteArray, clazz: Class<T>): T {
-            return om.readValue(ByteArrayInputStream(serializedData), clazz)
-        }
+        private fun <T> deserializeData(serializedData: ByteArray, clazz: Class<T>): T =
+            om.readValue(ByteArrayInputStream(serializedData), clazz)
         // =========================
     }
 }

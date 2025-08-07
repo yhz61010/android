@@ -37,9 +37,8 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
         private const val PORT = 10020
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketServerBinding {
-        return ActivitySocketServerBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketServerBinding =
+        ActivitySocketServerBinding.inflate(layoutInflater)
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
@@ -140,11 +139,12 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
 
     // =====================================================
 
-    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) : BaseNettyServer(
-        port,
-        connectionListener,
-        false
-    ) {
+    class SocketServer(port: Int, connectionListener: ServerConnectListener<BaseNettyServer>) :
+        BaseNettyServer(
+            port,
+            connectionListener,
+            false
+        ) {
         override fun getTagName() = "SSA-S"
         override fun addLastToPipeline(pipeline: ChannelPipeline) {
             super.addLastToPipeline(pipeline)
@@ -162,9 +162,7 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             netty.connectionListener.onReceivedData(netty, ctx.channel(), msg)
         }
 
-        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean {
-            return netty.executeCommand(clientChannel, msg)
-        }
+        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean = netty.executeCommand(clientChannel, msg)
 
         override fun release() {
         }

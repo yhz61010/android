@@ -25,11 +25,9 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2021/4/28 10:30 AM
  */
-class LeoTextureView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : TextureView(context, attrs, defStyleAttr), SurfaceTextureListener {
+class LeoTextureView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,) :
+    TextureView(context, attrs, defStyleAttr),
+    SurfaceTextureListener {
     companion object {
         private const val TAG = "LTV"
     }
@@ -100,9 +98,7 @@ class LeoTextureView @JvmOverloads constructor(
 
     // ----------------------------------------
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return touchHelper?.onTouchEvent(event) ?: performClick()
-    }
+    override fun onTouchEvent(event: MotionEvent): Boolean = touchHelper?.onTouchEvent(event) ?: performClick()
 
     override fun performClick(): Boolean {
         super.performClick()
@@ -208,9 +204,11 @@ class LeoTextureView @JvmOverloads constructor(
                             it.get(decodedData)
                             LogContext.log.w(TAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
                         }
+
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
                             // LogContext.log.d(TAG, "Found Key Frame[" + info.size + "]")
                         }
+
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
                         else -> Unit

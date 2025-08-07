@@ -10,7 +10,7 @@ import android.os.LocaleList
 import androidx.annotation.RequiresApi
 import com.leovp.android.exts.sharedPrefs
 import com.leovp.kotlin.utils.SingletonHolder
-import java.util.*
+import java.util.Locale
 
 /**
  * Attention:
@@ -109,7 +109,7 @@ class LangUtil private constructor(private val ctx: Context) {
         ctx: Context,
         targetLocale: Locale = getAppLanguage(),
         refreshUI: Boolean = false,
-        callback: ((Boolean) -> Unit)? = null
+        callback: ((Boolean) -> Unit)? = null,
     ): Context {
         saveLanguageToPref(targetLocale)
         val context = updateResources(ctx, targetLocale)
@@ -160,16 +160,14 @@ class LangUtil private constructor(private val ctx: Context) {
 
     // ================================
 
-    fun getLocale(languageAndCountry: String): Locale? {
-        return runCatching {
-            if (languageAndCountry.contains("_")) {
-                val langCountry = languageAndCountry.split("_".toRegex())
-                Locale(langCountry[0], langCountry[1])
-            } else {
-                Locale(languageAndCountry)
-            }
-        }.getOrNull()
-    }
+    fun getLocale(languageAndCountry: String): Locale? = runCatching {
+        if (languageAndCountry.contains("_")) {
+            val langCountry = languageAndCountry.split("_".toRegex())
+            Locale(langCountry[0], langCountry[1])
+        } else {
+            Locale(languageAndCountry)
+        }
+    }.getOrNull()
 
     fun getLanguageCountryCode(locale: Locale): String {
         val country = locale.country
@@ -198,13 +196,11 @@ class LangUtil private constructor(private val ctx: Context) {
     /**
      * @return If you call `toString()` on result, you will get something like: zh_CN_#Hans
      */
-    fun getDeviceLocale(): Locale {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Resources.getSystem().configuration.locales[0]
-        } else {
-            @Suppress("DEPRECATION")
-            Resources.getSystem().configuration.locale
-        }
+    fun getDeviceLocale(): Locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        Resources.getSystem().configuration.locales[0]
+    } else {
+        @Suppress("DEPRECATION")
+        Resources.getSystem().configuration.locale
     }
 
     /**

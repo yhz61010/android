@@ -48,9 +48,8 @@ class BluetoothClientActivity :
     BaseDemonstrationActivity<ActivityBluetoothClientBinding>(R.layout.activity_bluetooth_client) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothClientBinding {
-        return ActivityBluetoothClientBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothClientBinding =
+        ActivityBluetoothClientBinding.inflate(layoutInflater)
 
     private var device: BluetoothDevice? = null
     private var bluetoothGatt: BluetoothGatt? = null

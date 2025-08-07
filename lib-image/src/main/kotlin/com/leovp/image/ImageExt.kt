@@ -49,13 +49,12 @@ fun Bitmap.toBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-    return runCatching {
+fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
+    runCatching {
         Bitmap.createBitmap(width, height, config).also {
             it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
         }
     }.getOrNull()
-}
 
 fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     // API < 26

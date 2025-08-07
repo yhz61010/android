@@ -282,7 +282,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
         // Setup image capture metadata
-        val metadata = ImageCapture.Metadata().apply { // Mirror image when using the front camera
+        val metadata = ImageCapture.Metadata().apply {
+            // Mirror image when using the front camera
             isReversedHorizontal = lensFacing == CameraSelector.DEFAULT_FRONT_CAMERA
         }
 
@@ -441,7 +442,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         // We can only change the foreground Drawable using API level 23+ API
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             viewFinder.apply {
-                post { // Display flash animation to indicate that photo was captured.
+                post {
+                    // Display flash animation to indicate that photo was captured.
                     foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
                     postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
                 }
@@ -502,7 +504,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 val focusFuture: ListenableFuture<FocusMeteringResult> =
                     camera.cameraControl.startFocusAndMetering(action)
                 focusFuture.addListener({
-                    runCatching { // Get focus result
+                    runCatching {
+                        // Get focus result
                         val result = focusFuture.get() as FocusMeteringResult
                         if (result.isFocusSuccessful) {
                             touchListener?.onFocusSuccess()
@@ -675,7 +678,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         galleryButton.let { photoViewButton ->
             photoViewButton.post {
                 photoViewButton.setPadding(resources.getDimension(R.dimen.stroke_tiny).toInt())
-                photoViewButton.load(uri) { // placeholder(R.drawable.ic_photo)
+                photoViewButton.load(uri) {
+                    // placeholder(R.drawable.ic_photo)
                     error(R.drawable.ic_photo)
                     transformations(CircleCropTransformation())
                 }
@@ -864,10 +868,14 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
             }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
+                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") {
+                    "${it.profile}/${it.level}"
+                }
             }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") { "${it.profile}/${it.level}" }
+                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") {
+                    "${it.profile}/${it.level}"
+                }
             }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
@@ -990,16 +998,14 @@ Supported profile/level for HEVC=${
         internal fun createFile(baseFolder: File, format: String, extension: String) =
             File(baseFolder, SimpleDateFormat(format, Locale.US).format(System.currentTimeMillis()) + extension)
 
-        internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
-            return File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {
+        internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File =
+            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
-        }
 
-        internal fun getOutputVideoDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File {
-            return File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
+        internal fun getOutputVideoDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File =
+            File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
-        }
     }
 }

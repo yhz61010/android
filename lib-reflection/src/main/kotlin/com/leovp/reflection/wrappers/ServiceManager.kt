@@ -103,14 +103,12 @@ object ServiceManager {
         }
         private set
 
-    private fun getService(service: String, type: String): IInterface {
-        return try {
-            val binder: IBinder = getServiceMethod!!.invoke(null, service) as IBinder
-            val asInterfaceMethod: Method =
-                Class.forName("$type\$Stub").getMethod("asInterface", IBinder::class.java)
-            asInterfaceMethod.invoke(null, binder) as IInterface
-        } catch (e: Exception) {
-            throw AssertionError(e)
-        }
+    private fun getService(service: String, type: String): IInterface = try {
+        val binder: IBinder = getServiceMethod!!.invoke(null, service) as IBinder
+        val asInterfaceMethod: Method =
+            Class.forName("$type\$Stub").getMethod("asInterface", IBinder::class.java)
+        asInterfaceMethod.invoke(null, binder) as IInterface
+    } catch (e: Exception) {
+        throw AssertionError(e)
     }
 }

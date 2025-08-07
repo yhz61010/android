@@ -36,9 +36,7 @@ internal fun getDisplaySmartSize(ctx: Context): SmartSize {
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
-internal fun getDisplaySmartSize(designSize: Size): SmartSize {
-    return SmartSize(designSize.width, designSize.height)
-}
+internal fun getDisplaySmartSize(designSize: Size): SmartSize = SmartSize(designSize.width, designSize.height)
 
 /**
  * Returns the largest available PREVIEW size. For more information, see:
@@ -59,7 +57,7 @@ fun <T> getPreviewOutputSize(
     designSize: Size,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
-    format: Int? = null
+    format: Int? = null,
 ): Size {
     val smartSize = getDisplaySmartSize(designSize)
     // Find which is smaller: designSize or 1080p
@@ -93,7 +91,7 @@ internal fun <T> getPreviewOutputSize(
     ctx: Context,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
-    format: Int? = null
+    format: Int? = null,
 ): Size {
     val screenSize = getDisplaySmartSize(ctx)
     return getPreviewOutputSize(

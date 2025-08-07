@@ -9,7 +9,7 @@ import java.io.IOException
 import java.io.OutputStreamWriter
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 /**
  * Shell Utils
@@ -32,13 +32,10 @@ object ShellUtil {
      *
      * @return root for true otherwise false
      */
-    fun checkRootPermission(): Boolean {
-        return execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
-    }
+    fun checkRootPermission(): Boolean = execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
 
-    fun execCmd(command: String, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
-        return execCmd(listOf(command), isRoot, isNeedResultMsg)
-    }
+    fun execCmd(command: String, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult =
+        execCmd(listOf(command), isRoot, isNeedResultMsg)
 
     fun execCmd(commands: List<String>, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
         var result = -1
@@ -133,11 +130,9 @@ object ShellUtil {
      * @param name   Specific process named
      * @return Return found process list or return empty list.
      */
-    fun findProcessByName(name: String, isRoot: Boolean = false): List<LinuxProcess> {
-        return getProcessesList(isRoot)
-            .filter { process -> name.equals(process.name, true) }
-            .toCollection(arrayListOf())
-    }
+    fun findProcessByName(name: String, isRoot: Boolean = false): List<LinuxProcess> = getProcessesList(isRoot)
+        .filter { process -> name.equals(process.name, true) }
+        .toCollection(arrayListOf())
 
     fun killProcessByName(processName: String, isRoot: Boolean = false) {
         // As of API level 24: java.lang.Iterable#forEach
@@ -232,8 +227,4 @@ object ShellUtil {
 }
 
 @Keep
-data class CommandResult(
-    val result: Int,
-    val successMsg: String,
-    val errorMsg: String
-)
+data class CommandResult(val result: Int, val successMsg: String, val errorMsg: String)

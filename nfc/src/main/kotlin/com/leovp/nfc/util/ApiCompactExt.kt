@@ -75,23 +75,21 @@ inline fun <reified T : Parcelable> Intent.getParcelableExtraOrNull(key: String)
  * val rawMessages2 : Array<NdefMessage>? = intent.getParcelableArrayExtraOrNull(NfcAdapter.EXTRA_NDEF_MESSAGES)
  * ```
  */
-inline fun <reified T : Parcelable> Intent.getParcelableArrayExtraOrNull(key: String): Array<T>? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+inline fun <reified T : Parcelable> Intent.getParcelableArrayExtraOrNull(key: String): Array<T>? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getParcelableArrayExtra(key, T::class.java)
     } else {
         @Suppress("DEPRECATION")
         getParcelableArrayExtra(key)?.filterIsInstance<T>()?.toTypedArray()
     }
-}
 
-inline fun <reified T : Parcelable> Intent.getParcelableArrayListExtraOrNull(key: String): ArrayList<T>? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+inline fun <reified T : Parcelable> Intent.getParcelableArrayListExtraOrNull(key: String): ArrayList<T>? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         getParcelableArrayListExtra(key, T::class.java)
     } else {
         @Suppress("DEPRECATION")
         getParcelableArrayListExtra(key)
     }
-}
 
 // ==============================
 
@@ -151,8 +149,8 @@ fun BroadcastReceiver.getCompatContextInfo(ctx: Context, flags: Int): ActivityIn
 
 // ==============================
 
-fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): PackageInfo? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): PackageInfo? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         this.packageManager.getPackageArchiveInfo(
             archiveFilePath,
             PackageManager.PackageInfoFlags.of(flags.toLong())
@@ -160,7 +158,6 @@ fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): P
     } else {
         this.packageManager.getPackageArchiveInfo(archiveFilePath, flags)
     }
-}
 
 /**
  * Add the following permission in your `AndroidManifest.xml`:
@@ -171,8 +168,8 @@ fun Context.getCompactPackageArchiveInfo(archiveFilePath: String, flags: Int): P
  * https://stackoverflow.com/a/64946118/1685062
  */
 @SuppressLint("QueryPermissionsNeeded")
-fun Context.queryCompactIntentActivities(intent: Intent, flags: Int): List<ResolveInfo> {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+fun Context.queryCompactIntentActivities(intent: Intent, flags: Int): List<ResolveInfo> =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         this.packageManager.queryIntentActivities(
             intent,
             PackageManager.ResolveInfoFlags.of(flags.toLong())
@@ -180,10 +177,9 @@ fun Context.queryCompactIntentActivities(intent: Intent, flags: Int): List<Resol
     } else {
         this.packageManager.queryIntentActivities(intent, flags)
     }
-}
 
-fun Context.getCompactPackageInfo(packageName: String, flags: Int): PackageInfo {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+fun Context.getCompactPackageInfo(packageName: String, flags: Int): PackageInfo =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         this.packageManager.getPackageInfo(
             packageName,
             PackageManager.PackageInfoFlags.of(flags.toLong())
@@ -191,7 +187,6 @@ fun Context.getCompactPackageInfo(packageName: String, flags: Int): PackageInfo 
     } else {
         this.packageManager.getPackageInfo(packageName, flags)
     }
-}
 
 // ==============================
 

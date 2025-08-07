@@ -30,9 +30,8 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
     private lateinit var socketClient: SocketClient
     private lateinit var socketClientHandler: SocketClientHandler
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketClientBinding {
-        return ActivitySocketClientBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivitySocketClientBinding =
+        ActivitySocketClientBinding.inflate(layoutInflater)
 
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
@@ -119,8 +118,7 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
         port: Int,
         connectionListener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy
-    ) :
-        BaseNettyClient(host, port, connectionListener, retryStrategy) {
+    ) : BaseNettyClient(host, port, connectionListener, retryStrategy) {
         override fun getTagName() = "SocketClient"
     }
 
@@ -130,9 +128,7 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
             netty.connectionListener.onReceivedData(netty, msg)
         }
 
-        fun sendMsgToServer(msg: String): Boolean {
-            return netty.executeCommand(msg, "Send msg to server", "SocketCmd")
-        }
+        fun sendMsgToServer(msg: String): Boolean = netty.executeCommand(msg, "Send msg to server", "SocketCmd")
 
         override fun release() {
         }

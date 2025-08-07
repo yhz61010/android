@@ -72,9 +72,7 @@ class AacFilePlayer(
         }
     }
 
-    override fun computePresentationTimeUs(): Long {
-        return mediaExtractor?.sampleTime ?: -1
-    }
+    override fun computePresentationTimeUs(): Long = mediaExtractor?.sampleTime ?: -1
 
     override fun onEndOfStream() {
         cb?.invoke()

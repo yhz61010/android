@@ -22,7 +22,7 @@ class AacEncoder(
     channelCount: Int,
     private val bitrate: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
-    private val callback: IEncodeCallback
+    private val callback: IEncodeCallback,
 ) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, audioFormat, true) {
     companion object {
         private const val TAG = "AacEn"
@@ -47,12 +47,10 @@ class AacEncoder(
         super.start()
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int {
-        return queue.poll()?.let {
-            inBuf.put(it)
-            it.size.also { size -> totalPcmBytes += size }
-        } ?: 0
-    }
+    override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
+        inBuf.put(it)
+        it.size.also { size -> totalPcmBytes += size }
+    } ?: 0
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         if (isConfig) {
@@ -184,23 +182,21 @@ class AacEncoder(
         return csd0
     }
 
-    private fun getSampleFrequencyIndex(sampleRate: Int): Int {
-        return when (sampleRate) {
-            7350 -> 12
-            8000 -> 11
-            11025 -> 10
-            12000 -> 9
-            16000 -> 8
-            22050 -> 7
-            24000 -> 6
-            32000 -> 5
-            44100 -> 4
-            48000 -> 3
-            64000 -> 2
-            88200 -> 1
-            96000 -> 0
-            else -> -1
-        }
+    private fun getSampleFrequencyIndex(sampleRate: Int): Int = when (sampleRate) {
+        7350 -> 12
+        8000 -> 11
+        11025 -> 10
+        12000 -> 9
+        16000 -> 8
+        22050 -> 7
+        24000 -> 6
+        32000 -> 5
+        44100 -> 4
+        48000 -> 3
+        64000 -> 2
+        88200 -> 1
+        96000 -> 0
+        else -> -1
     }
 
     // presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate / channelCount

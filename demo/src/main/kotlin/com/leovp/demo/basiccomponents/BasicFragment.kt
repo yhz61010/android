@@ -76,9 +76,7 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): FragmentBasicBinding {
-        return FragmentBasicBinding.inflate(inflater, container, false)
-    }
+    ): FragmentBasicBinding = FragmentBasicBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

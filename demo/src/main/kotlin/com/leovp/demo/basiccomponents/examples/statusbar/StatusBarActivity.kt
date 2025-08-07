@@ -15,9 +15,8 @@ import com.leovp.log.base.ITAG
 class StatusBarActivity : BaseDemonstrationActivity<ActivityStatusBarBinding>(R.layout.activity_status_bar) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityStatusBarBinding {
-        return ActivityStatusBarBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityStatusBarBinding =
+        ActivityStatusBarBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -13,13 +13,11 @@ object AudioDecoderManager {
     fun getWrapper(
         type: AudioType,
         decoderInfo: AudioDecoderInfo,
-        outputCallback: OutputCallback
-    ): AudioDecoderWrapper? {
-        return when (type) {
-            AudioType.PCM -> null
-            AudioType.COMPRESSED_PCM -> CompressedPcmDecoderWrapper(decoderInfo, outputCallback)
-            AudioType.AAC -> null
-            AudioType.OPUS -> null
-        }
+        outputCallback: OutputCallback,
+    ): AudioDecoderWrapper? = when (type) {
+        AudioType.PCM -> null
+        AudioType.COMPRESSED_PCM -> CompressedPcmDecoderWrapper(decoderInfo, outputCallback)
+        AudioType.AAC -> null
+        AudioType.OPUS -> null
     }
 }

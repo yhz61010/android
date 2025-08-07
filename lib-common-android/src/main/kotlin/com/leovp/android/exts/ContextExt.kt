@@ -83,14 +83,13 @@ val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null
  *  @param value The constant defined in [PackageManager].
  *  For instance: [PackageManager.GET_ACTIVITIES], [PackageManager.GET_CONFIGURATIONS] and etc.
  */
-fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): PackageInfo {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): PackageInfo =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val infoFlags = PackageManager.PackageInfoFlags.of(value.toLong())
         packageManager.getPackageInfo(pkgName, infoFlags)
     } else {
         packageManager.getPackageInfo(pkgName, value)
     }
-}
 
 /**
  * @param algorithm "SHA", "SHA-1", "SHA-256", "MD5" and etc. Default value is "SHA2-56"

@@ -32,9 +32,8 @@ class NetworkMonitorActivity :
 
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetworkMonitorBinding {
-        return ActivityNetworkMonitorBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityNetworkMonitorBinding =
+        ActivityNetworkMonitorBinding.inflate(layoutInflater)
 
     private var networkMonitor: NetworkMonitor? = null
 

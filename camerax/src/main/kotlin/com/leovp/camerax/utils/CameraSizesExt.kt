@@ -44,9 +44,7 @@ internal fun getDisplaySmartSize(ctx: Context): SmartSize {
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
-internal fun getDisplaySmartSize(designSize: Size): SmartSize {
-    return SmartSize(designSize.width, designSize.height)
-}
+internal fun getDisplaySmartSize(designSize: Size): SmartSize = SmartSize(designSize.width, designSize.height)
 
 /**
  * Returns the largest available PREVIEW size. For more information, see:
@@ -67,7 +65,7 @@ internal fun <T> getPreviewOutputSize(
     designSize: Size,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
-    format: Int? = null
+    format: Int? = null,
 ): Size {
     val smartSize = getDisplaySmartSize(designSize)
     // Find which is smaller: designSize or 1080p
@@ -104,7 +102,7 @@ internal fun <T> getPreviewOutputSize(
     ctx: Context,
     characteristics: CameraCharacteristics,
     targetClass: Class<T>,
-    format: Int? = null
+    format: Int? = null,
 ): Size {
     val screenSize = getDisplaySmartSize(ctx)
     return getPreviewOutputSize(
@@ -115,21 +113,21 @@ internal fun <T> getPreviewOutputSize(
     )
 }
 
-internal fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> {
-    return getConfigMap().getOutputSizes(SurfaceHolder::class.java)
+internal fun CameraCharacteristics.getCameraSupportedSize(): Array<SmartSize> =
+    getConfigMap().getOutputSizes(SurfaceHolder::class.java)
         .map { SmartSize(it.width, it.height) }
         .toTypedArray()
-}
 
-internal fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> {
-    return getCameraSupportedSize().groupBy { getRatio(it)!! }
-}
+internal fun CameraCharacteristics.getCameraSupportedSizeMap(): Map<String, List<SmartSize>> =
+    getCameraSupportedSize().groupBy {
+        getRatio(it)!!
+    }
 
 internal fun getSpecificPreviewOutputSize(
     context: Context,
     desiredVideoWidth: Int,
     desiredVideoHeight: Int,
-    characteristics: CameraCharacteristics
+    characteristics: CameraCharacteristics,
 ): Size {
     // Generally, if the device is in portrait(Surface.ROTATION_0),
     // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
@@ -143,10 +141,12 @@ internal fun getSpecificPreviewOutputSize(
         Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
             swapDimension = true
         }
+
         Surface.ROTATION_90,
         Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
             swapDimension = true
         }
+
         else -> throw IllegalAccessException("Display rotation is invalid: $deviceRotation")
     }
 

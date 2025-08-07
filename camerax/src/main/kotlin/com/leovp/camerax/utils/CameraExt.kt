@@ -26,23 +26,21 @@ internal fun Context.getPreviewViewMaxHeight(): Int {
     return min(screenSize.width, screenSize.height)
 }
 
-internal fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap {
-    return get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-}
+internal fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap =
+    get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
 
 internal fun CameraCharacteristics.isFlashSupported(): Boolean = get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
 
 internal fun CameraCharacteristics.hardwareLevel(): Int = get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
 
-internal fun CameraCharacteristics.hardwareLevelName(): String {
-    return when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
+internal fun CameraCharacteristics.hardwareLevelName(): String =
+    when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
         0 -> "LIMIT"
         1 -> "FULL"
         2 -> "LEGACY"
         3 -> "LEVEL_3"
         else -> "NA"
     }
-}
 
 internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
     get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!

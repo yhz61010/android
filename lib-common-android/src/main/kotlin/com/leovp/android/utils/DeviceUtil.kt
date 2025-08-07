@@ -121,26 +121,24 @@ class DeviceUtil private constructor(private val ctx: Context) {
         } ?: -1
     }.getOrDefault(-2)
 
-    fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? {
-        return runCatching {
-            val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false)
-                .successMsg.toInt() != 0
-            val minFreq: Int
-            val maxFreq: Int
-            if (online) {
-                minFreq = ShellUtil
-                    .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false)
-                    .successMsg.toInt()
-                maxFreq = ShellUtil
-                    .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false)
-                    .successMsg.toInt()
-            } else {
-                minFreq = 0
-                maxFreq = 0
-            }
-            CpuCoreInfo(online, minFreq, maxFreq)
-        }.getOrNull()
-    }
+    fun getCpuCoreInfoByIndex(index: Int): CpuCoreInfo? = runCatching {
+        val online = ShellUtil.execCmd("cat /sys/devices/system/cpu/cpu$index/online", false)
+            .successMsg.toInt() != 0
+        val minFreq: Int
+        val maxFreq: Int
+        if (online) {
+            minFreq = ShellUtil
+                .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_min_freq", false)
+                .successMsg.toInt()
+            maxFreq = ShellUtil
+                .execCmd("cat /sys/devices/system/cpu/cpu$index/cpufreq/cpuinfo_max_freq", false)
+                .successMsg.toInt()
+        } else {
+            minFreq = 0
+            maxFreq = 0
+        }
+        CpuCoreInfo(online, minFreq, maxFreq)
+    }.getOrNull()
 
     @Keep
     data class CpuCoreInfo(val online: Boolean, val minFreq: Int, val maxFreq: Int)
@@ -206,31 +204,30 @@ class DeviceUtil private constructor(private val ctx: Context) {
         }
 
     @SuppressLint("MissingPermission")
-    fun getDeviceInfo(): String {
-        return runCatching {
-            @Suppress("DEPRECATION")
-            val defaultDisplay: Display? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                ctx.display
-            } else {
-                ctx.windowManager.defaultDisplay
-            }
-            val st = SystemClock.elapsedRealtime()
-            val memInfo = getMemInfoInBytes()
-            val screenSize = ctx.screenRealResolution
-            val availableSize = ctx.screenAvailableResolution
-            val statusBarHeight = ctx.statusBarHeight
-            val navBarHeight = ctx.navigationBarHeight
-            val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo
-            val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
-                "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
-            val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
-            val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches " +
-                "RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
-                "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
-                "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
-                "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
-                "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
-            """
+    fun getDeviceInfo(): String = runCatching {
+        @Suppress("DEPRECATION")
+        val defaultDisplay: Display? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ctx.display
+        } else {
+            ctx.windowManager.defaultDisplay
+        }
+        val st = SystemClock.elapsedRealtime()
+        val memInfo = getMemInfoInBytes()
+        val screenSize = ctx.screenRealResolution
+        val availableSize = ctx.screenAvailableResolution
+        val statusBarHeight = ctx.statusBarHeight
+        val navBarHeight = ctx.navigationBarHeight
+        val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo
+        val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
+            "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
+        val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
+        val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches " +
+            "RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
+            "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
+            "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
+            "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
+            "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
+        """
             Device basic information:
             App version      : ${ctx.versionName}(${ctx.versionCode})
             Device locale    : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
@@ -268,10 +265,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
                     Navigation bar is showing : ${ctx.isNavigationBarShown}
 
             Cost: ${SystemClock.elapsedRealtime() - st}ms
-            """.trimIndent()
-        }.getOrElse {
-            it.printStackTrace()
-            ""
-        }
+        """.trimIndent()
+    }.getOrElse {
+        it.printStackTrace()
+        ""
     }
 }

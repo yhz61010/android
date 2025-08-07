@@ -106,11 +106,9 @@ class TextureRenderer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int {
-        return GLES20.glCreateShader(type).also { shader ->
-            GLES20.glShaderSource(shader, shaderCode)
-            GLES20.glCompileShader(shader)
-        }
+    private fun loadShader(type: Int, shaderCode: String): Int = GLES20.glCreateShader(type).also { shader ->
+        GLES20.glShaderSource(shader, shaderCode)
+        GLES20.glCompileShader(shader)
     }
 
     fun draw(viewportWidth: Int, viewportHeight: Int, bitmap: Bitmap, mvpMatrix: FloatArray) {

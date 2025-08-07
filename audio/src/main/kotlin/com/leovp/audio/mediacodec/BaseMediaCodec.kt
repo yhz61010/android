@@ -19,7 +19,7 @@ abstract class BaseMediaCodec(
     protected open val sampleRate: Int,
     protected open val channelCount: Int,
     protected open val audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
-    private val isEncoding: Boolean = false
+    private val isEncoding: Boolean = false,
 ) : IAudioMediaCodec {
     companion object {
         private const val TAG = "BaseMediaCodec"
@@ -84,20 +84,18 @@ abstract class BaseMediaCodec(
         setMediaCodecOptions(codec)
     }
 
-    protected fun getBytesPerSample(): Int {
-        return when (audioFormat) {
-            AudioFormat.ENCODING_PCM_8BIT -> 1
+    protected fun getBytesPerSample(): Int = when (audioFormat) {
+        AudioFormat.ENCODING_PCM_8BIT -> 1
 
-            AudioFormat.ENCODING_PCM_16BIT,
-            AudioFormat.ENCODING_IEC61937,
-            AudioFormat.ENCODING_DEFAULT -> 2
+        AudioFormat.ENCODING_PCM_16BIT,
+        AudioFormat.ENCODING_IEC61937,
+        AudioFormat.ENCODING_DEFAULT -> 2
 
-            AudioFormat.ENCODING_PCM_24BIT_PACKED -> 3
+        AudioFormat.ENCODING_PCM_24BIT_PACKED -> 3
 
-            AudioFormat.ENCODING_PCM_FLOAT,
-            AudioFormat.ENCODING_PCM_32BIT -> 4
+        AudioFormat.ENCODING_PCM_FLOAT,
+        AudioFormat.ENCODING_PCM_32BIT -> 4
 
-            else -> throw IllegalArgumentException("Bad audio format $audioFormat")
-        }
+        else -> throw IllegalArgumentException("Bad audio format $audioFormat")
     }
 }

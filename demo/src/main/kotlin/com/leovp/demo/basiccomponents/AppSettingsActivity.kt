@@ -14,9 +14,8 @@ import com.leovp.log.base.ITAG
 class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding>(R.layout.activity_app_settings) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAppSettingsBinding {
-        return ActivityAppSettingsBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityAppSettingsBinding =
+        ActivityAppSettingsBinding.inflate(layoutInflater)
 
     fun onOpenStorageClick(@Suppress("UNUSED_PARAMETER") view: View) {
         runCatching {

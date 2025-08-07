@@ -58,6 +58,5 @@ class MMKVPref(ctx: Context) : AbsPref() {
 
     override fun getString(key: String, default: String?): String? = mmkv.decodeString(key, default)
 
-    override fun getStringSet(key: String, default: Set<String>?): Set<String>? =
-        mmkv.decodeStringSet(key, default)
+    override fun getStringSet(key: String, default: Set<String>?): Set<String>? = mmkv.decodeStringSet(key, default)
 }

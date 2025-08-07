@@ -97,26 +97,24 @@ abstract class AbsPref {
      * - Boolean
      * - Float
      */
-    inline fun <reified T> get(key: String, default: T): T {
-        return when (default) {
-            is Int -> internalGetInt(key, default) as T
-            is Long -> internalGetLong(key, default) as T
-            is Boolean -> internalGetBool(key, default) as T
-            is Float -> internalGetFloat(key, default) as T
-            is String ->
-                throw IllegalArgumentException(
-                    "Use getString(key: String, default: String? = null) instead."
-                )
-
-            is Set<*> ->
-                throw IllegalArgumentException(
-                    "Use getStringSet(key: String, default: Set<String>? = null) instead."
-                )
-
-            else -> throw IllegalArgumentException(
-                "To get object use getObject(key: String) instead."
+    inline fun <reified T> get(key: String, default: T): T = when (default) {
+        is Int -> internalGetInt(key, default) as T
+        is Long -> internalGetLong(key, default) as T
+        is Boolean -> internalGetBool(key, default) as T
+        is Float -> internalGetFloat(key, default) as T
+        is String ->
+            throw IllegalArgumentException(
+                "Use getString(key: String, default: String? = null) instead."
             )
-        }
+
+        is Set<*> ->
+            throw IllegalArgumentException(
+                "Use getStringSet(key: String, default: Set<String>? = null) instead."
+            )
+
+        else -> throw IllegalArgumentException(
+            "To get object use getObject(key: String) instead."
+        )
     }
 
     // -----
@@ -138,24 +136,22 @@ abstract class AbsPref {
      * - Float
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> get4Java(key: String, default: T, clazz: Class<T>): T {
-        return when (clazz) {
-            Int::class.java -> internalGetInt(key, default as Int) as T
-            Long::class.java -> internalGetLong(key, default as Long) as T
-            Boolean::class.java -> internalGetBool(key, default as Boolean) as T
-            Float::class.java -> internalGetFloat(key, default as Float) as T
-            String::class.java -> throw IllegalArgumentException(
-                "Use getString(key: String, default: String? = null) instead."
-            )
+    fun <T> get4Java(key: String, default: T, clazz: Class<T>): T = when (clazz) {
+        Int::class.java -> internalGetInt(key, default as Int) as T
+        Long::class.java -> internalGetLong(key, default as Long) as T
+        Boolean::class.java -> internalGetBool(key, default as Boolean) as T
+        Float::class.java -> internalGetFloat(key, default as Float) as T
+        String::class.java -> throw IllegalArgumentException(
+            "Use getString(key: String, default: String? = null) instead."
+        )
 
-            Set::class.java -> throw IllegalArgumentException(
-                "Use getStringSet(key: String, default: Set<String>? = null) instead."
-            )
+        Set::class.java -> throw IllegalArgumentException(
+            "Use getStringSet(key: String, default: Set<String>? = null) instead."
+        )
 
-            else -> throw IllegalArgumentException(
-                "To get object use getObject4Java(key: String, clazz: Class<T>) instead."
-            )
-        }
+        else -> throw IllegalArgumentException(
+            "To get object use getObject4Java(key: String, clazz: Class<T>) instead."
+        )
     }
 
     // ------------------------------------------------------------------

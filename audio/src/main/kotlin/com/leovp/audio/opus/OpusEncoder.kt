@@ -184,12 +184,10 @@ class OpusEncoder(
         super.start()
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int {
-        return queue.poll()?.let {
-            inBuf.put(it)
-            it.size.also { size -> totalPcmBytes += size }
-        } ?: 0
-    }
+    override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
+        inBuf.put(it)
+        it.size.also { size -> totalPcmBytes += size }
+    } ?: 0
 
     override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
         if (isConfig) {
@@ -214,9 +212,8 @@ class OpusEncoder(
         callback.onEncoded(outBuf.toByteArray(), isConfig, isKeyFrame)
     }
 
-    override fun computePresentationTimeUs(): Long {
-        return 1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
-    }
+    override fun computePresentationTimeUs(): Long =
+        1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
 
     override fun stop() {
         queue.clear()

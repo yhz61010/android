@@ -17,12 +17,13 @@ import com.leovp.log.base.e
 import com.leovp.log.base.i
 import com.leovp.log.base.w
 import com.leovp.nfc.util.getParcelableExtraOrNull
+import java.util.Locale
 
 /**
  * Author: Michael Leo
  * Date: 2025/6/6 10:52
  */
-class NfcReader() {
+class NfcReader {
     companion object {
         private const val TAG = "NFCReader"
         val logTypeNfc = LogOutType(hashCode())
@@ -108,7 +109,7 @@ class NfcReader() {
     private fun readNfcA(nfcA: NfcA) {
         try {
             nfcA.connect()
-            val uid = nfcA.tag.id.joinToString(" ") { String.format("%02X", it) }
+            val uid = nfcA.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }
             i {
                 this.tag = TAG
                 message = "NfcA UID: $uid"
@@ -131,7 +132,8 @@ class NfcReader() {
             nfcB.connect()
             i {
                 this.tag = TAG
-                message = "NfcB tag connected: ${nfcB.tag.id.joinToString(" ") { String.format("%02X", it) }}"
+                message =
+                    "NfcB tag connected: ${nfcB.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {
@@ -165,7 +167,7 @@ class NfcReader() {
             // )
             i {
                 this.tag = TAG
-                message = "NfcF tag UID: ${nfcF.tag.id.joinToString(" ") { String.format("%02X", it) }}"
+                message = "NfcF tag UID: ${nfcF.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {
@@ -183,7 +185,7 @@ class NfcReader() {
     private fun readIsoDep(isoDep: IsoDep) {
         try {
             isoDep.connect()
-            val hi = isoDep.tag.id.joinToString(" ") { String.format("%02X", it) }
+            val hi = isoDep.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }
             i {
                 this.tag = TAG
                 message = "IsoDep UID: $hi"

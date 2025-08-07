@@ -154,18 +154,16 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray {
-        return floatArrayOf(
-            -(vertex[2] + 1.0f) / 2.0f,
-            2 - (vertex[3] + 1.0f) / 2.0f,
-            -(vertex[0] + 1.0f) / 2.0f,
-            -(vertex[1] + 1.0f) / 2.0f,
-            2 - (vertex[6] + 1.0f) / 2.0f,
-            -(vertex[7] + 1.0f) / 2.0f,
-            2 - (vertex[4] + 1.0f) / 2.0f,
-            2 - (vertex[5] + 1.0f) / 2.0f
-        )
-    }
+    private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray = floatArrayOf(
+        -(vertex[2] + 1.0f) / 2.0f,
+        2 - (vertex[3] + 1.0f) / 2.0f,
+        -(vertex[0] + 1.0f) / 2.0f,
+        -(vertex[1] + 1.0f) / 2.0f,
+        2 - (vertex[6] + 1.0f) / 2.0f,
+        -(vertex[7] + 1.0f) / 2.0f,
+        2 - (vertex[4] + 1.0f) / 2.0f,
+        2 - (vertex[5] + 1.0f) / 2.0f
+    )
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 216f / 255, 209f / 255, 1f)

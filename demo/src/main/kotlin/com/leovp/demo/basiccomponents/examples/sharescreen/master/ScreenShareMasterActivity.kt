@@ -80,9 +80,8 @@ class ScreenShareMasterActivity :
         const val CMD_TOUCH_DRAG: Int = 10
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareMasterBinding {
-        return ActivityScreenShareMasterBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenShareMasterBinding =
+        ActivityScreenShareMasterBinding.inflate(layoutInflater)
 
     private var fingerPaintView: FingerPaintView? = null
 

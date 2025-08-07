@@ -15,7 +15,5 @@ class FragmentForNavThird : BaseFragment<FragmentForNavThirdBinding>(R.layout.fr
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): FragmentForNavThirdBinding {
-        return FragmentForNavThirdBinding.inflate(inflater, container, false)
-    }
+    ): FragmentForNavThirdBinding = FragmentForNavThirdBinding.inflate(inflater, container, false)
 }

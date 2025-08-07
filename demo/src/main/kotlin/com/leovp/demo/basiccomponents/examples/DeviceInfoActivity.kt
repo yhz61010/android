@@ -20,9 +20,8 @@ import kotlinx.coroutines.launch
 class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(R.layout.activity_device_info) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDeviceInfoBinding {
-        return ActivityDeviceInfoBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityDeviceInfoBinding =
+        ActivityDeviceInfoBinding.inflate(layoutInflater)
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {

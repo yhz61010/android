@@ -25,9 +25,8 @@ import kotlinx.coroutines.withTimeout
 class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.layout.activity_coroutine) {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCoroutineBinding {
-        return ActivityCoroutineBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityCoroutineBinding =
+        ActivityCoroutineBinding.inflate(layoutInflater)
 
     private val mainScope = MainScope()
 
@@ -78,26 +77,30 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.
             LogContext.log.e(ITAG, "measureTimeMillis cost=$time")
         }
 
-        cs.launch { // 运行在父协程的上下文中，即 runBlocking 主协程
+        cs.launch {
+            // 运行在父协程的上下文中，即 runBlocking 主协程
             LogContext.log.e(
                 ITAG,
                 "main runBlocking      : I'm working in thread ${Thread.currentThread().name}"
             )
         }
-        cs.launch(Dispatchers.Unconfined) { // 不受限的——将工作在主线程中
+        cs.launch(Dispatchers.Unconfined) {
+            // 不受限的——将工作在主线程中
             LogContext.log.e(
                 ITAG,
                 "Unconfined            : I'm working in thread ${Thread.currentThread().name}"
             )
         }
-        cs.launch(Dispatchers.Default) { // 将会获取默认调度器
+        cs.launch(Dispatchers.Default) {
+            // 将会获取默认调度器
             LogContext.log.e(
                 ITAG,
                 "Default               : I'm working in thread ${Thread.currentThread().name}"
             )
         }
         repeat(20) {
-            cs.launch(singleContext) { // 将使它获得一个新的线程
+            cs.launch(singleContext) {
+                // 将使它获得一个新的线程
                 LogContext.log.e(
                     ITAG,
                     "[$it] newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}"

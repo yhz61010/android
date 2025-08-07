@@ -45,9 +45,7 @@ class TrafficStatHelper private constructor(val ctx: Context) {
 
     data class TrafficSpeed(val download: Long, val upload: Long)
 
-    fun getSpeed(): TrafficSpeed {
-        return TrafficSpeed(downloadSpeed, uploadSpeed)
-    }
+    fun getSpeed(): TrafficSpeed = TrafficSpeed(downloadSpeed, uploadSpeed)
 
     /**
      * Total traffic

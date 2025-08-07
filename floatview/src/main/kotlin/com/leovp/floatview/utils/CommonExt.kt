@@ -89,23 +89,21 @@ internal val Context.screenRealResolution: Size
  * @return The screen size in current screen orientation. If parameter `surfaceRotation`
  *         is not a valid value, return available height according to the context.
  */
-internal fun Context.getScreenSize(rotation: Int, screenSize: Size = screenRealResolution): Size {
-    return when (rotation) {
-        Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
-            min(screenSize.width, screenSize.height),
-            max(screenSize.width, screenSize.height)
-        )
+internal fun Context.getScreenSize(rotation: Int, screenSize: Size = screenRealResolution): Size = when (rotation) {
+    Surface.ROTATION_0, Surface.ROTATION_180 -> Size(
+        min(screenSize.width, screenSize.height),
+        max(screenSize.width, screenSize.height)
+    )
 
-        Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
-            max(screenSize.width, screenSize.height),
-            min(screenSize.width, screenSize.height)
-        )
+    Surface.ROTATION_90, Surface.ROTATION_270 -> Size(
+        max(screenSize.width, screenSize.height),
+        min(screenSize.width, screenSize.height)
+    )
 
-        else -> Size(
-            min(screenSize.width, screenSize.height),
-            max(screenSize.width, screenSize.height)
-        )
-    }
+    else -> Size(
+        min(screenSize.width, screenSize.height),
+        max(screenSize.width, screenSize.height)
+    )
 }
 
 /**

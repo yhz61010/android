@@ -18,11 +18,12 @@ import com.leovp.demo.R
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-abstract class SimpleItemTouchCallback(context: Context) : ItemTouchHelper.SimpleCallback(
-    ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-    // or ItemTouchHelper.UP or ItemTouchHelper.DOWN
-    ItemTouchHelper.LEFT
-) {
+abstract class SimpleItemTouchCallback(context: Context) :
+    ItemTouchHelper.SimpleCallback(
+        ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+        // or ItemTouchHelper.UP or ItemTouchHelper.DOWN
+        ItemTouchHelper.LEFT
+    ) {
     private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_outline_delete_forever)!!
     private val intrinsicWidth = deleteIcon.intrinsicWidth
     private val intrinsicHeight = deleteIcon.intrinsicHeight

@@ -16,9 +16,8 @@ class FingerPaintActivity :
     View.OnClickListener {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFingerPaintBinding {
-        return ActivityFingerPaintBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityFingerPaintBinding =
+        ActivityFingerPaintBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

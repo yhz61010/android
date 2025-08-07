@@ -81,11 +81,9 @@ class WindowManager(private val manager: IInterface) {
         freezeRotationMethod?.invoke(manager, rotation)
     }
 
-    fun isRotationFrozen(): Boolean {
-        return runCatching {
-            (getIsRotationFrozenMethod()?.invoke(manager) as? Boolean) == true
-        }.getOrDefault(false)
-    }
+    fun isRotationFrozen(): Boolean = runCatching {
+        (getIsRotationFrozenMethod()?.invoke(manager) as? Boolean) == true
+    }.getOrDefault(false)
 
     fun thawRotation() = runCatching { getThawRotationMethod()?.invoke(manager) }
 

@@ -37,17 +37,14 @@ class OpenGLES20Activity :
     AdapterView.OnItemClickListener {
     override fun getTagName(): String = ITAG
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGles20Binding {
-        return ActivityOpenGles20Binding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGles20Binding =
+        ActivityOpenGles20Binding.inflate(layoutInflater)
 
     private lateinit var simpleAdapter: ArrayAdapter<Item>
 
     @Parcelize
     data class Item(val title: String, val clazz: Class<*>) : Parcelable {
-        override fun toString(): String {
-            return title
-        }
+        override fun toString(): String = title
     }
 
     private val items = arrayOf(
@@ -84,11 +81,9 @@ class OpenGLES20Activity :
     }
 
     companion object {
-        fun getRenderer(className: Class<*>, context: Context): GLSurfaceView.Renderer? {
-            return runCatching {
-                val constructor = className.getConstructor(Context::class.java)
-                constructor.newInstance(context) as GLSurfaceView.Renderer
-            }.getOrNull()
-        }
+        fun getRenderer(className: Class<*>, context: Context): GLSurfaceView.Renderer? = runCatching {
+            val constructor = className.getConstructor(Context::class.java)
+            constructor.newInstance(context) as GLSurfaceView.Renderer
+        }.getOrNull()
     }
 }

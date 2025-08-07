@@ -31,9 +31,8 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         private const val AUDIO_CHANNELS = 2
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ActivityADPCMBinding {
-        return ActivityADPCMBinding.inflate(layoutInflater)
-    }
+    override fun getViewBinding(savedInstanceState: Bundle?): ActivityADPCMBinding =
+        ActivityADPCMBinding.inflate(layoutInflater)
 
     private var player: AudioPlayer? = null
 

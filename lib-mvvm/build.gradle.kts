@@ -25,6 +25,8 @@ dependencies {
     compileOnly(libs.mmkv)
     api(libs.serialization.json)
     api(libs.gson)
+    api(libs.kotlin.reflect)
+
     // Net - dependencies - Start
     api(libs.kotlin.coroutines.android)
     api(libs.square.okhttp)

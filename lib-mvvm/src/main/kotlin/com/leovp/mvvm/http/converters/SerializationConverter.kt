@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.mvvm.http.converters
 
 import com.drake.net.convert.NetConverter
@@ -36,7 +38,7 @@ class SerializationConverter : NetConverter {
     override fun <R> onConvert(succeed: Type, response: Response): R? {
         try {
             return NetConverter.onConvert(succeed, response)
-        } catch (e: ConvertException) {
+        } catch (err: ConvertException) {
             val code = response.code
             when {
                 code in 200..299 -> {
@@ -53,17 +55,21 @@ class SerializationConverter : NetConverter {
                     // )
 
                     return response.body.string().let { bodyString ->
-                        val kType = response.request.kType ?: throw ConvertException(
-                            response, "Request does not contain KType"
-                        )
-                        bodyString.parseBody(kType)
+                        runCatching {
+                            val kType = response.request.kType ?: throw ConvertException(
+                                response, "Request does not contain KType"
+                            )
+                            bodyString.parseBody<R?>(kType)
+                        }.getOrElse {
+                            throw ConvertException(response, cause = err)
+                        }
                     }
                 }
 
-                code in 400..499 -> throw RequestParamsException(response, code.toString(), e)
+                code in 400..499 -> throw RequestParamsException(response, code.toString(), err)
 
-                code >= 500 -> throw ServerResponseException(response, code.toString(), e)
-                else -> throw ConvertException(response = response, cause = e)
+                code >= 500 -> throw ServerResponseException(response, code.toString(), err)
+                else -> throw ConvertException(response = response, cause = err)
             }
         }
     }

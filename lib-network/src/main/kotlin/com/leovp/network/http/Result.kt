@@ -1,11 +1,11 @@
 @file:Suppress("unused")
 
-package com.leovp.mvvm.http
+package com.leovp.network.http
 
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
-import com.leovp.mvvm.exception.ApiException
-import com.leovp.mvvm.exception.ApiResponseException
+import com.leovp.network.exception.ApiException
+import com.leovp.network.exception.ApiResponseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,25 +64,21 @@ fun <T> Result<T>.getOrThrow(): T = when {
     else -> (this as Result.Success<T>).data
 }
 
-inline fun <R, T : R> Result<T>.getOrElse(onFailure: (exception: ApiException) -> R): R {
-    return when (val exception = exceptionOrNull()) {
+inline fun <R, T : R> Result<T>.getOrElse(onFailure: (exception: ApiException) -> R): R =
+    when (val exception = exceptionOrNull()) {
         null -> (this as Result.Success<T>).data
         else -> onFailure(exception)
     }
+
+inline fun <T, R> Result<T>.map(transform: (value: T) -> R): Result<R> = when (val exception = exceptionOrNull()) {
+    null -> Result.Success(transform((this as Result.Success<T>).data))
+    else -> Result.Failure(exception)
 }
 
-inline fun <T, R> Result<T>.map(transform: (value: T) -> R): Result<R> {
-    return when (val exception = exceptionOrNull()) {
-        null -> Result.Success(transform((this as Result.Success<T>).data))
-        else -> Result.Failure(exception)
-    }
+fun <T> Result<T>.exceptionOrNull(): ApiException? = when {
+    isFailure -> (this as Result.Failure).exception
+    else -> null
 }
-
-fun <T> Result<T>.exceptionOrNull(): ApiException? =
-    when {
-        isFailure -> (this as Result.Failure).exception
-        else -> null
-    }
 
 fun <T> Result<T>.exception(): ApiException = (this as Result.Failure).exception
 
@@ -96,15 +92,11 @@ inline fun <T> Result<T>.onFailure(action: (exception: ApiException) -> Unit): R
     return this
 }
 
-inline fun <T, R> Result<T>.fold(
-    onSuccess: (value: T) -> R,
-    onFailure: (exception: ApiException) -> R,
-): R {
-    return when (val exception = exceptionOrNull()) {
+inline fun <T, R> Result<T>.fold(onSuccess: (value: T) -> R, onFailure: (exception: ApiException) -> R): R =
+    when (val exception = exceptionOrNull()) {
         null -> onSuccess((this as Result.Success<T>).data)
         else -> onFailure(exception)
     }
-}
 
 // ----------
 
@@ -144,13 +136,7 @@ suspend inline fun <reified R> result(
                 //     // IllegalArgumentException
                 //     message = it.message
                 // }
-                Result.Failure(
-                    ApiResponseException(
-                        message = err.message,
-                        cause = err,
-                        response = err.response,
-                    )
-                )
+                Result.Failure(ApiResponseException(message = err.message, cause = err, response = err.response))
             }
 
             else -> Result.Failure(ApiException(message = err.message, cause = err))

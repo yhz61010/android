@@ -4,10 +4,8 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.createFile
 import com.leovp.android.exts.toast
 import com.leovp.android.utils.NetworkUtil
@@ -90,16 +88,19 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())
-            .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
                     toast("Grand recording permission")
-                }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@AudioActivity,
+                    //      deniedList
+                    //  )
                     toast("Deny record permission")
                     finish()
                 }
-            })
+            }
 
         binding.tvIp.text = NetworkUtil.getIp()[0]
 
@@ -138,7 +139,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                         runOnUiThread { btn.isChecked = false }
                     }
                 }
-                playPcmThread?.start()
+                playPcmThread.start()
             } else {
                 playPcmThread?.interrupt()
                 audioPlayer?.release()
@@ -230,8 +231,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         recordType = type
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())
-            .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
                     LogContext.log.i(ITAG, "Record type: $type")
                     when (type) {
                         AudioType.PCM -> pcmOs = BufferedOutputStream(FileOutputStream(pcmFile))
@@ -241,13 +243,15 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     }
                     micRecorder = MicRecorder(audioEncoderInfo, recordCallback, type)
                     micRecorder?.startRecord()
-                }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@AudioActivity,
+                    //      deniedList
+                    //  )
                     toast("Deny record permission")
                     finish()
                 }
-            })
+            }
     }
 
     override fun onStop() {

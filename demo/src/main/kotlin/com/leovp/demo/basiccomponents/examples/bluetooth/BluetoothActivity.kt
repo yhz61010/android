@@ -5,10 +5,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.startActivity
@@ -50,15 +48,18 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
                     PermissionLists.getBluetoothScanPermission()
                 )
             )
-            .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
                     this@BluetoothActivity.toast("All permissions granted.")
-                }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@BluetoothActivity,
+                    //      deniedList
+                    //  )
                     this@BluetoothActivity.toast("Permissions denied.", error = true)
                 }
-            })
+            }
 
         bluetooth.enable()
     }

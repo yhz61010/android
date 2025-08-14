@@ -1,4 +1,6 @@
-package com.leovp.mvvm.viewmodel.lifecycle
+@file:Suppress("unused")
+
+package com.leovp.compose.viewmodel.lifecycle
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -25,7 +27,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 @Composable
 fun <VM> LifecycleViewModelBridge(
     viewModel: VM,
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
 ) where VM : ViewModel, VM : LifecycleAware {
     DisposableEffect(lifecycleOwner) {
         val observer = object : DefaultLifecycleObserver {

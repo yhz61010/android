@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.mvvm.exception
+package com.leovp.network.exception
 
 /**
  * Author: Michael Leo

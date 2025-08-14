@@ -3,11 +3,11 @@
 #===== Project =====
 #===================
 compile-sdk = "36"
-min-sdk = "25"
+min-sdk = "24"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.71"
+leo-version = "5.12.72"
 
 #===================
 #===== Compile =====
@@ -28,8 +28,8 @@ coroutines = "1.10.2"
 material = "1.12.0"
 appcompat = "1.7.1"
 activity-ktx = "1.10.1"
-fragment-ktx = "1.8.8"
-core-ktx = "1.16.0"
+fragment-ktx = "1.8.9"
+core-ktx = "1.17.0"
 multidex = "2.0.1"
 preference = "1.2.1"
 recyclerview = "1.4.0"
@@ -52,7 +52,7 @@ serialization-json = "1.9.0"
 #===========================
 #===== Android Compose =====
 #===========================
-compose = "1.8.3"
+compose = "1.9.0"
 androidx-activity-compose = "1.10.1"
 #compose-compilerextension = "1.2.0"
 lifecycle-viewmodel-navigation3 = "1.0.0-alpha04"
@@ -91,7 +91,7 @@ mmkv = "2.2.2" # 2.2.2 # 1.3.12
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
 fasterxml = "2.19.2" # 2.14.3
-xx-permissions = "25.2"
+xx-permissions = "26.0"
 bson = "2.18.0" # As of 2.13.0, you need to add fasterxml jackson manually.
 free-reflection = "3.2.2"
 flyco-tablayout = "2.2.0"

@@ -13,10 +13,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.RequiresPermission
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.bluetoothManager
 import com.leovp.android.exts.getParcelableExtraOrNull
 import com.leovp.android.exts.toast
@@ -46,7 +44,13 @@ class BluetoothScanActivity :
     private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,17 +68,18 @@ class BluetoothScanActivity :
                     PermissionLists.getBluetoothScanPermission()
                 )
             )
-            .request(object : OnPermissionCallback {
-                @SuppressLint("InlinedApi")
-                @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
                     doDiscovery()
-                }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@BluetoothScanActivity,
+                    //      deniedList
+                    //  )
                     this@BluetoothScanActivity.toast("Please grant Location permissions.")
                 }
-            })
+            }
     }
 
     private fun initReceiver() {

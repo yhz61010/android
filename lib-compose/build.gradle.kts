@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.sonarqube)
     jacoco
     id("maven-publish")
@@ -13,24 +14,29 @@ android {
         // Android Gradle plugin
         singleVariant("release")
     }
-
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-    buildFeatures {
-        compose = true
-        // Generate BuildConfig.java file
-        buildConfig = true
-    }
 }
 
+// composeCompiler {
+//     // deprecated
+//     // enableStrongSkippingMode = true
+//     // featureFlags.addAll(ComposeFeatureFlag.StrongSkipping, ComposeFeatureFlag.OptimizeNonSkippingGroups)
+//     includeSourceInformation = true
+// }
+
 dependencies {
-    api(libs.bundles.lifecycle.simple)
+    api(platform(libs.androidx.compose.bom))
+    // Material Design 3
+    api(libs.androidx.material3)
+    api(libs.bundles.androidx.compose)
+    // Android Studio Preview support
+    api(libs.androidx.compose.ui.tooling.preview)
+    // api(libs.androidx.compose.ui.graphics)
+    debugApi(libs.androidx.compose.ui.tooling)
+    debugApi(libs.androidx.compose.ui.test.manifest)
     api(libs.lifecycle.runtime.compose)
 
     api(projects.log)
-    api(projects.pref)
-
-    api(libs.kotlin.reflect)
-    compileOnly(libs.mmkv)
+    api(projects.libMvvm)
 }
 
 /** When use it: sourceJar.get() */

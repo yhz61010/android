@@ -23,14 +23,14 @@ dependencies {
 
     // ----------
     compileOnly(libs.mmkv)
-    api(libs.serialization.json)
-    api(libs.gson)
+    compileOnly(libs.serialization.json)
+    compileOnly(libs.gson)
     api(libs.kotlin.reflect)
 
     // Net - dependencies - Start
-    api(libs.kotlin.coroutines.android)
-    api(libs.square.okhttp)
-    api(libs.net)
+    compileOnly(libs.kotlin.coroutines.android)
+    compileOnly(libs.square.okhttp)
+    compileOnly(libs.net)
     // Net - dependencies - End
     // ----------
 }

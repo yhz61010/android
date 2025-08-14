@@ -22,18 +22,22 @@ class GsonConverter : NetConverter {
     override fun <R> onConvert(succeed: Type, response: Response): R? {
         try {
             return NetConverter.onConvert(succeed, response)
-        } catch (e: ConvertException) {
+        } catch (err: ConvertException) {
             val code = response.code
             when {
                 code in 200..299 -> {
                     return response.body.string().let { bodyString ->
-                        gson.fromJson<R>(bodyString, succeed)
+                        runCatching {
+                            gson.fromJson<R>(bodyString, succeed)
+                        }.getOrElse {
+                            throw ConvertException(response, cause = err)
+                        }
                     }
                 }
 
                 code in 400..499 -> throw RequestParamsException(response, code.toString())
                 code >= 500 -> throw ServerResponseException(response, code.toString())
-                else -> throw ConvertException(response, cause = e)
+                else -> throw ConvertException(response, cause = err)
             }
         }
     }

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.mvvm.viewmodel
 
 import com.leovp.log.base.d
@@ -88,9 +90,5 @@ class StateTimeTravelDebugger(private val viewClassName: String) {
         return ""
     }
 
-    private data class StateTransition(
-        val oldState: BaseState,
-        val action: BaseAction<*>,
-        val newState: BaseState,
-    )
+    private data class StateTransition(val oldState: BaseState, val action: BaseAction<*>, val newState: BaseState)
 }

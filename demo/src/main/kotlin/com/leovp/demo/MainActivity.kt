@@ -12,10 +12,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.getAndroidId
 import com.leovp.android.exts.getApplicationSignatures
 import com.leovp.android.exts.getPackageInfo
@@ -98,13 +96,18 @@ class MainActivity :
                     PermissionLists.getBluetoothScanPermission()
                 )
             )
-            .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
+                    this@MainActivity.toast("All permissions granted.")
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@MainActivity,
+                    //      deniedList
+                    //  )
+                    this@MainActivity.toast("Permissions denied.", error = true)
                 }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
-                }
-            })
+            }
 
         LogContext.log.i(
             tag,

@@ -1,17 +1,20 @@
+@file:Suppress("unused")
+
 package com.leovp.mvvm.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.leovp.feature.base.GlobalConst
-import com.leovp.mvvm.viewmodel.lifecycle.LifecycleAware
 import com.leovp.log.base.w
+import com.leovp.mvvm.BuildConfig
+import com.leovp.mvvm.viewmodel.lifecycle.LifecycleAware
 import kotlin.properties.Delegates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(initialState: State) :
-    ViewModel(), LifecycleAware {
+    ViewModel(),
+    LifecycleAware {
 
     companion object {
         private const val TAG = "BaseVM"
@@ -24,7 +27,7 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(init
 
     init {
         @Suppress("SENSELESS_COMPARISON")
-        if (GlobalConst.DEBUG) {
+        if (BuildConfig.DEBUG) {
             stateTimeTravelDebugger = StateTimeTravelDebugger(this::class.java.simpleName)
         }
     }

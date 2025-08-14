@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.mvvm.pref
+package com.leovp.pref.base
 
 import com.leovp.pref.PrefContext
 

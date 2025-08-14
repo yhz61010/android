@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 /*
  * Copyright 2020 The Android Open Source Project
  *
@@ -31,16 +33,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
  * If the created [ViewModel] does not match the requested class, an [IllegalArgumentException]
  * exception is thrown.
  */
-fun <VM : ViewModel> viewModelProviderFactoryOf(
-    create: () -> VM
-): ViewModelProvider.Factory = SimpleFactory(create)
+fun <VM : ViewModel> viewModelProviderFactoryOf(create: () -> VM): ViewModelProvider.Factory = SimpleFactory(create)
 
 /**
  * This needs to be a named class currently to workaround a compiler issue: b/163807311
  */
-private class SimpleFactory<VM : ViewModel>(
-    private val create: () -> VM
-) : ViewModelProvider.Factory {
+private class SimpleFactory<VM : ViewModel>(private val create: () -> VM) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm = create()
         if (modelClass.isInstance(vm)) {
@@ -93,14 +91,12 @@ private class SimpleFactory<VM : ViewModel>(
  */
 inline fun <reified VM : ViewModel, reified Param> viewModelFactoryWithSavedState(
     key: CreationExtras.Key<Param>,
-    crossinline create: (savedStateHandle: SavedStateHandle, param: Param) -> VM
-): ViewModelProvider.Factory {
-    return viewModelFactory {
-        initializer {
-            val savedStateHandle = createSavedStateHandle()
-            val param = this[key] ?: error("Missing ViewModel parameter for key: $key")
-            create(savedStateHandle, param)
-        }
+    crossinline create: (savedStateHandle: SavedStateHandle, param: Param) -> VM,
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer {
+        val savedStateHandle = createSavedStateHandle()
+        val param = this[key] ?: error("Missing ViewModel parameter for key: $key")
+        create(savedStateHandle, param)
     }
 }
 
@@ -151,15 +147,13 @@ inline fun <reified VM : ViewModel, reified Param> viewModelFactoryWithSavedStat
 inline fun <reified VM : ViewModel, reified Param1, reified Param2> viewModelFactoryWithSavedState(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
-    crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2) -> VM
-): ViewModelProvider.Factory {
-    return viewModelFactory {
-        initializer {
-            val savedStateHandle = createSavedStateHandle()
-            val param1 = this[key1] ?: error("Missing ViewModel parameter for key1: $key1")
-            val param2 = this[key2] ?: error("Missing ViewModel parameter for key2: $key2")
-            create(savedStateHandle, param1, param2)
-        }
+    crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2) -> VM,
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer {
+        val savedStateHandle = createSavedStateHandle()
+        val param1 = this[key1] ?: error("Missing ViewModel parameter for key1: $key1")
+        val param2 = this[key2] ?: error("Missing ViewModel parameter for key2: $key2")
+        create(savedStateHandle, param1, param2)
     }
 }
 
@@ -167,15 +161,13 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     key3: CreationExtras.Key<Param3>,
-    crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2, param3: Param3) -> VM
-): ViewModelProvider.Factory {
-    return viewModelFactory {
-        initializer {
-            val savedStateHandle = createSavedStateHandle()
-            val param1 = this[key1] ?: error("Missing ViewModel parameter for key1: $key1")
-            val param2 = this[key2] ?: error("Missing ViewModel parameter for key2: $key2")
-            val param3 = this[key3] ?: error("Missing ViewModel parameter for key3: $key3")
-            create(savedStateHandle, param1, param2, param3)
-        }
+    crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2, param3: Param3) -> VM,
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer {
+        val savedStateHandle = createSavedStateHandle()
+        val param1 = this[key1] ?: error("Missing ViewModel parameter for key1: $key1")
+        val param2 = this[key2] ?: error("Missing ViewModel parameter for key2: $key2")
+        val param3 = this[key3] ?: error("Missing ViewModel parameter for key3: $key3")
+        create(savedStateHandle, param1, param2, param3)
     }
 }

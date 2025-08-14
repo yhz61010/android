@@ -6,11 +6,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.Navigation
-import com.hjq.permissions.OnPermissionCallback
+import androidx.navigation.findNavController
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.camerax.R
 import kotlinx.coroutines.launch
 
@@ -21,7 +19,7 @@ import kotlinx.coroutines.launch
 class PermissionsFragment : Fragment() {
 
     companion object {
-//        val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
+        //        val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
         val PERMISSIONS_REQUIRED = PermissionLists.getCameraPermission()
     }
 
@@ -32,24 +30,27 @@ class PermissionsFragment : Fragment() {
         } else {
             XXPermissions.with(this)
                 .permission(PERMISSIONS_REQUIRED)
-                .request(object : OnPermissionCallback {
-                    override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+                .request { grantedList, deniedList ->
+                    val allGranted = deniedList.isEmpty()
+                    if (allGranted) {
                         // Take the user to the success fragment when permission is granted
                         Toast.makeText(context, "Permission request granted", Toast.LENGTH_LONG).show()
                         navigateToCamera()
-                    }
-
-                    override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                    } else {
+                        //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                        //      this@PermissionsFragment.requireActivity(),
+                        //      deniedList
+                        //  )
                         Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
                     }
-                })
+                }
         }
     }
 
     private fun navigateToCamera() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax).navigate(
+                requireActivity().findNavController(R.id.fragment_container_camerax).navigate(
                     PermissionsFragmentDirections.actionPermissionsToCamera()
                 )
             }

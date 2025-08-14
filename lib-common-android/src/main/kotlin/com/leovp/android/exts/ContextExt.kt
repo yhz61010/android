@@ -192,6 +192,7 @@ val Context.systemHealthManager
 val Context.hardwarePropertiesManager
     get() = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
 val Context.shortcutManager
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
     get() = getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 val Context.storageStatsManager
     @RequiresApi(Build.VERSION_CODES.O)

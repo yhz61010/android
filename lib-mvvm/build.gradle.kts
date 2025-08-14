@@ -13,26 +13,20 @@ android {
         // Android Gradle plugin
         singleVariant("release")
     }
+
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    buildFeatures {
+        // Generate BuildConfig.java file
+        buildConfig = true
+    }
 }
 
 dependencies {
     api(libs.bundles.lifecycle.simple)
 
     api(projects.log)
-    api(projects.pref)
 
-    // ----------
-    compileOnly(libs.mmkv)
-    compileOnly(libs.serialization.json)
-    compileOnly(libs.gson)
     api(libs.kotlin.reflect)
-
-    // Net - dependencies - Start
-    compileOnly(libs.kotlin.coroutines.android)
-    compileOnly(libs.square.okhttp)
-    compileOnly(libs.net)
-    // Net - dependencies - End
-    // ----------
 }
 
 /** When use it: sourceJar.get() */

@@ -7,10 +7,8 @@ import android.util.Size
 import android.view.SurfaceHolder
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.lifecycleScope
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.toast
 import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.utils.getPreviewOutputSize
@@ -42,16 +40,19 @@ class Camera2WithoutPreviewActivity :
 
         XXPermissions.with(this)
             .permission(PermissionLists.getCameraPermission())
-            .request(object : OnPermissionCallback {
-                override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+            .request { grantedList, deniedList ->
+                val allGranted = deniedList.isEmpty()
+                if (allGranted) {
                     toast("Grant camera permission")
-                }
-
-                override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                } else {
+                    //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                    //      this@Camera2WithoutPreviewActivity,
+                    //      deniedList
+                    //  )
                     toast("Deny camera permission")
                     finish()
                 }
-            })
+            }
 
         camera2Helper = Camera2ComponentHelper(this, CameraMetadata.LENS_FACING_BACK).apply {
             enableRecordFeature = false

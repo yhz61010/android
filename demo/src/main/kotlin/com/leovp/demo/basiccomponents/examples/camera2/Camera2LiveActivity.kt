@@ -4,10 +4,8 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.addCallback
-import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
-import com.hjq.permissions.permission.base.IPermission
 import com.leovp.android.exts.hideNavigationBar
 import com.leovp.android.exts.requestFullScreenAfterVisible
 import com.leovp.android.exts.requestFullScreenBeforeSetContentView
@@ -62,17 +60,20 @@ class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding
             addFragment()
         } else {
             XXPermissions.with(this).permission(PermissionLists.getCameraPermission())
-                .request(object : OnPermissionCallback {
-                    override fun onGranted(granted: MutableList<IPermission>, all: Boolean) {
+                .request { grantedList, deniedList ->
+                    val allGranted = deniedList.isEmpty()
+                    if (allGranted) {
                         toast("Grant camera permission")
                         addFragment()
-                    }
-
-                    override fun onDenied(denied: MutableList<IPermission>, never: Boolean) {
+                    } else {
+                        //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
+                        //      this@Camera2LiveActivity,
+                        //      deniedList
+                        //  )
                         toast("Deny camera permission")
                         finish()
                     }
-                })
+                }
         }
     }
 

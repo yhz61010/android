@@ -310,7 +310,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // Set initial target rotation
             .setTargetRotation(deviceRotation).setTargetResolution(targetSize).build().apply {
                 // Attach the viewfinder's surface provider to preview use case
-                setSurfaceProvider(incPreviewGridBinding.viewFinder.surfaceProvider)
+                surfaceProvider = incPreviewGridBinding.viewFinder.surfaceProvider
             }
 
         // ImageCapture

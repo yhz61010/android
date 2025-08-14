@@ -8,6 +8,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.leovp.mvvm.viewmodel.lifecycle.LifecycleAware
 
 /**
  * Author: Michael Leo
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
  * }
  * ```
  */
+@Suppress("FunctionNaming")
 @Composable
 fun <VM> LifecycleViewModelBridge(
     viewModel: VM,

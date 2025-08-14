@@ -1,4 +1,4 @@
-package com.leovp.mvvm.utils
+package com.leovp.compose.utils
 
 import com.leovp.log.LLog
 import com.leovp.log.LogContext

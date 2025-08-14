@@ -4,10 +4,11 @@ import okhttp3.Response
 
 /**
  * Author: Michael Leo
- * Date: 2023/9/13 16:22
+ * Date: 2025/8/14 13:26
  */
-open class ApiException(
+open class ApiResponseException(
     message: String? = null,
     cause: Throwable? = null,
-    var tag: Any? = null,
-) : Exception(message, cause)
+    val response: Response,
+    tag: Any? = null,
+) : ApiException(message, cause, tag)

@@ -1,6 +1,5 @@
 package com.leovp.log.base
 
-import com.leovp.log.BuildConfig
 import com.leovp.log.LogContext
 
 /**
@@ -74,18 +73,16 @@ class LogConfig4Debug : ILogConfig {
 }
 
 inline fun d(crossinline config: LogConfig4Debug.() -> Unit) {
-    if (BuildConfig.DEBUG) {
-        val logConfig = LogConfig4Debug().apply(config)
-        val ret = logConfig.block()
-        if (ret is String?) {
-            LogContext.log.d(
-                tag = logConfig.tag,
-                message = ret,
-                fullOutput = logConfig.fullOutput,
-                throwable = logConfig.throwable,
-                outputType = logConfig.outputType
-            )
-        }
+    val logConfig = LogConfig4Debug().apply(config)
+    val ret = logConfig.block()
+    if (ret is String?) {
+        LogContext.log.d(
+            tag = logConfig.tag,
+            message = ret,
+            fullOutput = logConfig.fullOutput,
+            throwable = logConfig.throwable,
+            outputType = logConfig.outputType
+        )
     }
 }
 

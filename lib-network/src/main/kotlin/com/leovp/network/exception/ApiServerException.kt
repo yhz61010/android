@@ -6,11 +6,11 @@ import okhttp3.Response
 
 /**
  * Author: Michael Leo
- * Date: 2025/8/14 13:26
+ * Date: 2025/8/14 17:55
  */
-open class ApiResponseException(
+open class ApiServerException(
     message: String? = null,
     cause: Throwable? = null,
-    val response: Response,
+    response: Response,
     tag: Any? = null,
-) : ApiException(message = message, cause = cause, tag = tag)
+) : ApiResponseException(message = message, cause = cause, response = response, tag = tag)

@@ -33,9 +33,3 @@ fun Int.toCounterBadgeText(limitation: Int = 99): String = this.toLong().toCount
 
 val monthDateFormat =
     SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }
-
-fun Long.formatTimestampShort(): String {
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(this)
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(this) - TimeUnit.MINUTES.toSeconds(minutes)
-    return String.format(Locale.ENGLISH, "%02d:%02d", minutes, seconds)
-}

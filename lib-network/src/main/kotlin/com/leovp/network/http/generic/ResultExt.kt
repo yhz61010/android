@@ -2,6 +2,7 @@
 
 package com.leovp.network.http.generic
 
+import com.leovp.network.exception.ApiException
 import com.leovp.network.exception.ApiResponseException
 import com.leovp.network.exception.ApiSerializationException
 import com.leovp.network.exception.ApiServerException
@@ -31,14 +32,18 @@ suspend inline fun <reified R> result(
      *
      * This method will wrap http request which is implemented by your custom http implementation.
      *
-     * In your custom http implementation, you must throw specific exception which is listed below.
+     * In your custom http implementation, you must throw specific exception which is listed below:
+     * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
+     * - For 500 response code, it is the [ApiServerException] instance.
+     * - For json serialize exception, it is the [ApiSerializationException] instance.
+     * - For unexpected exception, it is the [ApiException] instance.
      *
      * Wrap the [block] result into [com.leovp.network.http.Result].
      *
      * Note that, this function is very useful when you wrap your http request block.
      *
      * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure] parameter will be:
-     * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
+     * - For 4xx response code or converting exception, it is the [ApiResponseException] instance.
      * - For 500 response code, it is the [ResultServerException] instance.
      * - For json serialize exception, it is the [ResultConvertException] instance.
      * - For unexpected exception, it is the [ResultException] instance.

@@ -9,7 +9,7 @@ import com.leovp.log.base.LogOutType
  * Author: Michael Leo
  * Date: 20-6-15 下午7:16
  */
-class LLog(tagPrefix: String, logLevel: LogLevel = LogLevel.VERB, enableLog: Boolean = true,) :
+class LLog(tagPrefix: String, logLevel: LogLevel = LogLevel.VERB, enableLog: Boolean = true) :
     AbsLog(tagPrefix = tagPrefix, separator = "-", logLevel = logLevel, enableLog = enableLog) {
 
     override fun printVerbLog(tag: String, message: String, outputType: LogOutType) {

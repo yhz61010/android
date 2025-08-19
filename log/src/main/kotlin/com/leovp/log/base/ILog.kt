@@ -32,13 +32,18 @@ value class LogOutType(val type: Int) {
         private const val OUTPUT_TYPE_FRAMEWORK = OUTPUT_TYPE_SYSTEM + 3
         private const val OUTPUT_TYPE_HTTP = OUTPUT_TYPE_SYSTEM + 4
         private const val OUTPUT_TYPE_COMMON = OUTPUT_TYPE_SYSTEM + 5
+        private const val OUTPUT_TYPE_FRAMEWORK_HTTP = OUTPUT_TYPE_SYSTEM + 6
+        private const val OUTPUT_TYPE_FRAMEWORK_HTTP_HEADER = OUTPUT_TYPE_SYSTEM + 7
 
         val SYSTEM = LogOutType(OUTPUT_TYPE_SYSTEM)
         val CLIENT_COMMAND = LogOutType(OUTPUT_TYPE_CLIENT_COMMAND)
-        val HTTP_HEADER = LogOutType(OUTPUT_TYPE_HTTP_HEADER)
-        val FRAMEWORK = LogOutType(OUTPUT_TYPE_FRAMEWORK)
         val HTTP = LogOutType(OUTPUT_TYPE_HTTP)
+        val HTTP_HEADER = LogOutType(OUTPUT_TYPE_HTTP_HEADER)
         val COMMON = LogOutType(OUTPUT_TYPE_COMMON)
+
+        val FRAMEWORK = LogOutType(OUTPUT_TYPE_FRAMEWORK)
+        val FRAMEWORK_HTTP = LogOutType(OUTPUT_TYPE_FRAMEWORK_HTTP)
+        val FRAMEWORK_HTTP_HEADER = LogOutType(OUTPUT_TYPE_FRAMEWORK_HTTP_HEADER)
     }
 
     override fun toString(): String = when (this) {

@@ -16,7 +16,8 @@ android {
 }
 
 dependencies {
-    // ----------
+    compileOnly(projects.log)
+
     compileOnly(libs.serialization.json)
     compileOnly(libs.gson)
 
@@ -25,7 +26,6 @@ dependencies {
     compileOnly(libs.square.okhttp)
     compileOnly(libs.net)
     // Net - dependencies - End
-    // ----------
 }
 
 /** When use it: sourceJar.get() */

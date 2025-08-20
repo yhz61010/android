@@ -36,9 +36,7 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(init
     // will not be emitted multiple times to UI)
     private var state by Delegates.observable(initialState) { _, old, new ->
         if (old != new) {
-            viewModelScope.launch {
-                _uiStateFlow.value = new
-            }
+            viewModelScope.launch { _uiStateFlow.value = new }
 
             stateTimeTravelDebugger?.apply {
                 addStateTransition(old, new)
@@ -47,9 +45,14 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(init
         }
     }
 
-    protected fun sendAction(action: Action) {
+    protected fun sendAction(action: BaseAction.Simple<State>) {
         stateTimeTravelDebugger?.addAction(action)
-        state = action.execute(state)
+        state = action.reduce(state)
+    }
+
+    protected fun <T : Any> sendAction(action: BaseAction.WithExtra<State, T>, obj: T) {
+        stateTimeTravelDebugger?.addAction(action)
+        state = action.reduce(state, obj)
     }
 
     // ==============================

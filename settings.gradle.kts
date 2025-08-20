@@ -33,23 +33,24 @@ pluginManagement {
 
     resolutionStrategy {
         eachPlugin {
-            //            println("id=${requested.id.id} version=${requested.version} namespace=${requested.id.namespace}")
-            //            when (requested.id.id) {
-            //                "com.android.application",
-            //                "com.android.library",
-            //                "com.android.dynamic-feature" -> {
-            //                    val agpCoordinates: String by settings
-            //                    useModule(agpCoordinates)
-            //                }
-            //                "androidx.navigation.safeargs.kotlin" -> {
-            //                    val navigationCoordinates: String by settings
-            //                    useModule(navigationCoordinates)
-            //                }
-            //                "de.mannodermaus.android-junit5" -> {
-            //                    val androidJunit5Coordinates: String by settings
-            //                    useModule(androidJunit5Coordinates) // navigationVersion
-            //                }
-            //            }
+            // println("id=${requested.id.id} version=${requested.version}
+            // namespace=${requested.id.namespace}")
+            // when (requested.id.id) {
+            //     "com.android.application",
+            //     "com.android.library",
+            //     "com.android.dynamic-feature" -> {
+            //         val agpCoordinates: String by settings
+            //         useModule(agpCoordinates)
+            //     }
+            //     "androidx.navigation.safeargs.kotlin" -> {
+            //         val navigationCoordinates: String by settings
+            //         useModule(navigationCoordinates)
+            //     }
+            //     "de.mannodermaus.android-junit5" -> {
+            //         val androidJunit5Coordinates: String by settings
+            //         useModule(androidJunit5Coordinates) // navigationVersion
+            //     }
+            // }
         }
     }
 }

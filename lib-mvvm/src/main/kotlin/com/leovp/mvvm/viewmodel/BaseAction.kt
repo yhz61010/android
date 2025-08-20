@@ -4,17 +4,17 @@ package com.leovp.mvvm.viewmodel
  * Author: Michael Leo
  * Date: 2025/8/20 10:18
  */
-sealed class BaseAction<State> {
-    abstract fun reduce(state: State): State
+sealed interface BaseAction<State> {
+    interface Simple<State> : BaseAction<State> {
+        fun reduce(state: State): State
+    }
 
-    abstract class Simple<State> : BaseAction<State>()
+    interface WithExtra<State, T : Any> : BaseAction<State> {
+        fun reduce(state: State, extra: T): State
+    }
 
-    abstract class WithExtra<State, T : Any> : BaseAction<State>() {
-        abstract fun reduce(state: State, extra: T): State
-
-        final override fun reduce(state: State): State = throw UnsupportedOperationException(
-            "This action requires additional parameter. Use reduce(state, extra) instead."
-        )
+    interface WithOptional<State, T> : BaseAction<State> {
+        fun reduce(state: State, extra: T?): State
     }
 }
 

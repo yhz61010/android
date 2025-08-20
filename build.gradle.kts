@@ -186,6 +186,7 @@ fun Project.configureCompileTasks() {
             // Enable support for experimental features
             // freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
             optIn.add("kotlin.RequiresOptIn")
+            freeCompilerArgs = listOf("-XXLanguage:+WhenGuards")
         }
 
         // compilerOptions.jvmTarget.set(jvmTargetVersion)

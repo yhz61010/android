@@ -55,6 +55,11 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(init
         state = action.reduce(state, obj)
     }
 
+    protected fun <T> sendAction(action: BaseAction.WithOptional<State, T>, obj: T? = null) {
+        stateTimeTravelDebugger?.addAction(action)
+        state = action.reduce(state, obj)
+    }
+
     // ==============================
 
     override fun onResume() {

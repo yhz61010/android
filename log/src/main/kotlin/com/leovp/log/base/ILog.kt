@@ -4,7 +4,7 @@ package com.leovp.log.base
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
  */
-internal interface ILog {
+interface ILog {
     fun printVerbLog(tag: String, message: String, outputType: LogOutType)
     fun printDebugLog(tag: String, message: String, outputType: LogOutType)
     fun printInfoLog(tag: String, message: String, outputType: LogOutType)

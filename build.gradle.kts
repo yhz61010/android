@@ -128,11 +128,12 @@ allprojects {
 
     configureCompileTasks()
 
-    //    configurations.all {
-    //        resolutionStrategy.eachDependency {
-    //            println("module=${requested.module}:${requested.version} group=${requested.group} name=${requested.name}")
-    //        }
-    //    }
+    // configurations.all {
+    //     resolutionStrategy.eachDependency {
+    //         println("module=${requested.module}:${requested.version}
+    //         group=${requested.group} name=${requested.name}")
+    //     }
+    // }
 
     dependencies {
         // We must define `detektFormatting` in outside, or else the compile error will occur.

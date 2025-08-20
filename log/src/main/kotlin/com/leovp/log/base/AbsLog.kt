@@ -36,7 +36,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.VERB >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.VERB, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.VERB,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printVerbLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -59,7 +64,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.DEBUG >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.DEBUG, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.DEBUG,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printDebugLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -82,7 +92,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.INFO >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.INFO, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.INFO,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printInfoLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -105,7 +120,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.WARN >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.WARN, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.WARN,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printWarnLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -128,7 +148,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.ERROR >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.ERROR, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.ERROR,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printErrorLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -151,7 +176,12 @@ abstract class AbsLog(
     ) {
         if (LogLevel.FATAL >= logLevel && enableLog) {
             if (fullOutput) {
-                splitOutputMessage(LogLevel.FATAL, getTagName(tag), getMessage(message, throwable), outputType)
+                splitOutputMessage(
+                    LogLevel.FATAL,
+                    getTagName(tag),
+                    getMessage(message, throwable),
+                    outputType
+                )
             } else {
                 printFatalLog(getTagName(tag), getMessage(message, throwable), outputType)
             }
@@ -196,22 +226,18 @@ abstract class AbsLog(
         message: String,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (message.length > MAX_LENGTH) {
-            outputLog(logLevel, tag, message.substring(0, MAX_LENGTH), outputType)
-            splitOutputMessage(logLevel, tag, message.substring(MAX_LENGTH), outputType)
-        } else {
-            outputLog(logLevel, tag, message, outputType)
-        }
-    }
-
-    private fun outputLog(logLevel: LogLevel, tag: String, message: String, outputType: LogOutType) {
+        val isOverSize = message.length > MAX_LENGTH
+        val msg = if (isOverSize) message.substring(0, MAX_LENGTH) else message
         when (logLevel) {
-            LogLevel.VERB -> printVerbLog(tag, message, outputType)
-            LogLevel.DEBUG -> printDebugLog(tag, message, outputType)
-            LogLevel.INFO -> printInfoLog(tag, message, outputType)
-            LogLevel.WARN -> printWarnLog(tag, message, outputType)
-            LogLevel.ERROR -> printErrorLog(tag, message, outputType)
-            LogLevel.FATAL -> printFatalLog(tag, message, outputType)
+            LogLevel.VERB -> printVerbLog(tag, msg, outputType)
+            LogLevel.DEBUG -> printDebugLog(tag, msg, outputType)
+            LogLevel.INFO -> printInfoLog(tag, msg, outputType)
+            LogLevel.WARN -> printWarnLog(tag, msg, outputType)
+            LogLevel.ERROR -> printErrorLog(tag, msg, outputType)
+            LogLevel.FATAL -> printFatalLog(tag, msg, outputType)
+        }
+        if (isOverSize) {
+            splitOutputMessage(logLevel, tag, message.substring(MAX_LENGTH), outputType)
         }
     }
 

@@ -1,5 +1,5 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.2.0-blue)](https://kotlinlang.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.2.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-8.11.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-8.14.3-green)](https://gradle.org)
 

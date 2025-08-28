@@ -9,7 +9,7 @@ import com.leovp.pref.PrefContext
  * Date: 2025/4/11 09:03
  */
 
-inline fun prefPutStr(key: String, generateMsg: () -> String?) = PrefContext.pref.put(key, generateMsg())
+//inline fun prefPutStr(key: String, generateMsg: () -> String?) = PrefContext.pref.put(key, generateMsg())
 
 /**
  * Put value which type is following list:

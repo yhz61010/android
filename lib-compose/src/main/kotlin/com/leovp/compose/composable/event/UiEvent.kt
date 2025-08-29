@@ -10,18 +10,13 @@ sealed interface UiEvent {
         val message: String,
         val isError: Boolean = false,
         val longDuration: Boolean = false,
+        val isDebug: Boolean = false,
     ) : UiEvent
 
-    data class ShowSnackbar(
-        val message: String,
-        val actionLabel: String? = null,
-        val onAction: (() -> Unit)? = null,
-    ) : UiEvent
+    data class ShowSnackbar(val message: String, val actionLabel: String? = null, val onAction: (() -> Unit)? = null,) :
+        UiEvent
 
-    data class Navigate(
-        val route: String,
-        val arguments: String? = null,
-    ) : UiEvent
+    data class Navigate(val route: String, val arguments: String? = null,) : UiEvent
 
     object NavigateBack : UiEvent
 

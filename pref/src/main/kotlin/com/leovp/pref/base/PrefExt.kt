@@ -2,14 +2,14 @@
 
 package com.leovp.pref.base
 
-import com.leovp.pref.PrefContext
+import com.leovp.pref.PrefContext.pref
 
 /**
  * Author: Michael Leo
  * Date: 2025/4/11 09:03
  */
 
-//inline fun prefPutStr(key: String, generateMsg: () -> String?) = PrefContext.pref.put(key, generateMsg())
+fun prefPutStr(key: String, value: String?) = pref.put(key, value)
 
 /**
  * Put value which type is following list:
@@ -17,16 +17,23 @@ import com.leovp.pref.PrefContext
  * - Long
  * - Boolean
  * - Float
- * - String
  * - Object except Set
  */
-inline fun <reified T : Any> prefPut(key: String, generateValue: () -> T?) = PrefContext.pref.put(key, generateValue())
+inline fun <reified T : Any> prefPut(key: String, value: T) = pref.put(key, value)
 
-inline fun prefPutSet(key: String, generateSet: () -> Set<String>?) = PrefContext.pref.put(key, generateSet())
+fun prefPutSet(key: String, value: Set<String>?) = pref.putSet(key, value)
 
 // ----------
 
-fun prefGetStr(key: String, default: String? = null): String? = PrefContext.pref.getString(key, default)
+/**
+ * Get non-nullable string value which type is String.
+ */
+fun prefGetStr(key: String, default: String): String = pref.getString(key, default)!!
+
+/**
+ * Get nullable string value which type is String.
+ */
+fun prefGetStrOrNull(key: String, default: String? = null): String? = pref.getString(key, default)
 
 /**
  * Get value which type is following list:
@@ -35,8 +42,8 @@ fun prefGetStr(key: String, default: String? = null): String? = PrefContext.pref
  * - Boolean
  * - Float
  */
-inline fun <reified T> prefGet(key: String, default: T): T = PrefContext.pref.get(key, default)
+inline fun <reified T> prefGet(key: String, default: T): T = pref.get(key, default)
 
-fun prefGetSet(key: String, default: Set<String>? = null): Set<String>? = PrefContext.pref.getStringSet(key, default)
+fun prefGetSet(key: String, default: Set<String>? = null): Set<String>? = pref.getStringSet(key, default)
 
-inline fun <reified T> prefGetObj(key: String): T? = PrefContext.pref.getObject(key)
+inline fun <reified T> prefGetObj(key: String): T? = pref.getObject(key)

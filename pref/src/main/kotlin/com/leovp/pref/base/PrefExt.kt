@@ -28,12 +28,12 @@ fun prefPutSet(key: String, value: Set<String>?) = pref.putSet(key, value)
 /**
  * Get non-nullable string value which type is String.
  */
-fun prefGetStr(key: String, default: String): String = pref.getString(key, default)!!
+fun prefGetStr(key: String, default: String): String = pref.getString(key, default) ?: default
 
 /**
  * Get nullable string value which type is String.
  */
-fun prefGetStrOrNull(key: String, default: String? = null): String? = pref.getString(key, default)
+fun prefGetNullableStr(key: String, default: String? = null): String? = pref.getString(key, default)
 
 /**
  * Get value which type is following list:

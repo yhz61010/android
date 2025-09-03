@@ -104,6 +104,7 @@ fun rememberMultiDebounceHandler(): MultiDebounceHandler {
  * DebounceButton(onClick = {  }) { Text(text = "OK") }
  * ```
  */
+@Suppress("LongParameterList", "FunctionNaming")
 @Composable
 fun DebounceButton(
     onClick: () -> Unit,

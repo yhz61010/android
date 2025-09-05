@@ -56,16 +56,6 @@ sealed interface UiEvent {
         val onPositive: () -> Unit,
         val onNegative: () -> Unit = {},
     ) : UiEvent
-
-    @Keep
-    data class ShowResDialog(
-        @param:StringRes val titleResId: Int,
-        @param:StringRes val messageResId: Int,
-        val positiveButton: String,
-        val negativeButton: String? = null,
-        val onPositive: () -> Unit,
-        val onNegative: () -> Unit = {},
-    ) : UiEvent
 }
 
 // enum class ToastDuration {

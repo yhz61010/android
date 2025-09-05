@@ -18,11 +18,11 @@ import okhttp3.Response
  * Author: Michael Leo
  * Date: 2023/9/6 10:32
  */
-class SerializationConverter : NetConverter {
+class SerializationConverter(private val decoder: Json = defaultJson) : NetConverter {
 
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
-        val jsonDecoder = Json {
+        val defaultJson = Json {
             // Do not encode `null` fields.
             // During decoding, the absence of a field value as treated as `null`
             // for nullable properties without a default value.
@@ -45,7 +45,7 @@ class SerializationConverter : NetConverter {
                     // multiCatch(
                     //     runBlock = {
                     //         // Business error.
-                    //         val errorRes: ApiResponseResult = jsonDecoder.decodeFromString(bodyString)
+                    //         val errorRes: ApiResponseResult = decoder.decodeFromString(bodyString)
                     //         throw ApiException(errorRes.code, errorRes.message, e)
                     //     },
                     //     exceptions = arrayOf(
@@ -60,8 +60,8 @@ class SerializationConverter : NetConverter {
                                 response, "Request does not contain KType"
                             )
                             bodyString.parseBody<R?>(kType)
-                        }.getOrElse {
-                            throw ConvertException(response, cause = err)
+                        }.getOrElse { parseErr ->
+                            throw ConvertException(response, cause = parseErr)
                         }
                     }
                 }
@@ -76,5 +76,5 @@ class SerializationConverter : NetConverter {
 
     @Suppress("UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
     fun <R> String.parseBody(succeed: KType): R? =
-        jsonDecoder.decodeFromString(Json.serializersModule.serializer(succeed), this) as? R
+        decoder.decodeFromString(Json.serializersModule.serializer(succeed), this) as? R
 }

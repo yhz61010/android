@@ -28,10 +28,12 @@ class SerializationConverter(private val decoder: Json = defaultJson) : NetConve
             // for nullable properties without a default value.
             explicitNulls = false
             // Check the document for details.
-            coerceInputValues = false
+            coerceInputValues = true
             encodeDefaults = true
             prettyPrint = false
             ignoreUnknownKeys = true
+            allowSpecialFloatingPointValues = true
+            allowStructuredMapKeys = true
         }
     }
 

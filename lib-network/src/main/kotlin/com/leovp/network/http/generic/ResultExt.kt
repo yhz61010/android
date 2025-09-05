@@ -89,7 +89,7 @@ suspend inline fun <reified R> result(
             is ApiResponseException -> {
                 val errorData: R? = runCatching {
                     val bodyString = err.response.body.string()
-                    SerializationConverter.jsonDecoder.decodeFromString<R>(bodyString)
+                    SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
                 }.getOrElse {
                     // - SerializationException
                     // - IllegalArgumentException

@@ -6,6 +6,7 @@ import com.drake.net.convert.NetConverter
 import com.drake.net.exception.ConvertException
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 import okhttp3.Response
@@ -14,9 +15,9 @@ import okhttp3.Response
  * Author: Michael Leo
  * Date: 2022/5/13 16:43
  */
-class GsonConverter : NetConverter {
+class GsonConverter(private val decoder: Gson = defaultGson) : NetConverter {
     companion object {
-        private val gson = GsonBuilder().serializeNulls().create()
+        val defaultGson: Gson = GsonBuilder().serializeNulls().create()
     }
 
     override fun <R> onConvert(succeed: Type, response: Response): R? {
@@ -28,9 +29,9 @@ class GsonConverter : NetConverter {
                 code in 200..299 -> {
                     return response.body.string().let { bodyString ->
                         runCatching {
-                            gson.fromJson<R>(bodyString, succeed)
-                        }.getOrElse {
-                            throw ConvertException(response, cause = err)
+                            decoder.fromJson<R>(bodyString, succeed)
+                        }.getOrElse { parseErr ->
+                            throw ConvertException(response, cause = parseErr)
                         }
                     }
                 }

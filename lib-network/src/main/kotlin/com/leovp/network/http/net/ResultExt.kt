@@ -58,7 +58,7 @@ suspend inline fun <reified R> result(
             is RequestParamsException -> {
                 val errorData: R? = runCatching {
                     val bodyString = err.response.body.string()
-                    SerializationConverter.Companion.jsonDecoder.decodeFromString<R>(bodyString)
+                    SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
                 }.getOrElse {
                     // - SerializationException
                     // - IllegalArgumentException

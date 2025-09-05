@@ -67,10 +67,7 @@ fun Modifier.bottomBorder(color: Color, strokeWidth: Dp = 1.dp) = composed(
  * ```
  */
 @Composable
-fun Modifier.debounceClickable(
-    debounceTime: Long = 1000L,
-    onClick: () -> Unit,
-): Modifier {
+fun Modifier.debounceClickable(debounceTime: Long = 1000L, onClick: () -> Unit,): Modifier {
     var lastClickTime by remember { mutableLongStateOf(0L) }
 
     return this.clickable {

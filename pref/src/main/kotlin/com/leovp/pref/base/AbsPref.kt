@@ -129,4 +129,6 @@ abstract class AbsPref :
             "To get object use getObject4Java(key: String, clazz: Class<T>) instead."
         )
     }
+
+    open fun cleanAll() {}
 }

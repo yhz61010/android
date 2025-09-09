@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -104,6 +105,7 @@ fun DebounceButton(
     modifier: Modifier = Modifier,
     debounceTime: Long = 1000L,
     enabled: Boolean = true,
+    shape: Shape = ButtonDefaults.shape,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     elevation: ButtonElevation? = ButtonDefaults.buttonElevation(),
     border: BorderStroke? = null,
@@ -127,6 +129,7 @@ fun DebounceButton(
         },
         modifier = modifier,
         enabled = enabled && isClickable,
+        shape = shape,
         colors = colors,
         elevation = elevation,
         border = border,

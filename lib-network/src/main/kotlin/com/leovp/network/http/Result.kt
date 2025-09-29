@@ -2,7 +2,6 @@
 
 package com.leovp.network.http
 
-import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 
 /**

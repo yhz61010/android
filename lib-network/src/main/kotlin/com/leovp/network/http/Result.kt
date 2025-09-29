@@ -2,6 +2,7 @@
 
 package com.leovp.network.http
 
+import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 
 /**
@@ -23,7 +24,9 @@ sealed interface Result<out R> {
      * it is the [com.leovp.network.http.exception.ResultResponseException] instance.
      * - For response code 500,
      * it is the [com.leovp.network.http.exception.ResultServerException] instance.
-     * - Other error codes, it is the [ResultException] instance.
+     * - For json serialize exception,
+     * it is the [com.leovp.network.http.exception.ResultConvertException] instance.
+     * - Other error codes, it is the [com.leovp.network.http.exception.ResultException] instance.
      */
     data class Failure(val exception: ResultException) : Result<Nothing>
 

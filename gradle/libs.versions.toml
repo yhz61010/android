@@ -7,7 +7,7 @@ min-sdk = "24"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.12.95"
+leo-version = "5.12.96"
 
 #===================
 #===== Compile =====
@@ -216,9 +216,9 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-activity = { module = "androidx.activity:activity-compose", version.ref = "compose-activity" }
 
 # ViewModel utilities for Compose
-lifecycle-viewmodel-compose =  { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 # Lifecycle utilities for Compose
-lifecycle-runtime-compose =  { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 # ViewModel integration with Navigation3
 lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle-viewmodel-navigation3" }
 
@@ -407,7 +407,7 @@ androidx-simple = [
     "androidx-annotation",
     "androidx-constraintlayout"
 ]
-kotlin-coroutines = ["kotlin-coroutines-core" ,"kotlin-coroutines-android"]
+kotlin-coroutines = ["kotlin-coroutines-core", "kotlin-coroutines-android"]
 navigation = ["androidx-navigation-fragment", "androidx-navigation-ui"]
 lifecycle-full = [
     "lifecycle-viewmodel",

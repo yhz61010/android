@@ -72,6 +72,27 @@ class LogConfig4Debug : ILogConfig {
     lateinit var block: () -> Any?
 }
 
+inline fun v(crossinline config: LogConfig4Debug.() -> Unit) {
+    val logConfig = LogConfig4Debug().apply(config)
+    val ret = logConfig.block()
+    if (ret is String?) {
+        LogContext.log.v(
+            tag = logConfig.tag,
+            message = ret,
+            fullOutput = logConfig.fullOutput,
+            throwable = logConfig.throwable,
+            outputType = logConfig.outputType
+        )
+    }
+}
+
+inline fun v(tag: String, crossinline block: () -> Any?) {
+    v {
+        this.tag = tag
+        this.block = { block() }
+    }
+}
+
 inline fun d(crossinline config: LogConfig4Debug.() -> Unit) {
     val logConfig = LogConfig4Debug().apply(config)
     val ret = logConfig.block()

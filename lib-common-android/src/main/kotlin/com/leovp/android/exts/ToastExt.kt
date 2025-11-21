@@ -5,7 +5,6 @@ package com.leovp.android.exts
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
@@ -17,10 +16,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.toColorInt
 import com.leovp.android.R
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
@@ -70,11 +71,14 @@ class LeoToast private constructor(private val ctx: Context) {
          */
         var buildConfigInDebug: Boolean = false,
 
-        @DrawableRes
+        @param:DrawableRes
         var toastIcon: Int? = null,
 
         /** Unit: px */
         var toastIconSize: Int = 24.px,
+
+        @param:LayoutRes
+        var layout: Int = R.layout.toast_layout,
     )
 
     /**
@@ -103,7 +107,7 @@ fun Context.toast(
     debug: Boolean = false,
     textColor: String? = null,
     bgColor: String? = null,
-    error: Boolean = false
+    error: Boolean = false,
 ) {
     toast(getString(resId), longDuration, origin, debug, textColor, bgColor, error)
 }
@@ -122,7 +126,7 @@ fun Context.toast(
     debug: Boolean = false,
     textColor: String? = null,
     bgColor: String? = null,
-    error: Boolean = false
+    error: Boolean = false,
 ) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
         showToast(this, msg, longDuration, origin, debug, textColor, bgColor, error)
@@ -162,7 +166,7 @@ private fun showToast(
     debug: Boolean,
     textColor: String? = null,
     bgColor: String?,
-    error: Boolean
+    error: Boolean,
 ) {
     val toastCfg = LeoToast.getInstance(ctx).config
 
@@ -196,7 +200,7 @@ private fun showToast(
                 mainHandler.removeCallbacksAndMessages(null)
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
                 FloatView.with(ctx)
-                    .layout(R.layout.toast_layout) { v ->
+                    .layout(toastCfg.layout) { v ->
                         decorateToast(ctx, v, message, textColor, bgColor, error)
                     }
                     .meta { viewWidth, viewHeight ->
@@ -218,7 +222,7 @@ private fun showToast(
                 toast?.cancel()
 
                 val view = LayoutInflater.from(ctx)
-                    .inflate(R.layout.toast_layout, null)
+                    .inflate(toastCfg.layout, null)
                     .also { v ->
                         decorateToast(ctx, v, message, textColor, bgColor, error)
                     }
@@ -260,7 +264,7 @@ private fun decorateToast(
     message: String,
     textColor: String? = null,
     bgColor: String? = null,
-    error: Boolean = false
+    error: Boolean = false,
 ) {
     val tv: TextView = rootView.findViewById(R.id.tv_text)
     tv.text = message
@@ -275,17 +279,17 @@ private fun decorateToast(
     val containerViewGroup: LinearLayout = rootView.findViewById(R.id.ll_container)
     if (!error && bgColor == null) { // without error and without bgColor
         containerViewGroup.background = defaultBgDrawable
-        tv.setTextColor(Color.parseColor(textColor ?: TOAST_NORMAL_TEXT_COLOR_NORMAL))
+        tv.setTextColor((textColor ?: TOAST_NORMAL_TEXT_COLOR_NORMAL).toColorInt())
     } else {
         // - with error and with bgColor
         // - with error but without bgColor
         // - without error but with bgColor
 
-        tv.setTextColor(Color.parseColor(textColor ?: TOAST_NORMAL_TEXT_COLOR_WHITE))
+        tv.setTextColor((textColor ?: TOAST_NORMAL_TEXT_COLOR_WHITE).toColorInt())
 
         val customDrawableWrapper = DrawableCompat.wrap(defaultBgDrawable).mutate()
         containerViewGroup.background = customDrawableWrapper
         val defBgColor = bgColor ?: TOAST_ERROR_BG_COLOR
-        DrawableCompat.setTint(customDrawableWrapper, Color.parseColor(defBgColor))
+        DrawableCompat.setTint(customDrawableWrapper, defBgColor.toColorInt())
     }
 }

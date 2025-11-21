@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
 import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.cancelToast
@@ -76,7 +77,8 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
             LeoToast.ToastConfig(
                 buildConfigInDebug = BuildConfig.DEBUG,
                 toastIcon = R.mipmap.ic_launcher_round,
-                layout = R.layout.custom_toast_layout
+                layout = R.layout.custom_toast_layout,
+                gravity = Gravity.CENTER
             )
         )
         toast("This is custom error color toast.", bgColor = "#711CDE", error = true)

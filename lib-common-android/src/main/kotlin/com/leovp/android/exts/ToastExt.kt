@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.annotation.GravityInt
 import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
@@ -79,6 +80,9 @@ class LeoToast private constructor(private val ctx: Context) {
 
         @param:LayoutRes
         var layout: Int = R.layout.toast_layout,
+
+        @param:GravityInt
+        var gravity: Int = Gravity.BOTTOM
     )
 
     /**
@@ -206,7 +210,7 @@ private fun showToast(
                     .meta { viewWidth, viewHeight ->
                         // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
                         tag = FLOAT_VIEW_TAG
-                        gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                        gravity = toastCfg.gravity or Gravity.CENTER_HORIZONTAL
                         enableAlphaAnimation = true
                         enableDrag = false
                         systemWindow = ctx.canDrawOverlays
@@ -230,7 +234,7 @@ private fun showToast(
                 toast = Toast(ctx).apply {
                     @Suppress("DEPRECATION")
                     this.view = view
-                    setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, 64.px)
+                    setGravity(Gravity.CENTER_HORIZONTAL or toastCfg.gravity, 0, 64.px)
                     this.duration = duration
                     show()
                 }

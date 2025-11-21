@@ -7,9 +7,11 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.view.View
+import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.cancelToast
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.getMetaData
+import com.leovp.demo.BuildConfig
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
@@ -70,6 +72,13 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
     }
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round,
+                layout = R.layout.custom_toast_layout
+            )
+        )
         toast("This is custom error color toast.", bgColor = "#711CDE", error = true)
     }
 

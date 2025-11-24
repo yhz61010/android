@@ -2,11 +2,9 @@
 
 package com.leovp.android.exts
 
-import android.R.attr.textSize
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -16,12 +14,12 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.GravityInt
 import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.toColorInt
 import com.leovp.android.R
@@ -85,6 +83,12 @@ class LeoToast private constructor(private val ctx: Context) {
         /** Unit: sp */
         var textSize: Float = DEF_FONT_SIZE,
 
+        /** Hex color value with prefix '#'. Example: "#FFCC0000". */
+        var textColor: String? = null,
+
+        /** Hex color value with prefix '#'. Example: "#FFCC0000". */
+        var bgColor: String? = null,
+
         @param:LayoutRes
         var layout: Int = R.layout.toast_layout,
 
@@ -106,8 +110,8 @@ class LeoToast private constructor(private val ctx: Context) {
 
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
- * @param textColor Text hex color value with prefix '#'. Example: "#ffffff".
- * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param textColor Text hex color value with prefix '#'. Example: "#FFCC0000".
+ * @param bgColor Background hex color value with prefix '#'. Example: "#FFCC0000"
  * @param error `true` will use `ERROR_BG_COLOR` as background.
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
@@ -134,7 +138,7 @@ fun Context.toast(
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
  *               On Android 11+(Android R+), this parameter will be ignored.
- * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param bgColor Background hex color value with prefix '#'. Example: "#FFCC0000"
  * @param error `true` will use `ERROR_BG_COLOR` as background.
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
@@ -177,12 +181,8 @@ fun Context.toast(
 
 // ==========
 
-@Suppress("unused")
-const val TOAST_NORMAL_BG_COLOR = "#FFFFFF"
-const val TOAST_ERROR_BG_COLOR = "#F16C4C"
-
-const val TOAST_NORMAL_TEXT_COLOR_NORMAL = "#000000"
-const val TOAST_NORMAL_TEXT_COLOR_WHITE = "#FFFFFF"
+const val TOAST_ERROR_BG_COLOR = "#FFF16C4C"
+const val TOAST_NORMAL_TEXT_COLOR_WHITE = "#FFFFFFFF"
 
 private var toast: Toast? = null
 private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
@@ -190,7 +190,7 @@ private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
  *               On Android 11+(Android R+), this parameter will be ignored.
- * @param bgColor Background hex color value with prefix '#'. Example: "#ff0000"
+ * @param bgColor Background hex color value with prefix '#'. Example: "#FFCC0000"
  * @param error `true` will use `ERROR_BG_COLOR` as background.
  *              However, if you also set `bgColor`, `error` parameter will be ignored.
  */
@@ -238,7 +238,15 @@ private fun showToast(
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
                 FloatView.with(ctx)
                     .layout(toastCfg.layout) { v ->
-                        decorateToast(ctx, v, message, toastCfg.textSize, textColor, bgColor, error)
+                        decorateToast(
+                            ctx = ctx,
+                            rootView = v,
+                            message = message,
+                            textSize = toastCfg.textSize,
+                            textColor = textColor ?: toastCfg.textColor,
+                            bgColor = bgColor ?: toastCfg.bgColor,
+                            error = error
+                        )
                     }
                     .meta { viewWidth, viewHeight ->
                         // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
@@ -261,7 +269,15 @@ private fun showToast(
                 val view = LayoutInflater.from(ctx)
                     .inflate(toastCfg.layout, null)
                     .also { v ->
-                        decorateToast(ctx, v, message, toastCfg.textSize, textColor, bgColor, error)
+                        decorateToast(
+                            ctx = ctx,
+                            rootView = v,
+                            message = message,
+                            textSize = toastCfg.textSize,
+                            textColor = textColor ?: toastCfg.textColor,
+                            bgColor = bgColor ?: toastCfg.bgColor,
+                            error = error
+                        )
                     }
 
                 toast = Toast(ctx).apply {
@@ -310,15 +326,16 @@ private fun decorateToast(
     //    tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
     setDrawableIcon(ctx, tv)
 
-    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(
-        ctx.resources,
-        R.drawable.toast_bg_normal,
-        null
-    )!!
+//    val defaultBgDrawable: Drawable = ResourcesCompat.getDrawable(
+//        ctx.resources,
+//        R.drawable.toast_bg_normal,
+//        null
+//    )!!
     val containerViewGroup: LinearLayout = rootView.findViewById(R.id.ll_container)
+    val defaultBgDrawable = containerViewGroup.background
     if (!error && bgColor == null) { // without error and without bgColor
         containerViewGroup.background = defaultBgDrawable
-        tv.setTextColor((textColor ?: TOAST_NORMAL_TEXT_COLOR_NORMAL).toColorInt())
+        tv.setTextColor(textColor?.toColorInt() ?: tv.currentTextColor)
     } else {
         // - with error and with bgColor
         // - with error but without bgColor

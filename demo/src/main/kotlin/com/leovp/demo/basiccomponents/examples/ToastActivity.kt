@@ -77,6 +77,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
             LeoToast.ToastConfig(
                 buildConfigInDebug = BuildConfig.DEBUG,
                 toastIcon = R.mipmap.ic_launcher_round,
+                textSize = 24f,
                 layout = R.layout.custom_toast_layout,
                 gravity = Gravity.CENTER
             )

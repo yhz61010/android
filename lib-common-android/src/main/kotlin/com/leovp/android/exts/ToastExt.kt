@@ -14,7 +14,6 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.GravityInt
 import androidx.annotation.LayoutRes

@@ -5,7 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="@dimen/toast_layout_margin_horizontal"
-    android:background="@drawable/toast_bg_normal"
+    android:background="@drawable/custom_toast_bg_normal"
     android:elevation="2dp"
     android:gravity="center_vertical"
     android:maxWidth="@dimen/toast_max_width"
@@ -16,6 +16,7 @@
         android:paddingVertical="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
         android:text="[Custom]" />
     <!-- android:lineHeight="20sp" -->
     <TextView
@@ -29,8 +30,8 @@
         android:paddingVertical="16dp"
         android:textSize="14sp"
         android:textStyle="normal"
-        tools:text="Hello Michael Leo.\nThis is the second line.\nThis is the last line."
-        tools:textColor="#000000" />
+        android:textColor="@color/white"
+        tools:text="Hello Michael Leo.\nThis is the second line.\nThis is the last line." />
 </LinearLayout>
 
     <!--

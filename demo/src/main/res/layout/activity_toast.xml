@@ -94,5 +94,54 @@
             app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
             app:layout_constraintTop_toBottomOf="@+id/btnCustomColor"
             tools:ignore="UsingOnClickInXml" />
+
+        <Button
+            android:id="@+id/btnCustomLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomLayoutClick"
+            android:text="Custom Layout"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnDebugToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
+            tools:ignore="UsingOnClickInXml" />
+
+        <Button
+            android:id="@+id/btnCustomLayoutWithError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomLayoutWithErrorClick"
+            android:text="Custom Layout with Error"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomLayout"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomLayout"
+            tools:ignore="UsingOnClickInXml" />
+
+        <Button
+            android:id="@+id/btnCustomLayoutWithCustomColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomLayoutWithCustomColorClick"
+            android:text="Custom Layout with Custom Color"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomLayoutWithError"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomLayoutWithError"
+            tools:ignore="UsingOnClickInXml" />
+
+        <Button
+            android:id="@+id/btnReset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onResetClick"
+            android:text="Reset to Default"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomLayoutWithCustomColor"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomLayoutWithCustomColor"
+            tools:ignore="UsingOnClickInXml" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

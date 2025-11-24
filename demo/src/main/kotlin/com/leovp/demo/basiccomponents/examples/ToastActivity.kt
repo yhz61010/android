@@ -73,15 +73,6 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
     }
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        LeoToast.getInstance(this).init(
-            LeoToast.ToastConfig(
-                buildConfigInDebug = BuildConfig.DEBUG,
-                toastIcon = R.mipmap.ic_launcher_round,
-                textSize = 24f,
-                layout = R.layout.custom_toast_layout,
-                gravity = Gravity.CENTER
-            )
-        )
         toast("This is custom error color toast.", bgColor = "#711CDE", error = true)
     }
 
@@ -94,11 +85,60 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
             "I have a dream. A song to sing. " +
                 "To help me cope with anything. If you see the wonder.",
             debug = true,
-            error = true
         )
     }
 
     fun onCancelToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
         cancelToast()
+    }
+
+    fun onCustomLayoutClick(@Suppress("UNUSED_PARAMETER")  view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round,
+                textSize = 24f,
+                layout = R.layout.custom_toast_layout,
+                gravity = Gravity.CENTER
+            )
+        )
+        toast("This is custom layout toast.")
+    }
+
+    fun onCustomLayoutWithErrorClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round,
+                textSize = 24f,
+                layout = R.layout.custom_toast_layout,
+                gravity = Gravity.CENTER
+            )
+        )
+        toast("This is custom layout toast with error.", error = true)
+    }
+
+    fun onCustomLayoutWithCustomColorClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round,
+                textSize = 24f,
+                layout = R.layout.custom_toast_layout,
+                gravity = Gravity.CENTER,
+                textColor = "#FFFFFF00",
+                bgColor = "#FFFF00FF"
+            )
+        )
+        toast("This is custom layout toast with custom color.")
+    }
+
+    fun onResetClick(@Suppress("UNUSED_PARAMETER")  view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round
+            )
+        )
     }
 }

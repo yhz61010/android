@@ -23,8 +23,8 @@
         android:paddingVertical="16dp"
         android:textSize="14sp"
         android:textStyle="normal"
-        tools:text="Hello Michael Leo.\nThis is the second line.\nThis is the last line."
-        tools:textColor="#000000" />
+        android:textColor="#ff000000"
+        tools:text="Hello Michael Leo.\nThis is the second line.\nThis is the last line." />
 </LinearLayout>
 
     <!--

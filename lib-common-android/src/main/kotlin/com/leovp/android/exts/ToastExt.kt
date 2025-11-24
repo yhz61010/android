@@ -2,6 +2,7 @@
 
 package com.leovp.android.exts
 
+import android.R.attr.textSize
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
@@ -49,7 +50,10 @@ private val mainHandler = Handler(Looper.getMainLooper())
  * ```
  */
 class LeoToast private constructor(private val ctx: Context) {
-    companion object : SingletonHolder<LeoToast, Context>(::LeoToast)
+    companion object : SingletonHolder<LeoToast, Context>(::LeoToast) {
+        /** Unit: sp */
+        const val DEF_FONT_SIZE = 14f
+    }
 
     lateinit var config: ToastConfig
         private set
@@ -78,11 +82,14 @@ class LeoToast private constructor(private val ctx: Context) {
         /** Unit: px */
         var toastIconSize: Int = 24.px,
 
+        /** Unit: sp */
+        var textSize: Float = DEF_FONT_SIZE,
+
         @param:LayoutRes
         var layout: Int = R.layout.toast_layout,
 
         @param:GravityInt
-        var gravity: Int = Gravity.BOTTOM
+        var gravity: Int = Gravity.BOTTOM,
     )
 
     /**
@@ -113,7 +120,15 @@ fun Context.toast(
     bgColor: String? = null,
     error: Boolean = false,
 ) {
-    toast(getString(resId), longDuration, origin, debug, textColor, bgColor, error)
+    toast(
+        msg = getString(resId),
+        longDuration = longDuration,
+        origin = origin,
+        debug = debug,
+        textColor = textColor,
+        bgColor = bgColor,
+        error = error
+    )
 }
 
 /**
@@ -133,11 +148,29 @@ fun Context.toast(
     error: Boolean = false,
 ) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
-        showToast(this, msg, longDuration, origin, debug, textColor, bgColor, error)
+        showToast(
+            ctx = this,
+            msg = msg,
+            longDuration = longDuration,
+            origin = origin,
+            debug = debug,
+            textColor = textColor,
+            bgColor = bgColor,
+            error = error
+        )
     } else {
         // Be sure toast can be shown in thread
         mainHandler.post {
-            showToast(this, msg, longDuration, origin, debug, textColor, bgColor, error)
+            showToast(
+                ctx = this,
+                msg = msg,
+                longDuration = longDuration,
+                origin = origin,
+                debug = debug,
+                textColor = textColor,
+                bgColor = bgColor,
+                error = error
+            )
         }
     }
 }
@@ -205,7 +238,7 @@ private fun showToast(
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
                 FloatView.with(ctx)
                     .layout(toastCfg.layout) { v ->
-                        decorateToast(ctx, v, message, textColor, bgColor, error)
+                        decorateToast(ctx, v, message, toastCfg.textSize, textColor, bgColor, error)
                     }
                     .meta { viewWidth, viewHeight ->
                         // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
@@ -228,7 +261,7 @@ private fun showToast(
                 val view = LayoutInflater.from(ctx)
                     .inflate(toastCfg.layout, null)
                     .also { v ->
-                        decorateToast(ctx, v, message, textColor, bgColor, error)
+                        decorateToast(ctx, v, message, toastCfg.textSize, textColor, bgColor, error)
                     }
 
                 toast = Toast(ctx).apply {
@@ -266,12 +299,14 @@ private fun decorateToast(
     ctx: Context,
     rootView: View,
     message: String,
+    textSize: Float,
     textColor: String? = null,
     bgColor: String? = null,
     error: Boolean = false,
 ) {
     val tv: TextView = rootView.findViewById(R.id.tv_text)
     tv.text = message
+    tv.textSize = textSize
     //    tv.setTextColor(ContextCompat.getColor(tv.context, android.R.color.white))
     setDrawableIcon(ctx, tv)
 

@@ -93,6 +93,17 @@ class LeoToast private constructor(private val ctx: Context) {
 
         @param:GravityInt
         var gravity: Int = Gravity.BOTTOM,
+
+        var duration: Int = Toast.LENGTH_SHORT,
+
+        /** Only valid for Android 11+ */
+        var durationShortMs: Long = 2000L,
+
+        /** Only valid for Android 11+ */
+        var durationLongMs: Long = 3500L,
+
+        /** Unit: dp */
+        var extraMargin: Int = 0,
     )
 
     /**
@@ -116,7 +127,7 @@ class LeoToast private constructor(private val ctx: Context) {
  */
 fun Context.toast(
     @StringRes resId: Int,
-    longDuration: Boolean = false,
+    longDuration: Boolean? = null,
     origin: Boolean = false,
     debug: Boolean = false,
     textColor: String? = null,
@@ -143,7 +154,7 @@ fun Context.toast(
  */
 fun Context.toast(
     msg: String?,
-    longDuration: Boolean = false,
+    longDuration: Boolean? = null,
     origin: Boolean = false,
     debug: Boolean = false,
     textColor: String? = null,
@@ -197,10 +208,10 @@ private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
 private fun showToast(
     ctx: Context,
     msg: String?,
-    longDuration: Boolean = false,
+    longDuration: Boolean?,
     origin: Boolean,
     debug: Boolean,
-    textColor: String? = null,
+    textColor: String?,
     bgColor: String?,
     error: Boolean,
 ) {
@@ -211,7 +222,8 @@ private fun showToast(
         return
     }
 
-    val duration = if (longDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+    val isLongDuration = longDuration ?: (toastCfg.duration == Toast.LENGTH_LONG)
+    val duration = if (isLongDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
     runCatching {
         when {
@@ -259,7 +271,14 @@ private fun showToast(
                         // y = toastPos.y
                     }
                     .show()
-                mainHandler.postDelayed({ FloatView.with(FLOAT_VIEW_TAG).remove() }, if (longDuration) 3500 else 2000)
+                mainHandler.postDelayed(
+                    { FloatView.with(FLOAT_VIEW_TAG).remove() },
+                    if (isLongDuration) {
+                        toastCfg.durationLongMs
+                    } else {
+                        toastCfg.durationShortMs
+                    }
+                )
             }
 
             else -> {
@@ -282,7 +301,11 @@ private fun showToast(
                 toast = Toast(ctx).apply {
                     @Suppress("DEPRECATION")
                     this.view = view
-                    setGravity(Gravity.CENTER_HORIZONTAL or toastCfg.gravity, 0, 64.px)
+                    setGravity(
+                        /* gravity = */ Gravity.CENTER_HORIZONTAL or toastCfg.gravity,
+                        /* xOffset = */ 0,
+                        /* yOffset = */ (64 + toastCfg.extraMargin).px
+                    )
                     this.duration = duration
                     show()
                 }

@@ -8,11 +8,11 @@ import android.os.IBinder
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import android.widget.Toast
 import com.leovp.android.exts.LeoToast
 import com.leovp.android.exts.cancelToast
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.exts.android.getMetaData
-import com.leovp.demo.BuildConfig
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityToastBinding
@@ -61,15 +61,15 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
         ActivityToastBinding.inflate(layoutInflater)
 
     fun onAndroidToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("DEBUG: onClientDisconnected: 127.0.0.1:42542", origin = true)
+        toast("onClientDisconnected: 127.0.0.1:42542", origin = true)
     }
 
     fun onNormalToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("DEBUG: onClientDisconnected: 127.0.0.1:42542")
+        toast("onClientDisconnected: 127.0.0.1:42542")
     }
 
     fun onErrorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is error toast.", error = true)
+        toast("This is error long toast.", error = true, longDuration = true)
     }
 
     fun onCustomErrorColorToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -77,7 +77,7 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
     }
 
     fun onCustomToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        toast("This is custom color toast.", bgColor = "#FF00FF")
+        toast("This is custom bg color toast.", bgColor = "#FF00FF")
     }
 
     fun onDebugToastClick(@Suppress("UNUSED_PARAMETER") view: View) {
@@ -92,10 +92,9 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
         cancelToast()
     }
 
-    fun onCustomLayoutClick(@Suppress("UNUSED_PARAMETER")  view: View) {
+    fun onCustomLayoutClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LeoToast.getInstance(this).init(
             LeoToast.ToastConfig(
-                buildConfigInDebug = BuildConfig.DEBUG,
                 toastIcon = R.mipmap.ic_launcher_round,
                 textSize = 24f,
                 layout = R.layout.custom_toast_layout,
@@ -108,7 +107,6 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
     fun onCustomLayoutWithErrorClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LeoToast.getInstance(this).init(
             LeoToast.ToastConfig(
-                buildConfigInDebug = BuildConfig.DEBUG,
                 toastIcon = R.mipmap.ic_launcher_round,
                 textSize = 24f,
                 layout = R.layout.custom_toast_layout,
@@ -121,7 +119,6 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
     fun onCustomLayoutWithCustomColorClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LeoToast.getInstance(this).init(
             LeoToast.ToastConfig(
-                buildConfigInDebug = BuildConfig.DEBUG,
                 toastIcon = R.mipmap.ic_launcher_round,
                 textSize = 24f,
                 layout = R.layout.custom_toast_layout,
@@ -133,10 +130,31 @@ class ToastActivity : BaseDemonstrationActivity<ActivityToastBinding>(R.layout.a
         toast("This is custom layout toast with custom color.")
     }
 
-    fun onResetClick(@Suppress("UNUSED_PARAMETER")  view: View) {
+    fun onExtraMarginClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LeoToast.getInstance(this).init(
             LeoToast.ToastConfig(
-                buildConfigInDebug = BuildConfig.DEBUG,
+                toastIcon = R.mipmap.ic_launcher_round,
+                durationShortMs = 1000L,
+                extraMargin = 100
+            )
+        )
+        toast("This is custom margin toast with custom short duration.")
+    }
+
+    fun onCustomDurationClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                toastIcon = R.mipmap.ic_launcher_round,
+                duration = Toast.LENGTH_LONG,
+                durationLongMs = 5000L
+            )
+        )
+        toast("This is default long toast with custom long duration.")
+    }
+
+    fun onResetClick(@Suppress("UNUSED_PARAMETER") view: View) {
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
                 toastIcon = R.mipmap.ic_launcher_round
             )
         )

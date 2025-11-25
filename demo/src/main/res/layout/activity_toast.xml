@@ -60,18 +60,6 @@
             tools:ignore="UsingOnClickInXml" />
 
         <Button
-            android:id="@+id/btnCancelToast"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:onClick="onCancelToastClick"
-            android:text="Cancel Toast"
-            android:textAllCaps="false"
-            app:layout_constraintStart_toStartOf="@+id/btnCustomColor"
-            app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
-            tools:ignore="OnClick,UsingOnClickInXml" />
-
-        <Button
             android:id="@+id/btnCustomColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -96,6 +84,18 @@
             tools:ignore="UsingOnClickInXml" />
 
         <Button
+            android:id="@+id/btnCancelToast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCancelToastClick"
+            android:text="Cancel Toast"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnDebugToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
+            tools:ignore="OnClick,UsingOnClickInXml" />
+
+        <Button
             android:id="@+id/btnCustomLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -103,8 +103,8 @@
             android:onClick="onCustomLayoutClick"
             android:text="Custom Layout"
             android:textAllCaps="false"
-            app:layout_constraintStart_toStartOf="@+id/btnDebugToast"
-            app:layout_constraintTop_toBottomOf="@+id/btnDebugToast"
+            app:layout_constraintStart_toStartOf="@+id/btnCancelToast"
+            app:layout_constraintTop_toBottomOf="@+id/btnCancelToast"
             tools:ignore="UsingOnClickInXml" />
 
         <Button
@@ -132,6 +132,30 @@
             tools:ignore="UsingOnClickInXml" />
 
         <Button
+            android:id="@+id/btnExtraMargin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onExtraMarginClick"
+            android:text="Custom extra margin"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnCustomLayoutWithCustomColor"
+            app:layout_constraintTop_toBottomOf="@+id/btnCustomLayoutWithCustomColor"
+            tools:ignore="UsingOnClickInXml" />
+
+        <Button
+            android:id="@+id/btnDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="onCustomDurationClick"
+            android:text="Custom duration margin"
+            android:textAllCaps="false"
+            app:layout_constraintStart_toStartOf="@+id/btnExtraMargin"
+            app:layout_constraintTop_toBottomOf="@+id/btnExtraMargin"
+            tools:ignore="UsingOnClickInXml" />
+
+        <Button
             android:id="@+id/btnReset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -139,8 +163,8 @@
             android:onClick="onResetClick"
             android:text="Reset to Default"
             android:textAllCaps="false"
-            app:layout_constraintStart_toStartOf="@+id/btnCustomLayoutWithCustomColor"
-            app:layout_constraintTop_toBottomOf="@+id/btnCustomLayoutWithCustomColor"
+            app:layout_constraintStart_toStartOf="@+id/btnDuration"
+            app:layout_constraintTop_toBottomOf="@+id/btnDuration"
             tools:ignore="UsingOnClickInXml" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

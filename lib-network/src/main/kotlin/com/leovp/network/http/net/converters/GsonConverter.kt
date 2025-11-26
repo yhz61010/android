@@ -31,7 +31,11 @@ class GsonConverter(private val decoder: Gson = defaultGson) : NetConverter {
                         runCatching {
                             decoder.fromJson<R>(bodyString, succeed)
                         }.getOrElse { parseErr ->
-                            throw ConvertException(response, cause = parseErr)
+                            throw ConvertException(
+                                response = response,
+                                message = bodyString,
+                                cause = parseErr
+                            )
                         }
                     }
                 }

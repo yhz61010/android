@@ -92,7 +92,7 @@ suspend inline fun <reified R> result(
                     ResultConvertException(
                         message = err.message,
                         cause = err,
-                        responseBodyString = err.response.body.string(),
+                        responseBodyString = err.message ?: runCatching { err.response.body.string() }.getOrDefault(""),
                         tag = err.tag
                     )
                 )

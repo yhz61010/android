@@ -1,7 +1,5 @@
 package com.leovp.network.http.exception
 
-import okhttp3.Response
-
 /**
  * Author: Michael Leo
  * Date: 2025/8/15 09:41
@@ -9,6 +7,11 @@ import okhttp3.Response
 open class ResultConvertException(
     message: String? = null,
     cause: Throwable? = null,
-    response: Response,
+    responseBodyString: String? = null,
     tag: Any? = null,
-) : ResultResponseException(message = message, cause = cause, response = response, tag = tag)
+) : ResultResponseException(
+    message = message,
+    cause = cause,
+    responseBodyString = responseBodyString,
+    tag = tag
+)

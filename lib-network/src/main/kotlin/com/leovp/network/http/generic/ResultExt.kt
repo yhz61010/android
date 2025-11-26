@@ -7,11 +7,11 @@ import com.leovp.network.exception.ApiResponseException
 import com.leovp.network.exception.ApiSerializationException
 import com.leovp.network.exception.ApiServerException
 import com.leovp.network.http.Result
-import com.leovp.network.http.net.converters.SerializationConverter
 import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.ResultResponseException
 import com.leovp.network.http.exception.ResultServerException
+import com.leovp.network.http.net.converters.SerializationConverter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  */
 
 suspend inline fun <reified R> result(
-    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
     crossinline block: suspend CoroutineScope.() -> R,
 ): Result<R> = supervisorScope {
     /**
@@ -48,7 +48,7 @@ suspend inline fun <reified R> result(
      * - For json serialize exception, it is the [ResultConvertException] instance.
      * - For unexpected exception, it is the [ResultException] instance.
      *
-     * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.Main] by default.
+     * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.IO] by default.
      */
     runCatching {
         Result.Success(withContext(dispatcher) { block() })
@@ -65,9 +65,9 @@ suspend inline fun <reified R> result(
             is ApiServerException -> {
                 Result.Failure(
                     ResultServerException(
+                        statusCode = err.statusCode,
                         message = err.message,
                         cause = err.cause,
-                        response = err.response,
                         tag = err.tag
                     )
                 )
@@ -79,7 +79,7 @@ suspend inline fun <reified R> result(
                     ResultConvertException(
                         message = err.message,
                         cause = err.cause,
-                        response = err.response,
+                        responseBodyString = err.responseBodyString,
                         tag = err.tag
                     )
                 )
@@ -87,20 +87,21 @@ suspend inline fun <reified R> result(
 
             // 400~499
             is ApiResponseException -> {
-                val errorData: R? = runCatching {
-                    val bodyString = err.response.body.string()
-                    SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
-                }.getOrElse {
-                    // - SerializationException
-                    // - IllegalArgumentException
-                    null
+                val bodyString = err.responseBodyString
+                val errorData: R? = bodyString?.let {
+                    runCatching {
+                        SerializationConverter.defaultJson.decodeFromString<R>(it)
+                        // - SerializationException
+                        // - IllegalArgumentException
+                    }.getOrNull()
                 }
 
                 Result.Failure(
                     ResultResponseException(
+                        statusCode = err.statusCode,
                         message = err.message,
                         cause = err,
-                        response = err.response,
+                        responseBodyString = err.responseBodyString,
                         tag = errorData
                     )
                 )

@@ -63,12 +63,20 @@ class SerializationConverter(private val decoder: Json = defaultJson) : NetConve
                             )
                             bodyString.parseBody<R?>(kType)
                         }.getOrElse { parseErr ->
-                            throw ConvertException(response, cause = parseErr)
+                            throw ConvertException(
+                                response = response,
+                                message = bodyString,
+                                cause = parseErr
+                            )
                         }
                     }
                 }
 
-                code in 400..499 -> throw RequestParamsException(response, code.toString(), err)
+                code in 400..499 -> throw RequestParamsException(
+                    response = response,
+                    message = code.toString(),
+                    cause = err
+                )
 
                 code >= 500 -> throw ServerResponseException(response, code.toString(), err)
                 else -> throw ConvertException(response = response, cause = err)

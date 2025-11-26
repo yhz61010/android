@@ -6,11 +6,11 @@ import com.drake.net.exception.ConvertException
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
 import com.leovp.network.http.Result
-import com.leovp.network.http.net.converters.SerializationConverter
 import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.ResultResponseException
 import com.leovp.network.http.exception.ResultServerException
+import com.leovp.network.http.net.converters.SerializationConverter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,10 +37,10 @@ import kotlinx.coroutines.withContext
  * - For json serialize exception, it is the [ResultConvertException] instance.
  * - For unexpected exception, it is the [ResultException] instance.
  *
- * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.Main] by default.
+ * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.IO] by default.
  */
 suspend inline fun <reified R> result(
-    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
     crossinline block: suspend CoroutineScope.() -> R,
 ): Result<R> = supervisorScope {
     runCatching {
@@ -56,20 +56,19 @@ suspend inline fun <reified R> result(
         when (err) {
             // 400~499
             is RequestParamsException -> {
+                val bodyString = err.response.body.string()
                 val errorData: R? = runCatching {
-                    val bodyString = err.response.body.string()
                     SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
-                }.getOrElse {
                     // - SerializationException
                     // - IllegalArgumentException
-                    null
-                }
+                }.getOrNull()
 
                 Result.Failure(
                     ResultResponseException(
+                        statusCode = err.response.code,
                         message = err.message,
                         cause = err,
-                        response = err.response,
+                        responseBodyString = bodyString,
                         tag = errorData
                     )
                 )
@@ -77,12 +76,26 @@ suspend inline fun <reified R> result(
 
             // 500
             is ServerResponseException -> {
-                Result.Failure(ResultServerException(message = err.message, cause = err, response = err.response))
+                Result.Failure(
+                    ResultServerException(
+                        statusCode = err.response.code,
+                        message = err.message,
+                        cause = err,
+                        tag = err.tag
+                    )
+                )
             }
 
             // JSON convert exception
             is ConvertException -> {
-                Result.Failure(ResultConvertException(message = err.message, cause = err, response = err.response))
+                Result.Failure(
+                    ResultConvertException(
+                        message = err.message,
+                        cause = err,
+                        responseBodyString = err.response.body.string(),
+                        tag = err.tag
+                    )
+                )
             }
 
             else -> Result.Failure(ResultException(message = err.message, cause = err))

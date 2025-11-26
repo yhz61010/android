@@ -2,8 +2,6 @@
 
 package com.leovp.network.exception
 
-import okhttp3.Response
-
 /**
  * Author: Michael Leo
  * Date: 2025/8/14 17:59
@@ -11,6 +9,11 @@ import okhttp3.Response
 open class ApiSerializationException(
     message: String? = null,
     cause: Throwable? = null,
-    response: Response,
+    responseBodyString: String? = null,
     tag: Any? = null,
-) : ApiResponseException(message = message, cause = cause, response = response, tag = tag)
+) : ApiResponseException(
+    message = message,
+    cause = cause,
+    responseBodyString = responseBodyString,
+    tag = tag
+)

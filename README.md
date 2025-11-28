@@ -13,7 +13,7 @@
 
 # Attention
 Project configurations:
-- `minSdk` is `24` (Android 7.0)
+- `minSdk` is `21` (Android 5.0) ~~`minSdk` is `24` (Android 7.0)~~
 - `targetSdk` is `36` (Android 16 - Baklava)
 
 # How to import?

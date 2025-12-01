@@ -7,7 +7,7 @@ min-sdk = "21"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.13.3"
+leo-version = "5.13.4"
 
 #===================
 #===== Compile =====
@@ -374,7 +374,7 @@ androidx-compose = [
     "androidx-compose-activity",
     "lifecycle-viewmodel-compose",
     "lifecycle-runtime-compose",
-    "lifecycle-viewmodel-navigation3",
+#    "lifecycle-viewmodel-navigation3",
     "androidx-compose-runtime-livedata",
     "androidx-compose-materialWindow",
     "lifecycle-viewmodel-savedstate",

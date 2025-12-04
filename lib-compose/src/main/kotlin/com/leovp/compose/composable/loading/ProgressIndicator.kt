@@ -3,6 +3,7 @@ package com.leovp.compose.composable.loading
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,7 @@ fun ProgressIndicator(
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.width(64.dp),
+            modifier = Modifier.size(64.dp),
             color = color,
             trackColor = trackColor
         )

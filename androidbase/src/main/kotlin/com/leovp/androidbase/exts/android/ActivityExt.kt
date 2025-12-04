@@ -54,9 +54,7 @@ inline fun <reified T : Context> Context.startActivity(
     noinline extras: ((intent: Intent) -> Intent)? = null,
     flags: Int? = null,
     options: Bundle? = null,
-) {
-    startActivity(T::class.java, extras, flags, options)
-}
+) = startActivity(T::class.java, extras, flags, options)
 
 // --------------------
 
@@ -88,13 +86,11 @@ fun Fragment.startActivity(
 ) = startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch a Activity in Fragment */
-inline fun <reified T : Fragment> Fragment.startActivity(
+inline fun <reified T : Context> Fragment.startActivity(
     noinline extras: ((intent: Intent) -> Intent)? = null,
     flags: Int? = null,
     options: Bundle? = null,
-) {
-    startActivity(T::class.java, extras, flags, options)
-}
+) = startActivity(T::class.java, extras, flags, options)
 
 // -----
 
@@ -240,9 +236,8 @@ inline fun <reified T : Fragment> Fragment.startActivity(
  * Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Context.startAppDetailSetting() {
+fun Context.startAppDetailSetting() =
     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri))
-}
 
 /**
  * Launch applications detail page
@@ -250,9 +245,8 @@ fun Context.startAppDetailSetting() {
  * Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Fragment.startAppDetailSetting() {
+fun Fragment.startAppDetailSetting() =
     startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri))
-}
 
 /**
  * Launch applications detail page
@@ -261,9 +255,8 @@ fun Fragment.startAppDetailSetting() {
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
 @JvmOverloads
-fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
+fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) =
     startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri), requestCode, options)
-}
 
 /**
  * Launch applications detail page
@@ -284,9 +277,8 @@ fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? =
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Context.startAppStorageSettings() {
+fun Context.startAppStorageSettings() =
     startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri))
-}
 
 /**
  * Launch internal storage settings page
@@ -294,9 +286,8 @@ fun Context.startAppStorageSettings() {
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Fragment.startAppStorageSettings() {
+fun Fragment.startAppStorageSettings() =
     startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri))
-}
 
 /**
  * Launch internal storage settings page
@@ -305,9 +296,8 @@ fun Fragment.startAppStorageSettings() {
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
 @JvmOverloads
-fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
+fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) =
     startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri), requestCode, options)
-}
 
 /**
  * Launch internal storage settings page

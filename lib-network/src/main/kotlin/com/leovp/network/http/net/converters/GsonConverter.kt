@@ -40,9 +40,23 @@ class GsonConverter(private val decoder: Gson = defaultGson) : NetConverter {
                     }
                 }
 
-                code in 400..499 -> throw RequestParamsException(response, code.toString())
-                code >= 500 -> throw ServerResponseException(response, code.toString())
-                else -> throw ConvertException(response, cause = err)
+                code in 400..499 -> throw RequestParamsException(
+                    response = response,
+                    message = err.message,
+                    cause = err
+                )
+
+                code >= 500 -> throw ServerResponseException(
+                    response = response,
+                    message = err.message,
+                    cause = err
+                )
+
+                else -> throw ConvertException(
+                    response = response,
+                    message = err.message,
+                    cause = err
+                )
             }
         }
     }

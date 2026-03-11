@@ -302,9 +302,12 @@ private fun showToast(
                     @Suppress("DEPRECATION")
                     this.view = view
                     setGravity(
-                        /* gravity = */ Gravity.CENTER_HORIZONTAL or toastCfg.gravity,
-                        /* xOffset = */ 0,
-                        /* yOffset = */ (64 + toastCfg.extraMargin).px
+                        /* gravity = */
+                        Gravity.CENTER_HORIZONTAL or toastCfg.gravity,
+                        /* xOffset = */
+                        0,
+                        /* yOffset = */
+                        (64 + toastCfg.extraMargin).px
                     )
                     this.duration = duration
                     show()

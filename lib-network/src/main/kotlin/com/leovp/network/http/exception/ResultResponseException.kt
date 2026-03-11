@@ -6,8 +6,14 @@ package com.leovp.network.http.exception
  */
 open class ResultResponseException(
     val statusCode: Int? = null,
+    code: String? = null,
     message: String? = null,
     cause: Throwable? = null,
     val responseBodyString: String? = null,
     tag: Any? = null,
-) : ResultException(message = message, cause = cause, tag = tag)
+) : ResultException(
+    code = code,
+    message = message,
+    cause = cause,
+    tag = tag
+)

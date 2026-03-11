@@ -23,33 +23,33 @@ import kotlinx.coroutines.withContext
  * Date: 2025/8/14 17:27
  */
 
+/**
+ * **Attention**
+ *
+ * This method will wrap http request which is implemented by your custom http implementation.
+ *
+ * Wrap the [block] result into [com.leovp.network.http.Result].
+ *
+ * Note that, this function is very useful when you wrap your http request block.
+ *
+ * In your custom http implementation, you must throw specific exception which is listed below:
+ * - For 4xx response code or converting exception, you should throw [ApiResponseException] instance.
+ * - For 500 response code, you should throw [ApiServerException] instance.
+ * - For json serialize exception, you should throw [ApiSerializationException] instance.
+ * - For unexpected exception, you should throw [ApiException] instance.
+ *
+ * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure] parameter will be:
+ * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
+ * - For 500 response code, it is the [ResultServerException] instance.
+ * - For json serialize exception, it is the [ResultConvertException] instance.
+ * - For unexpected exception, it is the [ResultException] instance.
+ *
+ * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.IO] by default.
+ */
 suspend inline fun <reified R> result(
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     crossinline block: suspend CoroutineScope.() -> R,
 ): Result<R> = supervisorScope {
-    /**
-     * **Attention**
-     *
-     * This method will wrap http request which is implemented by your custom http implementation.
-     *
-     * In your custom http implementation, you must throw specific exception which is listed below:
-     * - For 4xx response code or converting exception, it is the [ApiResponseException] instance.
-     * - For 500 response code, it is the [ApiServerException] instance.
-     * - For json serialize exception, it is the [ApiSerializationException] instance.
-     * - For unexpected exception, it is the [ApiException] instance.
-     *
-     * Wrap the [block] result into [com.leovp.network.http.Result].
-     *
-     * Note that, this function is very useful when you wrap your http request block.
-     *
-     * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure] parameter will be:
-     * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
-     * - For 500 response code, it is the [ResultServerException] instance.
-     * - For json serialize exception, it is the [ResultConvertException] instance.
-     * - For unexpected exception, it is the [ResultException] instance.
-     *
-     * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.IO] by default.
-     */
     runCatching {
         Result.Success(withContext(dispatcher) { block() })
     }.getOrElse { err ->
@@ -66,6 +66,7 @@ suspend inline fun <reified R> result(
                 Result.Failure(
                     ResultServerException(
                         statusCode = err.statusCode,
+                        code = err.code,
                         message = err.message,
                         cause = err.cause,
                         tag = err.tag
@@ -99,6 +100,7 @@ suspend inline fun <reified R> result(
                 Result.Failure(
                     ResultResponseException(
                         statusCode = err.statusCode,
+                        code = err.code,
                         message = err.message,
                         cause = err,
                         responseBodyString = err.responseBodyString,

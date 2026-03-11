@@ -8,11 +8,13 @@ package com.leovp.network.exception
  */
 open class ApiServerException(
     statusCode: Int? = null,
+    code: String? = null,
     message: String? = null,
     cause: Throwable? = null,
     tag: Any? = null,
 ) : ApiResponseException(
     statusCode = statusCode,
+    code = code,
     message = message,
     cause = cause,
     tag = tag

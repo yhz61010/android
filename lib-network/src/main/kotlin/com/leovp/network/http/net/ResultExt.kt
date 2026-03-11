@@ -66,6 +66,7 @@ suspend inline fun <reified R> result(
                 Result.Failure(
                     ResultResponseException(
                         statusCode = err.response.code,
+                        code = err.response.code.toString(),
                         message = err.message,
                         cause = err,
                         responseBodyString = bodyString,
@@ -76,9 +77,16 @@ suspend inline fun <reified R> result(
 
             // 500
             is ServerResponseException -> {
+//                val bodyString = err.response.body.string()
+//                val errorData: R? = runCatching {
+//                    SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
+//                    // - SerializationException
+//                    // - IllegalArgumentException
+//                }.getOrNull()
                 Result.Failure(
                     ResultServerException(
                         statusCode = err.response.code,
+                        code = err.response.code.toString(),
                         message = err.message,
                         cause = err,
                         tag = err.tag
@@ -88,17 +96,21 @@ suspend inline fun <reified R> result(
 
             // JSON convert exception
             is ConvertException -> {
+                val bodyString = err.response.body.string()
                 Result.Failure(
                     ResultConvertException(
-                        message = err.message,
+                        statusCode = err.response.code,
+                        message = err.cause?.message,
                         cause = err,
-                        responseBodyString = err.message ?: runCatching { err.response.body.string() }.getOrDefault(""),
+                        responseBodyString = bodyString,
                         tag = err.tag
                     )
                 )
             }
 
-            else -> Result.Failure(ResultException(message = err.message, cause = err))
+            else -> Result.Failure(
+                ResultException(message = err.message, cause = err)
+            )
         }
     }
 }

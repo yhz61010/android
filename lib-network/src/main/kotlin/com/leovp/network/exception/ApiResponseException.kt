@@ -8,8 +8,14 @@ package com.leovp.network.exception
  */
 open class ApiResponseException(
     val statusCode: Int? = null,
+    code: String? = null,
     message: String? = null,
     cause: Throwable? = null,
     val responseBodyString: String? = null,
     tag: Any? = null,
-) : ApiException(message = message, cause = cause, tag = tag)
+) : ApiException(
+    code = code,
+    message = message,
+    cause = cause,
+    tag = tag
+)

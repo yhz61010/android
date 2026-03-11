@@ -74,12 +74,21 @@ class SerializationConverter(private val decoder: Json = defaultJson) : NetConve
 
                 code in 400..499 -> throw RequestParamsException(
                     response = response,
-                    message = code.toString(),
+                    message = err.message,
                     cause = err
                 )
 
-                code >= 500 -> throw ServerResponseException(response, code.toString(), err)
-                else -> throw ConvertException(response = response, cause = err)
+                code >= 500 -> throw ServerResponseException(
+                    response = response,
+                    message = err.message,
+                    cause = err
+                )
+
+                else -> throw ConvertException(
+                    response = response,
+                    message = err.message,
+                    cause = err
+                )
             }
         }
     }

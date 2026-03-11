@@ -38,6 +38,8 @@ dependencies {
 
     api(projects.log)
     api(projects.libMvvm)
+    api(projects.androidbase)
+    api(projects.libNetwork)
 }
 
 /** When use it: sourceJar.get() */

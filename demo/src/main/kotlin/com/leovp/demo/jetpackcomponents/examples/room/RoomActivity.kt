@@ -88,7 +88,7 @@ class RoomActivity : BaseDemonstrationActivity<ActivityRoomBinding>(R.layout.act
     }
 
     private val newWordActivityLauncher = BetterActivityResult.registerForActivityResult(
-        this,
+        this@RoomActivity,
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {

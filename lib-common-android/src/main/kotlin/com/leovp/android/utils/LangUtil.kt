@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import com.leovp.android.exts.sharedPrefs
 import com.leovp.kotlin.utils.SingletonHolder
 import java.util.Locale
@@ -84,7 +85,7 @@ import java.util.Locale
  * }
  * ```
  *
- * @param ctx Most of time, this context should be `Activity` context.
+ * @param ctx Most of the time, this context should be `Activity` context.
  *
  * Author: Michael Leo
  * Date: 2021/6/4 13:05
@@ -100,7 +101,7 @@ class LangUtil private constructor(private val ctx: Context) {
     private var currentAppLang: Locale? = null
 
     /**
-     * Most of time, just call this method is enough.
+     * Most of the time, just call this method is enough.
      *
      * @param ctx Try to use context which get from `Activity#applicationContext`.
      */
@@ -120,7 +121,7 @@ class LangUtil private constructor(private val ctx: Context) {
     /**
      * This method should be called on `onCreate`.
      *
-     * @param context Most of time, this context should be `Activity` context.
+     * @param context Most of the time, this context should be `Activity` context.
      */
     private fun updateResources(context: Context, targetLocale: Locale): Context {
         val res: Resources = context.resources
@@ -213,9 +214,8 @@ class LangUtil private constructor(private val ctx: Context) {
         // Use commit() instead of apply(), because sometimes we kill the application process
         // immediately that prevents apply() from finishing
         // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
-        pref.edit().run {
+        pref.edit {
             putString(PREF_KEY_LANGUAGE, language.toString())
-            commit()
         }
         currentAppLang = language
     }

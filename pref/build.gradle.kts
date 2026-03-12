@@ -16,9 +16,9 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.core.ktx)
-
-    implementation(projects.libJson)
+    compileOnly(libs.androidx.core.ktx)
+    compileOnly(libs.gson)
+    compileOnly(projects.libJson)
 }
 
 /** When use it: sourceJar.get() */

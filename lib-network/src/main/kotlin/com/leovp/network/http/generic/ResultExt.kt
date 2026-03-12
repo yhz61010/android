@@ -2,6 +2,7 @@
 
 package com.leovp.network.http.generic
 
+import com.leovp.log.base.e
 import com.leovp.network.exception.ApiException
 import com.leovp.network.exception.ApiResponseException
 import com.leovp.network.exception.ApiSerializationException
@@ -94,7 +95,12 @@ suspend inline fun <reified R> result(
                         SerializationConverter.defaultJson.decodeFromString<R>(it)
                         // - SerializationException
                         // - IllegalArgumentException
-                    }.getOrNull()
+                    }.getOrElse { err ->
+                        e("ResultExt", err) {
+                            "Error while converting body string."
+                        }
+                        null
+                    }
                 }
 
                 Result.Failure(

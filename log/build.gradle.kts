@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.core.ktx)
+    compileOnly(libs.androidx.core.ktx)
 }
 
 /** When use it: sourceJar.get() */

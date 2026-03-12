@@ -1,9 +1,7 @@
-import android.annotation.SuppressLint
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.navigation)
 
@@ -27,11 +25,10 @@ android {
     defaultConfig {
         versionCode = 25
         versionName = "2.5"
-        multiDexEnabled = true
 
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
-            @SuppressLint("ChromeOsAbiSupport")
+            @Suppress("ChromeOsAbiSupport")
             abiFilters += setOf("armeabi-v7a")
         }
 
@@ -181,20 +178,8 @@ android {
     //        javaMaxHeapSize = "4g"
     //    }
 
-    applicationVariants.all {
-        val variant = this
-        variant.outputs
-            .mapNotNull { it as? com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-            .forEach { output ->
-                output.outputFileName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-${buildType.name}" +
-                    "-v$versionName($versionCode)" +
-                    "-${gitVersionTag()}-${gitCommitCount()}" +
-                    ".apk"
-            }
-    }
-
     sourceSets {
-        getByName("main").jniLibs.srcDirs("src/main/libs")
+        getByName("main").jniLibs.directories.add("src/main/libs")
     }
 
     lint {
@@ -215,6 +200,36 @@ android {
     //         apiVersion.set(kotlinApiDemoVersion)
     //     }
     // }
+}
+
+// AGP 9.0 removed outputFileName from VariantOutput API.
+// Use Copy task with SingleArtifact.APK to customize APK naming.
+androidComponents {
+    onVariants { variant ->
+        val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
+        val flavorName = variant.productFlavors.firstOrNull()?.second.orEmpty()
+        val buildType = variant.buildType.orEmpty()
+        val versionName = android.defaultConfig.versionName
+        val versionCode = android.defaultConfig.versionCode
+
+        tasks.register<Copy>("rename${capitalizedName}Apk") {
+            from(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
+            into(layout.buildDirectory.dir("outputs/renamed-apk/${variant.name}"))
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            include("*.apk")
+            rename { _ ->
+                "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildType" +
+                    "-v$versionName($versionCode)" +
+                    "-${gitVersionTag()}-${gitCommitCount()}" +
+                    ".apk"
+            }
+        }
+        afterEvaluate {
+            tasks.named("assemble${capitalizedName}") {
+                finalizedBy("rename${capitalizedName}Apk")
+            }
+        }
+    }
 }
 
 // 获取当前分支的提交总次数
@@ -261,7 +276,7 @@ fun gitVersionTag(): String {
 
     val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
     return if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
-        versionTag.substring(0, matcherGroup0.range.first) + "." + matcherGroup0.value
+        versionTag.take(matcherGroup0.range.first) + "." + matcherGroup0.value
     } else {
         versionTag
     }
@@ -273,7 +288,6 @@ dependencies {
     implementation(libs.bundles.androidx.full)
     implementation(libs.android.material)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(libs.androidx.multidex)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.bundles.lifecycle.simple)

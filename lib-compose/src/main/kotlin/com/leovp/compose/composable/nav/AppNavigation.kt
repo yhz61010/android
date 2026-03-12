@@ -57,12 +57,12 @@ open class AppNavigation(private val navController: NavHostController) {
         }
     }
 
-    fun navigate(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
+    open fun navigate(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
         i(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }
 
-    fun relogin() {
+    open fun relogin() {
         // Default no-op, override in subclass to handle relogin
     }
 }

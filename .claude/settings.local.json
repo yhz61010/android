@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(./gradlew :lib-compose:detekt 2>&1 | tail -40)",
+      "Bash(./gradlew :lib-network:detekt 2>&1 | tail -20)",
+      "Bash(./gradlew detekt:*)",
+      "Bash(./gradlew :adpcm-ima-qt-codec:assembleDebug 2>&1 | tail -20)",
+      "Bash(./gradlew :adpcm-ima-qt-codec:assembleDebug 2>&1 | tail -30)",
+      "Bash(./gradlew :adpcm-ima-qt-codec:assembleDebug 2>&1 | grep \"^ \" | head -60)",
+      "Bash(jar tf:*)",
+      "Bash(find ~/.gradle/caches -path \"*/com.android.tools.build/gradle-api/9.0*\" -name \"*.jar\" 2>/dev/null | head -5)",
+      "Bash(javap -p /home/yhz61010/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle-api/9.0.1/f56272b0dd0bfed6b5bfedd72711eefb83023bd0/gradle-api-9.0.1.jar\\\\!/com/android/build/api/dsl/CommonExtension.class 2>/dev/null || jar xf /home/yhz61010/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle-api/9.0.1/f56272b0dd0bfed6b5bfedd72711eefb83023bd0/gradle-api-9.0.1.jar com/android/build/api/dsl/CommonExtension.class && javap -p com/android/build/api/dsl/CommonExtension.class && rm -rf com/android/build/api/dsl)",
+      "Read(//tmp/**)",
+      "Bash(jar xf:*)",
+      "Bash(javap -p com/android/build/api/dsl/VariantDimension.class)",
+      "Bash(rm -rf com)",
+      "Bash(./gradlew :adpcm-ima-qt-codec:assembleDebug 2>&1 | grep \"Line \\\\|\\\\.gradle\\\\.kts\" | head -30)",
+      "Bash(cd /tmp && jar xf /home/yhz61010/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle-api/9.0.1/f56272b0dd0bfed6b5bfedd72711eefb83023bd0/gradle-api-9.0.1.jar com/android/build/api/variant/VariantOutput.class && javap -p com/android/build/api/variant/VariantOutput.class && rm -rf com)",
+      "Bash(cd /tmp && jar xf /home/yhz61010/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle-api/9.0.1/f56272b0dd0bfed6b5bfedd72711eefb83023bd0/gradle-api-9.0.1.jar com/android/build/api/variant/ApkOutput.class && javap -p com/android/build/api/variant/ApkOutput.class && rm -rf com)",
+      "Bash(cd /tmp && jar xf /home/yhz61010/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle-api/9.0.1/f56272b0dd0bfed6b5bfedd72711eefb83023bd0/gradle-api-9.0.1.jar com/android/build/api/variant/ApplicationVariant.class && javap -p com/android/build/api/variant/ApplicationVariant.class && rm -rf com)",
+      "Bash(./gradlew :adpcm-ima-qt-codec:assembleDebug 2>&1 | grep -i \"srcDirs\\\\|deprecated\\\\|warning\" | head -10)",
+      "Bash(./gradlew assembleDebug 2>&1 | tail -20)",
+      "Bash(./gradlew :pref:compileDebugKotlin 2>&1 | grep \"^e:\" | head -20)",
+      "Bash(./gradlew assembleDebug 2>&1 | tail -80)",
+      "Bash(./gradlew assembleDebug 2>&1 | grep -E \"\\(FAILED|uses-sdk:minSdkVersion|declared in library\\)\" | head -30)",
+      "Bash(./gradlew assembleDebug --continue 2>&1 | grep -E \"\\(FAILED|declared in library \\\\[\\)\" | sort -u)",
+      "Bash(./gradlew assembleDebug --continue 2>&1 | grep \"processDebugMainManifest FAILED\")",
+      "Read(//home/yhz61010/.gradle/caches/9.4.0/transforms/**)",
+      "Bash(2)",
+      "Bash(find /home/yhz61010/.gradle/caches/9.4.0/transforms/ -name \"AndroidManifest.xml\" -exec grep -l \"minSdkVersion=\\\\\"23\\\\\"\" {} \\\\; 2>/dev/null | xargs -I{} grep 'package=' {} | sed 's/.*package=\"\\\\\\([^\"]*\\\\\\)\".*/\\\\1/' | sort -u)",
+      "Bash(./gradlew assembleDebug 2>&1 | tail -60)",
+      "Bash(./gradlew assembleDebug 2>&1 | tail -40)",
+      "Bash(./gradlew :demo:assembleDevDebug 2>&1)",
+      "Bash(./gradlew :demo:tasks --group=\"build\" 2>&1 | head -30)",
+      "Bash(./gradlew :demo:help)",
+      "Bash(./gradlew :demo:dependencies --configuration devDebugRuntimeClasspath 2>&1 | grep -B5 \"support-compat\")"
+    ]
+  }
+}

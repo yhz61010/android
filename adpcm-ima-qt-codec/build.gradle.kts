@@ -50,7 +50,7 @@ android {
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
-    implementation(libs.androidx.annotation)
+    compileOnly(libs.androidx.annotation)
 }
 
 /** When use it: sourceJar.get() */

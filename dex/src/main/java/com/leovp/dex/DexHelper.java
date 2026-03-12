@@ -22,14 +22,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * // Some devices internally create a Handler when creating an input Surface, causing an exception:
- * //   "Can't create handler inside thread that has not called Looper.prepare()"
- * // <https://github.com/Genymobile/scrcpy/issues/240>
- * //
- * // Use Looper.prepareMainLooper() instead of Looper.prepare() to avoid a NullPointerException:
- * //   "Attempt to read from field 'android.os.MessageQueue android.os.Looper.mQueue'
- * //    on a null object reference"
- * // <https://github.com/Genymobile/scrcpy/issues/921>
+ * Some devices internally create a Handler when creating an input Surface, causing an exception:
+ * "Can't create handler inside thread that has not called Looper.prepare()"
+ * <a href="https://github.com/Genymobile/scrcpy/issues/240">issues240</a>
+ * Use Looper.prepareMainLooper() instead of Looper.prepare() to avoid a NullPointerException:
+ * "Attempt to read from field 'android.os.MessageQueue android.os.Looper.mQueue'
+ * on a null object reference"
+ * <a href="https://github.com/Genymobile/scrcpy/issues/921">issues_921</a>
  * <p>
  * <p>
  * Author: Michael Leo
@@ -94,7 +93,7 @@ public class DexHelper {
             mBoundApplicationField.setAccessible(true);
             mBoundApplicationField.set(activityThread, appBindData);
 
-            Application app = Application.class.newInstance();
+            Application app = Application.class.getDeclaredConstructor().newInstance();
             Field baseField = ContextWrapper.class.getDeclaredField("mBase");
             baseField.setAccessible(true);
             baseField.set(app, FakeContext.get());

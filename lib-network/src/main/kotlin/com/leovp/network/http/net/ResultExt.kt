@@ -5,6 +5,7 @@ package com.leovp.network.http.net
 import com.drake.net.exception.ConvertException
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
+import com.leovp.log.base.e
 import com.leovp.network.http.Result
 import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
@@ -56,12 +57,27 @@ suspend inline fun <reified R> result(
         when (err) {
             // 400~499
             is RequestParamsException -> {
-                val bodyString = err.response.body.string()
+                val bodyString = runCatching {
+                    err.response.body.string()
+                }.getOrElse { err ->
+                    e("ResultExt", err) {
+                        "Error while getting body string."
+                    }
+                    null
+                }
                 val errorData: R? = runCatching {
-                    SerializationConverter.defaultJson.decodeFromString<R>(bodyString)
+                    val bodyStringRef = bodyString ?: error("bodyString is null")
+                    SerializationConverter
+                        .defaultJson
+                        .decodeFromString<R>(bodyStringRef)
                     // - SerializationException
                     // - IllegalArgumentException
-                }.getOrNull()
+                }.getOrElse { err ->
+                    e("ResultExt", err) {
+                        "Error while converting body string."
+                    }
+                    null
+                }
 
                 Result.Failure(
                     ResultResponseException(

@@ -28,7 +28,11 @@ import kotlinx.coroutines.delay
  */
 @Suppress("FunctionNaming")
 @Composable
-fun RippleAnimation(circleColor: Color = Color(0xFF6DA4EE), size: Dp = 60.dp, animationDelay: Int = 30) {
+fun RippleAnimation(
+    circleColor: Color = Color(0xFF6DA4EE),
+    size: Dp = 60.dp,
+    animationDelay: Int = 30,
+) {
     val circles = listOf(
         remember { Animatable(initialValue = 0f) },
         remember { Animatable(initialValue = 0f) }

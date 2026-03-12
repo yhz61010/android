@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.log.base
 
 import com.leovp.log.LogContext
@@ -165,6 +167,32 @@ inline fun e(tag: String, throwable: Throwable? = null, crossinline message: () 
     e {
         this.tag = tag
         this.throwable = throwable
+        this.message = message()
+    }
+}
+
+// ----------
+
+fun getUserOpTagName(tag: String): String = "$tag-UOP".take(20)
+
+inline fun userOp(crossinline config: LogConfig.() -> Unit) {
+    val logConfig = LogConfig().apply(config)
+    LogContext.log.w(
+        tag = getUserOpTagName(logConfig.tag),
+        message = logConfig.message,
+        fullOutput = logConfig.fullOutput,
+        throwable = logConfig.throwable,
+        outputType = logConfig.outputType,
+    )
+}
+
+inline fun userOp(
+    tag: String,
+    crossinline message: () -> String?,
+) {
+    userOp {
+        this.tag = tag
+        fullOutput = true
         this.message = message()
     }
 }

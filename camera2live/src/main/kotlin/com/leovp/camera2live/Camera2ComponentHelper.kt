@@ -1129,7 +1129,7 @@ class Camera2ComponentHelper(
 
     /**
      * Once you called this method, you must reinitialized this class again if you want to use again.
-     * Most of time, when you don't need camera, just call [closeCamera] method, so that you can reuse it again.
+     * Most of the time, when you don't need camera, just call [closeCamera] method, so that you can reuse it again.
      * This method only should be called when you do want to release camera resources and do not want to use it any more.
      */
     @Suppress("WeakerAccess")

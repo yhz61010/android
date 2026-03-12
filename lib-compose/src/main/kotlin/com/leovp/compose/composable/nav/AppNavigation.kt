@@ -6,9 +6,8 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
-import com.leovp.compose.composable.event.base.UiEvent
 import com.leovp.log.base.d
-import com.leovp.log.base.i
+import com.leovp.mvvm.event.base.UiEvent
 
 /**
  * Author: Michael Leo
@@ -57,8 +56,12 @@ open class AppNavigation(private val navController: NavHostController) {
         }
     }
 
-    open fun navigate(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
-        i(TAG) { "-> navigate to: $route" }
+    open fun navigate(
+        route: String,
+        arguments: String? = null,
+        extras: UiEvent.NavExtras? = null,
+    ) {
+        d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }
 
@@ -67,7 +70,10 @@ open class AppNavigation(private val navController: NavHostController) {
     }
 }
 
-private fun NavHostController.navigateSingleTopTo(route: String, arguments: String? = null,) {
+private fun NavHostController.navigateSingleTopTo(
+    route: String,
+    arguments: String? = null,
+) {
     val arg: String? = arguments?.trimStart('/')
     this.navigate(route.takeIf { arguments == null } ?: "$route/$arg") {
         // Pop up to the start destination of the graph to
@@ -81,7 +87,10 @@ private fun NavHostController.navigateSingleTopTo(route: String, arguments: Stri
     }
 }
 
-private fun NavHostController.navigateTo(route: String, arguments: String? = null,) {
+private fun NavHostController.navigateTo(
+    route: String,
+    arguments: String? = null,
+) {
     val arg: String? = arguments?.trimStart('/')
     this.navigate(route.takeIf { arguments == null } ?: "$route/$arg") {
         // Whether to restore state when re-selecting a previously selected item
@@ -95,7 +104,9 @@ fun rememberNavigationActions(navController: NavHostController): AppNavigation =
 
 @SuppressLint("RestrictedApi")
 private fun outputGraphInfo(route: String, navController: NavHostController) {
-    d(TAG) { "  current: $route  previous=${navController.currentDestination?.route}" }
+    d(TAG) {
+        "  current: $route  previous=${navController.currentDestination?.route}"
+    }
     for ((i, dest) in navController.currentBackStack.value.withIndex()) {
         d(TAG) { "    Stack $i: ${dest.destination.route}" }
     }

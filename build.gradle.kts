@@ -358,21 +358,21 @@ fun isNonStable(version: String): Boolean {
 
 // --------------------------------------
 /** Takes value from Gradle project property and sets it as build config property. */
-//@Suppress("unused")
-//fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
-//    val propertyValue = project.properties[gradlePropertyName] as? String
-//    checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
+// @Suppress("unused")
+// fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
+//     val propertyValue = project.properties[gradlePropertyName] as? String
+//     checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
 //
-//    val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".uppercase()
-//    buildConfigField("String", androidResourceName, propertyValue)
-//}
+//     val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".uppercase()
+//     buildConfigField("String", androidResourceName, propertyValue)
+// }
 
 /** Adds a new field to the generated BuildConfig class. */
-//@Suppress("unused")
-//fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
-//    // Create String that holds Java String Array code
-//    val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })
-//    buildConfigField("String[]", name, strValue)
-//}
+// @Suppress("unused")
+// fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
+//     // Create String that holds Java String Array code
+//     val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })
+//     buildConfigField("String[]", name, strValue)
+// }
 
 fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.uppercase() }

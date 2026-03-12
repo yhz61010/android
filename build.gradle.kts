@@ -1,7 +1,7 @@
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import com.android.build.gradle.internal.dsl.BaseFlavor
-import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
@@ -53,7 +53,6 @@ val localProperties: Properties by extra { gradleLocalProperties(rootProject.roo
 plugins {
     // https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.library) apply false
 
     alias(libs.plugins.detekt)
@@ -142,8 +141,6 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = rootProject.libs.plugins.kotlin.android.get().pluginId)
-
     plugins.withId(rootProject.libs.plugins.android.application.get().pluginId) {
         // println("displayName=$displayName, name=$name, group=$group")
         configureApplication()
@@ -195,82 +192,56 @@ fun Project.configureCompileTasks() {
     }
 }
 
-fun Project.configureBase(): BaseExtension = extensions.getByName<BaseExtension>("android").apply {
+fun Project.configureBase() {
+    val android = extensions.getByName("android") as CommonExtension
     if (useResourcePrefix) {
         val moduleName = name.replace("-", "_")
-        resourcePrefix = "${moduleName}_"
+        android.resourcePrefix = "${moduleName}_"
     }
-    compileSdkVersion(rootProject.libs.versions.compile.sdk.get().toInt())
-    defaultConfig {
+    android.compileSdk = rootProject.libs.versions.compile.sdk.get().toInt()
+    android.defaultConfig.apply {
         minSdk = rootProject.libs.versions.min.sdk.get().toInt()
-        targetSdk = rootProject.libs.versions.target.sdk.get().toInt()
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    sourceSets.configureEach {
-        // This `name` is just the name for each `source` in `sourceSets`.
-        java.srcDirs("src/$name/kotlin", "src/$name/java")
+    for (srcSet in android.sourceSets) {
+        srcSet.java.srcDirs("src/${srcSet.name}/kotlin", "src/${srcSet.name}/java")
     }
-    // sourceSets {
-    //     map { it.java.srcDir("src/${it.name}/kotlin") }
-    // }
-    testOptions {
-        unitTests {
-            isReturnDefaultValues = true
-            isIncludeAndroidResources = true
-        }
+    android.testOptions.unitTests.apply {
+        isReturnDefaultValues = true
+        isIncludeAndroidResources = true
     }
-    compileOptions {
-        // setDefaultJavaVersion(jdkVersion)
+    android.compileOptions.apply {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
-    buildTypes {
-        getByName("release") {
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
+    val defaultProguard = android.getDefaultProguardFile("proguard-android-optimize.txt")
+    android.buildTypes.getByName("release").apply {
+        proguardFiles(defaultProguard, File("proguard-rules.pro"))
     }
 
-    buildFeatures.viewBinding = true
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
-    // Add this line if necessary
-    // buildFeatures.buildConfig = true
+    android.buildFeatures.viewBinding = true
 
     // turn off checking the given issue id's
-    lintOptions.disable += setOf(
-        // "MissingTranslation",
-        // "GoogleAppIndexingWarning",
+    android.lint.disable += setOf(
         "RtlHardcoded",
         "RtlCompat",
         "RtlEnabled"
     )
-    packagingOptions.resources.pickFirsts += setOf(
-        "META-INF/atomicfu.kotlin_module"
-    )
-    packagingOptions.resources.excludes += setOf(
-        "META-INF/licenses/**",
-        "META-INF/NOTICE*",
-        "META-INF/LICENSE*",
-        "META-INF/DEPENDENCIES*",
-        "META-INF/INDEX.LIST",
-        "META-INF/io.netty.versions.properties",
-        "META-INF/{AL2.0,LGPL2.1}",
-        "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
-        // "**/*.proto",
-        // "**/*.bin",
-        // "**/*.java",
-        // "**/*.properties",
-        // "**/*.version",
-        // "**/*.*_module",
-        // "*.txt",
-        // "kotlin/**",
-        // "kotlinx/**",
-        // "okhttp3/**",
-        // "META-INF/services/**",
-    )
+    android.packaging.resources.apply {
+        pickFirsts += setOf(
+            "META-INF/atomicfu.kotlin_module"
+        )
+        excludes += setOf(
+            "META-INF/licenses/**",
+            "META-INF/NOTICE*",
+            "META-INF/LICENSE*",
+            "META-INF/DEPENDENCIES*",
+            "META-INF/INDEX.LIST",
+            "META-INF/io.netty.versions.properties",
+            "META-INF/{AL2.0,LGPL2.1}",
+            "META-INF/services/reactor.blockhound.integration.BlockHoundIntegration"
+        )
+    }
 }
 
 /**
@@ -280,20 +251,24 @@ fun Project.configureBase(): BaseExtension = extensions.getByName<BaseExtension>
  * **Attention**:
  * The default value of `applicationId` is equal to the value of `namespace`.
  */
-fun Project.configureApplication(): BaseExtension = configureBase().apply {
-    defaultConfig {
-        applicationId = namespace
-        vectorDrawables.useSupportLibrary = true
-    }
-    buildTypes {
-        getByName("release") {
-            isShrinkResources = false
-            isMinifyEnabled = true
+fun Project.configureApplication() {
+    configureBase()
+    extensions.configure<ApplicationExtension> {
+        defaultConfig {
+            applicationId = namespace
+            targetSdk = rootProject.libs.versions.target.sdk.get().toInt()
+            vectorDrawables.useSupportLibrary = true
         }
+        buildTypes {
+            getByName("release") {
+                isShrinkResources = false
+                isMinifyEnabled = true
+            }
 
-        getByName("debug") {
-            isShrinkResources = false
-            isMinifyEnabled = false
+            getByName("debug") {
+                isShrinkResources = false
+                isMinifyEnabled = false
+            }
         }
     }
 }
@@ -302,17 +277,20 @@ fun Project.configureApplication(): BaseExtension = configureBase().apply {
  * All the submodules will have the hierarchy configurations.
  * You just need to add your custom properties as you wish.
  */
-fun Project.configureLibrary(): BaseExtension = configureBase().apply {
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
+fun Project.configureLibrary() {
+    configureBase()
+    extensions.configure<LibraryExtension> {
+        defaultConfig {
+            consumerProguardFiles("consumer-rules.pro")
         }
+        buildTypes {
+            getByName("release") {
+                isMinifyEnabled = false
+            }
 
-        getByName("debug") {
-            isMinifyEnabled = false
+            getByName("debug") {
+                isMinifyEnabled = false
+            }
         }
     }
 }
@@ -379,23 +357,22 @@ fun isNonStable(version: String): Boolean {
 }
 
 // --------------------------------------
-
 /** Takes value from Gradle project property and sets it as build config property. */
-@Suppress("unused")
-fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
-    val propertyValue = project.properties[gradlePropertyName] as? String
-    checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
-
-    val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".uppercase()
-    buildConfigField("String", androidResourceName, propertyValue)
-}
-
-fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.uppercase() }
+//@Suppress("unused")
+//fun BaseFlavor.buildConfigFieldFromGradleProperty(gradlePropertyName: String) {
+//    val propertyValue = project.properties[gradlePropertyName] as? String
+//    checkNotNull(propertyValue) { "Gradle property $gradlePropertyName is null" }
+//
+//    val androidResourceName = "GRADLE_${gradlePropertyName.toSnakeCase()}".uppercase()
+//    buildConfigField("String", androidResourceName, propertyValue)
+//}
 
 /** Adds a new field to the generated BuildConfig class. */
-@Suppress("unused")
-fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
-    // Create String that holds Java String Array code
-    val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })
-    buildConfigField("String[]", name, strValue)
-}
+//@Suppress("unused")
+//fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
+//    // Create String that holds Java String Array code
+//    val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })
+//    buildConfigField("String[]", name, strValue)
+//}
+
+fun String.toSnakeCase() = this.split(Regex("(?=[A-Z])")).joinToString("_") { it.uppercase() }

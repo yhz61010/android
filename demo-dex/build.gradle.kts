@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -40,14 +39,26 @@ android {
     //     "META-INF/androidx.emoji2_emoji2.version"
     // )
 
-    applicationVariants.all {
-        val variant = this
-        variant.outputs
-            .mapNotNull { it as? com.android.build.gradle.internal.api.ApkVariantOutputImpl }
-            .forEach { output ->
-                variant.packageApplicationProvider.get().outputDirectory
-                output.outputFileName = "dexdemo.dex"
+}
+
+// AGP 9.0 removed outputFileName from VariantOutput API.
+// Use Copy task with SingleArtifact.APK to customize APK naming.
+androidComponents {
+    onVariants { variant ->
+        val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
+
+        tasks.register<Copy>("rename${capitalizedName}Apk") {
+            from(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
+            into(layout.buildDirectory.dir("outputs/renamed-apk/${variant.name}"))
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            include("*.apk")
+            rename { _ -> "dexdemo.dex" }
+        }
+        afterEvaluate {
+            tasks.named("assemble${capitalizedName}") {
+                finalizedBy("rename${capitalizedName}Apk")
             }
+        }
     }
 }
 

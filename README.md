@@ -1,9 +1,9 @@
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
-[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.2.10-blue)](https://kotlinlang.org)
-[![AGP](https://img.shields.io/badge/AGP-8.11.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
-[![Gradle](https://img.shields.io/badge/Gradle-8.14.3-green)](https://gradle.org)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.3.10-blue)](https://kotlinlang.org)
+[![AGP](https://img.shields.io/badge/AGP-9.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
+[![Gradle](https://img.shields.io/badge/Gradle-9.4.0-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/Android_Studio-Meerkat_Feature_Drop_|_2025.1.1_Patch_1-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Otter_3_Feature_Drop_|_2025.2.3-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)
@@ -15,6 +15,12 @@
 Project configurations:
 - `minSdk` is `21` (Android 5.0) ~~`minSdk` is `24` (Android 7.0)~~
 - `targetSdk` is `36` (Android 16 - Baklava)
+
+PS:
+Due to limitations from other projects I am currently involved in, 
+the `minSdk` must remain at `21` and cannot be upgraded for now. 
+This also indirectly affects some of the open-source libraries used in this project, 
+preventing them from being updated to their latest versions.
 
 # How to import?
 

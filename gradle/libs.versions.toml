@@ -7,14 +7,14 @@ min-sdk = "21"
 target-sdk = "36"
 ndk-sdk = "25.2.9519653"
 
-leo-version = "5.13.7"
+leo-version = "5.13.8"
 
 #===================
 #===== Compile =====
 #===================
-agp = "8.11.1"
-kotlin = "2.2.10"
-ksp = "2.2.10-2.0.2"
+agp = "9.0.1"
+kotlin = "2.3.10"
+ksp = "2.3.6"
 #kotlin-language = "2.1"
 #kotlin-api = "2.1"
 
@@ -27,82 +27,83 @@ jvmVersion = "17"
 coroutines = "1.10.2"
 material = "1.13.0"
 appcompat = "1.7.1"
-activity-ktx = "1.10.1"
+activity-ktx = "1.12.4"
 fragment-ktx = "1.8.9"
 core-ktx = "1.17.0"
-multidex = "2.0.1"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 constraintlayout = "2.2.1"
 coordinatorlayout = "1.3.0"
-navigation = "2.9.3"
+navigation = "2.9.7"
 concurrent-futures-ktx = "1.3.0"
-lifecycle = "2.9.3"
+lifecycle = "2.10.0"
 #android-annotation = "4.1.1.4"
 androidx-annotation = "1.9.1"
 #android-support-annotation = "28.0.0"
 cardview = "1.0.0"
 viewpager2 = "1.1.0"
-swiperefreshlayout = "1.1.0"
-room = "2.7.2" # 2.4.2 has compilation error with Kotlin 1.7.0
-camera = "1.4.2"
-exifinterface = "1.4.1"
-serialization-json = "1.9.0"
+swiperefreshlayout = "1.2.0"
+room = "2.8.4" # 2.4.2 has compilation error with Kotlin 1.7.0
+camera = "1.4.1" # 1.5.0+ requires minSdkVersion 23
+exifinterface = "1.4.2"
+serialization-json = "1.10.0"
 
 #===========================
 #===== Android Compose =====
 #===========================
-compose-bom = "2025.08.01"
-compose-activity = "1.10.1"
-compose-navigation = "2.9.3"
-lifecycle-viewmodel-navigation3 = "1.0.0-alpha04"
+compose-bom = "2026.02.01"
+compose-activity = "1.12.4"
+compose-navigation = "2.9.7"
+lifecycle-viewmodel-navigation3 = "2.10.0"
 androidx-constraintlayout-compose = "1.1.1"
 
 #=======================
 #===== Third party =====
 #=======================
 detekt = "1.23.8"
-dokka = "2.0.0"
+dokka = "2.1.0"
 # ktlint = "0.49.0"
-ktlint-gradle = "13.1.0"
-benmanes = "0.52.0"
+ktlint-gradle = "14.1.0"
+benmanes = "0.53.0"
 #vcu = "0.7.0"
-jacoco = "0.8.13"
+jacoco = "0.8.14"
 # The version should be the same as server.
-sonarqube = "6.3.1.5724"
+sonarqube = "7.2.3.7755"
 
 coil = "2.7.0"
-glide = "5.0.4"
+glide = "5.0.5"
 glide-transformations = "4.3.0"
-square-okhttp = "5.1.0"
+square-okhttp = "5.3.2"
 square-retrofit2 = "3.0.0"
 square-moshi = "1.15.2"
 rxjava2 = "2.2.21"
 rxjava2-android = "2.1.1"
-rxjava3 = "3.1.11"
+rxjava3 = "3.1.12"
 rxjava3-android = "3.0.2"
-gson = "2.13.1"
+gson = "2.13.2"
 eventbus = "3.3.1"
 mars-xlog = "1.2.6"
 karn-notify = "1.4.0"
 # Starting from v2.0.0,
 # MMKV no longer supports 32-bit arch and API level 22 or 21,
 # if you want 32-bit or API level 21~22, use v1.3.x LTS series.
-mmkv = "1.3.12" # 2.2.2 # 1.3.12
+mmkv = "2.3.0" # 2.2.2 # 1.3.12
 # 2.15.0+ Build with error "Unsupported class file major version 63"
 # https://github.com/FasterXML/jackson-core/issues/955
-fasterxml = "2.20.0" # 2.14.3
+fasterxml = "2.21.1" # 2.14.3
 # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
-fasterxml-annotations = "2.20"
-xx-permissions = "26.5"
-bson = "2.18.0" # As of 2.13.0, you need to add fasterxml jackson manually.
+fasterxml-annotations = "2.21"
+xx-permissions = "28.0"
+# As of 2.13.0, you need to add fasterxml jackson manually.
+# As of 3.1.0, requires minSdkVersion 26
+bson = "2.15.1"
 free-reflection = "3.2.2"
 flyco-tablayout = "2.2.0"
 srl = "2.0.5"
 netty = "4.1.108.Final"
 koin = "4.1.1"
-bytedeco-ffmpeg = "7.1-1.5.11"
-bytedeco-javacpp = "1.5.12"
+bytedeco-ffmpeg = "8.0.1-1.5.13"
+bytedeco-javacpp = "1.5.13"
 material-dialogs = "3.3.0"
 android-animations = "2.4"
 java-mail = "1.6.8"
@@ -110,22 +111,22 @@ jzlib = "1.1.3"
 androidasync = "3.1.0"
 net = "3.7.0"
 subsampling-scale-image-view = "3.10.0"
-mannodermaus-android-junit5 = "1.13.1.0"
-mannodermaus-junit5 = "1.8.0"
+mannodermaus-android-junit5 = "2.0.1"
+mannodermaus-junit5 = "2.0.1"
 
 #================
 #===== Test =====
 #================
-jupiter = "5.13.4" # JUnit 5
+jupiter = "6.0.3" # JUnit 5
 androidx-test = "1.7.0"
 androidx-test-runner = "1.7.0"
 androidx-test-ext = "1.3.0"
 espresso-core = "3.7.0"
 kluent = "1.73"
-mockk = "1.14.5"
+mockk = "1.14.9"
 arch = "2.2.0"
 powermock-version = "2.0.9"
-robolectric-version = "4.16"
+robolectric-version = "4.16.1"
 
 #===================#===================#===================#===================
 #===================#===================#===================#===================
@@ -149,7 +150,6 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity-ktx" }
 androidx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment-ktx" }
-androidx-multidex = { module = "androidx.multidex:multidex", version.ref = "multidex" }
 #android-annotation = { module = "com.google.android:annotations", version.ref = "android-annotation" }
 #android-support-annotation = { module = "com.android.support:support-annotations", version.ref = "android-support-annotation" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }

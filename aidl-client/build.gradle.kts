@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.kotlin.parcelize)
 }
@@ -11,7 +10,6 @@ android {
     defaultConfig {
         versionCode = 1
         versionName = "1.0"
-        multiDexEnabled = true
     }
 
     // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
@@ -58,7 +56,6 @@ android {
 dependencies {
     implementation(libs.bundles.androidx.simple)
     implementation(libs.android.material)
-    implementation(libs.androidx.multidex)
 
     implementation(projects.androidbase)
     implementation(projects.libCommonAndroid)

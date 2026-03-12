@@ -17,7 +17,7 @@ android {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
-    api(libs.gson)
+    compileOnly(libs.gson)
 }
 
 /** When use it: sourceJar.get() */

@@ -15,10 +15,6 @@ android {
         buildConfig = true
     }
 
-    defaultConfig {
-        multiDexEnabled = true
-    }
-
     lint {
         abortOnError = false
     }
@@ -34,7 +30,6 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
 
     api(libs.kotlin.coroutines.core)
-    api(libs.androidx.multidex)
 
     api(libs.bundles.lifecycle.full)
     api(libs.android.material)

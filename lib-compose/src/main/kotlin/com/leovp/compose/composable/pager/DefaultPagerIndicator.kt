@@ -25,7 +25,11 @@ import androidx.compose.ui.unit.dp
 
 @Suppress("FunctionNaming")
 @Composable
-fun DefaultPagerIndicator(modifier: Modifier = Modifier, currentPageIndex: Int, pageCount: Int) {
+fun DefaultPagerIndicator(
+    modifier: Modifier = Modifier,
+    currentPageIndex: Int,
+    pageCount: Int,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()

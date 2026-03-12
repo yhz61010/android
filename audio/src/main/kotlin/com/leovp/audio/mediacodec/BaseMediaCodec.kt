@@ -64,7 +64,7 @@ abstract class BaseMediaCodec(
     }
 
     /**
-     * Most of time, you do NOT need to override this method.
+     * Most of the time, you do NOT need to override this method.
      */
     open fun createMediaFormat() {
         LogContext.log.w(TAG, "createMediaFormat() codec=$codecName sampleRate=$sampleRate channelCount=$channelCount")
@@ -75,7 +75,7 @@ abstract class BaseMediaCodec(
     }
 
     /**
-     * Most of time, you do NOT need to override this method.
+     * Most of the time, you do NOT need to override this method.
      */
     open fun createCodec() {
         LogContext.log.w(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")

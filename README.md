@@ -3,7 +3,7 @@
 [![AGP](https://img.shields.io/badge/AGP-9.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-9.4.0-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/Android_Studio-Otter_3_Feature_Drop_|_2025.2.3-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_2_|_2025.3.2-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-25.2.9519653-green)](https://developer.android.com/ndk/downloads)

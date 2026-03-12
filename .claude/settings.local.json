@@ -34,7 +34,12 @@
       "Bash(./gradlew :demo:assembleDevDebug 2>&1)",
       "Bash(./gradlew :demo:tasks --group=\"build\" 2>&1 | head -30)",
       "Bash(./gradlew :demo:help)",
-      "Bash(./gradlew :demo:dependencies --configuration devDebugRuntimeClasspath 2>&1 | grep -B5 \"support-compat\")"
+      "Bash(./gradlew :demo:dependencies --configuration devDebugRuntimeClasspath 2>&1 | grep -B5 \"support-compat\")",
+      "Bash(find /home/yhz61010/StudioProjects/android -name \"detekt-report.*\" -o -name \"detekt.html\" -o -name \"detekt.xml\" 2>/dev/null | head -20)",
+      "Bash(for mod:*)",
+      "Bash(do echo:*)",
+      "Read(//home/yhz61010/StudioProjects/android/$mod/build/reports/detekt/**)",
+      "Bash(done)"
     ]
   }
 }

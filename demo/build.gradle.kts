@@ -1,3 +1,5 @@
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Properties
 
 plugins {
@@ -206,22 +208,35 @@ android {
 // Use Copy task with SingleArtifact.APK to customize APK naming.
 androidComponents {
     onVariants { variant ->
+        // Example: debug
+        val buildTypeName = variant.buildType ?: "unknown"
+        // Example: DevDebug
         val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
+        // Example: dev
         val flavorName = variant.productFlavors.firstOrNull()?.second.orEmpty()
-        val buildType = variant.buildType.orEmpty()
-        val versionName = android.defaultConfig.versionName
-        val versionCode = android.defaultConfig.versionCode
+        println("buildTypeName=$buildTypeName flavorName=$flavorName capitalizedName=$capitalizedName")
+        val versionName = android.defaultConfig.versionName ?: "NA"
+        val versionCode = android.defaultConfig.versionCode ?: 0
+        val timestamp = ZonedDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss(z)"))
+        val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
+            "-v$versionName($versionCode)" +
+            "-${gitVersionTag()}-${gitCommitCount()}" +
+            "-${timestamp}.apk"
 
-        tasks.register<Copy>("rename${capitalizedName}Apk") {
-            from(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK))
-            into(layout.buildDirectory.dir("outputs/renamed-apk/${variant.name}"))
-            duplicatesStrategy = DuplicatesStrategy.INCLUDE
-            include("*.apk")
-            rename { _ ->
-                "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildType" +
-                    "-v$versionName($versionCode)" +
-                    "-${gitVersionTag()}-${gitCommitCount()}" +
-                    ".apk"
+        tasks.register("rename${capitalizedName}Apk") {
+            val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
+            inputs.dir(apkDir)
+            doLast {
+                val dir = apkDir.get().asFile
+                dir.listFiles()?.filter { it.extension == "apk" }?.forEach { srcFile ->
+                    val finalName = if ("unsigned" in srcFile.name) {
+                        apkName.replace(".apk", "-unsigned.apk")
+                    } else {
+                        apkName
+                    }
+                    srcFile.copyTo(File(dir, finalName), overwrite = true)
+                }
             }
         }
         afterEvaluate {

@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.compose.composable.event.base
+package com.leovp.mvvm.event.base
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow

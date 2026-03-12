@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.compose.composable.event.base
+package com.leovp.mvvm.event.base
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.Keep
@@ -20,6 +20,7 @@ sealed interface UiEvent {
         val isError: Boolean = false,
         val longDuration: Boolean = false,
         val isDebug: Boolean = false,
+        val origin: Boolean = false,
     ) : UiEvent
 
     @Keep
@@ -32,7 +33,11 @@ sealed interface UiEvent {
     ) : UiEvent
 
     @Keep
-    data class Navigate(val route: String, val arguments: String? = null, val extras: NavExtras? = null,) : UiEvent
+    data class Navigate(
+        val route: String,
+        val arguments: String? = null,
+        val extras: NavExtras? = null,
+    ) : UiEvent
 
     data object NavigateBack : UiEvent
 

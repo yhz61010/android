@@ -1,6 +1,6 @@
 @file:Suppress("unused", "LongParameterList", "CyclomaticComplexMethod")
 
-package com.leovp.compose.composable.event
+package com.leovp.compose.composable.event.base
 
 import android.app.Activity
 import androidx.compose.material3.SnackbarDuration
@@ -15,15 +15,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.audio.SoundEffectPlayer
-import com.leovp.compose.composable.event.base.UiEvent
 import com.leovp.compose.composable.nav.AppNavigation
 import com.leovp.compose.composable.navigationBarVisibility
+import com.leovp.mvvm.event.base.UiEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -43,6 +44,7 @@ fun GenericEventHandler(
     )? = null,
 ) {
     val localizedCtx = LocalContext.current
+    val localRes = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Hide system navigation bar and keep it hidden even when keyboard appears
@@ -80,7 +82,7 @@ fun GenericEventHandler(
                     }
 
                     is UiEvent.ShowSnackbar -> {
-                        val msg = event.message ?: event.resId?.let { localizedCtx.getString(it) } ?: ""
+                        val msg = event.message ?: event.resId?.let { localRes.getString(it) } ?: ""
                         snackbarHostState
                             .showSnackbar(
                                 message = msg,

@@ -33,12 +33,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
  * If the created [ViewModel] does not match the requested class, an [IllegalArgumentException]
  * exception is thrown.
  */
-fun <VM : ViewModel> viewModelProviderFactoryOf(create: () -> VM,): ViewModelProvider.Factory = SimpleFactory(create)
+fun <VM : ViewModel> viewModelProviderFactoryOf(create: () -> VM): ViewModelProvider.Factory = SimpleFactory(create)
 
 /**
- * This needs to be a named class currently to workaround a compiler issue: b/163807311
+ * This needs to be a named class currently to work around a compiler issue: b/163807311
  */
-private class SimpleFactory<VM : ViewModel>(private val create: () -> VM,) : ViewModelProvider.Factory {
+private class SimpleFactory<VM : ViewModel>(private val create: () -> VM) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm = create()
         if (modelClass.isInstance(vm)) {
@@ -64,7 +64,7 @@ private class SimpleFactory<VM : ViewModel>(private val create: () -> VM,) : Vie
  *     companion object {
  *         val USE_CASE_KEY = object : CreationExtras.Key<UseCase> {}
  *
- *         val Factory: ViewModelProvider.Factory = viewModelFactoryWithSavedState(
+ *         val Factory: ViewModelProvider.Factory = viewModelFactory(
  *             key1 = USE_CASE_KEY
  *         ) { savedStateHandle, useCase ->
  *             HomeViewModel(useCase = useCase, savedStateHandle = savedStateHandle)
@@ -89,7 +89,7 @@ private class SimpleFactory<VM : ViewModel>(private val create: () -> VM,) : Vie
  * }
  * ```
  */
-inline fun <reified VM : ViewModel, reified Param> viewModelFactoryWithSavedState(
+inline fun <reified VM : ViewModel, reified Param> viewModelFactory(
     key: CreationExtras.Key<Param>,
     crossinline create: (savedStateHandle: SavedStateHandle, param: Param) -> VM,
 ): ViewModelProvider.Factory = viewModelFactory {
@@ -117,7 +117,7 @@ inline fun <reified VM : ViewModel, reified Param> viewModelFactoryWithSavedStat
  *         val USE_CASE_KEY = object : CreationExtras.Key<YourUseCase> {}
  *         val TYPE = object : CreationExtras.Key<YourTypeModel> {}
  *
- *         val Factory: ViewModelProvider.Factory = viewModelFactoryWithSavedState(
+ *         val Factory: ViewModelProvider.Factory = viewModelFactory(
  *             key1 = USE_CASE_KEY,
  *             key2 = TYPE,
  *         ) { savedStateHandle, useCase, type ->
@@ -144,7 +144,7 @@ inline fun <reified VM : ViewModel, reified Param> viewModelFactoryWithSavedStat
  * }
  * ```
  */
-inline fun <reified VM : ViewModel, reified Param1, reified Param2> viewModelFactoryWithSavedState(
+inline fun <reified VM : ViewModel, reified Param1, reified Param2> viewModelFactory(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2) -> VM,
@@ -157,7 +157,50 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2> viewModelFac
     }
 }
 
-inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3> viewModelFactoryWithSavedState(
+/**
+ * Creates a [ViewModelProvider.Factory] that provides [SavedStateHandle] and
+ * three required parameters retrieved from [CreationExtras].
+ *
+ * @param key1 The key to retrieve the first parameter from [CreationExtras]
+ * @param key2 The key to retrieve the second parameter from [CreationExtras]
+ * @param key3 The key to retrieve the third parameter from [CreationExtras]
+ * @param create Lambda to create the ViewModel with [SavedStateHandle] and the three parameters
+ *
+ * Example:
+ * ```
+ * class DetailViewModel(
+ *     private val savedStateHandle: SavedStateHandle,
+ *     private val useCase: DetailUseCase,
+ *     private val repo: DetailRepository,
+ *     private val logger: Logger,
+ * ) : ViewModel() {
+ *     companion object {
+ *         val USE_CASE_KEY = object : CreationExtras.Key<DetailUseCase> {}
+ *         val REPO_KEY = object : CreationExtras.Key<DetailRepository> {}
+ *         val LOGGER_KEY = object : CreationExtras.Key<Logger> {}
+ *
+ *         val Factory: ViewModelProvider.Factory = viewModelFactory(
+ *             key1 = USE_CASE_KEY,
+ *             key2 = REPO_KEY,
+ *             key3 = LOGGER_KEY,
+ *         ) { savedStateHandle, useCase, repo, logger ->
+ *             DetailViewModel(savedStateHandle, useCase, repo, logger)
+ *         }
+ *     }
+ * }
+ *
+ * // In navigation graph:
+ * val detailVM: DetailViewModel = viewModel(
+ *     factory = DetailViewModel.Factory,
+ *     extras = defaultExtras + MutableCreationExtras().apply {
+ *         set(USE_CASE_KEY, DetailUseCase())
+ *         set(REPO_KEY, DetailRepositoryImpl())
+ *         set(LOGGER_KEY, Logger())
+ *     },
+ * )
+ * ```
+ */
+inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3> viewModelFactory(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     key3: CreationExtras.Key<Param3>,
@@ -169,5 +212,77 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
         val param2 = this[key2] ?: error("Missing ViewModel parameter for key2: $key2")
         val param3 = this[key3] ?: error("Missing ViewModel parameter for key3: $key3")
         create(savedStateHandle, param1, param2, param3)
+    }
+}
+
+/**
+ * Creates a [ViewModelProvider.Factory] that provides [SavedStateHandle] and
+ * a single parameter retrieved from [CreationExtras].
+ *
+ * @param key1 The key to retrieve the parameter from [CreationExtras]
+ * @param key2 The key to retrieve the parameter from [CreationExtras]
+ * @param key3 The key to retrieve the parameter from [CreationExtras]
+ * @param key4 The nullable key to retrieve the parameter from [CreationExtras]
+ * @param create Lambda to create the ViewModel with [SavedStateHandle] and the parameter
+ */
+inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3, reified Param4> viewModelFactory(
+    key1: CreationExtras.Key<Param1>,
+    key2: CreationExtras.Key<Param2>,
+    key3: CreationExtras.Key<Param3>,
+    key4: CreationExtras.Key<Param4>,
+    crossinline create: (
+        savedStateHandle: SavedStateHandle,
+        param1: Param1,
+        param2: Param2,
+        param3: Param3,
+        param4: Param4?,
+    ) -> VM,
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer {
+        create(
+            createSavedStateHandle(),
+            this[key1] ?: error("Missing ViewModel parameter for key: $key1"),
+            this[key2] ?: error("Missing ViewModel parameter for key: $key2"),
+            this[key3] ?: error("Missing ViewModel parameter for key: $key3"),
+            this[key4],
+        )
+    }
+}
+
+/**
+ * Creates a [ViewModelProvider.Factory] that provides [SavedStateHandle] and
+ * a single parameter retrieved from [CreationExtras].
+ *
+ * @param key1 The key to retrieve the parameter from [CreationExtras]
+ * @param key2 The key to retrieve the parameter from [CreationExtras]
+ * @param key3 The key to retrieve the parameter from [CreationExtras]
+ * @param key4 The nullable key to retrieve the parameter from [CreationExtras]
+ * @param key5 The nullable key to retrieve the parameter from [CreationExtras]
+ * @param create Lambda to create the ViewModel with [SavedStateHandle] and the parameter
+ */
+inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3, reified Param4, reified Param5> viewModelFactory(
+    key1: CreationExtras.Key<Param1>,
+    key2: CreationExtras.Key<Param2>,
+    key3: CreationExtras.Key<Param3>,
+    key4: CreationExtras.Key<Param4>,
+    key5: CreationExtras.Key<Param5>,
+    crossinline create: (
+        savedStateHandle: SavedStateHandle,
+        param1: Param1,
+        param2: Param2,
+        param3: Param3,
+        param4: Param4?,
+        param5: Param5?,
+    ) -> VM,
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer {
+        create(
+            createSavedStateHandle(),
+            this[key1] ?: error("Missing ViewModel parameter for key: $key1"),
+            this[key2] ?: error("Missing ViewModel parameter for key: $key2"),
+            this[key3] ?: error("Missing ViewModel parameter for key: $key3"),
+            this[key4],
+            this[key5],
+        )
     }
 }

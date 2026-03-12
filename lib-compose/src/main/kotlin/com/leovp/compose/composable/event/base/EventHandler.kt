@@ -1,12 +1,14 @@
-package com.leovp.compose.composable.event
+@file:Suppress("unused")
+
+package com.leovp.compose.composable.event.base
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
-import com.leovp.compose.composable.event.base.UiEvent
 import com.leovp.compose.composable.nav.AppNavigation
+import com.leovp.mvvm.event.base.UiEvent
 import kotlinx.coroutines.flow.Flow
 
 /**

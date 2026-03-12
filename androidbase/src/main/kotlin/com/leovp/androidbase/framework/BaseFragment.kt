@@ -34,7 +34,7 @@ abstract class BaseFragment<B : ViewBinding>(@LayoutRes layoutResId: Int) : Frag
 
     @Suppress("WeakerAccess")
     /**
-     * Most of time, you should use [binding] property.
+     * Most of the time, you should use [binding] property.
      */
     private var _binding: B? = null
 

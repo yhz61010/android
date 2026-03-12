@@ -2,9 +2,9 @@
 
 package com.leovp.network.http
 
-import com.leovp.compose.composable.event.base.UiEvent
-import com.leovp.compose.composable.event.base.UiEventManager
 import com.leovp.log.base.d
+import com.leovp.mvvm.event.base.UiEvent
+import com.leovp.mvvm.event.base.UiEventManager
 import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.business.BusinessException
 import com.leovp.network.http.exception.business.ReloginException

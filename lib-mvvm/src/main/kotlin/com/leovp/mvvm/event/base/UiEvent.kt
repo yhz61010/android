@@ -11,7 +11,7 @@ import androidx.annotation.StringRes
  * Date: 2025/8/21 10:33
  */
 
-sealed interface UiEvent {
+interface UiEvent {
     @Keep
     data class ShowToast(
         val message: String? = null,

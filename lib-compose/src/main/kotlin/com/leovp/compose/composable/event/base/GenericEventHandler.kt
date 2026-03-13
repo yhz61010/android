@@ -42,6 +42,7 @@ fun GenericEventHandler(
     dialogContent: @Composable (
         (dialogState: MutableState<UiEvent.ShowDialog?>) -> Unit
     )? = null,
+    onCustomEvent: (suspend (UiEvent) -> Unit)? = null,
 ) {
     val localizedCtx = LocalContext.current
     val localRes = LocalResources.current
@@ -129,6 +130,8 @@ fun GenericEventHandler(
                     )
 
                     UiEvent.Relogin -> navController?.relogin()
+
+                    else -> onCustomEvent?.invoke(event)
                 }
             }
         }

@@ -14,6 +14,7 @@ import com.leovp.mvvm.ScreenCountdownManager.CountdownEvent
  * Date: 2025/11/18 16:40
  */
 
+@Suppress("FunctionNaming")
 @Composable
 fun DispatchTouchEvent(
     interactionSource: MutableInteractionSource,

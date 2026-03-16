@@ -98,9 +98,21 @@ private fun NavHostController.navigateTo(
     }
 }
 
+/**
+ * Usage:
+ * ```
+ * val navActions: MyAppNavigation = rememberNavigationActions(navController) {
+ *     MyAppNavigation(it)
+ * }
+ * navActions.navigateToHome()
+ * ```
+ */
+@Suppress("UNCHECKED_CAST")
 @Composable
-fun rememberNavigationActions(navController: NavHostController): AppNavigation =
-    remember { AppNavigation(navController) }
+fun <T : AppNavigation> rememberNavigationActions(
+    navController: NavHostController,
+    factory: (NavHostController) -> T = { AppNavigation(it) as T },
+): T = remember { factory(navController) }
 
 @SuppressLint("RestrictedApi")
 private fun outputGraphInfo(route: String, navController: NavHostController) {

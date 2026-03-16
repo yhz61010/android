@@ -42,8 +42,8 @@ class ScreenCountdownManager(
     ) {
         companion object {
             val DEFAULT = CountdownParam(
-                countdownDurationMillis = 10_000L,
-                warningThresholdMillis = 3000L,
+                countdownDurationMillis = 60_000L,
+                warningThresholdMillis = 10_000L,
                 enableAutoReset = true,
                 enableWarning = false,
             )

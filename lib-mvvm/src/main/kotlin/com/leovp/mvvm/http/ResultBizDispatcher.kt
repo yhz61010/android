@@ -50,8 +50,8 @@ private const val TAG = "ResultBiz"
 suspend fun <R, T : R> dispatchBizResult(
     uiEventManager: UiEventManager?,
     bizResult: ResultBiz<T>,
-    onSuccess: suspend (R, Any?) -> Unit,
-    onBizError: (BusinessException, R?) -> Unit,
+    onSuccess: (suspend (R, Any?) -> Unit)? = null,
+    onBizError: ((BusinessException, R?) -> Unit)? = null,
     onFailure: ((ResultException) -> Unit)? = null,
     onRelogin: ((BusinessException, R?) -> Unit)? = null,
     onLast: (() -> Unit)? = null,
@@ -83,7 +83,7 @@ suspend fun <R, T : R> dispatchBizResult(
     is ResultBiz.Success -> {
         d(TAG) { "dispatchBizResult -> Success" }
         try {
-            onSuccess(bizResult.get(), bizResult.extraData)
+            onSuccess?.invoke(bizResult.get(), bizResult.extraData)
         } finally {
             onLast?.invoke()
         }
@@ -93,7 +93,7 @@ suspend fun <R, T : R> dispatchBizResult(
     is ResultBiz.BusinessError -> {
         d(TAG) { "dispatchBizResult -> BusinessError" }
         try {
-            onBizError(bizResult.exception, bizResult.getBizErrData())
+            onBizError?.invoke(bizResult.exception, bizResult.getBizErrData())
         } finally {
             onLast?.invoke()
         }

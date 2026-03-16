@@ -25,8 +25,7 @@ dependencies {
     api(libs.bundles.lifecycle.simple)
 
     api(projects.log)
-
-    api(libs.kotlin.reflect)
+    api(projects.libNetwork)
 }
 
 /** When use it: sourceJar.get() */

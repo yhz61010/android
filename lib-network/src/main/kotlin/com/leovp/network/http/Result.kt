@@ -3,7 +3,6 @@
 package com.leovp.network.http
 
 import com.leovp.network.http.exception.ResultException
-import com.leovp.network.http.exception.business.BusinessException
 
 /**
  * A generic class that holds a value or an exception
@@ -15,29 +14,18 @@ sealed interface Result<out R> {
      */
     data class Success<out T>(
         val data: T, // T & Any
-        val extraData: Any? = null,
     ) : Result<T>
 
     /**
-     * Response with business error.
-     */
-    data class BusinessError<out T>(val exception: BusinessException, val data: T? = null,) : Result<T>
-
-    /**
-     * A special business error that needs to relogin.
-     */
-    data class Relogin<out T>(val exception: BusinessException, val data: T? = null,) : Result<T>
-
-    /**
      * The network encounters unexpected exception before getting a response
-     * from the network such as IOException, UnKnownHostException and etc.
+     * from the network such as IOException, UnKnownHostException etc.
      *
      * @param exception
      * - For response code 400~499,
      * it is the [com.leovp.network.http.exception.ResultResponseException] instance.
      * - For response code 500,
      * it is the [com.leovp.network.http.exception.ResultServerException] instance.
-     * - For json serialize exception,
+     * - For JSON serialize exception,
      * it is the [com.leovp.network.http.exception.ResultConvertException] instance.
      * - Other error codes, it is the [com.leovp.network.http.exception.ResultException] instance.
      */
@@ -45,8 +33,6 @@ sealed interface Result<out R> {
 
     val isSuccess: Boolean get() = this is Success
     val isFailure: Boolean get() = this is Failure
-    val isBusinessFailure: Boolean get() = this is BusinessError
-    val isRelogin: Boolean get() = this is Relogin
 }
 
 fun <R, T : R> Result<T>.get(): R = (this as Result.Success<T>).data
@@ -78,19 +64,8 @@ fun <T> Result<T>.getOrThrow(): T = when {
     else -> throw exception()
 }
 
-fun <T> Result<T>.getBizErr(): ResultException? = when {
-    isBusinessFailure -> (this as Result.BusinessError<T>).exception
-    else -> null
-}
-
-fun <R, T : R> Result<T>.getBizErrData(): R? = (this as? Result.BusinessError<T>)?.data
-
-fun <R, T : R> Result<T>.getReloginErrData(): R? = (this as? Result.Relogin<T>)?.data
-
 fun <T> Result<T>.exceptionOrNull(): ResultException? = when {
     isFailure -> (this as Result.Failure).exception
-    isBusinessFailure -> (this as Result.BusinessError<T>).exception
-    isRelogin -> (this as Result.Relogin<T>).exception
     else -> null
 }
 
@@ -105,12 +80,12 @@ inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
     return this
 }
 
-inline fun <T> Result<T>.onFailure(action: (exception: ResultException) -> Unit,): Result<T> {
+inline fun <T> Result<T>.onFailure(action: (exception: ResultException) -> Unit): Result<T> {
     exceptionOrNull()?.let { action(it) }
     return this
 }
 
-inline fun <T, R> Result<T>.fold(onSuccess: (value: T) -> R, onFailure: (exception: ResultException) -> R,): R =
+inline fun <T, R> Result<T>.fold(onSuccess: (value: T) -> R, onFailure: (exception: ResultException) -> R): R =
     when (val exception = exceptionOrNull()) {
         null -> onSuccess((this as Result.Success<T>).data)
         else -> onFailure(exception)

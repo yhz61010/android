@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 /**
  * Note that: If you don't need the countdown timer reset functionality,
  * set `countdownParam = null` in the parent class constructor within the subclass.
+ * Or, using the predefined parameter `ScreenCountdownManager.CountdownParam.DEFAULT` if you wish.
+ *
  *
  * Author: Michael Leo
  * Date: 2025/7/7 10:55
@@ -29,7 +31,7 @@ import kotlinx.coroutines.launch
 abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
     initialState: State,
     val uiEventManager: UiEventManager? = null,
-    countdownParam: ScreenCountdownManager.CountdownParam? = ScreenCountdownManager.CountdownParam.DEFAULT,
+    countdownParam: ScreenCountdownManager.CountdownParam? = null,
 ) : ViewModel(), LifecycleAware {
 
     abstract fun getTagName(): String
@@ -103,11 +105,11 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
     }
 
     fun resetTimer() {
-        requiredScreenCountdownComponent.handleCountdownEvent(CountdownEvent.Reset)
+        screenCountdownComponent?.handleCountdownEvent(CountdownEvent.Reset)
     }
 
     fun executeResetTimerByInteraction() {
-        requiredScreenCountdownComponent.handleCountdownEvent(CountdownEvent.OnUserInteraction)
+        screenCountdownComponent?.handleCountdownEvent(CountdownEvent.OnUserInteraction)
     }
 
     // private fun observeCountdownEffects() {

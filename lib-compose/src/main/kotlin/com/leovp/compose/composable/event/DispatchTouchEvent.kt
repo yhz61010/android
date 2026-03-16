@@ -31,8 +31,8 @@ fun DispatchTouchEvent(
             when (interaction) {
                 is PressInteraction.Press ->
                     viewModel
-                        .requiredScreenCountdownComponent
-                        .handleCountdownEvent(CountdownEvent.OnUserInteraction)
+                        .screenCountdownComponent
+                        ?.handleCountdownEvent(CountdownEvent.OnUserInteraction)
 
                 is PressInteraction.Release -> Unit
                 is PressInteraction.Cancel -> Unit

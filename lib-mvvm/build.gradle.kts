@@ -26,6 +26,7 @@ dependencies {
 
     api(projects.log)
     api(projects.libNetwork)
+    api(libs.kotlin.reflect)
 }
 
 /** When use it: sourceJar.get() */

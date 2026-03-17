@@ -66,6 +66,22 @@ val String.fromUrlBase64: String
     @RequiresApi(API.O)
     get() = java.util.Base64.getUrlDecoder().decode(this).toString()
 
+val String.toUrlBase64Legacy: String
+    get() = runCatching {
+        Base64.encodeToString(
+            this.toByteArray(Charsets.UTF_8),
+            Base64.URL_SAFE or Base64.NO_WRAP
+        )
+    }.getOrDefault("")
+
+val String.fromUrlBase64Legacy: String
+    get() = runCatching {
+        String(
+            bytes = Base64.decode(this, Base64.URL_SAFE or Base64.NO_WRAP),
+            charset = Charsets.UTF_8,
+        )
+    }.getOrDefault("")
+
 /** Convert String to Mime type base64 String */
 val String.toMimeBase64: String
     @RequiresApi(API.O)

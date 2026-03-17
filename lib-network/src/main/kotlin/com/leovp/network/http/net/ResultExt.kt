@@ -112,7 +112,14 @@ suspend inline fun <reified R> result(
 
             // JSON convert exception
             is ConvertException -> {
-                val bodyString = err.response.body.string()
+                val bodyString = runCatching {
+                    err.response.body.string()
+                }.getOrElse { err ->
+                    e("ResultExt", err) {
+                        "Error while getting body string."
+                    }
+                    null
+                }
                 Result.Failure(
                     ResultConvertException(
                         statusCode = err.response.code,

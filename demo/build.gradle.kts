@@ -21,6 +21,13 @@ plugins {
 // }
 val localProperties: Properties by rootProject.extra
 
+junitPlatform {
+    // Disable the plugin's built-in Jacoco integration, which is deprecated from AGP 9.0.0 onwards.
+    jacocoOptions {
+        taskGenerationEnabled.set(false)
+    }
+}
+
 android {
     namespace = "com.leovp.demo"
 

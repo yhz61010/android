@@ -25,7 +25,8 @@ dependencies {
     api(libs.bundles.lifecycle.simple)
 
     api(projects.log)
-    api(projects.libNetwork)
+    compileOnly(projects.libNetwork)
+    compileOnly(libs.androidx.navigation.compose)
     api(libs.kotlin.reflect)
 }
 

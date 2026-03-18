@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.compose.utils
+package com.leovp.compose.composable.nav
 
 import android.annotation.SuppressLint
 import androidx.navigation.NavHostController
@@ -51,8 +51,10 @@ fun NavHostController.navigateSingleTopTo(route: String, arguments: String? = nu
     }
 }
 
+fun getNavArgs(arguments: String? = null): String? = arguments?.trimStart('/')
+
 @SuppressLint("RestrictedApi")
-fun outputGraphInfo(route: String, navController: NavHostController) {
+fun <T : Any> outputGraphInfo(route: T, navController: NavHostController) {
     d {
         tag = TAG
         outputType = LogOutType.FRAMEWORK
@@ -66,5 +68,3 @@ fun outputGraphInfo(route: String, navController: NavHostController) {
         }
     }
 }
-
-fun getNavArgs(arguments: String? = null): String? = arguments?.trimStart('/')

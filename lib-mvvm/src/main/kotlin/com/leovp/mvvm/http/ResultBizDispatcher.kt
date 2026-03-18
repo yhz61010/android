@@ -26,25 +26,30 @@ private const val TAG = "ResultBiz"
  *
  * This function handles four possible outcomes of a business result:
  * - [ResultBiz.Success] — invokes [onSuccess] with the result data and extra data.
- * - [ResultBiz.BusinessError] — invokes [onBizError] with the exception and error data.
- * - [ResultBiz.Failure] — invokes [onFailure] if provided, otherwise sends a toast event
- *   via [uiEventManager].
+ * - [ResultBiz.BusinessError] — invokes [onBizError] with the exception and error data;
+ *   if [onBizError] is `null`, falls back to [onElse].
+ * - [ResultBiz.Failure] — invokes [onFailure] with the exception;
+ *   if [onFailure] is `null`, falls back to [onElse].
  * - [ResultBiz.Relogin] — invokes [onRelogin] if provided, otherwise attempts to send
  *   a relogin event via [uiEventManager].
  *
  * @param R the base result type.
  * @param T the concrete result type, a subtype of [R].
- * @param uiEventManager optional [UiEventManager] used to send UI events (e.g., toast, relogin)
+ * @param uiEventManager optional [UiEventManager] used to send UI events (e.g., relogin)
  *   when no explicit callback is provided.
  * @param bizResult the [ResultBiz] to dispatch.
- * @param onSuccess called when [bizResult] is [ResultBiz.Success], receiving the data and extra data.
- * @param onBizError called when [bizResult] is [ResultBiz.BusinessError], receiving the exception
- *   and the associated error data.
- * @param onFailure optional callback for [ResultBiz.Failure]. If `null`, a toast is shown instead.
- * @param onRelogin optional callback for [ResultBiz.Relogin]. If `null`, a relogin event is sent instead.
+ * @param onSuccess optional callback for [ResultBiz.Success], receiving the data and extra data.
+ * @param onBizError optional callback for [ResultBiz.BusinessError], receiving the exception
+ *   and the associated error data. If `null`, falls back to [onElse].
+ * @param onFailure optional callback for [ResultBiz.Failure]. If `null`, falls back to [onElse].
+ * @param onRelogin optional callback for [ResultBiz.Relogin]. If `null`, a relogin event is sent
+ *   via [uiEventManager] instead.
+ * @param onElse optional fallback callback invoked when [onFailure] or [onBizError] is `null`,
+ *   receiving the exception and the associated error data (or `null` for [ResultBiz.Failure]).
+ *   This callback is typically used only in conjunction with the [onSuccess] callback.
  * @param onLast optional callback invoked in the `finally` block for [ResultBiz.Success],
  *   [ResultBiz.BusinessError], and [ResultBiz.Failure] cases, typically used for cleanup
- *   (e.g., hiding a loading indicator).
+ *   (e.g., hiding a loading indicator). Not invoked for [ResultBiz.Relogin].
  * @return `true` if the result was [ResultBiz.Success], `false` otherwise.
  */
 suspend fun <R, T : R> dispatchBizResult(
@@ -54,17 +59,20 @@ suspend fun <R, T : R> dispatchBizResult(
     onBizError: ((BusinessException, R?) -> Unit)? = null,
     onFailure: ((ResultException) -> Unit)? = null,
     onRelogin: ((BusinessException, R?) -> Unit)? = null,
+    onElse: ((ResultException, R?) -> Unit)? = null,
     onLast: (() -> Unit)? = null,
 ): Boolean = when (bizResult) {
     is ResultBiz.Failure -> {
         d(TAG) { "dispatchBizResult -> Failure" }
         try {
-            onFailure?.invoke(bizResult.exception()) ?: uiEventManager?.sendEvent(
-                UiEvent.ShowToast(
-                    message = bizResult.exception.message,
-                    isError = true
-                )
-            )
+            onFailure?.invoke(bizResult.exception())
+                ?: onElse?.invoke(bizResult.exception(), null)
+            // uiEventManager?.sendEvent(
+            //         UiEvent.ShowToast(
+            //             message = bizResult.exception.message,
+            //             isError = true
+            //         )
+            //     )
         } finally {
             onLast?.invoke()
         }
@@ -94,6 +102,7 @@ suspend fun <R, T : R> dispatchBizResult(
         d(TAG) { "dispatchBizResult -> BusinessError" }
         try {
             onBizError?.invoke(bizResult.exception, bizResult.getBizErrData())
+                ?: onElse?.invoke(bizResult.exception, bizResult.getBizErrData())
         } finally {
             onLast?.invoke()
         }

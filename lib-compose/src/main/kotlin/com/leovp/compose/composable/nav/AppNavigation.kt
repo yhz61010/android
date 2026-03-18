@@ -2,7 +2,6 @@
 
 package com.leovp.compose.composable.nav
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -90,34 +89,6 @@ open class AppNavigation(private val navController: NavHostController) {
     }
 }
 
-private fun NavHostController.navigateSingleTopTo(
-    route: String,
-    arguments: String? = null,
-) {
-    val arg: String? = arguments?.trimStart('/')
-    this.navigate(route.takeIf { arguments == null } ?: "$route/$arg") {
-        // Pop up to the start destination of the graph to
-        // avoid building up a large stack of destinations
-        // on the back stack as users select items
-        popUpTo(route) { inclusive = false }
-        // Avoid multiple copies of the same destination when re-selecting the same item
-        launchSingleTop = true
-        // Whether to restore state when re-selecting a previously selected item
-        restoreState = false
-    }
-}
-
-private fun NavHostController.navigateTo(
-    route: String,
-    arguments: String? = null,
-) {
-    val arg: String? = arguments?.trimStart('/')
-    this.navigate(route.takeIf { arguments == null } ?: "$route/$arg") {
-        // Whether to restore state when re-selecting a previously selected item
-        restoreState = true
-    }
-}
-
 /**
  * Usage:
  * ```
@@ -133,13 +104,3 @@ fun <T : AppNavigation> rememberNavigationActions(
     navController: NavHostController,
     factory: (NavHostController) -> T = { AppNavigation(it) as T },
 ): T = remember { factory(navController) }
-
-@SuppressLint("RestrictedApi")
-private fun <T : Any> outputGraphInfo(route: T, navController: NavHostController) {
-    d(TAG) {
-        "  current: $route  previous=${navController.currentDestination?.route}"
-    }
-    for ((i, dest) in navController.currentBackStack.value.withIndex()) {
-        d(TAG) { "    Stack $i: ${dest.destination.route}" }
-    }
-}

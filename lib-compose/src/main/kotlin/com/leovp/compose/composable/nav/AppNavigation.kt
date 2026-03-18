@@ -36,9 +36,9 @@ private const val TAG = "Nav"
  * destination=Destination(0x88e673a4) route=app_main
  * ```
  */
-open class AppNavigation(private val navController: NavHostController) {
+open class AppNavigation(val navController: NavHostController) {
     @Suppress("unused")
-    val currentRoute: String? get() = navController.currentDestination?.route
+    val currentRouteString: String? get() = navController.currentDestination?.route
 
     fun upPress() {
         navController.navigateUp()

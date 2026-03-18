@@ -6,6 +6,9 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.Navigator
 import com.leovp.log.base.d
 import com.leovp.log.base.i
 import com.leovp.mvvm.ScreenCountdownManager.CountdownEvent
@@ -206,13 +209,35 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
         }
     }
 
-    fun navigate(
+    fun navigateString(
         route: String,
         arguments: String? = null,
         extras: UiEvent.NavExtras? = null,
     ) {
         viewModelScope.launch {
-            uiEventManager?.sendEvent(UiEvent.Navigate(route, arguments, extras))
+            uiEventManager?.sendEvent(UiEvent.NavigateString(route, arguments, extras))
+        }
+    }
+
+    fun <T : Any> navigate(route: T, builder: NavOptionsBuilder.() -> Unit) {
+        viewModelScope.launch {
+            uiEventManager?.sendEvent(UiEvent.NavigateRouteBuilder(route, builder))
+        }
+    }
+
+    fun <T : Any> navigate(
+        route: T,
+        navOptions: NavOptions? = null,
+        navigatorExtras: Navigator.Extras? = null,
+    ) {
+        viewModelScope.launch {
+            uiEventManager?.sendEvent(
+                UiEvent.Navigate(
+                    route,
+                    navOptions,
+                    navigatorExtras
+                )
+            )
         }
     }
 

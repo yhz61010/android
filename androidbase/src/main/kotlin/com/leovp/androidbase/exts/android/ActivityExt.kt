@@ -22,7 +22,7 @@ fun Activity.ignoreDuplicateStartSplash(): Boolean =
 
 // ============================================================================
 
-/** Launch a Activity */
+/** Launch an Activity */
 fun Context.startActivity(
     cls: Class<*>,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -33,7 +33,7 @@ fun Context.startActivity(
     this.startActivity(if (extras == null) intent else extras(intent), options)
 }
 
-/** Launch a Activity */
+/** Launch an Activity */
 fun Context.startActivity(
     kcls: KClass<*>,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -41,7 +41,7 @@ fun Context.startActivity(
     options: Bundle? = null,
 ) = startActivity(kcls.java, extras, flags, options)
 
-/** Launch a Activity */
+/** Launch an Activity */
 fun Context.startActivity(
     clsStr: String,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -49,7 +49,7 @@ fun Context.startActivity(
     options: Bundle? = null,
 ) = startActivity(Class.forName(clsStr), extras, flags, options)
 
-/** Launch a Activity */
+/** Launch an Activity */
 inline fun <reified T : Context> Context.startActivity(
     noinline extras: ((intent: Intent) -> Intent)? = null,
     flags: Int? = null,
@@ -58,7 +58,7 @@ inline fun <reified T : Context> Context.startActivity(
 
 // --------------------
 
-/** Launch a Activity in Fragment */
+/** Launch an Activity in Fragment */
 fun Fragment.startActivity(
     cls: Class<*>,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -69,7 +69,7 @@ fun Fragment.startActivity(
     startActivity(if (extras == null) intent else extras(intent), options)
 }
 
-/** Launch a Activity in Fragment */
+/** Launch an Activity in Fragment */
 fun Fragment.startActivity(
     kcls: KClass<*>,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -77,7 +77,7 @@ fun Fragment.startActivity(
     options: Bundle? = null,
 ) = startActivity(kcls.java, extras, flags, options)
 
-/** Launch a Activity in Fragment */
+/** Launch an Activity in Fragment */
 fun Fragment.startActivity(
     clsStr: String,
     extras: ((intent: Intent) -> Intent)? = null,
@@ -85,7 +85,7 @@ fun Fragment.startActivity(
     options: Bundle? = null,
 ) = startActivity(Class.forName(clsStr), extras, flags, options)
 
-/** Launch a Activity in Fragment */
+/** Launch an Activity in Fragment */
 inline fun <reified T : Context> Fragment.startActivity(
     noinline extras: ((intent: Intent) -> Intent)? = null,
     flags: Int? = null,
@@ -95,7 +95,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 // -----
 
 /**
- * Launch a Activity
+ * Launch an Activity
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
@@ -118,7 +118,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 // }
 
 /**
- * Launch a Activity
+ * Launch an Activity
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
@@ -139,7 +139,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
- * Launch a Activity
+ * Launch an Activity
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
@@ -162,7 +162,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 // -----
 
 /**
- * Launch a Activity in Fragment
+ * Launch an Activity in Fragment
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
@@ -185,7 +185,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 // }
 
 /**
- * Launch a Activity in Fragment
+ * Launch an Activity in Fragment
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
@@ -206,7 +206,7 @@ inline fun <reified T : Context> Fragment.startActivity(
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
- * Launch a Activity in Fragment
+ * Launch an Activity in Fragment
  *
  * Attention:
  * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):

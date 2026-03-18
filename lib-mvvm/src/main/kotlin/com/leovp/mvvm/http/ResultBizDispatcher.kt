@@ -110,6 +110,21 @@ suspend fun <R, T : R> dispatchBizResult(
     }
 }
 
+suspend fun <R, T : R> extractBizData(
+    uiEventManager: UiEventManager?,
+    bizResult: ResultBiz<T>,
+    onElse: (ResultException, R?) -> Unit
+): T? {
+    var data: T? = null
+    dispatchBizResult(
+        uiEventManager = uiEventManager,
+        bizResult = bizResult,
+        onSuccess = { result, _ -> data = result },
+        onElse = onElse,
+    )
+    return data
+}
+
 suspend fun ResultException.trySendReloginEvt(uiEvtMgr: UiEventManager): Boolean =
     if (this is ReloginException) {
         uiEvtMgr.sendEvent(UiEvent.Relogin)

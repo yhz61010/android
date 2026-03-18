@@ -5,6 +5,9 @@ package com.leovp.mvvm.event.base
 import androidx.annotation.DrawableRes
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.Navigator
 
 /**
  * Author: Michael Leo
@@ -33,10 +36,23 @@ interface UiEvent {
     ) : UiEvent
 
     @Keep
-    data class Navigate(
+    data class NavigateString(
         val route: String,
         val arguments: String? = null,
         val extras: NavExtras? = null,
+    ) : UiEvent
+
+    @Keep
+    data class NavigateRouteBuilder<T>(
+        val route: T,
+        val builder: NavOptionsBuilder.() -> Unit
+    ) : UiEvent
+
+    @Keep
+    data class Navigate<T>(
+        val route: T,
+        val navOptions: NavOptions? = null,
+        val navigatorExtras: Navigator.Extras? = null
     ) : UiEvent
 
     data object NavigateBack : UiEvent

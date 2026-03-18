@@ -34,12 +34,12 @@ dependencies {
     debugApi(libs.androidx.compose.ui.tooling)
     debugApi(libs.androidx.compose.ui.test.manifest)
     api(libs.lifecycle.runtime.compose)
-    api(libs.androidx.navigation.compose)
+    compileOnly(libs.androidx.navigation.compose)
 
     api(projects.log)
     api(projects.libMvvm)
     api(projects.androidbase)
-    api(projects.libNetwork)
+    compileOnly(projects.libNetwork)
 }
 
 /** When use it: sourceJar.get() */

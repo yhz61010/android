@@ -6,6 +6,9 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.Navigator
 import com.leovp.log.base.d
 import com.leovp.mvvm.event.base.UiEvent
 
@@ -56,10 +59,27 @@ open class AppNavigation(private val navController: NavHostController) {
         }
     }
 
-    open fun navigate(
+    open fun navigateString(
         route: String,
         arguments: String? = null,
         extras: UiEvent.NavExtras? = null,
+    ) {
+        d(TAG) { "-> navigate to: $route" }
+        d(TAG) { outputGraphInfo(route, navController) }
+    }
+
+    open fun <T : Any> navigate(
+        route: T,
+        builder: NavOptionsBuilder.() -> Unit,
+    ) {
+        d(TAG) { "-> navigate to: $route" }
+        d(TAG) { outputGraphInfo(route, navController) }
+    }
+
+    open fun <T : Any> navigate(
+        route: T,
+        navOptions: NavOptions? = null,
+        navigatorExtras: Navigator.Extras? = null,
     ) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
@@ -115,7 +135,7 @@ fun <T : AppNavigation> rememberNavigationActions(
 ): T = remember { factory(navController) }
 
 @SuppressLint("RestrictedApi")
-private fun outputGraphInfo(route: String, navController: NavHostController) {
+private fun <T : Any> outputGraphInfo(route: T, navController: NavHostController) {
     d(TAG) {
         "  current: $route  previous=${navController.currentDestination?.route}"
     }

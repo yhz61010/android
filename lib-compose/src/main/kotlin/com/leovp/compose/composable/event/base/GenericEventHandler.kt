@@ -96,11 +96,24 @@ fun GenericEventHandler(
                             }
                     }
 
-                    is UiEvent.Navigate ->
-                        navController?.navigate(
+                    is UiEvent.NavigateString ->
+                        navController?.navigateString(
                             event.route,
                             event.arguments,
                             event.extras
+                        )
+
+                    is UiEvent.NavigateRouteBuilder<*> ->
+                        navController?.navigate(
+                            event.route as Any,
+                            event.builder
+                        )
+
+                    is UiEvent.Navigate<*> ->
+                        navController?.navigate(
+                            event.route as Any,
+                            event.navOptions,
+                            event.navigatorExtras
                         )
 
                     UiEvent.NavigateBack -> navController?.popBackStack()

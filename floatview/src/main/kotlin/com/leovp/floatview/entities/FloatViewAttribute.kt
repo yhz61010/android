@@ -68,7 +68,7 @@ class FloatViewAttribute(private val tag: String) {
 
     /**
      * Show a float view with specific tag.
-     * Attention: The float view should be exist which is created by calling `build()` method like this [FloatView.with(ctx).build()]
+     * Attention: The float view should be existed which is created by calling `build()` method like this [FloatView.with(ctx).build()]
      */
     fun show() {
         if (FloatViewManager.exist(tag)) {

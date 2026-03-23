@@ -109,7 +109,7 @@ val Context.screenAvailableResolution: Size
             // display.getMetrics(displayMetrics)
             // return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
             val displayMetrics = resources.displayMetrics
-            return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+            Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
 
@@ -368,17 +368,17 @@ fun Context.getAndroidId(): String = Settings.Secure.getString(
 
 @SuppressLint("HardwareIds")
 fun Context.getUniqueID(): String {
-    // return if (!API.ABOVE_O) {
-    //     val uid: ByteArray? = getUniqueIdByMediaDrm()
-    //     if (uid != null) {
-    //         android.util.Base64.encodeToString(uid, android.util.Base64.NO_WRAP)
-    //     } else {
-    //         getUuid()
-    //     }
-    // } else {
-    //     Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-    // }
-    return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+        val uid: ByteArray? = getUniqueIdByMediaDrm()
+        if (uid != null) {
+            android.util.Base64.encodeToString(uid, android.util.Base64.NO_WRAP)
+        } else {
+            getUuid()
+        }
+    } else {
+        Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+    }
+//    return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 }
 
 fun getImei(ctx: Context): String? {

@@ -21,7 +21,7 @@ import com.leovp.floatview.framework.FloatViewManager
  *
  * @see [Easy Float](https://github.com/princekin-f/EasyFloat)
  * @see [Float View](https://stackoverflow.com/a/53092436)
- * @see [Float View Github](https://github.com/aminography/FloatingWindowApp)
+ * @see [Float View GitHub](https://github.com/aminography/FloatingWindowApp)
  */
 class FloatView internal constructor(internal val context: Context) {
 
@@ -29,7 +29,7 @@ class FloatView internal constructor(internal val context: Context) {
         /** Create new FloatView. */
         fun with(context: Context): FloatViewCreator = FloatViewCreator(FloatView(context))
 
-        /** Get the the specified FloatView by tag name in order to change its attribute. */
+        /** Get the specified FloatView by tag name in order to change its attribute. */
         fun with(tag: String, init: (FloatViewAttribute.() -> Unit)? = null): FloatViewAttribute {
             val attr = FloatViewAttribute(tag)
             init?.let { attr.init() }

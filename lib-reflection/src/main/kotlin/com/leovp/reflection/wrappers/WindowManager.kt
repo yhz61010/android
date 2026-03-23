@@ -2,14 +2,15 @@
 
 package com.leovp.reflection.wrappers
 
-import android.annotation.TargetApi
 import android.graphics.Point
+import android.os.Build
 import android.os.IInterface
 import android.util.Log
 import android.util.Size
 import android.view.Display
 import android.view.IDisplayFoldListener
 import android.view.IRotationWatcher
+import androidx.annotation.RequiresApi
 import com.leovp.reflection.ReflectJavaManager
 import java.lang.reflect.Method
 
@@ -104,27 +105,27 @@ class WindowManager(private val manager: IInterface) {
             // API 26 or above
             // display parameter added since this commit:
             // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
-            cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
-                .invoke(manager, rotationWatcher, displayId)
+//            cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
+//                .invoke(manager, rotationWatcher, displayId)
 
-            // when {
-            //
-            //     // API 26 or above
-            //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
-            //         // display parameter added since this commit:
-            //         // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
-            //         cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
-            //             .invoke(manager, rotationWatcher, displayId)
-            //     }
-            //
-            //     else -> { // NoSuchMethodException
-            //         // old version
-            //         cls.getMethod(
-            //             "watchRotation",
-            //             IRotationWatcher::class.java
-            //         ).invoke(manager, rotationWatcher)
-            //     }
-            // }
+            when {
+
+                // API 26 or above
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                    // display parameter added since this commit:
+                    // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
+                    cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
+                        .invoke(manager, rotationWatcher, displayId)
+                }
+
+                else -> { // NoSuchMethodException
+                    // old version
+                    cls.getMethod(
+                        "watchRotation",
+                        IRotationWatcher::class.java
+                    ).invoke(manager, rotationWatcher)
+                }
+            }
         } catch (e: Exception) {
             throw AssertionError(e)
         }
@@ -156,7 +157,7 @@ class WindowManager(private val manager: IInterface) {
         return Size(out.x, out.y)
     }
 
-    @TargetApi(29)
+    @RequiresApi(29)
     fun registerDisplayFoldListener(foldListener: IDisplayFoldListener?) {
         try {
             val cls: Class<*> = manager.javaClass

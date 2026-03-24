@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class Pref4KotlinAndroidTest {
-    inner class NullObject
+    class NullObject
 
     @Test
     fun mmkvPref() {
@@ -33,7 +33,8 @@ class Pref4KotlinAndroidTest {
         val nullString: String? = null
         PrefContext.pref.put("mmkv_null_str", nullString)
         val nullObj: NullObject? = null
-        PrefContext.pref.put("mmkv_null_obj", nullObj)
+        @Suppress("SENSELESS_COMPARISON")
+        PrefContext.pref.put("mmkv_null_obj", nullObj?.toJsonString())
         PrefContext.pref.put("mmkv_pure_null", null)
         PrefContext.pref.putSet("mmkv_set", setOf("s1", "s2"))
 

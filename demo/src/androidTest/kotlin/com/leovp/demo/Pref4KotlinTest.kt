@@ -32,7 +32,7 @@ import org.robolectric.shadows.ShadowLog
 class Pref4KotlinTest {
     private val context: Application = ApplicationProvider.getApplicationContext()
 
-    inner class NullObject
+    class NullObject
 
     @BeforeEach
     fun setUp() {
@@ -60,7 +60,8 @@ class Pref4KotlinTest {
         val nullString: String? = null
         PrefContext.pref.put("null_str", nullString)
         val nullObj: NullObject? = null
-        PrefContext.pref.put("null_obj", nullObj)
+        @Suppress("SENSELESS_COMPARISON")
+        PrefContext.pref.put("null_obj", nullObj?.toJsonString())
         PrefContext.pref.put("pure_null", null)
         PrefContext.pref.putSet("set", setOf("s1", "s2"))
 

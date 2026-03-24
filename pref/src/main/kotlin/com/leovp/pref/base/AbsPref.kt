@@ -3,6 +3,7 @@ package com.leovp.pref.base
 import com.google.gson.reflect.TypeToken
 import com.leovp.json.toJsonString
 import com.leovp.json.toObject
+import kotlin.jvm.java
 
 /**
  * Author: Michael Leo
@@ -20,13 +21,13 @@ abstract class AbsPref :
      * - String
      * - Object except Set
      */
-    inline fun <reified T : Any> put(key: String, v: T?) {
+    inline fun <reified T : Any> put(key: String, v: T) {
         when (v) {
             is Int -> put(key, v)
             is Long -> put(key, v)
             is Boolean -> put(key, v)
             is Float -> put(key, v)
-            is String? -> put(key, v)
+            is String -> put(key, v)
             is Set<*> -> throw IllegalArgumentException(
                 "Use putSet(key: String, v: Set<String>?) instead."
             )
@@ -54,7 +55,7 @@ abstract class AbsPref :
             Long::class.java -> put(key, v as Long)
             Boolean::class.java -> put(key, v as Boolean)
             Float::class.java -> put(key, v as Float)
-            String::class.java -> put(key, v as String?)
+            String::class.java -> put(key, v as? String)
             Set::class.java -> throw IllegalArgumentException(
                 "Use putSet(key: String, v: Set<String>?) instead."
             )
@@ -64,9 +65,6 @@ abstract class AbsPref :
     }
 
     // ----------------------
-
-    /** Get object */
-    inline fun <reified T> getObject(key: String): T? = getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
 
     /**
      * Get value which type is following list:
@@ -80,20 +78,21 @@ abstract class AbsPref :
         is Long -> getLong(key, default) as T
         is Boolean -> getBool(key, default) as T
         is Float -> getFloat(key, default) as T
-        is String ->
-            throw IllegalArgumentException(
-                "Use getString(key: String, default: String? = null) instead."
-            )
+        is String -> getString(key, default) as T
 
         is Set<*> ->
             throw IllegalArgumentException(
-                "Use getStringSet(key: String, default: Set<String>? = null) instead."
+                "Use prefGetSet(key: String, default: Set<String>?) instead."
             )
 
         else -> throw IllegalArgumentException(
-            "To get object use getObject(key: String) instead."
+            "To get object use prefGetObj(key: String) instead."
         )
     }
+
+    /** Get object */
+    inline fun <reified T> getObject(key: String): T? = getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+
 
     // -----
 
@@ -117,16 +116,14 @@ abstract class AbsPref :
         Long::class.java -> getLong(key, default as Long) as T
         Boolean::class.java -> getBool(key, default as Boolean) as T
         Float::class.java -> getFloat(key, default as Float) as T
-        String::class.java -> throw IllegalArgumentException(
-            "Use getString(key: String, default: String? = null) instead."
-        )
+        String::class.java -> getString(key, default as? String) as T
 
         Set::class.java -> throw IllegalArgumentException(
             "Use getStringSet(key: String, default: Set<String>? = null) instead."
         )
 
         else -> throw IllegalArgumentException(
-            "To get object use getObject4Java(key: String, clazz: Class<T>) instead."
+            "To get object use getObject4Java(key: String) instead."
         )
     }
 

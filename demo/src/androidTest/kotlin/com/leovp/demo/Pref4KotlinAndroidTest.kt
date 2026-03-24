@@ -3,6 +3,7 @@ package com.leovp.demo
 import androidx.test.platform.app.InstrumentationRegistry
 import com.leovp.demo.basiccomponents.examples.pref.MMKVPref
 import com.leovp.json.toJsonString
+import com.leovp.log.LLog
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.pref.PrefContext
@@ -21,6 +22,7 @@ class Pref4KotlinAndroidTest {
     @Test
     fun mmkvPref() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        LogContext.setLogImpl(LLog("UT"))
         PrefContext.setPrefImpl(MMKVPref(appContext))
 
         PrefContext.pref.put("mmkv_string", "this is a string")

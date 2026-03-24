@@ -3,6 +3,7 @@ package com.leovp.pref.base
 import com.google.gson.reflect.TypeToken
 import com.leovp.json.toJsonString
 import com.leovp.json.toObject
+import java.lang.reflect.Type
 import kotlin.jvm.java
 
 /**
@@ -99,7 +100,7 @@ abstract class AbsPref :
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
      */
-    fun <T> getObject4Java(key: String): T? = getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    fun <T> getObject4Java(key: String, type: Type): T? = getString(key, null)?.toObject(type)
 
     /**
      * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.

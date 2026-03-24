@@ -3,6 +3,7 @@ package com.leovp.demo;
 import android.app.Application;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
+import com.google.gson.reflect.TypeToken;
 import com.leovp.log.LLog;
 import com.leovp.log.LogContext;
 import com.leovp.log.base.LogLevel;
@@ -81,25 +82,34 @@ public class Pref4JavaTest {
         assertEquals(1234567L, PrefContext.INSTANCE.getPref().get4Java("long", 0L, long.class).longValue());
         assertEquals(10, PrefContext.INSTANCE.getPref().get4Java("int", 0, int.class).intValue());
         assertEquals(3.14d, PrefContext.INSTANCE.getPref().get4Java("float", 0f, float.class).doubleValue(), 0.001d);
-        Map<?, ?> mapIntObj = PrefContext.INSTANCE.getPref().getObject4Java("object_int");
+        Map<String, Integer> mapIntObj = PrefContext.INSTANCE.getPref()
+            .getObject4Java(
+                "object_int",
+                new TypeToken<Map<String, Integer>>() {
+                }.getType()
+            );
         assertEquals(new HashMap<>() {
             {
-                put("k_int1", 1.0);
-                put("k_int2", 2.0);
+                put("k_int1", 1);
+                put("k_int2", 2);
             }
         }, mapIntObj);
-        Map<?, ?> mapFloatObj = PrefContext.INSTANCE.getPref().getObject4Java("object_float");
+        Map<String, Float> mapFloatObj = PrefContext.INSTANCE.getPref()
+            .getObject4Java("object_float", new TypeToken<Map<String, Float>>() {
+            }.getType());
         assertEquals(new HashMap<>() {
             {
-                put("k_float1", 11.1);
-                put("k_float2", 22.2);
+                put("k_float1", 11.1f);
+                put("k_float2", 22.2f);
             }
         }, mapFloatObj);
         assertEquals("<null string>", PrefContext.INSTANCE.getPref().getString("null_str", "<null string>"));
         assertNull(PrefContext.INSTANCE.getPref().getString("null_str", null));
-        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_str"));
+        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_str", new TypeToken<String>() {
+        }.getType()));
         assertEquals("null", PrefContext.INSTANCE.getPref().getString("null_obj", null));
-        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_obj"));
+        assertNull(PrefContext.INSTANCE.getPref().getObject4Java("null_obj", new TypeToken<NullObject>() {
+        }.getType()));
         assertNull(PrefContext.INSTANCE.getPref().getString("pure_null", null));
         assertEquals(new HashSet<>() {
             {

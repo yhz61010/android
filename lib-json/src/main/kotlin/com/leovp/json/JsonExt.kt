@@ -59,7 +59,7 @@ val gson: Gson
 fun Any?.toJsonString(): String = runCatching { gson.toJson(this) }.getOrElse { "" }
 
 /**
- * Convert json string to object.
+ * Convert JSON string to object.
  *
  * Example:
  * ```kotlin
@@ -73,7 +73,7 @@ fun Any?.toJsonString(): String = runCatching { gson.toJson(this) }.getOrElse { 
 inline fun <reified T> String?.toObject(): T? = runCatching { gson.fromJson(this, T::class.java) }.getOrNull()
 
 /**
- * Convert json string to object
+ * Convert JSON string to object
  *
  * Example:
  * ```kotlin

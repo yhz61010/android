@@ -38,7 +38,7 @@ android {
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
             @Suppress("ChromeOsAbiSupport")
-            abiFilters += setOf("armeabi-v7a")
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a")
         }
 
         // You can use this property in AndroidManifest as meta-data.

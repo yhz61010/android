@@ -228,8 +228,9 @@ androidComponents {
             .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss(z)"))
         val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
             "-v$versionName($versionCode)" +
+            "-${timestamp}" +
             "-${gitVersionTag()}-${gitCommitCount()}" +
-            "-${timestamp}.apk"
+            ".apk"
 
         tasks.register("rename${capitalizedName}Apk") {
             val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)

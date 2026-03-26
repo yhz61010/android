@@ -31,7 +31,8 @@ function build_one
     pushd "$FFMPEG_FOLDER" || exit
     ./configure \
         --prefix="$PREFIX" \
-        --extra-cflags="$OPTIMIZE_CFLAGS" \
+        --extra-cflags="$OPTIMIZE_CFLAGS -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384" \
+        --extra-ldflags="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384" \
         --cross-prefix="$CROSS_PREFIX" \
         --sysroot="$SYSROOT" \
         --enable-cross-compile \

@@ -89,3 +89,35 @@ or execute command with full parameters:
 Then you will get each generate `so` file
 in `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/libs`
 folder.
+
+## How to check 16KB align?
+### By using `readelf`
+```bash
+$ readelf -l /home/yhz61010/StudioProjects/android/ffmpeg-sdk/src/main/libs/arm64-v8a/libadpcm-ima-qt-encoder.so | grep -A 1 "LOAD"
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x00000000000023d0 0x00000000000023d0  R E    0x4000
+  LOAD           0x00000000000023d0 0x00000000000063d0 0x00000000000063d0
+                 0x0000000000000370 0x0000000000000370  RW     0x4000
+  LOAD           0x0000000000002740 0x000000000000a740 0x000000000000a740
+                 0x0000000000000068 0x0000000000000090  RW     0x4000
+  DYNAMIC        0x00000000000023e8 0x00000000000063e8 0x00000000000063e8
+```
+
+如果 Align 列显示 0x4000（16KB = 16384 = 0x4000），说明已正确设置 16KB 对齐。如果是 0x1000（4KB），则还是 4KB 对齐。
+
+### By using `objdump`
+```bash
+$ objdump -p /home/yhz61010/StudioProjects/android/ffmpeg-sdk/src/main/libs/arm64-v8a/libavutil.so | grep -A 2 "LOAD"
+    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**14
+         filesz 0x0000000000029a14 memsz 0x0000000000029a14 flags r--
+    LOAD off    0x0000000000029a20 vaddr 0x000000000002da20 paddr 0x000000000002da20 align 2**14
+         filesz 0x0000000000043bc0 memsz 0x0000000000043bc0 flags r-x
+    LOAD off    0x000000000006d5e0 vaddr 0x00000000000755e0 paddr 0x00000000000755e0 align 2**14
+         filesz 0x000000000000e870 memsz 0x000000000000e870 flags rw-
+    LOAD off    0x000000000007be50 vaddr 0x0000000000087e50 paddr 0x0000000000087e50 align 2**14
+         filesz 0x0000000000000028 memsz 0x00000000001076d9 flags rw-
+ DYNAMIC off    0x000000000007b6f8 vaddr 0x00000000000836f8 paddr 0x00000000000836f8 align 2**3
+```
+
+objdump -p 输出中的 align `2**14` (2 的 14 次方 = 16384) 表示 16KB 对齐
+objdump -p 输出中的 align `2**12` (2 的 12 次方 = 4096) 表示 4KB 对齐

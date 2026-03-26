@@ -97,7 +97,7 @@ fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap 
 fun Bitmap.compressBitmap(
     quality: Int = 100,
     sampleSize: Int = 1,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
 ): Bitmap {
     val compressedBmpOS = ByteArrayOutputStream()
     this.compress(imgType, quality, compressedBmpOS)
@@ -117,7 +117,7 @@ fun Bitmap.compressBitmap(
 fun Bitmap.writeToFile(
     outputFile: File,
     quality: Int = 100,
-    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
+    imgType: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
 ) {
     val outputStream = FileOutputStream(outputFile)
     outputStream.use {
@@ -173,7 +173,7 @@ fun Bitmap.flipRotate(
     vertical: Boolean,
     degrees: Float,
     x: Float = width / 2f,
-    y: Float = height / 2f
+    y: Float = height / 2f,
 ): Bitmap {
     val matrix = Matrix().apply {
         postScale(

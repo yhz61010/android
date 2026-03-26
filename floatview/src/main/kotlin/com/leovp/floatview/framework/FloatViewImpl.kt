@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.os.Build
 import android.util.Log
 import android.util.Size
 import android.view.IRotationWatcher
@@ -335,20 +336,38 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun init() {
         setWindowLayoutParams()
 
-        // Log.e("LEO-float-view", "1 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
-        val finalX = adjustPosX(config.x, config.edgeMargin)
-        // Log.e("LEO-float-view", "2 config.x=${config.x} config.y=${config.y} finalX=$finalX config.edgeMargin=${config.edgeMargin}")
+        // Ensure customView is measured and laid out before calculating position
+        config.customView?.let { view ->
+            if (view.width <= 0 || view.height <= 0) {
+                // Measure and layout the view if not already done
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            }
+        }
+
+        // Only adjust initial position if it's out of edge margin constraints.
+        // If the initial position is valid (within screen and satisfies edgeMargin),
+        // use the configured x,y directly. EdgeMargin will be enforced during movement.
+        val viewWidth = config.customView?.width ?: 0
+        val viewHeight = config.customView?.height ?: 0
+        
+        val needsAdjustX = config.x < config.edgeMargin || 
+            config.x <= 0 || 
+            (config.x + viewWidth + config.edgeMargin) >= screenOrientSz.width
+        val needsAdjustY = config.y < config.edgeMargin || 
+            config.y <= 0 || 
+            (config.y + viewHeight + config.edgeMargin) >= screenOrientSz.height
+        
+        val finalX = if (needsAdjustX) adjustPosX(config.x, config.edgeMargin) else config.x
+        val finalY = if (needsAdjustY) adjustPosY(config.y, config.edgeMargin) else config.y
+        
         layoutParams.x = finalX
+        layoutParams.y = finalY
         config.x = finalX
-
-        // Log.e("LEO-float-view", "3 config.x=${config.x} config.y=${config.y} config.edgeMargin=${config.edgeMargin}")
-        val finalY = adjustPosY(config.y, config.edgeMargin)
-        // Log.e("LEO-float-view", "4 config.x=${config.x} config.y=${config.y} finalY=$finalY config.edgeMargin=${config.edgeMargin}")
-        layoutParams.y = finalY
         config.y = finalY
-
-        layoutParams.x = finalX
-        layoutParams.y = finalY
 
         // Ensure to set the touch listener to the root view.
         config.customView?.setOnTouchListener(onTouchListener)
@@ -418,7 +437,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 // In this case, I should set touchable status to `false`.
 
                 // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
-                // However the float layer itself can not be touched anymore.
+                // However, the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
@@ -426,18 +445,17 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             if (config.systemWindow && context.canDrawOverlays) {
-                type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-
-                // type = when {
-                //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                //     else -> {
-                //         @Suppress("DEPRECATION")
-                //         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
-                //         // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                //         // android.view.WindowManager${WindowManager.BadTokenException}:
-                //         // Unable to add window -- token null is not valid; is your activity running?
-                //     }
-                // }
+                // type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                type = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else -> {
+                        @Suppress("DEPRECATION")
+                        WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                        // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
+                        // android.view.WindowManager${WindowManager.BadTokenException}:
+                        // Unable to add window -- token null is not valid; is your activity running?
+                    }
+                }
             }
 
             gravity = config.gravity // Default value: Gravity.TOP or Gravity.START

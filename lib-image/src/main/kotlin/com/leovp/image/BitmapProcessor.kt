@@ -90,19 +90,19 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
      * 123    321
      * 456 => 654
      * 789    987
-     </pre> *
+     * </pre>
      */
     //
     fun flipBitmapHorizontal() = bitmapByteBuffer?.let { flipBitmapHorizontal(it) }
 
     /**
-     * Flips the bitmap on the vertically, as such:<br></br>
+     * Flips the bitmap on vertically, as such:<br></br>
      *
      * <pre>
      * 123    789
      * 456 => 456
      * 789    123
-     </pre> *
+     * </pre>
      */
     fun flipBitmapVertical() = bitmapByteBuffer?.let { flipBitmapVertical(it) }
 

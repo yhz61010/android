@@ -115,7 +115,7 @@ allprojects {
 
     // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
     apply(plugin = rootProject.libs.plugins.ktlint.gradle.get().pluginId)
-     configure<KtlintExtension> { version.set(rootProject.libs.versions.detekt.get()) }
+    configure<KtlintExtension> { version.set(rootProject.libs.versions.detekt.get()) }
 
     apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
     // or

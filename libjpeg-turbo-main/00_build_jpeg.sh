@@ -31,6 +31,8 @@ cmake -G"Unix Makefiles" \
   -DCMAKE_ASM_FLAGS="--target=${AOSP_TARGET}}" \
   -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+  -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384" \
+  -DCMAKE_MODULE_LINKER_FLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384" \
   ${MY_SOURCE_DIR}
 
 make clean

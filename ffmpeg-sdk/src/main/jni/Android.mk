@@ -44,10 +44,9 @@ LOCAL_MODULE := h264-hevc-decoder
 LOCAL_SRC_FILES := $(LOCAL_PATH)/h264_hevc_decoder/h264_hevc_decoder_all_in_one_file.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
-# 告诉 linker 将最大页面大小设置为 16KB（16384 字节）
-# 这确保了生成的 .so 文件的 LOAD section 是 16KB 对齐的，符合 Android 的要求
-# -Wl,--max-page-size=16384 这个参数在 NDK r25+ 中不被直接支持
-LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384
+# Support Android 16KB page size for arm64-v8a architecture
+# This ensures ELF segments are aligned to 16KB boundaries for Android 15+ compatibility
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_C_INCLUDES) \
                     $(MY_PREBUILT)/include \
@@ -67,6 +66,9 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/adpcm_ima_qt_decoder/adpcm_ima_qt_decoder.cpp \
                    $(LOCAL_PATH)/adpcm_ima_qt_decoder/native_adpcm_ima_qt_decoder.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
+# Support Android 16KB page size for arm64-v8a architecture
+# This ensures ELF segments are aligned to 16KB boundaries for Android 15+ compatibility
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_C_INCLUDES) \
                     $(MY_PREBUILT)/include \
@@ -86,6 +88,9 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/adpcm_ima_qt_encoder/adpcm_ima_qt_encoder.cpp \
                    $(LOCAL_PATH)/adpcm_ima_qt_encoder/native_adpcm_ima_qt_encoder.cpp
 LOCAL_CFLAGS    :=
 LOCAL_LDLIBS    := -llog -ljnigraphics -lz -landroid -lm -pthread -L$(SYSROOT)/usr/lib
+# Support Android 16KB page size for arm64-v8a architecture
+# This ensures ELF segments are aligned to 16KB boundaries for Android 15+ compatibility
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_C_INCLUDES) \
                     $(MY_PREBUILT)/include \

@@ -34,6 +34,12 @@ class DecodeH264RawFileByFFMpeg {
     private var csd0Size: Int = 0
 
     private val videoDecoder = H264HevcDecoder()
+    
+    @Volatile
+    private var isDecoding = false
+    
+    @Volatile
+    private var isClosed = false
 
     fun init(videoFile: String, glSurfaceView: LeoGLSurfaceView) {
         this.glSurfaceView = glSurfaceView
@@ -138,21 +144,37 @@ class DecodeH264RawFileByFFMpeg {
 
     fun close() {
         LogContext.log.d(TAG, "close()")
-        videoDecoder.release()
+        isClosed = true
+        // Stop decoding loop first
+        isDecoding = false
+        // Cancel the scope and wait for it to finish
         ioScope.cancel()
+        // Give some time for the decoding thread to stop
+        Thread.sleep(100)
+        // Then release the decoder
+        try {
+            videoDecoder.release()
+        } catch (e: Exception) {
+            LogContext.log.e(TAG, "Error releasing decoder", e)
+        }
     }
 
     fun startDecoding() {
         // FIXME
         // If use coroutines here, the video will be displayed. I don't know why!!!
+        isDecoding = true
         ioScope.launch {
             val startIdx = 4
             runCatching {
-                while (true) {
+                while (isDecoding && !isClosed) {
                     ensureActive()
                     val bytes = getRawH264() ?: break
                     var previousStart = 0
                     for (i in startIdx until bytes.size) {
+                        // Check if we should stop decoding
+                        if (!isDecoding || isClosed) {
+                            break
+                        }
                         ensureActive()
                         if (findStartCode4(bytes, i)) {
                             val frame = ByteArray(i - previousStart)
@@ -161,26 +183,32 @@ class DecodeH264RawFileByFFMpeg {
                             val st1 = SystemClock.elapsedRealtime()
                             var st3: Long
                             try {
-                                val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
-                                    decodeVideo(frame)
-                                val st2 = SystemClock.elapsedRealtimeNanos()
-                                decodeFrame?.let {
-                                    val yuv420Type = if (videoInfo.pixelFormatId < 0) {
-                                        BaseRenderer.Yuv420Type.I420
-                                    } else {
-                                        BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
-                                    }
-                                    glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
+                                // Don't decode if already closed
+                                if (!isClosed) {
+                                    val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
+                                        decodeVideo(frame)
+                                    val st2 = SystemClock.elapsedRealtimeNanos()
+                                    decodeFrame?.let {
+                                        val yuv420Type = if (videoInfo.pixelFormatId < 0) {
+                                            BaseRenderer.Yuv420Type.I420
+                                        } else {
+                                            BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
+                                        }
+                                        glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
 
-                                    // it.yuvOrRgbBytes.toBitmapFromBytes(it.width, it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.bmp"))
+                                        // it.yuvOrRgbBytes.toBitmapFromBytes(it.width, it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.bmp"))
+                                    }
+                                    st3 = SystemClock.elapsedRealtimeNanos()
+                                    LogContext.log.w(
+                                        TAG,
+                                        "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms]" +
+                                            "[render cost=${(st3 - st2) / 1000}us] " +
+                                            "${decodeFrame?.width}x${decodeFrame?.height}"
+                                    )
+                                } else {
+                                    // If closed, still record time for sleep calculation
+                                    st3 = SystemClock.elapsedRealtimeNanos()
                                 }
-                                st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.w(
-                                    TAG,
-                                    "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms]" +
-                                        "[render cost=${(st3 - st2) / 1000}us] " +
-                                        "${decodeFrame?.width}x${decodeFrame?.height}"
-                                )
                             } catch (e: Exception) {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.e(TAG, "decode error.", e)
@@ -189,7 +217,9 @@ class DecodeH264RawFileByFFMpeg {
                             previousStart = i
                             // FIXME We'd better control the FPS by SpeedManager
                             val sleepOffset: Long = 1000 / 30 - (st3 / 1000_000 - st1)
-                            Thread.sleep(if (sleepOffset < 0) 0 else sleepOffset)
+                            if (sleepOffset > 0 && !isClosed) {
+                                Thread.sleep(sleepOffset)
+                            }
                         }
                     }
                 }

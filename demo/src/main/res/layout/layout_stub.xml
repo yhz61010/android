@@ -8,8 +8,9 @@
         android:id="@+id/stub_img"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:src="@color/material_dynamic_neutral90"
+        android:src="@color/teal_200"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

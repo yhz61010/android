@@ -2,7 +2,6 @@ cp -r ../libjpeg-turbo-main/libs/arm64-v8a/include src/main/cpp/
 
 rm -rf libs/arm64-v8a/
 rm -rf libs/armeabi-v7a/
-rm -rf libs/armeabi-v7a/
 rm -rf libs/x86/
 rm -rf libs/x86_64/
 

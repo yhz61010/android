@@ -13,11 +13,37 @@ android {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
             abiFilters += setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
         }
+        
+        // Support Android 16KB page size for arm64-v8a architecture
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                    "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384",
+                    "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+                )
+            }
+        }
+        
+        // Support Android 16KB page size for arm64-v8a architecture
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                    "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384",
+                    "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+                )
+            }
+        }
     }
 
     externalNativeBuild {
         ndkBuild {
             path = File("src/main/jni/Android.mk")
+            // Support Android 16KB page size for arm64-v8a architecture
+            arguments += listOf(
+                "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            )
         }
     }
 

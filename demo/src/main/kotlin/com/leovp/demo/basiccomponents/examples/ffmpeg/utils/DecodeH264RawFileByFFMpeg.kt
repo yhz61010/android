@@ -34,10 +34,10 @@ class DecodeH264RawFileByFFMpeg {
     private var csd0Size: Int = 0
 
     private val videoDecoder = H264HevcDecoder()
-    
+
     @Volatile
     private var isDecoding = false
-    
+
     @Volatile
     private var isClosed = false
 

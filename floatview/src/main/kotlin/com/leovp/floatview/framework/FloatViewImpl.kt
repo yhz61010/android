@@ -353,17 +353,17 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         // use the configured x,y directly. EdgeMargin will be enforced during movement.
         val viewWidth = config.customView?.width ?: 0
         val viewHeight = config.customView?.height ?: 0
-        
-        val needsAdjustX = config.x < config.edgeMargin || 
-            config.x <= 0 || 
+
+        val needsAdjustX = config.x < config.edgeMargin ||
+            config.x <= 0 ||
             (config.x + viewWidth + config.edgeMargin) >= screenOrientSz.width
-        val needsAdjustY = config.y < config.edgeMargin || 
-            config.y <= 0 || 
+        val needsAdjustY = config.y < config.edgeMargin ||
+            config.y <= 0 ||
             (config.y + viewHeight + config.edgeMargin) >= screenOrientSz.height
-        
+
         val finalX = if (needsAdjustX) adjustPosX(config.x, config.edgeMargin) else config.x
         val finalY = if (needsAdjustY) adjustPosY(config.y, config.edgeMargin) else config.y
-        
+
         layoutParams.x = finalX
         layoutParams.y = finalY
         config.x = finalX

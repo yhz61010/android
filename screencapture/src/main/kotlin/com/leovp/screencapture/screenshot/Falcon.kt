@@ -6,11 +6,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
-import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.view.View
 import android.view.WindowManager
+import androidx.core.graphics.createBitmap
 import com.leovp.log.LogContext
 import java.io.BufferedOutputStream
 import java.io.Closeable
@@ -101,7 +101,7 @@ object Falcon {
                 maxHeight = viewRoot.winFrame.bottom
             }
         }
-        val bitmap = Bitmap.createBitmap(maxWidth, maxHeight, config)
+        val bitmap = createBitmap(maxWidth, maxHeight, config)
 
         // We need to do it in main thread
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -170,11 +170,16 @@ object Falcon {
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("UNCHECKED_CAST")
     fun getRootViews(weakAct: WeakReference<Activity>): List<ViewRootData> {
-        val globalWindowManager: Any = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
-            getFieldValue("mWindowManager", weakAct.get()?.windowManager)!!
-        } else {
-            getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
-        }
+        // val globalWindowManager: Any = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
+        //     getFieldValue("mWindowManager", weakAct.get()?.windowManager)!!
+        // } else {
+        //     getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
+        // }
+
+        // Since minSdk is 21, Build.VERSION_CODES.JELLY_BEAN is always below minSdk.
+        // We can safely use "mGlobal" which exists in API 21+.
+        val globalWindowManager: Any = getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
+
         val rootObjects = getFieldValue("mRoots", globalWindowManager)
         val paramsObject = getFieldValue("mParams", globalWindowManager)
         val params: Array<WindowManager.LayoutParams>

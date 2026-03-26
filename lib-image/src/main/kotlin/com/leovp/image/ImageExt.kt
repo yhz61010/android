@@ -57,12 +57,12 @@ fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config =
     }.getOrNull()
 
 fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
-    // API < 26
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || this is BitmapDrawable) {
+    if (this is BitmapDrawable) {
         return (this as BitmapDrawable).bitmap
     }
-    return runCatching {
-        if (this is AdaptiveIconDrawable) {
+    // AdaptiveIconDrawable exists from API 26
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this is AdaptiveIconDrawable) {
+        return runCatching {
             val layerDrawable = LayerDrawable(arrayOf<Drawable>(this.background, this.foreground))
             val width = layerDrawable.intrinsicWidth
             val height = layerDrawable.intrinsicHeight
@@ -71,10 +71,9 @@ fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap?
             layerDrawable.setBounds(0, 0, canvas.width, canvas.height)
             layerDrawable.draw(canvas)
             bitmap
-        } else {
-            null
-        }
-    }.getOrNull()
+        }.getOrNull()
+    }
+    return null
 }
 
 fun Image.createBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {

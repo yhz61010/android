@@ -5,7 +5,10 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.Surface
 import android.view.View
+import android.widget.ImageButton
 import android.widget.TextView
+import com.leovp.android.exts.screenAvailableHeight
+import com.leovp.android.exts.screenWidth
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.toast
 import com.leovp.demo.R
@@ -17,7 +20,8 @@ import com.leovp.floatview.entities.DockEdge
 import com.leovp.floatview.entities.StickyEdge
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import java.util.*
+import java.util.Random
+import androidx.core.graphics.toColorInt
 
 class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.layout.activity_float_view) {
     override fun getTagName(): String = ITAG
@@ -94,7 +98,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
             .meta { _, _ ->
                 tag = "f3"
                 immersiveMode = true
-                y = 900
+                y = 600
                 stickyEdge = StickyEdge.RIGHT
                 screenOrientation = Surface.ROTATION_0
             }
@@ -104,7 +108,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
             .layout(TextView(this)) { v ->
                 (v as TextView).run {
                     text = "f4\nImmersive:ON\nDock:LEFT"
-                    setBackgroundColor(Color.parseColor("#711CDE"))
+                    setBackgroundColor("#711CDE".toColorInt())
                     setTextColor(Color.WHITE)
                 }
             }
@@ -113,6 +117,25 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                 immersiveMode = true
                 y = 900
                 dockEdge = DockEdge.LEFT
+                screenOrientation = Surface.ROTATION_0
+            }
+            .show()
+
+        FloatView.with(this)
+            .layout(ImageButton(this)) { v ->
+                (v as ImageButton).run {
+                    setImageResource(R.mipmap.ic_launcher_round)
+                    setBackgroundColor(Color.TRANSPARENT)
+                    setOnSingleClickListener {
+                        toast("Click Button")
+                    }
+                }
+            }
+            .meta { _, _ ->
+                tag = "f5"
+                x = this@FloatViewActivity.screenWidth
+                y = this@FloatViewActivity.screenAvailableHeight / 2
+                edgeMargin = 30
                 screenOrientation = Surface.ROTATION_0
             }
             .show()

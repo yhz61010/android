@@ -4,7 +4,6 @@ import com.google.gson.reflect.TypeToken
 import com.leovp.json.toJsonString
 import com.leovp.json.toObject
 import java.lang.reflect.Type
-import kotlin.jvm.java
 
 /**
  * Author: Michael Leo
@@ -40,7 +39,8 @@ abstract class AbsPref :
     // -----
 
     /**
-     * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
+     * Call this method if you want to use it in Java due to **`reified`**
+     * can't be called in Java.
      *
      * Put value which type is following list:
      * - Int
@@ -92,18 +92,21 @@ abstract class AbsPref :
     }
 
     /** Get object */
-    inline fun <reified T> getObject(key: String): T? = getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
-
+    inline fun <reified T> getObject(key: String): T? =
+        getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
 
     // -----
 
     /**
-     * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
+     * Call this method if you want to use it in Java due to **`reified`**
+     * can't be called in Java.
      */
-    fun <T> getObject4Java(key: String, type: Type): T? = getString(key, null)?.toObject(type)
+    fun <T> getObject4Java(key: String, type: Type): T? =
+        getString(key, null)?.toObject(type)
 
     /**
-     * Call this method if you want to use it in Java due to **`reified`** can't be called in Java.
+     * Call this method if you want to use it in Java due to **`reified`**
+     * can't be called in Java.
      *
      * Get value which type is following list:
      * - Int

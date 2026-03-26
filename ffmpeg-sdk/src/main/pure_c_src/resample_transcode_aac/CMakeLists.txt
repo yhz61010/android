@@ -10,6 +10,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_HOME_DIRECTORY}/output")
 # <project path>/cmake-build-debug/output
 #set(EXECUTABLE_OUTPUT_PATH "output")
 
+# 设置 LOAD section alignment 为 16KB，满足 Android 要求
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
         libavformat

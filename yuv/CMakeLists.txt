@@ -8,6 +8,9 @@ project(leo-yuv)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall")
 
+# 设置 LOAD section alignment 为 16KB，满足 Android 要求
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+
 add_library(leo-yuv # Sets the name of the library.
             SHARED  # Sets the library as a shared library.
             # Provides a relative path to your source file(s).

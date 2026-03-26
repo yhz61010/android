@@ -1,5 +1,5 @@
 **DO NOT** add this module to project if you want to push sources to `github`.
-This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you push sources to `github`.
+These means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you push sources to `github`.
 
 
 **Suggestion**
@@ -7,7 +7,7 @@ This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you pu
 If you want to develop, you'd better add this module into `settings.gradle.kts` or else the source code won't be highlighted.
 
 
-**This module can no be imported by other projects.**
+**This module can not be imported by other projects.**
 If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
 
 ### Compile Environment：

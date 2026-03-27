@@ -320,6 +320,19 @@ public static java.lang.String TABLENAME;
 -dontwarn okhttp3.logging.**
 -keep class okhttp3.internal.**{*;}
 
+# OkHttp - Complete rules to fix missing class warnings
+# https://github.com/square/okhttp/blob/master/okhttp/src/main/resources/META-INF/proguard/okhttp3.pro
+-dontwarn okhttp3.**
+-keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
+-keep class okhttp3.internal.Util { *; }
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-keep enum okhttp3.** { *; }
+
+# BlockHound - Fix missing service class warning
+-dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-keepnames class reactor.blockhound.integration.BlockHoundIntegration
+
 # Okio
 -dontwarn com.squareup.**
 -dontwarn okio.**

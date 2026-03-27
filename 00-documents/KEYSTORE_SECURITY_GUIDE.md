@@ -49,7 +49,19 @@ git filter-branch --force --index-filter \
   'git rm --cached --ignore-unmatch leo-anroid-release.jks' \
   --prune-empty --tag-name-filter cat -- --all
 
-# 3. 清理引用
+# 3. 清理引用 
+# 以下三行代码各自的作用及目的如下：
+# 作用：删除 git filter-branch 命令创建的备份引用
+# 目的：防止这些备份暴露已被移除的敏感信息
+# -----
+# 作用：立即过期所有 reflog 记录
+# -----
+# 作用：执行垃圾回收，立即清理不可达的对象
+# 参数说明：
+# --prune=now：立即删除孤立的对象（不等待默认的 2 周宽限期）
+# --aggressive：更积极地优化仓库，可能会花更多时间但效果更好
+# 目的：真正从 .git/objects/ 中删除包含敏感数据的 blob 对象
+# 
 rm -rf .git/refs/original/
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive

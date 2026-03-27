@@ -1,0 +1,28 @@
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+
+org.gradle.parallel=true
+org.gradle.daemon=true
+org.gradle.caching=true
+
+android.useAndroidX=true
+android.enableJetifier=false
+android.nonTransitiveRClass=true
+android.injected.testOnly=false
+android.nonFinalResIds=true
+
+android.enableR8.fullMode=true
+
+kotlin.code.style=official
+kapt.include.compile.classpath=false
+kapt.incremental.apt=true
+kotlin.pluginLoadedInMultipleProjects.ignore=true
+
+# ==============================
+
+leovp.storeFile=leo-anroid-release.jks
+leovp.storePassword=your-store-password
+leovp.keyAlias=your-key-alias
+leovp.keyPassword=your-key-password
+
+systemProp.sonar.host.url=your-sonar-server
+systemProp.sonar.login=your-sonar-login-key

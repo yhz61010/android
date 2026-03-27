@@ -19,6 +19,7 @@ plugins {
 //     // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
 //     org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.apidemo.get())
 // }
+/** The property references local.properties file */
 val localProperties: Properties by rootProject.extra
 
 junitPlatform {
@@ -32,8 +33,8 @@ android {
     namespace = "com.leovp.demo"
 
     defaultConfig {
-        versionCode = 25
-        versionName = "2.5"
+        versionCode = libs.versions.versionCode.get().toInt()
+        versionName = libs.versions.versionName.get()
 
         ndk {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
@@ -43,6 +44,7 @@ android {
 
         // You can use this property in AndroidManifest as meta-data.
         manifestPlaceholders += mapOf(
+            // Get properties from local.properties file.
             "LEO_CUSTOM_KEY" to localProperties.getProperty("leo.custom.key", "")
         )
 
@@ -256,16 +258,20 @@ androidComponents {
         val versionCode = android.defaultConfig.versionCode ?: 0
         val timestamp = ZonedDateTime.now()
             .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss(z)"))
-        val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
-            "-v$versionName($versionCode)" +
-            "-${timestamp}" +
-            "-${gitVersionTag()}-${gitCommitCount()}" +
-            ".apk"
+
+        // Use providers to defer Git calls
+        val commitCount = gitCommitCount()
+        val versionTag = gitVersionTag()
 
         tasks.register("rename${capitalizedName}Apk") {
             val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
             inputs.dir(apkDir)
             doLast {
+                val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
+                    "-v$versionName($versionCode)" +
+                    "-${timestamp}" +
+                    "-${versionTag.get()}-${commitCount.get()}" +
+                    ".apk"
                 val dir = apkDir.get().asFile
                 dir.listFiles()?.filter { it.extension == "apk" }?.forEach { srcFile ->
                     val finalName = if ("unsigned" in srcFile.name) {
@@ -295,16 +301,11 @@ fun Project.getDebugSignProperty(
         }.getProperty(key)
 
 // 获取当前分支的提交总次数
-fun gitCommitCount(): String {
-    //    val cmd = 'git rev-list HEAD --first-parent --count'
-    val cmd = "git rev-list HEAD --count"
-
-    return runCatching {
-        // You must trim() the result. Because the result of command has a suffix '\n'.
-        providers.exec {
-            commandLine = cmd.trim().split(' ')
-        }.standardOutput.asText.get().trim()
-    }.getOrDefault("NA")
+fun gitCommitCount(): Provider<String> {
+    // val cmd = 'git rev-list HEAD --first-parent --count'
+    return providers.exec {
+        commandLine = listOf("git", "rev-list", "HEAD", "--count")
+    }.standardOutput.asText.map { it.trim() }.orElse("NA")
 }
 
 // 使用commit的哈希值作为版本号也是可以的，获取最新的一次提交的哈希值的前七个字符
@@ -321,26 +322,22 @@ fun gitCommitCount(): String {
  * ga935b078    ：开头 g 为 git 的缩写，在多种管理工具并存的环境中很有用处
  * a935b078     ：当前分支最新的 commitID 前几位
  */
-fun gitVersionTag(): String {
+fun gitVersionTag(): Provider<String> {
     // https://stackoverflow.com/a/4916591/1685062
     //    val cmd = "git describe --tags"
-    val cmd = "git describe --always"
+    val rawTag = providers.exec {
+        commandLine = listOf("git", "describe", "--always")
+    }.standardOutput.asText.map { it.trim() }.orElse("NA")
 
-    val versionTag = runCatching {
-        // You must trim() the result. Because the result of command has a suffix '\n'.
-        providers.exec {
-            commandLine = cmd.trim().split(' ')
-        }.standardOutput.asText.get().trim()
-    }.getOrDefault("NA")
-
-    val regex = "-(\\d+)-g".toRegex()
-    val matcher: MatchResult? = regex.matchEntire(versionTag)
-
-    val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
-    return if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
-        versionTag.take(matcherGroup0.range.first) + "." + matcherGroup0.value
-    } else {
-        versionTag
+    return rawTag.map { versionTag ->
+        val regex = "-(\\d+)-g".toRegex()
+        val matcher: MatchResult? = regex.matchEntire(versionTag)
+        val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
+        if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
+            versionTag.take(matcherGroup0.range.first) + "." + matcherGroup0.value
+        } else {
+            versionTag
+        }
     }
 }
 

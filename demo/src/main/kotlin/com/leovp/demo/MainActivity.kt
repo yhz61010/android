@@ -96,7 +96,7 @@ class MainActivity :
                     PermissionLists.getBluetoothScanPermission()
                 )
             )
-            .request { grantedList, deniedList ->
+            .request { _, deniedList ->
                 val allGranted = deniedList.isEmpty()
                 if (allGranted) {
                     this@MainActivity.toast("All permissions granted.")

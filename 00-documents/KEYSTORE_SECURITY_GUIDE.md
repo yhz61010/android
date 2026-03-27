@@ -39,6 +39,10 @@ chmod +x generate-keystore.sh
 ```bash
 # 1. 先从当前目录删除
 git rm --cached leo-anroid-release.jks
+# 只从 Git 版本控制中移除该文件
+# 不会删除你本地的 leo-anroid-release.jks 文件
+# 该文件会从远程仓库中删除
+# 提交并推送后，其他开发者拉取代码时，这个文件会从他们的仓库中消失
 
 # 2. 从 Git 历史中彻底清除
 git filter-branch --force --index-filter \

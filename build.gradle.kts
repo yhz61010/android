@@ -124,7 +124,7 @@ allprojects {
     // }
 
     detekt {
-        config.from(files("$rootDir/detekt.yml"))
+        config.from(files("$rootDir/10-configs/detekt.yml"))
 
         parallel = true
 

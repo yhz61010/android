@@ -64,28 +64,54 @@ android {
         buildConfig = true
     }
 
-    val releaseSigning = signingConfigs.create("releaseSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "${projectDir.absolutePath}/../debug.keystore")
-        keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-        keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-        storePassword = System.getenv("KEY_PASSWORD") ?: "android"
+    signingConfigs {
+        named("debug") {
+            storeFile = File(rootDir, getDebugSignProperty("storeFile"))
+            storePassword = getDebugSignProperty("storePassword")
+            keyAlias = getDebugSignProperty("keyAlias")
+            keyPassword = getDebugSignProperty("keyPassword")
 
-        enableV1Signing = true
-        enableV2Signing = true
-        enableV3Signing = true
-        enableV4Signing = true
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+        }
+
+        create("release") {
+            storeFile = System.getenv("KEYSTORE_PATH")?.let { file(it) }
+                ?: rootProject.properties["leovp.storeFile"]?.let { file(it) }
+                    ?: error("KEYSTORE_PATH not found")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: rootProject.properties["leovp.storePassword"] as? String ?: error("KEYSTORE_PASSWORD not found")
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: rootProject.properties["leovp.keyAlias"] as? String ?: error("KEY_ALIAS not found")
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: rootProject.properties["leovp.keyPassword"] as? String ?: error("KEY_PASSWORD not found")
+
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+        }
     }
 
     buildTypes {
-        getByName("debug") {
-            isMinifyEnabled = false
-            isShrinkResources = false
-            signingConfig = releaseSigning
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
         }
 
-        //        getByName("release") {
-        //            signingConfig = releaseSigning
-        //        }
+        release {
+            signingConfig = signingConfigs.getByName("release")
+        }
+        // getByName("debug") {
+        //     isMinifyEnabled = false
+        //     isShrinkResources = false
+        //     signingConfig = signingConfigs.getByName("debug")
+        // }
+
+        // getByName("release") {
+        //     signingConfig = signingConfigs.getByName("release")
+        // }
     }
 
     productFlavors {
@@ -256,6 +282,15 @@ androidComponents {
         }
     }
 }
+
+fun Project.getDebugSignProperty(
+    key: String,
+    path: String = "10-configs/sign/keystore.properties",
+): String =
+    Properties()
+        .apply {
+            rootProject.file(path).inputStream().use(::load)
+        }.getProperty(key)
 
 // 获取当前分支的提交总次数
 fun gitCommitCount(): String {

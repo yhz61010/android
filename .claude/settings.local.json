@@ -12,13 +12,15 @@
       "Read(//tmp/**)",
       "Bash(rm -rf com)",
       "Bash(cd /tmp && jar xf *)",
-      "Read(//home/yhz61010/.gradle/caches/9.4.0/transforms/**)",
       "Bash(2)",
       "Bash(for mod:*)",
       "Bash(do echo:*)",
       "Read(*)",
       "Bash(done)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)"
     ]
   }
 }

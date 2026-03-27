@@ -38,6 +38,8 @@ android {
                 "lib/arm64-v8a/libadpcm-ima-qt-decoder.so",
                 "lib/arm64-v8a/libh264-hevc-decoder.so"
             )
+            // Prevent stripping debug symbols from these libraries to avoid build warnings
+            keepDebugSymbols += "**/*.so"
         }
     }
 

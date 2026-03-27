@@ -24,13 +24,24 @@ preventing them from being updated to their latest versions.
 
 # How to import?
 
+1. You MUST rename or copy the `gradle.properties.template` file to `gradle.properties` and MODIFY it.
+2. Configure the following environment variables on the CI/CD platform:
+- KEYSTORE_PATH
+- KEYSTORE_PASSWORD
+- KEY_ALIAS
+- KEY_PASSWORD
+
 ## For Kotlin (build.gradle.kts)
 
-Add the library you need. For example:
+Add the libraries as you need. For example:
 
 ```
 [libraries]
 leo-androidbase = { module = "com.leovp.android:androidbase", version.ref = "<latest-version>" }
+leo-lib-compose = { module = "com.leovp.android:lib-compose", version.ref = "<latest-version>" }
+leo-pref = { module = "com.leovp.android:pref", version.ref = "<latest-version>" }
+...
+...
 ```
 
 Import that library in your module `build.gradle.kts` file:
@@ -44,6 +55,10 @@ implementation(libs.leo.androidbase)
 ```
 dependencies {
     implementation "com.leovp.android:androidbase:<latest>"
+    implementation "com.leovp.android:lib-compose:<latest>"
+    implementation "com.leovp.android:pref:<latest>"
+    ...
+    ...
 }
 ```
 
@@ -67,12 +82,12 @@ dependencies {
 
 ~~1. Camera2Live~~(Solved)
 ~~When you initialize `Camera2Component`, you must specify the *encoder* type manually.
-This is not a wise way. In the next version, I will identity the *encoder* automatically
+This is not a wise way. In the next version, I will identify the *encoder* automatically
 according to the camera characteristics.~~
 
 ~~2. Network Monitor~~(Solved)
 ~~Now, I do not show you a way to get the network traffic and ping by implementing a listener.
-That means you can just check the network traffic and ping in log but you can not get them in your code.
+That means you can just check the network traffic and ping in log, but you can not get them in your code.
 In the next version, I will provide you a listener that you can use them freely when network traffic and ping are changed.~~
 
 # About Log
@@ -81,7 +96,7 @@ Almost every project will use a log wrapper to manage your log. So does this lib
 Here comes a question: how to save this library logs in your project if you need it?
 In order to solve this problem, I implement a log system by using `LogContext`.
 You just need to initiate `LogContext` with your custom log wrapper and output your log by using `LogContext`
-I have already implement the `LLog` which is a wrapper of Android default log as default implementation for `LogContext`.
+I have already implemented the `LLog` which is a wrapper of Android default log as default implementation for `LogContext`.
 Of course, you can implement your log wrapper by implement `ILog`.
 **DO NOT** forget to initialize it first in `Application`.
 

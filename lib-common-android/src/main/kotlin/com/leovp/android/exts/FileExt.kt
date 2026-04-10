@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package com.leovp.android.exts
 
 import android.content.Context
@@ -53,7 +54,7 @@ fun getExternalFolder(baseFolder: String): File {
 fun fileExists(filePath: String): Boolean = File(filePath).exists()
 
 /**
- * Create a image file which name is a formatted timestamp with the current date and time.
+ * Create an image file which name is a formatted timestamp with the current date and time.
  */
 fun Context.createImageFile(extension: String): File {
     val sdf = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)

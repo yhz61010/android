@@ -65,7 +65,6 @@ object LogContext {
     //         log.enableLog = value
     //     }
 
-
     private var _log: AbsLog? = null
 
     var log: AbsLog

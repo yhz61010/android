@@ -75,6 +75,7 @@ class LogConfig4Debug : ILogConfig {
 }
 
 inline fun v(crossinline config: LogConfig4Debug.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig4Debug().apply(config)
     val ret = logConfig.block()
     if (ret is String?) {
@@ -96,6 +97,7 @@ inline fun v(tag: String, crossinline block: () -> Any?) {
 }
 
 inline fun d(crossinline config: LogConfig4Debug.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig4Debug().apply(config)
     val ret = logConfig.block()
     if (ret is String?) {
@@ -117,6 +119,7 @@ inline fun d(tag: String, crossinline block: () -> Any?) {
 }
 
 inline fun i(crossinline config: LogConfig.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig().apply(config)
     LogContext.log.i(
         tag = logConfig.tag,
@@ -135,6 +138,7 @@ inline fun i(tag: String, crossinline message: () -> String?) {
 }
 
 inline fun w(crossinline config: LogConfig.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig().apply(config)
     LogContext.log.w(
         tag = logConfig.tag,
@@ -153,6 +157,7 @@ inline fun w(tag: String, crossinline message: () -> String?) {
 }
 
 inline fun e(crossinline config: LogConfig.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig().apply(config)
     LogContext.log.e(
         tag = logConfig.tag,
@@ -176,6 +181,7 @@ inline fun e(tag: String, throwable: Throwable? = null, crossinline message: () 
 fun getUserOpTagName(tag: String): String = "$tag-UOP".take(20)
 
 inline fun userOp(crossinline config: LogConfig.() -> Unit) {
+    if (!LogContext.isLogInitialized() || !LogContext.log.enableLog) return
     val logConfig = LogConfig().apply(config)
     LogContext.log.w(
         tag = getUserOpTagName(logConfig.tag),

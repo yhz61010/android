@@ -12,13 +12,15 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.IntRange
 import androidx.annotation.Keep
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.withSave
 import com.leovp.android.exts.sp2px
 import com.leovp.androidbase.BuildConfig
 import com.leovp.androidbase.R
 import com.leovp.androidbase.exts.kotlin.getToday
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import java.util.*
+import java.util.Date
 import kotlin.math.sqrt
 
 /**
@@ -67,7 +69,7 @@ object Watermark {
          * Watermark text color.
          * Example: 0xAEAEAEAE
          */
-        var textColor: Int = Color.parseColor("#AEAEAEAE"),
+        var textColor: Int = "#AEAEAEAE".toColorInt(),
 
         /**
          * Watermark text size in sp
@@ -87,7 +89,7 @@ object Watermark {
         /**
          * Watermark text line word multiple
          */
-        var wordSpacerMultiple: Float = 1.3f
+        var wordSpacerMultiple: Float = 1.3f,
     )
 }
 
@@ -149,8 +151,9 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
                     canvas.drawText(text, positionX.toFloat(), positionY.toFloat(), paint)
                 }
             }
-            canvas.save()
-            canvas.restore()
+            canvas.withSave {
+                canvas.restore()
+            }
         }
 
         override fun setAlpha(@IntRange(from = 0, to = 255) alpha: Int) {}

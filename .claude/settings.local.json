@@ -10,7 +10,6 @@
       "Bash(unzip:*)",
       "Bash(javap *)",
       "Read(//tmp/**)",
-      "Bash(rm -rf com)",
       "Bash(cd /tmp && jar xf *)",
       "Bash(2)",
       "Bash(for mod:*)",
@@ -20,7 +19,32 @@
       "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(mkdir:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash:*)",
+      "Bash(git reset:*)",
+      "Bash(kotlin-lsp --version)",
+      "Bash(kotlin -version)",
+      "Bash(kotlinc -version)",
+      "Bash(java -version)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(git add:*)",
+      "Bash(python3:*)"
+    ],
+    "ask": [
+      "Bash(rm -rf *)",
+      "Bash(curl * | bash)",
+      "Bash(bash -n *)"
     ]
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "kotlin-lsp@claude-plugins-official": true,
+    "jdtls-lsp@claude-plugins-official": true
   }
 }

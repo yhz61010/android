@@ -1,0 +1,2 @@
+- [Bilingual docs](feedback_bilingual_docs.md) — Always generate both English and Chinese versions for documentation
+- [English code & commits](feedback_english_code_commits.md) — Code comments and git commit messages must be in English

@@ -10,7 +10,7 @@ ndk-sdk = "25.2.9519653"
 versionCode = "26"
 versionName = "2.6"
 
-leo-version = "5.13.28"
+leo-version = "5.13.29"
 
 #===================
 #===== Compile =====

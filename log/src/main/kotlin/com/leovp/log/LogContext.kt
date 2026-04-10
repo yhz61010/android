@@ -65,20 +65,30 @@ object LogContext {
     //         log.enableLog = value
     //     }
 
-    lateinit var log: AbsLog
-        private set
+
+    private var _log: AbsLog? = null
+
+    var log: AbsLog
+        get() {
+            return _log ?: LLog(tagPrefix = "__NO_LOG_OUTPUT__", logLevel = LogLevel.VERB, enableLog = false).also {
+                _log = it
+            }
+        }
+        private set(value) {
+            _log = value
+        }
 
     @Suppress("unused")
     val logLevel: LogLevel
-        get() = if (isLogInitialized()) {
+        get() = if (_log != null) {
             log.logLevel
         } else {
             throw IllegalAccessException("You must call setLogImp() first")
         }
 
-    fun isLogInitialized(): Boolean = ::log.isInitialized
+    fun isLogInitialized(): Boolean = _log != null
 
     fun setLogImpl(log: AbsLog) {
-        LogContext.log = log
+        _log = log
     }
 }

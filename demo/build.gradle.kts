@@ -1,5 +1,5 @@
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+// import java.time.ZonedDateTime
+// import java.time.format.DateTimeFormatter
 import java.util.Properties
 
 plugins {
@@ -79,22 +79,22 @@ android {
             enableV4Signing = true
         }
 
-        create("release") {
-            storeFile = System.getenv("KEYSTORE_PATH")?.let { file(it) }
-                ?: rootProject.properties["leovp.storeFile"]?.let { file(it) }
-                    ?: error("KEYSTORE_PATH not found")
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-                ?: rootProject.properties["leovp.storePassword"] as? String ?: error("KEYSTORE_PASSWORD not found")
-            keyAlias = System.getenv("KEY_ALIAS")
-                ?: rootProject.properties["leovp.keyAlias"] as? String ?: error("KEY_ALIAS not found")
-            keyPassword = System.getenv("KEY_PASSWORD")
-                ?: rootProject.properties["leovp.keyPassword"] as? String ?: error("KEY_PASSWORD not found")
-
-            enableV1Signing = true
-            enableV2Signing = true
-            enableV3Signing = true
-            enableV4Signing = true
-        }
+        // Comment out release signing config to avoid build failure on JitPack (no keystore env vars).
+        // create("release") {
+        //     storeFile = System.getenv("KEYSTORE_PATH")?.let { file(it) }
+        //         ?: rootProject.properties["leovp.storeFile"]?.let { file(it) }
+        //     storePassword = System.getenv("KEYSTORE_PASSWORD")
+        //         ?: rootProject.properties["leovp.storePassword"] as? String
+        //     keyAlias = System.getenv("KEY_ALIAS")
+        //         ?: rootProject.properties["leovp.keyAlias"] as? String
+        //     keyPassword = System.getenv("KEY_PASSWORD")
+        //         ?: rootProject.properties["leovp.keyPassword"] as? String
+        //
+        //     enableV1Signing = true
+        //     enableV2Signing = true
+        //     enableV3Signing = true
+        //     enableV4Signing = true
+        // }
     }
 
     buildTypes {
@@ -102,9 +102,9 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
 
-        release {
-            signingConfig = signingConfigs.getByName("release")
-        }
+        // release {
+        //     signingConfig = signingConfigs.getByName("release")
+        // }
         // getByName("debug") {
         //     isMinifyEnabled = false
         //     isShrinkResources = false
@@ -243,53 +243,54 @@ android {
     // }
 }
 
+// Comment out APK renaming to avoid build failure on JitPack (git commands not available).
 // AGP 9.0 removed outputFileName from VariantOutput API.
 // Use Copy task with SingleArtifact.APK to customize APK naming.
-androidComponents {
-    onVariants { variant ->
-        // Example: debug
-        val buildTypeName = variant.buildType ?: "unknown"
-        // Example: DevDebug
-        val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
-        // Example: dev
-        val flavorName = variant.productFlavors.firstOrNull()?.second.orEmpty()
-        println("buildTypeName=$buildTypeName flavorName=$flavorName capitalizedName=$capitalizedName")
-        val versionName = android.defaultConfig.versionName ?: "NA"
-        val versionCode = android.defaultConfig.versionCode ?: 0
-        val timestamp = ZonedDateTime.now()
-            .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss(z)"))
-
-        // Use providers to defer Git calls
-        val commitCount = gitCommitCount()
-        val versionTag = gitVersionTag()
-
-        tasks.register("rename${capitalizedName}Apk") {
-            val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
-            inputs.dir(apkDir)
-            doLast {
-                val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
-                    "-v$versionName($versionCode)" +
-                    "-${timestamp}" +
-                    "-${versionTag.get()}-${commitCount.get()}" +
-                    ".apk"
-                val dir = apkDir.get().asFile
-                dir.listFiles()?.filter { it.extension == "apk" }?.forEach { srcFile ->
-                    val finalName = if ("unsigned" in srcFile.name) {
-                        apkName.replace(".apk", "-unsigned.apk")
-                    } else {
-                        apkName
-                    }
-                    srcFile.copyTo(File(dir, finalName), overwrite = true)
-                }
-            }
-        }
-        afterEvaluate {
-            tasks.named("assemble${capitalizedName}") {
-                finalizedBy("rename${capitalizedName}Apk")
-            }
-        }
-    }
-}
+// androidComponents {
+//     onVariants { variant ->
+//         // Example: debug
+//         val buildTypeName = variant.buildType ?: "unknown"
+//         // Example: DevDebug
+//         val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
+//         // Example: dev
+//         val flavorName = variant.productFlavors.firstOrNull()?.second.orEmpty()
+//         println("buildTypeName=$buildTypeName flavorName=$flavorName capitalizedName=$capitalizedName")
+//         val versionName = android.defaultConfig.versionName ?: "NA"
+//         val versionCode = android.defaultConfig.versionCode ?: 0
+//         val timestamp = ZonedDateTime.now()
+//             .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss(z)"))
+//
+//         // Use providers to defer Git calls
+//         val commitCount = gitCommitCount()
+//         val versionTag = gitVersionTag()
+//
+//         tasks.register("rename${capitalizedName}Apk") {
+//             val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
+//             inputs.dir(apkDir)
+//             doLast {
+//                 val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
+//                     "-v$versionName($versionCode)" +
+//                     "-${timestamp}" +
+//                     "-${versionTag.get()}-${commitCount.get()}" +
+//                     ".apk"
+//                 val dir = apkDir.get().asFile
+//                 dir.listFiles()?.filter { it.extension == "apk" }?.forEach { srcFile ->
+//                     val finalName = if ("unsigned" in srcFile.name) {
+//                         apkName.replace(".apk", "-unsigned.apk")
+//                     } else {
+//                         apkName
+//                     }
+//                     srcFile.copyTo(File(dir, finalName), overwrite = true)
+//                 }
+//             }
+//         }
+//         afterEvaluate {
+//             tasks.named("assemble${capitalizedName}") {
+//                 finalizedBy("rename${capitalizedName}Apk")
+//             }
+//         }
+//     }
+// }
 
 fun Project.getDebugSignProperty(
     key: String,
@@ -300,46 +301,47 @@ fun Project.getDebugSignProperty(
             rootProject.file(path).inputStream().use(::load)
         }.getProperty(key)
 
-// 获取当前分支的提交总次数
-fun gitCommitCount(): Provider<String> {
-    // val cmd = 'git rev-list HEAD --first-parent --count'
-    return providers.exec {
-        commandLine = listOf("git", "rev-list", "HEAD", "--count")
-    }.standardOutput.asText.map { it.trim() }.orElse("NA")
-}
-
-// 使用commit的哈希值作为版本号也是可以的，获取最新的一次提交的哈希值的前七个字符
-// $ git rev-list HEAD --abbrev-commit --max-count=1
-// a935b078
-
-/*
- * 获取最新的一个tag信息
- * $ git describe --tags
- * 4.0.4-9-ga935b078
- * 说明：
- * 4.0.4        : tag名
- * 9            : 打tag之后又有四次提交
- * ga935b078    ：开头 g 为 git 的缩写，在多种管理工具并存的环境中很有用处
- * a935b078     ：当前分支最新的 commitID 前几位
- */
-fun gitVersionTag(): Provider<String> {
-    // https://stackoverflow.com/a/4916591/1685062
-    //    val cmd = "git describe --tags"
-    val rawTag = providers.exec {
-        commandLine = listOf("git", "describe", "--always")
-    }.standardOutput.asText.map { it.trim() }.orElse("NA")
-
-    return rawTag.map { versionTag ->
-        val regex = "-(\\d+)-g".toRegex()
-        val matcher: MatchResult? = regex.matchEntire(versionTag)
-        val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
-        if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
-            versionTag.take(matcherGroup0.range.first) + "." + matcherGroup0.value
-        } else {
-            versionTag
-        }
-    }
-}
+// // Get the total commit count of the current branch.
+// fun gitCommitCount(): Provider<String> {
+//     // val cmd = 'git rev-list HEAD --first-parent --count'
+//     return providers.exec {
+//         commandLine = listOf("git", "rev-list", "HEAD", "--count")
+//     }.standardOutput.asText.map { it.trim() }.orElse("NA")
+// }
+//
+// // You can also use the commit hash as a version number.
+// // Get the first 7 characters of the latest commit hash:
+// // $ git rev-list HEAD --abbrev-commit --max-count=1
+// // a935b078
+//
+// /*
+//  * Get the latest tag info.
+//  * $ git describe --tags
+//  * 4.0.4-9-ga935b078
+//  * Explanation:
+//  * 4.0.4        : tag name
+//  * 9            : 9 commits after the tag
+//  * ga935b078    : 'g' stands for git, useful in multi-VCS environments
+//  * a935b078     : first few characters of the latest commitID on the current branch
+//  */
+// fun gitVersionTag(): Provider<String> {
+//     // https://stackoverflow.com/a/4916591/1685062
+//     //    val cmd = "git describe --tags"
+//     val rawTag = providers.exec {
+//         commandLine = listOf("git", "describe", "--always")
+//     }.standardOutput.asText.map { it.trim() }.orElse("NA")
+//
+//     return rawTag.map { versionTag ->
+//         val regex = "-(\\d+)-g".toRegex()
+//         val matcher: MatchResult? = regex.matchEntire(versionTag)
+//         val matcherGroup0: MatchGroup? = matcher?.groups?.get(0)
+//         if (matcher?.value?.isNotBlank() == true && matcherGroup0?.value?.isNotBlank() == true) {
+//             versionTag.take(matcherGroup0.range.first) + "." + matcherGroup0.value
+//         } else {
+//             versionTag
+//         }
+//     }
+// }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))

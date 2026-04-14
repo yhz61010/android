@@ -1,4 +1,0 @@
-- [Bilingual docs](feedback_bilingual_docs.md) — Always generate both English and Chinese versions for documentation
-- [English code & commits](feedback_english_code_commits.md) — Code comments and git commit messages must be in English
-- [Language preference](user_language.md) — Communicate in Chinese; code/commits in English
-- [No Co-Authored-By](feedback_no_coauthor.md) — Do not add Co-Authored-By line in commit messages

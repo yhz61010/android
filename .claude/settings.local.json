@@ -33,7 +33,9 @@
       "Bash(java -version)",
       "Bash(xargs -I {} basename {})",
       "Bash(git add:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(npx skills:*)"
     ],
     "ask": [
       "Bash(rm -rf *)",
@@ -41,10 +43,16 @@
       "Bash(bash -n *)"
     ]
   },
+  "autoMemoryDirectory": ".claude/memory",
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "kotlin-lsp@claude-plugins-official": true,
-    "jdtls-lsp@claude-plugins-official": true
+    "jdtls-lsp@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true
   }
 }

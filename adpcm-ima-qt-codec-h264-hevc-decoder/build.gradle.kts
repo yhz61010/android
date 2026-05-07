@@ -8,7 +8,7 @@ android {
     namespace = "com.leovp.ffmpeg"
 
     sourceSets {
-        getByName("main").jniLibs.srcDirs("src/main/libs")
+        getByName("main").jniLibs.directories.add("src/main/libs")
     }
 
     packaging {

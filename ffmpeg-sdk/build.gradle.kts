@@ -19,36 +19,17 @@ android {
             cmake {
                 arguments += listOf(
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                    "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384",
-                    "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
-                )
-            }
-        }
-        
-        // Support Android 16KB page size for arm64-v8a architecture
-        externalNativeBuild {
-            cmake {
-                arguments += listOf(
-                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                    "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384",
-                    "-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+                    "-DANDROID_STL=c++_shared"
                 )
             }
         }
     }
 
     externalNativeBuild {
-        ndkBuild {
-            path = File("src/main/jni/Android.mk")
-            // Support Android 16KB page size for arm64-v8a architecture
-            arguments += listOf(
-                "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-            )
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = libs.versions.cmake.get()
         }
-    }
-
-    sourceSets {
-        getByName("main").jniLibs.srcDirs("src/main/libs")
     }
 
     packaging {

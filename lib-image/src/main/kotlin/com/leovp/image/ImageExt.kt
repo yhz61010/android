@@ -58,7 +58,7 @@ fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config =
 
 fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     if (this is BitmapDrawable) {
-        return (this as BitmapDrawable).bitmap
+        return this.bitmap
     }
     // AdaptiveIconDrawable exists from API 26
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this is AdaptiveIconDrawable) {

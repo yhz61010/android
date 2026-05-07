@@ -24,8 +24,11 @@ android {
         }
     }
 
-    sourceSets {
-        getByName("main").jniLibs.srcDirs("libs")
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = libs.versions.cmake.get()
+        }
     }
 
     publishing {

@@ -99,3 +99,4 @@ gradle.properties
 # Keep specific keystore if needed (uncomment only if absolutely necessary)
 !leo-anroid-release.jks
 !**/leo-anroid-release.jks
+**/.cxx/

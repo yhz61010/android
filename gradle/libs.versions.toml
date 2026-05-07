@@ -5,7 +5,9 @@
 compile-sdk = "36"
 min-sdk = "21"
 target-sdk = "36"
-ndk-sdk = "25.2.9519653"
+
+ndk-sdk = "29.0.14206865"
+cmake = "4.1.2"
 
 versionCode = "26"
 versionName = "2.6"

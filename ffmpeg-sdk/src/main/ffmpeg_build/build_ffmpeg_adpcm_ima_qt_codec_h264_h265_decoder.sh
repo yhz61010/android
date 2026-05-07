@@ -106,4 +106,4 @@ export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
 export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
 build_one
 
-sh ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
+bash gradle-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh

@@ -1,123 +1,137 @@
 **DO NOT** add this module to project if you want to push sources to `github`.
-These means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you push sources to `github`.
-
+This means do not include `ffmpeg-sdk` module in `settings.gradle.kts` if you push sources to `github`.
 
 **Suggestion**
 
-If you want to develop, you'd better add this module into `settings.gradle.kts` or else the source code won't be highlighted.
-
+If you want to develop, you'd better add this module into `settings.gradle.kts` or else the source code won't be highlighted and can't be compiled.
 
 **This module can not be imported by other projects.**
-If your want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources form this module to that wrapper project.
+If you want to import this module by other projects, you can make a wrapper module just like [adpcm-ima-qt-codec-sdk] and copy any necessary sources from this module to that wrapper project.
 
-### Compile Environment：
+## Build Process
 
-- Android Studio: Flamingo | 2022.2.1
-- OS：macOS 13.2
-- NDK：25.2.9519653
-- Min SDK: 23 (Android 6.0)
-- FFmpeg 6.0 "Von Neumann"(6.0 was released on 2023-02-27)
-- cmake: 3.23.0
-- gcc:
-  Apple clang version 14.0.0 (clang-1400.0.29.202)
-  Target: x86_64-apple-darwin22.3.0
-  Thread model: posix
-  InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-- JDK: java 17.0.6 2023-01-17 LTS
+**Prerequisites:** Add `include(":ffmpeg-sdk")` to `settings.gradle.kts` before building.
 
-### How to compile ffmpeg and generate so file for Android
+### One-command build (recommended)
 
-You can download from official website and scroll to the **Releases** section:
+The `build_ffmpeg_*.sh` scripts handle the entire build process automatically:
+1. Compile FFmpeg source code into prebuilt shared libraries (with only the required codecs enabled)
+2. Build JNI wrapper libraries via Gradle/CMake
+3. Copy the generated `.so` files to the corresponding wrapper module
 
-1. Get ffmpeg source
-
-```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
-% wget -c https://www.ffmpeg.org/releases/ffmpeg-6.0.tar.xz
-```
-
-Unzip it into the following folder:
-
-> -z(gzip), -j(bzip2), -J(xz), --lzma(lzma)
-
-```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
-% tar xvJf ffmpeg-6.0.tar.xz
-```
-
-2. Compile and get static library
-
-```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
-```
-
-Modify the ffmpeg version in `config.sh` file:
-
-```shell
-FFMPEG_FOLDER=ffmpeg-<ffmepg version>
-```
-
-Run any one of the following scripts as you want:
-
-```shell
-% cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/ffmpeg_build
-```
-
-```shell
-% ./build_ffmpeg_adpcm_ima_qt_codec.sh
-% ./build_ffmpeg_h264_hevc_decoder.sh
-% ./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
-```
-
-3. Generate `so` files.
-   The above shell script in `Step 2` has already generated `so` files. However, if you want to generate it again,
-   in Android Studio, just build project, you will get `so` files.
-   Or execute the following command under
-   `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni`
-   folder:
-
-```shell
-% ndk-build
-```
-
-or execute command with full parameters:
-
-```shell
-% ndk-build NDK_PROJECT_PATH=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/adpcm-ima-qt-sdk/src/main/jni APP_PLATFORM=android-21 NDK_APPLICATION_MK=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Application.mk APP_BUILD_SCRIPT=/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/jni/Android.mk
-```
-
-Then you will get each generate `so` file
-in `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/ffmpeg-sdk/src/main/libs`
-folder.
-
-## How to check 16KB align?
-### By using `readelf`
 ```bash
-$ readelf -l /home/yhz61010/StudioProjects/android/ffmpeg-sdk/src/main/libs/arm64-v8a/libadpcm-ima-qt-encoder.so | grep -A 1 "LOAD"
-  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
-                 0x00000000000023d0 0x00000000000023d0  R E    0x4000
-  LOAD           0x00000000000023d0 0x00000000000063d0 0x00000000000063d0
-                 0x0000000000000370 0x0000000000000370  RW     0x4000
-  LOAD           0x0000000000002740 0x000000000000a740 0x000000000000a740
-                 0x0000000000000068 0x0000000000000090  RW     0x4000
-  DYNAMIC        0x00000000000023e8 0x00000000000063e8 0x00000000000063e8
+cd ffmpeg-sdk/src/main/ffmpeg_build
 ```
 
-如果 Align 列显示 0x4000（16KB = 16384 = 0x4000），说明已正确设置 16KB 对齐。如果是 0x1000（4KB），则还是 4KB 对齐。
+Modify the FFmpeg version and NDK path in `config.sh` first, then run one of:
 
-### By using `objdump`
 ```bash
-$ objdump -p /home/yhz61010/StudioProjects/android/ffmpeg-sdk/src/main/libs/arm64-v8a/libavutil.so | grep -A 2 "LOAD"
-    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**14
-         filesz 0x0000000000029a14 memsz 0x0000000000029a14 flags r--
-    LOAD off    0x0000000000029a20 vaddr 0x000000000002da20 paddr 0x000000000002da20 align 2**14
-         filesz 0x0000000000043bc0 memsz 0x0000000000043bc0 flags r-x
-    LOAD off    0x000000000006d5e0 vaddr 0x00000000000755e0 paddr 0x00000000000755e0 align 2**14
-         filesz 0x000000000000e870 memsz 0x000000000000e870 flags rw-
-    LOAD off    0x000000000007be50 vaddr 0x0000000000087e50 paddr 0x0000000000087e50 align 2**14
-         filesz 0x0000000000000028 memsz 0x00000000001076d9 flags rw-
- DYNAMIC off    0x000000000007b6f8 vaddr 0x00000000000836f8 paddr 0x00000000000836f8 align 2**3
+# ADPCM IMA QT codec only → copies to [adpcm-ima-qt-codec] module
+./build_ffmpeg_adpcm_ima_qt_codec.sh
+
+# H.264/HEVC decoder only → copies to [h264-hevc-decoder] module
+./build_ffmpeg_h264_hevc_decoder.sh
+
+# Both ADPCM codec + H.264/HEVC decoder → copies to [adpcm-ima-qt-codec-h264-hevc-decoder] module
+./build_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
 ```
 
-objdump -p 输出中的 align `2**14` (2 的 14 次方 = 16384) 表示 16KB 对齐
-objdump -p 输出中的 align `2**12` (2 的 12 次方 = 4096) 表示 4KB 对齐
+> **IMPORTANT: Build order matters.**
+>
+> Each `build_ffmpeg_*.sh` script configures FFmpeg with **different codec options**, producing a different `prebuilt/` directory (i.e., `libavcodec.so` with only the required codecs, minimizing binary size). Running a different script **overwrites** the `prebuilt/` directory.
+>
+> The script automatically calls `./gradlew :ffmpeg-sdk:assembleRelease` at the end, which builds **all three** JNI libraries (`h264-hevc-decoder`, `adpcm-ima-qt-decoder`, `adpcm-ima-qt-encoder`) regardless of the FFmpeg configuration. However, only the relevant `.so` files are copied to the target wrapper module.
+>
+> Therefore, **you must run scripts one at a time** and let each one complete fully (including the copy step) before running the next. Do NOT run all `build_ffmpeg_*.sh` scripts first and then do a single Gradle build — this would result in all wrapper modules using the same FFmpeg prebuilt from the last script, defeating the purpose of minimal codec builds.
+
+### Step-by-step breakdown
+
+If you need to run each step separately:
+
+#### Step 1 — Build FFmpeg prebuilt libraries
+
+Download and extract FFmpeg source:
+
+```bash
+cd ffmpeg-sdk/src/main/ffmpeg_build
+wget -c https://www.ffmpeg.org/releases/ffmpeg-8.1.tar.xz
+tar xvJf ffmpeg-8.1.tar.xz
+```
+
+Modify `config.sh`:
+
+```bash
+FFMPEG_FOLDER=ffmpeg-8.1
+NDK_PATH=/path/to/your/ndk
+```
+
+Run the build script (without the auto-copy at the end, just Ctrl+C before the last line, or comment out the last `sh` line):
+
+This generates `prebuilt/<abi>/lib/*.so` and `prebuilt/<abi>/include/` directories.
+
+#### Step 2 — Build JNI libraries via Gradle/CMake
+
+This compiles the JNI wrapper libraries (`libh264-hevc-decoder.so`, `libadpcm-ima-qt-decoder.so`, `libadpcm-ima-qt-encoder.so`) that link against the FFmpeg prebuilt libraries from Step 1.
+
+```bash
+./gradlew :ffmpeg-sdk:assembleRelease
+```
+
+#### Step 3 — Copy .so files to wrapper modules
+
+Run the corresponding copy script:
+
+```bash
+cd ffmpeg-sdk/src/main/ffmpeg_build
+
+./ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec.sh
+./ndk-build-and-copy-to-module_ffmpeg_h264_hevc_decoder.sh
+./ndk-build-and-copy-to-module_ffmpeg_adpcm_ima_qt_codec_h264_h265_decoder.sh
+```
+
+> Note: These scripts will also run `./gradlew :ffmpeg-sdk:assembleRelease` internally, so Step 2 can be skipped if you run these directly.
+
+### Output locations
+
+The generated `.so` files can be found under:
+
+```
+ffmpeg-sdk/build/intermediates/stripped_native_libs/release/stripReleaseDebugSymbols/out/lib/<abi>/
+```
+
+You can use the following command to find all `.so` files:
+
+```bash
+find ffmpeg-sdk/ -type f -name "*.so"
+```
+
+See also: `00-documents/android-native-build-output-directories.md`
+
+### CMake configuration
+
+The `CMakeLists.txt` is at `src/main/cpp/CMakeLists.txt`. It builds three shared libraries:
+
+- `libh264-hevc-decoder.so` — links against `avcodec`, `avutil`, `swscale`
+- `libadpcm-ima-qt-decoder.so` — links against `avcodec`, `avutil`
+- `libadpcm-ima-qt-encoder.so` — links against `avcodec`, `avutil`
+
+All libraries enforce **16KB page alignment** via `-Wl,-z,max-page-size=16384` for Android compatibility.
+
+## How to verify 16KB alignment
+
+### Using `readelf`
+
+```bash
+readelf -l ffmpeg-sdk/build/intermediates/stripped_native_libs/release/stripReleaseDebugSymbols/out/lib/arm64-v8a/libadpcm-ima-qt-encoder.so | grep -A 1 "LOAD"
+```
+
+If the Align column shows `0x4000` (16KB = 16384 = 0x4000), the alignment is correct. If it shows `0x1000` (4KB), the alignment is still 4KB.
+
+### Using `objdump`
+
+```bash
+objdump -p ffmpeg-sdk/build/intermediates/stripped_native_libs/release/stripReleaseDebugSymbols/out/lib/arm64-v8a/libavutil.so | grep -A 2 "LOAD"
+```
+
+- `align 2**14` (2^14 = 16384) means 16KB aligned.
+- `align 2**12` (2^12 = 4096) means 4KB aligned.

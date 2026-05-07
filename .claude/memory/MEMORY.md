@@ -3,3 +3,4 @@
 - [English commits & comments](feedback_english_code_commits.md) — Code comments and git commits must be in English
 - [Language preference](user_language.md) — Communicate in Chinese; code/commits in English
 - [No Co-Authored-By](feedback_no_coauthor.md) — Do not add Co-Authored-By trailer in commit messages
+- [CMake & NDK versions](../../../.claude/projects/-home-coding04-yhz61010-leo-projects-android-android/memory/project_cmake_ndk_versions.md) — CMake 4.1.2, NDK 29.0.14206865

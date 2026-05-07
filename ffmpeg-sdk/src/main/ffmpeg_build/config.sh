@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 FFMPEG_FOLDER=ffmpeg-8.1
-NDK_PATH=/home/yhz61010/Android/Sdk/ndk/25.2.9519653
+NDK_PATH=/home/yhz61010/Android/Sdk/ndk/29.0.14206865
 HOST_ARCH=$(uname -m)
 # linux-x86_64
 # darwin-x86_64

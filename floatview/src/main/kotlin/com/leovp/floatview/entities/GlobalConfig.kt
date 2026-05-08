@@ -16,7 +16,8 @@ data class GlobalConfig(
     override var dockAnimDuration: Long = 200,
     override var touchToleranceInPx: Int = TOUCH_TOLERANCE_IN_PX,
     override var enableAlphaAnimation: Boolean = ENABLE_ALPHA_ANIMATION,
-    override var screenOrientation: Int = -1
+    override var screenOrientation: Int = -1,
+    override var followDeviceOrientation: Boolean = false
 ) : IBaseConfig {
     companion object {
         const val DEFAULT_EDGE_MARGIN = 0 // px

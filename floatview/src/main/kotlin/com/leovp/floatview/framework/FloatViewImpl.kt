@@ -507,12 +507,23 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     @MainThread
     fun updateScreenOrientation(orientation: Int) {
+        val oldScreenSize = screenOrientSz
         lastScrOri = orientation
         config.screenOrientation = orientation
         screenOrientSz = getScreenOrientationSize(orientation)
+
+        // Scale position proportionally to maintain relative position after orientation change
+        if (oldScreenSize.width > 0 && oldScreenSize.width != screenOrientSz.width) {
+            layoutParams.x = (layoutParams.x.toFloat() / oldScreenSize.width * screenOrientSz.width).toInt()
+            layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
+        }
+        if (oldScreenSize.height > 0 && oldScreenSize.height != screenOrientSz.height) {
+            layoutParams.y = (layoutParams.y.toFloat() / oldScreenSize.height * screenOrientSz.height).toInt()
+            layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
+        }
+
         updateAutoDock(config.dockEdge)
         updateStickyEdge(config.stickyEdge)
-        // Log.e("LEO-float-view", "lastScrOri=$lastScrOri config.screenOrientation=$orientation")
     }
 
     @Suppress("unused")

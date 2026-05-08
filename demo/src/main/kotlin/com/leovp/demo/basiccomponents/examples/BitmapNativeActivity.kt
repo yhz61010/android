@@ -60,6 +60,7 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
                 Environment.DIRECTORY_PICTURES
             )
         )
+        androidProcessedBmp?.recycle()
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.rotate(180f)
@@ -72,6 +73,7 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
                 Environment.DIRECTORY_PICTURES
             )
         )
+        androidProcessedBmp?.recycle()
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.rotate(270f)
@@ -84,6 +86,7 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
                 Environment.DIRECTORY_PICTURES
             )
         )
+        androidProcessedBmp?.recycle()
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.flipHorizontal()
@@ -96,6 +99,7 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
                 Environment.DIRECTORY_PICTURES
             )
         )
+        androidProcessedBmp?.recycle()
 
         androidCost = measureNanoTime {
             androidProcessedBmp = beautyBmp.flipVertical()
@@ -108,6 +112,8 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
                 Environment.DIRECTORY_PICTURES
             )
         )
+        androidProcessedBmp?.recycle()
+        beautyBmp.recycle()
     }
 
     private fun bitmapProcessByNative(@Suppress("SameParameterValue") @DrawableRes resId: Int) {

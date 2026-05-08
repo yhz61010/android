@@ -48,6 +48,7 @@ void encodedAudioCallback(uint8_t *encodedAudioData, int decodedAudioLength) {
     // Calls my.package.name.JNIReturnExample#javaCallback(float, float);
     gEnv->CallVoidMethod(gObj, constructor, encoded_byte_array);
     gEnv->DeleteLocalRef(encoded_byte_array);
+    gEnv->DeleteLocalRef(clazz);
 }
 
 // =============================

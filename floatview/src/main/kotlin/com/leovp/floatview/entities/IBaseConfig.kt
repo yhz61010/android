@@ -35,4 +35,12 @@ interface IBaseConfig {
      * Surface.ROTATION_270
      */
     var screenOrientation: Int
+
+    /**
+     * When true, the float view adjusts position based on device physical
+     * orientation even when screen rotation is locked by the user.
+     * This uses OrientationEventListener (accelerometer sensor).
+     * Default: false (only follow actual screen rotation).
+     */
+    var followDeviceOrientation: Boolean
 }

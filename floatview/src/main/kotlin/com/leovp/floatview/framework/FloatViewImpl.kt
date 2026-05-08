@@ -6,11 +6,16 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.hardware.display.DisplayManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.Size
-import android.view.IRotationWatcher
+import android.view.Display
 import android.view.MotionEvent
+import android.view.OrientationEventListener
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -30,7 +35,6 @@ import com.leovp.floatview.utils.screenAvailableResolution
 import com.leovp.floatview.utils.screenRealResolution
 import com.leovp.floatview.utils.screenSurfaceRotation
 import com.leovp.floatview.utils.statusBarHeight
-import com.leovp.reflection.wrappers.ServiceManager
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -57,36 +61,62 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private var isClickGesture = true
 
-    private val rotationWatcher = object : IRotationWatcher.Stub() {
-        override fun onRotationChanged(rotation: Int) {
-            // Log.e("LEO-float-view", "tag=${config.tag} onRotationChanged rotation=$rotation " +
-            //     "lastScreenOrientation=$lastScrOri config.screenOrientation=${config.screenOrientation}")
-            if (rotation != lastScrOri) config.customView?.post { updateScreenOrientation(rotation) }
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) {
+            if (displayId != Display.DEFAULT_DISPLAY) return
+            val rotation = displayManager.getDisplay(displayId)?.rotation ?: return
+            if (rotation != lastScrOri) updateScreenOrientation(rotation)
         }
     }
 
+    private val orientationEventListener = object : OrientationEventListener(context) {
+        private var lastDeviceRotation: Int = -1
+
+        override fun onOrientationChanged(orientation: Int) {
+            if (orientation == ORIENTATION_UNKNOWN) return
+            val rotation = when (orientation) {
+                in 45..134 -> Surface.ROTATION_270
+                in 135..224 -> Surface.ROTATION_180
+                in 225..314 -> Surface.ROTATION_90
+                else -> Surface.ROTATION_0
+            }
+            if (rotation != lastDeviceRotation) {
+                lastDeviceRotation = rotation
+                if (rotation != lastScrOri) {
+                    mainHandler.post { updateScreenOrientation(rotation) }
+                }
+            }
+        }
+    }
+
+    // Cached screen dimensions — refreshed only in refreshScreenCache()
+    private var cachedRealResolution: Size = context.screenRealResolution
+    private var cachedAvailableResolution: Size = context.screenAvailableResolution
+    private var cachedStatusBarHeight: Int = context.statusBarHeight
+
+    private fun refreshScreenCache() {
+        cachedRealResolution = context.screenRealResolution
+        cachedAvailableResolution = context.screenAvailableResolution
+        cachedStatusBarHeight = context.statusBarHeight
+    }
+
     private fun getScreenOrientationSize(orientation: Int): Size {
-        // val screenResolution = if (context.canDrawOverlays) context.screenRealResolution else context.screenAvailableResolution
-        val screenResolution = context.screenRealResolution
-        // val widthNecessaryOffset =
-        //         abs(min(context.screenRealResolution.width, context.screenRealResolution.height)
-        //                 - min(context.screenAvailableResolution.width,
-        //             context.screenAvailableResolution.height))
+        val realRes = cachedRealResolution
+        val availRes = cachedAvailableResolution
         val heightNecessaryOffset = abs(
-            max(context.screenRealResolution.width, context.screenRealResolution.height) -
-                max(context.screenAvailableResolution.width, context.screenAvailableResolution.height)
+            max(realRes.width, realRes.height) - max(availRes.width, availRes.height)
         )
         val finalHeightNecessaryOffset = when {
-            isGoogle -> heightNecessaryOffset - context.statusBarHeight
-            else -> abs(
-                max(context.screenRealResolution.width, context.screenRealResolution.height) -
-                    max(context.screenAvailableResolution.width, context.screenAvailableResolution.height)
-            )
+            isGoogle -> heightNecessaryOffset - cachedStatusBarHeight
+            else -> heightNecessaryOffset
         }
-        val curScreenOrientationSize = context.getScreenSize(orientation, screenResolution)
-        // Log.e("LEO-float-view", "getScreenOrientationSize()=$curScreenOrientationSize " +
-        //     "widthOffset=$widthNecessaryOffset heightNecessaryOffset=$heightNecessaryOffset " +
-        //     "heightOffset=$finalHeightNecessaryOffset statusBar=${context.statusBarHeight}")
+        val curScreenOrientationSize = context.getScreenSize(orientation, realRes)
         return Size(curScreenOrientationSize.width, curScreenOrientationSize.height - finalHeightNecessaryOffset)
     }
 
@@ -94,6 +124,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         config.screenOrientation == -1
     } ?: config.screenOrientation
     private var screenOrientSz: Size = getScreenOrientationSize(lastScrOri)
+
+    // Previous layoutParams position for dirty-flag check
+    private var prevLayoutX: Int = Int.MIN_VALUE
+    private var prevLayoutY: Int = Int.MIN_VALUE
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
@@ -109,20 +143,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 firstX = lastX
                 firstY = lastY
                 isClickGesture = true
-                // Log.e("LEO-FV",
-                //     "ACTION_DOWN isPressed=${view.isPressed} hasFocus=${view.hasFocus()} isActivated=${view.isActivated} $view")
                 touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
-                // view.performClick()
-                // Log.e("LEO-FV",
-                //     "ACTION_UP isPressed=${view.isPressed} " +
-                //             "consumeIsAlwaysFalse=$consumeIsAlwaysFalse " +
-                //             "config.autoDock=${config.autoDock} " +
-                //             "hasFocus=${view.hasFocus()} " +
-                //             "isActivated=${view.isActivated} " +
-                //             "isClickGesture=$isClickGesture $view")
                 if (!consumeIsAlwaysFalse && config.dockEdge != DockEdge.NONE) {
                     startDockAnim(layoutParams.x, layoutParams.y, config.dockEdge)
                 }
@@ -142,8 +166,12 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         if (event.pointerCount == 1) {
                             updateLayoutForSticky(deltaX, deltaY)
                             touchConsumedByMove = true
-                            windowManager.updateViewLayout(config.customView, layoutParams)
-                            // Log.e("LEO-float-view", "ACTION_MOVE x=${layoutParams.x} y=${layoutParams.y}")
+                            // Only call updateViewLayout when position actually changed
+                            if (layoutParams.x != prevLayoutX || layoutParams.y != prevLayoutY) {
+                                prevLayoutX = layoutParams.x
+                                prevLayoutY = layoutParams.y
+                                windowManager.updateViewLayout(config.customView, layoutParams)
+                            }
                         } else {
                             touchConsumedByMove = false
                         }
@@ -199,8 +227,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private fun startDockAnim(left: Int, top: Int, dockEdge: DockEdge) {
         config.customView?.let { v ->
-            val floatViewCenterX = left + config.customView!!.width / 2
-            val floatViewCenterY = top + config.customView!!.height / 2
+            val viewWidth = v.width
+            val viewHeight = v.height
+            val floatViewCenterX = left + viewWidth / 2
+            val floatViewCenterY = top + viewHeight / 2
             var animateDirectionForDockFull = DockEdge.NONE
             when (dockEdge) {
                 DockEdge.NONE -> null
@@ -225,14 +255,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 }
 
                 DockEdge.FULL -> {
-                    // Distance to left edge
                     val distToLeft = left - config.edgeMargin
-                    // Distance to right edge
-                    val distToRight = screenOrientSz.width - getFloatViewTopRightPos().x - config.edgeMargin
-                    // Distance to top edge
+                    val distToRight = screenOrientSz.width - (left + viewWidth) - config.edgeMargin
                     val distToTop = top - getTopHeightOffset() - config.edgeMargin
-                    // Distance to bottom edge
-                    val distToBottom = screenOrientSz.height - getFloatViewBottomLeftPos().y - config.edgeMargin
+                    val distToBottom = screenOrientSz.height - (top + viewHeight) - config.edgeMargin
 
                     if (floatViewCenterX <= screenOrientSz.width / 2) { // On left screen
                         if (floatViewCenterY <= screenOrientSz.height / 2) { // Top left
@@ -275,19 +301,22 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             }?.apply {
                 duration = config.dockAnimDuration
                 addUpdateListener {
+                    val value = it.animatedValue as Int
                     when (dockEdge) {
                         DockEdge.NONE -> Unit
-                        DockEdge.LEFT, DockEdge.RIGHT, DockEdge.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
-                        DockEdge.TOP, DockEdge.BOTTOM, DockEdge.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
+                        DockEdge.LEFT, DockEdge.RIGHT, DockEdge.LEFT_RIGHT -> layoutParams.x = value
+                        DockEdge.TOP, DockEdge.BOTTOM, DockEdge.TOP_BOTTOM -> layoutParams.y = value
                         DockEdge.FULL -> {
                             when (animateDirectionForDockFull) {
-                                DockEdge.LEFT, DockEdge.RIGHT -> layoutParams.x = it.animatedValue as Int
-                                DockEdge.TOP, DockEdge.BOTTOM -> layoutParams.y = it.animatedValue as Int
+                                DockEdge.LEFT, DockEdge.RIGHT -> layoutParams.x = value
+                                DockEdge.TOP, DockEdge.BOTTOM -> layoutParams.y = value
                                 else -> Unit
                             }
                         }
                     }
-                    runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { _ ->
+                    try {
+                        windowManager.updateViewLayout(v, layoutParams)
+                    } catch (_: Exception) {
                         cancel()
                     }
                 }
@@ -306,7 +335,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     fun updateFloatViewPosition(x: Int?, y: Int?, accumulateY: Boolean = false) {
         config.customView?.let { v ->
-            runCatching {
+            try {
                 x?.let {
                     val finalX = adjustPosX(x, config.edgeMargin)
                     layoutParams.x = finalX
@@ -317,9 +346,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     layoutParams.y = finalY
                     config.y = finalY
                 }
-                // Log.e("LEO-float-view", "updateFloatViewPosition x=$x y=$y layoutParams=${layoutParams.x}x${layoutParams.y}")
                 windowManager.updateViewLayout(v, layoutParams)
-            }.onFailure { e ->
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
@@ -338,7 +366,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         // Ensure customView is measured and laid out before calculating position
         config.customView?.let { view ->
             if (view.width <= 0 || view.height <= 0) {
-                // Measure and layout the view if not already done
                 view.measure(
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -347,9 +374,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             }
         }
 
-        // Only adjust initial position if it's out of edge margin constraints.
-        // If the initial position is valid (within screen and satisfies edgeMargin),
-        // use the configured x,y directly. EdgeMargin will be enforced during movement.
         val viewWidth = config.customView?.width ?: 0
         val viewHeight = config.customView?.height ?: 0
 
@@ -368,8 +392,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         config.x = finalX
         config.y = finalY
 
-        // Ensure to set the touch listener to the root view.
-        config.customView?.setOnTouchListener(onTouchListener)
+        // Set touch listener on root view and child views with click listeners
+        config.customView?.let { v ->
+            v.setOnTouchListener(onTouchListener)
+            addTouchListenerToChildViews(v, onTouchListener)
+        }
     }
 
     private fun adjustPosX(x: Int, edgeMargin: Int): Int {
@@ -407,56 +434,29 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private fun getFloatViewBottomMaxMargin(): Int =
         screenOrientSz.height - (config.customView?.height ?: 0) - config.edgeMargin
 
-    private fun getFloatViewTopLeftPos(): Point = Point(layoutParams.x, layoutParams.y)
-    private fun getFloatViewTopRightPos(): Point =
-        Point(layoutParams.x + (config.customView?.width ?: 0), layoutParams.y)
-
-    private fun getFloatViewBottomLeftPos(): Point =
-        Point(layoutParams.x, layoutParams.y + (config.customView?.height ?: 0))
-
-    private fun getFloatViewBottomRightPos(): Point = Point(
-        layoutParams.x + (config.customView?.width ?: 0),
-        layoutParams.y + (config.customView?.height ?: 0)
-    )
-
-    private fun getTopHeightOffset(): Int = if (config.immersiveMode) 0 else context.statusBarHeight
+    private fun getTopHeightOffset(): Int = if (config.immersiveMode) 0 else cachedStatusBarHeight
 
     private fun setWindowLayoutParams() {
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = if (config.touchable) {
-                // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             } else {
-                // In ScreenShareMasterActivity demo,
-                // I just want to mask a full screen transparent float window and I can show finger paint on screen.
-                // Meanwhile, I can still touch screen and pass through the float window to the bottom layer just like
-                // no that float window.
-                // In this case, I should set touchable status to `false`.
-
-                // FLAG_NOT_TOUCHABLE will bubble the event to the bottom layer.
-                // However, the float layer itself can not be touched anymore.
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-
-                // or WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
             }
             if (config.systemWindow && context.canDrawOverlays) {
-                // type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 type = when {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     else -> {
                         @Suppress("DEPRECATION")
                         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
-                        // Attention: Add [WindowManager.LayoutParams.TYPE_PHONE] type will fix the following error if API below Android 8.0
-                        // android.view.WindowManager${WindowManager.BadTokenException}:
-                        // Unable to add window -- token null is not valid; is your activity running?
                     }
                 }
             }
 
-            gravity = config.gravity // Default value: Gravity.TOP or Gravity.START
+            gravity = config.gravity
             if (config.fullScreenFloatView) {
                 width = WindowManager.LayoutParams.MATCH_PARENT
                 height = WindowManager.LayoutParams.MATCH_PARENT
@@ -467,18 +467,14 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }
     }
 
-    private fun addTouchListenerToView(view: View, touchListener: View.OnTouchListener) {
+    private fun addTouchListenerToChildViews(view: View, touchListener: View.OnTouchListener) {
         if (view is ViewGroup) {
-            // if (GlobalConstants.DEBUG) LogContext.log.e("Found ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-                // if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for ViewGroup: ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
-            view.children.forEach { child -> addTouchListenerToView(child, touchListener) }
+            view.children.forEach { child -> addTouchListenerToChildViews(child, touchListener) }
         } else {
-            // if (GlobalConstants.DEBUG) LogContext.log.e("Found View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
             if (view.hasOnClickListeners()) {
-                // if (GlobalConstants.DEBUG) LogContext.log.e("setOnTouchListener for View     : ${getResourceEntryName(view.id)}:${view::class.simpleName}")
                 view.setOnTouchListener(touchListener)
             }
         }
@@ -487,20 +483,18 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     @MainThread
     fun updateAutoDock(dockEdge: DockEdge) {
         config.dockEdge = dockEdge
-        val floatViewTopLeft = getFloatViewTopLeftPos()
-        startDockAnim(floatViewTopLeft.x, floatViewTopLeft.y, dockEdge)
+        startDockAnim(layoutParams.x, layoutParams.y, dockEdge)
     }
 
     @MainThread
     fun updateStickyEdge(stickyEdge: StickyEdge) {
         config.stickyEdge = stickyEdge
         updateLayoutForSticky(0, 0)
-        runCatching {
-            // if (config.customView?.windowToken != null) {
-            // Log.e("LEO-float-view", "${config.tag} updateStickyEdge=$stickyEdge x=${config.x} y=${config.y}")
+        try {
             windowManager.updateViewLayout(config.customView, layoutParams)
-            // }
-        }.onFailure { e -> e.printStackTrace() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     @MainThread
@@ -508,6 +502,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         val oldScreenSize = screenOrientSz
         lastScrOri = orientation
         config.screenOrientation = orientation
+        refreshScreenCache()
         screenOrientSz = getScreenOrientationSize(orientation)
 
         // Scale position proportionally to maintain relative position after orientation change
@@ -521,8 +516,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }
 
         if (config.dockEdge != DockEdge.NONE) {
-            // When dock edge is active, only run dock animation.
-            // Sticky edge will fight with the async dock animation if called here.
             updateAutoDock(config.dockEdge)
         } else {
             updateStickyEdge(config.stickyEdge)
@@ -543,26 +536,33 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 )
             }
 
-            // Log.e("LEO-float-view", "1 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             remove(true)
-            // Log.e("LEO-float-view", "1.2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
-            ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
+            registerListeners()
             init()
-            // Log.e("LEO-float-view", "2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             windowManager.addView(config.customView!!, layoutParams)
-            addTouchListenerToView(config.customView!!, onTouchListener)
             visible(true)
-            // Log.e("LEO-float-view", "3 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
         }.onFailure {
-            ServiceManager.windowManager?.removeRotationWatcher(rotationWatcher)
+            unregisterListeners()
             it.printStackTrace()
         }
     }
 
+    private fun registerListeners() {
+        displayManager.registerDisplayListener(displayListener, mainHandler)
+        if (config.followDeviceOrientation && orientationEventListener.canDetectOrientation()) {
+            orientationEventListener.enable()
+        }
+    }
+
+    private fun unregisterListeners() {
+        displayManager.unregisterDisplayListener(displayListener)
+        orientationEventListener.disable()
+    }
+
     fun remove(immediately: Boolean = false) {
-        ServiceManager.windowManager?.removeRotationWatcher(rotationWatcher)
+        unregisterListeners()
         if (immediately) {
             config.customView?.let { v ->
                 hideCustomView(v)
@@ -626,14 +626,4 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         view.visibility = View.GONE
         config.isDisplaying = false
     }
-
-    // private fun setCustomViewVisibility(show: Boolean) {
-    //     config.customView?.visibility = if (show) {
-    //         config.isDisplaying = true
-    //         View.VISIBLE
-    //     } else {
-    //         config.isDisplaying = false
-    //         View.GONE
-    //     }
-    // }
 }

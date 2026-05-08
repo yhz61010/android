@@ -1,6 +1,7 @@
 package com.leovp.floatview.framework
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
@@ -89,7 +90,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         return Size(curScreenOrientationSize.width, curScreenOrientationSize.height - finalHeightNecessaryOffset)
     }
 
-    private var lastScrOri = context.screenSurfaceRotation.takeIf {
+    @Volatile private var lastScrOri = context.screenSurfaceRotation.takeIf {
         config.screenOrientation == -1
     } ?: config.screenOrientation
     private var screenOrientSz: Size = getScreenOrientationSize(lastScrOri)
@@ -196,7 +197,6 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         }
     }
 
-    @SuppressLint("ObjectAnimatorBinding")
     private fun startDockAnim(left: Int, top: Int, dockEdge: DockEdge) {
         config.customView?.let { v ->
             val floatViewCenterX = left + config.customView!!.width / 2
@@ -204,95 +204,94 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             var animateDirectionForDockFull = DockEdge.NONE
             when (dockEdge) {
                 DockEdge.NONE -> null
-                DockEdge.LEFT -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
-                DockEdge.RIGHT -> ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
-                DockEdge.TOP -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
-                DockEdge.BOTTOM -> ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
+                DockEdge.LEFT -> ValueAnimator.ofInt(left, getFloatViewLeftMinMargin())
+                DockEdge.RIGHT -> ValueAnimator.ofInt(left, getFloatViewRightMaxMargin())
+                DockEdge.TOP -> ValueAnimator.ofInt(top, getFloatViewTopMinMargin())
+                DockEdge.BOTTOM -> ValueAnimator.ofInt(top, getFloatViewBottomMaxMargin())
                 DockEdge.LEFT_RIGHT -> {
                     if (floatViewCenterX <= screenOrientSz.width / 2) {
-                        ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
+                        ValueAnimator.ofInt(left, getFloatViewLeftMinMargin())
                     } else {
-                        ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
+                        ValueAnimator.ofInt(left, getFloatViewRightMaxMargin())
                     }
                 }
 
                 DockEdge.TOP_BOTTOM -> {
                     if (floatViewCenterY <= screenOrientSz.height / 2) {
-                        ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
+                        ValueAnimator.ofInt(top, getFloatViewTopMinMargin())
                     } else {
-                        ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
+                        ValueAnimator.ofInt(top, getFloatViewBottomMaxMargin())
                     }
                 }
 
                 DockEdge.FULL -> {
+                    // Distance to left edge
+                    val distToLeft = left - config.edgeMargin
+                    // Distance to right edge
+                    val distToRight = screenOrientSz.width - getFloatViewTopRightPos().x - config.edgeMargin
+                    // Distance to top edge
+                    val distToTop = top - getTopHeightOffset() - config.edgeMargin
+                    // Distance to bottom edge
+                    val distToBottom = screenOrientSz.height - getFloatViewBottomLeftPos().y - config.edgeMargin
+
                     if (floatViewCenterX <= screenOrientSz.width / 2) { // On left screen
-                        if (floatViewCenterY <= screenOrientSz.height / 2) { // On top screen // Top left
-                            if (left <= top - getTopHeightOffset()) { // Animate to left
+                        if (floatViewCenterY <= screenOrientSz.height / 2) { // Top left
+                            if (distToLeft <= distToTop) {
                                 animateDirectionForDockFull = DockEdge.LEFT
-                                ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
-                            } else { // Animate to top
+                                ValueAnimator.ofInt(left, getFloatViewLeftMinMargin())
+                            } else {
                                 animateDirectionForDockFull = DockEdge.TOP
-                                ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
+                                ValueAnimator.ofInt(top, getFloatViewTopMinMargin())
                             }
-                        } else {
-                            // On bottom screen // Bottom left
-                            if (left <= screenOrientSz.height - getFloatViewBottomLeftPos().y) { // Animate to left
+                        } else { // Bottom left
+                            if (distToLeft <= distToBottom) {
                                 animateDirectionForDockFull = DockEdge.LEFT
-                                ObjectAnimator.ofInt(v, "translationX", left, getFloatViewLeftMinMargin())
-                            } else { // Animate to bottom
+                                ValueAnimator.ofInt(left, getFloatViewLeftMinMargin())
+                            } else {
                                 animateDirectionForDockFull = DockEdge.BOTTOM
-                                ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
+                                ValueAnimator.ofInt(top, getFloatViewBottomMaxMargin())
                             }
                         }
                     } else { // On right screen
-                        if (floatViewCenterY <= screenOrientSz.height / 2) { // On top screen // Top right
-                            // Animate to top
-                            if (getFloatViewTopRightPos().y - getTopHeightOffset()
-                                <= screenOrientSz.width - getFloatViewTopRightPos().x
-                            ) {
+                        if (floatViewCenterY <= screenOrientSz.height / 2) { // Top right
+                            if (distToTop <= distToRight) {
                                 animateDirectionForDockFull = DockEdge.TOP
-                                ObjectAnimator.ofInt(v, "translationY", top, getFloatViewTopMinMargin())
-                            } else { // Animate to right
+                                ValueAnimator.ofInt(top, getFloatViewTopMinMargin())
+                            } else {
                                 animateDirectionForDockFull = DockEdge.RIGHT
-                                ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
+                                ValueAnimator.ofInt(left, getFloatViewRightMaxMargin())
                             }
-                        } else { // On bottom screen // Bottom right
-                            // Animate to bottom
-                            if (screenOrientSz.height - getFloatViewBottomRightPos().y <=
-                                screenOrientSz.width - getFloatViewBottomRightPos().x
-                            ) {
+                        } else { // Bottom right
+                            if (distToBottom <= distToRight) {
                                 animateDirectionForDockFull = DockEdge.BOTTOM
-                                ObjectAnimator.ofInt(v, "translationY", top, getFloatViewBottomMaxMargin())
-                            } else { // Animate to right
+                                ValueAnimator.ofInt(top, getFloatViewBottomMaxMargin())
+                            } else {
                                 animateDirectionForDockFull = DockEdge.RIGHT
-                                ObjectAnimator.ofInt(v, "translationX", left, getFloatViewRightMaxMargin())
+                                ValueAnimator.ofInt(left, getFloatViewRightMaxMargin())
                             }
                         }
                     }
                 }
             }?.apply {
                 duration = config.dockAnimDuration
-                start()
-            }?.addUpdateListener {
-                when (dockEdge) {
-                    DockEdge.NONE -> Unit
-                    DockEdge.LEFT, DockEdge.RIGHT, DockEdge.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
-
-                    DockEdge.TOP, DockEdge.BOTTOM, DockEdge.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
-
-                    DockEdge.FULL -> {
-                        when (animateDirectionForDockFull) {
-                            DockEdge.LEFT, DockEdge.RIGHT -> layoutParams.x = it.animatedValue as Int
-
-                            DockEdge.TOP, DockEdge.BOTTOM -> layoutParams.y = it.animatedValue as Int
-
-                            else -> Unit
+                addUpdateListener {
+                    when (dockEdge) {
+                        DockEdge.NONE -> Unit
+                        DockEdge.LEFT, DockEdge.RIGHT, DockEdge.LEFT_RIGHT -> layoutParams.x = it.animatedValue as Int
+                        DockEdge.TOP, DockEdge.BOTTOM, DockEdge.TOP_BOTTOM -> layoutParams.y = it.animatedValue as Int
+                        DockEdge.FULL -> {
+                            when (animateDirectionForDockFull) {
+                                DockEdge.LEFT, DockEdge.RIGHT -> layoutParams.x = it.animatedValue as Int
+                                DockEdge.TOP, DockEdge.BOTTOM -> layoutParams.y = it.animatedValue as Int
+                                else -> Unit
+                            }
                         }
                     }
+                    runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { _ ->
+                        cancel()
+                    }
                 }
-                runCatching { windowManager.updateViewLayout(v, layoutParams) }.onFailure { _ ->
-                    it.cancel() // Cancel animation
-                }
+                start()
             }
         }
     }
@@ -374,9 +373,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     private fun adjustPosX(x: Int, edgeMargin: Int): Int {
+        val viewWidth = config.customView?.width ?: return x
         if (x < edgeMargin || x <= 0) return edgeMargin
-        return if ((x + (config.customView?.width ?: 0) + edgeMargin) >= screenOrientSz.width) {
-            screenOrientSz.width - (config.customView?.width ?: 0) - edgeMargin
+        return if ((x + viewWidth + edgeMargin) >= screenOrientSz.width) {
+            screenOrientSz.width - viewWidth - edgeMargin
         } else {
             x
         }
@@ -387,15 +387,13 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
      * the result will accumulate `y`.
      */
     private fun adjustPosY(y: Int, edgeMargin: Int, considerY: Boolean = false): Int {
+        val viewHeight = config.customView?.height ?: return y
         val drawHeightOffset = getTopHeightOffset()
-        // Log.e("LEO-float-view",
-        //     "drawHeightOffset=$drawHeightOffset y=$y edgeMargin=$edgeMargin " +
-        //     "config.customView?.height=${config.customView?.height} screen.height=${screenOrientSz.height}")
         if (y <= edgeMargin + drawHeightOffset) {
             return edgeMargin + drawHeightOffset + (y.takeIf { considerY } ?: 0)
         }
-        return if ((y + (config.customView?.height ?: 0) + edgeMargin) >= screenOrientSz.height) {
-            screenOrientSz.height - (config.customView?.height ?: 0) - edgeMargin
+        return if ((y + viewHeight + edgeMargin) >= screenOrientSz.height) {
+            screenOrientSz.height - viewHeight - edgeMargin
         } else {
             y
         }
@@ -522,8 +520,13 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
         }
 
-        updateAutoDock(config.dockEdge)
-        updateStickyEdge(config.stickyEdge)
+        if (config.dockEdge != DockEdge.NONE) {
+            // When dock edge is active, only run dock animation.
+            // Sticky edge will fight with the async dock animation if called here.
+            updateAutoDock(config.dockEdge)
+        } else {
+            updateStickyEdge(config.stickyEdge)
+        }
     }
 
     @Suppress("unused")
@@ -546,8 +549,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
             init()
             // Log.e("LEO-float-view", "2 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
-            addTouchListenerToView(config.customView!!, onTouchListener)
             windowManager.addView(config.customView!!, layoutParams)
+            addTouchListenerToView(config.customView!!, onTouchListener)
             visible(true)
             // Log.e("LEO-float-view", "3 show() x=${config.x} y=${config.y} lastScrOri=$lastScrOri scrOriSz=$screenOrientSz")
             updateAutoDock(config.dockEdge)

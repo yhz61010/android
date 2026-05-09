@@ -348,7 +348,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 }
                 windowManager.updateViewLayout(v, layoutParams)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "updateFloatViewPosition failed", e)
             }
         }
     }
@@ -493,7 +493,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         try {
             windowManager.updateViewLayout(config.customView, layoutParams)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "updateStickyEdge failed", e)
         }
     }
 
@@ -543,9 +543,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-        }.onFailure {
+        }.onFailure { e ->
             unregisterListeners()
-            it.printStackTrace()
+            Log.e(TAG, "show() failed", e)
         }
     }
 

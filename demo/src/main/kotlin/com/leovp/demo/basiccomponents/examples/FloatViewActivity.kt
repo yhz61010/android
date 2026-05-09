@@ -71,7 +71,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
         FloatView.with(this)
             .layout(R.layout.floatview) { v ->
                 v.findViewById<TextView>(R.id.tvText).text =
-                    "f2\nImmersive:ON\nEdge 20px\nDock:${FloatView.with("f1").dockEdge}"
+                    "f2\nImmersive:OFF\nEdge 20px\nDock:${FloatView.with("f1").dockEdge}"
                 v.findViewById<View>(R.id.floatViewBtn)
                     .setOnSingleClickListener { toast("Win2 Button") }
                 v.findViewById<View>(R.id.linearLayout)
@@ -79,7 +79,7 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
             }
             .meta { _, _ ->
                 tag = "f2"
-                immersiveMode = true
+                immersiveMode = false
                 edgeMargin = 20
                 x = 100
                 y = 600

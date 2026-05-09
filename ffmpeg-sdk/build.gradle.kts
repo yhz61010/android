@@ -13,8 +13,9 @@ android {
             // abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
             abiFilters += setOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
         }
-        
+
         // Support Android 16KB page size for arm64-v8a architecture
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments += listOf(

@@ -6,7 +6,7 @@ import androidx.annotation.Keep
  * Author: Michael Leo
  * Date: 2021/6/11 09:57
  */
-@Keep
+@Keep // Prevents ProGuard/R8 from removing the nativeHandle field used by JNI.
 class H264HevcDecoder {
     companion object {
         init {
@@ -17,6 +17,7 @@ class H264HevcDecoder {
         }
     }
 
+    /** Stores the native C++ object pointer. Accessed by JNI only. */
     @Suppress("unused")
     private var nativeHandle: Long = 0L
 

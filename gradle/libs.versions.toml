@@ -12,7 +12,7 @@ cmake = "4.1.2"
 versionCode = "26"
 versionName = "2.6"
 
-leo-version = "5.14.2"
+leo-version = "5.14.3"
 
 #===================
 #===== Compile =====

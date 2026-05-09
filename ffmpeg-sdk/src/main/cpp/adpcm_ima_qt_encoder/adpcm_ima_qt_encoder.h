@@ -3,6 +3,7 @@
 
 #include <jni.h>
 #include <string>
+#include <functional>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,21 +20,24 @@ extern "C" {
 }
 #endif
 
-typedef void(*pCallbackFunc)(uint8_t *encodedAudioData, int decodedAudioLength);
+using EncoderCallback = std::function<void(uint8_t *encodedAudioData, int encodedAudioLength)>;
 
 class AdpcmImaQtEncoder {
 private:
     AVCodecContext *ctx = nullptr;
     AVFrame *frame = nullptr;
     AVPacket *pkt = nullptr;
+    bool valid = false;
 
-    static void do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, pCallbackFunc callback);
+    static void do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, const EncoderCallback &callback);
 
 public:
     AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate);
     ~AdpcmImaQtEncoder();
 
-    void encode(const uint8_t *pcmByteArray, int pcmLen, pCallbackFunc callback);
+    [[nodiscard]] bool isValid() const { return valid; }
+
+    void encode(const uint8_t *pcmByteArray, int pcmLen, const EncoderCallback &callback);
 };
 
 #endif //LEOANDROIDBASEUTIL_ADPCM_IMA_QT_ENCODER_H

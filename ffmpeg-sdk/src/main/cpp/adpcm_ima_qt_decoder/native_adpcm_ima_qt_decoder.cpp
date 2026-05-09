@@ -4,27 +4,50 @@
 
 #define ADPCM_PACKAGE_BASE "com/leovp/ffmpeg/audio/adpcm/"
 
-AdpcmImaQtDecoder *pDecoder = nullptr;
-
-JNIEXPORT jint JNICALL init(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj, jint sampleRate, jint channels) {
-//    LOGE("init decoder=%p", pDecoder);
-    if (nullptr == pDecoder) {
-        pDecoder = new AdpcmImaQtDecoder(sampleRate, channels);
-        return 0;
-    }
-    return -1;
+static jfieldID getHandleField(JNIEnv *env, jobject obj) {
+    jclass clazz = env->GetObjectClass(obj);
+    jfieldID fid = env->GetFieldID(clazz, "nativeHandle", "J");
+    env->DeleteLocalRef(clazz);
+    return fid;
 }
 
-JNIEXPORT jint JNICALL chunkSize(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
+static AdpcmImaQtDecoder *getDecoder(JNIEnv *env, jobject obj) {
+    jlong handle = env->GetLongField(obj, getHandleField(env, obj));
+    return reinterpret_cast<AdpcmImaQtDecoder *>(handle);
+}
+
+JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels) {
+    if (getDecoder(env, obj) != nullptr) {
+        LOGE("Decoder already initialized");
+        return -1;
+    }
+    auto *pDecoder = new(std::nothrow) AdpcmImaQtDecoder(sampleRate, channels);
+    if (pDecoder == nullptr || !pDecoder->isValid()) {
+        delete pDecoder;
+        return -2;
+    }
+    env->SetLongField(obj, getHandleField(env, obj), reinterpret_cast<jlong>(pDecoder));
+    return 0;
+}
+
+JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj) {
+    auto *pDecoder = getDecoder(env, obj);
+    if (pDecoder == nullptr) return -1;
     return 34 * pDecoder->getChannels();
 }
 
-JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
-    delete pDecoder;
-    pDecoder = nullptr;
+JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+    auto *pDecoder = getDecoder(env, obj);
+    if (pDecoder != nullptr) {
+        delete pDecoder;
+        env->SetLongField(obj, getHandleField(env, obj), 0L);
+    }
 }
 
-JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject obj, jbyteArray adpcmByteArray) {
+JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray) {
+    auto *pDecoder = getDecoder(env, obj);
+    if (pDecoder == nullptr) return nullptr;
+
     int adpcmLen = env->GetArrayLength(adpcmByteArray);
     if (adpcmLen != pDecoder->getCodecContext()->ch_layout.nb_channels * 34) {
         LOGE("Decoder: ADPCM bytes must be %d", pDecoder->getCodecContext()->ch_layout.nb_channels * 34);
@@ -36,17 +59,18 @@ JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, __attribute__((unused)) jobject
     int pcmLength;
     uint8_t *pcmBytes = pDecoder->decode(adpcm_unit8_t_array, adpcmLen, &pcmLength);
 
-//    LOGE("Decoder: adpcmLen=%d pcmLength=%d", adpcmLen, pcmLength);
-
-    jbyteArray pcm_byte_array = env->NewByteArray(pcmLength);
-    env->SetByteArrayRegion(pcm_byte_array, 0, pcmLength, reinterpret_cast<const jbyte *>(pcmBytes));
+    jbyteArray pcm_byte_array = nullptr;
+    if (pcmBytes != nullptr) {
+        pcm_byte_array = env->NewByteArray(pcmLength);
+        env->SetByteArrayRegion(pcm_byte_array, 0, pcmLength, reinterpret_cast<const jbyte *>(pcmBytes));
+        delete[] pcmBytes;
+    }
     delete[] adpcm_unit8_t_array;
-    delete pcmBytes;
     return pcm_byte_array;
 }
 
 JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
-    return env->NewStringUTF("0.1.0");
+    return env->NewStringUTF("1.0.0");
 }
 
 // =============================

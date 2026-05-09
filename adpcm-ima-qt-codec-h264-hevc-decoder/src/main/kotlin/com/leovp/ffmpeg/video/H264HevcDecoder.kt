@@ -17,6 +17,9 @@ class H264HevcDecoder {
         }
     }
 
+    @Suppress("unused")
+    private var nativeHandle: Long = 0L
+
     fun init(
         vpsBytes: ByteArray?,
         spsBytes: ByteArray,

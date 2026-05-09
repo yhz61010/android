@@ -8,21 +8,29 @@ AdpcmImaQtDecoder::AdpcmImaQtDecoder(int sampleRate, int channels) {
     this->channels = channels;
 
     const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_ADPCM_IMA_QT);
+    if (!codec) {
+        LOGE("Decoder: ADPCM IMA QT decoder not found");
+        return;
+    }
     ctx = avcodec_alloc_context3(codec);
+    if (!ctx) {
+        LOGE("Decoder: Could not allocate codec context");
+        return;
+    }
     ctx->sample_rate = sampleRate;
     ctx->ch_layout = channels == 2 ? (AVChannelLayout) AV_CHANNEL_LAYOUT_STEREO : (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
-    // Old ffmpeg version usage.
-    // ctx->channels = channels;
-    // ctx->channel_layout = av_get_default_channel_layout(ctx->channels);
 
     int ret = avcodec_open2(ctx, codec, nullptr);
     if (ret < 0) {
         LOGE("Decoder: avcodec_open2 error. code=%d", ret);
-        exit(0);
+        avcodec_free_context(&ctx);
+        ctx = nullptr;
+        return;
     }
 
     frame = av_frame_alloc();
     pkt = av_packet_alloc();
+    valid = true;
 }
 
 AdpcmImaQtDecoder::~AdpcmImaQtDecoder() {
@@ -72,8 +80,10 @@ uint8_t *AdpcmImaQtDecoder::decode(uint8_t *adpcmByteArray, int adpcmLength, int
             subI += 2;
         }
         return outPcmBytes;
-    } else { // For mono
-        return left_channel_data;
+    } else { // For mono — copy FFmpeg-owned data to a new buffer
+        auto *outPcmBytes = new uint8_t[pcmSize];
+        memcpy(outPcmBytes, left_channel_data, pcmSize);
+        return outPcmBytes;
     }
 }
 
@@ -81,7 +91,7 @@ AVCodecContext *AdpcmImaQtDecoder::getCodecContext() {
     return ctx;
 }
 
-__attribute__((unused)) int AdpcmImaQtDecoder::getSampleRate() const {
+[[maybe_unused]] int AdpcmImaQtDecoder::getSampleRate() const {
     return sampleRate;
 }
 

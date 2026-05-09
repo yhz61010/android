@@ -21,6 +21,9 @@ class AdpcmImaQtEncoder private constructor() {
         init(sampleRate, channels, bitRate)
     }
 
+    @Suppress("unused")
+    private var nativeHandle: Long = 0L
+
     var encodedCallback: EncodeAudioCallback? = null
 
     private external fun init(sampleRate: Int, channels: Int, bitRate: Int): Int

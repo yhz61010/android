@@ -16,6 +16,9 @@ class AdpcmImaQtDecoder private constructor() {
         }
     }
 
+    @Suppress("unused")
+    private var nativeHandle: Long = 0L
+
     constructor(sampleRate: Int, channels: Int) : this() {
         init(sampleRate, channels)
     }

@@ -16,7 +16,6 @@
       "Bash(do echo:*)",
       "Read(*)",
       "Bash(done)",
-      "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",

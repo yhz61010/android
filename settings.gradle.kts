@@ -132,7 +132,6 @@ include(
     ":lib-common-android",
     ":lib-common-kotlin",
     ":lib-mvvm",
-    ":lib-compose"
-
-    // "ffmpeg-sdk"
+    ":lib-compose",
+     "ffmpeg-sdk"
 )

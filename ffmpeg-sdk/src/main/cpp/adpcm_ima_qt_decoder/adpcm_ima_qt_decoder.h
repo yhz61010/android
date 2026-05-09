@@ -23,16 +23,23 @@ private:
 
     int sampleRate;
     int channels;
+    bool valid = false;
 public:
     AdpcmImaQtDecoder(int sampleRate, int channels);
 
     ~AdpcmImaQtDecoder();
 
+    [[nodiscard]] bool isValid() const { return valid; }
+
+    /**
+     * Decodes ADPCM data to PCM. The returned buffer is always newly allocated
+     * and must be freed by the caller with delete[].
+     */
     uint8_t *decode(uint8_t *adpcmByteArray, int length, int *outPcmLength);
 
-    __attribute__((unused)) __attribute__((unused)) int getSampleRate() const;
+    [[maybe_unused]] [[nodiscard]] int getSampleRate() const;
 
-    int getChannels() const;
+    [[nodiscard]] int getChannels() const;
 
     AVCodecContext *getCodecContext();
 };

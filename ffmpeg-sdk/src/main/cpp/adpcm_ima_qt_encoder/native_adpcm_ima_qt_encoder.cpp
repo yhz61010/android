@@ -4,51 +4,65 @@
 
 #define ADPCM_PACKAGE_BASE "com/leovp/ffmpeg/audio/adpcm/"
 
-AdpcmImaQtEncoder *pEncoder = nullptr;
-
-JNIEnv *gEnv;
-jobject gObj;
-
-JNIEXPORT jint JNICALL init(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj, jint sampleRate, jint channels, jint bitRate) {
-    if (nullptr == pEncoder) {
-        pEncoder = new AdpcmImaQtEncoder(sampleRate, channels, bitRate);
-        return 0;
-    }
-    return -1;
+static jfieldID getHandleField(JNIEnv *env, jobject obj) {
+    jclass clazz = env->GetObjectClass(obj);
+    jfieldID fid = env->GetFieldID(clazz, "nativeHandle", "J");
+    env->DeleteLocalRef(clazz);
+    return fid;
 }
 
-JNIEXPORT void JNICALL release(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject obj) {
-    delete pEncoder;
-    pEncoder = nullptr;
+static AdpcmImaQtEncoder *getEncoder(JNIEnv *env, jobject obj) {
+    jlong handle = env->GetLongField(obj, getHandleField(env, obj));
+    return reinterpret_cast<AdpcmImaQtEncoder *>(handle);
+}
+
+JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels, jint bitRate) {
+    if (getEncoder(env, obj) != nullptr) {
+        LOGE("Encoder already initialized");
+        return -1;
+    }
+    auto *pEncoder = new(std::nothrow) AdpcmImaQtEncoder(sampleRate, channels, bitRate);
+    if (pEncoder == nullptr || !pEncoder->isValid()) {
+        delete pEncoder;
+        return -2;
+    }
+    env->SetLongField(obj, getHandleField(env, obj), reinterpret_cast<jlong>(pEncoder));
+    return 0;
+}
+
+JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
+    auto *pEncoder = getEncoder(env, obj);
+    if (pEncoder != nullptr) {
+        delete pEncoder;
+        env->SetLongField(obj, getHandleField(env, obj), 0L);
+    }
 }
 
 JNIEXPORT void JNICALL encode(JNIEnv *env, jobject obj, jbyteArray pcmByteArray) {
-    gEnv = env;
-    gObj = obj;
+    auto *pEncoder = getEncoder(env, obj);
+    if (pEncoder == nullptr) return;
+
     int pcmLen = env->GetArrayLength(pcmByteArray);
     auto *pcm_unit8_t_array = new uint8_t[pcmLen];
     env->GetByteArrayRegion(pcmByteArray, 0, pcmLen, reinterpret_cast<jbyte *>(pcm_unit8_t_array));
-    pEncoder->encode(pcm_unit8_t_array, pcmLen, encodedAudioCallback);
+
+    // Cache jclass and jmethodID for the callback
+    jclass clazz = env->GetObjectClass(obj);
+    jmethodID callbackMethod = env->GetMethodID(clazz, "encodedAudioCallback", "([B)V");
+    env->DeleteLocalRef(clazz);
+
+    pEncoder->encode(pcm_unit8_t_array, pcmLen, [env, obj, callbackMethod](uint8_t *data, int len) {
+        jbyteArray encoded_byte_array = env->NewByteArray(len);
+        env->SetByteArrayRegion(encoded_byte_array, 0, len, reinterpret_cast<const jbyte *>(data));
+        env->CallVoidMethod(obj, callbackMethod, encoded_byte_array);
+        env->DeleteLocalRef(encoded_byte_array);
+    });
+
     delete[] pcm_unit8_t_array;
 }
 
 JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
-    return env->NewStringUTF("0.1.0");
-}
-
-void encodedAudioCallback(uint8_t *encodedAudioData, int decodedAudioLength) {
-//    LOGE("encodedAudioCallback decodedAudioLength=%d gEnv=%p", decodedAudioLength, gEnv);
-    jbyteArray encoded_byte_array = gEnv->NewByteArray(decodedAudioLength);
-    gEnv->SetByteArrayRegion(encoded_byte_array, 0, decodedAudioLength, reinterpret_cast<const jbyte *>(encodedAudioData));
-
-    // Get the class of the current calling object
-    jclass clazz = gEnv->GetObjectClass(gObj);
-    // Get the method id of an empty constructor in clazz
-    jmethodID constructor = gEnv->GetMethodID(clazz, "encodedAudioCallback", "([B)V");
-    // Calls my.package.name.JNIReturnExample#javaCallback(float, float);
-    gEnv->CallVoidMethod(gObj, constructor, encoded_byte_array);
-    gEnv->DeleteLocalRef(encoded_byte_array);
-    gEnv->DeleteLocalRef(clazz);
+    return env->NewStringUTF("1.0.0");
 }
 
 // =============================

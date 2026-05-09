@@ -133,5 +133,5 @@ include(
     ":lib-common-kotlin",
     ":lib-mvvm",
     ":lib-compose",
-     "ffmpeg-sdk"
+    "ffmpeg-sdk"
 )

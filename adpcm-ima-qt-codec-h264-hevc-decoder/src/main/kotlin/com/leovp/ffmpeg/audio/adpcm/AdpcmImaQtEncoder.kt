@@ -7,7 +7,7 @@ import com.leovp.ffmpeg.audio.base.EncodeAudioCallback
  * Author: Michael Leo
  * Date: 2021/6/11 09:57
  */
-@Keep
+@Keep // Prevents ProGuard/R8 from removing the nativeHandle field used by JNI.
 class AdpcmImaQtEncoder private constructor() {
     companion object {
         init {
@@ -21,6 +21,7 @@ class AdpcmImaQtEncoder private constructor() {
         init(sampleRate, channels, bitRate)
     }
 
+    /** Stores the native C++ object pointer. Accessed by JNI only. */
     @Suppress("unused")
     private var nativeHandle: Long = 0L
 

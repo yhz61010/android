@@ -5,4 +5,4 @@ jdk:
 #  - yes | sdkmanager --install "ndk;21.1.6352462" "cmake;3.18.1"
 
 before_install:
-  - sdkmanager --install "cmake;4.1.2"
+  - yes | sdkmanager --install "cmake;3.22.1"

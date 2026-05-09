@@ -12,6 +12,7 @@ android {
 
     defaultConfig {
         // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 cppFlags += setOf("")

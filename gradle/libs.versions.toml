@@ -7,12 +7,12 @@ min-sdk = "21"
 target-sdk = "36"
 
 ndk-sdk = "29.0.14206865"
-cmake = "4.1.2"
+cmake = "3.22.1"
 
 versionCode = "26"
 versionName = "2.6"
 
-leo-version = "5.14.4"
+leo-version = "5.14.5"
 
 #===================
 #===== Compile =====

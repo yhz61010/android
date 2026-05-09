@@ -2,7 +2,7 @@
 1. Play raw H.264
 2. Convert video to raw stream
 3. How to compile `libyuv`
-4. How to compile `yuv-sdk`
+4. How to compile `yuv`
 
 **Attention:**
 The base `libyuv.so` does not include the `JPEG` related library.
@@ -58,7 +58,7 @@ $ mkdir -p libyuv/jni
 $ cd libyuv/jni
 $ git clone https://chromium.googlesource.com/libyuv/libyuv .
 # or unzip `libyuv-20220324.tar.gz` file
-$ tar xvzf ../../yuv-sdk/libyuv-20220824.tar.gz --strip-components 1
+$ tar xvzf ../../yuv/libyuv-20220824.tar.gz --strip-components 1
 ```
 
 ### Modify `./libyuv/jni/Android.mk` file
@@ -83,7 +83,7 @@ endif
 ```
 
 ### Compile
-You can run the handy shell script to compile `libyuv` and `yuv-sdk`:
+You can run the handy shell script to compile `libyuv` and `yuv`:
 ```shell
 sh compile_all_in_one.sh
 ```
@@ -96,32 +96,32 @@ $ ndk-build
 You'll get the `so` files in the generated folder 
 `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
 
-## How to compile `yuv-sdk`
-First, copy `include` folder from `libyuv/jni` to `yuv-sdk/src/main/cpp`.
+## How to compile `yuv`
+First, copy `include` folder from `libyuv/jni` to `yuv/src/main/cpp`.
 ```shell
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
-$ rm -rf ../yuv-sdk/src/main/cpp/include
-$ mkdir -p ../yuv-sdk/src/main/cpp/include
-$ cp -R jni/include/ ../yuv-sdk/src/main/cpp/include
+$ rm -rf ../yuv/src/main/cpp/include
+$ mkdir -p ../yuv/src/main/cpp/include
+$ cp -R jni/include/ ../yuv/src/main/cpp/include
 ```
-Then Copy `so` files from `libyuv/libs` to `yuv-sdk/libs`.
+Then Copy `so` files from `libyuv/libs` to `yuv/libs`.
 ```shell
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
-$ rm -rf ../yuv-sdk/libs/
-$ mkdir -p ../yuv-sdk/libs/armeabi-v7a
-$ mkdir -p ../yuv-sdk/libs/arm64-v8a
-$ cp -R libs/armeabi-v7a/ ../yuv-sdk/libs/armeabi-v7a/
-$ cp -R libs/arm64-v8a/ ../yuv-sdk/libs/arm64-v8a/
+$ rm -rf ../yuv/libs/
+$ mkdir -p ../yuv/libs/armeabi-v7a
+$ mkdir -p ../yuv/libs/arm64-v8a
+$ cp -R libs/armeabi-v7a/ ../yuv/libs/armeabi-v7a/
+$ cp -R libs/arm64-v8a/ ../yuv/libs/arm64-v8a/
 ```
 
-Finally, you have three ways to compile `yuv-sdk` module:
+Finally, you have three ways to compile `yuv` module:
 - Compile with `gradlew` command.
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
-$ ./gradlew :yuv-sdk:assemble
+$ ./gradlew :yuv:assemble
 ```
 - Compile from `Gradle` sidebar.
-Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> yuv-sdk -> build -> assemble **.
+Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> yuv -> build -> assemble **.
 - Compile from `Build` menu.
-Select `yuv-sdk` module then click from menu **Build -> Make Module 'LeoAndroidBaseUtil.yuv-sdk'**.
+Select `yuv` module then click from menu **Build -> Make Module 'LeoAndroidBaseUtil.yuv'**.
 You can select the compile option from `Build Variants` menu. 

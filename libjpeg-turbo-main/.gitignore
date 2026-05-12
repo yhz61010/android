@@ -4,3 +4,4 @@
 /libs/**/lib/cmake/
 /libs/**/share/
 /libs/**/bin/
+/libjpeg-turbo-**/

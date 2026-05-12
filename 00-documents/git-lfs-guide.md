@@ -33,6 +33,12 @@ git lfs track "*.tar.xz"
 git lfs track "*.tar.bz2"
 git lfs track "*.tar.gz"
 git lfs track "*.mp3"
+git lfs track "*.wav"
+git lfs track "*.pcm"
+git lfs track "*.h264"
+git lfs track "*.h265"
+git lfs track "*.caf"
+git lfs track "*.ima4"
 ```
 
 This automatically generates rules in `.gitattributes`:
@@ -46,6 +52,12 @@ This automatically generates rules in `.gitattributes`:
 *.tar.bz2 filter=lfs diff=lfs merge=lfs -text
 *.tar.gz filter=lfs diff=lfs merge=lfs -text
 *.mp3 filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.pcm filter=lfs diff=lfs merge=lfs -text
+*.h264 filter=lfs diff=lfs merge=lfs -text
+*.265 filter=lfs diff=lfs merge=lfs -text
+*.caf filter=lfs diff=lfs merge=lfs -text
+*.ima4 filter=lfs diff=lfs merge=lfs -text
 ```
 
 ## 4. Commit `.gitattributes` / 提交 `.gitattributes`
@@ -62,7 +74,7 @@ git commit -m "Track large binary files with Git LFS"
 `git lfs track` 仅对**新提交**生效。要清理历史中已有的大文件：
 
 ```bash
-git lfs migrate import --include="*.so,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3" --everything
+git lfs migrate import --include="*.so,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3,*.wav,*.pcm,*.h264,*.265,*.caf,*.ima4" --everything
 ```
 
 This **rewrites Git history**, converting large files in history to LFS pointers. The `.git` directory size will be significantly reduced.
@@ -90,6 +102,120 @@ git push --force --tags
 | **Collaborators / 协作者** | All collaborators must re-clone after migration / 迁移后所有协作者需重新 clone |
 | **JitPack** | JitPack supports Git LFS, but verify that prebuilt `.so` files can be fetched properly / JitPack 支持 Git LFS，但需确认预编译 `.so` 能正常拉取 |
 | **Irreversible / 不可逆** | `migrate import` rewrites history — back up first / `migrate import` 会重写历史，建议先备份 |
+
+## First-Time Clone (For New Users) / 首次克隆仓库（新用户）
+
+If the repository already uses Git LFS, follow these steps after cloning:
+
+如果仓库已经启用了 Git LFS，克隆后请按以下步骤操作：
+
+### Step 1: Install Git LFS / 第一步：安装 Git LFS
+
+```bash
+# Ubuntu/Debian
+sudo apt install git-lfs
+
+# macOS
+brew install git-lfs
+```
+
+### Step 2: Clone the repository / 第二步：克隆仓库
+
+```bash
+# Option A: Normal clone (automatically downloads LFS files)
+# 方式 A：普通克隆（自动下载 LFS 文件）
+git clone https://github.com/yhz61010/android.git
+
+# Option B: Clone without downloading LFS files first (for slow networks)
+# 方式 B：先克隆但不下载 LFS 文件（适合网络较慢的情况）
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/yhz61010/android.git
+cd android
+git lfs pull    # Download LFS files manually / 手动下载 LFS 文件
+```
+
+### Step 3: Enable Git LFS in local repository / 第三步：在本地仓库中启用 Git LFS
+
+```bash
+cd android
+git lfs install
+```
+
+After this, all future `git pull` and `git checkout` operations will automatically handle LFS files.
+
+之后，所有 `git pull` 和 `git checkout` 操作都会自动处理 LFS 文件。
+
+### Verify LFS is working / 验证 LFS 是否正常工作
+
+```bash
+git lfs ls-files    # Should list all LFS-tracked files / 应列出所有 LFS 追踪的文件
+```
+
+If files show as pointer text (starting with `version https://git-lfs.github.com/spec/v1`) instead of actual content, run:
+git lfs track
+如果文件显示为指针文本（以 `version https://git-lfs.github.com/spec/v1` 开头）而非实际内容，运行：
+
+```bash
+git lfs pull
+```
+
+---
+
+## Adding a New File Type to LFS / 新增文件类型到 LFS
+
+When you need to track a new file extension (e.g., `.aac`) that is **not yet** in `.gitattributes`:
+
+当需要追踪一个**尚未**在 `.gitattributes` 中的新文件扩展名时（如 `.aac`）：
+
+```bash
+# 1. Add the new tracking rule / 添加新的追踪规则
+git lfs track "*.aac"
+
+# 2. Commit the updated .gitattributes / 提交更新后的 .gitattributes
+git add .gitattributes
+git commit -m "Track *.aac files with Git LFS"
+
+# 3. Add and commit the new files / 添加并提交新文件
+git add path/to/file.aac
+git commit -m "Add audio file"
+git push
+```
+
+If there are already `.aac` files in the Git history that you want to migrate to LFS:
+
+如果 Git 历史中已经存在需要迁移到 LFS 的 `.aac` 文件：
+
+```bash
+git lfs migrate import --include="*.aac" --everything
+git push --force --all
+```
+
+---
+
+## Adding a New File of an Already-Tracked Type / 新增已追踪类型的文件
+
+If the file type is already tracked by LFS (e.g., `.so` is already in `.gitattributes`), simply add and commit the file — Git LFS handles it automatically:
+
+如果文件类型已被 LFS 追踪（如 `.so` 已在 `.gitattributes` 中），直接添加并提交即可，Git LFS 会自动处理：
+
+```bash
+git add path/to/newlib.so
+git commit -m "Add new native library"
+git push
+```
+
+No extra steps needed. Git automatically stores it via LFS based on the existing `.gitattributes` rules.
+
+无需额外操作。Git 会根据 `.gitattributes` 中的规则自动通过 LFS 存储该文件。
+
+You can verify the file is being tracked by LFS:
+
+可以验证文件是否被 LFS 追踪：
+
+```bash
+git lfs ls-files | grep newlib.so
+```
+
+---
 
 ## Common Commands / 常用命令
 

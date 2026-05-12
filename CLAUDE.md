@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Development
 
 - **Kotlin-only** codebase with Kotlin DSL for Gradle
-- **Requires**: JDK 17, Android SDK 36, NDK 25.2.9519653
+- **Requires**: JDK 17, Android SDK 36, NDK 29.0.14206865, CMake 3.22.1+
 - **Setup**: Copy `gradle.properties.template` to `gradle.properties` and configure keystore properties
 
 ### Common Commands
@@ -39,6 +39,16 @@ All build configuration is centralized in the root `build.gradle.kts`:
 
 Version catalog at `gradle/libs.versions.toml` manages all dependency versions, SDK versions, and defines dependency bundles (e.g., `androidx-full`, `lifecycle-full`, `test`, `android-test`).
 
+## Native Build (CMake)
+
+Native modules use **CMake** (migrated from Android.mk/ndk-build):
+- `lib-image` — Bitmap rotation JNI library (`leo-bitmap`)
+- `ffmpeg-sdk` — Three native libraries: `h264-hevc-decoder`, `adpcm-ima-qt-decoder`, `adpcm-ima-qt-encoder` (links prebuilt FFmpeg libs)
+
+All native targets include 16KB page alignment (`-Wl,-z,max-page-size=16384`) for Android compatibility. CMakeLists.txt files are under each module's `src/main/cpp/`.
+
+**JNI nativeHandle pattern**: Native modules use an instance-based architecture where each Kotlin object holds a `nativeHandle: Long` field storing the C++ object pointer. This replaces the previous global-variable approach and enables multi-instance + thread-safe usage. See `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md` for details.
+
 ## Module Organization
 
 Key module categories:
@@ -47,7 +57,7 @@ Key module categories:
 - **lib-compose** — Jetpack Compose extensions and composables
 - **androidbase** — Core Android utilities, depends on many lib-* modules
 - **Media modules** — audio, h264-hevc-decoder, adpcm-ima-qt-codec, ffmpeg-javacpp, ffmpeg-sdk, yuv, jpeg, x264
-- **Feature modules** — camerax, camera2live, opengl, nfc, webrtc, screencapture, basenetty, floatview
+- **Feature modules** — camerax, camera2live, opengl, nfc, webrtc, screencapture, basenetty, floatview (uses `DisplayManager.DisplayListener` + `OrientationEventListener` for orientation tracking)
 - **pref** — Preferences (MMKV-based)
 - **log** — Logging system
 - **demo** — Main demo application showcasing all modules

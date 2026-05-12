@@ -3,7 +3,7 @@
 [![AGP](https://img.shields.io/badge/AGP-9.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-9.4.0-green)](https://gradle.org)
 
-[![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_2_|_2025.3.2-green)](https://developer.android.com/studio)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_4_|_2025.3.4_Patch_1-green)](https://developer.android.com/studio)
 [![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
 [![NDK](https://img.shields.io/badge/NDK-29.0.14206865-green)](https://developer.android.com/ndk/downloads)
@@ -20,6 +20,10 @@ Due to limitations from other projects I am currently involved in,
 the `minSdk` must remain at `21` and cannot be upgraded for now. 
 This also indirectly affects some of the open-source libraries used in this project, 
 preventing them from being updated to their latest versions.
+
+PPS:
+This project is using `git lfs`. Please install it before you start.
+Check the document `00-documents/git-lfs-guide.md` for details.
 
 # How to import?
 

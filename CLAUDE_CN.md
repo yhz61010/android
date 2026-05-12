@@ -9,7 +9,7 @@
 ## 构建与开发
 
 - **纯 Kotlin** 代码库，Gradle 使用 Kotlin DSL
-- **环境要求**：JDK 17、Android SDK 36、NDK 25.2.9519653
+- **环境要求**：JDK 17、Android SDK 36、NDK 29.0.14206865、CMake 3.22.1+
 - **初始设置**：将 `gradle.properties.template` 复制为 `gradle.properties` 并配置 keystore 属性
 
 ### 常用命令
@@ -39,6 +39,16 @@
 
 版本目录文件 `gradle/libs.versions.toml` 管理所有依赖版本、SDK 版本，并定义依赖 bundle（如 `androidx-full`、`lifecycle-full`、`test`、`android-test`）。
 
+## Native 构建（CMake）
+
+Native 模块使用 **CMake** 构建（已从 Android.mk/ndk-build 迁移）：
+- `lib-image` — Bitmap 旋转 JNI 库（`leo-bitmap`）
+- `ffmpeg-sdk` — 三个 native 库：`h264-hevc-decoder`、`adpcm-ima-qt-decoder`、`adpcm-ima-qt-encoder`（链接预编译的 FFmpeg 库）
+
+所有 native 目标均包含 16KB 页面对齐（`-Wl,-z,max-page-size=16384`）以兼容 Android。CMakeLists.txt 文件位于各模块的 `src/main/cpp/` 目录下。
+
+**JNI nativeHandle 模式**：Native 模块使用基于实例的架构，每个 Kotlin 对象持有一个 `nativeHandle: Long` 字段存储 C++ 对象指针。该模式替代了之前的全局变量方案，支持多实例及线程安全使用。详见 `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md`。
+
 ## 模块组织
 
 主要模块分类：
@@ -47,7 +57,7 @@
 - **lib-compose** — Jetpack Compose 扩展和组件
 - **androidbase** — Android 核心工具，依赖多个 lib-* 模块
 - **媒体模块** — audio、h264-hevc-decoder、adpcm-ima-qt-codec、ffmpeg-javacpp、ffmpeg-sdk、yuv、jpeg、x264
-- **功能模块** — camerax、camera2live、opengl、nfc、webrtc、screencapture、basenetty、floatview
+- **功能模块** — camerax、camera2live、opengl、nfc、webrtc、screencapture、basenetty、floatview（使用 `DisplayManager.DisplayListener` + `OrientationEventListener` 跟踪设备方向）
 - **pref** — 偏好设置（基于 MMKV）
 - **log** — 日志系统
 - **demo** — 主 demo 应用，展示所有模块功能

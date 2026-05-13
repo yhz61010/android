@@ -1,7 +1,6 @@
 # Text files
 * text eol=lf
 *.bat text eol=crlf
-
 # Binary files (not managed by LFS)
 *.jar binary
 *.png binary

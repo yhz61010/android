@@ -26,6 +26,7 @@ git lfs install
 
 ```bash
 git lfs track "*.so"
+git lfs track "*.o"
 git lfs track "*.a"
 git lfs track "*.tar.xz"
 git lfs track "*.tar.bz2"
@@ -37,14 +38,15 @@ git lfs track "*.pcm"
 git lfs track "*.h264"
 git lfs track "*.h265"
 git lfs track "*.caf"
-git lfs track "*.ima4"
 git lfs track "*.ima"
+git lfs track "*.ima4"
 ```
 
 This automatically generates rules in `.gitattributes`:
 
 ```
 *.so filter=lfs diff=lfs merge=lfs -text
+*.o filter=lfs diff=lfs merge=lfs -text
 *.a filter=lfs diff=lfs merge=lfs -text
 *.tar.xz filter=lfs diff=lfs merge=lfs -text
 *.tar.bz2 filter=lfs diff=lfs merge=lfs -text
@@ -56,8 +58,8 @@ This automatically generates rules in `.gitattributes`:
 *.h264 filter=lfs diff=lfs merge=lfs -text
 *.h265 filter=lfs diff=lfs merge=lfs -text
 *.caf filter=lfs diff=lfs merge=lfs -text
-*.ima4 filter=lfs diff=lfs merge=lfs -text
 *.ima filter=lfs diff=lfs merge=lfs -text
+*.ima4 filter=lfs diff=lfs merge=lfs -text
 ```
 
 ## 4. Commit `.gitattributes`
@@ -72,7 +74,7 @@ git commit -m "Track large binary files with Git LFS"
 `git lfs track` only applies to **new commits**. To clean up large files already in the Git history:
 
 ```bash
-git lfs migrate import --include="*.so,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3,*.mp4,*.wav,*.pcm,*.h264,*.h265,*.caf,*.ima4,*.ima" --everything
+git lfs migrate import --include="*.so,*.o,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3,*.mp4,*.wav,*.pcm,*.h264,*.h265,*.caf,*.ima,*.ima4" --everything
 ```
 
 This **rewrites Git history**, converting large files in history to LFS pointers. The `.git` directory size will be significantly reduced.

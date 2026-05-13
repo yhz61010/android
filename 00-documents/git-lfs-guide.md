@@ -210,6 +210,63 @@ git lfs ls-files | grep newlib.so
 
 ---
 
+## Removing Old Large Blobs from History
+
+When you optimize or replace a large file (e.g., compress an image), the old version still exists in Git history as a blob. Commands like `git rev-list --objects --all | git cat-file --batch-check` will still show the old size.
+
+### Find old large blobs
+
+```bash
+git rev-list --objects --all \
+  | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
+  | awk '/^blob/ && $3 > 500000 {print $3, $4}' \
+  | sort -rn
+```
+
+### Method 1: Using `git filter-repo` (Recommended)
+
+`git filter-repo` is the modern replacement for `git filter-branch`, faster and safer.
+
+```bash
+# Install
+pip install git-filter-repo
+
+# Remove a specific file from all history
+git filter-repo --path demo/src/main/res/drawable-nodpi/img_3024x4032.jpeg --invert-paths
+
+# Or remove by file size (e.g., blobs larger than 1MB)
+git filter-repo --strip-blobs-bigger-than 1M
+```
+
+### Method 2: Using `git filter-branch`
+
+If `git filter-repo` is not available:
+
+```bash
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --index-filter \
+  'git rm --cached --ignore-unmatch path/to/large-file' \
+  --tag-name-filter cat -- --all
+```
+
+### After rewriting history
+
+```bash
+# Clean up backup refs
+git for-each-ref --format='delete %(refname)' refs/original | git update-ref --stdin
+
+# Expire reflog and garbage collect
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+
+# Force push all branches and tags
+git push --force --all
+git push --force --tags
+```
+
+> **Warning:** Rewriting history changes all commit hashes. All collaborators must re-clone the repository after a force push. For small files (under ~1MB), the trade-off is usually not worth it.
+
+---
+
 ## Common Commands
 
 ```bash

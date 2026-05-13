@@ -209,6 +209,63 @@ git lfs ls-files | grep newlib.so
 
 ---
 
+## 从历史中移除旧的大 blob
+
+当你优化或替换了一个大文件（例如压缩图片）后，旧版本仍然以 blob 形式存在于 Git 历史中。使用 `git rev-list --objects --all | git cat-file --batch-check` 等命令仍会显示旧的大小。
+
+### 查找旧的大 blob
+
+```bash
+git rev-list --objects --all \
+  | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
+  | awk '/^blob/ && $3 > 500000 {print $3, $4}' \
+  | sort -rn
+```
+
+### 方法 1：使用 `git filter-repo`（推荐）
+
+`git filter-repo` 是 `git filter-branch` 的现代替代工具，更快更安全。
+
+```bash
+# 安装
+pip install git-filter-repo
+
+# 从所有历史中移除指定文件
+git filter-repo --path demo/src/main/res/drawable-nodpi/img_3024x4032.jpeg --invert-paths
+
+# 或按文件大小移除（例如大于 1MB 的 blob）
+git filter-repo --strip-blobs-bigger-than 1M
+```
+
+### 方法 2：使用 `git filter-branch`
+
+如果无法使用 `git filter-repo`：
+
+```bash
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --index-filter \
+  'git rm --cached --ignore-unmatch path/to/large-file' \
+  --tag-name-filter cat -- --all
+```
+
+### 重写历史后的清理工作
+
+```bash
+# 清除备份引用
+git for-each-ref --format='delete %(refname)' refs/original | git update-ref --stdin
+
+# 清除 reflog 并垃圾回收
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+
+# 强制推送所有分支和标签
+git push --force --all
+git push --force --tags
+```
+
+> **警告：** 重写历史会改变所有 commit 哈希。强制推送后，所有协作者必须重新克隆仓库。对于较小的文件（不超过约 1MB），通常不值得为此重写整个历史。
+
+---
+
 ## 常用命令
 
 ```bash

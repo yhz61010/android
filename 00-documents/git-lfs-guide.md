@@ -33,6 +33,7 @@ git lfs track "*.tar.xz"
 git lfs track "*.tar.bz2"
 git lfs track "*.tar.gz"
 git lfs track "*.mp3"
+git lfs track "*.mp4"
 git lfs track "*.wav"
 git lfs track "*.pcm"
 git lfs track "*.h264"
@@ -52,10 +53,11 @@ This automatically generates rules in `.gitattributes`:
 *.tar.bz2 filter=lfs diff=lfs merge=lfs -text
 *.tar.gz filter=lfs diff=lfs merge=lfs -text
 *.mp3 filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
 *.wav filter=lfs diff=lfs merge=lfs -text
 *.pcm filter=lfs diff=lfs merge=lfs -text
 *.h264 filter=lfs diff=lfs merge=lfs -text
-*.265 filter=lfs diff=lfs merge=lfs -text
+*.h265 filter=lfs diff=lfs merge=lfs -text
 *.caf filter=lfs diff=lfs merge=lfs -text
 *.ima4 filter=lfs diff=lfs merge=lfs -text
 ```
@@ -74,12 +76,22 @@ git commit -m "Track large binary files with Git LFS"
 `git lfs track` 仅对**新提交**生效。要清理历史中已有的大文件：
 
 ```bash
-git lfs migrate import --include="*.so,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3,*.wav,*.pcm,*.h264,*.265,*.caf,*.ima4" --everything
+git lfs migrate import --include="*.so,*.a,*.tar.xz,*.tar.bz2,*.tar.gz,*.mp3,*.mp4,*.wav,*.pcm,*.h264,*.h265,*.caf,*.ima4" --everything
 ```
 
 This **rewrites Git history**, converting large files in history to LFS pointers. The `.git` directory size will be significantly reduced.
 
 该命令会**重写 Git 历史**，将历史中的大文件转为 LFS 指针，`.git` 目录会大幅缩小。
+
+Clean History / 清理历史
+```bash
+# 清除所有分支的 reflog 记录。Reflog 是 Git 的"撤销历史"，记录了 HEAD 和分支的每次变动。它会引用旧的 commit，导致旧 blob 无法被回收
+# --expire=now 表示立即过期所有记录（默认保留 90 天）
+git reflog expire --expire=now --all
+# 垃圾回收。--prune=now 立即删除所有不可达的对象（不再被任何 commit/分支/标签/reflog 引用的 blob）；
+# --aggressive 更彻底地重新压缩 packfile，耗时更长但压缩率更高
+git gc --prune=now --aggressive
+```
 
 ## 6. Force Push / 强制推送
 

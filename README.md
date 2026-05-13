@@ -22,8 +22,42 @@ This also indirectly affects some of the open-source libraries used in this proj
 preventing them from being updated to their latest versions.
 
 PPS:
-This project is using `git lfs`. Please install it before you start.
-Check the document `00-documents/git-lfs-guide.md` for details.
+This project uses **Git LFS** to manage large binary files (`.so`, `.a`, `.mp3`, `.mp4`, `.tar.xz`, etc.).
+
+### First-Time Setup
+
+1. **Install Git LFS** (required before cloning):
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install git-lfs
+   
+   # macOS
+   brew install git-lfs
+   ```
+
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yhz61010/android.git
+   cd android
+   git lfs install
+   ```
+   
+   For slow networks, you can skip LFS downloads during clone and pull them later:
+   ```bash
+   GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/yhz61010/android.git
+   cd android
+   git lfs install
+   git lfs pull
+   ```
+
+3. **Verify LFS is working**:
+   ```bash
+   git lfs ls-files
+   ```
+
+> **Without Git LFS**, LFS-tracked files will appear as ~130-byte pointer files instead of actual content. Install Git LFS and run `git lfs pull` to fix this.
+
+For more details, see `00-documents/git-lfs-guide.md`.
 
 # How to import?
 

@@ -1,4 +1,5 @@
 @file:Suppress("unused")
+
 package com.leovp.kotlin.exts
 
 import java.math.BigDecimal
@@ -143,6 +144,4 @@ fun BigDecimal.isNegative() = this < BigDecimal.ZERO
  * BigDecimal("5.5").isInteger()  // false
  * ```
  */
-fun BigDecimal.isInteger(): Boolean {
-    return this.stripTrailingZeros().scale() <= 0
-}
+fun BigDecimal.isInteger(): Boolean = this.stripTrailingZeros().scale() <= 0

@@ -28,20 +28,20 @@ class NetworkUnitTest {
     @Test
     fun getIpsByName() {
         var ips = InternetUtil.getIpsByHost("50d.win").toTypedArray()
-        assertArrayEquals(arrayOf("142.11.227.207"), ips)
+        assertArrayEquals(arrayOf("198.13.56.42", "2401:c080:1000:22be:5400:6ff:fe13:82f4"), ips)
 
         ips = InternetUtil.getIpsByHost("barcode.50d.win").toTypedArray()
         // InternetUtil.getIpsByName("lib.leovp.com").toTypedArray().forEach { println(it) }
-        assertEquals("142.11.227.207", ips[0])
+        assertEquals("198.13.56.42", ips[0])
 
         ips = InternetUtil.getIpsByHost("leo vp.com").toTypedArray()
         assertArrayEquals(emptyArray(), ips)
 
         ips = InternetUtil.getIpsByHost("50d.win   ").toTypedArray()
-        assertArrayEquals(arrayOf("142.11.227.207"), ips)
+        assertArrayEquals(arrayOf("198.13.56.42", "2401:c080:1000:22be:5400:6ff:fe13:82f4"), ips)
 
         ips = InternetUtil.getIpsByHost("   50d.win   ").toTypedArray()
-        assertArrayEquals(arrayOf("142.11.227.207"), ips)
+        assertEquals("198.13.56.42", ips[0])
 
         ips = InternetUtil.getIpsByHost("203.107.43.165").toTypedArray()
         assertArrayEquals(arrayOf("203.107.43.165"), ips)

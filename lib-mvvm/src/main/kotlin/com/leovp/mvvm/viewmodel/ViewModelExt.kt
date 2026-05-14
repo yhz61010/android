@@ -244,7 +244,7 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
             this[key1] ?: error("Missing ViewModel parameter for key: $key1"),
             this[key2] ?: error("Missing ViewModel parameter for key: $key2"),
             this[key3] ?: error("Missing ViewModel parameter for key: $key3"),
-            this[key4],
+            this[key4]
         )
     }
 }
@@ -260,7 +260,14 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
  * @param key5 The nullable key to retrieve the parameter from [CreationExtras]
  * @param create Lambda to create the ViewModel with [SavedStateHandle] and the parameter
  */
-inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3, reified Param4, reified Param5> viewModelFactory(
+inline fun <
+    reified VM : ViewModel,
+    reified Param1,
+    reified Param2,
+    reified Param3,
+    reified Param4,
+    reified Param5,
+    > viewModelFactory(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     key3: CreationExtras.Key<Param3>,
@@ -282,7 +289,7 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
             this[key2] ?: error("Missing ViewModel parameter for key: $key2"),
             this[key3] ?: error("Missing ViewModel parameter for key: $key3"),
             this[key4],
-            this[key5],
+            this[key5]
         )
     }
 }

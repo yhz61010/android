@@ -44,16 +44,13 @@ val LocalAppLocale =
 
 @Suppress("FunctionNaming")
 @Composable
-fun LocalizedApp(
-    locale: Locale,
-    content: @Composable () -> Unit,
-) {
+fun LocalizedApp(locale: Locale, content: @Composable () -> Unit,) {
     val context = LocalContext.current
     val localizedContext = remember(locale) { context.withLocale(locale) }
 
     CompositionLocalProvider(
         LocalAppLocale provides locale,
-        LocalLocalizedContext provides localizedContext,
+        LocalLocalizedContext provides localizedContext
     ) {
         content()
     }

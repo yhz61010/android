@@ -58,28 +58,17 @@ open class AppNavigation(val navController: NavHostController) {
         }
     }
 
-    open fun navigateString(
-        route: String,
-        arguments: String? = null,
-        extras: UiEvent.NavExtras? = null,
-    ) {
+    open fun navigateString(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }
 
-    open fun <T : Any> navigate(
-        route: T,
-        builder: NavOptionsBuilder.() -> Unit,
-    ) {
+    open fun <T : Any> navigate(route: T, builder: NavOptionsBuilder.() -> Unit,) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }
 
-    open fun <T : Any> navigate(
-        route: T,
-        navOptions: NavOptions? = null,
-        navigatorExtras: Navigator.Extras? = null,
-    ) {
+    open fun <T : Any> navigate(route: T, navOptions: NavOptions? = null, navigatorExtras: Navigator.Extras? = null,) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }

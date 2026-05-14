@@ -69,11 +69,10 @@ fun <T> Result<T>.exceptionOrNull(): ResultException? = when {
     else -> null
 }
 
-fun <T> Result<T>.exception(): ResultException =
-    when (val err: ResultException? = this.exceptionOrNull()) {
-        null -> error("No exception!")
-        else -> err
-    }
+fun <T> Result<T>.exception(): ResultException = when (val err: ResultException? = this.exceptionOrNull()) {
+    null -> error("No exception!")
+    else -> err
+}
 
 inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
     if (isSuccess) action((this as Result.Success<T>).data)

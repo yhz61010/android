@@ -8,9 +8,7 @@ import kotlin.reflect.full.memberProperties
 /**
  * Logs actions and view state transitions to facilitate debugging.
  */
-class StateTimeTravelDebugger(
-    private val viewClassName: String,
-) {
+class StateTimeTravelDebugger(private val viewClassName: String,) {
 
     companion object {
         private const val TAG = "STTD"
@@ -23,10 +21,7 @@ class StateTimeTravelDebugger(
         lastViewAction = viewAction
     }
 
-    fun addStateTransition(
-        oldState: BaseState,
-        newState: BaseState,
-    ) {
+    fun addStateTransition(oldState: BaseState, newState: BaseState,) {
         val lastViewAction =
             checkNotNull(lastViewAction) {
                 "lastViewAction is null. Please log action before logging state transition"
@@ -53,7 +48,7 @@ class StateTimeTravelDebugger(
                     getLogLine(
                         stateTransition.oldState,
                         stateTransition.newState,
-                        propertyName,
+                        propertyName
                     )
                 message += logLine
             }
@@ -75,11 +70,7 @@ class StateTimeTravelDebugger(
         w(TAG) { "<-- Action & State - End -----------------------------" }
     }
 
-    private fun getLogLine(
-        oldState: BaseState,
-        newState: BaseState,
-        propertyName: String,
-    ): String {
+    private fun getLogLine(oldState: BaseState, newState: BaseState, propertyName: String,): String {
         val oldValue = getPropertyValue(oldState, propertyName)
         val newValue = getPropertyValue(newState, propertyName)
         val indent = "\t"
@@ -99,10 +90,7 @@ class StateTimeTravelDebugger(
             .map { it.name }
     }
 
-    private fun getPropertyValue(
-        baseState: BaseState,
-        propertyName: String,
-    ): String {
+    private fun getPropertyValue(baseState: BaseState, propertyName: String,): String {
         baseState::class.memberProperties.forEach {
             if (propertyName == it.name) {
                 var value = it.getter.call(baseState).toString()
@@ -117,9 +105,5 @@ class StateTimeTravelDebugger(
         return ""
     }
 
-    private data class StateTransition(
-        val oldState: BaseState,
-        val action: BaseAction<*>,
-        val newState: BaseState,
-    )
+    private data class StateTransition(val oldState: BaseState, val action: BaseAction<*>, val newState: BaseState,)
 }

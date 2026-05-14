@@ -135,8 +135,8 @@ allprojects {
                 "$rootDir/build.gradle.kts",
                 "$rootDir/settings.gradle.kts",
                 "src/main/kotlin",
-                "src/test/kotlin",
-            ),
+                "src/test/kotlin"
+            )
         )
     }
 
@@ -287,7 +287,7 @@ fun Project.configureApplication() {
             getByName("release") {
                 proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro",
+                    "proguard-rules.pro"
                 )
                 isShrinkResources = true
                 isMinifyEnabled = true
@@ -315,7 +315,7 @@ fun Project.configureApplication() {
                     "META-INF/{AL2.0,LGPL2.1}",
                     "**/*.proto",
                     "**/*.bin",
-                    "**/*.java",
+                    "**/*.java"
                 )
         }
     }
@@ -350,7 +350,7 @@ fun Project.configureLibrary() {
             getByName("release") {
                 proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro",
+                    "proguard-rules.pro"
                 )
                 isMinifyEnabled = false
             }
@@ -376,7 +376,7 @@ fun Project.configureLibrary() {
                     "META-INF/{AL2.0,LGPL2.1}",
                     "**/*.proto",
                     "**/*.bin",
-                    "**/*.java",
+                    "**/*.java"
                 )
         }
     }

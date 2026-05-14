@@ -188,14 +188,11 @@ inline fun userOp(crossinline config: LogConfig.() -> Unit) {
         message = logConfig.message,
         fullOutput = logConfig.fullOutput,
         throwable = logConfig.throwable,
-        outputType = logConfig.outputType,
+        outputType = logConfig.outputType
     )
 }
 
-inline fun userOp(
-    tag: String,
-    crossinline message: () -> String?,
-) {
+inline fun userOp(tag: String, crossinline message: () -> String?,) {
     userOp {
         this.tag = tag
         fullOutput = true

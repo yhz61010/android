@@ -9,19 +9,11 @@ sealed interface BaseAction<State> {
         fun reduce(state: State): State
     }
 
-    interface WithExtra<State, T : Any> :
-        BaseAction<State> {
-        fun reduce(
-            state: State,
-            extra: T,
-        ): State
+    interface WithExtra<State, T : Any> : BaseAction<State> {
+        fun reduce(state: State, extra: T): State
     }
 
-    interface WithOptional<State, T> :
-        BaseAction<State> {
-        fun reduce(
-            state: State,
-            extra: T?,
-        ): State
+    interface WithOptional<State, T> : BaseAction<State> {
+        fun reduce(state: State, extra: T?): State
     }
 }

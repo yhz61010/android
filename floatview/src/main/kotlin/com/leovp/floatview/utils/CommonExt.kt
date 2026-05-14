@@ -20,7 +20,11 @@ import kotlin.math.min
  * Date: 2022/6/14 16:46
  */
 internal val Context.canDrawOverlays: Boolean
-    get() = Settings.canDrawOverlays(this)
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Settings.canDrawOverlays(this)
+    } else {
+        true
+    }
 
 /**
  * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
@@ -54,7 +58,7 @@ internal val Context.screenAvailableResolution: Size
             //            display.getMetrics(displayMetrics)
             //            return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
             val displayMetrics = resources.displayMetrics
-            return Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+            Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
     }
 

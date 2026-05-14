@@ -78,7 +78,7 @@ val String.fromUrlBase64Legacy: String
     get() = runCatching {
         String(
             bytes = Base64.decode(this, Base64.URL_SAFE or Base64.NO_WRAP),
-            charset = Charsets.UTF_8,
+            charset = Charsets.UTF_8
         )
     }.getOrDefault("")
 

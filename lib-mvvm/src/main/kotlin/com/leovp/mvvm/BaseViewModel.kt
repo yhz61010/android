@@ -35,7 +35,8 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
     initialState: State,
     val uiEventManager: UiEventManager? = null,
     countdownParam: ScreenCountdownManager.CountdownParam? = null,
-) : ViewModel(), LifecycleAware {
+) : ViewModel(),
+    LifecycleAware {
 
     abstract fun getTagName(): String
 
@@ -87,7 +88,7 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
                 tag = tag,
                 countdownDurationMillis = countdownParam.countdownDurationMillis,
                 warningThresholdMillis = countdownParam.warningThresholdMillis,
-                enableAutoReset = countdownParam.enableAutoReset,
+                enableAutoReset = countdownParam.enableAutoReset
             )
 
             // observeCountdownEffects()
@@ -204,16 +205,12 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
                     resId = resId,
                     actionLabel = actionLabel,
                     onAction = onAction
-                ),
+                )
             )
         }
     }
 
-    fun navigateString(
-        route: String,
-        arguments: String? = null,
-        extras: UiEvent.NavExtras? = null,
-    ) {
+    fun navigateString(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
         viewModelScope.launch {
             uiEventManager?.sendEvent(UiEvent.NavigateString(route, arguments, extras))
         }
@@ -225,11 +222,7 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
         }
     }
 
-    fun <T : Any> navigate(
-        route: T,
-        navOptions: NavOptions? = null,
-        navigatorExtras: Navigator.Extras? = null,
-    ) {
+    fun <T : Any> navigate(route: T, navOptions: NavOptions? = null, navigatorExtras: Navigator.Extras? = null,) {
         viewModelScope.launch {
             uiEventManager?.sendEvent(
                 UiEvent.Navigate(
@@ -276,17 +269,14 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
     @Suppress("LongParameterList")
     fun showDialog(
         @DrawableRes iconResId: Int? = null,
-
         title: String? = null,
         message: String? = null,
         positiveButtonText: String? = null,
         negativeButtonText: String? = null,
-
         @StringRes titleResId: Int? = null,
         @StringRes messageResId: Int? = null,
         @StringRes positiveButtonTextResId: Int? = null,
         @StringRes negativeButtonTextResId: Int? = null,
-
         onPositive: () -> Unit,
         onNegative: (() -> Unit)? = null,
         countdownSeconds: Int? = null,
@@ -326,7 +316,7 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
                             it()
                         }
                     }
-                ),
+                )
             )
         }
     }

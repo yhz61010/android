@@ -448,7 +448,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             }
             if (config.systemWindow && context.canDrawOverlays) {
                 type = when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ->
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     else -> {
                         @Suppress("DEPRECATION")
                         WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE

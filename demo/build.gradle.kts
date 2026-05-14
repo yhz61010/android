@@ -292,10 +292,7 @@ android {
 //     }
 // }
 
-fun Project.getDebugSignProperty(
-    key: String,
-    path: String = "10-configs/sign/keystore.properties",
-): String =
+fun Project.getDebugSignProperty(key: String, path: String = "10-configs/sign/keystore.properties",): String =
     Properties()
         .apply {
             rootProject.file(path).inputStream().use(::load)

@@ -38,7 +38,6 @@ android {
     // packagingOptions.resources.excludes += setOf(
     //     "META-INF/androidx.emoji2_emoji2.version"
     // )
-
 }
 
 // AGP 9.0 removed outputFileName from VariantOutput API.
@@ -55,7 +54,7 @@ androidComponents {
             rename { _ -> "dexdemo.dex" }
         }
         afterEvaluate {
-            tasks.named("assemble${capitalizedName}") {
+            tasks.named("assemble$capitalizedName") {
                 finalizedBy("rename${capitalizedName}Apk")
             }
         }

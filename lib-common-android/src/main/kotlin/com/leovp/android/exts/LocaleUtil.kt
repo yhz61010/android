@@ -16,10 +16,7 @@ import java.util.Locale
  * Date: 2025/9/9 16:12
  */
 object LocaleUtil {
-    fun changeAppLanguage(
-        context: Context,
-        localeName: String,
-    ) {
+    fun changeAppLanguage(context: Context, localeName: String,) {
         if (localeName == AppCompatDelegate.getApplicationLocales().toLanguageTags()) {
             return
         }
@@ -34,7 +31,7 @@ object LocaleUtil {
             localeManager.applicationLocales = LocaleList.forLanguageTags(localeName)
         } else {
             AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(localeName),
+                LocaleListCompat.forLanguageTags(localeName)
             )
         }
 
@@ -46,7 +43,7 @@ object LocaleUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context
                 .getSystemService(
-                    LocaleManager::class.java,
+                    LocaleManager::class.java
                 ).applicationLocales[0]
                 .toLanguageTag()
         } else {

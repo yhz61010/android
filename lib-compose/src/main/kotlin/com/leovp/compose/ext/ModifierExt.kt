@@ -24,12 +24,11 @@ import androidx.compose.ui.unit.dp
  */
 
 @Composable
-fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier =
-    clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = null,
-        onClick = onClick
-    )
+fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = clickable(
+    interactionSource = remember { MutableInteractionSource() },
+    indication = null,
+    onClick = onClick
+)
 
 /**
  * Usage:

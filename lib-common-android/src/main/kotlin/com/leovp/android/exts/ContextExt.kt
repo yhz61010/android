@@ -72,16 +72,19 @@ import java.security.MessageDigest
 /**
  * Get the package name
  */
-val Context.id: String get() = this.packageName!!
+val Context.id: String get() = this.packageName
 
 /**
  * Get package uri
  */
-val Context.packageUri get() = Uri.fromParts("package", this.packageName!!, null)!!
+val Context.packageUri: Uri?
+    get() = runCatching {
+        Uri.fromParts("package", this.packageName, null)
+    }.getOrDefault(null)
 
 /**
  *  @param value The constant defined in [PackageManager].
- *  For instance: [PackageManager.GET_ACTIVITIES], [PackageManager.GET_CONFIGURATIONS] and etc.
+ *  For instance: [PackageManager.GET_ACTIVITIES], [PackageManager.GET_CONFIGURATIONS] etc.
  */
 fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): PackageInfo =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -127,12 +130,12 @@ fun Context.getApplicationSignatures(pkgName: String = packageName, algorithm: S
 }
 
 /**
- * Return the version name of empty string if can't get version string.
+ * Return the version name of empty string if you can't get version string.
  */
 val Context.versionName get() = getPackageInfo().versionName ?: ""
 
 /**
- * Return the version code or 0 if can't get version code.
+ * Return the version code or 0 if you can't get version code.
  */
 val Context.versionCode get() = PackageInfoCompat.getLongVersionCode(getPackageInfo())
 
@@ -183,13 +186,23 @@ val Context.appWidgetManager get() = getSystemService(Context.APPWIDGET_SERVICE)
 val Context.restrictionsManager get() = getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
 val Context.mediaSessionManager get() = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
 val Context.mediaProjectionManager get() = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-val Context.usageStatsManager get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-val Context.midiManager get() = getSystemService(Context.MIDI_SERVICE) as MidiManager
-val Context.networkStatusManager get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
-val Context.carrierConfigManager get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
+val Context.usageStatsManager
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+val Context.midiManager
+    @RequiresApi(Build.VERSION_CODES.M)
+    get() = getSystemService(Context.MIDI_SERVICE) as MidiManager
+val Context.networkStatusManager
+    @RequiresApi(Build.VERSION_CODES.M)
+    get() = getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+val Context.carrierConfigManager
+    @RequiresApi(Build.VERSION_CODES.M)
+    get() = getSystemService(Context.CARRIER_CONFIG_SERVICE) as CarrierConfigManager
 val Context.systemHealthManager
+    @RequiresApi(Build.VERSION_CODES.N)
     get() = getSystemService(Context.SYSTEM_HEALTH_SERVICE) as SystemHealthManager
 val Context.hardwarePropertiesManager
+    @RequiresApi(Build.VERSION_CODES.N)
     get() = getSystemService(Context.HARDWARE_PROPERTIES_SERVICE) as HardwarePropertiesManager
 val Context.shortcutManager
     @RequiresApi(Build.VERSION_CODES.N_MR1)

@@ -109,7 +109,6 @@ class WindowManager(private val manager: IInterface) {
 //                .invoke(manager, rotationWatcher, displayId)
 
             when {
-
                 // API 26 or above
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
                     // display parameter added since this commit:

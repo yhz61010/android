@@ -41,6 +41,7 @@ dependencies {
     androidTestImplementation(libs.bundles.android.test)
     testImplementation(libs.bundles.powermock)
     testImplementation(libs.bundles.test)
+    testImplementation(libs.gson)
 
     api(projects.log)
     api(projects.libJson)

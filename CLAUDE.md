@@ -43,9 +43,15 @@ Version catalog at `gradle/libs.versions.toml` manages all dependency versions, 
 
 Native modules use **CMake** (migrated from Android.mk/ndk-build):
 - `lib-image` — Bitmap rotation JNI library (`leo-bitmap`)
+- `yuv` — libyuv wrapper (`leo-yuv`)
+- `jpeg` — libjpeg-turbo wrapper (`leo-jpeg`)
 - `ffmpeg-sdk` — Three native libraries: `h264-hevc-decoder`, `adpcm-ima-qt-decoder`, `adpcm-ima-qt-encoder` (links prebuilt FFmpeg libs)
 
-All native targets include 16KB page alignment (`-Wl,-z,max-page-size=16384`) for Android compatibility. CMakeLists.txt files are under each module's `src/main/cpp/`.
+All native targets include 16KB page alignment (`-Wl,-z,max-page-size=16384`) for Android compatibility. CMakeLists.txt files are under each module's root or `src/main/cpp/` directory.
+
+**External native library sources** (not Gradle modules, used for offline compilation):
+- `libjpeg-turbo/` — libjpeg-turbo build scripts and source archive (produces `.so` for `jpeg` module)
+- `ffmpeg-sdk/src/main/ffmpeg_build/` — FFmpeg build scripts and source archives
 
 **JNI nativeHandle pattern**: Native modules use an instance-based architecture where each Kotlin object holds a `nativeHandle: Long` field storing the C++ object pointer. This replaces the previous global-variable approach and enables multi-instance + thread-safe usage. See `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md` for details.
 

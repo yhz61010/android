@@ -43,9 +43,15 @@
 
 Native 模块使用 **CMake** 构建（已从 Android.mk/ndk-build 迁移）：
 - `lib-image` — Bitmap 旋转 JNI 库（`leo-bitmap`）
+- `yuv` — libyuv 封装（`leo-yuv`）
+- `jpeg` — libjpeg-turbo 封装（`leo-jpeg`）
 - `ffmpeg-sdk` — 三个 native 库：`h264-hevc-decoder`、`adpcm-ima-qt-decoder`、`adpcm-ima-qt-encoder`（链接预编译的 FFmpeg 库）
 
-所有 native 目标均包含 16KB 页面对齐（`-Wl,-z,max-page-size=16384`）以兼容 Android。CMakeLists.txt 文件位于各模块的 `src/main/cpp/` 目录下。
+所有 native 目标均包含 16KB 页面对齐（`-Wl,-z,max-page-size=16384`）以兼容 Android。CMakeLists.txt 文件位于各模块的根目录或 `src/main/cpp/` 目录下。
+
+**外部 native 库源码**（非 Gradle 模块，用于离线编译）：
+- `libjpeg-turbo/` — libjpeg-turbo 编译脚本和源码包（产出 `.so` 供 `jpeg` 模块使用）
+- `ffmpeg-sdk/src/main/ffmpeg_build/` — FFmpeg 编译脚本和源码包
 
 **JNI nativeHandle 模式**：Native 模块使用基于实例的架构，每个 Kotlin 对象持有一个 `nativeHandle: Long` 字段存储 C++ 对象指针。该模式替代了之前的全局变量方案，支持多实例及线程安全使用。详见 `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md`。
 

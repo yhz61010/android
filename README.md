@@ -2,11 +2,12 @@
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.3.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-9.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-9.4.0-green)](https://gradle.org)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-8.1.1-important)](https://www.ffmpeg.org/releases/ffmpeg-8.1.1.tar.xz)
 
-[![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_4_|_2025.3.4_Patch_1-green)](https://developer.android.com/studio)
-[![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-green)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_4_|_2025.3.4_Patch_1-blue)](https://developer.android.com/studio)
+[![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-orange)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
-[![NDK](https://img.shields.io/badge/NDK-29.0.14206865-green)](https://developer.android.com/ndk/downloads)
+[![NDK](https://img.shields.io/badge/NDK-29.0.14206865-important)](https://developer.android.com/ndk/downloads)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
 

@@ -49,27 +49,52 @@ h264_mp4toannexb: Convert an H.264 bitstream from length prefixed mode to start 
 
 ### Download
 Download `libyuv` sources and move all files into `jni` folder.
-or use the downloaded sources `libyuv-20220824.tar.gz`
-(This is the original official version just excludes `.git` folder. Downloaded date: 2022/08/24)
+or use the downloaded sources `libyuv-20260514.tar.xz`
+(This is the original official version just excludes `.git` folder. Downloaded date: 2026/05/14)
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
 $ rm -rf libyuv/jni libyuv/libs libyuv/obj
 $ mkdir -p libyuv/jni
 $ cd libyuv/jni
 $ git clone https://chromium.googlesource.com/libyuv/libyuv .
-# or unzip `libyuv-20220324.tar.gz` file
-$ tar xvzf ../../yuv/libyuv-20220824.tar.gz --strip-components 1
+# or unzip file
+$ tar xvJf ../../yuv/libyuv-20260514.tar.xz --strip-components 1
 ```
+
+### Create `./libyuv/jni/Application.mk` file
+```
+cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
+cd libyuv/jni
+echo -e "# Keep the NDK platform level explicit to avoid default warning.\nAPP_PLATFORM := android-21\n" > Application.mk
+````
 
 ### Modify `./libyuv/jni/Android.mk` file
 Modify `Android.mk` file to ignore JPEG dependency.
-Add the following line before ```LOCAL_CPP_EXTENSION := .cc```
+Add the following line before the first ```LOCAL_CPP_EXTENSION := .cc```
 
 ```
 LIBYUV_DISABLE_JPEG := "yes"
 ```
 
-Replace the following lines(from lines 86 to 87)
+Insert the following lines after line 46, just after `common_CFLAGS := -Wall -fexceptions`:
+
+```
+# ndk-build file list does not include SVE/SME source units.
+# Keep them disabled here to avoid unresolved *_SVE2/*_SME symbols.
+common_CFLAGS += -DLIBYUV_DISABLE_SVE -DLIBYUV_DISABLE_SME
+```
+
+Insert the following lines before line 58, just before `LOCAL_CFLAGS += $(common_CFLAGS)`:
+
+```
+# AArch64 sources include dotprod/i8mm inline asm in neon64 files.
+# Enable required ISA extensions for arm64 builds.
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+common_CFLAGS += -march=armv8-a+dotprod+i8mm
+endif
+```
+
+Replace the lines 78, 79 
 ```
 LOCAL_STATIC_LIBRARIES := libyuv_static
 LOCAL_SHARED_LIBRARIES := libjpeg
@@ -85,8 +110,11 @@ endif
 ### Compile
 You can run the handy shell script to compile `libyuv` and `yuv`:
 ```shell
+cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/yuv
 sh compile_all_in_one.sh
 ```
+
+----------
 
 Or you can do that step by step:
 ```
@@ -96,7 +124,7 @@ $ ndk-build
 You'll get the `so` files in the generated folder 
 `/Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/libs`
 
-## How to compile `yuv`
+## How to compile `yuv` step by step
 First, copy `include` folder from `libyuv/jni` to `yuv/src/main/cpp`.
 ```shell
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libyuv/
@@ -118,7 +146,7 @@ Finally, you have three ways to compile `yuv` module:
 - Compile with `gradlew` command.
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/
-$ ./gradlew :yuv:assemble
+$ ./gradlew :yuv:assembleRelease
 ```
 - Compile from `Gradle` sidebar.
 Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> yuv -> build -> assemble **.

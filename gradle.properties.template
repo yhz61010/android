@@ -15,8 +15,8 @@ org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
 # This option should only be used with decoupled projects. More details, visit
 # http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
 org.gradle.parallel=true
-org.gradle.daemon=true
 org.gradle.caching=true
+# org.gradle.daemon=true
 
 # -------Android-------
 # AndroidX package structure to make it clearer which packages are bundled with the
@@ -31,7 +31,7 @@ android.enableJetifier=false
 # From AGP 8.0, it's true when not specified, and thus becomes the default.
 # https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
 android.nonTransitiveRClass=true
-android.injected.testOnly=false
+# android.injected.testOnly=false
 # https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
 #android.defaults.buildfeatures.buildconfig=true
 # https://developer.android.com/build/releases/gradle-plugin#default-changes
@@ -47,12 +47,12 @@ kotlin.code.style=official
 # ksp.useKSP2=true
 # Enable Compile Avoidance, which skips annotation processing if only method bodies are changed in dependencies
 # To turn on Compile Avoidance we need to turn off AP discovery in compile path.
-kapt.include.compile.classpath=false
+# kapt.include.compile.classpath=false
 # https://droidyue.com/blog/2019/08/18/faster-kapt/
-kapt.incremental.apt=true
+# kapt.incremental.apt=true
 # Suppress false positive "The Kotlin Gradle plugin was loaded multiple times" warning. See
 # https://youtrack.jetbrains.com/issue/KT-46200
-kotlin.pluginLoadedInMultipleProjects.ignore=true
+# kotlin.pluginLoadedInMultipleProjects.ignore=true
 
 # ==============================
 

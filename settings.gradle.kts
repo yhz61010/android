@@ -24,11 +24,11 @@ pluginManagement {
         mavenCentral()
 
         maven { url = uri("https://maven.aliyun.com/repository/google") }
+        // AliYun Gradle mirrors
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
         // Tencent Gradle mirrors
         maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/gradle-plugins/") }
         maven { url = uri("https://mirrors.tuna.tsinghua.edu.cn/maven") }
-        // AliYun Gradle mirrors
-        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
     }
 
     // resolutionStrategy {
@@ -71,24 +71,24 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     @Suppress("UnstableApiUsage")
     repositories {
-        maven("https://jitpack.io")
-
-        maven("https://plugins.gradle.org/m2/")
-        maven("https://maven.java.net/content/groups/public/")
-        // https://github.com/airbnb/lottie/blob/master/android-compose.md
-        maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
-
         google()
-        mavenCentral {
-            isAllowInsecureProtocol = true
-        }
+        mavenCentral()
+        // mavenCentral {
+        //     isAllowInsecureProtocol = true
+        // }
 
         maven("https://maven.aliyun.com/repository/public")
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/central")
-
-        maven("https://mirrors.cloud.tencent.com/gradle/")
         maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
+        maven("https://mirrors.cloud.tencent.com/gradle/")
+
+        maven("https://jitpack.io")
+
+        // maven("https://plugins.gradle.org/m2/")
+        // maven("https://maven.java.net/content/groups/public/")
+        // https://github.com/airbnb/lottie/blob/master/android-compose.md
+        maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
     }
 }
 
@@ -133,6 +133,5 @@ include(
     ":lib-common-kotlin",
     ":lib-mvvm",
     ":lib-compose"
-
-    // "ffmpeg-sdk"
+    // ":ffmpeg-sdk"
 )

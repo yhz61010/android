@@ -5,7 +5,6 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Locale
 import java.util.Properties
-import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 // =====================================
 // ========== Global settings ==========
@@ -115,7 +114,7 @@ allprojects {
 
     // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
     apply(plugin = rootProject.libs.plugins.ktlint.gradle.get().pluginId)
-    configure<KtlintExtension> { version.set(rootProject.libs.versions.detekt.get()) }
+    // configure<KtlintExtension> { version.set(rootProject.libs.versions.ktlint.get()) }
 
     apply(plugin = rootProject.libs.plugins.detekt.get().pluginId)
     // or

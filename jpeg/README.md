@@ -1,6 +1,6 @@
 ### Compile `libjpeg-turbo`
 
-Please read `README.md` in `libjpeg-turbo-main` module. Then compile `libjpeg-turbo`. Copy the
+Please read `README.md` in `libjpeg-turbo` module. Then compile `libjpeg-turbo`. Copy the
 generated header files from `libs/(arm64-v8a|armeabi-v7a)/include/*.h` into `jpeg`
 module `src/main/cpp/include`. Copy the generated `so` files from `libs/<ABIS>/lib/*.so`
 into `jpeg` module `libs/<ABIS>`. The final file structures like this:
@@ -18,7 +18,7 @@ jpeg
          |-> main
               |-> cpp
                    |-> include
-                          |-> header files copied from `libjpeg-turbo-main`
+                          |-> header files copied from `libjpeg-turbo`
 ```
 
 You can run the following handy shell to do the things mentioned above:
@@ -36,7 +36,7 @@ You have three ways to compile `jpeg` module:
 
 ```
 $ cd /Users/yhz61010/AndroidStudioProjects/android/
-$ ./gradlew :jpeg:assemble
+$ ./gradlew :jpeg:assembleRelease
 ```
 
 - Compile from `Gradle` sidebar. Run from right sidebar **Gradle -> LeoAndroidBaseUtil -> jpeg

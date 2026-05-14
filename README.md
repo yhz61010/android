@@ -16,9 +16,9 @@ Project configurations:
 - `targetSdk` is `36` (Android 16 - Baklava)
 
 PS:
-Due to limitations from other projects I am currently involved in, 
-the `minSdk` must remain at `21` and cannot be upgraded for now. 
-This also indirectly affects some of the open-source libraries used in this project, 
+Due to limitations from other projects I am currently involved in,
+the `minSdk` must remain at `21` and cannot be upgraded for now.
+This also indirectly affects some of the open-source libraries used in this project,
 preventing them from being updated to their latest versions.
 
 PPS:
@@ -41,7 +41,7 @@ This project uses **Git LFS** to manage large binary files (`.so`, `.a`, `.mp3`,
    cd android
    git lfs install
    ```
-   
+
    For slow networks, you can skip LFS downloads during clone and pull them later:
    ```bash
    GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/yhz61010/android.git
@@ -58,6 +58,23 @@ This project uses **Git LFS** to manage large binary files (`.so`, `.a`, `.mp3`,
 > **Without Git LFS**, LFS-tracked files will appear as ~130-byte pointer files instead of actual content. Install Git LFS and run `git lfs pull` to fix this.
 
 For more details, see `00-documents/git-lfs-guide.md`.
+
+# Troubleshooting
+
+### JitPack dependency download failure
+
+If you encounter build errors like `Could not find <library>.aar (com.github.xxx:xxx)` with the searched location pointing to a mirror repository (e.g., Tencent or Alibaba mirrors) instead of JitPack, the Gradle cache may have resolved the dependency metadata from the wrong repository.
+
+**Fix**: Clear the corrupted local cache for the affected dependency, then rebuild:
+
+```bash
+# Example: clear cache for com.github.liangjingkanji:Net
+rm -rf ~/.gradle/caches/modules-2/files-2.1/com.github.liangjingkanji
+rm -rf ~/.gradle/caches/modules-2/metadata-2.*/descriptors/com.github.liangjingkanji
+
+# Rebuild
+./gradlew :demo:assembleDevDebug
+```
 
 # How to import?
 

@@ -27,14 +27,14 @@ Download and extract FFmpeg source:
 
 ```bash
 cd ffmpeg-sdk/src/main/ffmpeg_build
-wget -c https://www.ffmpeg.org/releases/ffmpeg-8.1.tar.xz
-tar xvJf ffmpeg-8.1.tar.xz
+wget -c https://www.ffmpeg.org/releases/ffmpeg-8.1.1.tar.xz
+tar xvJf ffmpeg-8.1.1.tar.xz
 ```
 
 Modify the FFmpeg version and NDK path in `config.sh` first:
 
 ```bash
-FFMPEG_FOLDER=ffmpeg-8.1
+FFMPEG_FOLDER=ffmpeg-8.1.1
 NDK_PATH=/path/to/your/ndk
 ```
 

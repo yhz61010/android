@@ -8,7 +8,7 @@ else
 fi
 
 # NDK路径和版本配置
-ANDROID_NDK_ROOT=~/Library/Android/sdk/ndk/21.1.6352462
+ANDROID_NDK_ROOT=~/Android/Sdk/ndk/29.0.14206865
 
 #IFS='/' read -r -a ANDROID_NDK_ROOT_STR_ARRAY <<< "$ANDROID_NDK_ROOT"
 ANDROID_NDK_ROOT_STR_ARRAY=($(echo "$ANDROID_NDK_ROOT" | sed -e 's/\// /g'))

@@ -1,5 +1,7 @@
 **Attention**:
-`libjpeg-turbo-v2.1.4-202200823.tar.gz` This file is downloaded at 2022/08/23.
+`libjpeg-turbo-3.1.4.1.tar.gz` This file is downloaded at 2026/05/14.
+
+The generated `libs` will be used by `jpeg` module.
 
 ## Android 16KB Page Size Alignment Fix
 
@@ -25,30 +27,31 @@ meeting the requirements of Android 15+ on arm64-v8a devices.
 ## How to compile `ibjpeg-turbo`
 
 ### Download
-Download `libjpeg-turbo` sources or use the downloaded sources `libjpeg-turbo-main-20220325.tar.gz`
-(This is the original official version just excludes `.git` and `.github` folder. Downloaded date: 2022/03/25)
+Download `libjpeg-turbo` sources or use the downloaded sources `libjpeg-turbo-3.1.4.1.tar.gz`
+(This is the original official version just excludes `.git` and `.github` folder. Downloaded date: 2026/05/14)
 
 ```
-$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libjpeg-turbo-main
+$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libjpeg-turbo
 $ rm -rf source
 $ mkdir source
 $ cd source
 $ git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git .
-# or unzip `libjpeg-turbo-v2.1.4-202200823.tar.gz` file
-$ tar xvzf ../libjpeg-turbo-v2.1.4-202200823.tar.gz --strip-components 1
+# or unzip the file
+$ tar xvzf ../libjpeg-turbo-3.1.4.1.tar.gz --strip-components 1
 ```
 
 ### Compile
 Run the following command:
 ```shell
-$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libjpeg-turbo-main/
+$ cd /Users/yhz61010/AndroidStudioProjects/LeoAndroidBaseUtilProject-Kotlin/libjpeg-turbo/
+$ vim 00_config.sh # Set the ANDROID_NDK_ROOT to your path. 
 $ sh 00_build_jpeg_all.sh
 ```
 
 ### How to check 16KB align?
 #### By using `readelf`
 ```bash
-$ readelf -l /home/yhz61010/StudioProjects/android/libjpeg-turbo-main/libs/arm64-v8a/lib/libjpeg.so | grep -A 1 "LOAD"
+$ readelf -l /home/yhz61010/StudioProjects/android/libjpeg-turbo/libs/arm64-v8a/lib/libjpeg.so | grep -A 1 "LOAD"
   LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
                  0x0000000000057030 0x0000000000057030  R E    0x4000
   LOAD           0x0000000000057030 0x000000000005b030 0x000000000005b030
@@ -61,7 +64,7 @@ $ readelf -l /home/yhz61010/StudioProjects/android/libjpeg-turbo-main/libs/arm64
 
 ### By using `objdump`
 ```bash
-$ objdump -p /home/yhz61010/StudioProjects/android/libjpeg-turbo-main/libs/arm64-v8a/lib/libturbojpeg.so | grep -A 2 "LOAD"
+$ objdump -p /home/yhz61010/StudioProjects/android/libjpeg-turbo/libs/arm64-v8a/lib/libturbojpeg.so | grep -A 2 "LOAD"
     LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**14
          filesz 0x000000000006cdd0 memsz 0x000000000006cdd0 flags r-x
     LOAD off    0x000000000006cdd0 vaddr 0x0000000000070dd0 paddr 0x0000000000070dd0 align 2**14

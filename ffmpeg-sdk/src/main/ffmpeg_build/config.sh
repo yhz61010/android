@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # shellcheck disable=SC2034
-FFMPEG_FOLDER=ffmpeg-8.1
+FFMPEG_FOLDER=ffmpeg-8.1.1
 NDK_PATH=/home/yhz61010/Android/Sdk/ndk/29.0.14206865
 HOST_ARCH=$(uname -m)
 # linux-x86_64
 # darwin-x86_64
 HOST_TAG=linux-${HOST_ARCH}
-MIN_SDK_VER=23
+MIN_SDK_VER=21
 PKG_CONFIG_PATH=$(which pkg-config | sed 's/pkg-config$//' )
 
 # ==================================

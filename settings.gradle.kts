@@ -77,13 +77,13 @@ dependencyResolutionManagement {
         //     isAllowInsecureProtocol = true
         // }
 
+        maven("https://jitpack.io")
+
         maven("https://maven.aliyun.com/repository/public")
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/central")
         maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
         maven("https://mirrors.cloud.tencent.com/gradle/")
-
-        maven("https://jitpack.io")
 
         // maven("https://plugins.gradle.org/m2/")
         // maven("https://maven.java.net/content/groups/public/")

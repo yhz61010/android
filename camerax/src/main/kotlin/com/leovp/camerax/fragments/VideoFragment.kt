@@ -20,8 +20,10 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.DynamicRange
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.FileOutputOptions
@@ -39,9 +41,7 @@ import androidx.core.util.Consumer
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenCreated
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import com.leovp.android.exts.circularClose
 import com.leovp.android.exts.circularReveal
 import com.leovp.android.exts.setOnSingleClickListener
@@ -54,7 +54,7 @@ import com.leovp.camerax.enums.CameraRatio
 import com.leovp.camerax.enums.RecordUiState
 import com.leovp.camerax.fragments.base.BaseCameraXFragment
 import com.leovp.camerax.listeners.CameraXTouchListener
-import com.leovp.camerax.utils.getAspectRatio
+import com.leovp.camerax.utils.getAspectRatioStrategy
 import com.leovp.camerax.utils.getAspectRatioString
 import com.leovp.camerax.utils.getNameString
 import com.leovp.camerax.utils.toggleButton
@@ -63,10 +63,9 @@ import com.leovp.log.LogContext
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import androidx.navigation.findNavController
 
 @SuppressLint("RestrictedApi")
 class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
@@ -93,7 +92,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     /** Host's navigation controller */
     private val navController: NavController by lazy {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+        requireActivity().findNavController(R.id.fragment_container_camerax)
     }
 
     // Selector showing which flash mode is selected (on, off)
@@ -118,7 +117,6 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private var torchEnabled = false
 
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(requireContext()) }
-    private var enumerationDeferred: Deferred<Unit>? = null
 
     /**
      * CaptureEvent listener.
@@ -145,11 +143,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         incPreviewGridBinding.viewFinder.post {
             // Keep track of the display in which this view is attached
             displayId = incPreviewGridBinding.viewFinder.display.displayId
-            // Build UI controls
-            updateCameraUi()
             lifecycleScope.launch(Dispatchers.Main) {
-                enumerationDeferred?.await()
-                enumerationDeferred = null
+                loadCameraCapabilities()
+                // Build UI controls
+                updateCameraUi()
                 // Set up the camera and its use cases
                 setUpCamera()
             }
@@ -249,16 +246,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         //        val maxPreviewSize = getMaxPreviewSize(cameraSelector)
         //        LogContext.log.w(logTag, "Max preview size=$maxPreviewSize")
 
+        val previewResolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(selectedQuality.getAspectRatioStrategy())
+            .build()
+
         val preview = Preview.Builder()
-            // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            .setTargetAspectRatio(selectedQuality.getAspectRatio())
+            .setResolutionSelector(previewResolutionSelector)
             // Set initial target rotation
             .setTargetRotation(rotation)
-            // Cannot use both setTargetResolution and setTargetAspectRatio on the same config.
-            //            .setTargetResolution(targetSize)
             .build().apply {
                 // Attach the viewfinder's surface provider to preview use case
-                setSurfaceProvider(incPreviewGridBinding.viewFinder.surfaceProvider)
+                surfaceProvider = incPreviewGridBinding.viewFinder.surfaceProvider
             }
 
         // build a recorder, which can:
@@ -302,7 +300,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     /**
-     * Kick start the video recording
+     * Kick-start the video recording
      *   - config Recorder to capture to MediaStoreOutput
      *   - register RecordEvent Listener
      *   - apply audio request from user
@@ -355,39 +353,33 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     /**
      * Query and cache this platform's camera capabilities, run only once.
      */
-    init {
-        enumerationDeferred = lifecycleScope.async {
-            whenCreated {
-                val provider = ProcessCameraProvider.getInstance(requireContext()).await()
-                provider.unbindAll()
-                for (
-                camSelector in arrayOf(
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    CameraSelector.DEFAULT_FRONT_CAMERA
-                )
-                ) {
-                    runCatching {
-                        // just get the camera.cameraInfo to query capabilities
-                        // we are not binding anything here.
-                        if (provider.hasCamera(camSelector)) {
-                            val camera = provider.bindToLifecycle(requireActivity(), camSelector)
-                            val supportedQualities = QualitySelector.getSupportedQualities(camera.cameraInfo)
-                            val camName =
-                                if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
-                            LogContext.log.w(
-                                logTag,
-                                "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}"
-                            )
-                            supportedQualities.filter { quality ->
-                                listOf(Quality.UHD, Quality.FHD, Quality.HD).contains(quality)
-                            }.also {
-                                cameraCapabilities[camSelector] = it
-                            }
-                        }
-                    }.onFailure {
-                        LogContext.log.e(logTag, "Camera Face $camSelector is not supported")
+    private suspend fun loadCameraCapabilities() {
+        val provider = ProcessCameraProvider.getInstance(requireContext()).await()
+        provider.unbindAll()
+        for (camSelector in arrayOf(
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        )) {
+            runCatching {
+                if (provider.hasCamera(camSelector)) {
+                    val camera = provider.bindToLifecycle(viewLifecycleOwner, camSelector)
+                    val supportedQualities = Recorder.getVideoCapabilities(camera.cameraInfo)
+                        .getSupportedQualities(DynamicRange.SDR)
+                    val camName = if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
+                    LogContext.log.w(
+                        logTag,
+                        "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}"
+                    )
+                    supportedQualities.filter { quality ->
+                        listOf(Quality.UHD, Quality.FHD, Quality.HD).contains(quality)
+                    }.also {
+                        cameraCapabilities[camSelector] = it
                     }
                 }
+            }.onFailure {
+                LogContext.log.e(logTag, "Camera Face $camSelector is not supported")
+            }.also {
+                provider.unbindAll()
             }
         }
     }
@@ -416,7 +408,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     enableUI(false) // Our eventListener will turn on the Recording UI.
                     startRecording()
                 } else {
-                    if (currentRecording == null || recordingState is VideoRecordEvent.Finalize) {
+                    if (currentRecording == null) {
                         return@setOnClickListener
                     }
                     currentRecording?.stop()
@@ -615,8 +607,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
 
         if (event is VideoRecordEvent.Finalize) {
-            val state =
-                if (event is VideoRecordEvent.Status) recordingState.getNameString() else event.getNameString()
+            val state = event.getNameString()
             val stats = event.recordingStats
             val size = stats.numBytesRecorded
             val time = TimeUnit.NANOSECONDS.toSeconds(stats.recordedDurationNanos)

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.leovp.androidbase.utils.device
 
 import android.Manifest
@@ -7,7 +9,10 @@ import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.net.NetworkRequest
 import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
 import android.net.wifi.WifiNetworkSpecifier
+import android.os.Build
 import androidx.annotation.RequiresPermission
 import com.leovp.android.exts.connectivityManager
 import com.leovp.android.exts.wifiManager
@@ -29,10 +34,9 @@ class WifiUtil private constructor(private val ctx: Context) {
      *
      * @param enc Only available below API 29(API < 29)(Android Q/Android 10)
      */
-    @Suppress("DEPRECATION")
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
     fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WEP) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) { // Android 10
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // Android 10
             val wifiNetworkSpecifier =
                 WifiNetworkSpecifier.Builder().setSsid(wifiSsid).setWpa2Passphrase(wifiPwd).build()
             val networkRequest = NetworkRequest.Builder()
@@ -83,15 +87,29 @@ class WifiUtil private constructor(private val ctx: Context) {
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getCurrentSsid(): String? {
-        var ssid: String? = null
-        val networkInfo: NetworkInfo? = ctx.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
-        if (networkInfo?.isConnected == true) {
-            val connectionInfo = ctx.wifiManager.connectionInfo
-            if (connectionInfo != null && connectionInfo.ssid.isNotEmpty()) {
-                ssid = connectionInfo.ssid
+        val ssid: String? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val activeNetwork = ctx.connectivityManager.activeNetwork
+            val capabilities = ctx.connectivityManager.getNetworkCapabilities(activeNetwork)
+            (capabilities?.transportInfo as? WifiInfo)?.ssid
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val activeNetwork = ctx.connectivityManager.activeNetwork
+            val capabilities = ctx.connectivityManager.getNetworkCapabilities(activeNetwork)
+            if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+                ctx.wifiManager.connectionInfo?.ssid
+            } else {
+                null
+            }
+        } else {
+            val networkInfo: NetworkInfo? =
+                ctx.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+            if (networkInfo?.isConnected == true) {
+                ctx.wifiManager.connectionInfo?.ssid
+            } else {
+                null
             }
         }
-        return ssid?.removePrefix("\"")?.removeSuffix("\"")
+        return ssid?.takeUnless { it.isBlank() || it == WifiManager.UNKNOWN_SSID }
+            ?.removePrefix("\"")?.removeSuffix("\"")
     }
 }
 

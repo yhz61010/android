@@ -3,15 +3,19 @@
 package com.leovp.camerax.utils
 
 import androidx.camera.core.AspectRatio
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.video.Quality
 
 /**
- * a helper function to retrieve the aspect ratio from a QualitySelector enum.
+ * A helper function to convert the quality preset to a CameraX aspect ratio strategy.
  */
-internal fun Quality.getAspectRatio(): Int = when {
-    arrayOf(Quality.UHD, Quality.FHD, Quality.HD).contains(this) -> AspectRatio.RATIO_16_9
-    (this == Quality.SD) -> AspectRatio.RATIO_4_3
-    else -> throw UnsupportedOperationException()
+internal fun Quality.getAspectRatioStrategy(): AspectRatioStrategy {
+    val ratio = when {
+        arrayOf(Quality.UHD, Quality.FHD, Quality.HD).contains(this) -> AspectRatio.RATIO_16_9
+        this == Quality.SD -> AspectRatio.RATIO_4_3
+        else -> throw UnsupportedOperationException()
+    }
+    return AspectRatioStrategy(ratio, AspectRatioStrategy.FALLBACK_RULE_AUTO)
 }
 
 /**

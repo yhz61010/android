@@ -98,8 +98,6 @@ class AudioPlayer(
                     AudioType.OPUS -> opusStreamPlayer?.startPlayingStream(chunkAudioData) {
                         LogContext.log.w(TAG, "Opus Drop audio frame")
                     }
-
-                    else -> Unit
                 }
             }
         } catch (e: Exception) {

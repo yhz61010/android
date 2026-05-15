@@ -99,7 +99,12 @@ abstract class BaseRenderer :
     }
 
     @Synchronized
-    protected fun readFramePixelBuffer(x: Int = 0, y: Int = 0, width: Int = outputWidth, height: Int = outputHeight) {
+    protected fun readFramePixelBuffer(
+        x: Int = 0,
+        y: Int = 0,
+        width: Int = outputWidth,
+        height: Int = outputHeight
+    ) {
         val buffer = ByteBuffer.allocate(width * height * Float.SIZE_BYTES).also {
             GLES20.glReadPixels(x, y, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, it)
         }

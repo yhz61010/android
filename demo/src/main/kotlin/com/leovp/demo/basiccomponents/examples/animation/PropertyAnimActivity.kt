@@ -24,7 +24,8 @@ import kotlin.random.Random
  * BounceInterpolator 结束时Q弹一下
  * CycleInterpolator 来回循环
  */
-class PropertyAnimActivity : BaseDemonstrationActivity<ActivityPropertyAnimBinding>(R.layout.activity_property_anim) {
+class PropertyAnimActivity :
+    BaseDemonstrationActivity<ActivityPropertyAnimBinding>(R.layout.activity_property_anim) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityPropertyAnimBinding =

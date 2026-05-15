@@ -20,13 +20,23 @@ object GZipUtil {
      * @param data Byte order: Little endian
      */
     fun decompress(data: ByteArray, charset: Charset = StandardCharsets.UTF_8): String? =
-        runCatching { GZIPInputStream(data.inputStream()).bufferedReader(charset).use { it.readText() } }.getOrNull()
+        runCatching {
+            GZIPInputStream(
+                data.inputStream()
+            ).bufferedReader(charset).use { it.readText() }
+        }.getOrNull()
 
     /**
      * @param data Byte order: Little endian
      *
      * GZIP_MAGIC: 0x8b1f - in big endian
      */
-    fun isGzip(data: ByteArray): Boolean =
-        ((data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)) and 0xFFFF == GZIPInputStream.GZIP_MAGIC
+    fun isGzip(data: ByteArray): Boolean = (
+        (
+            data[0].toInt() and
+                0xFF
+            ) or
+            (data[1].toInt() shl 8)
+        ) and
+        0xFFFF == GZIPInputStream.GZIP_MAGIC
 }

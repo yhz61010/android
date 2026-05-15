@@ -127,8 +127,10 @@ fun Long.autoByteInDecimal(precision: Int = 2): String = when {
  * B -> XB/XiB
  * Automatically convert Byte to the appropriate XB/XiB.
  *
- * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB, EB, ZB, YB.
- * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB.
+ * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB,
+ * EB, ZB, YB.
+ * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB,
+ * GiB, TiB, PiB, EiB, ZiB, YiB.
  *
  * @param si true -> B -> XB; false -> B -> XiB
  */
@@ -137,8 +139,10 @@ fun Long.autoFormatByte(si: Boolean = false, precision: Int = 2): String =
 
 // Formatter.formatShortFileSize(ctx, bytes)
 /**
- * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB, EB, ZB, YB.
- * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB.
+ * SI(The International System of Units): Base quantity is 1000, units are B, kB, MB, GB, TB, PB,
+ * EB, ZB, YB.
+ * IEC(The International Electrotechnical Commission): Base quantity is 1024, units are B, KiB, MiB,
+ * GiB, TiB, PiB, EiB, ZiB, YiB.
  */
 fun Long.humanReadableByteCount(si: Boolean = false, precision: Int = 2): String {
     if (this < 0) return "NA"
@@ -146,7 +150,11 @@ fun Long.humanReadableByteCount(si: Boolean = false, precision: Int = 2): String
     if (this < base) return "${this}B"
     val exp = (ln(this.toDouble()) / ln(base.toDouble())).toInt()
     val pre = (if (si) "kMGTPEZY" else "KMGTPEZY")[exp - 1].toString()
-    return "%.${precision}f%s%s".format(this / base.toDouble().pow(exp.toDouble()), pre, if (si) "B" else "iB")
+    return "%.${precision}f%s%s".format(
+        this / base.toDouble().pow(exp.toDouble()),
+        pre,
+        if (si) "B" else "iB"
+    )
 }
 
 fun Long.outputFormatByte(): String = "${autoByteInBinary()}(${autoByteInDecimal()})"

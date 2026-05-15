@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Author: Michael Leo
  * Date: 20-5-15 下午1:54
  */
-class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) : ScreenProcessor {
+class ScreenRecordMediaCodecStrategy private constructor(private val builder: Builder) :
+    ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
 
@@ -51,12 +52,16 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             //            // fill inputBuffer with valid data
             //
             //            codec.queueInputBuffer(inputBufferId,)
-            //            LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
+            // LogContext.log.d(TAG, "onInputBufferAvailable inputBufferId=$inputBufferId")
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
-                //                    LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
+                // LogContext.log.d(TAG, "onOutputBufferAvailable outputBufferId=$outputBufferId")
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
@@ -69,10 +74,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                         info.presentationTimeUs - beginPTS
                     }
                     //                    LogContext.log.w(
-                    //                        TAG, "ori presentationTimeUs=${currentPTS / 1000 / 1000} new=${info.presentationTimeUs} " +
-                    //                                "currentTimeMillis=${System.currentTimeMillis()} " +
-                    //                                "elapsedRealtime=${SystemClock.elapsedRealtime()} " +
-                    //                                "currentThreadTimeMillis=${SystemClock.currentThreadTimeMillis()} " +
+                    // TAG, "ori presentationTimeUs=${currentPTS / 1000 / 1000}
+                    // new=${info.presentationTimeUs} " +
+                    // "currentTimeMillis=${System.currentTimeMillis()} " +
+                    // "elapsedRealtime=${SystemClock.elapsedRealtime()} " +
+                    // "currentThreadTimeMillis=${SystemClock.currentThreadTimeMillis()} " +
                     //                                "uptimeMillis=${SystemClock.uptimeMillis()}"
                     //                    )
                     onSendAvcFrame(it, info.flags, info.size, calcPTS)
@@ -82,7 +88,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            //            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+            // LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
@@ -121,7 +127,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
-        fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
+        fun setGoogleEncoder(useGoogleEncoder: Boolean) =
+            apply { this.useGoogleEncoder = useGoogleEncoder }
 
         fun build(): ScreenRecordMediaCodecStrategy {
             LogContext.log.i(
@@ -165,24 +172,29 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             // Set the encoder priority to realtime.
             setInteger(MediaFormat.KEY_PRIORITY, 0x00)
             // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
+            // Actually, this key has been used in Android 6.0+ although it just has been opened as
+            // of Android 10.
             @Suppress("unchecked")
             setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             // }
-            //            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
-            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
-            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
-            // //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
-            //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+            // val profileLevelPair =
+            // CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+            // // .firstOrNull { it.profile ==
+            // MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
+            // // .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
+            // // .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
+            // .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
             // //                .maxByOrNull { it.profile }
-            //            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-            //            val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
+            // val usedProfile = profileLevelPair?.profile ?:
+            // MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+            // val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
             //            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
             //                LogContext.log.w(TAG, "KEY_PROFILE: $usedProfile")
             //                setInteger(MediaFormat.KEY_PROFILE, usedProfile)
             //            } else {
             //                LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
-            //                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+            // setInteger(MediaFormat.KEY_PROFILE,
+            // MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
             //            }
             //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
             //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -193,7 +205,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             //                setInteger(MediaFormat.KEY_LEVEL, usedLevel)
             //            } else {
             //                LogContext.log.w(TAG, "KEY_LEVEL static: AVCLevel4")
-            //                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
+            // setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             //            }
         }
         h26xEncoder = if (builder.useGoogleEncoder) {
@@ -300,7 +312,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendThread = null
     }
 
-    private fun onSendAvcFrame(bb: ByteBuffer, flags: Int, bufferSize: Int, presentationTimeUs: Long) {
+    private fun onSendAvcFrame(
+        bb: ByteBuffer,
+        flags: Int,
+        bufferSize: Int,
+        presentationTimeUs: Long
+    ) {
         //        var naluIndex = 4
         //        if (bb[2].toInt() == 0x01) {
         //            naluIndex = 3
@@ -343,7 +360,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         //        if (BuildConfig.DEBUG) {
         //            LogContext.log.d(
         //                TAG,
-        //                "$naluTypeStr:Len=${bytes.size}${if (NAL_SPS == naluType) "[" + bytes.toHexStringLE() + "]" else ""}"
+        // "$naluTypeStr:Len=${bytes.size}${if (NAL_SPS == naluType) "[" + bytes.toHexStringLE() +
+        // "]" else ""}"
         //            )
         //        }
 
@@ -384,7 +402,10 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
                 imageReader.setOnImageAvailableListener(null, videoDataSendHandler)
                 runCatching { imageReader.close() }.onFailure { it.printStackTrace() }
-                runCatching { virtualDisplayForImageReader?.release() }.onFailure { it.printStackTrace() }
+                runCatching { virtualDisplayForImageReader?.release() }.onFailure {
+                    it
+                        .printStackTrace()
+                }
             }.also { image.close() }
         }, null)
     }

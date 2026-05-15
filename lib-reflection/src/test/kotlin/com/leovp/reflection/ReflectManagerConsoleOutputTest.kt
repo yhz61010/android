@@ -68,7 +68,11 @@ class ReflectManagerConsoleOutputTest {
         assertEquals("Harry[M] is 21 years old.", harry.toString())
 
         // Primary Constructor
-        val employeeHarry: Employee? = Employee::class.primaryConstructor?.call("e0000001", DEPT_ID_DEV, harry)
+        val employeeHarry: Employee? = Employee::class.primaryConstructor?.call(
+            "e0000001",
+            DEPT_ID_DEV,
+            harry
+        )
         assertNotNull(employeeHarry)
         assertIs<Employee>(employeeHarry)
         assertEquals(
@@ -87,7 +91,8 @@ class ReflectManagerConsoleOutputTest {
         }.call("e0000002", amy)
         assertIs<Employee>(employeeAmy)
         assertEquals(
-            "[Leo Group] Employee(Amy[F] is 19 years old.) with ID e0000002 works in 0 departure. Salary: 0.",
+            "[Leo Group] Employee(Amy[F] is 19 years old.) with ID e0000002 " +
+                "works in 0 departure. Salary: 0.",
             employeeAmy.toString()
         )
 
@@ -106,23 +111,34 @@ class ReflectManagerConsoleOutputTest {
             println(
                 "constructor param size=${constructor.parameters.size} " +
                     "name=${constructor.name} " +
-                    "${constructor.parameters.map { p -> "argument type=${p.type} -> argument name=${p.name}" }}"
+                    "${constructor.parameters.map { p ->
+                        "argument type=${p
+                            .type} -> argument name=${p
+                            .name}"
+                    }}"
             )
         }
         // Result:
-        // constructor param size=1 name=<init> [argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
-        /* constructor param size=2 name=<init> [argument type=kotlin.String -> argument name=employeeId,
-                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
-        /* constructor param size=2 name=<init> [argument type=kotlin.Int -> argument name=deptId,
-                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
-        /* constructor param size=5 name=<init> [argument type=kotlin.String -> argument name=userName,
-                                    argument type=kotlin.Char -> argument name=sex,
-                                    argument type=kotlin.Int -> argument name=age,
-                                    argument type=kotlin.String -> argument name=employeeId,
-                                    argument type=kotlin.Int -> argument name=deptId] */
-        /* constructor param size=3 name=<init> [argument type=kotlin.String -> argument name=employeeId,
-                                    argument type=kotlin.Int -> argument name=deptId,
-                                    argument type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p] */
+        // constructor param size=1 name=<init> [argument
+        // type=com.leovp.reflection.ReflectManagerTest.Person -> argument name=p]
+        // constructor param size=2 name=<init> [argument type=kotlin.String -> argument
+        // name=employeeId,
+        //                             argument type=com.leovp.reflection.ReflectManagerTest
+        //                                 .Person -> argument name=p]
+        // constructor param size=2 name=<init> [argument type=kotlin.Int -> argument name=deptId,
+        //                             argument type=com.leovp.reflection.ReflectManagerTest
+        //                                 .Person -> argument name=p]
+        // constructor param size=5 name=<init> [argument type=kotlin.String -> argument
+        // name=userName,
+        //                             argument type=kotlin.Char -> argument name=sex,
+        //                             argument type=kotlin.Int -> argument name=age,
+        //                             argument type=kotlin.String -> argument name=employeeId,
+        //                             argument type=kotlin.Int -> argument name=deptId]
+        // constructor param size=3 name=<init> [argument type=kotlin.String -> argument
+        // name=employeeId,
+        //                             argument type=kotlin.Int -> argument name=deptId,
+        //                             argument type=com.leovp.reflection.ReflectManagerTest
+        //                                 .Person -> argument name=p]
     }
 
     @Test
@@ -143,7 +159,10 @@ class ReflectManagerConsoleOutputTest {
         employeeAllProperties.forEach { prop ->
             // Allow to get private property value.
             if (!prop.isAccessible) prop.isAccessible = true
-            println("${prop.visibility} ${prop.name}: ${prop.returnType} --> ${prop.getter.call(employee)}")
+            println(
+                "${prop.visibility} ${prop.name}: ${prop.returnType} --> " +
+                    "${prop.getter.call(employee)}"
+            )
         }
         // How to change a kotlin private val property?
         // https://stackoverflow.com/a/58361516/1685062
@@ -183,7 +202,8 @@ class ReflectManagerConsoleOutputTest {
         // Returns a Method object that reflects the specified public member method of the class or
         // interface represented by this Class object.
         // The name parameter is a String specifying the simple name of the desired method.
-        // The parameterTypes parameter is an array of Class objects that identify the method's formal parameter types,
+        // The parameterTypes parameter is an array of Class objects that identify the method's
+        // formal parameter types,
         // in declared order. If parameterTypes is null, it is treated as if it were an empty array.
         // If the name is " " or " " a NoSuchMethodException is raised. Otherwise,
         // the method to be reflected is determined by the algorithm that follows.
@@ -194,11 +214,13 @@ class ReflectManagerConsoleOutputTest {
         // The name parameter is a String that specifies the simple name of the desired method,
         // and the parameterTypes parameter is an array of Class objects that
         // identify the method's formal parameter types,
-        // in declared order. If more than one method with the same parameter types is declared in a class,
+        // in declared order. If more than one method with the same parameter types is declared in a
+        // class,
         // and one of these methods has a return type that is more specific than any of the others,
         // that method is returned; otherwise one of the methods is chosen arbitrarily.
         // If the name is "<init>"or "<clinit>" a NoSuchMethodException is raised.
-        // If this Class object represents an array type, then this method does not find the clone() method.
+        // If this Class object represents an array type, then this method does not find the clone()
+        // method.
         Person::class.java.getDeclaredMethod("say", String::class.java)
 
         // All functions and properties accessible in this class,
@@ -218,7 +240,8 @@ class ReflectManagerConsoleOutputTest {
         // in the class and the superclasses, as well as static methods declared in the class.
         Person::class.declaredFunctions
 
-        // Returns non-extension non-static functions declared in this class and all of its superclasses.
+        // Returns non-extension non-static functions declared in this class and all of its
+        // superclasses.
         Person::class.memberFunctions
         // Returns non-extension non-static functions declared in this class.
         Person::class.declaredMemberFunctions
@@ -289,7 +312,10 @@ class ReflectManagerConsoleOutputTest {
         employeeOnlySelfProperties.forEach { prop ->
             // Allow to get private property value.
             if (!prop.isAccessible) prop.isAccessible = true
-            println("${prop.visibility} ${prop.name}: ${prop.returnType} --> ${prop.getter.call(employee)}")
+            println(
+                "${prop.visibility} ${prop.name}: ${prop.returnType} --> " +
+                    "${prop.getter.call(employee)}"
+            )
         }
         // Result:
         // PUBLIC company: kotlin.String --> Leo Group
@@ -302,7 +328,8 @@ class ReflectManagerConsoleOutputTest {
         println("===== declaredMembers ========")
         println("==============================")
 
-        // Returns all functions and properties declared in this class. Does not include members declared in supertypes.
+        // Returns all functions and properties declared in this class. Does not include members
+        // declared in supertypes.
         val employeeAllMembers = Employee::class.declaredMembers
         employeeAllMembers.forEach { callable ->
             // Allow to get private property value.
@@ -340,7 +367,8 @@ class ReflectManagerConsoleOutputTest {
         println("==== declaredFunctions =======")
         println("==============================")
 
-        // Returns all functions and properties declared in this class. Does not include members declared in supertypes.
+        // Returns all functions and properties declared in this class. Does not include members
+        // declared in supertypes.
         val employeeDeclaredFunctions = Employee::class.declaredFunctions
         employeeDeclaredFunctions.forEach { callable ->
             // Allow to get private property value.
@@ -365,7 +393,8 @@ class ReflectManagerConsoleOutputTest {
         employeeFunctions.forEach { func ->
             if (!func.isAccessible) func.isAccessible = true
             println(
-                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Employee::class.isCompanion}" +
+                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: " +
+                    "${Employee::class.isCompanion}" +
                     "\ntypeParameters--> ${func.typeParameters}" +
                     "\ninstanceParameter--> ${func.instanceParameter}" +
                     "\nvalueParameters  -->${func.valueParameters}" +
@@ -382,7 +411,8 @@ class ReflectManagerConsoleOutputTest {
         personFunctions.forEach { func ->
             if (!func.isAccessible) func.isAccessible = true
             println(
-                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: ${Person::class.isCompanion}" +
+                "${func.visibility} ${func.name}: ${func.returnType} isCompanion: " +
+                    "${Person::class.isCompanion}" +
                     "\ntypeParameters--> ${func.typeParameters}" +
                     "\ninstanceParameter--> ${func.instanceParameter}" +
                     "\nvalueParameters  -->${func.valueParameters}" +
@@ -397,7 +427,8 @@ class ReflectManagerConsoleOutputTest {
 
         // Returns an instance of the companion object of a given class,
         // or null if the class doesn't have a companion object.
-        val companionObjectInstance: Person.Companion = Person::class.companionObjectInstance as Person.Companion
+        val companionObjectInstance: Person.Companion =
+            Person::class.companionObjectInstance as Person.Companion
         println("companionObjectInstance=$companionObjectInstance")
         companionObjectInstance.sayHi()
         companionObjectInstance.showClothes(true)

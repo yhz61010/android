@@ -8,7 +8,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityViewStubBinding
 import com.leovp.log.base.ITAG
 
-class ViewStubActivity : BaseDemonstrationActivity<ActivityViewStubBinding>(R.layout.activity_view_stub) {
+class ViewStubActivity :
+    BaseDemonstrationActivity<ActivityViewStubBinding>(R.layout.activity_view_stub) {
     override fun getTagName(): String = ITAG
 
     var stubImageView: ImageView? = null

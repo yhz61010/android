@@ -71,7 +71,8 @@ class DecodeH264RawFileByFFMpeg {
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
+        videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -196,12 +197,15 @@ class DecodeH264RawFileByFFMpeg {
                                         }
                                         glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
 
-                                        // it.yuvOrRgbBytes.toBitmapFromBytes(it.width, it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.bmp"))
+                                        // it.yuvOrRgbBytes.toBitmapFromBytes(it.width,
+                                        // it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.b
+                                        // mp"))
                                     }
                                     st3 = SystemClock.elapsedRealtimeNanos()
                                     LogContext.log.w(
                                         TAG,
-                                        "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms]" +
+                                        "frame[${frame.size}][decode " +
+                                            "cost=${st2 / 1000_000 - st1}ms]" +
                                             "[render cost=${(st3 - st2) / 1000}us] " +
                                             "${decodeFrame?.width}x${decodeFrame?.height}"
                                     )

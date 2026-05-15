@@ -71,14 +71,17 @@ class MainActivity :
         super.onCreate(savedInstanceState)
 
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+            supportFragmentManager.findFragmentById(
+                R.id.nav_host_fragment_activity_main
+            ) as NavHostFragment
 
         // val navController = findNavController(R.id.nav_host_fragment_activity_main)
         val navController = navHostFragment.navController
 
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        val appBarConfiguration = AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
+        val appBarConfiguration =
+            AppBarConfiguration(setOf(R.id.navigation_common, R.id.navigation_jetpack))
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.navView.setupWithNavController(navController)
 
@@ -111,7 +114,8 @@ class MainActivity :
 
         LogContext.log.i(
             tag,
-            "real=${screenRealResolution.toJsonString()} available=${screenAvailableResolution.toJsonString()} " +
+            "real=${screenRealResolution.toJsonString()} " +
+                "available=${screenAvailableResolution.toJsonString()} " +
                 "status_bar=$statusBarHeight navigation_bar=$navigationBarHeight"
         )
 
@@ -176,7 +180,10 @@ class MainActivity :
         val signatures: List<ByteArray> = getApplicationSignatures()
         if (signatures.isNotEmpty()) {
             for (i in signatures.indices) {
-                LogContext.log.i(ITAG, "signatures:" + i + "=" + signatures[i].toHexString(true, ""))
+                LogContext.log.i(
+                    ITAG,
+                    "signatures:" + i + "=" + signatures[i].toHexString(true, "")
+                )
             }
         }
 
@@ -204,7 +211,12 @@ class MainActivity :
         }
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
     override fun onResume() {
         super.onResume()
         startTrafficNetwork("leovp.com")
@@ -237,10 +249,17 @@ class MainActivity :
         LogContext.log.i(ITAG, "uid by drm=${getUniqueIdByMediaDrm()?.toHexString(true, "")}")
         LogContext.log.i(ITAG, "uid=${getUniqueID()}")
 
-        // LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}", fullOutput = true)
+        // LogContext.log.i(ITAG, "Security Providers=${Security.getProviders().toJsonString()}",
+        // fullOutput = true)
 
         @Suppress("DEPRECATION")
-        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else windowManager.defaultDisplay
+        val display = if (Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.R
+        ) {
+            display
+        } else {
+            windowManager.defaultDisplay
+        }
         LogContext.log.i(ITAG, "refresh rate=${display?.refreshRate}")
 
         LogContext.log.i(ITAG, "xdpi=$xdpi")

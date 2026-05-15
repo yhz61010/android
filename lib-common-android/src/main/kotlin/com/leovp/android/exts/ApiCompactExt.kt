@@ -70,9 +70,11 @@ inline fun <reified T : Parcelable> Intent.getParcelableExtraOrNull(key: String)
 /**
  * Usage:
  * ```kotlin
- * val rawMessages1 = intent.getParcelableArrayExtraOrNull<NdefMessage>(NfcAdapter.EXTRA_NDEF_MESSAGES)
+ * val rawMessages1 =
+ * intent.getParcelableArrayExtraOrNull<NdefMessage>(NfcAdapter.EXTRA_NDEF_MESSAGES)
  * // or
- * val rawMessages2 : Array<NdefMessage>? = intent.getParcelableArrayExtraOrNull(NfcAdapter.EXTRA_NDEF_MESSAGES)
+ * val rawMessages2 : Array<NdefMessage>? =
+ * intent.getParcelableArrayExtraOrNull(NfcAdapter.EXTRA_NDEF_MESSAGES)
  * ```
  */
 inline fun <reified T : Parcelable> Intent.getParcelableArrayExtraOrNull(key: String): Array<T>? =
@@ -83,13 +85,14 @@ inline fun <reified T : Parcelable> Intent.getParcelableArrayExtraOrNull(key: St
         getParcelableArrayExtra(key)?.filterIsInstance<T>()?.toTypedArray()
     }
 
-inline fun <reified T : Parcelable> Intent.getParcelableArrayListExtraOrNull(key: String): ArrayList<T>? =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        getParcelableArrayListExtra(key, T::class.java)
-    } else {
-        @Suppress("DEPRECATION")
-        getParcelableArrayListExtra(key)
-    }
+inline fun <reified T : Parcelable> Intent.getParcelableArrayListExtraOrNull(
+    key: String
+): ArrayList<T>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    getParcelableArrayListExtra(key, T::class.java)
+} else {
+    @Suppress("DEPRECATION")
+    getParcelableArrayListExtra(key)
+}
 
 // ==============================
 
@@ -110,12 +113,18 @@ inline fun <reified O : PackageItemInfo> Context.getCompatContextInfo(flags: Int
     val pm = this.packageManager
     when (this) {
         is Activity -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getActivityInfo(this.componentName, PackageManager.ComponentInfoFlags.of(flags.toLong()))
+            pm.getActivityInfo(
+                this.componentName,
+                PackageManager.ComponentInfoFlags.of(flags.toLong())
+            )
         } else {
             pm.getActivityInfo(this.componentName, flags)
         } as O // ActivityInfo
         is Application -> return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getApplicationInfo(this.packageName, PackageManager.ApplicationInfoFlags.of(flags.toLong()))
+            pm.getApplicationInfo(
+                this.packageName,
+                PackageManager.ApplicationInfoFlags.of(flags.toLong())
+            )
         } else {
             pm.getApplicationInfo(this.packageName, flags)
         } as O // ApplicationInfo

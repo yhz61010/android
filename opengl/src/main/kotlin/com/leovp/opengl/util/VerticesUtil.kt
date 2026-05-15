@@ -193,7 +193,11 @@ object VerticesUtil {
         else -> verticesArray
     }
 
-    fun flip(verticesArray: FloatArray, isHorizontal: Boolean = false, isVertical: Boolean = false): FloatArray {
+    fun flip(
+        verticesArray: FloatArray,
+        isHorizontal: Boolean = false,
+        isVertical: Boolean = false
+    ): FloatArray {
         var temp = floatArrayOf(
             verticesArray[0],
             verticesArray[1],

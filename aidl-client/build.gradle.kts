@@ -12,7 +12,8 @@ android {
         versionName = "1.0"
     }
 
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flam
+    // ingo-release-da34616bb946
     buildFeatures {
         aidl = true
         // Generate BuildConfig.java file
@@ -20,7 +21,11 @@ android {
     }
 
     val releaseSigning = signingConfigs.create("releaseSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "${projectDir.absolutePath}/../10-configs/sign/debug.keystore")
+        storeFile =
+            File(
+                System.getenv("KEYSTORE")
+                    ?: "${projectDir.absolutePath}/../10-configs/sign/debug.keystore"
+            )
         keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
         keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
         storePassword = System.getenv("KEY_PASSWORD") ?: "android"

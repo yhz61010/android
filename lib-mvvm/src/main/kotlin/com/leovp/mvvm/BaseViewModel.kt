@@ -210,7 +210,11 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
         }
     }
 
-    fun navigateString(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
+    fun navigateString(
+        route: String,
+        arguments: String? = null,
+        extras: UiEvent.NavExtras? = null,
+    ) {
         viewModelScope.launch {
             uiEventManager?.sendEvent(UiEvent.NavigateString(route, arguments, extras))
         }
@@ -222,7 +226,11 @@ abstract class BaseViewModel<State : BaseState, Action : BaseAction<State>>(
         }
     }
 
-    fun <T : Any> navigate(route: T, navOptions: NavOptions? = null, navigatorExtras: Navigator.Extras? = null,) {
+    fun <T : Any> navigate(
+        route: T,
+        navOptions: NavOptions? = null,
+        navigatorExtras: Navigator.Extras? = null,
+    ) {
         viewModelScope.launch {
             uiEventManager?.sendEvent(
                 UiEvent.Navigate(

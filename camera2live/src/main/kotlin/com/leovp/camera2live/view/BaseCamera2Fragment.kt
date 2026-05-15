@@ -56,7 +56,11 @@ abstract class BaseCamera2Fragment : Fragment() {
     abstract suspend fun onStopRecordButtonClick()
     abstract fun onOpenGallery()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         _binding = FragmentCameraViewBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -81,7 +85,8 @@ abstract class BaseCamera2Fragment : Fragment() {
             backPressListener?.onBackPressed()
         }
         cameraView = binding.cameraSurfaceView
-        camera2Helper = Camera2ComponentHelper(requireActivity(), CameraMetadata.LENS_FACING_BACK, view)
+        camera2Helper =
+            Camera2ComponentHelper(requireActivity(), CameraMetadata.LENS_FACING_BACK, view)
         camera2Helper.enableRecordFeature = enableRecordFeature
         camera2Helper.enableTakePhotoFeature = enableTakePhotoFeature
         camera2Helper.enableGallery = enableGallery
@@ -136,7 +141,8 @@ abstract class BaseCamera2Fragment : Fragment() {
                 }
                 LogContext.log.d(
                     TAG,
-                    "=====> Total click shot button processing cost: ${SystemClock.elapsedRealtime() - st}"
+                    "=====> Total click shot button processing cost: " +
+                        "${SystemClock.elapsedRealtime() - st}"
                 )
             }
         }
@@ -186,11 +192,12 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
 
         // Used to rotate the output media to match device orientation
-        relativeOrientation = OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
-            observe(viewLifecycleOwner) { orientation ->
-                LogContext.log.d(TAG, "Orientation changed: $orientation")
+        relativeOrientation =
+            OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
+                observe(viewLifecycleOwner) { orientation ->
+                    LogContext.log.d(TAG, "Orientation changed: $orientation")
+                }
             }
-        }
     }
 
     override fun onStop() {

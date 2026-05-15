@@ -61,9 +61,11 @@ class AdpcmImaQTDecoder(sampleRate: Int, private val channel: Int) {
             }
 
             // if (LogContext.enableLog) LogContext.log.i(
-            //     "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())} ch:${frame.channels()} " +
+            // "bytes per sample=${avutil.av_get_bytes_per_sample(frame.format())}
+            // ch:${frame.channels()} " +
             //         "sampleRate:${frame.sample_rate()} np_samples:${frame.nb_samples()} " +
-            //         " linesize[0]=${frame.linesize(0)} fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
+            // " linesize[0]=${frame.linesize(0)}
+            // fmt[${frame.format()}]:${getSampleFormatName(frame.format())}"
             // )
 
             val bpLeft: BytePointer = frame.extended_data(0)

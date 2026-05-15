@@ -20,7 +20,9 @@ import kotlin.concurrent.thread
  * Date: 2021/9/30 14:07
  */
 class CircleProgressbarActivity :
-    BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(R.layout.activity_circle_progressbar) {
+    BaseDemonstrationActivity<ActivityCircleProgressbarBinding>(
+        R.layout.activity_circle_progressbar
+    ) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCircleProgressbarBinding =
@@ -68,7 +70,8 @@ class CircleProgressbarActivity :
 
         binding.vCustomInd2.setIndeterminate()
 
-        // This click listener will not be triggered. Because `enableClickListener` in xml has been set to `false`.
+        // This click listener will not be triggered. Because `enableClickListener` in xml has been
+        // set to `false`.
         binding.vCustomIdle.setOnClickListener(object : DefaultOnClickListener() {
             override fun onIdleButtonClick(view: View) {
                 toast("Click Upload Idle.")
@@ -93,7 +96,8 @@ class CircleProgressbarActivity :
             }
         })
 
-        binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar.OnStateChangedListener {
+        binding.vUpload.addOnStateChangedListeners(object : CircleProgressbar
+            .OnStateChangedListener {
             override fun onStateChanged(newState: State.Type) {
                 val stateName = when (newState) {
                     State.Type.STATE_IDLE -> "Idle"

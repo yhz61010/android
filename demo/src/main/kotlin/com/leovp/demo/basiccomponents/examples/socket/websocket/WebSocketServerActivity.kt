@@ -67,12 +67,18 @@ class WebSocketServerActivity :
             toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text =
-                    "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                    "${binding.txtResponse.text}\nClient connected: " +
+                    "${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
 
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
+        override fun onReceivedData(
+            netty: BaseNettyServer,
+            clientChannel: Channel,
+            data: Any?,
+            action: Int
+        ) {
             LogContext.log.i(tag, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             runOnUiThread {
                 binding.txtResponse.text =
@@ -87,7 +93,8 @@ class WebSocketServerActivity :
             toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text =
-                    "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                    "${binding.txtResponse.text}\nClient disconnected: " +
+                    "${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -146,7 +153,8 @@ class WebSocketServerActivity :
     }
 
     @ChannelHandler.Sharable
-    class WebSocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+    class WebSocketServerHandler(private val netty: BaseNettyServer) :
+        BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame

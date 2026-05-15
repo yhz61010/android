@@ -64,7 +64,13 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                 AUDIO_SAMPLE_RATE,
 
                 @Suppress("SENSELESS_COMPARISON")
-                if (AUDIO_CHANNELS == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO,
+                if (AUDIO_CHANNELS ==
+                    2
+                ) {
+                    AudioFormat.CHANNEL_OUT_STEREO
+                } else {
+                    AudioFormat.CHANNEL_OUT_MONO
+                },
                 AudioFormat.ENCODING_PCM_16BIT
             )
         player = AudioPlayer(this, decoderInfo, AudioType.PCM)
@@ -83,7 +89,8 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                 val pcmBytes = adpcmQT.decode(chunk)
                 LogContext.log.i(
                     ITAG,
-                    "PCM[${pcmBytes.size}] cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
+                    "PCM[${pcmBytes.size}] " +
+                        "cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
                 )
                 player?.play(pcmBytes)
             }

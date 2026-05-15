@@ -108,7 +108,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // Selector showing is grid enabled or not
     private var hasGrid = false
 
-    // Selector showing is hdr enabled or not (will work, only if device's camera supports hdr on hardware level)
+    // Selector showing is hdr enabled or not (will work, only if device's camera supports hdr on
+    // hardware level)
     private var enableHdr = false
 
     // Selector showing is there any selected timer and it's value (3s or 10s)
@@ -144,7 +145,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         updateOrientationLiveData()
         // Make sure that all permissions are still present, since the
         // user could have removed them while the app was in paused state.
-        if (!XXPermissions.isGrantedPermission(requireContext(), PermissionsFragment.PERMISSIONS_REQUIRED)) {
+        if (!XXPermissions.isGrantedPermission(
+                requireContext(),
+                PermissionsFragment.PERMISSIONS_REQUIRED
+            )
+        ) {
             navController.navigate(CameraFragmentDirections.actionCameraToPermissions())
         }
     }
@@ -155,7 +160,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         relativeOrientation = null
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
@@ -178,7 +187,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 setUpCamera()
                 //                deviceOrientationListener = object : OrientationListener {
                 //                    override fun invoke(rotation: Int) {
-                //                        LogContext.log.w(logTag, "OrientationListener rotation=$rotation")
+                // LogContext.log.w(logTag, "OrientationListener rotation=$rotation")
                 //                        bindCameraUseCases()
                 //                    }
                 //                }
@@ -267,16 +276,27 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        val characteristics: CameraCharacteristics =
+            cameraManager.getCameraCharacteristics(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
         val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val supportedSize: SmartSize? = when (selectedRatio) {
-            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
-            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
-            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
+            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull {
+                getRatio(it) ==
+                    "16:9"
+            }
+            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull {
+                getRatio(it) ==
+                    "1:1"
+            }
+            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull {
+                getRatio(it) ==
+                    "4:3"
+            }
             CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
-                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
+                (it.long * 1.0 / it.short).round(1) ==
+                    (metrics.height * 1.0 / metrics.width).round(1)
             }
         }
         checkNotNull(supportedSize) { "Unknown camera size $supportedSize" }
@@ -286,7 +306,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             logTag,
             "Screen metrics: ${metrics.width}x${metrics.height}[${getRatio(metrics)}] " +
                 "targetSize=$targetSize[${getRatio(targetSize)}]" +
-                " deviceOrientation=${SURFACE_ROTATION_TO_DEGREE[deviceRotation]} cameraOrientation=$cameraOrientation"
+                " deviceOrientation=${SURFACE_ROTATION_TO_DEGREE[deviceRotation]} " +
+                "cameraOrientation=$cameraOrientation"
         )
 
         //        characteristics.getCameraSupportedSizeMap().forEach { (ratio, sizeList) ->
@@ -375,7 +396,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // CameraProvider
         val camProvider = cameraProvider
-        checkNotNull(camProvider) { "Camera initialization failed. Did you call configCamera() method?" }
+        checkNotNull(camProvider) {
+            "Camera initialization failed. Did you call configCamera() method?"
+        }
         try {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
@@ -394,7 +417,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     val lower: Float = exposureCompensationRange.lower.toFloat()
                     val upper: Float = exposureCompensationRange.upper.toFloat()
                     cameraUiContainerTopBinding.sliderExposure.run {
-                        LogContext.log.i(logTag, "Exposure[$lower, $upper]=$exposureCompensationIndex")
+                        LogContext.log.i(
+                            logTag,
+                            "Exposure[$lower, $upper]=$exposureCompensationIndex"
+                        )
                         valueFrom = lower
                         valueTo = upper
                         //                        stepSize = 1f / 10
@@ -413,7 +439,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 if (lensFacing == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"
             LogContext.log.i(logTag, "$cameraName camera support flash: $hasFlash")
             if (!hasFlash) {
-                cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash)
+                cameraUiContainerTopBinding.llFlashOptions.circularClose(
+                    cameraUiContainerTopBinding.btnFlash
+                )
                 cameraUiContainerTopBinding.btnFlash.visibility = View.GONE
             } else {
                 cameraUiContainerTopBinding.btnFlash.visibility = View.VISIBLE
@@ -438,16 +466,18 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     //                        "CameraState: Pending Open",
     //                        Toast.LENGTH_SHORT).show()
     //                    // Show the Camera UI
-    //                    CameraState.Type.OPENING      -> Toast.makeText(context, "CameraState: Opening", Toast.LENGTH_SHORT)
+    // CameraState.Type.OPENING -> Toast.makeText(context, "CameraState: Opening",
+    // Toast.LENGTH_SHORT)
     //                        .show()
     //                    // Setup Camera resources and begin processing
-    //                    CameraState.Type.OPEN         -> Toast.makeText(context, "CameraState: Open", Toast.LENGTH_SHORT)
+    // CameraState.Type.OPEN -> Toast.makeText(context, "CameraState: Open", Toast.LENGTH_SHORT)
     //                        .show()
     //                    // Close camera UI
-    //                    CameraState.Type.CLOSING      -> Toast.makeText(context, "CameraState: Closing", Toast.LENGTH_SHORT)
+    // CameraState.Type.CLOSING -> Toast.makeText(context, "CameraState: Closing",
+    // Toast.LENGTH_SHORT)
     //                        .show()
     //                    // Free camera resources
-    //                    CameraState.Type.CLOSED       -> Toast.makeText(context, "CameraState: Closed", Toast.LENGTH_SHORT)
+    // CameraState.Type.CLOSED -> Toast.makeText(context, "CameraState: Closed", Toast.LENGTH_SHORT)
     //                        .show()
     //                }
     //            }
@@ -460,7 +490,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     //                        "Stream config error",
     //                        Toast.LENGTH_SHORT).show()
     //                    // Opening errors
-    //                    // Close the camera or ask user to close another camera app that's using the camera
+    // // Close the camera or ask user to close another camera app that's using the camera
     //                    CameraState.ERROR_CAMERA_IN_USE               -> Toast.makeText(context,
     //                        "Camera in use",
     //                        Toast.LENGTH_SHORT)
@@ -483,7 +513,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     //                        "Fatal error",
     //                        Toast.LENGTH_SHORT).show()
     //                    // Closed errors
-    //                    // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
+    // // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
     //                    CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> Toast.makeText(context,
     //                        "Do not disturb mode enabled",
     //                        Toast.LENGTH_SHORT).show()
@@ -511,7 +541,11 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             true
         )
         _cameraUiContainerBottomBinding =
-            CameraUiContainerBottomBinding.inflate(requireContext().layoutInflater, binding.root, true)
+            CameraUiContainerBottomBinding.inflate(
+                requireContext().layoutInflater,
+                binding.root,
+                true
+            )
 
         incRatioBinding = IncRatioOptionsBinding.bind(cameraUiContainerTopBinding.root)
 
@@ -526,9 +560,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             btnFlashAuto.setOnClickListener { closeFlashAndSelect(ImageCapture.FLASH_MODE_AUTO) }
             btnRatio.setOnClickListener { showRatioLayer() }
             incRatioBinding.btnRatio4v3.setOnClickListener { closeRatioAndSelect(CameraRatio.R4v3) }
-            incRatioBinding.btnRatio16v9.setOnClickListener { closeRatioAndSelect(CameraRatio.R16v9) }
+            incRatioBinding.btnRatio16v9.setOnClickListener {
+                closeRatioAndSelect(CameraRatio.R16v9)
+            }
             incRatioBinding.btnRatio1v1.setOnClickListener { closeRatioAndSelect(CameraRatio.R1v1) }
-            incRatioBinding.btnRatioFull.setOnClickListener { closeRatioAndSelect(CameraRatio.RFull) }
+            incRatioBinding.btnRatioFull.setOnClickListener {
+                closeRatioAndSelect(CameraRatio.RFull)
+            }
             btnTimer.setOnClickListener { showSelectTimerLayer() }
             btnTimerOff.setOnClickListener { closeTimerAndSelect(CameraTimer.OFF) }
             btnTimer3.setOnClickListener { closeTimerAndSelect(CameraTimer.S3) }
@@ -556,7 +594,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // Only navigate when the gallery has photos
                 if (true == outputPictureDirectory.listFiles()?.isNotEmpty()) {
                     navController.navigate(
-                        CameraFragmentDirections.actionCameraToGallery(outputPictureDirectory.absolutePath)
+                        CameraFragmentDirections.actionCameraToGallery(
+                            outputPictureDirectory.absolutePath
+                        )
                     )
                 }
             }
@@ -588,7 +628,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             }
                             requireNotNull(savedImage) { "savedImage can't be null" }
 
-                            //  LogContext.log.i(logTag, "Photo capture succeeded: ${savedImage.fileUri.path!!}")
+                            // LogContext.log.i(logTag, "Photo capture succeeded:
+                            // ${savedImage.fileUri.path!!}")
                             // val cost = measureTimeMillis {
                             //     ExifUtil.saveExif(savedImage.fileUri.path!!,
                             //         savedImage = savedImage)
@@ -603,7 +644,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                                 )
                             }
 
-                            // Implicit broadcasts will be ignored for devices running API level >= 24
+                            // Implicit broadcasts will be ignored for devices running API level >=
+                            // 24
                             // so if you only target API level 24+ you can remove this statement
                             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                                 @Suppress("DEPRECATION")
@@ -619,11 +661,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             // If the folder selected is an external media directory, this is
                             // unnecessary but otherwise other apps will not be able to access our
                             // images unless we scan them using [MediaScannerConnection]
-                            // val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile().extension)
+                            // val mimeType =
+                            // MimeTypeMap.getSingleton().getMimeTypeFromExtension(savedUri.toFile()
+                            // .extension)
                             // MediaScannerConnection.scanFile(context,
                             //     arrayOf(savedUri.toFile().absolutePath),
                             //     arrayOf(mimeType)) { path, uri ->
-                            //     LogContext.log.i(logTag, "Image capture scanned into media store: [$uri] [$path]")
+                            // LogContext.log.i(logTag, "Image capture scanned into media store:
+                            // [$uri] [$path]")
                             // }
                             captureImageListener?.onSavedImageUri(savedImage, null)
                         }
@@ -692,7 +737,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
     }
 
-    private fun showRatioLayer() = incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
+    private fun showRatioLayer() =
+        incRatioBinding.llRatioOptions.circularReveal(cameraUiContainerTopBinding.btnRatio)
 
     private suspend fun startCountdown() = withContext(Dispatchers.Main) {
         // if (CameraTimer.OFF != selectedTimer) playSound(soundIdCountdown1, getSoundVolume())
@@ -719,15 +765,17 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
      * Show timer selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showSelectTimerLayer() =
-        cameraUiContainerTopBinding.llTimerOptions.circularReveal(cameraUiContainerTopBinding.btnTimer)
+    private fun showSelectTimerLayer() = cameraUiContainerTopBinding.llTimerOptions.circularReveal(
+        cameraUiContainerTopBinding.btnTimer
+    )
 
     /**
      * Show flashlight selection menu by circular reveal animation.
      * circularReveal() function is an Extension function which is adding the circular reveal
      */
-    private fun showFlashLayer() =
-        cameraUiContainerTopBinding.llFlashOptions.circularReveal(cameraUiContainerTopBinding.btnFlash)
+    private fun showFlashLayer() = cameraUiContainerTopBinding.llFlashOptions.circularReveal(
+        cameraUiContainerTopBinding.btnFlash
+    )
 
     /** Turns on or off the grid on the screen */
     private fun toggleGrid() {
@@ -761,7 +809,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
      * circularClose() function is an Extension function which is adding circular close
      */
     private fun closeTimerAndSelect(timer: CameraTimer) {
-        cameraUiContainerTopBinding.llTimerOptions.circularClose(cameraUiContainerTopBinding.btnTimer) {
+        cameraUiContainerTopBinding.llTimerOptions.circularClose(
+            cameraUiContainerTopBinding.btnTimer
+        ) {
             selectedTimer = timer
             cameraUiContainerTopBinding.btnTimer.setImageResource(
                 when (timer) {
@@ -779,7 +829,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
      * circularClose() function is an Extension function which is adding circular close
      */
     private fun closeFlashAndSelect(@ImageCapture.FlashMode flash: Int) {
-        cameraUiContainerTopBinding.llFlashOptions.circularClose(cameraUiContainerTopBinding.btnFlash) {
+        cameraUiContainerTopBinding.llFlashOptions.circularClose(
+            cameraUiContainerTopBinding.btnFlash
+        ) {
             flashMode = flash
             cameraUiContainerTopBinding.btnFlash.setImageResource(
                 when (flash) {

@@ -68,7 +68,10 @@ fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit
  * ```
  */
 @Composable
-fun rememberDebounceHandler(debounceTime: Long = 1000L): DebounceHandler = remember { DebounceHandler(debounceTime) }
+fun rememberDebounceHandler(
+    debounceTime: Long =
+        1000L
+): DebounceHandler = remember { DebounceHandler(debounceTime) }
 
 /**
  * Advanced version of _rememberDebounceHandler_.

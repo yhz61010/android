@@ -17,7 +17,8 @@ import com.leovp.log.base.ITAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(R.layout.activity_device_info) {
+class DeviceInfoActivity :
+    BaseDemonstrationActivity<ActivityDeviceInfoBinding>(R.layout.activity_device_info) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityDeviceInfoBinding =
@@ -27,7 +28,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //        CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
+        // CodecUtil.getEncoderListByMimeType(MediaFormat.MIMETYPE_VIDEO_HEVC).forEach {
+        // LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
         val deviceInfo = DeviceUtil.getInstance(this).getDeviceInfo()
@@ -51,10 +53,12 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
 
         lifecycleScope.launch(Dispatchers.IO) {
             for (index in 0 until DeviceUtil.getInstance(this@DeviceInfoActivity).cpuCoreCount) {
-                val coreInfo = DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
+                val coreInfo =
+                    DeviceUtil.getInstance(this@DeviceInfoActivity).getCpuCoreInfoByIndex(index)
                 LogContext.log.i(
                     TAG,
-                    "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} maxFreq=${coreInfo?.maxFreq}"
+                    "cpu$index enable=${coreInfo?.online} minFreq=${coreInfo?.minFreq} " +
+                        "maxFreq=${coreInfo?.maxFreq}"
                 )
             }
         }
@@ -66,7 +70,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         H264Util.getAvcCodec().forEach {
             LogContext.log.i(
                 TAG,
-                "AVC Encoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
+                "AVC Encoder : ${it.name.padEnd(25)} " +
+                    "isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
             )
             sb.append(it.name.padEnd(25))
             sb.append("\n")
@@ -74,7 +79,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         H264Util.getAvcCodec(false).forEach {
             LogContext.log.i(
                 TAG,
-                "AVC Decoder : ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
+                "AVC Decoder : ${it.name.padEnd(25)} " +
+                    "isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
             )
             sb.append(it.name.padEnd(25))
             sb.append("\n")
@@ -85,7 +91,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         H265Util.getHevcCodec().forEach {
             LogContext.log.i(
                 TAG,
-                "HEVC Encoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
+                "HEVC Encoder: ${it.name.padEnd(25)} " +
+                    "isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
             )
             sb.append(it.name.padEnd(25))
             sb.append("\n")
@@ -93,7 +100,8 @@ class DeviceInfoActivity : BaseDemonstrationActivity<ActivityDeviceInfoBinding>(
         H265Util.getHevcCodec(false).forEach {
             LogContext.log.i(
                 TAG,
-                "HEVC Decoder: ${it.name.padEnd(25)} isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
+                "HEVC Decoder: ${it.name.padEnd(25)} " +
+                    "isSoftwareCodec=${CodecUtil.isSoftwareCodec(it.name)}"
             )
             sb.append(it.name.padEnd(25))
             sb.append("\n")

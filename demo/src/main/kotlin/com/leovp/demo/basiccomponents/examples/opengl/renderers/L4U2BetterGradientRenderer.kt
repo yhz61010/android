@@ -61,7 +61,8 @@ class L4U2BetterGradientRenderer(@Suppress("unused") private val ctx: Context) :
         /**
          * 数据数组中每个顶点起始数据的间距：数组中每个顶点相关属性占的 Byte 值
          */
-        private val STRIDE = (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT) * Float.SIZE_BYTES
+        private val STRIDE =
+            (TWO_DIMEN_POS_COMPONENT_COUNT + RGB_COLOR_COMPONENT_COUNT) * Float.SIZE_BYTES
     }
 
     /**
@@ -120,7 +121,8 @@ class L4U2BetterGradientRenderer(@Suppress("unused") private val ctx: Context) :
 
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
+        // ml
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         GLES20.glDrawArrays(
             GLES20.GL_TRIANGLE_STRIP,

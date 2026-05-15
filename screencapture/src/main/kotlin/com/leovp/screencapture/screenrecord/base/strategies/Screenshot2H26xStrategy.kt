@@ -74,7 +74,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             val outputBuffer = codec.getOutputBuffer(outputBufferId)
             // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
             // bufferFormat is equivalent to member variable outputFormat
@@ -88,11 +92,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 when (info.flags) {
                     MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                         vpsSpsPpsBytes = encodedBytes.copyOf()
-                        //                        LogContext.log.w(TAG, "Found SPS/PPS frame: ${spsPpsBytes!!.contentToString()}")
+                        // LogContext.log.w(TAG, "Found SPS/PPS frame:
+                        // ${spsPpsBytes!!.contentToString()}")
                     }
 
                     MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-                        //                        LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        // LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
                     }
 
                     MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
@@ -119,7 +124,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            //            LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
+            // LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             outputFormat = format // option B
@@ -130,8 +135,14 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
     }
 
-    class Builder(val width: Int, val height: Int, val dpi: Int, val screenDataListener: ScreenDataListener,) {
-        var encodeType: ScreenRecordMediaCodecStrategy.EncodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
+    class Builder(
+        val width: Int,
+        val height: Int,
+        val dpi: Int,
+        val screenDataListener: ScreenDataListener,
+    ) {
+        var encodeType: ScreenRecordMediaCodecStrategy.EncodeType =
+            ScreenRecordMediaCodecStrategy.EncodeType.H264
             private set
 
         // FIXME Seems does not work. Check bellow setKeyFrameRate
@@ -164,7 +175,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         fun build(): Screenshot2H26xStrategy {
             LogContext.log.w(
                 TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps sampleSize=$sampleSize"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps " +
+                    "sampleSize=$sampleSize"
             )
             return Screenshot2H26xStrategy(this)
         }
@@ -180,11 +192,13 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private fun encodeImages(bitmap: Bitmap) {
         //        LogContext.log.d(TAG, "encodeImages")
 
-        //        val supportSize = h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(
+        // val supportSize =
+        // h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapab
+        // ilities.isSizeSupported(
         //            bitmap.width,
         //            bitmap.height
         //        )
-        //        LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
+        // LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
 
         // Render the bitmap/texture here
         //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
@@ -206,13 +220,16 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
         if (eglDisplay == EGL14.EGL_NO_DISPLAY) {
             throw RuntimeException(
-                "eglDisplay == EGL14.EGL_NO_DISPLAY: ${GLUtils.getEGLErrorString(EGL14.eglGetError())}"
+                "eglDisplay == EGL14.EGL_NO_DISPLAY: " +
+                    "${GLUtils.getEGLErrorString(EGL14.eglGetError())}"
             )
         }
 
         val version = IntArray(2)
         if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1)) {
-            throw RuntimeException("eglInitialize(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+            throw RuntimeException(
+                "eglInitialize(): " + GLUtils.getEGLErrorString(EGL14.eglGetError())
+            )
         }
 
         val attribList = intArrayOf(
@@ -236,18 +253,32 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             2,
             EGL14.EGL_NONE
         )
-        eglContext = EGL14.eglCreateContext(eglDisplay, configs[0], EGL14.EGL_NO_CONTEXT, ctxAttribs, 0)
+        eglContext = EGL14.eglCreateContext(
+            eglDisplay,
+            configs[0],
+            EGL14.EGL_NO_CONTEXT,
+            ctxAttribs,
+            0
+        )
 
         err = EGL14.eglGetError()
         if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
         val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
-        eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, configs[0], surface, surfaceAttribs, 0)
+        eglSurface = EGL14.eglCreateWindowSurface(
+            eglDisplay,
+            configs[0],
+            surface,
+            surfaceAttribs,
+            0
+        )
         err = EGL14.eglGetError()
         if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
         if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
-            throw RuntimeException("eglMakeCurrent(): " + GLUtils.getEGLErrorString(EGL14.eglGetError()))
+            throw RuntimeException(
+                "eglMakeCurrent(): " + GLUtils.getEGLErrorString(EGL14.eglGetError())
+            )
         }
     }
 
@@ -278,19 +309,26 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             builder.height
         )
         with(format) {
-            setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+            setInteger(
+                MediaFormat.KEY_COLOR_FORMAT,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+            )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+ although it just has been opened as of Android 10.
+                // Actually, this key has been used in Android 6.0+ although it just has been opened
+                // as of Android 10.
                 @Suppress("unchecked", "InlinedApi")
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
             }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+                setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                )
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // You must specify KEY_LEVEL on Android 6.0+
@@ -331,7 +369,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 ensureActive()
                 CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
                     if (builder.sampleSize > 1) {
-                        val compressedBitmap = it.compressBitmap(builder.quality, builder.sampleSize)
+                        val compressedBitmap = it.compressBitmap(
+                            builder.quality,
+                            builder.sampleSize
+                        )
                         encodeImages(compressedBitmap)
                         compressedBitmap.recycle()
                     } else {

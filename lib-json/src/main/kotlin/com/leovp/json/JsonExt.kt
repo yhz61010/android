@@ -16,7 +16,8 @@ import java.lang.reflect.Type
 annotation class Exclude(
     /**
      * If `true`, the field marked with this annotation is skipped from the serialized output.
-     * If `false`, the field marked with this annotation is written out in the JSON while serializing. Defaults to `true`.
+     * If `false`, the field marked with this annotation is written out in the JSON while
+     * serializing. Defaults to `true`.
      */
     val serialize: Boolean = true,
     /**
@@ -70,7 +71,12 @@ fun Any?.toJsonString(): String = runCatching { gson.toJson(this) }.getOrElse { 
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-inline fun <reified T> String?.toObject(): T? = runCatching { gson.fromJson(this, T::class.java) }.getOrNull()
+inline fun <reified T> String?.toObject(): T? = runCatching {
+    gson.fromJson(
+        this,
+        T::class.java
+    )
+}.getOrNull()
 
 /**
  * Convert JSON string to object
@@ -85,4 +91,9 @@ inline fun <reified T> String?.toObject(): T? = runCatching { gson.fromJson(this
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-fun <T> String?.toObject(type: Type): T? = runCatching { return gson.fromJson(this, type) }.getOrNull()
+fun <T> String?.toObject(type: Type): T? = runCatching {
+    return gson.fromJson(
+        this,
+        type
+    )
+}.getOrNull()

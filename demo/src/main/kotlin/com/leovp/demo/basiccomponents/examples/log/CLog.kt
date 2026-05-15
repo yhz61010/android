@@ -51,7 +51,8 @@ class CLog(tagPrefix: String, logLevel: LogLevel = LogLevel.VERB, enableLog: Boo
 
     @Suppress("WeakerAccess")
     private fun getBaseDirString(ctx: Context, baseFolderName: String): String =
-        ctx.getExternalFilesDir(null)?.let { it.absolutePath + File.separator + baseFolderName } ?: ""
+        ctx.getExternalFilesDir(null)?.let { it.absolutePath + File.separator + baseFolderName }
+            ?: ""
 
     fun init(context: Context) {
         System.loadLibrary("c++_shared")

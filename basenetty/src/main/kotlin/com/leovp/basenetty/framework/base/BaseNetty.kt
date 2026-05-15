@@ -24,14 +24,16 @@ enum class ClientConnectStatus {
     CONNECTED,
 
     /**
-     * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
+     * After connecting, this connection is **ONLY** be working in this status if you do intent to
+     * disconnect to server as you expect.
      *
      * **Attention:** [FAILED] listener will **NOT** trigger [DISCONNECTED] listener.
      */
     DISCONNECTED,
 
     /**
-     * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
+     * During netty initializing connecting phase, if connect to server failed, the connecting state
+     * will be assigned in this status.
      * For example, server down, invalid ip or port, retry to connect failed.
      *
      * Once connecting is in this status, [DISCONNECTED] listeners will **NOT** be triggered.
@@ -46,8 +48,10 @@ enum class ClientConnectStatus {
      * **PRIVATE status** for library.
      * **DO NOT** use it in your codes
      *
-     * Because of [CONNECTED] status is an asynchronous status, when user do connect to server successively,
-     * it will create more than one connection than you expect. So we need this status to tell user you're
+     * Because of [CONNECTED] status is an asynchronous status, when user do connect to server
+     * successively,
+     * it will create more than one connection than you expect. So we need this status to tell user
+     * you're
      * doing a connect now.
      */
     CONNECTING,
@@ -79,14 +83,16 @@ enum class ServerConnectStatus {
     CLIENT_CONNECTED,
 
     /**
-     * After connecting, this connection is **ONLY** be working in this status if you do intent to disconnect to server as you expect.
+     * After connecting, this connection is **ONLY** be working in this status if you do intent to
+     * disconnect to server as you expect.
      *
      * **Attention:** [FAILED] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
      */
     CLIENT_DISCONNECTED,
 
     /**
-     * During netty initializing connecting phase, if connect to server failed, the connecting state will be assigned in this status.
+     * During netty initializing connecting phase, if connect to server failed, the connecting state
+     * will be assigned in this status.
      * For example, server down, invalid ip or port, retry to connect failed.
      *
      * Once connecting is in this status, [CLIENT_DISCONNECTED] listeners will **NOT** be triggered.

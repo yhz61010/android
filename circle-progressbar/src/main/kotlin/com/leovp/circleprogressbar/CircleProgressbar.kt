@@ -32,7 +32,8 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * This class is copied from [AndroidButtonProgress](https://github.com/abdularis/AndroidButtonProgress)
+ * This class is copied from
+ * [AndroidButtonProgress](https://github.com/abdularis/AndroidButtonProgress)
  * and make some small changes.
  *
  * This view class shows 5 different view in different state
@@ -42,7 +43,8 @@ import kotlin.math.min
  * 4. Finish state show finish drawable or hide this view
  * 5. Error state show error drawable or hide this view
  *
- * You can use this view to make a download or upload button, you might also use this for another purpose.
+ * You can use this view to make a download or upload button, you might also use this for another
+ * purpose.
  */
 @Suppress("unused", "WeakerAccess")
 class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
@@ -63,7 +65,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     private var internalProgressAnimDuration: Long = DEF_PROGRESS_ANIM_DURATION
     private var internalCrrIndeterminateBarPos = 0
-    private var internalProgressIndeterminateSweepAngle = DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE
+    private var internalProgressIndeterminateSweepAngle =
+        DEF_PROGRESS_INDETERMINATE_SWEEP_ANGLE_IN_DEGREE
     private var internalProgressColor = DEF_PROGRESS_COLOR
     private var internalProgressMargin: Int = Resources.getSystem().dp2px(DEF_PROGRESS_MARGIN_IN_DP)
 
@@ -81,7 +84,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private val internalProgressTextPaint = Paint()
     private var internalShowProgressText = DEF_SHOW_PROGRESS_TEXT
     private var internalProgressTextColor = DEF_PROGRESS_TEXT_COLOR
-    private var internalProgressTextSize: Int = resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat())
+    private var internalProgressTextSize: Int =
+        resources.sp2px(DEF_PROGRESS_TEXT_SIZE_IN_SP.toFloat())
 
     init {
         internalProgressPaint.style = Paint.Style.STROKE
@@ -115,7 +119,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
                     State.Type.STATE_IDLE.value
                 )
             )
-            internalCancelable = attr.getBoolean(R.styleable.CircleProgressbar_cancelable, DEF_CANCELABLE)
+            internalCancelable = attr.getBoolean(
+                R.styleable.CircleProgressbar_cancelable,
+                DEF_CANCELABLE
+            )
             internalEnableClickListener =
                 attr.getBoolean(
                     R.styleable.CircleProgressbar_enableClickListener,
@@ -294,14 +301,21 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         invalidate()
     }
 
-    fun addOnClickListener(listener: OnClickListener): Boolean =
-        if (!internalClickListeners.contains(listener)) internalClickListeners.add(listener) else false
+    fun addOnClickListener(listener: OnClickListener): Boolean = if (
+        !internalClickListeners.contains(listener)
+    ) {
+        internalClickListeners.add(listener)
+    } else {
+        false
+    }
 
-    fun removeOnClickListener(listener: OnClickListener): Boolean = internalClickListeners.remove(listener)
+    fun removeOnClickListener(listener: OnClickListener): Boolean =
+        internalClickListeners.remove(listener)
 
     /**
      * If you also set `View#setOnClickListener`,
-     * that listener will be triggered first then your custom `setOnClickListener` will be triggered after that.
+     * that listener will be triggered first then your custom `setOnClickListener` will be triggered
+     * after that.
      */
     fun setOnClickListener(listener: OnClickListener) {
         removeAllOnClickListeners()
@@ -405,8 +419,16 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
 
-    private fun drawActionState(canvas: Canvas, showProgressText: Boolean, startAngle: Float, sweepAngle: Float) {
-        require(State.Type.STATE_INDETERMINATE == currState || State.Type.STATE_DETERMINATE == currState) {
+    private fun drawActionState(
+        canvas: Canvas,
+        showProgressText: Boolean,
+        startAngle: Float,
+        sweepAngle: Float
+    ) {
+        require(
+            State.Type.STATE_INDETERMINATE == currState ||
+                State.Type.STATE_DETERMINATE == currState
+        ) {
             "Illegal state. Current state=$currState"
         }
         if (internalCancelable) {
@@ -427,7 +449,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun setProgressText(canvas: Canvas) {
         internalProgressTextPaint.color = internalProgressTextColor
         internalProgressTextPaint.textSize = internalProgressTextSize.toFloat()
-        val baseLineY: Float = abs(internalProgressTextPaint.ascent() + internalProgressTextPaint.descent()) / 2
+        val baseLineY: Float =
+            abs(internalProgressTextPaint.ascent() + internalProgressTextPaint.descent()) / 2
         canvas.drawText(
             "$internalCurrProgress%",
             width.toFloat() / 2,
@@ -508,7 +531,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     private fun setProgressRectBounds() {
         val halfStroke = internalProgressPaint.strokeWidth / 2.0f
         val totalMargin = internalProgressMargin + halfStroke
-        internalProgressRect.set(totalMargin, totalMargin, width - totalMargin, height - totalMargin)
+        internalProgressRect.set(
+            totalMargin,
+            totalMargin,
+            width - totalMargin,
+            height - totalMargin
+        )
     }
 
     private fun initIndeterminateAnimator() {
@@ -525,7 +553,8 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    private fun getDegrees(): Float = internalCurrProgress.toFloat() / internalMaxProgress.toFloat() * 360
+    private fun getDegrees(): Float =
+        internalCurrProgress.toFloat() / internalMaxProgress.toFloat() * 360
 
     private fun drawDrawableInCenter(drawable: Drawable, canvas: Canvas, width: Int, height: Int) {
         val left = getWidth() / 2 - width / 2

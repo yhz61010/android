@@ -180,7 +180,8 @@ class LangUtil private constructor(private val ctx: Context) {
     }
 
     /**
-     * @return The result is like: `zh_CN` or `zh_CN_#Hans`. Please notice the difference with [getDeviceLanguageCountryCode].
+     * @return The result is like: `zh_CN` or `zh_CN_#Hans`. Please notice the difference with
+     * [getDeviceLanguageCountryCode].
      */
     fun getDefaultLanguageFullCode(): String = Locale.getDefault().toString()
 
@@ -205,7 +206,8 @@ class LangUtil private constructor(private val ctx: Context) {
     }
 
     /**
-     * @return The result is only contains language and country, just like this: `zh_CN`. Please notice the difference with [getDefaultLanguageFullCode].
+     * @return The result is only contains language and country, just like this: `zh_CN`. Please
+     * notice the difference with [getDefaultLanguageFullCode].
      */
     fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
 
@@ -213,7 +215,8 @@ class LangUtil private constructor(private val ctx: Context) {
     private fun saveLanguageToPref(language: Locale) {
         // Use commit() instead of apply(), because sometimes we kill the application process
         // immediately that prevents apply() from finishing
-        // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffice/languagetest/LocaleManager.java
+        // https://github.com/YarikSOffice/LanguageTest/blob/master/app/src/main/java/com/yariksoffi
+        // ce/languagetest/LocaleManager.java
         pref.edit {
             putString(PREF_KEY_LANGUAGE, language.toString())
         }

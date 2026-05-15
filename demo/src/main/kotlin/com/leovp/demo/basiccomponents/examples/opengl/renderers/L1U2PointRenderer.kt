@@ -109,7 +109,14 @@ class L1U2PointRenderer(@Suppress("unused") private val ctx: Context) : BaseRend
         )
         GLES20.glEnableVertexAttribArray(aPositionLocation)
 
-        GLES20.glVertexAttribPointer(aColorLocation, RGB_COLOR_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, colorData)
+        GLES20.glVertexAttribPointer(
+            aColorLocation,
+            RGB_COLOR_COMPONENT_COUNT,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            colorData
+        )
         GLES20.glEnableVertexAttribArray(aColorLocation)
     }
 

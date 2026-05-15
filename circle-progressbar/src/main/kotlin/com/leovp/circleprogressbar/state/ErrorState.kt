@@ -25,15 +25,34 @@ class ErrorState(view: View) : State(view) {
     ) {
         if (attrs != null && attr != null) {
             val iconResId =
-                attr.getResourceId(R.styleable.CircleProgressbar_errorIconDrawable, R.drawable.ic_default_error)
+                attr.getResourceId(
+                    R.styleable.CircleProgressbar_errorIconDrawable,
+                    R.drawable.ic_default_error
+                )
             internalIcon = context.getDrawable(iconResId)!!
-            iconTint = attr.getColor(R.styleable.CircleProgressbar_errorIconTintColor, DEF_ICON_TINT)
-            width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_errorIconWidth, getIcon().minimumWidth)
-            height = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_errorIconHeight, getIcon().minimumHeight)
+            iconTint = attr.getColor(
+                R.styleable.CircleProgressbar_errorIconTintColor,
+                DEF_ICON_TINT
+            )
+            width = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_errorIconWidth,
+                getIcon().minimumWidth
+            )
+            height = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_errorIconHeight,
+                getIcon().minimumHeight
+            )
 
-            val backgroundResId = attr.getResourceId(R.styleable.CircleProgressbar_errorBackgroundDrawable, -1)
-            backgroundDrawable = if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
-            backgroundColor = attr.getColor(R.styleable.CircleProgressbar_errorBackgroundColor, defColor)
+            val backgroundResId = attr.getResourceId(
+                R.styleable.CircleProgressbar_errorBackgroundDrawable,
+                -1
+            )
+            backgroundDrawable =
+                if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
+            backgroundColor = attr.getColor(
+                R.styleable.CircleProgressbar_errorBackgroundColor,
+                defColor
+            )
         } else {
             internalIcon = context.getDrawable(R.drawable.ic_default_error)!!
             width = getIcon().minimumWidth

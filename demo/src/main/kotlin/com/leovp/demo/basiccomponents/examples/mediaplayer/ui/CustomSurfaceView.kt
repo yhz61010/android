@@ -12,8 +12,11 @@ import kotlin.math.min
  * Author: Michael Leo
  * Date: 20-3-24 下午16:00
  */
-class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyle: Int = 0) :
-    SurfaceView(context, attrs, defStyle) {
+class CustomSurfaceView @JvmOverloads constructor(
+    context: Context?,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0
+) : SurfaceView(context, attrs, defStyle) {
 
     private var aspectRatio = 0f
 
@@ -35,7 +38,8 @@ class CustomSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
         }
         LogContext.log.d(
             TAG,
-            "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth realHeight=$realHeight "
+            "setDimension width=$width height=$height ratio=$aspectRatio realWidth=$realWidth " +
+                "realHeight=$realHeight "
         )
 
         holder.setFixedSize(realWidth, realHeight)

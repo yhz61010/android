@@ -71,19 +71,23 @@ class OpenGLES20Activity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        simpleAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, items)
+        simpleAdapter =
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, items)
         binding.list.adapter = simpleAdapter
         binding.list.onItemClickListener = this
     }
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-        startActivity<OpenGLESPlaygroundActivity>({ intent -> intent.putExtra("item", items[position]) })
+        startActivity<OpenGLESPlaygroundActivity>({ intent ->
+            intent.putExtra("item", items[position])
+        })
     }
 
     companion object {
-        fun getRenderer(className: Class<*>, context: Context): GLSurfaceView.Renderer? = runCatching {
-            val constructor = className.getConstructor(Context::class.java)
-            constructor.newInstance(context) as GLSurfaceView.Renderer
-        }.getOrNull()
+        fun getRenderer(className: Class<*>, context: Context): GLSurfaceView.Renderer? =
+            runCatching {
+                val constructor = className.getConstructor(Context::class.java)
+                constructor.newInstance(context) as GLSurfaceView.Renderer
+            }.getOrNull()
     }
 }

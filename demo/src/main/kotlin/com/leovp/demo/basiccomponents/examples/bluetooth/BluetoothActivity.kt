@@ -25,16 +25,24 @@ import com.leovp.log.base.ITAG
  * <!-- Required only if your app isn't using the Device Companion Manager. -->
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  */
-class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.layout.activity_bluetooth) {
+class BluetoothActivity :
+    BaseDemonstrationActivity<ActivityBluetoothBinding>(R.layout.activity_bluetooth) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothBinding =
         ActivityBluetoothBinding.inflate(layoutInflater)
 
-    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+    private val bluetooth: BluetoothUtil by lazy {
+        BluetoothUtil.getInstance(bluetoothManager.adapter)
+    }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -80,7 +88,12 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     fun onEnableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val enable = bluetooth.enable()
         LogContext.log.i(tag, "Enable=$enable")
@@ -88,7 +101,12 @@ class BluetoothActivity : BaseDemonstrationActivity<ActivityBluetoothBinding>(R.
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     fun onDisableBluetooth(@Suppress("UNUSED_PARAMETER") view: View) {
         val disable = bluetooth.disable()
         LogContext.log.i(tag, "Disable=$disable")

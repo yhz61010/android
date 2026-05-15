@@ -28,7 +28,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.layout.activity_java_mail) {
+class JavaMailActivity :
+    BaseDemonstrationActivity<ActivityJavaMailBinding>(R.layout.activity_java_mail) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -88,7 +89,8 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
             null
         } else {
             object : javax.mail.Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication = PasswordAuthentication(userName, pwd)
+                override fun getPasswordAuthentication(): PasswordAuthentication =
+                    PasswordAuthentication(userName, pwd)
             }
         }
     )
@@ -200,7 +202,8 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
                     val from = fromAddress[0].toString()
                     val subject = msg.subject
                     val toList: String = parseAddresses(msg.getRecipients(Message.RecipientType.TO))
-                    // val ccList: String = parseAddresses(msg.getRecipients(Message.RecipientType.CC))
+                    // val ccList: String =
+                    // parseAddresses(msg.getRecipients(Message.RecipientType.CC))
                     val sentDate = msg.sentDate.toString()
                     val contentType = msg.contentType
                     var messageContent = ""
@@ -216,7 +219,8 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
                         val multiPart = msg.content as? Multipart
                         val numberOfParts = multiPart?.count ?: 0
                         for (partCount in 0 until numberOfParts) {
-                            val part: MimeBodyPart? = multiPart?.getBodyPart(partCount) as? MimeBodyPart
+                            val part: MimeBodyPart? =
+                                multiPart?.getBodyPart(partCount) as? MimeBodyPart
                             LogContext.log.i(
                                 ITAG,
                                 "    Part[$partCount] content type: ${part?.contentType}"
@@ -232,10 +236,17 @@ class JavaMailActivity : BaseDemonstrationActivity<ActivityJavaMailBinding>(R.la
                     if (messageContent.isBlank()) messageContent = messageHtmlContent
 
                     // print out details of each message
-                    val truncatedContentType = if (contentType.length > 15) 15 else contentType.length
+                    val truncatedContentType = if (contentType.length >
+                        15
+                    ) {
+                        15
+                    } else {
+                        contentType.length
+                    }
                     LogContext.log.i(
                         ITAG,
-                        "Message(${contentType.substring(0, truncatedContentType)}) #" + (i + 1) + ":"
+                        "Message(${contentType.substring(0, truncatedContentType)}) #" + (i + 1) +
+                            ":"
                     )
                     LogContext.log.i(ITAG, "From: $from")
                     LogContext.log.i(ITAG, "To: $toList")

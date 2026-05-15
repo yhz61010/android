@@ -21,7 +21,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class Camera2WithoutPreviewActivity :
-    BaseDemonstrationActivity<ActivityCamera2WithoutPreviewBinding>(R.layout.activity_camera2_without_preview) {
+    BaseDemonstrationActivity<ActivityCamera2WithoutPreviewBinding>(
+        R.layout.activity_camera2_without_preview
+    ) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -71,9 +73,12 @@ class Camera2WithoutPreviewActivity :
             })
 
             //            encoderType = if (
-            //                CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-            //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-            //                || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+            // CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC,
+            // "OMX.IMG.TOPAZ.VIDEO.Encoder")
+            // || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC,
+            // "OMX.Exynos.AVC.Encoder")
+            // || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC,
+            // "OMX.MTK.VIDEO.ENCODER.AVC")
             //            ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
             //            else DataProcessFactory.ENCODER_TYPE_NORMAL
             //            encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
@@ -122,7 +127,8 @@ class Camera2WithoutPreviewActivity :
                 build()
             }
             camera2Helper.outputH264ForDebug = true
-            camera2Helper.setEncodeListener(object : Camera2ComponentHelper.EncodeDataUpdateListener {
+            camera2Helper.setEncodeListener(object : Camera2ComponentHelper
+                .EncodeDataUpdateListener {
                 override fun onUpdate(h264Data: ByteArray) {
                     LogContext.log.d(ITAG, "Get encoded video data length=${h264Data.size}")
                 }

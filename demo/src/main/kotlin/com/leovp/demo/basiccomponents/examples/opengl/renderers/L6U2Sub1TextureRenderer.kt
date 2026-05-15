@@ -177,9 +177,13 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanFireL.textureId)
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
+        // ml
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_FIRE_L.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_FAN, 0,
+            POINT_DATA_FIRE_L.size / TWO_DIMEN_POS_COMPONENT_COUNT
+        )
     }
 
     private fun drawBeauty() {
@@ -195,10 +199,14 @@ class L6U2Sub1TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
         // 绑定新的纹理 ID 到已激活的纹理单元上
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureBeanBeauty.textureId)
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
+        // ml
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_FAN, 0,
+            POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT
+        )
     }
 }

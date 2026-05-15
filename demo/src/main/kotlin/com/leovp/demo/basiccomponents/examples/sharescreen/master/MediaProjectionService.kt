@@ -40,7 +40,8 @@ import okhttp3.internal.closeQuietly
  * 2. Request permission to capture screen.
  * 3. If permission is granted, then start your foreground service by calling `startForeground`.
  *
- * Please note that, request permission first, then start your your foreground service by calling `startForeground`.
+ * Please note that, request permission first, then start your your foreground service by calling
+ * `startForeground`.
  * Make sure you run in correct steps, otherwise, your app will crash.
  *
  * > The app must set the foregroundServiceType attribute to
@@ -53,11 +54,13 @@ import okhttp3.internal.closeQuietly
  * > this API here, or else it'll receive a SecurityException from this API call,
  * > unless it's a privileged app.
  *
- * Android Q+(Android 10+) MediaProjection must be used in Service and with android:foregroundServiceType="mediaProjection" permission.
+ * Android Q+(Android 10+) MediaProjection must be used in Service and with
+ * android:foregroundServiceType="mediaProjection" permission.
  * Example:
  * <pre>
  * <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
- * <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" android:minSdkVersion="34" />
+ * <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"
+ * android:minSdkVersion="34" />
  *
  * <service
  *  android:name=".MediaProjectionService"
@@ -104,7 +107,7 @@ class MediaProjectionService : Service() {
                     LogContext.log.e(TAG, "onDataUpdate error", e)
                 }
             }
-            //            LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
+            // LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
             screenDataUpdateListener?.onUpdate(data, flags, presentationTimeUs)
 
             // Bitmap for screenshot
@@ -125,7 +128,9 @@ class MediaProjectionService : Service() {
     private fun setDebugInfo() {
         if (outputH26xFile) {
             try {
-                val baseFolder = File(getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media")
+                val baseFolder = File(
+                    getExternalFilesDir(null)?.absolutePath + File.separator + "leo-media"
+                )
                 LogContext.log.w(TAG, "Output H.26x file path=$baseFolder")
                 baseFolder.mkdirs()
                 videoH26xFile = File(
@@ -195,7 +200,11 @@ class MediaProjectionService : Service() {
             }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(10086, notify.asBuilder().build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            startForeground(
+                10086,
+                notify.asBuilder().build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            )
         } else {
             startForeground(10086, notify.asBuilder().build())
         }
@@ -221,7 +230,8 @@ class MediaProjectionService : Service() {
     fun startScreenShare(setting: ScreenShareSetting) {
         LogContext.log.i(TAG, "startScreenShare: ${setting.toJsonString()}")
         setDebugInfo()
-        mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionManager =
+            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val mediaProjectionRef = mediaProjectionManager.getMediaProjection(resultCode, data)
         requireNotNull(mediaProjectionRef) { "MediaProjection can't be null" }
         mediaProjection = mediaProjectionRef
@@ -295,7 +305,8 @@ class MediaProjectionService : Service() {
         screenProcessor?.takeScreenshot(width, height) { bmp ->
             val compressedBmp = bmp.compressBitmap()
             bmp.recycle()
-            val jpegFile = File(this@MediaProjectionService.getBaseDirString("screenshot"), "screenshot.jpg")
+            val jpegFile =
+                File(this@MediaProjectionService.getBaseDirString("screenshot"), "screenshot.jpg")
             compressedBmp.writeToFile(jpegFile)
             compressedBmp.recycle()
             LogContext.log.w(TAG, "onScreenshot[${jpegFile.length()}]")

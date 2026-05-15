@@ -43,5 +43,8 @@ object DeviceProp {
         }.getOrDefault("")
     }
 
-    private fun getSystemPropertyByShell(propName: String) = ShellUtil.execCmd("getprop $propName", false).successMsg
+    private fun getSystemPropertyByShell(propName: String) = ShellUtil.execCmd(
+        "getprop $propName",
+        false
+    ).successMsg
 }

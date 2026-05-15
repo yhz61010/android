@@ -18,7 +18,10 @@ class OrientationService : BaseService() {
 
     private val screenRotationChanged: IRotationWatcher.Stub = object : IRotationWatcher.Stub() {
         override fun onRotationChanged(rotation: Int) {
-            LogContext.log.w(ITAG, "Reflection: Device rotation changed to ${rotation.surfaceRotationName}")
+            LogContext.log.w(
+                ITAG,
+                "Reflection: Device rotation changed to ${rotation.surfaceRotationName}"
+            )
         }
     }
 

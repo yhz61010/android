@@ -36,7 +36,8 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
             return
         }
 
-        // We listen to two intents. The new outgoing call only tells us of an outgoing call. We use it to get the number.
+        // We listen to two intents. The new outgoing call only tells us of an outgoing call. We use
+        // it to get the number.
         if (intent.action == Intent.ACTION_NEW_OUTGOING_CALL) {
             savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER)
         } else {
@@ -55,15 +56,26 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
     // Derived classes should override these to respond to specific events of interest
     protected abstract fun onIncomingCallReceived(ctx: Context, number: String?, start: Date?)
     protected abstract fun onIncomingCallAnswered(ctx: Context, number: String?, start: Date?)
-    protected abstract fun onIncomingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?)
+    protected abstract fun onIncomingCallEnded(
+        ctx: Context,
+        number: String?,
+        start: Date?,
+        end: Date?
+    )
 
     protected abstract fun onOutgoingCallStarted(ctx: Context, number: String?, start: Date?)
-    protected abstract fun onOutgoingCallEnded(ctx: Context, number: String?, start: Date?, end: Date?)
+    protected abstract fun onOutgoingCallEnded(
+        ctx: Context,
+        number: String?,
+        start: Date?,
+        end: Date?
+    )
 
     protected abstract fun onMissedCall(ctx: Context, number: String?, start: Date?)
 
     // Deals with actual events
-    // Incoming call-  goes from IDLE to RINGING when it rings, to OFFHOOK when it's answered, to IDLE when its hung up
+    // Incoming call- goes from IDLE to RINGING when it rings, to OFFHOOK when it's answered, to
+    // IDLE when its hung up
     // Outgoing call-  goes from IDLE to OFFHOOK when it dials out, to IDLE when hung up
     private fun onCallStateChanged(context: Context, state: Int, number: String?) {
         if (lastState == state) {

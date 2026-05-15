@@ -27,7 +27,8 @@ import androidx.lifecycle.LiveData
  * rotation relative to sensor orientation, i.e., allows user to see camera
  * frames with the expected orientation.
  */
-class OrientationLiveData(context: Context, characteristics: CameraCharacteristics) : LiveData<Int>() {
+class OrientationLiveData(context: Context, characteristics: CameraCharacteristics) :
+    LiveData<Int>() {
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
@@ -64,8 +65,12 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
          * @return the relative rotation from the camera sensor to the current device orientation.
          */
         @JvmStatic
-        private fun computeRelativeRotation(characteristics: CameraCharacteristics, surfaceRotation: Int): Int {
-            val sensorOrientationDegrees = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        private fun computeRelativeRotation(
+            characteristics: CameraCharacteristics,
+            surfaceRotation: Int
+        ): Int {
+            val sensorOrientationDegrees =
+                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
 
             val deviceOrientationDegrees = when (surfaceRotation) {
                 Surface.ROTATION_0 -> 0
@@ -77,7 +82,9 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
 
             // Reverse device orientation for front-facing cameras
             val sign =
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT) {
+                if (characteristics.get(CameraCharacteristics.LENS_FACING) ==
+                    CameraCharacteristics.LENS_FACING_FRONT
+                ) {
                     1
                 } else {
                     -1

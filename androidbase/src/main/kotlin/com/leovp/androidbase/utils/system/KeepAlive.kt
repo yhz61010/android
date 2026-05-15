@@ -23,7 +23,8 @@ import kotlinx.coroutines.launch
 
 /**
  * You must assign `app` which means the application context first.
- * Generally, it will be assigned in you custom application or another singleton utility before using it.
+ * Generally, it will be assigned in you custom application or another singleton utility before
+ * using it.
  *
  * **DO NOT** forget to register your broadcast receiver in `AndroidManifest.xml` like this:
  * ```xml
@@ -56,7 +57,10 @@ class KeepAlive(
 
     fun start() {
         release()
-        LogContext.log.w(TAG, "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)")
+        LogContext.log.w(
+            TAG,
+            "Start keepAlive() for $keepAliveTimeInMin min(${keepAliveTimeInMin * 60}s)"
+        )
         runCatching {
             mediaPlayer = MediaPlayer.create(app, undeadAudioResId).apply {
                 setWakeMode(app, PowerManager.PARTIAL_WAKE_LOCK)
@@ -67,7 +71,10 @@ class KeepAlive(
         }.onFailure { it.printStackTrace() }
 
         val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
-        val alarmManager: AlarmManager = ContextCompat.getSystemService(app, AlarmManager::class.java)!!
+        val alarmManager: AlarmManager = ContextCompat.getSystemService(
+            app,
+            AlarmManager::class.java
+        )!!
         val triggerAtTime = SystemClock.elapsedRealtime() + aliveTimeInMs
         val intent = Intent(app, KeepAliveReceiver::class.java)
 //            intent.putExtra("package", app.id)

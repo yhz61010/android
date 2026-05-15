@@ -20,7 +20,8 @@ import org.powermock.modules.junit4.PowerMockRunner
 class RSAUtilTest {
     private val plainText = "I have a dream."
     private val plainBytes = "My auu-".toByteArray()
-    private val longPlainText = "I have a dream. A song to sing. To help cope with anything. ".repeat(100)
+    private val longPlainText =
+        "I have a dream. A song to sing. To help cope with anything. ".repeat(100)
 
     @Test
     fun encryptAndDecrypt() {
@@ -42,7 +43,10 @@ class RSAUtilTest {
         assertEquals(plainText, decryptBytes?.decodeToString())
         assertEquals(plainText, decryptString?.decodeToString())
 
-        assertContentEquals(plainBytes, RSAUtil.decrypt(priKey, RSAUtil.encrypt(pubKey, plainBytes)!!))
+        assertContentEquals(
+            plainBytes,
+            RSAUtil.decrypt(priKey, RSAUtil.encrypt(pubKey, plainBytes)!!)
+        )
     }
 
     @Test fun fragment() {
@@ -78,6 +82,7 @@ class RSAUtilTest {
         assertEquals(plainText, decryptBytes?.decodeToString())
         assertEquals(plainText, decryptString?.decodeToString())
 
-        // assertContentEquals(plainBytes, RSAUtil.verify(priKey, RSAUtil.sign(pubKey, plainBytes)!!))
+        // assertContentEquals(plainBytes, RSAUtil.verify(priKey, RSAUtil.sign(pubKey,
+        // plainBytes)!!))
     }
 }

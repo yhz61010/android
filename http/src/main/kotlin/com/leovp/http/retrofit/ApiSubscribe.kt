@@ -17,7 +17,8 @@ import io.reactivex.schedulers.Schedulers
  * }
  *
  * fun test() {
- *     val observer: ObserverOnNextListener<Map<String, String>> = object : ObserverOnNextListener<Map<String, String>> {
+ * val observer: ObserverOnNextListener<Map<String, String>> = object :
+ * ObserverOnNextListener<Map<String, String>> {
  *         override fun onNext(t: Map<String, String>) {
  *         t.forEach { LogContext.log.e(TAG, "Response ${it.key}=$${it.value}") }
  *         }

@@ -23,7 +23,8 @@ import kotlin.system.measureNanoTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBinding>(R.layout.activity_bitmap_native) {
+class BitmapNativeActivity :
+    BaseDemonstrationActivity<ActivityBitmapNativeBinding>(R.layout.activity_bitmap_native) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBitmapNativeBinding =
@@ -230,10 +231,12 @@ class BitmapNativeActivity : BaseDemonstrationActivity<ActivityBitmapNativeBindi
 
     private fun compressTest(@Suppress("SameParameterValue") @DrawableRes resId: Int) {
         // Attention:
-        // If you put image in dimension related drawable folder, like [drawable], [drawable-xxhdpi],
+        // If you put image in dimension related drawable folder, like [drawable],
+        // [drawable-xxhdpi],
         // [BitmapFactory.decodeResource] will take into account the screen dimension.
         //
-        // So if your want to get the real size of image, put your images in [drawable-nodpi] folder.
+        // So if your want to get the real size of image, put your images in [drawable-nodpi]
+        // folder.
         //
         // https://developer.android.com/training/multiscreen/screendensities#TaskProvideAltBmp
         // https://developer.android.com/guide/topics/resources/providing-resources

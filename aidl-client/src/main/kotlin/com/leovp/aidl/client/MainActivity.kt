@@ -21,7 +21,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        LeoToast.getInstance(this).init(LeoToast.ToastConfig(BuildConfig.DEBUG, R.mipmap.ic_launcher_round))
+        LeoToast.getInstance(this).init(
+            LeoToast.ToastConfig(
+                BuildConfig.DEBUG,
+                R.mipmap.ic_launcher_round
+            )
+        )
 
         LogContext.setLogImpl(
             LLog(tagPrefix = "LEO-AIDL-CLIENT")

@@ -61,7 +61,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ScreenShareClientActivity :
-    BaseDemonstrationActivity<ActivityScreenShareClientBinding>(R.layout.activity_screen_share_client) {
+    BaseDemonstrationActivity<ActivityScreenShareClientBinding>(
+        R.layout.activity_screen_share_client
+    ) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -115,8 +117,16 @@ class ScreenShareClientActivity :
                 }
             }
 
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-                LogContext.log.w(ITAG, "=====> surfaceChanged($width x $height format=$format) <=====")
+            override fun surfaceChanged(
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
+            ) {
+                LogContext.log.w(
+                    ITAG,
+                    "=====> surfaceChanged($width x $height format=$format) <====="
+                )
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -204,7 +214,8 @@ class ScreenShareClientActivity :
     private fun initDecoder(vps: ByteArray?, sps: ByteArray, pps: ByteArray) {
         LogContext.log.w(
             ITAG,
-            "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} pps=${pps.toHexString()}"
+            "initDecoder vps=${vps?.toHexString()} sps=${sps.toHexString()} " +
+                "pps=${pps.toHexString()}"
         )
         this.vps = vps
         this.sps = sps
@@ -223,12 +234,14 @@ class ScreenShareClientActivity :
         //        decoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
         decoder = when (MediaProjectionService.VIDEO_ENCODE_TYPE) {
             ScreenRecordMediaCodecStrategy.EncodeType.H264 -> {
-                // val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66, 1, -31, 16, -115, 64)
+                // val sps = byteArrayOf(0, 0, 0, 1, 103, 66, -64, 51, -115, 104, 8, -127, -25, -66,
+                // 1, -31, 16, -115, 64)
                 // val pps = byteArrayOf(0, 0, 0, 1, 104, -50, 1, -88, 53, -56)
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
                 format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
 
-                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC,
+                // "c2.android.avc.decoder", encoder = false)) {
                 //     LogContext.log.w(ITAG, "Use decoder: c2.android.avc.decoder")
                 //     // c2.android.avc.decoder       latency: 170ms(130ms ~ 200ms)
                 //     // OMX.google.h264.decoder      latency: 170ms(150ms ~ 270ms)
@@ -243,7 +256,8 @@ class ScreenShareClientActivity :
                 val csd0 = vps!! + sps + pps
                 format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
 
-                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+                // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC,
+                // "c2.android.hevc.decoder", encoder = false)) {
                 //     LogContext.log.w(ITAG, "Use decoder: c2.android.hevc.decoder")
                 //     // c2.android.hevc.decoder       latency: 60ms(0ms ~ 70ms)
                 //     MediaCodec.createByCodecName("c2.android.hevc.decoder")
@@ -267,31 +281,47 @@ class ScreenShareClientActivity :
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-                    //                LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
+                    // LogContext.log.i(ITAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                 }
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
+                codec.queueInputBuffer(
+                    inputBufferId,
+                    0,
+                    data?.size ?: 0,
+                    computePresentationTimeUs(++frameCount),
+                    0
+                )
             } catch (_: Exception) {
                 LogContext.log.e(tag, "onInputBufferAvailable() exception.")
             }
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
                 // outputBuffer is ready to be processed or rendered.
                 outputBuffer?.let {
-                    //                LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
+                    // LogContext.log.i(ITAG, "onOutputBufferAvailable length=${info.size}")
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
-                            LogContext.log.w(ITAG, "Found SPS/PPS frame: HEX[${decodedData.toHexString()}]")
+                            LogContext.log.w(
+                                ITAG,
+                                "Found SPS/PPS frame: HEX[${decodedData.toHexString()}]"
+                            )
                         }
 
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(
+                            ITAG,
+                            "Found Key Frame[" + info.size + "]"
+                        )
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }
@@ -341,7 +371,8 @@ class ScreenShareClientActivity :
     }
 
     @ChannelHandler.Sharable
-    class WebSocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
+    class WebSocketClientHandler(private val netty: BaseNettyClient) :
+        BaseClientChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedByteBuf = (msg as WebSocketFrame).content().retain()
             // Data length
@@ -358,7 +389,12 @@ class ScreenShareClientActivity :
         }
 
         fun triggerIFrame(): Boolean {
-            val cmdArray = CmdBean(CMD_TRIGGER_I_FRAME, null, null, null).toJsonString().encodeToByteArray()
+            val cmdArray = CmdBean(
+                CMD_TRIGGER_I_FRAME,
+                null,
+                null,
+                null
+            ).toJsonString().encodeToByteArray()
 
             val cId = CMD_TRIGGER_I_FRAME.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -369,7 +405,12 @@ class ScreenShareClientActivity :
         }
 
         fun sendDeviceScreenInfoToServer(point: Size): Boolean {
-            val paintArray = CmdBean(CMD_DEVICE_SCREEN_INFO, null, point, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(
+                CMD_DEVICE_SCREEN_INFO,
+                null,
+                point,
+                null
+            ).toJsonString().encodeToByteArray()
 
             val cId = CMD_DEVICE_SCREEN_INFO.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -382,14 +423,24 @@ class ScreenShareClientActivity :
         fun sendDragData(x: Float, y: Float, dstX: Float, dstY: Float, duration: Long): Boolean {
             val touchBean = TouchBean(TouchType.DRAG, x, y, dstX, dstY, duration)
             val touchArray =
-                CmdBean(ScreenShareMasterActivity.CMD_TOUCH_DRAG, null, null, touchBean).toJsonString()
+                CmdBean(
+                    ScreenShareMasterActivity.CMD_TOUCH_DRAG,
+                    null,
+                    null,
+                    touchBean
+                ).toJsonString()
                     .encodeToByteArray()
             val cId = ScreenShareMasterActivity.CMD_TOUCH_DRAG.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
             val command = ByteUtil.mergeBytes(contentLen, cId, protoVer, touchArray)
 
-            return netty.executeCommand(command, "Touch[${touchBean.touchType}]", "WebSocketTouchDragCmd", false)
+            return netty.executeCommand(
+                command,
+                "Touch[${touchBean.touchType}]",
+                "WebSocketTouchDragCmd",
+                false
+            )
         }
 
         fun sendTouchData(type: TouchType, x: Float, y: Float): Boolean {
@@ -400,7 +451,12 @@ class ScreenShareClientActivity :
                 TouchType.BACK -> ScreenShareMasterActivity.CMD_TOUCH_BACK
                 else -> CMD_TOUCH_EVENT
             }
-            val touchArray = CmdBean(cmdId, null, null, touchBean).toJsonString().encodeToByteArray()
+            val touchArray = CmdBean(
+                cmdId,
+                null,
+                null,
+                touchBean
+            ).toJsonString().encodeToByteArray()
             val cId = cmdId.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
             val contentLen = (cId.size + protoVer.size + touchArray.size).toBytesLE()
@@ -411,7 +467,12 @@ class ScreenShareClientActivity :
 
         fun sendPaintData(type: TouchType, x: Float, y: Float, paint: Paint): Boolean {
             val paintBean = PaintBean(type, x, y, paint.color, paint.style, paint.strokeWidth)
-            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(
+                CMD_PAINT_EVENT,
+                paintBean,
+                null,
+                null
+            ).toJsonString().encodeToByteArray()
 
             val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -423,7 +484,12 @@ class ScreenShareClientActivity :
 
         fun clearCanvas(): Boolean {
             val paintBean = PaintBean(TouchType.CLEAR)
-            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(
+                CMD_PAINT_EVENT,
+                paintBean,
+                null,
+                null
+            ).toJsonString().encodeToByteArray()
 
             val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -435,7 +501,12 @@ class ScreenShareClientActivity :
 
         fun undoDraw(): Boolean {
             val paintBean = PaintBean(TouchType.UNDO)
-            val paintArray = CmdBean(CMD_PAINT_EVENT, paintBean, null, null).toJsonString().encodeToByteArray()
+            val paintArray = CmdBean(
+                CMD_PAINT_EVENT,
+                paintBean,
+                null,
+                null
+            ).toJsonString().encodeToByteArray()
 
             val cId = CMD_PAINT_EVENT.asByteAndForceToBytes()
             val protoVer = 1.asByteAndForceToBytes()
@@ -450,7 +521,12 @@ class ScreenShareClientActivity :
     }
 
     @Keep
-    data class CmdBean(val cmdId: Int, val paintBean: PaintBean?, val deviceInfo: Size?, val touchBean: TouchBean?)
+    data class CmdBean(
+        val cmdId: Int,
+        val paintBean: PaintBean?,
+        val deviceInfo: Size?,
+        val touchBean: TouchBean?
+    )
 
     @Keep
     data class PaintBean(
@@ -511,7 +587,8 @@ class ScreenShareClientActivity :
                         LogContext.log.w(
                             ITAG,
                             "initDecoder with vps=" +
-                                "${vps?.toHexString()} sps=${sps?.toHexString()} pps=${pps?.toHexString()}"
+                                "${vps?.toHexString()} sps=${sps?.toHexString()} " +
+                                "pps=${pps?.toHexString()}"
                         )
                         if (sps != null && pps != null) {
                             initDecoder(vps, sps, pps)
@@ -633,7 +710,11 @@ class ScreenShareClientActivity :
                     abs(touchDownRawY - touchUpRawY) <= CLICK_THRESHOLD
                 ) {
                     w(tag) { "Accept as click" }
-                    webSocketClientHandler?.sendTouchData(TouchType.DOWN, touchUpRawX, touchDownRawY)
+                    webSocketClientHandler?.sendTouchData(
+                        TouchType.DOWN,
+                        touchUpRawX,
+                        touchDownRawY
+                    )
                     return super.dispatchTouchEvent(event)
                 }
             }

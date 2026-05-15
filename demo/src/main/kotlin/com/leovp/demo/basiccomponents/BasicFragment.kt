@@ -140,7 +140,8 @@ class BasicFragment : BaseFragment<FragmentBasicBinding>(R.layout.fragment_basic
             Pair("NFC", NfcActivity::class.java)
         )
 
-        val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
+        val colorBaseAdapter =
+            ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 startActivity(

@@ -54,7 +54,9 @@ class BluetoothServerActivity :
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityBluetoothServerBinding =
         ActivityBluetoothServerBinding.inflate(layoutInflater)
 
-    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+    private val bluetooth: BluetoothUtil by lazy {
+        BluetoothUtil.getInstance(bluetoothManager.adapter)
+    }
 
     private var connectedDevice: BluetoothDevice? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
@@ -84,7 +86,12 @@ class BluetoothServerActivity :
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     override fun onDestroy() {
         super.onDestroy()
         bluetooth.stopAdvertising(advertiseCallback)
@@ -132,7 +139,8 @@ class BluetoothServerActivity :
         // Read only characteristic
         characteristicRead = BluetoothGattCharacteristic(
             characteristicReadUuid,
-            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PROPERTY_READ or
+                BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
         // Write only characteristic
@@ -140,7 +148,8 @@ class BluetoothServerActivity :
             characteristicWriteUuid,
             BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_READ
                 or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-            BluetoothGattCharacteristic.PERMISSION_WRITE or BluetoothGattCharacteristic.PERMISSION_READ
+            BluetoothGattCharacteristic.PERMISSION_WRITE or
+                BluetoothGattCharacteristic.PERMISSION_READ
         )
         // Add characteristics to service
         gattService.addCharacteristic(characteristicRead)
@@ -154,7 +163,11 @@ class BluetoothServerActivity :
         object : BluetoothGattServerCallback() {
             @SuppressLint("InlinedApi")
             @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-            override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
+            override fun onConnectionStateChange(
+                device: BluetoothDevice,
+                status: Int,
+                newState: Int
+            ) {
                 super.onConnectionStateChange(device, status, newState)
                 connectedDevice = device
                 var state = ""
@@ -162,12 +175,16 @@ class BluetoothServerActivity :
                     state = "Connected"
                     runOnUiThread {
                         this@BluetoothServerActivity.title =
-                            "Bluetooth Server - ${connectedDevice?.name ?: connectedDevice?.address ?: ""}"
+                            "Bluetooth Server - " +
+                            "${connectedDevice?.name ?: connectedDevice?.address ?: ""}"
                     }
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     state = "Disconnected"
                 }
-                LogContext.log.w(ITAG, "onConnectionStateChange device=$device status=$status newState=$state")
+                LogContext.log.w(
+                    ITAG,
+                    "onConnectionStateChange device=$device status=$status newState=$state"
+                )
             }
 
             @SuppressLint("InlinedApi")

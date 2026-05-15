@@ -63,11 +63,19 @@ class AacFilePlayer(
         return sampleSize
     }
 
-    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean
+    ) {
         // LogContext.log.e(TAG, "onOutputData isConfig=$isConfig isKeyFrame=$isKeyFrame")
         val chunkPCM = outBuf.toByteArray()
         if (chunkPCM.isNotEmpty()) {
-            LogContext.log.i(TAG, "PCM data[${chunkPCM.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame")
+            LogContext.log.i(
+                TAG,
+                "PCM data[${chunkPCM.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
+            )
             audioTrackPlayer.write(chunkPCM)
         }
     }

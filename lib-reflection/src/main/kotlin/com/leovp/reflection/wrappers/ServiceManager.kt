@@ -19,7 +19,10 @@ object ServiceManager {
 
     init {
         getServiceMethod = try {
-            Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String::class.java)
+            Class.forName("android.os.ServiceManager").getDeclaredMethod(
+                "getService",
+                String::class.java
+            )
         } catch (e: Exception) {
             throw AssertionError(e)
         }
@@ -28,7 +31,12 @@ object ServiceManager {
     var windowManager: WindowManager? = null
         get() {
             if (field == null) {
-                field = WindowManager(getService(Context.WINDOW_SERVICE, "android.view.IWindowManager"))
+                field = WindowManager(
+                    getService(
+                        Context.WINDOW_SERVICE,
+                        "android.view.IWindowManager"
+                    )
+                )
             }
             return field
         }
@@ -52,7 +60,12 @@ object ServiceManager {
     var inputManager: InputManager? = null
         get() {
             if (field == null) {
-                field = InputManager(getService(Context.INPUT_SERVICE, "android.hardware.input.IInputManager"))
+                field = InputManager(
+                    getService(
+                        Context.INPUT_SERVICE,
+                        "android.hardware.input.IInputManager"
+                    )
+                )
             }
             return field
         }

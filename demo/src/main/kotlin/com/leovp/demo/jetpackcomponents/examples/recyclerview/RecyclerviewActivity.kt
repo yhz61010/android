@@ -24,7 +24,8 @@ import com.leovp.demo.jetpackcomponents.examples.recyclerview.base.SimpleAdapter
 import com.leovp.demo.jetpackcomponents.examples.recyclerview.base.SimpleItemTouchCallback
 import com.leovp.log.base.ITAG
 
-class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBinding>(R.layout.activity_recyclerview) {
+class RecyclerviewActivity :
+    BaseDemonstrationActivity<ActivityRecyclerviewBinding>(R.layout.activity_recyclerview) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityRecyclerviewBinding =
@@ -121,7 +122,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
             listItem.isVisible = true
             gridItem.isVisible = false
             itemTouchHandler.setDefaultDragDirs(
-                ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or
+                    ItemTouchHelper.RIGHT
             )
         }
         return super.onPrepareOptionsMenu(menu)
@@ -185,7 +187,8 @@ class RecyclerviewActivity : BaseDemonstrationActivity<ActivityRecyclerviewBindi
 }
 
 @Keep
-data class ItemBean(val id: Long, val title: String, val imageUrl: String) : BaseMultipleCheckedItem()
+data class ItemBean(val id: Long, val title: String, val imageUrl: String) :
+    BaseMultipleCheckedItem()
 
 open class BaseMultipleCheckedItem {
     var checked = false

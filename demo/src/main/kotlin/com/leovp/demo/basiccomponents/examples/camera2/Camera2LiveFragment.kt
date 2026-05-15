@@ -44,19 +44,25 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
         enableTakePhotoFeature = true
 
         activityResultLauncher =
-            BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult())
+            BetterActivityResult.registerForActivityResult(
+                this,
+                ActivityResultContracts.StartActivityForResult()
+            )
 
         LogContext.log.w(
             TAG,
             "Supported image format for avc encoder: ${
-                CodecUtil.getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
+                CodecUtil.getSupportedColorFormatForEncoder(
+                    MediaFormat.MIMETYPE_VIDEO_AVC
+                ).sorted().joinToString(",")
             }"
         )
 
         CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).forEach {
             LogContext.log.w(
                 TAG,
-                "Supported profile profile/level for avc encoder: profile=${it.profile} level=${it.level}"
+                "Supported profile profile/level for avc encoder: profile=${it.profile} " +
+                    "level=${it.level}"
             )
         }
     }
@@ -69,9 +75,9 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
             @RequiresPermission(android.Manifest.permission.CAMERA)
             override fun surfaceCreated(holder: SurfaceHolder) {
 //                camera2Helper.encoderType = if (
-//                    CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
-//                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
-//                    || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
+// CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder")
+// || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder")
+// || CodecUtil.hasEncoderByCodecName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC")
 //                ) DataProcessFactory.ENCODER_TYPE_YUV_ORIGINAL
 //                else DataProcessFactory.ENCODER_TYPE_NORMAL
 //                camera2Helper.encoderType = DataProcessFactory.ENCODER_TYPE_YUV420SP
@@ -88,7 +94,10 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                     camera2Helper.characteristics,
                     SurfaceHolder::class.java
                 )
-                LogContext.log.d(TAG, "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}")
+                LogContext.log.d(
+                    TAG,
+                    "CameraSurfaceView size: ${cameraView.width}x${cameraView.height}"
+                )
                 LogContext.log.d(TAG, "Selected preview size: $previewSize")
                 cameraView.setDimension(previewSize.width, previewSize.height)
                 // To ensure that size is set, initialize camera in the view's thread
@@ -105,7 +114,12 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 }
             }
 
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+            override fun surfaceChanged(
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
+            ) = Unit
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
         })
     }
@@ -139,13 +153,18 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     override suspend fun onRecordButtonClick() {
         LogContext.log.w(TAG, "onRecordButtonClick")
-        // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=5
+        // CAMERA_SIZE_NORMAL & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH &
+        // KEY_I_FRAME_INTERVAL=5
         // BITRATE_MODE_CQ: 348.399kB/s
         // BITRATE_MODE_CBR: 85.875kB/s
         // BITRATE_MODE_VBR: 84.929kB/s
-        // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH & KEY_I_FRAME_INTERVAL=3
+        // CAMERA_SIZE_HIGH & BITRATE_NORMAL & CAMERA_FPS_NORMAL & VIDEO_FPS_FREQUENCY_HIGH &
+        // KEY_I_FRAME_INTERVAL=3
         // BITRATE_MODE_CBR: 113.630kB/s
-        val camera2ComponentBuilder = camera2Helper.Builder(DESIGNED_CAMERA_SIZE.width, DESIGNED_CAMERA_SIZE.height)
+        val camera2ComponentBuilder = camera2Helper.Builder(
+            DESIGNED_CAMERA_SIZE.width,
+            DESIGNED_CAMERA_SIZE.height
+        )
 //        camera2ComponentBuilder.previewInFullscreen = true
         camera2ComponentBuilder.quality = Camera2ComponentHelper.BITRATE_INSANE_HIGH
         // On Nexus6 Camera Fps should be CAMERA_FPS_VERY_HIGH - Range(30, 30)
@@ -183,23 +202,37 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
 
     override fun onOpenGallery() {
         val act = requireActivity() as AppCompatActivity
-        CameraUtil.openGallery(getString(R.string.cmn_chooser_gallery), false, activityResultLauncher) { uri ->
+        CameraUtil.openGallery(
+            getString(R.string.cmn_chooser_gallery),
+            false,
+            activityResultLauncher
+        ) { uri ->
             LogContext.log.i(TAG, "OPEN_GALLERY onActivityResult")
-//            CameraUtil.handleImageAboveKitKat(this, data).forEach { LogContext.log.i(TAG, "Selected image=$it") }
+// CameraUtil.handleImageAboveKitKat(this, data).forEach { LogContext.log.i(TAG, "Selected
+// image=$it") }
             // The following code is just for demo. The exception is not considered.
 
             // In Android 10+, I really do not know how to get the file real path.
             // According to the post [https://stackoverflow.com/a/2790688],
-            // there is no need for us to know the real path. I just need to get the InputStream directly. That's enough.
+            // there is no need for us to know the real path. I just need to get the InputStream
+            // directly. That's enough.
             // Set uri for ImageView
 //                ImageView(this).setImageURI(uri)
             // Or get file input stream.
             val inputStream = act.contentResolver.openInputStream(uri)!!
-            val outFile = File(act.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!, "os.jpg")
+            val outFile =
+                File(
+                    act.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath!!,
+                    "os.jpg"
+                )
             val outputStream = FileOutputStream(outFile)
             inputStream.copyTo(outputStream)
             LogContext.log.i(TAG, "Image stream has been copied to FileOutputStream")
-            Toast.makeText(context, "Save selected file to ${outFile.absolutePath}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Save selected file to ${outFile.absolutePath}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

@@ -140,8 +140,14 @@ class ZipUtilTest {
     @DisplayName("Test File Full Path Zipping and Unzipping Files")
     fun zipFilePathAndUnzipTest() {
         // Create some test files
-        val txtFile1 = File(testDir, "text_filepath_1.txt").apply { writeText("This is text path file 1") }
-        val txtFile2 = File(testDir, "text_filepath_2.txt").apply { writeText("This is text path file 2") }
+        val txtFile1 = File(
+            testDir,
+            "text_filepath_1.txt"
+        ).apply { writeText("This is text path file 1") }
+        val txtFile2 = File(
+            testDir,
+            "text_filepath_2.txt"
+        ).apply { writeText("This is text path file 2") }
 
         // Compress test directory
         ZipUtil.zip(listOf(txtFile1, txtFile2), testZipFile3.absolutePath)
@@ -178,7 +184,10 @@ class ZipUtilTest {
         val fileList = ZipUtil.listFilesInZip(testZipFile.absolutePath)
 
         // Verify file structure inside ZIP
-        assertThat(fileList, hasItems("$TEST_DIR/file1.txt", "$TEST_DIR/file2.txt", "$TEST_DIR/subDir/file3.txt"))
+        assertThat(
+            fileList,
+            hasItems("$TEST_DIR/file1.txt", "$TEST_DIR/file2.txt", "$TEST_DIR/subDir/file3.txt")
+        )
     }
 
     @Test

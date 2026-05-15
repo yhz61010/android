@@ -28,7 +28,8 @@ object YuvUtil {
     const val SCALE_FILTER_BOX = 3 // Highest quality.
 
     /**
-     * Maybe the [convertToI420] method is what you want unless you find a way to get [pixelStrideUV] automatically.
+     * Maybe the [convertToI420] method is what you want unless you find a way to get
+     * [pixelStrideUV] automatically.
      *
      * @param pixelStrideUV How can I get this parameter automatically?
      *                      1: I420
@@ -86,7 +87,12 @@ object YuvUtil {
      *                180: Rotate 180 degrees.
      *                270: Rotate 270 degrees clockwise.
      */
-    external fun rotateI420(i420ByteArray: ByteArray, width: Int, height: Int, degree: Int): ByteArray
+    external fun rotateI420(
+        i420ByteArray: ByteArray,
+        width: Int,
+        height: Int,
+        degree: Int
+    ): ByteArray
 
     /**
      * @param width The original video width.
@@ -141,7 +147,12 @@ object YuvUtil {
 
     external fun nv21ToI420(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
-    external fun nv12ToI420(nv21ByteArray: ByteArray, width: Int, height: Int, degree: Int = ROTATE_0): ByteArray
+    external fun nv12ToI420(
+        nv21ByteArray: ByteArray,
+        width: Int,
+        height: Int,
+        degree: Int = ROTATE_0
+    ): ByteArray
 
     // --------------------
 

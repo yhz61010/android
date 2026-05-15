@@ -189,7 +189,10 @@ class Camera2ComponentHelper(
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
         // TODO Do we have a better way to check the specific YUV420 type used by MediaCodec?
         dataProcessContext = if (
-            CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.IMG.TOPAZ.VIDEO.Encoder") ||
+            CodecUtil.hasCodecByName(
+                MediaFormat.MIMETYPE_VIDEO_AVC,
+                "OMX.IMG.TOPAZ.VIDEO.Encoder"
+            ) ||
             CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.Exynos.AVC.Encoder") ||
             CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.MTK.VIDEO.ENCODER.AVC") ||
             CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
@@ -200,7 +203,8 @@ class Camera2ComponentHelper(
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
             DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
         }
-        //        dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder, MediaFormat.MIMETYPE_VIDEO_AVC)
+        // dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder,
+        // MediaFormat.MIMETYPE_VIDEO_AVC)
         //                .contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar)
         //        ) {
         //            LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
@@ -320,8 +324,16 @@ class Camera2ComponentHelper(
             cameraWidth = desiredVideoWidth
             cameraHeight = desiredVideoHeight
         }
-        if (cameraWidth > cameraSupportedMaxPreviewHeight) cameraWidth = cameraSupportedMaxPreviewHeight
-        if (cameraHeight > cameraSupportedMaxPreviewWidth) cameraHeight = cameraSupportedMaxPreviewWidth
+        if (cameraWidth >
+            cameraSupportedMaxPreviewHeight
+        ) {
+            cameraWidth = cameraSupportedMaxPreviewHeight
+        }
+        if (cameraHeight >
+            cameraSupportedMaxPreviewWidth
+        ) {
+            cameraHeight = cameraSupportedMaxPreviewWidth
+        }
         LogContext.log.w(TAG, "After adjust cameraWidth=$cameraWidth, cameraHeight=$cameraHeight")
 
         // Calculate ImageReader input preview size from supported size list by camera.
@@ -336,9 +348,11 @@ class Camera2ComponentHelper(
         // Take care of the result value. It's in camera orientation.
         LogContext.log.w(
             TAG,
-            "selectedSizeFromCamera width=${selectedSizeFromCamera.width} height=${selectedSizeFromCamera.height}"
+            "selectedSizeFromCamera width=${selectedSizeFromCamera.width} " +
+                "height=${selectedSizeFromCamera.height}"
         )
-        // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
+        // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size
+        // for CameraTextureView.
         previewSize =
             if (swapDimension) {
                 Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width)
@@ -448,7 +462,13 @@ class Camera2ComponentHelper(
 
         /** [previewSize] is initialized in [initializeRecordingParameters] */
         val usedBitrate =
-            if (autoBitrate) (previewSize!!.width * previewSize!!.height * builder.quality).toInt() else bitrate
+            if (autoBitrate) {
+                (
+                    previewSize!!.width * previewSize!!.height * builder.quality
+                    ).toInt()
+            } else {
+                bitrate
+            }
         initCameraEncoder(
             previewSize!!.width,
             previewSize!!.height,
@@ -474,7 +494,9 @@ class Camera2ComponentHelper(
     private fun setImageReaderForPhoto(previewWidth: Int, previewHeight: Int) {
         /** [characteristics] is initialized in [initializeParameters] */
         // Initialize an image reader which will be used to capture still photos
-        //        val size = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)
+        // val size =
+        // characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSiz
+        // es(ImageFormat.JPEG)
         //            .maxBy { it.height * it.width }!!
         imageReader =
             ImageReader.newInstance(
@@ -492,7 +514,9 @@ class Camera2ComponentHelper(
         // There is no need to call session.close() method. Please check its comment
         //        if (::session.isInitialized) session.close()
         val targets = mutableListOf(imageReader.surface)
-        cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
+        cameraView?.let {
+            targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+        }
 
         // Start a capture session using our open camera and list of Surfaces where frames will go
         session = createCaptureSession(camera, targets, cameraHandler)
@@ -502,7 +526,9 @@ class Camera2ComponentHelper(
             session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
                 cameraView?.let {
                     // Add the preview surface target
-                    addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                    addTarget(
+                        it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface
+                    )
                 }
                 // Auto focus
                 set(
@@ -515,8 +541,8 @@ class Camera2ComponentHelper(
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
                 )
                 // AWB
-                //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-                //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                // set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                // set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
             }
         // This will keep sending the capture request as frequently as possible until the
         // session is torn down or session.stopRepeating() is called
@@ -531,72 +557,78 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    fun initializeCamera(previewWidth: Int, previewHeight: Int) = context.lifecycleScope.launch(Dispatchers.Main) {
-        LogContext.log.i(
-            TAG,
-            "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
-        )
-        this@Camera2ComponentHelper.previewWidth = previewWidth
-        this@Camera2ComponentHelper.previewHeight = previewHeight
-        initializeParameters()
-
-        // Open the selected camera
-        camera = openCamera(cameraManager, cameraId, cameraHandler)
-
-        if (enableTakePhotoFeature) {
-            val st = SystemClock.elapsedRealtime()
-            setImageReaderForPhoto(previewWidth, previewHeight)
-            LogContext.log.d(
+    fun initializeCamera(previewWidth: Int, previewHeight: Int) =
+        context.lifecycleScope.launch(Dispatchers.Main) {
+            LogContext.log.i(
                 TAG,
-                "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
+                "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
             )
-            setPreviewRepeatingRequest()
-            LogContext.log.d(
-                TAG,
-                "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
-            )
+            this@Camera2ComponentHelper.previewWidth = previewWidth
+            this@Camera2ComponentHelper.previewHeight = previewHeight
+            initializeParameters()
+
+            // Open the selected camera
+            camera = openCamera(cameraManager, cameraId, cameraHandler)
+
+            if (enableTakePhotoFeature) {
+                val st = SystemClock.elapsedRealtime()
+                setImageReaderForPhoto(previewWidth, previewHeight)
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+                setPreviewRepeatingRequest()
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+            }
         }
-    }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    private suspend fun openCamera(manager: CameraManager, cameraId: String, handler: Handler? = null): CameraDevice =
-        suspendCancellableCoroutine { cont ->
-            manager.openCamera(
-                cameraId,
-                object : CameraDevice.StateCallback() {
-                    override fun onOpened(device: CameraDevice) = cont.resume(device)
+    private suspend fun openCamera(
+        manager: CameraManager,
+        cameraId: String,
+        handler: Handler? = null
+    ): CameraDevice = suspendCancellableCoroutine { cont ->
+        manager.openCamera(
+            cameraId,
+            object : CameraDevice.StateCallback() {
+                override fun onOpened(device: CameraDevice) = cont.resume(device)
 
-                    override fun onDisconnected(device: CameraDevice) {
-                        LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
-                        // TODO In some cases, call this method will cause crash
-                        //                context.requireActivity().finish()
-                    }
+                override fun onDisconnected(device: CameraDevice) {
+                    LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+                    // TODO In some cases, call this method will cause crash
+                    //                context.requireActivity().finish()
+                }
 
-                    override fun onClosed(camera: CameraDevice) {
-                        LogContext.log.w(TAG, "Camera $cameraId has been closed")
-                        super.onClosed(camera)
-                    }
+                override fun onClosed(camera: CameraDevice) {
+                    LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                    super.onClosed(camera)
+                }
 
-                    override fun onError(device: CameraDevice, error: Int) {
-                        val msg = when (error) {
-                            ERROR_CAMERA_DEVICE -> "Fatal (device)"
-                            ERROR_CAMERA_DISABLED -> "Device policy"
-                            ERROR_CAMERA_IN_USE -> "Camera in use"
-                            ERROR_CAMERA_SERVICE -> "Fatal (service)"
-                            ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                            else -> "Unknown"
-                        }
-                        device.close()
-                        val exc =
-                            IllegalAccessException("Active: ${cont.isActive} Camera $cameraId error: ($error) $msg.")
-                        LogContext.log.e(TAG, exc.message, exc)
-                        if (cont.isActive) cont.resumeWithException(exc)
+                override fun onError(device: CameraDevice, error: Int) {
+                    val msg = when (error) {
+                        ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                        ERROR_CAMERA_DISABLED -> "Device policy"
+                        ERROR_CAMERA_IN_USE -> "Camera in use"
+                        ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                        ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                        else -> "Unknown"
                     }
-                },
-                handler
-            )
-        }
+                    device.close()
+                    val exc =
+                        IllegalAccessException(
+                            "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
+                        )
+                    LogContext.log.e(TAG, exc.message, exc)
+                    if (cont.isActive) cont.resumeWithException(exc)
+                }
+            },
+            handler
+        )
+    }
 
     /**
      * Starts a [CameraCaptureSession] and returns the configured session (as the result of the
@@ -622,7 +654,8 @@ class Camera2ComponentHelper(
                 SessionConfiguration(SESSION_REGULAR, outputs, singleExecutor, stateCallback)
             device.createCaptureSession(config)
         } else {
-            // Create a capture session using the predefined targets; this also involves defining the
+            // Create a capture session using the predefined targets; this also involves defining
+            // the
             // session state callback to be notified of when the session is ready
             @Suppress("DEPRECATION")
             device.createCaptureSession(targets, stateCallback, handler)
@@ -686,7 +719,9 @@ class Camera2ComponentHelper(
         cameraView?.postDelayed({
             if (isRecording) {
                 cameraView.findViewById<ViewGroup>(R.id.llRecordTime).visibility = View.VISIBLE
-                (cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable).start()
+                (
+                    cameraView.findViewById<View>(R.id.vRedDot).background as AnimationDrawable
+                    ).start()
             }
         }, 1000)
 
@@ -713,7 +748,8 @@ class Camera2ComponentHelper(
                     for ((i, plane) in image.planes.withIndex()) {
                         LogContext.log.v(
                             TAG,
-                            "planes[$i] rowStride=${plane.rowStride} pixelStride=${plane.pixelStride} " +
+                            "planes[$i] rowStride=${plane.rowStride} " +
+                                "pixelStride=${plane.pixelStride} " +
                                 "bufferSize=${plane.buffer.remaining()}"
                         )
                     }
@@ -723,26 +759,37 @@ class Camera2ComponentHelper(
                 val i420Data = YuvUtil.getYuvDataFromImage(image, YuvUtil.COLOR_FORMAT_I420)
                 val convertedYUVData = i420Data
 
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width, image.height, image.width / 2,
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleI420(i420Data, image.width,
+                // image.height, image.width / 2,
                 // image.height / 2, com.leovp.yuv_sdk.YuvUtil.SCALE_FILTER_NONE)
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.cropI420(i420Data, image.width, image.height, 400, 400, 100, 100)!!
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.cropI420(i420Data, image.width,
+                // image.height, 400, 400, 100, 100)!!
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data,
+                // image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data,
+                // image.width, image.height)
 
-                //                 val nv21Data = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width, image.height)
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv21ToI420(nv21Data, image.width, image.height)
+                // val nv21Data = com.leovp.yuv_sdk.YuvUtil.i420ToNv21(i420Data, image.width,
+                // image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv21ToI420(nv21Data,
+                // image.width, image.height)
 
-                //                val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv21ToNv12(nv21Data, image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv21ToNv12(nv21Data,
+                // image.width, image.height)
 
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv12ToI420(nv12, image.width, image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.nv12ToI420(nv12, image.width,
+                // image.height)
 
-                // val nv12Data = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width, image.height)
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.mirrorNv12(nv12Data, image.width, image.height)
+                // val nv12Data = com.leovp.yuv_sdk.YuvUtil.i420ToNv12(i420Data, image.width,
+                // image.height)
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.mirrorNv12(nv12Data,
+                // image.width, image.height)
 
                 // val scaledWidth = (image.width shr 1) and 7.inv()
                 // val scaledHeight = (image.height shr 1) and 7.inv()
                 // LogContext.log.w(message ="scaled width=$scaledWidth x $scaledHeight")
-                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleNv12(nv12Data, image.width, image.height,
+                // val convertedYUVData = com.leovp.yuv_sdk.YuvUtil.scaleNv12(nv12Data, image.width,
+                // image.height,
                 // scaledWidth, scaledHeight)
 
                 videoYuvOsForDebug?.write(convertedYUVData)
@@ -763,7 +810,9 @@ class Camera2ComponentHelper(
         }, cameraHandler)
 
         val targets = mutableListOf(imageReader.surface)
-        cameraView?.let { targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface) }
+        cameraView?.let {
+            targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+        }
         context.lifecycleScope.launch(Dispatchers.Main) {
             session = createCaptureSession(camera, targets, cameraHandler)
             LogContext.log.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
@@ -772,7 +821,11 @@ class Camera2ComponentHelper(
                 session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
                     cameraView?.let {
                         // Add the preview and recording surface targets
-                        addTarget(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
+                        addTarget(
+                            it.findViewById<CameraSurfaceView>(
+                                R.id.cameraSurfaceView
+                            ).holder.surface
+                        )
                     }
                     addTarget(imageReader.surface)
                     LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
@@ -784,8 +837,10 @@ class Camera2ComponentHelper(
                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
                     )
                     // AWB
-                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-                    //        set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                    // set(CaptureRequest.CONTROL_AWB_MODE,
+                    // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                    // set(CaptureRequest.CONTROL_AWB_MODE,
+                    // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
                 }.build(),
                 null,
                 cameraHandler
@@ -896,11 +951,15 @@ class Camera2ComponentHelper(
                             val buffer = image.planes[0].buffer
                             val width = image.width
                             val height = image.height
-                            val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+                            val imageBytes = ByteArray(buffer.remaining()).apply {
+                                buffer.get(this)
+                            }
                             // DO NOT forget for close Image object
                             image.close()
 
-                            val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            val deviceRotation = if (Build.VERSION.SDK_INT >=
+                                Build.VERSION_CODES.R
+                            ) {
                                 context.display?.rotation ?: -1
                             } else {
                                 @Suppress("DEPRECATION")
@@ -911,7 +970,8 @@ class Camera2ComponentHelper(
                             // Compute EXIF orientation metadata
                             // TODO Maybe you want to use rotation in someday
                             val rotation = 0
-                            // val rotation = (context as BaseCamera2Fragment).relativeOrientation.value ?: 0
+                            // val rotation = (context as
+                            // BaseCamera2Fragment).relativeOrientation.value ?: 0
                             val mirrored =
                                 characteristics.get(CameraCharacteristics.LENS_FACING) ==
                                     CameraCharacteristics.LENS_FACING_FRONT
@@ -920,7 +980,8 @@ class Camera2ComponentHelper(
                             LogContext.log.d(
                                 TAG,
                                 "rotation=$rotation deviceRotation=$deviceRotation " +
-                                    "cameraSensorOrientation=$cameraSensorOrientation mirrored=$mirrored"
+                                    "cameraSensorOrientation=$cameraSensorOrientation " +
+                                    "mirrored=$mirrored"
                             )
                             LogContext.log.d(
                                 TAG,
@@ -940,7 +1001,8 @@ class Camera2ComponentHelper(
                                 )
                             )
 
-                            // There is no need to break out of the loop, this coroutine will suspend
+                            // There is no need to break out of the loop, this coroutine will
+                            // suspend
                         }
                     }
                 }
@@ -965,7 +1027,8 @@ class Camera2ComponentHelper(
             CaptureRequest.CONTROL_AE_MODE_ON
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
-        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
+        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+        // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
         torchOn = runCatching {
             session.setRepeatingRequest(capturePreviewRequestBuilder.build(), null, cameraHandler)
             //                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -991,7 +1054,8 @@ class Camera2ComponentHelper(
             CaptureRequest.CONTROL_AE_MODE_ON
         )
         capturePreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
-        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
+        // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
+        // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
         torchOn = runCatching {
             val captureRequest = capturePreviewRequestBuilder.build()
             session.setRepeatingRequest(captureRequest, null, cameraHandler)
@@ -1071,7 +1135,8 @@ class Camera2ComponentHelper(
                 context.lifecycleScope.launch(Dispatchers.IO) {
                     // TODO The buffer that is just the JPEG data not the original camera image.
                     // So I can not mirror image in the general way like this below:
-                    // if (result.mirrored) mirrorImage(bytes, result.image.width, result.image.height)
+                    // if (result.mirrored) mirrorImage(bytes, result.image.width,
+                    // result.image.height)
                     try {
                         val output = context.createImageFile("jpg")
                         FileOutputStream(output).use { it.write(result.imageBytes) }
@@ -1088,7 +1153,7 @@ class Camera2ComponentHelper(
             //                val dngCreator = DngCreator(characteristics, result.metadata)
             //                try {
             //                    val output = createFile(context.requireContext(), "dng")
-            //                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+            // FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
             //                    cont.resume(output)
             //                } catch (exc: IOException) {
             //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
@@ -1128,9 +1193,12 @@ class Camera2ComponentHelper(
     }
 
     /**
-     * Once you called this method, you must reinitialized this class again if you want to use again.
-     * Most of the time, when you don't need camera, just call [closeCamera] method, so that you can reuse it again.
-     * This method only should be called when you do want to release camera resources and do not want to use it any more.
+     * Once you called this method, you must reinitialized this class again if you want to use
+     * again.
+     * Most of the time, when you don't need camera, just call [closeCamera] method, so that you can
+     * reuse it again.
+     * This method only should be called when you do want to release camera resources and do not
+     * want to use it any more.
      */
     @Suppress("WeakerAccess")
     fun stopCameraThread() {

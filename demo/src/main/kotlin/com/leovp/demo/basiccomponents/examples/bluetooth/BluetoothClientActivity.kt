@@ -92,7 +92,11 @@ class BluetoothClientActivity :
             false,
             object : BluetoothGattCallback() {
                 @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-                override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                override fun onConnectionStateChange(
+                    gatt: BluetoothGatt?,
+                    status: Int,
+                    newState: Int
+                ) {
                     super.onConnectionStateChange(gatt, status, newState)
                     when (newState) {
                         BluetoothProfile.STATE_CONNECTED -> {

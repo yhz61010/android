@@ -31,14 +31,18 @@ data class DefaultConfig(
      */
     var y: Int = DEFAULT_Y_POS,
 
-    /** The gravity of the float view. (The gravity is used by setting [WindowManager.LayoutParams()]) */
+    /**
+     * The gravity of the float view.
+     * The gravity is used by setting [WindowManager.LayoutParams()].
+     */
     var gravity: Int = DEFAULT_GRAVITY,
 
     /**
      * Specific the width of the float view.
      *
      * If this parameter is `null` and the [fullScreenFloatView] is `false`,
-     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting [WindowManager.LayoutParams()].
+     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting
+     * [WindowManager.LayoutParams()].
      */
     var width: Int? = null,
 
@@ -46,7 +50,8 @@ data class DefaultConfig(
      * Specific the height of the float view.
      *
      * If this parameter is `null` and the [fullScreenFloatView] is `false`,
-     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting [WindowManager.LayoutParams()].
+     * the `WindowManager.LayoutParams.WRAP_CONTENT` will be used by setting
+     * [WindowManager.LayoutParams()].
      */
     var height: Int? = null,
 
@@ -73,7 +78,8 @@ data class DefaultConfig(
 
     /**
      * If the [touchable] is `false`, this listener will not be triggered.
-     * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom layer.
+     * Because the FLAG_NOT_TOUCHABLE will be added and it will bubble the event to the bottom
+     * layer.
      * So the float layer itself can not be touched anymore.
      */
     internal var touchEventListener: FloatView.TouchEventListener? = null
@@ -81,8 +87,10 @@ data class DefaultConfig(
     var isDisplaying: Boolean = false
 
     /**
-     * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
-     * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
+     * In some cases, you may just want to mask a full screen transparent float window and you can
+     * show finger paint on screen.
+     * Meanwhile, you can still touch screen and pass through the float window to the bottom layer
+     * just like no that float window.
      * In this case, you should set touchable status to `false`.
      */
     var touchable: Boolean = true

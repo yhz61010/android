@@ -9,14 +9,17 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
 class SaveInstanceStateActivity :
-    BaseDemonstrationActivity<ActivitySaveInstanceStateBinding>(R.layout.activity_save_instance_state) {
+    BaseDemonstrationActivity<ActivitySaveInstanceStateBinding>(
+        R.layout.activity_save_instance_state
+    ) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivitySaveInstanceStateBinding =
         ActivitySaveInstanceStateBinding.inflate(layoutInflater)
 
     /**
-     * Only you set following property in `AndroidManifest.xml` for activity, this method will be called.
+     * Only you set following property in `AndroidManifest.xml` for activity, this method will be
+     * called.
      * Otherwise, it will not be called.
      *
      * ```xml

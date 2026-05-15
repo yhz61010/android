@@ -11,7 +11,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityAppSettingsBinding
 import com.leovp.log.base.ITAG
 
-class AppSettingsActivity : BaseDemonstrationActivity<ActivityAppSettingsBinding>(R.layout.activity_app_settings) {
+class AppSettingsActivity :
+    BaseDemonstrationActivity<ActivityAppSettingsBinding>(R.layout.activity_app_settings) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAppSettingsBinding =

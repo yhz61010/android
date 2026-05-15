@@ -24,7 +24,8 @@ object ClipboardUtil {
     private fun getTextFromClipboardForAndroidQ(activity: Activity, f: (String) -> Unit) {
         val runnable = Runnable {
             runCatching {
-                val clipboardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clipboardManager =
+                    activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 if (!clipboardManager.hasPrimaryClip()) {
                     f.invoke("")
                     return@Runnable
@@ -50,7 +51,8 @@ object ClipboardUtil {
     }
 
     private fun getTextFromClipboard(activity: Activity): String {
-        val clipboardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboardManager =
+            activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         if (!clipboardManager.hasPrimaryClip()) {
             return ""
         }

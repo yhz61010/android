@@ -30,7 +30,8 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 21-1-25 上午11:43
  */
-class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBinding>(R.layout.activity_socket_server) {
+class SocketServerActivity :
+    BaseDemonstrationActivity<ActivitySocketServerBinding>(R.layout.activity_socket_server) {
     override fun getTagName(): String = ITAG
 
     companion object {
@@ -70,12 +71,18 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             toast("onClientConnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text =
-                    "${binding.txtResponse.text}\nClient connected: ${clientChannel.remoteAddress()}"
+                    "${binding.txtResponse.text}\nClient connected: " +
+                    "${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
 
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
+        override fun onReceivedData(
+            netty: BaseNettyServer,
+            clientChannel: Channel,
+            data: Any?,
+            action: Int
+        ) {
             LogContext.log.i(tag, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             runOnUiThread {
                 binding.txtResponse.text =
@@ -90,7 +97,8 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
             toast("onClientDisconnected: ${clientChannel.remoteAddress()}", debug = true)
             runOnUiThread {
                 binding.txtResponse.text =
-                    "${binding.txtResponse.text}\nClient disconnected: ${clientChannel.remoteAddress()}"
+                    "${binding.txtResponse.text}\nClient disconnected: " +
+                    "${clientChannel.remoteAddress()}"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
         }
@@ -157,12 +165,14 @@ class SocketServerActivity : BaseDemonstrationActivity<ActivitySocketServerBindi
     }
 
     @ChannelHandler.Sharable
-    class SocketServerHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+    class SocketServerHandler(private val netty: BaseNettyServer) :
+        BaseServerChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             netty.connectionListener.onReceivedData(netty, ctx.channel(), msg)
         }
 
-        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean = netty.executeCommand(clientChannel, msg)
+        fun responseClientMsg(clientChannel: Channel, msg: String): Boolean =
+            netty.executeCommand(clientChannel, msg)
 
         override fun release() {
         }

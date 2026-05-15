@@ -68,7 +68,8 @@ class FloatViewAttribute(private val tag: String) {
 
     /**
      * Show a float view with specific tag.
-     * Attention: The float view should be existed which is created by calling `build()` method like this [FloatView.with(ctx).build()]
+     * Attention: The float view should be existed which is created by calling `build()` method like
+     * this [FloatView.with(ctx).build()]
      */
     fun show() {
         if (FloatViewManager.exist(tag)) {
@@ -96,8 +97,10 @@ class FloatViewAttribute(private val tag: String) {
     fun isDisplaying(): Boolean = FloatViewManager.getConfig(tag)?.isDisplaying ?: false
 
     /**
-     * In some cases, you may just want to mask a full screen transparent float window and you can show finger paint on screen.
-     * Meanwhile, you can still touch screen and pass through the float window to the bottom layer just like no that float window.
+     * In some cases, you may just want to mask a full screen transparent float window and you can
+     * show finger paint on screen.
+     * Meanwhile, you can still touch screen and pass through the float window to the bottom layer
+     * just like no that float window.
      * In this case, you should set touchable status to `false`.
      */
     var touchable: Boolean
@@ -134,7 +137,8 @@ class FloatViewAttribute(private val tag: String) {
     /**
      * You must set the proper screen orientation to float view.
      * Otherwise, the float view may display at unexpected position on Android 12+
-     * when your app in background or the float view is just created after screen orientation changed.
+     * when your app in background or the float view is just created after screen orientation
+     * changed.
      *
      * Available values:
      * - Surface.ROTATION_0

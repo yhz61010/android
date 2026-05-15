@@ -10,8 +10,10 @@ import com.leovp.audio.opus.OpusEncoder
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
-class OpusEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback,) :
-    AudioEncoderWrapper {
+class OpusEncoderWrapper(
+    encoderInfo: AudioEncoderInfo,
+    private val outputCallback: OutputCallback,
+) : AudioEncoderWrapper {
 
     private val encoder = OpusEncoder(
         sampleRate = encoderInfo.sampleRate,
@@ -19,7 +21,11 @@ class OpusEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallba
         bitrate = encoderInfo.bitrate,
         audioFormat = encoderInfo.audioFormat,
         callback = object : IEncodeCallback {
-            override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+            override fun onEncoded(
+                encodedBytes: ByteArray,
+                isConfig: Boolean,
+                isKeyFrame: Boolean
+            ) {
                 outputCallback.output(encodedBytes, isConfig, isKeyFrame)
             }
         }

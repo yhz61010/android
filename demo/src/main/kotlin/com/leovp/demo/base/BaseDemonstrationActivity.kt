@@ -29,7 +29,8 @@ abstract class BaseDemonstrationActivity<B : ViewBinding>(
         super.onCreate(savedInstanceState)
         EventBus.getDefault().register(this)
         title = intent.getStringExtra("title")
-        //        simpleActivityLauncher = BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
+        // simpleActivityLauncher = BetterActivityResult.registerForActivityResult(this,
+        // ActivityResultContracts.StartActivityForResult()) { result ->
         //            toast("Result in BaseActivity: ${result.resultCode}")
         //        }
         val lang = LangUtil.getInstance(this).getAppLanguage()

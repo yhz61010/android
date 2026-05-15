@@ -55,14 +55,22 @@ class PlayH265VideoByMediaCodecActivity :
                     // first we set SurfaceView color to black same as root layout background color.
                     // When SurfaceView is ready to render, we remove its background color.
                     videoSurfaceView.setBackgroundColor(Color.TRANSPARENT)
-                    videoSurfaceView.setDimension(decoderManager.videoWidth, decoderManager.videoHeight)
+                    videoSurfaceView.setDimension(
+                        decoderManager.videoWidth,
+                        decoderManager.videoHeight
+                    )
                     decoderManager.startDecoding()
 //                    AudioPlayManager.setContext(applicationContext)
 //                    AudioPlayManager.startThread()
                 }
             }
 
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) = Unit
+            override fun surfaceChanged(
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
+            ) = Unit
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
         })
     }

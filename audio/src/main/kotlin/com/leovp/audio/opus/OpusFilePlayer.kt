@@ -75,7 +75,8 @@ class OpusFilePlayer(
             callback = object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     queue.put(pcmData)
-                    // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}] pcm[${pcmData.size}]")
+                    // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}]
+                    // pcm[${pcmData.size}]")
                 }
             }
         ).apply { start() }
@@ -99,11 +100,14 @@ class OpusFilePlayer(
                 try {
                     startCodeEndPos = findStartCode(startCodeBeginPos + startCodeSize)
                     require(startCodeEndPos > -1) { "Can't find start code." }
-                    // LogContext.log.w(tag, "startCodeBeginPos=$startCodeBeginPos  startCodeEndPos=$startCodeEndPos")
-                    val audioFrameData = ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
+                    // LogContext.log.w(tag, "startCodeBeginPos=$startCodeBeginPos
+                    // startCodeEndPos=$startCodeEndPos")
+                    val audioFrameData =
+                        ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
                     rf.seek(startCodeBeginPos + startCodeSize)
                     rf.readFully(audioFrameData)
-                    // LogContext.log.d(tag, "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
+                    // LogContext.log.d(tag,
+                    // "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
                     decoder?.decode(audioFrameData)
                     val delayMs = if (calcDelay > maxFrameSizeMs) maxFrameSizeMs else calcDelay
                     if (queue.size < 1) {

@@ -70,7 +70,10 @@ class L12U1BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRend
         // 设置刷新屏幕时候使用的颜色值,顺序是 RGBA，值的范围从 0~1。GLES20.glClear 调用时使用该颜色值。
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        makeProgram(ctx.readAssetsFileAsString(R.raw.ball_vertex), ctx.readAssetsFileAsString(R.raw.ball_fragment))
+        makeProgram(
+            ctx.readAssetsFileAsString(R.raw.ball_vertex),
+            ctx.readAssetsFileAsString(R.raw.ball_fragment)
+        )
 
         pointData = createBallPointData()
         vertexBuffer = createFloatBuffer(pointData)
@@ -131,7 +134,10 @@ class L12U1BallRenderer(@Suppress("unused") private val ctx: Context) : BaseRend
 
         // GLES20.GL_TRIANGLE_STRIP
         // GLES20.GL_TRIANGLES
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, pointData.size / THREE_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_STRIP, 0,
+            pointData.size / THREE_DIMEN_POS_COMPONENT_COUNT
+        )
         GLES20.glDisableVertexAttribArray(aPositionLocation)
     }
 }

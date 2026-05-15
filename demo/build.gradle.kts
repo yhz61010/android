@@ -49,17 +49,20 @@ android {
         )
 
         // Connect JUnit 5 to the runner
-        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"
+        testInstrumentationRunnerArguments["runnerBuilder"] =
+            "de.mannodermaus.junit5.AndroidJUnit5Builder"
     }
 
     // https://developer.android.com/studio/build/build-variants
     flavorDimensions += listOf("default")
 
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flam
+    // ingo-release-da34616bb946
     buildFeatures {
         //noinspection DataBindingWithoutKapt
         dataBinding = true
-        // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of project.
+        // viewBinding is enabled by default. Check [build.gradle.kts] in the root folder of
+        // project.
         // viewBinding = true
         aidl = true
         // Generate BuildConfig.java file
@@ -79,7 +82,8 @@ android {
             enableV4Signing = true
         }
 
-        // Comment out release signing config to avoid build failure on JitPack (no keystore env vars).
+        // Comment out release signing config to avoid build failure on JitPack (no keystore env
+        // vars).
         // create("release") {
         //     storeFile = System.getenv("KEYSTORE_PATH")?.let { file(it) }
         //         ?: rootProject.properties["leovp.storeFile"]?.let { file(it) }
@@ -234,7 +238,8 @@ android {
         )
     }
 
-    // This configuration will override the global setting which is configured in root build.gradle.kts.
+    // This configuration will override the global setting which is configured in root
+    // build.gradle.kts.
     // https://kotlinlang.org/docs/gradle-compiler-options.html#target-the-jvm
     // tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
     //     compilerOptions {
@@ -254,7 +259,7 @@ android {
 //         val capitalizedName = variant.name.replaceFirstChar { it.uppercase() }
 //         // Example: dev
 //         val flavorName = variant.productFlavors.firstOrNull()?.second.orEmpty()
-//         println("buildTypeName=$buildTypeName flavorName=$flavorName capitalizedName=$capitalizedName")
+// println("buildTypeName=$buildTypeName flavorName=$flavorName capitalizedName=$capitalizedName")
 //         val versionName = android.defaultConfig.versionName ?: "NA"
 //         val versionCode = android.defaultConfig.versionCode ?: 0
 //         val timestamp = ZonedDateTime.now()
@@ -268,7 +273,7 @@ android {
 //             val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
 //             inputs.dir(apkDir)
 //             doLast {
-//                 val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
+// val apkName = "LeoDemo${("-$flavorName").takeIf { it != "-" } ?: ""}-$buildTypeName" +
 //                     "-v$versionName($versionCode)" +
 //                     "-${timestamp}" +
 //                     "-${versionTag.get()}-${commitCount.get()}" +
@@ -292,11 +297,13 @@ android {
 //     }
 // }
 
-fun Project.getDebugSignProperty(key: String, path: String = "10-configs/sign/keystore.properties",): String =
-    Properties()
-        .apply {
-            rootProject.file(path).inputStream().use(::load)
-        }.getProperty(key)
+fun Project.getDebugSignProperty(
+    key: String,
+    path: String = "10-configs/sign/keystore.properties",
+): String = Properties()
+    .apply {
+        rootProject.file(path).inputStream().use(::load)
+    }.getProperty(key)
 
 // // Get the total commit count of the current branch.
 // fun gitCommitCount(): Provider<String> {

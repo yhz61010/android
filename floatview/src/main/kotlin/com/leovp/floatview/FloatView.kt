@@ -14,8 +14,10 @@ import com.leovp.floatview.framework.FloatViewManager
  * Date: 2021/8/26 10:27
  *
  * **Attention**:
- * By using `FloatView`, you can still drag the whole float view even you drag on a button or any other view.
- * However, the view in layout can **NOT** have an empty `onClickListener` otherwise you can't drag on it.
+ * By using `FloatView`, you can still drag the whole float view even you drag on a button or any
+ * other view.
+ * However, the view in layout can **NOT** have an empty `onClickListener` otherwise you can't drag
+ * on it.
  *
  * Need permission: `<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />`
  *
@@ -56,13 +58,15 @@ class FloatView internal constructor(internal val context: Context) {
 
     interface TouchEventListener {
         /**
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is
+         * `false`,
          * the return result will be ignored. It'll always `false`.
          */
         fun touchDown(view: View, x: Int, y: Int): Boolean = false
 
         /**
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is
+         * `false`,
          * the return result will be ignored. It'll always `false`.
          */
         fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = true
@@ -75,7 +79,8 @@ class FloatView internal constructor(internal val context: Context) {
          * In contrast, if [isClickGesture] is `true` that means user triggers the click event,
          * so this touch event should not be consumed.
          *
-         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is `false`,
+         * If [DefaultConfig.fullScreenFloatView] is `true` or [DefaultConfig.enableDrag] is
+         * `false`,
          * the return result will be ignored. It'll always `false`.
          */
         fun touchUp(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean = !isClickGesture

@@ -21,7 +21,8 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.reflection.wrappers.ServiceManager
 
-class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding>(R.layout.activity_orientation) {
+class OrientationActivity :
+    BaseDemonstrationActivity<ActivityOrientationBinding>(R.layout.activity_orientation) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityOrientationBinding =
@@ -52,11 +53,13 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
         super.onDestroy()
     }
 
-    inner class DeviceOrientationListener(private val ctx: Context) : OrientationEventListener(ctx) {
+    inner class DeviceOrientationListener(private val ctx: Context) :
+        OrientationEventListener(ctx) {
         @SuppressLint("SetTextI18n")
         override fun onOrientationChanged(degree: Int) {
             // val confOrientation = resources.configuration.orientation
-            // LogContext.log.d("orientation=$orientation confOrientation=$confOrientation screenWidth=${ctx.screenWidth}")
+            // LogContext.log.d("orientation=$orientation confOrientation=$confOrientation
+            // screenWidth=${ctx.screenWidth}")
             binding.tvOrientationDegree.text = degree.toString()
             binding.tvScreenWidth.text = ctx.screenWidth.toString()
             if (degree == ORIENTATION_UNKNOWN) {
@@ -67,7 +70,8 @@ class OrientationActivity : BaseDemonstrationActivity<ActivityOrientationBinding
 
             val surRotationLiteral = screenSurfaceRotation.surfaceRotationLiteralName
             val surRotationName = screenSurfaceRotation.surfaceRotationName
-            binding.tvSurfaceRotation.text = "$surRotationLiteral($screenSurfaceRotation) $surRotationName"
+            binding.tvSurfaceRotation.text =
+                "$surRotationLiteral($screenSurfaceRotation) $surRotationName"
 
             currentDeviceOrientation = getDeviceOrientation(degree, currentDeviceOrientation)
             val screenOrientationName = currentDeviceOrientation.screenOrientationName

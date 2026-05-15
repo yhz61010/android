@@ -21,7 +21,10 @@ internal class XiaoMiDisplayCutout : DisplayCutout {
         }.onFailure { it.printStackTrace() }
     }
 
-    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
+    override fun cutoutAreaRect(
+        activity: Activity,
+        callback: DisplayCutout.CutoutAreaRectCallback
+    ) {
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
         callback.onResult(arrayListOf(rect))
     }

@@ -9,7 +9,8 @@ import com.leovp.demo.databinding.ActivityFfmpegH264Binding
 import com.leovp.log.base.ITAG
 import com.leovp.opengl.ui.LeoGLSurfaceView
 
-class FFMpegH264Activity : BaseDemonstrationActivity<ActivityFfmpegH264Binding>(R.layout.activity_ffmpeg_h264) {
+class FFMpegH264Activity :
+    BaseDemonstrationActivity<ActivityFfmpegH264Binding>(R.layout.activity_ffmpeg_h264) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityFfmpegH264Binding =
@@ -25,7 +26,11 @@ class FFMpegH264Activity : BaseDemonstrationActivity<ActivityFfmpegH264Binding>(
         glSurfaceView.setKeepRatio(true)
         //        glSurfaceView.updateDimension(screenWidth, getScreenAvailableHeight())
         val rawFileFullPath =
-            saveRawResourceToFile(R.raw.tears_400_x264_raw, getExternalFilesDir(null)!!.absolutePath, "h264.h264")
+            saveRawResourceToFile(
+                R.raw.tears_400_x264_raw,
+                getExternalFilesDir(null)!!.absolutePath,
+                "h264.h264"
+            )
         decodeObjByFFMpeg.init(rawFileFullPath, glSurfaceView)
         decodeObjByFFMpeg.startDecoding()
     }

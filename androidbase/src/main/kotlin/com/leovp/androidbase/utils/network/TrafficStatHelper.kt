@@ -18,7 +18,8 @@ import java.io.RandomAccessFile
  * getTotalRxPackets() // 总的接受数据包数，包含 Mobile 和 WiFi 等 static long
  * getTotalTxBytes() // 总的发送字节数，包含 Mobile 和 WiFi 等 static long
  * getTotalTxPackets() // 发送的总数据包数，包含 Mobile 和 WiFi 等 static long
- * getUidRxBytes(int uid) // 获取某个网络 UID 的接受字节数 static long getUidTxBytes(int uid) //获取某个网络 UID 的发送字节数
+ * getUidRxBytes(int uid) // 获取某个网络 UID 的接受字节数 static long getUidTxBytes(int uid) //获取某个网络 UID
+ * 的发送字节数
  *
  *
  * Author: Michael Leo
@@ -26,7 +27,9 @@ import java.io.RandomAccessFile
  */
 class TrafficStatHelper private constructor(val ctx: Context) {
     private val uid =
-        (ctx.applicationContext as Application).getCompatContextInfo<ApplicationInfo>(PackageManager.GET_META_DATA).uid
+        (
+            ctx.applicationContext as Application
+            ).getCompatContextInfo<ApplicationInfo>(PackageManager.GET_META_DATA).uid
 
     /**
      * The data will be sent in every *freq* second(s)

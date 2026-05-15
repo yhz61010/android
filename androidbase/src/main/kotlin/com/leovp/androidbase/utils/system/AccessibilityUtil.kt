@@ -98,14 +98,20 @@ object AccessibilityUtil {
         return weakService.get()?.rootInActiveWindow?.findAccessibilityNodeInfosByText(text)
     }
 
-    private fun performClick(nodesInfo: List<AccessibilityNodeInfo>?): Boolean { // As of API level 24
+    // As of API level 24
+    private fun performClick(nodesInfo: List<AccessibilityNodeInfo>?): Boolean {
         //        nodesInfo?.forEach { node ->
-        //            if (node.isEnabled) return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+        // if (node.isEnabled) return runCatching {
+        // node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
         //        }
         nodesInfo?.let { list ->
             for (node in list) {
                 if (node.isEnabled) {
-                    return runCatching { node.performAction(AccessibilityNodeInfo.ACTION_CLICK) }.getOrDefault(false)
+                    return runCatching {
+                        node.performAction(
+                            AccessibilityNodeInfo.ACTION_CLICK
+                        )
+                    }.getOrDefault(false)
                 }
             }
         }
@@ -128,7 +134,8 @@ object AccessibilityUtil {
 
     fun clickRecentKey(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_RECENTS)
 
-    fun openNotification(): Boolean = performFunctionKey(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)
+    fun openNotification(): Boolean =
+        performFunctionKey(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)
 
     fun performFunctionKey(action: Int): Boolean {
         if (!::weakService.isInitialized) {
@@ -151,11 +158,15 @@ object AccessibilityUtil {
     }
 
     fun scrollBackwardById(resourceId: String): Boolean = runCatching {
-        findNodesById(resourceId)?.firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) ?: false
+        findNodesById(resourceId)?.firstOrNull()?.performAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+        ) ?: false
     }.getOrDefault(false)
 
     fun scrollForwardById(resourceId: String): Boolean = runCatching {
-        findNodesById(resourceId)?.firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) ?: false
+        findNodesById(resourceId)?.firstOrNull()?.performAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+        ) ?: false
     }.getOrDefault(false)
 
     fun jumpToSettingPage(ctx: Context) {

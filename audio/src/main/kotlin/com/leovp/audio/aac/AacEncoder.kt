@@ -23,7 +23,13 @@ class AacEncoder(
     private val bitrate: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val callback: IEncodeCallback,
-) : BaseMediaCodecAsynchronous(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channelCount, audioFormat, true) {
+) : BaseMediaCodecAsynchronous(
+    MediaFormat.MIMETYPE_AUDIO_AAC,
+    sampleRate,
+    channelCount,
+    audioFormat,
+    true
+) {
     companion object {
         private const val TAG = "AacEn"
     }
@@ -52,7 +58,12 @@ class AacEncoder(
         it.size.also { size -> totalPcmBytes += size }
     } ?: 0
 
-    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean
+    ) {
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
             val outBytes = ByteArray(outBuf.remaining())
@@ -115,7 +126,8 @@ class AacEncoder(
      * 4: 4 channels: front-center, front-left, front-right, back-center
      * 5: 5 channels: front-center, front-left, front-right, back-left, back-right
      * 6: 6 channels: front-center, front-left, front-right, back-left, back-right, LFE-channel
-     * 7: 8 channels: front-center, front-left, front-right, side-left, side-right, back-left, back-right, LFE-channel
+     * 7: 8 channels: front-center, front-left, front-right, side-left, side-right, back-left,
+     * back-right, LFE-channel
      * 8-15: Reserved
      *
      * @param outAacDataWithAdts    The audio data with ADTS header.
@@ -123,7 +135,8 @@ class AacEncoder(
      */
     private fun addAdtsToDataWithoutCRC(outAacDataWithAdts: ByteArray, outAacDataLenWithAdts: Int) {
         // if (BuildConfig.DEBUG) {
-        //     LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate channelCount=$channelCount")
+        // LogContext.log.d(TAG, "addAdtsToDataWithoutCRC sampleRate=$sampleRate
+        // channelCount=$channelCount")
         // }
 
         // ByteBuffer key
@@ -145,21 +158,25 @@ class AacEncoder(
             LogContext.log.e(TAG, "csd0 can not be null")
         }
         csd0?.let {
-            // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while configuring MediaCodec
+            // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while
+            // configuring MediaCodec
             val profile: Int = (it[0].toInt() shr 3) and 0x1F
             // 4: 44.1KHz 8: 16Khz 11: 8Khz
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
             // 1: single_channel_element 2: CPE(channel_pair_element)
             val channelCfg: Int = (it[1].toInt() shr 3) and 0xF
             // if (BuildConfig.DEBUG) {
-            //     LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx channelCfg=$channelCfg")
+            // LogContext.log.d(TAG, "addAdtsToDataWithoutCRC profile=$profile freqIdx=$freqIdx
+            // channelCfg=$channelCfg")
             // }
 
             // https://www.jianshu.com/p/5c770a22e8f8
             outAacDataWithAdts[0] = 0xFF.toByte()
             outAacDataWithAdts[1] = 0xF9.toByte() // No CRC  // With CRC 0xF1
-            outAacDataWithAdts[2] = (((profile - 1) shl 6) + (freqIdx shl 2) + (channelCfg shr 2)).toByte()
-            outAacDataWithAdts[3] = (((channelCfg and 3) shl 6) + (outAacDataLenWithAdts shr 11)).toByte()
+            outAacDataWithAdts[2] =
+                (((profile - 1) shl 6) + (freqIdx shl 2) + (channelCfg shr 2)).toByte()
+            outAacDataWithAdts[3] =
+                (((channelCfg and 3) shl 6) + (outAacDataLenWithAdts shr 11)).toByte()
             outAacDataWithAdts[4] = ((outAacDataLenWithAdts and 0x7FF) shr 3).toByte()
             outAacDataWithAdts[5] = (((outAacDataLenWithAdts and 7) shl 5) + 0x1F).toByte()
             outAacDataWithAdts[6] = 0xFC.toByte()
@@ -170,7 +187,11 @@ class AacEncoder(
     // FIXME
     // Has bug!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
     @Suppress("SameParameterValue")
-    private fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
+    private fun getAudioEncodingCsd0(
+        aacProfile: Int,
+        sampleRate: Int,
+        channelCount: Int
+    ): ByteArray? {
         val freqIdx = getSampleFrequencyIndex(sampleRate)
         if (freqIdx == -1) return null
         val csd = ByteBuffer.allocate(2)
@@ -199,7 +220,8 @@ class AacEncoder(
         else -> -1
     }
 
-    // presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate / channelCount
+    // presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate /
+    // channelCount
     override fun computePresentationTimeUs(): Long {
         // LogContext.log.d(TAG, "totalPcmBytes=$totalPcmBytes")
         return 1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount

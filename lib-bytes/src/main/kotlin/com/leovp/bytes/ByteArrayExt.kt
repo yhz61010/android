@@ -60,7 +60,10 @@ fun ByteArray.readLongLE(index: Int = 0): Long {
 // =============================================
 
 fun Short.toBytes(): ByteArray = ByteArray(Short.SIZE_BYTES).also {
-    for (i in it.indices) it[i] = (this.toInt() ushr ((Short.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
+    for (i in it.indices) {
+        it[i] =
+            (this.toInt() ushr ((Short.SIZE_BYTES - 1 - i) * 8) and 0xFF).toByte()
+    }
 }
 
 fun Short.toBytesLE(): ByteArray = ByteArray(Short.SIZE_BYTES).also {
@@ -108,14 +111,19 @@ fun Long.toBytesLE(): ByteArray = ByteArray(Long.SIZE_BYTES).also {
 
 // ==============================================
 
-fun Byte.toHexString(addPadding: Boolean = false) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
-fun ByteArray.toAsciiString(delimiter: CharSequence = ",") = map { it.toInt().toChar() }.joinToString(delimiter)
+fun Byte.toHexString(
+    addPadding: Boolean =
+        false
+) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
+fun ByteArray.toAsciiString(delimiter: CharSequence = ",") =
+    map { it.toInt().toChar() }.joinToString(delimiter)
 
 /**
  * Attention.
  * This method is a little bit slow so be aware that if you use it in loop.
  */
-// fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) { "%02X".format(it) }
+// fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) {
+// "%02X".format(it) }
 
 // fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
 //     if (this.isEmpty()) return ""

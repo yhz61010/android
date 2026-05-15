@@ -67,7 +67,8 @@ class LeoToast private constructor(private val ctx: Context) {
         /**
          * Whether the host project is working in `DEBUG` mode.
          *
-         * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your app.
+         * You **MUST** initialize `buildConfigInDebug` in the very beginning when you start your
+         * app.
          * Otherwise, the `debug` feature doesn't work.
          * For example in your custom Application.
          */
@@ -240,7 +241,8 @@ private fun showToast(
                 }
                 // if (error || bgColor != null) {
                 //     val errorMsgColor = bgColor ?: ERROR_BG_COLOR
-                //     Toast.makeText(ctx, HtmlCompat.fromHtml("<font color='$errorMsgColor'>$message</font>",
+                // Toast.makeText(ctx, HtmlCompat.fromHtml("<font
+                // color='$errorMsgColor'>$message</font>",
                 //         HtmlCompat.FROM_HTML_MODE_LEGACY), duration).show()
                 // } else {
                 //     Toast.makeText(ctx, message, duration).show()
@@ -260,7 +262,8 @@ private fun showToast(
                         )
                     }
                     .meta { viewWidth, viewHeight ->
-                        // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight  dp=${viewWidth.dp}x${viewHeight.dp}")
+                        // Log.d("LEO-FV", "viewWidth=$viewWidth viewHeight=$viewHeight
+                        // dp=${viewWidth.dp}x${viewHeight.dp}")
                         tag = FLOAT_VIEW_TAG
                         gravity = toastCfg.gravity or Gravity.CENTER_HORIZONTAL
                         enableAlphaAnimation = true

@@ -22,7 +22,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
-class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.layout.activity_coroutine) {
+class CoroutineActivity :
+    BaseDemonstrationActivity<ActivityCoroutineBinding>(R.layout.activity_coroutine) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCoroutineBinding =
@@ -103,7 +104,8 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.
                 // 将使它获得一个新的线程
                 LogContext.log.e(
                     ITAG,
-                    "[$it] newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}"
+                    "[$it] newSingleThreadContext: I'm working in thread " +
+                        "${Thread.currentThread().name}"
                 )
             }
         }
@@ -111,7 +113,8 @@ class CoroutineActivity : BaseDemonstrationActivity<ActivityCoroutineBinding>(R.
             cs.launch(fixedContext) {
                 LogContext.log.e(
                     ITAG,
-                    "[$it] newFixedThreadPoolContext: I'm working in thread ${Thread.currentThread().name}"
+                    "[$it] newFixedThreadPoolContext: I'm working in thread " +
+                        "${Thread.currentThread().name}"
                 )
             }
         }

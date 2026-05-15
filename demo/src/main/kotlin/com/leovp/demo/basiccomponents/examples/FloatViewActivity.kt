@@ -23,7 +23,8 @@ import com.leovp.log.base.ITAG
 import java.util.Random
 import androidx.core.graphics.toColorInt
 
-class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.layout.activity_float_view) {
+class FloatViewActivity :
+    BaseDemonstrationActivity<ActivityFloatViewBinding>(R.layout.activity_float_view) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityFloatViewBinding =
@@ -56,7 +57,12 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                     return false
                 }
 
-                override fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean {
+                override fun touchMove(
+                    view: View,
+                    x: Int,
+                    y: Int,
+                    isClickGesture: Boolean
+                ): Boolean {
                     LogContext.log.w("F1", "touchMove ($x, $y) isClickGesture=$isClickGesture")
                     return false
                 }
@@ -168,7 +174,12 @@ class FloatViewActivity : BaseDemonstrationActivity<ActivityFloatViewBinding>(R.
                     return false
                 }
 
-                override fun touchMove(view: View, x: Int, y: Int, isClickGesture: Boolean): Boolean {
+                override fun touchMove(
+                    view: View,
+                    x: Int,
+                    y: Int,
+                    isClickGesture: Boolean
+                ): Boolean {
                     LogContext.log.w(
                         "floatView_touchable",
                         "touchMove ($x, $y) isClickGesture=$isClickGesture"

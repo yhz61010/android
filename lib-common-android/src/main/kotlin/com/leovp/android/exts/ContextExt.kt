@@ -97,11 +97,17 @@ fun Context.getPackageInfo(value: Int = 0, pkgName: String = packageName): Packa
 /**
  * @param algorithm "SHA", "SHA-1", "SHA-256", "MD5" and etc. Default value is "SHA2-56"
  */
-fun Context.getApplicationSignatures(pkgName: String = packageName, algorithm: String = "SHA-256"): List<ByteArray> {
+fun Context.getApplicationSignatures(
+    pkgName: String = packageName,
+    algorithm: String = "SHA-256"
+): List<ByteArray> {
     return runCatching {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // New signature
-            val sig = getPackageInfo(PackageManager.GET_SIGNING_CERTIFICATES, pkgName).signingInfo ?: return emptyList()
+            val sig = getPackageInfo(
+                PackageManager.GET_SIGNING_CERTIFICATES,
+                pkgName
+            ).signingInfo ?: return emptyList()
             if (sig.hasMultipleSigners()) {
                 // Send all with apkContentsSigners
                 sig.apkContentsSigners.map {
@@ -119,7 +125,10 @@ fun Context.getApplicationSignatures(pkgName: String = packageName, algorithm: S
             }
         } else {
             @Suppress("DEPRECATION")
-            val sig = getPackageInfo(PackageManager.GET_SIGNATURES, pkgName).signatures ?: return emptyList()
+            val sig = getPackageInfo(
+                PackageManager.GET_SIGNATURES,
+                pkgName
+            ).signatures ?: return emptyList()
             sig.map {
                 val digest = MessageDigest.getInstance(algorithm)
                 digest.update(it.toByteArray())
@@ -139,28 +148,37 @@ val Context.versionName get() = getPackageInfo().versionName ?: ""
  */
 val Context.versionCode get() = PackageInfoCompat.getLongVersionCode(getPackageInfo())
 
-val Context.isPortrait get() = this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-val Context.isLandscape get() = this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+val Context.isPortrait get() =
+    this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+val Context.isLandscape get() =
+    this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-// val Context.sharedPrefs: SharedPreferences get() = PreferenceManager.getDefaultSharedPreferences(this)
-fun Context.sharedPrefs(name: String): SharedPreferences = this.getSharedPreferences(name, Activity.MODE_PRIVATE)
+// val Context.sharedPrefs: SharedPreferences get() =
+// PreferenceManager.getDefaultSharedPreferences(this)
+fun Context.sharedPrefs(name: String): SharedPreferences =
+    this.getSharedPreferences(name, Activity.MODE_PRIVATE)
 
-val Context.accessibilityManager get() = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+val Context.accessibilityManager get() =
+    getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 val Context.accountManager get() = getSystemService(Context.ACCOUNT_SERVICE) as AccountManager
 val Context.activityManager get() = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
 val Context.alarmManager get() = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 val Context.audioManager get() = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 val Context.clipboardManager get() = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-val Context.connectivityManager get() = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-val Context.devicePolicyManager get() = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+val Context.connectivityManager get() =
+    getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+val Context.devicePolicyManager get() =
+    getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 val Context.downloadManager get() = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 val Context.dropBoxManager get() = getSystemService(Context.DROPBOX_SERVICE) as DropBoxManager
 val Context.inputManager get() = getSystemService(Context.INPUT_SERVICE) as InputManager
-val Context.inputMethodManager get() = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+val Context.inputMethodManager get() =
+    getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 val Context.keyguardManager get() = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 val Context.locationManager get() = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 val Context.nfcManager get() = getSystemService(Context.NFC_SERVICE) as NfcManager
-val Context.notificationManager get() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+val Context.notificationManager get() =
+    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 val Context.powerManager get() = getSystemService(Context.POWER_SERVICE) as PowerManager
 val Context.searchManager get() = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 val Context.sensorManager get() = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -169,23 +187,29 @@ val Context.telephonyManager get() = getSystemService(Context.TELEPHONY_SERVICE)
 val Context.uiModeManager get() = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
 val Context.usbManager get() = getSystemService(Context.USB_SERVICE) as UsbManager
 val Context.wallpaperManager get() = getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
-val Context.wifiManager get() = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+val Context.wifiManager get() =
+    applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 val Context.wifiP2pManager get() = getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
 val Context.windowManager get() = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 val Context.userManager get() = getSystemService(Context.USER_SERVICE) as UserManager
 val Context.displayManager get() = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
 val Context.bluetoothManager get() = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-val Context.captioningManager get() = getSystemService(Context.CAPTIONING_SERVICE) as CaptioningManager
+val Context.captioningManager get() =
+    getSystemService(Context.CAPTIONING_SERVICE) as CaptioningManager
 val Context.appOpsManager get() = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
 val Context.printManager get() = getSystemService(Context.PRINT_SERVICE) as PrintManager
-val Context.consumerManager get() = getSystemService(Context.CONSUMER_IR_SERVICE) as ConsumerIrManager
+val Context.consumerManager get() =
+    getSystemService(Context.CONSUMER_IR_SERVICE) as ConsumerIrManager
 val Context.telecomManager get() = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
 val Context.cameraManager get() = getSystemService(Context.CAMERA_SERVICE) as CameraManager
 val Context.batteryManager get() = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
 val Context.appWidgetManager get() = getSystemService(Context.APPWIDGET_SERVICE) as AppWidgetManager
-val Context.restrictionsManager get() = getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
-val Context.mediaSessionManager get() = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-val Context.mediaProjectionManager get() = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+val Context.restrictionsManager get() =
+    getSystemService(Context.RESTRICTIONS_SERVICE) as RestrictionsManager
+val Context.mediaSessionManager get() =
+    getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+val Context.mediaProjectionManager get() =
+    getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 val Context.usageStatsManager
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     get() = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager

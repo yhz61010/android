@@ -81,11 +81,12 @@ class AudioSender {
     fun start(ctx: Context, uri: URI) {
         this.ctx = ctx
         ioScope.launch {
-            senderClient = AudioSenderWebSocket(uri, connectionListener, true, ConstantRetry(10, 2000)).also {
-                senderHandler = AudioSenderWebSocketHandler(it)
-                it.initHandler(senderHandler)
-                it.connect()
-            }
+            senderClient =
+                AudioSenderWebSocket(uri, connectionListener, true, ConstantRetry(10, 2000)).also {
+                    senderHandler = AudioSenderWebSocketHandler(it)
+                    it.initHandler(senderHandler)
+                    it.connect()
+                }
         }
 
         micRecorder = MicRecorder(

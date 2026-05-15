@@ -29,8 +29,10 @@ fun Context.useBuildInSpeaker(on: Boolean, mode: Int? = null) {
     val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
     mode?.let { setAudioManagerMode(it) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val targetType = if (on) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
-        val targetDevice = audioManager.availableCommunicationDevices.firstOrNull { it.type == targetType }
+        val targetType =
+            if (on) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
+        val targetDevice =
+            audioManager.availableCommunicationDevices.firstOrNull { it.type == targetType }
         if (targetDevice != null) {
             audioManager.setCommunicationDevice(targetDevice)
         } else if (!on) {

@@ -50,7 +50,10 @@ class HttpActivity : BaseDemonstrationActivity<ActivityHttpBinding>(R.layout.act
 
         @Multipart
         @POST("/fileTransfer/uploadFile")
-        fun uploadFile(@QueryMap parameters: Map<String, String>, @Part file: MultipartBody.Part): Observable<String>
+        fun uploadFile(
+            @QueryMap parameters: Map<String, String>,
+            @Part file: MultipartBody.Part
+        ): Observable<String>
 
         // Values are URL encoded by default. Disable with encoded=true.
         @Streaming

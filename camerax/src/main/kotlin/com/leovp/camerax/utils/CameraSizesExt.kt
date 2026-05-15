@@ -35,7 +35,10 @@ internal val SIZE_HD_720P: SmartSize = SmartSize(1280, 720) // 16:9
 internal val SIZE_FHD_1080P: SmartSize = SmartSize(1920, 1080) // 16:9
 internal val SIZE_4K_UHD_2160P_TV: SmartSize = SmartSize(3840, 2160) // 16:9
 internal val SIZE_4K_DCI_2160P: SmartSize = SmartSize(4096, 2160) // Used by Digital Cinemas (DCI)
-internal val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(7680, 4320) // TV format in Japan from 2020 on
+internal val SIZE_8K_UHD_4320P_TV: SmartSize = SmartSize(
+    7680,
+    4320
+) // TV format in Japan from 2020 on
 
 /** Returns a [SmartSize] object for the given [Display] */
 internal fun getDisplaySmartSize(ctx: Context): SmartSize {
@@ -44,20 +47,27 @@ internal fun getDisplaySmartSize(ctx: Context): SmartSize {
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
-internal fun getDisplaySmartSize(designSize: Size): SmartSize = SmartSize(designSize.width, designSize.height)
+internal fun getDisplaySmartSize(designSize: Size): SmartSize =
+    SmartSize(designSize.width, designSize.height)
 
 /**
  * Returns the largest available PREVIEW size. For more information, see:
  * [CameraDevice](https://d.android.com/reference/android/hardware/camera2/CameraDevice) and
- * [StreamConfigurationMap](https://developer.android.com/reference/android/hardware/camera2/params/StreamConfigurationMap)
+ * [StreamConfigurationMap](https://developer.android.com/reference/android/hardware/camera2/params/
+ * StreamConfigurationMap)
  *
  * @param targetClass The following list is generally usable for outputs:
- * - [android.media.ImageReader] - Recommended for image processing or streaming to external resources (such as a file or network)
+ * - [android.media.ImageReader] - Recommended for image processing or streaming to external
+ * resources (such as a file or network)
  * - [android.media.MediaRecorder] - Recommended for recording video (simple to use)
- * - [android.media.MediaCodec] - Recommended for recording video (more complicated to use, with more flexibility)
- * - [android.renderscript.Allocation] - Recommended for image processing with {@link android.renderscript RenderScript}
- * - [android.view.SurfaceHolder] - Recommended for low-power camera preview with {@link android.view.SurfaceView}
- * - [android.graphics.SurfaceTexture] - Recommended for OpenGL-accelerated preview processing or compositing with
+ * - [android.media.MediaCodec] - Recommended for recording video (more complicated to use, with
+ * more flexibility)
+ * - [android.renderscript.Allocation] - Recommended for image processing with {@link
+ * android.renderscript RenderScript}
+ * - [android.view.SurfaceHolder] - Recommended for low-power camera preview with {@link
+ * android.view.SurfaceView}
+ * - [android.graphics.SurfaceTexture] - Recommended for OpenGL-accelerated preview processing or
+ * compositing with
  * - [android.view.TextureView]
  * @param format an image format from either `ImageFormat` or `PixelFormat`
  */
@@ -138,12 +148,16 @@ internal fun getSpecificPreviewOutputSize(
     var swapDimension = false
     when (deviceRotation) {
         Surface.ROTATION_0,
-        Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 || cameraSensorOrientation == 270) {
+        Surface.ROTATION_180 -> if (cameraSensorOrientation == 90 ||
+            cameraSensorOrientation == 270
+        ) {
             swapDimension = true
         }
 
         Surface.ROTATION_90,
-        Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 || cameraSensorOrientation == 180) {
+        Surface.ROTATION_270 -> if (cameraSensorOrientation == 0 ||
+            cameraSensorOrientation == 180
+        ) {
             swapDimension = true
         }
 
@@ -160,8 +174,16 @@ internal fun getSpecificPreviewOutputSize(
         cameraWidth = desiredVideoWidth
         cameraHeight = desiredVideoHeight
     }
-    if (cameraWidth > context.getPreviewViewMaxHeight()) cameraWidth = context.getPreviewViewMaxHeight()
-    if (cameraHeight > context.getPreviewViewMaxWidth()) cameraHeight = context.getPreviewViewMaxWidth()
+    if (cameraWidth >
+        context.getPreviewViewMaxHeight()
+    ) {
+        cameraWidth = context.getPreviewViewMaxHeight()
+    }
+    if (cameraHeight >
+        context.getPreviewViewMaxWidth()
+    ) {
+        cameraHeight = context.getPreviewViewMaxWidth()
+    }
 
     // Calculate ImageReader input preview size from supported size list by camera.
     // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
@@ -173,7 +195,8 @@ internal fun getSpecificPreviewOutputSize(
     )
 
     // Take care of the result value. It's in camera orientation.
-    // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for CameraTextureView.
+    // Swap the selectedPreviewSizeFromCamera is necessary. So that we can use the proper size for
+    // CameraTextureView.
     val previewSize: Size = if (swapDimension) {
         Size(selectedSizeFromCamera.height, selectedSizeFromCamera.width)
     } else {

@@ -111,7 +111,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /** Generic ViewBinding of the subclasses */
     lateinit var binding: B
 
-    abstract fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): B
+    abstract fun getViewBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): B
 
     // An instance of a helper function to work with Shared Preferences
     protected val prefs by lazy { SharedPrefsManager.getInstance(requireContext()) }
@@ -143,18 +147,22 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
      *
      * https://developer.android.com/training/camerax/orientation-rotation#displayListener
      */
-    //    protected val displayManager by lazy { requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
+    // protected val displayManager by lazy {
+    // requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
     protected var touchListener: CameraXTouchListener? = null
 
     /** Returns true if the device has an available back camera. False otherwise */
-    protected fun hasBackCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
+    protected fun hasBackCamera(): Boolean =
+        cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
 
     /** Returns true if the device has an available front camera. False otherwise */
-    protected fun hasFrontCamera(): Boolean = cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
+    protected fun hasFrontCamera(): Boolean =
+        cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
     // This property will be initialize in updateOrientationLiveData()
-    protected var cameraRotationInDegree = -1 //    var deviceOrientationListener: OrientationListener? = null
+    //    var deviceOrientationListener: OrientationListener? = null
+    protected var cameraRotationInDegree = -1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         LogContext.log.w(logTag, "=====> onViewCreated <=====")
@@ -167,7 +175,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         outputVideoDirectory = getOutputVideoDirectory(requireContext())
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
         binding = getViewBinding(inflater, container, savedInstanceState)
@@ -226,7 +238,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         val imageBuffer = image.planes[0].buffer // val width = image.width
                         //  val height = image.height
                         val oriImageBytes = imageBuffer.toByteArray()
-                        LogContext.log.i(logTag, "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms")
+                        LogContext.log.i(
+                            logTag,
+                            "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms"
+                        )
 
                         // DO NOT forget for close Image object
                         image.close()
@@ -234,22 +249,33 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         lifecycleScope.launch(Dispatchers.IO) {
                             val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
                             val st1 = System.currentTimeMillis()
-                            val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+                            val oriBmp = BitmapFactory.decodeByteArray(
+                                oriImageBytes,
+                                0,
+                                oriImageBytes.size
+                            )
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-                            val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val processedBmp =
+                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
                             val finalWidth = processedBmp.width
                             val finalHeight = processedBmp.height
                             val imageBytes: ByteArray = processedBmp.toBytes()
-                            LogContext.log.i(logTag, "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
+                            LogContext.log.i(
+                                logTag,
+                                "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms"
+                            )
 
                             oriBmp.recycledSafety()
                             processedBmp.recycledSafety()
 
                             withContext(Dispatchers.Main) {
-                                onImageSaved(CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight), null)
+                                onImageSaved(
+                                    CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight),
+                                    null
+                                )
                             }
                         }
                     } catch (e: Exception) {
@@ -259,7 +285,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
 
                 override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(logTag, "ImageCapturedCallback - Photo capture failed: ${exc.message}", exc)
+                    LogContext.log.e(
+                        logTag,
+                        "ImageCapturedCallback - Photo capture failed: ${exc.message}",
+                        exc
+                    )
                     requireActivity().runOnUiThread { onImageSaved(null, exc) }
                 }
             }
@@ -289,7 +319,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
         // Create output options object which contains file + metadata
         //        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
+        val outputOptions =
+            ImageCapture.OutputFileOptions.Builder(photoFile).setMetadata(metadata).build()
 
         val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
 
@@ -298,12 +329,19 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             outputOptions, cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    LogContext.log.e(logTag, "ImageSavedCallback - Photo capture failed: ${exc.message}", exc)
+                    LogContext.log.e(
+                        logTag,
+                        "ImageSavedCallback - Photo capture failed: ${exc.message}",
+                        exc
+                    )
                     onImageSaved(null, exc)
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    LogContext.log.w(logTag, "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms")
+                    LogContext.log.w(
+                        logTag,
+                        "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms"
+                    )
                     try {
                         showShutterAnimation(viewFinder)
                         soundManager.playShutterSound()
@@ -328,7 +366,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap file cost=${st2 - st1}ms")
 
-                            val rotatedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val rotatedBmp =
+                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
 
@@ -349,7 +388,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         )
     }
 
-    private fun adjustBitmapRotation(bitmap: Bitmap, mirror: Boolean, cameraSensorOrientationDegree: Int): Bitmap {
+    private fun adjustBitmapRotation(
+        bitmap: Bitmap,
+        mirror: Boolean,
+        cameraSensorOrientationDegree: Int
+    ): Bitmap {
         return when (cameraSensorOrientationDegree) {
             0 -> {
                 // by android
@@ -444,7 +487,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
             viewFinder.apply {
                 post {
                     // Display flash animation to indicate that photo was captured.
-                    foreground = ColorDrawable(ResourcesCompat.getColor(resources, R.color.camera_flash_layer, null))
+                    foreground =
+                        ColorDrawable(
+                            ResourcesCompat.getColor(
+                                resources,
+                                R.color.camera_flash_layer,
+                                null
+                            )
+                        )
                     postDelayed({ foreground = null }, ANIMATION_SLOW_MILLIS)
                 }
             }
@@ -519,7 +569,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
             // ====================
 
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
                 if (e1 == null) return false
 
                 val deltaX = e1.x - e2.x
@@ -567,7 +622,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     private var swipeCallback: SwipeCallback? = null
 
-    fun setSwipeCallback(left: () -> Unit = {}, right: () -> Unit = {}, up: () -> Unit = {}, down: () -> Unit = {}) {
+    fun setSwipeCallback(
+        left: () -> Unit = {
+        },
+        right: () -> Unit = {},
+        up: () -> Unit = {},
+        down: () -> Unit = {}
+    ) {
         swipeCallback = object : SwipeCallback {
             override fun onUpSwipe() {
                 up()
@@ -597,7 +658,10 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         fun onRightSwipe()
     }
 
-    protected fun checkForHdrExtensionAvailability(hasHdr: Boolean, callback: (isHdrAvailable: Boolean) -> Unit) {
+    protected fun checkForHdrExtensionAvailability(
+        hasHdr: Boolean,
+        callback: (isHdrAvailable: Boolean) -> Unit
+    ) {
         // Create a Vendor Extension for HDR
         val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(
             requireContext(),
@@ -704,7 +768,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val metrics = requireContext().screenRealResolution
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        val characteristics: CameraCharacteristics =
+            cameraManager.getCameraCharacteristics(cameraId)
 
         characteristics.getCameraSupportedSize().forEach {
             when (com.leovp.android.exts.getRatio(it)) {
@@ -723,7 +788,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     return@forEach
                 }
             }
-            if ((it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)) {
+            if ((it.long * 1.0 / it.short).round(1) ==
+                (metrics.height * 1.0 / metrics.width).round(1)
+            ) {
                 incRatioBinding.btnRatioFull.visibility = View.VISIBLE
             }
         }
@@ -731,7 +798,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         updateRatioUI(ratio, previewView, ratioBtn)
     }
 
-    protected fun updateRatioUI(ratio: CameraRatio, previewView: PreviewView, ratioBtn: ImageButton? = null) {
+    protected fun updateRatioUI(
+        ratio: CameraRatio,
+        previewView: PreviewView,
+        ratioBtn: ImageButton? = null
+    ) {
         ratioBtn?.visibility = View.GONE
         when (ratio) {
             CameraRatio.R16v9 -> {
@@ -773,7 +844,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val screenMetrics = requireContext().screenRealResolution
         return if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-            val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val characteristics: CameraCharacteristics =
+                cameraManager.getCameraCharacteristics(cameraId)
             getSpecificPreviewOutputSize(
                 requireContext(),
                 screenMetrics.width,
@@ -831,7 +903,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     ) = runCatching {
         if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-            val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val characteristics: CameraCharacteristics =
+                cameraManager.getCameraCharacteristics(cameraId)
             val configMap = characteristics.getConfigMap()
 
             // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
@@ -861,32 +934,44 @@ cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
           hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
 
  Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).sorted().joinToString(",")
+                getSupportedColorFormatForEncoder(
+                    MediaFormat.MIMETYPE_VIDEO_AVC
+                ).sorted().joinToString(",")
             }
  Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC).sorted().joinToString(",")
+                getSupportedColorFormatForEncoder(
+                    MediaFormat.MIMETYPE_VIDEO_HEVC
+                ).sorted().joinToString(",")
             }
 
 Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") {
+                getSupportedProfileLevelsForEncoder(
+                    MediaFormat.MIMETYPE_VIDEO_AVC
+                ).joinToString(",") {
                     "${it.profile}/${it.level}"
                 }
             }
 Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC).joinToString(",") {
+                getSupportedProfileLevelsForEncoder(
+                    MediaFormat.MIMETYPE_VIDEO_AVC
+                ).joinToString(",") {
                     "${it.profile}/${it.level}"
                 }
             }
 
      highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
          highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") { "${it.width}x${it.height}(${getRatio(it.width, it.height)})" }
+                highSpeedVideoSizes?.joinToString(",") {
+                    "${it.width}x${it.height}(${getRatio(it.width, it.height)})"
+                }
             }
 
         Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
               Supported Size=${
                 allCameraSupportSize?.joinToString(",") {
-                    "${it.width}x${it.height}(${getCameraSizeTotalPixels(it)}-${getRatio(it.width, it.height)})"
+                    val pixels = getCameraSizeTotalPixels(it)
+                    val ratio = getRatio(it.width, it.height)
+                    "${it.width}x${it.height}($pixels-$ratio)"
                 }
             }
             """.trimIndent()
@@ -926,7 +1011,10 @@ Supported profile/level for HEVC=${
                 val path = cursor.getString(pathColumn)
                 val date = cursor.getLong(dateColumn)
 
-                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                val contentUri: Uri = ContentUris.withAppendedId(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
 
                 if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, true, date))
@@ -954,7 +1042,10 @@ Supported profile/level for HEVC=${
                 val path = cursor.getString(pathColumn)
                 val date = cursor.getLong(dateColumn)
 
-                val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                val contentUri: Uri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
 
                 if (path == outputPictureDirectory.absolutePath) {
                     items.add(Media(contentUri, false, date))
@@ -995,15 +1086,23 @@ Supported profile/level for HEVC=${
         internal const val VIDEO_EXTENSION = ".mp4"
 
         /** Helper function used to create a timestamped file */
-        internal fun createFile(baseFolder: File, format: String, extension: String) =
-            File(baseFolder, SimpleDateFormat(format, Locale.US).format(System.currentTimeMillis()) + extension)
+        internal fun createFile(baseFolder: File, format: String, extension: String) = File(
+            baseFolder,
+            SimpleDateFormat(format, Locale.US).format(System.currentTimeMillis()) + extension
+        )
 
-        internal fun getOutputPictureDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File =
+        internal fun getOutputPictureDirectory(
+            context: Context,
+            parentFolder: String = BASE_FOLDER_NAME
+        ): File =
             File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }
 
-        internal fun getOutputVideoDirectory(context: Context, parentFolder: String = BASE_FOLDER_NAME): File =
+        internal fun getOutputVideoDirectory(
+            context: Context,
+            parentFolder: String = BASE_FOLDER_NAME
+        ): File =
             File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), parentFolder).also {
                 if (!it.exists()) it.mkdirs()
             }

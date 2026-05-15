@@ -29,9 +29,11 @@ internal fun Context.getPreviewViewMaxHeight(): Int {
 internal fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap =
     get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
 
-internal fun CameraCharacteristics.isFlashSupported(): Boolean = get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
+internal fun CameraCharacteristics.isFlashSupported(): Boolean =
+    get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
 
-internal fun CameraCharacteristics.hardwareLevel(): Int = get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
+internal fun CameraCharacteristics.hardwareLevel(): Int =
+    get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
 
 internal fun CameraCharacteristics.hardwareLevelName(): String =
     when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
@@ -45,7 +47,8 @@ internal fun CameraCharacteristics.hardwareLevelName(): String =
 internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
     get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
 
-internal fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+internal fun CameraCharacteristics.cameraSensorOrientation(): Int =
+    get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
 /**
  * @return Return the screen rotation(**NOT** device rotation).
@@ -59,4 +62,10 @@ internal fun CameraCharacteristics.cameraSensorOrientation(): Int = get(CameraCh
 internal val Context.screenSurfaceRotation: Int
     @Suppress("DEPRECATION")
     get() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display.rotation else windowManager.defaultDisplay.rotation
+        if (Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.R
+        ) {
+            display.rotation
+        } else {
+            windowManager.defaultDisplay.rotation
+        }

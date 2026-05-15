@@ -14,7 +14,8 @@ import javax.crypto.spec.IvParameterSpec
  * Author: Michael Leo
  * Date: 20-12-21 下午5:39
  *
- * https://stackoverflow.com/questions/13433529/android-4-2-broke-my-encrypt-decrypt-code-and-the-provided-solutions-dont-work/39002997#39002997
+ * https://stackoverflow.com/questions/13433529/android-4-2-broke-my-encrypt-decrypt-code-and-the-pr
+ * ovided-solutions-dont-work/39002997#39002997
  */
 @Suppress("unused", "WeakerAccess")
 object AESUtil {
@@ -45,7 +46,8 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
         decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
@@ -82,7 +84,8 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      * @param secKey You must use the same SecretKey or else the decryption will be failed.
      */
     fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
@@ -135,7 +138,8 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
         decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
@@ -189,7 +193,8 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
         decrypt(cipherBytes, secKey.toByteArray(), useSHA512)
@@ -250,7 +255,8 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
         decrypt(cipherBytes, secKey.encoded, useSHA512)
@@ -267,7 +273,8 @@ object AESUtil {
      * val plainText = "I have a dream."
      * val secKey = "I'm a key."
      *
-     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey.toByteArray())
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
+     * secKey.toByteArray())
      * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
@@ -308,7 +315,8 @@ object AESUtil {
      * val plainText = "I have a dream."
      * val secKey = "I'm a key."
      *
-     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey.toByteArray())
+     * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
+     * secKey.toByteArray())
      * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
@@ -318,11 +326,15 @@ object AESUtil {
      * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
      * In other words 16, 24 or 32 byte.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
+     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
         val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)
-        val oriCipherBytes: ByteArray = cipherBytes.copyOfRange(DEFAULT_PRE_SALT_LENGTH, cipherBytes.size)
+        val oriCipherBytes: ByteArray = cipherBytes.copyOfRange(
+            DEFAULT_PRE_SALT_LENGTH,
+            cipherBytes.size
+        )
         val rawKey: SecretKey = if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             PBKDF2Util.generateKeyWithSHA512(secKey.toHexString(true, ""), salt)
         } else {
@@ -341,10 +353,16 @@ object AESUtil {
     fun generateKeyBySHA512(): SecretKey =
         PBKDF2Util.generateKeyWithSHA512(SystemClock.elapsedRealtimeNanos().toString())
 
-    fun generateKeyBySHA1(): SecretKey = PBKDF2Util.generateKeyWithSHA1(SystemClock.elapsedRealtimeNanos().toString())
+    fun generateKeyBySHA1(): SecretKey =
+        PBKDF2Util.generateKeyWithSHA1(SystemClock.elapsedRealtimeNanos().toString())
 
-    fun generateKey(): SecretKey =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) generateKeyBySHA512() else generateKeyBySHA1()
+    fun generateKey(): SecretKey = if (
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+    ) {
+        generateKeyBySHA512()
+    } else {
+        generateKeyBySHA1()
+    }
 
     // ==============================================================
 

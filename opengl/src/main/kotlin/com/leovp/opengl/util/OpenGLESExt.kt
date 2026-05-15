@@ -6,7 +6,10 @@ import com.leovp.log.base.LogOutType
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
 
-// https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
+// https://download.csdn.net/download/lkl22/11065372?spm=1001.2101.3001.6650.3&utm_medium=distribute
+// .pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBaidu%7ERate-3.pc_relevant_paycolumn
+// _v3&depth_1-utm_source=distribute.pc_relevant.none-task-download-2%7Edefault%7EBlogCommendFromBai
+// du%7ERate-3.pc_relevant_paycolumn_v3&utm_relevant_index=6
 // https://blog.csdn.net/sinat_23092639/article/details/103046553
 // https://blog.csdn.net/mengks1987/article/details/104186060
 
@@ -160,7 +163,8 @@ fun compileShader(type: Int, shaderCode: String): Int {
     // 4. 编译着色器对象
     GLES20.glCompileShader(shaderId)
 
-    //    LogContext.log.i(TAG, "Results of compiling.\n${GLES20.glGetShaderInfoLog(shaderId)}", outputType = OUTPUT_TYPE_SYSTEM)
+    // LogContext.log.i(TAG, "Results of compiling.\n${GLES20.glGetShaderInfoLog(shaderId)}",
+    // outputType = OUTPUT_TYPE_SYSTEM)
 
     // 5. 获取编译状态：OpenGL 将想要获取的值放入长度为1的数组的首位
     val compileStatus = IntArray(1)
@@ -282,7 +286,9 @@ fun validateProgram(programObjectId: Int): Boolean {
  *
  * https://www.jianshu.com/p/a772bfc2276b
  * https://blog.csdn.net/mengks1987/article/details/104186060
- * https://mp.weixin.qq.com/s?__biz=MzI0NzI0NDY2OQ==&mid=2652749998&idx=1&sn=73cb65f64e6c7ff6b823919d9c016b13&chksm=f25b92bcc52c1baa2c482431f111f98da33832d8fb2b1385e6fc197847b690de137601e23f68&token=1476949111&lang=zh_CN&scene=21#wechat_redirect
+ * https://mp.weixin.qq.com/s?__biz=MzI0NzI0NDY2OQ==&mid=2652749998&idx=1&sn=73cb65f64e6c7ff6b823919
+ * d9c016b13&chksm=f25b92bcc52c1baa2c482431f111f98da33832d8fb2b1385e6fc197847b690de137601e23f68&toke
+ * n=1476949111&lang=zh_CN&scene=21#wechat_redirect
  *
  * attribute：只能用在顶点着色器中，一般用于表示顶点数据。
  *            一般用于各个顶点各不相同的量。如顶点位置、纹理坐标、法向量、颜色等等。
@@ -314,10 +320,12 @@ fun validateProgram(programObjectId: Int): Boolean {
  * 作用：GPU 将 YUV 转 RGB
  *
  * https://www.jianshu.com/p/a772bfc2276b
- * // v_TexCoord = vec2((tv.x - 0.5) * (screenWidth / screenHeight), v_TexCoord.y - 0.5) * mat2(cos_factor, sin_factor, -sin_factor, cos_factor) + 0.5;
+ * // v_TexCoord = vec2((tv.x - 0.5) * (screenWidth / screenHeight), v_TexCoord.y - 0.5) *
+ * mat2(cos_factor, sin_factor, -sin_factor, cos_factor) + 0.5;
  * https://github.com/gre/gl-react-native-v2/issues/107#issuecomment-244106961
  * https://stackoverflow.com/a/37414763
- * https://github.com/kenneycode/OpenGLES2.0SamplesForAndroid/blob/0864ee22db/app/src/main/java/com/kenneycode/samples/renderer/SampleVertexShaderRenderer.kt
+ * https://github.com/kenneycode/OpenGLES2.0SamplesForAndroid/blob/0864ee22db/app/src/main/java/com/
+ * kenneycode/samples/renderer/SampleVertexShaderRenderer.kt
  * https://blog.csdn.net/junzia/article/details/68952183
  */
 // internal const val fragmentShaderCode = """

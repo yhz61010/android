@@ -109,7 +109,8 @@ import kotlinx.coroutines.launch
  * LayerId=0
  * TID=1
  *
- * According to some articles(Not verified), NALU type from 0~9 indicates P frame, 16~21 indicates I frame.
+ * According to some articles(Not verified), NALU type from 0~9 indicates P frame, 16~21 indicates I
+ * frame.
  *
  * Author: Michael Leo
  * Date: 20-7-30 上午10:54
@@ -179,7 +180,8 @@ class DecodeH265RawFileByFFMpeg {
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? = videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
+        videoDecoder.decode(rawVideo)
 
     private lateinit var rf: RandomAccessFile
 
@@ -301,14 +303,17 @@ class DecodeH265RawFileByFFMpeg {
                                             if (videoInfo.pixelFormatId < 0) {
                                                 BaseRenderer.Yuv420Type.I420
                                             } else {
-                                                BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
+                                                BaseRenderer.Yuv420Type.getType(
+                                                    videoInfo.pixelFormatId
+                                                )
                                             }
                                         glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
                                     }
                                     st3 = SystemClock.elapsedRealtimeNanos()
                                     LogContext.log.w(
                                         TAG,
-                                        "frame[${frame.size}][decode cost=${st2 / 1000_000 - st1}ms]" +
+                                        "frame[${frame.size}][decode " +
+                                            "cost=${st2 / 1000_000 - st1}ms]" +
                                             "[render cost=${(st3 - st2) / 1000}us] " +
                                             "${decodeFrame?.width}x${decodeFrame?.height}"
                                     )

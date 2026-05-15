@@ -58,7 +58,8 @@ class MicRecorder(
         ) * recordMinBufferRatio
         LogContext.log.w(
             TAG,
-            "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio bufferSizeInBytes=$bufferSizeInBytes"
+            "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio " +
+                "bufferSizeInBytes=$bufferSizeInBytes"
         )
 
         encodeWrapper = AudioEncoderManager.getWrapper(
@@ -110,7 +111,8 @@ class MicRecorder(
                     // It will cost almost 200ms due to preparing the first audio data.
                     // For the second and subsequent audio data, it will only cost 40ms-.
                     // if (cost > 100) {
-                    //     LogContext.log.w(TAG, "Drop the generated audio data which costs over 100 ms.")
+                    // LogContext.log.w(TAG, "Drop the generated audio data which costs over 100
+                    // ms.")
                     //     continue
                     // }
                     encodeWrapper?.encode(pcmData.toByteArrayLE()) ?: callback.onRecording(

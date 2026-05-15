@@ -23,7 +23,8 @@ class ProjectionMatrixHelper(program: Int, name: String) {
 
     fun enable(width: Int, height: Int) {
         // 边长比(>=1)，非宽高比
-        val aspectRatio: Float = if (width > height) width.toFloat() / height else height.toFloat() / width
+        val aspectRatio: Float =
+            if (width > height) width.toFloat() / height else height.toFloat() / width
 
         // 1. 矩阵数组
         // 2. 结果矩阵起始的偏移量

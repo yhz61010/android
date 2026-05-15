@@ -61,7 +61,8 @@ internal class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysi
         val timestampFirst = frameTimestamps.peekFirst() ?: currentTime
         val timestampLast = frameTimestamps.peekLast() ?: currentTime
         framesPerSecond = 1.0 /
-            ((timestampFirst - timestampLast) / frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
+            ((timestampFirst - timestampLast) / frameTimestamps.size.coerceAtLeast(1).toDouble()) *
+            1000.0
 
         // Analysis could take an arbitrarily long amount of time
         // Since we are running in a different thread, it won't stall other use cases

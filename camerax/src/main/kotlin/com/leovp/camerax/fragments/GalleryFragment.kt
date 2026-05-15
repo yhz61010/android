@@ -77,7 +77,8 @@ class GalleryFragment internal constructor() : Fragment() {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             // https://stackoverflow.com/a/71891158/1685062
-            // Mark this as a retain fragment, so the lifecycle does not get restarted on config change
+            // Mark this as a retain fragment, so the lifecycle does not get restarted on config
+            // change
             @Suppress("DEPRECATION")
             retainInstance = true
         }
@@ -94,7 +95,11 @@ class GalleryFragment internal constructor() : Fragment() {
         LogContext.log.d(TAG, "mediaList=$mediaList")
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _fragmentGalleryBinding = FragmentGalleryBinding.inflate(inflater, container, false)
         return fragmentGalleryBinding.root
     }

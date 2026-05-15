@@ -29,7 +29,8 @@ class WindowManager(private val manager: IInterface) {
             val cls: Class<*> = manager.javaClass
             getRotationMethod = runCatching {
                 // method changed since this commit:
-                // https://android.googlesource.com/platform/frameworks/base/+/8ee7285128c3843401d4c4d0412cd66e86ba49e3%5E%21/#F2
+                // https://android.googlesource.com/platform/frameworks/base/+/8ee7285128c3843401d4c
+                // 4d0412cd66e86ba49e3%5E%21/#F2
                 cls.getMethod("getDefaultDisplayRotation")
             }.getOrDefault(
 
@@ -98,22 +99,31 @@ class WindowManager(private val manager: IInterface) {
      * ServiceManager.windowManager?.registerRotationWatcher(rotationWatcher)
      * ```
      */
-    fun registerRotationWatcher(rotationWatcher: IRotationWatcher, displayId: Int = Display.DEFAULT_DISPLAY) {
+    fun registerRotationWatcher(
+        rotationWatcher: IRotationWatcher,
+        displayId: Int = Display.DEFAULT_DISPLAY
+    ) {
         try {
             val cls: Class<*> = manager.javaClass
 
             // API 26 or above
             // display parameter added since this commit:
-            // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
-//            cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
+            // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0d
+            // f5228b1f67cf2c6%5E%21/#F1
+// cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
 //                .invoke(manager, rotationWatcher, displayId)
 
             when {
                 // API 26 or above
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
                     // display parameter added since this commit:
-                    // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f6577849fd0df5228b1f67cf2c6%5E%21/#F1
-                    cls.getMethod("watchRotation", IRotationWatcher::class.java, Int::class.javaPrimitiveType)
+                    // https://android.googlesource.com/platform/frameworks/base/+/35fa3c26adcb5f657
+                    // 7849fd0df5228b1f67cf2c6%5E%21/#F1
+                    cls.getMethod(
+                        "watchRotation",
+                        IRotationWatcher::class.java,
+                        Int::class.javaPrimitiveType
+                    )
                         .invoke(manager, rotationWatcher, displayId)
                 }
 
@@ -136,7 +146,10 @@ class WindowManager(private val manager: IInterface) {
     fun removeRotationWatcher(rotationWatcher: IRotationWatcher) {
         try {
             val cls: Class<*> = manager.javaClass
-            cls.getMethod("removeRotationWatcher", IRotationWatcher::class.java).invoke(manager, rotationWatcher)
+            cls.getMethod(
+                "removeRotationWatcher",
+                IRotationWatcher::class.java
+            ).invoke(manager, rotationWatcher)
         } catch (ignored: NoSuchMethodException) {
             Log.e(TAG, "removeRotationWatcher exception.")
         }

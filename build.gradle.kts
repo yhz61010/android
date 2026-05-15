@@ -34,7 +34,7 @@ val jvmTargetVersion by extra {
 // }
 // val kotlinLanguageVersion by extra {
 //     // org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
-//     org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.language.get())
+// org.jetbrains.kotlin.gradle.dsl.KotlinVersion.fromVersion(libs.versions.kotlin.language.get())
 // }
 
 val useResourcePrefix = false
@@ -112,7 +112,8 @@ val detektFormatting: Provider<MinimalExternalModuleDependency> =
 allprojects {
     group = mavenGroupId
 
-    // We want to apply ktlint at all project level because it also checks Gradle config files (*.kts)
+    // We want to apply ktlint at all project level because it also checks Gradle config files
+    // (*.kts)
     apply(plugin = rootProject.libs.plugins.ktlint.gradle.get().pluginId)
     // configure<KtlintExtension> { version.set(rootProject.libs.versions.ktlint.get()) }
 
@@ -163,7 +164,8 @@ allprojects {
         useJUnitPlatform()
     }
 
-    // https://medium.com/kacper.wojciechowski/kotlin-2-0-android-project-migration-guide-b1234fbbff65
+    // https://medium.com/kacper.wojciechowski/kotlin-2-0-android-project-migration-guide-b1234fbbff
+    // 65
     // Configure it in your each compose module.
     // composeCompiler {
     //     enableStrongSkippingMode = true
@@ -179,7 +181,8 @@ allprojects {
     // configurations.all {
     //     resolutionStrategy.eachDependency {
     //         println(
-    //             "module=${requested.module}:${requested.version} group=${requested.group} name=${requested.name}"
+    // "module=${requested.module}:${requested.version} group=${requested.group}
+    // name=${requested.name}"
     //         )
     //     }
     // }
@@ -403,7 +406,8 @@ tasks.withType<Detekt>().configureEach {
 
 /*
  * Mimics all static checks that run on CI.
- * Note that this task is intended to run locally (not on CI), because on CI we prefer to have parallel execution
+ * Note that this task is intended to run locally (not on CI), because on CI we prefer to have
+ * parallel execution
  * and separate reports for each of the checks (multiple statuses e.g. on GitHub PR page).
  */
 tasks.register("staticCheck", fun Task.() {
@@ -460,7 +464,8 @@ fun isNonStable(version: String): Boolean {
 // @Suppress("unused")
 // fun DefaultConfig.buildConfigField(name: String, value: Array<String>) {
 //     // Create String that holds Java String Array code
-//     val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = { "\"$it\"" })
+// val strValue = value.joinToString(prefix = "{", separator = ",", postfix = "}", transform = {
+// "\"$it\"" })
 //     buildConfigField("String[]", name, strValue)
 // }
 

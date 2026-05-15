@@ -58,9 +58,11 @@ object H264Util {
      * @param data The video data.
      * @return Whether this frame is key frame.
      */
-    fun isIdrFrame(data: ByteArray): Boolean = getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101) or 0x25(37)
+    fun isIdrFrame(data: ByteArray): Boolean =
+        getNaluType(data) == NALU_TYPE_IDR // 5 0x65(101) or 0x25(37)
 
-    fun isNoneIdrFrame(data: ByteArray): Boolean = getNaluType(data) == NALU_TYPE_NONE_IDR // 1 0x41(65) or 0x21(33)
+    // 1 0x41(65) or 0x21(33)
+    fun isNoneIdrFrame(data: ByteArray): Boolean = getNaluType(data) == NALU_TYPE_NONE_IDR
 
     fun isSps(data: ByteArray): Boolean {
         // 5bits, 7.3.1 NAL unit syntax,
@@ -77,7 +79,8 @@ object H264Util {
     }
 
     /**
-     * @param data The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * @param data The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are
+     * in hexadecimal)
      * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
@@ -88,8 +91,10 @@ object H264Util {
             null
         } else {
             try {
-                // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
-                // Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
+                // The following example contains both NALU_TYPE_SPS and NALU_TYPE_PPS(All data are
+                // in hexadecimal)
+                // Example:
+                // 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
                 for (i in 5 until data.size) {
                     if (CodecUtil.findStartCode(data, i)) {
                         val sps = ByteArray(i)
@@ -106,16 +111,22 @@ object H264Util {
     }
 
     /**
-     * @param data The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
-     * Example: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
+     * @param data The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video
+     * data(All data are in hexadecimal)
+     * Example:
+     * 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0
+     * ,7C,F1
      *
      * @return The returned pps data contains the delimiter prefix 0,0,0,1
      */
     fun getPps(data: ByteArray): ByteArray? {
         if (!CodecUtil.findStartCode(data)) return null
         return try {
-            // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video data(All data are in hexadecimal)
-            // Example1: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
+            // The following example contains both NALU_TYPE_SPS, NALU_TYPE_PPS and first video
+            // data(All data are in hexadecimal)
+            // Example1:
+            // 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2,0,0,0,1,65
+            // ,8B,4,B0,7C,F1
             // Example2: 0,0,0,1,67,42,80,28,DA,1,10,F,1E,5E,6A,A,C,A,D,A1,42,6A,0,0,0,1,68,CE,6,E2
             // Example3: 0,0,0,1,68,CE,6,E2,0,0,0,1,65,8B,4,B0,7C,F1
             // Example4: 0,0,0,1,68,CE,6,E2

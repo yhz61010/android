@@ -38,7 +38,10 @@ object Watermark {
         val layout = FrameLayout(activity)
         layout.setTag(R.id.TAG_WATERMARK_LAYOUT, true)
         layout.layoutParams =
-            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         val rootView = activity.findViewById<ViewGroup>(android.R.id.content)
         rootView.setTag(R.id.TAG_WATERMARK_IN_USE, true)
         rootView.addView(layout)
@@ -142,7 +145,10 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             var loopFrom: Int
             var loopTo: Int
             var loopStep: Int
-            for ((index, positionY) in (0..diagonal step (textHeight * lineSpacerMultiple).toInt()).withIndex()) {
+            for ((
+                index,
+                positionY
+            ) in (0..diagonal step (textHeight * lineSpacerMultiple).toInt()).withIndex()) {
                 loopFrom = (-textWidth * wordSpacerMultiple + index % 2 * textWidth * 0.5f).toInt()
                 loopTo = (width + textWidth * wordSpacerMultiple).toInt()
                 loopStep = (textWidth * wordSpacerMultiple).toInt()

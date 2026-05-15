@@ -13,7 +13,8 @@ import com.leovp.demo.R
 import com.leovp.demo.databinding.FragmentForNavSecondBinding
 import com.leovp.log.base.ITAG
 
-class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.fragment_for_nav_second) {
+class FragmentForNavSecond :
+    BaseFragment<FragmentForNavSecondBinding>(R.layout.fragment_for_nav_second) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(
@@ -24,7 +25,11 @@ class FragmentForNavSecond : BaseFragment<FragmentForNavSecondBinding>(R.layout.
 
     private val args by navArgs<FragmentForNavSecondArgs>()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         binding.btnGotoForthActivity.setOnSingleClickListener {
             val forthAction =

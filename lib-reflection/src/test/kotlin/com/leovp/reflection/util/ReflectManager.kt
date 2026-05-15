@@ -108,7 +108,11 @@ class ReflectManager private constructor() {
     fun newInstance(vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager {
         val types = getArgsType(*args)
         for (constructor in type.constructors) {
-            if (matchArgsType(constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(), types)) {
+            if (matchArgsType(
+                    constructor.parameters.map { it.type.jvmErasure.java }.toTypedArray(),
+                    types
+                )
+            ) {
                 if (!constructor.isAccessible) constructor.isAccessible = true
                 return ReflectManager(type, constructor.call(*args))
             }
@@ -201,7 +205,12 @@ class ReflectManager private constructor() {
         try {
             // Call Kotlin class companion object method.
             type.companionObject?.let { companion ->
-                val result = callFunctions(type.companionObjectInstance, companion.declaredFunctions, name, *args)
+                val result = callFunctions(
+                    type.companionObjectInstance,
+                    companion.declaredFunctions,
+                    name,
+                    *args
+                )
                 if (result != null) return result
             }
             // Only call Java static method.
@@ -243,7 +252,10 @@ class ReflectManager private constructor() {
         return result
     }
 
-    private fun matchArgsType(declaredTypes: Array<Class<*>?>, actualTypes: Array<KClass<*>?>): Boolean {
+    private fun matchArgsType(
+        declaredTypes: Array<Class<*>?>,
+        actualTypes: Array<KClass<*>?>
+    ): Boolean {
         return if (declaredTypes.size == actualTypes.size) {
             for (i in actualTypes.indices) {
                 val actualType: Class<*>? = actualTypes[i]?.javaObjectType
@@ -319,7 +331,10 @@ class ReflectManager private constructor() {
         //     if (Modifier.isPublic(accessible.modifiers)
         //         && Modifier.isPublic(accessible.declaringClass.modifiers)) {
         //         // Check the following case:
-        //         // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
+        // //
+        // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT
+        // ",
+        // 10086)
         //         // If you set Java Public Static Final field as above, when run into here,
         //         // although its a public filed, its `accessible` is still `false`.
         //         // So I need to set `accessible` to `true` anyway.
@@ -331,7 +346,10 @@ class ReflectManager private constructor() {
         return accessible
     }
 
-    private fun callJavaStaticFunction(name: String, vararg args: Any? = arrayOfNulls<Any>(0)): ReflectManager? {
+    private fun callJavaStaticFunction(
+        name: String,
+        vararg args: Any? = arrayOfNulls<Any>(0)
+    ): ReflectManager? {
         type.java.declaredMethods
             .filter { method ->
                 if (!method.isAccessible) method.isAccessible = true

@@ -15,20 +15,22 @@ import java.nio.charset.StandardCharsets
  * Date: 20-7-30 下午7:14
  */
 
-fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): String = resources.assets.open(
-    if (subdirectory.isNullOrBlank()) {
-        filename
-    } else {
-        "$subdirectory${File.separatorChar}$filename"
-    }
-)
-    .use {
+fun Context.readAssetsFileAsString(subdirectory: String?, filename: String): String =
+    resources.assets.open(
+        if (subdirectory.isNullOrBlank()) {
+            filename
+        } else {
+            "$subdirectory${File.separatorChar}$filename"
+        }
+    )
+        .use {
+            it.readBytes().toString(StandardCharsets.UTF_8)
+        }
+
+fun Context.readAssetsFileAsString(@RawRes rawId: Int): String =
+    resources.openRawResource(rawId).use {
         it.readBytes().toString(StandardCharsets.UTF_8)
     }
-
-fun Context.readAssetsFileAsString(@RawRes rawId: Int): String = resources.openRawResource(rawId).use {
-    it.readBytes().toString(StandardCharsets.UTF_8)
-}
 
 fun Context.saveRawResourceToFile(
     @RawRes id: Int,
@@ -58,14 +60,16 @@ fun Context.saveAssetToFile(
     false
 }
 
-// TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, ctx.resources.displayMetrics).toInt()
+// TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue,
+// ctx.resources.displayMetrics).toInt()
 // (dipValue * ctx.resources.displayMetrics.density + 0.5f).toInt()
 /**
  * Can I use [Resources.getSystem()] to get [Resources]?
  *
  * @return The return type is either `Int` or `Float`
  */
-inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T = px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
+inline fun <reified T : Number> Resources.dp2px(dipValue: Float): T =
+    px(TypedValue.COMPLEX_UNIT_DIP, dipValue)
 
 /** Converts dp to pixel. */
 val Int.px get(): Int = (this * Resources.getSystem().displayMetrics.density).toInt()
@@ -96,7 +100,8 @@ val Float.dp get(): Float = (this * 1.0f / Resources.getSystem().displayMetrics.
  *
  * @return The return type is either `Int` or `Float`
  */
-inline fun <reified T : Number> Resources.sp2px(spValue: Float): T = px(TypedValue.COMPLEX_UNIT_SP, spValue)
+inline fun <reified T : Number> Resources.sp2px(spValue: Float): T =
+    px(TypedValue.COMPLEX_UNIT_SP, spValue)
 
 /**
  * Converts an unpacked complex data value holding a dimension to its final floating point value.
@@ -112,7 +117,10 @@ inline fun <reified T : Number> Resources.sp2px(spValue: Float): T = px(TypedVal
  * @return The return type is either `Int` or `Float`
  */
 @JvmOverloads
-inline fun <reified T : Number> Resources.px(unit: Int = TypedValue.COMPLEX_UNIT_DIP, value: Float): T {
+inline fun <reified T : Number> Resources.px(
+    unit: Int = TypedValue.COMPLEX_UNIT_DIP,
+    value: Float
+): T {
     val result: Float = TypedValue.applyDimension(unit, value, displayMetrics)
     return when (T::class) {
         Float::class -> result as T

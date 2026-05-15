@@ -32,7 +32,12 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
         LogContext.log.d(TAG, "Hello d", outputType = LogOutType(2))
         LogContext.log.i(TAG, "Hello i", outputType = LogOutType(3))
         LogContext.log.w(TAG, "Hello w", outputType = LogOutType(4))
-        LogContext.log.e(TAG, "Hello e with fullOutput", fullOutput = true, outputType = LogOutType(5))
+        LogContext.log.e(
+            TAG,
+            "Hello e with fullOutput",
+            fullOutput = true,
+            outputType = LogOutType(5)
+        )
         LogContext.log.f(TAG, "Hello f", outputType = LogOutType(6))
 
         LogContext.log.v(TAG, "Hello v", Exception("exception-v"), outputType = LogOutType(7))
@@ -55,7 +60,11 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
             sb.append(" | ")
         }
         val string = sb.toString()
-        LogContext.log.w(TAG, "Long Log[${string.length}][truncated]=$string", outputType = LogOutType(16))
+        LogContext.log.w(
+            TAG,
+            "Long Log[${string.length}][truncated]=$string",
+            outputType = LogOutType(16)
+        )
         LogContext.log.w(
             TAG,
             "Long Log[${string.length}][full]=$string",

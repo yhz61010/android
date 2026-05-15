@@ -15,7 +15,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import javax.crypto.SecretKey
 
-class AudioCipherActivity : BaseDemonstrationActivity<ActivityAudioCipherBinding>(R.layout.activity_audio_cipher) {
+class AudioCipherActivity :
+    BaseDemonstrationActivity<ActivityAudioCipherBinding>(R.layout.activity_audio_cipher) {
     override fun getTagName(): String = ITAG
 
     companion object {

@@ -74,7 +74,11 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Set pin
      */
-    fun setPin(bluetoothClass: Class<out BluetoothDevice>, device: BluetoothDevice, str: String): Boolean {
+    fun setPin(
+        bluetoothClass: Class<out BluetoothDevice>,
+        device: BluetoothDevice,
+        str: String
+    ): Boolean {
         runCatching {
             val removeBondMethod = bluetoothClass.getDeclaredMethod("setPin", ByteArray::class.java)
             return removeBondMethod.invoke(device, str.toByteArray()) as Boolean
@@ -144,13 +148,15 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     // Bluetooth Low Energy
-    fun isSupportBle(pm: PackageManager): Boolean = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    fun isSupportBle(pm: PackageManager): Boolean =
+        pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     var isEnabled: Boolean = bluetoothAdapter.isEnabled
         private set
 
     /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * You'd better add a short delay after calling this method to make sure the operation will be
+     * done.
      *
      * Starting with Build.VERSION_CODES.TIRAMISU,
      * applications are not allowed to enable/disable Bluetooth.
@@ -174,7 +180,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     fun enable(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         false
     } else {
@@ -183,7 +194,8 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * You'd better add a short delay after calling this method to make sure the operation will be
+     * done.
      *
      * Starting with Build.VERSION_CODES.TIRAMISU,
      * applications are not allowed to enable/disable Bluetooth.
@@ -204,7 +216,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     fun disable(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         false
     } else {
@@ -234,7 +251,8 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * You'd better add a short delay after calling this method to make sure the operation will be
+     * done.
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -242,7 +260,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun stopScan() {
         bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
     }
@@ -257,11 +280,17 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun startDiscovery(): Boolean = bluetoothAdapter.startDiscovery()
 
     /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * You'd better add a short delay after calling this method to make sure the operation will be
+     * done.
      *
      * Requires
      * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -269,7 +298,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun cancelDiscovery(): Boolean = bluetoothAdapter.cancelDiscovery()
 
     /**
@@ -315,10 +349,16 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     }
 
     /**
-     * You'd better add a short delay after calling this method to make sure the operation will be done.
+     * You'd better add a short delay after calling this method to make sure the operation will be
+     * done.
      */
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun release() {
         cancelDiscovery()
         stopScan()
@@ -331,7 +371,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      * permission
      */
     @SuppressLint("InlinedApi", "MissingPermission")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     var boundedDevices: Set<BluetoothDevice> = bluetoothAdapter.bondedDevices
         private set
 }

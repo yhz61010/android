@@ -32,7 +32,8 @@ private const val TAG = "Nav"
  * when you navigate to other screen after you switch the device to dark mode.
  * ```
  * java.lang.IllegalStateException:
- * no event down from INITIALIZED in component NavBackStackEntry(40f53e9f-981c-4e19-bcc0-69c85ed7ce77)
+ * no event down from INITIALIZED in component
+ * NavBackStackEntry(40f53e9f-981c-4e19-bcc0-69c85ed7ce77)
  * destination=Destination(0x88e673a4) route=app_main
  * ```
  */
@@ -58,7 +59,11 @@ open class AppNavigation(val navController: NavHostController) {
         }
     }
 
-    open fun navigateString(route: String, arguments: String? = null, extras: UiEvent.NavExtras? = null,) {
+    open fun navigateString(
+        route: String,
+        arguments: String? = null,
+        extras: UiEvent.NavExtras? = null,
+    ) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }
@@ -68,7 +73,11 @@ open class AppNavigation(val navController: NavHostController) {
         d(TAG) { outputGraphInfo(route, navController) }
     }
 
-    open fun <T : Any> navigate(route: T, navOptions: NavOptions? = null, navigatorExtras: Navigator.Extras? = null,) {
+    open fun <T : Any> navigate(
+        route: T,
+        navOptions: NavOptions? = null,
+        navigatorExtras: Navigator.Extras? = null,
+    ) {
         d(TAG) { "-> navigate to: $route" }
         d(TAG) { outputGraphInfo(route, navController) }
     }

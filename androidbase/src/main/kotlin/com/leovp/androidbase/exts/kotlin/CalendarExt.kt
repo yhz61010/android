@@ -181,8 +181,11 @@ fun Date.addSeconds(seconds: Int): Date = add(Calendar.SECOND, seconds)
  * m-分/s-秒/S-毫秒
  * D-一年中的第几天
  * F-一月中第几个星期几
- * w-一年中第几个星期   Tips.1.星期天为一周的开始,不随FirstDayOfWeek变化，根据FirstDayOfWeek变化的周次使用Calendar.get(Calendar.WEEK_OF_YEAR)  2.无论w或者Calendar.get(Calendar.WEEK_OF_YEAR)，一年的第53周默认都算为次年第一周
- * W-一月中第几个星期   Tips.星期天为一周的开始,不随FirstDayOfWeek变化，根据FirstDayOfWeek变化的周次使用Calendar.get(Calendar.WEEK_OF_MONTH)
+ * w-一年中第几个星期
+ * Tips.1.星期天为一周的开始,不随FirstDayOfWeek变化，根据FirstDayOfWeek变化的周次使用Calendar.get(Calendar.WEEK_OF_YEAR)
+ * 2.无论w或者Calendar.get(Calendar.WEEK_OF_YEAR)，一年的第53周默认都算为次年第一周
+ * W-一月中第几个星期
+ * Tips.星期天为一周的开始,不随FirstDayOfWeek变化，根据FirstDayOfWeek变化的周次使用Calendar.get(Calendar.WEEK_OF_MONTH)
  */
 
 /**
@@ -191,13 +194,18 @@ fun Date.addSeconds(seconds: Int): Date = add(Calendar.SECOND, seconds)
 val Calendar.utc: String
     get() {
         add(Calendar.MILLISECOND, -(get(Calendar.ZONE_OFFSET) + get(Calendar.DST_OFFSET)))
-        return SimpleDateFormat("yyyy'-'MM'-'dd'T'kk':'mm':'ss'Z'", Locale.getDefault()).format(time)
+        return SimpleDateFormat(
+            "yyyy'-'MM'-'dd'T'kk':'mm':'ss'Z'",
+            Locale.getDefault()
+        ).format(time)
     }
 
 /** Get formatted date */
 @JvmOverloads
-fun Calendar.date(pattern: String = "yyyy-MM-dd HH:mm:ss", locale: Locale = Locale.getDefault()): String =
-    SimpleDateFormat(pattern, locale).format(time)
+fun Calendar.date(
+    pattern: String = "yyyy-MM-dd HH:mm:ss",
+    locale: Locale = Locale.getDefault()
+): String = SimpleDateFormat(pattern, locale).format(time)
 
 /** Get year */
 var Calendar.year
@@ -249,7 +257,8 @@ val Calendar.week
 
 /** Get week name */
 @JvmOverloads
-fun Calendar.week(locale: Locale = Locale.getDefault()): String = SimpleDateFormat("E", locale).format(time)
+fun Calendar.week(locale: Locale = Locale.getDefault()): String =
+    SimpleDateFormat("E", locale).format(time)
 
 /**
  * Set the Calendar to the date that first day of the week

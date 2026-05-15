@@ -105,11 +105,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         )
     )
 
-    //  Called if the geometry of the view changes, for example when the device's screen orientation changes.
+    // Called if the geometry of the view changes, for example when the device's screen orientation
+    // changes.
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         LogContext.log.w(
             tag,
-            "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x $videoHeight",
+            "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x " +
+                "$videoHeight",
             outputType = LogOutType.FRAMEWORK
         )
         super.onSurfaceChanged(gl, width, height)
@@ -122,7 +124,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
 
         if (videoWidth > 0 && videoHeight > 0) {
-            pointCoord = createCustomFloatBuffer(videoWidth, videoHeight, keepRatio, outputWidth, outputHeight)
+            pointCoord = createCustomFloatBuffer(
+                videoWidth,
+                videoHeight,
+                keepRatio,
+                outputWidth,
+                outputHeight
+            )
         }
         hasVisibility = true
         LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = LogOutType.FRAMEWORK)
@@ -136,7 +144,14 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 if (yuv420Type == Yuv420Type.I420) {
                     u.position(0)
                     v.position(0)
-                    feedTextureWithImageData(y, u, v, videoWidth, videoHeight, planarTextureIntBuffer)
+                    feedTextureWithImageData(
+                        y,
+                        u,
+                        v,
+                        videoWidth,
+                        videoHeight,
+                        planarTextureIntBuffer
+                    )
                 } else {
                     uv.position(0)
                     feedTextureWithImageData(y, uv, videoWidth, videoHeight, planarTextureIntBuffer)
@@ -149,10 +164,10 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 //                Matrix.rotateM(viewMatrix, 0, -90f, 1f, 0f, 0f)
 
                 // Set the camera position (View matrix)
-                //                Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 1f, 0.0f, 0.0f)
+                // Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 1f, 0.0f, 0.0f)
 
                 // Calculate the projection and view transformation
-                //                Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+                // Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
                 runCatching {
                     drawTexture(mvpMatrix, yuv420Type)
@@ -180,7 +195,13 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         )
         if (width > 0 && height > 0) {
             // 调整比例
-            pointCoord = createCustomFloatBuffer(width, height, keepRatio, renderWidth, renderHeight)
+            pointCoord = createCustomFloatBuffer(
+                width,
+                height,
+                keepRatio,
+                renderWidth,
+                renderHeight
+            )
 
             if (width != videoWidth && height != videoHeight) {
                 this.videoWidth = width
@@ -313,7 +334,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 第 3 个参数：从顶点数组读取的数据长度
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
+        // ml
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         GLES20.glDrawArrays(
             GLES20.GL_TRIANGLE_STRIP,

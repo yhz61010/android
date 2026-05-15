@@ -82,7 +82,10 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
                     ioScope.launch {
                         delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
                         audioLatencyThresholdInMs = AUDIO_ALLOW_LATENCY_LIMIT_IN_MS
-                        LogContext.log.w(TAG, "Change latency limit to $AUDIO_ALLOW_LATENCY_LIMIT_IN_MS")
+                        LogContext.log.w(
+                            TAG,
+                            "Change latency limit to $AUDIO_ALLOW_LATENCY_LIMIT_IN_MS"
+                        )
                     }
                     LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
                 }
@@ -94,14 +97,19 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
             return
         }
         val latencyInMs =
-            (SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000 - getAudioTimeUs() / 1000
+            (
+                SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs
+                ) / 1000 - getAudioTimeUs() / 1000
         LogContext.log.d(
             TAG,
-            "st=$playStartTimeInUs\t cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
+            "st=$playStartTimeInUs\t " +
+                "cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
                 "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
         )
         val auDecQueueSize = audioDecoder?.queueSize ?: 0
-        if (auDecQueueSize >= AUDIO_DATA_QUEUE_CAPACITY || abs(latencyInMs) > audioLatencyThresholdInMs) {
+        if (auDecQueueSize >= AUDIO_DATA_QUEUE_CAPACITY ||
+            abs(latencyInMs) > audioLatencyThresholdInMs
+        ) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(
                 TAG,
@@ -113,7 +121,8 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
             runCatching { audioTrackPlayer.pause() }.getOrNull()
             runCatching { audioTrackPlayer.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
-                // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need to do sync again.
+                // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need
+                // to do sync again.
                 dropFrameTimes.set(0)
                 dropFrameCallback.invoke()
             }

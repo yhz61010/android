@@ -107,7 +107,11 @@ open class BaseFilter(
         // 将纹理单元传递片段着色器的 u_TextureUnit
         GLES20.glUniform1i(uTextureUnitLocation, 0)
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_FAN,
+            0,
+            VerticesUtil.VERTICES_COORD.size / TWO_DIMEN_POS_COMPONENT_COUNT
+        )
     }
 
     fun onDestroy() {

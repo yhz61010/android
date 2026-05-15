@@ -11,16 +11,21 @@ import com.leovp.androidbase.utils.notch.DisplayCutout
 
 @RequiresApi(Build.VERSION_CODES.P)
 internal class AndroidPDisplayCutout : DisplayCutout {
-    /** Always return _true_. However, you should check notch by the result of [cutoutAreaRect] method. */
+    /**
+     * Always return _true_. However, you should check notch by the result of [cutoutAreaRect]
+     * method.
+     */
     override fun supportDisplayCutout(activity: Activity): Boolean = true
 
     /** Note that, calling this method will cause status bar being hidden. */
     override fun fillDisplayCutout(activity: Activity) {
         val window = activity.window
         val lp = window.attributes
-        // By using this flag, the window can be displayed in a way that avoids overlapping with the cutout area,
+        // By using this flag, the window can be displayed in a way that avoids overlapping with the
+        // cutout area,
         // providing a more immersive and visually pleasing experience.
-        lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        lp.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         window.attributes = lp
 
         // Allow content to extend into status bar.
@@ -33,7 +38,10 @@ internal class AndroidPDisplayCutout : DisplayCutout {
         }
     }
 
-    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
+    override fun cutoutAreaRect(
+        activity: Activity,
+        callback: DisplayCutout.CutoutAreaRectCallback
+    ) {
         val contentView = activity.window.decorView
         contentView.post(
             Runnable {

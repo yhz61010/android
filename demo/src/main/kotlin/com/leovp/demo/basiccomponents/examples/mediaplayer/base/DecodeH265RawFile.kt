@@ -108,7 +108,8 @@ import kotlinx.coroutines.launch
  * LayerId=0
  * TID=1
  *
- * According to some articles(Not verified), NALU type from 0~9 indicates P frame, 16~21 indicates I frame.
+ * According to some articles(Not verified), NALU type from 0~9 indicates P frame, 16~21 indicates I
+ * frame.
  *
  * Author: Michael Leo
  * Date: 20-7-30 上午10:54
@@ -147,7 +148,11 @@ class DecodeH265RawFile {
 
             //        mediaCodec = MediaCodec.createByCodecName("OMX.google.h265.decoder")
             mediaCodec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
-            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_HEVC, width, height)
+            val format = MediaFormat.createVideoFormat(
+                MediaFormat.MIMETYPE_VIDEO_HEVC,
+                width,
+                height
+            )
             format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
             mediaCodec.configure(format, surface, null, 0)
             outputFormat = mediaCodec.outputFormat // option B
@@ -162,17 +167,27 @@ class DecodeH265RawFile {
                 // fill inputBuffer with valid data
                 inputBuffer?.clear()
                 val data = queue.poll()?.also {
-                    //                LogContext.log.i(TAG, "onInputBufferAvailable length=${it.size}")
+                    // LogContext.log.i(TAG, "onInputBufferAvailable length=${it.size}")
                     inputBuffer?.put(it)
                     LogContext.log.w(TAG, "poll queue[${queue.size}] content_size=${it.size}")
                 }
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
+                codec.queueInputBuffer(
+                    inputBufferId,
+                    0,
+                    data?.size ?: 0,
+                    computePresentationTimeUs(++frameCount),
+                    0
+                )
             }.onFailure {
                 it.printStackTrace()
             }
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
@@ -181,7 +196,10 @@ class DecodeH265RawFile {
                 outputBuffer?.let {
                     when (info.flags) {
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> Unit
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(ITAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(
+                            ITAG,
+                            "Found Key Frame[" + info.size + "]"
+                        )
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
                         MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
                         else -> Unit

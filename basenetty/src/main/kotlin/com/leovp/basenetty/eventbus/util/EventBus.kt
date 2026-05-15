@@ -24,10 +24,14 @@ object EventBus {
         message: Any? = null,
         headers: Map<String, Any>? = null,
         handler: EventBusHandler? = null,
-    ): Map<String, Any> = constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
+    ): Map<String, Any> =
+        constructData(EventBusAttributes.TYPE_SEND, address, message, headers, null, handler)
 
-    fun publish(address: String, message: Any? = null, headers: Map<String, Any>? = null): Map<String, Any> =
-        constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
+    fun publish(
+        address: String,
+        message: Any? = null,
+        headers: Map<String, Any>? = null
+    ): Map<String, Any> = constructData(EventBusAttributes.TYPE_PUBLISH, address, message, headers)
 
     /** same as `consumer` */
     fun register(
@@ -35,7 +39,14 @@ object EventBus {
         headers: Map<String, Any>? = null,
         customFields: Map<String, Any?>? = null,
         handler: EventBusHandler,
-    ): Map<String, Any> = constructData(EventBusAttributes.TYPE_REGISTER, address, null, headers, customFields, handler)
+    ): Map<String, Any> = constructData(
+        EventBusAttributes.TYPE_REGISTER,
+        address,
+        null,
+        headers,
+        customFields,
+        handler
+    )
 
     fun unregister(address: String, headers: Map<String, Any>? = null): Map<String, Any> {
         handlers.remove(address)
@@ -75,7 +86,8 @@ object EventBus {
         } else {
             if (handlers.containsKey(address)) {
                 handlers[address] = handlerList.apply { add(handler) }
-                // LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler size: ${handlers.size}")
+                // LogContext.log.i(TAG, "[$address] Replaced handler in EventBus. Current handler
+                // size: ${handlers.size}")
             }
         }
     }

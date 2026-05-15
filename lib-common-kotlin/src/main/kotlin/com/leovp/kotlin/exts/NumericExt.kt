@@ -51,17 +51,18 @@ fun gcd(a: Int, b: Int): Int {
  * getRatio(800, 600)                     // "4:3"
  * ```
  */
-fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = false): String? = runCatching {
-    val gcd = gcd(a, b)
-    val firstVal = if (swapResult) b / gcd else a / gcd
-    val secondVal = if (swapResult) a / gcd else b / gcd
-    "$firstVal$delimiters$secondVal"
-}.getOrElse {
-    // In case getGDC (a recursively looping method) repeats too many times
-    // Log.e(TAG, "Irrational ratio: $a to $b")
-    // throw ArithmeticException("Irrational ratio: $a to $b")
-    null
-}
+fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = false): String? =
+    runCatching {
+        val gcd = gcd(a, b)
+        val firstVal = if (swapResult) b / gcd else a / gcd
+        val secondVal = if (swapResult) a / gcd else b / gcd
+        "$firstVal$delimiters$secondVal"
+    }.getOrElse {
+        // In case getGDC (a recursively looping method) repeats too many times
+        // Log.e(TAG, "Irrational ratio: $a to $b")
+        // throw ArithmeticException("Irrational ratio: $a to $b")
+        null
+    }
 
 /**
  * Formats an [Int] with comma-separated thousands.

@@ -27,12 +27,13 @@ object HttpRequest : BaseHttpRequest() {
     @Suppress("unused")
     fun getRetrofit(baseUrl: HttpUrl): Retrofit = getRetrofit(baseUrl.toString())
 
-    private fun getRetrofitBuilder(headerMap: Map<String, String>? = null): Retrofit.Builder = Retrofit.Builder()
-        .client(getOkHttpClient(headerMap))
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(GsonConverterFactory.create())
+    private fun getRetrofitBuilder(headerMap: Map<String, String>? = null): Retrofit.Builder =
+        Retrofit.Builder()
+            .client(getOkHttpClient(headerMap))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
 //        .addConverterFactory(MoshiConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
     fun setReadTimeout(mills: Long) {
         readTimeoutInMs = mills

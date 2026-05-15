@@ -36,7 +36,9 @@ object ZipUtil {
 
         DataInputStream(FileInputStream(file)).use { dis ->
             val magicNumber = dis.readInt()
-            return magicNumber == 0x504B0304 || magicNumber == 0x504B0506 || magicNumber == 0x504B0708
+            return magicNumber == 0x504B0304 ||
+                magicNumber == 0x504B0506 ||
+                magicNumber == 0x504B0708
         }
     }
 
@@ -79,7 +81,11 @@ object ZipUtil {
      * @param sourceFilePath Path of the file or directory to be compressed.
      * @param zipFilePath Destination path for the output ZIP file.
      */
-    fun zip(sourceFilePath: String, zipFilePath: String, @IntRange(0, 9) compressionLevel: Int = 6) {
+    fun zip(
+        sourceFilePath: String,
+        zipFilePath: String,
+        @IntRange(0, 9) compressionLevel: Int = 6
+    ) {
         zip(listOf(sourceFilePath), zipFilePath, compressionLevel)
     }
 

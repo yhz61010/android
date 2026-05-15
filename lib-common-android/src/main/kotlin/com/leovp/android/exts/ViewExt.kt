@@ -93,7 +93,9 @@ fun ViewGroup.circularReveal(button: ImageButton) {
         button.x.toInt() + button.width / 2,
         button.y.toInt() + button.height / 2,
         0f,
-        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (
+            button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        ) {
             this.width.toFloat()
         } else {
             this.height.toFloat()
@@ -109,7 +111,9 @@ fun ViewGroup.circularClose(button: ImageButton, action: () -> Unit = {}) {
         this,
         button.x.toInt() + button.width / 2,
         button.y.toInt() + button.height / 2,
-        if (button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        if (
+            button.context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        ) {
             this.width.toFloat()
         } else {
             this.height.toFloat()
@@ -148,9 +152,13 @@ const val FLAGS_FULLSCREEN =
         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
 /**
- * You should use this click listener to replace with `setOnClickListener` to avoid duplicated click on view
+ * You should use this click listener to replace with `setOnClickListener` to avoid duplicated click
+ * on view
  */
-fun View.setOnSingleClickListener(interval: Long = OnSingleClickListener.INTERVAL_TIME, action: (view: View) -> Unit) {
+fun View.setOnSingleClickListener(
+    interval: Long = OnSingleClickListener.INTERVAL_TIME,
+    action: (view: View) -> Unit
+) {
     val actionListener = OnSingleClickListener(interval, action)
 
     // This is the only place in the project where we should actually use setOnClickListener
@@ -243,7 +251,8 @@ fun AlertDialog.showImmersive() {
         WindowInsetsControllerCompat(win, win.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.statusBars())
             controller.hide(WindowInsetsCompat.Type.navigationBars())
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     } else {
         // https://blog.csdn.net/c15522627353/article/details/52452490

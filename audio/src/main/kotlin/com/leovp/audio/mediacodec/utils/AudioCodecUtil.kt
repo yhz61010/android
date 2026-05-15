@@ -19,7 +19,8 @@ object AudioCodecUtil {
     private val emptyCsd = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
 
     /**
-     * @param data The byte order of [data] must be little endian. If the [data] is obtained from MediaCodec,
+     * @param data The byte order of [data] must be little endian. If the [data] is obtained from
+     * MediaCodec,
      * it's little endian by default.
      */
     fun isOpusConfigFrame(data: ByteArray): Boolean {
@@ -33,7 +34,9 @@ object AudioCodecUtil {
      */
     fun parseOpusConfigFrame(data: ByteArray, byteOrder: ByteOrder? = null): OpusCsd? {
         if (!isOpusConfigFrame(data)) return null
-        return parseOpusConfigFrame(ByteBuffer.wrap(data).also { buf -> byteOrder?.let { order -> buf.order(order) } })
+        return parseOpusConfigFrame(
+            ByteBuffer.wrap(data).also { buf -> byteOrder?.let { order -> buf.order(order) } }
+        )
     }
 
     fun parseOpusConfigFrame(buffer: ByteBuffer): OpusCsd? {
@@ -42,8 +45,10 @@ object AudioCodecUtil {
 
         00000000  41 4f 50 55 53 48 44 52  13 00 00 00 00 00 00 00  |AOPUSHDR........|
         -------------- BELOW IS THE PART WE MUST PUT AS EXTRADATA  -------------------
-        00000010  4f 70 75 73 48 65 61 64  01 02 38 01 80 bb 00 00  |OpusHead..8.....|  <- Identification header
-        00000020  00 00 00                                          |...             |  <- Identification header
+        00000010  4f 70 75 73 48 65 61 64  01 02 38 01 80 bb 00 00  |OpusHead..8....
+            .|  <- Identification header
+        00000020  00 00 00                                          |..
+            .             |  <- Identification header
         ------------------------------------------------------------------------------
         00000020           41 4f 50 55 53  44 4c 59 08 00 00 00 00  |   AOPUSDLY.....|
         00000030  00 00 00 a0 2e 63 00 00  00 00 00 41 4f 50 55 53  |.....c.....AOPUS|
@@ -87,7 +92,9 @@ object AudioCodecUtil {
 
         // The length of identification header. In generally, the length is 19 (0x13).
         val idHeaderLength = buffer.long // little endian
-        require(idHeaderLength in 0..0x7ffffffe) { "Invalid block size in OPUS header: $idHeaderLength" }
+        require(
+            idHeaderLength in 0..0x7ffffffe
+        ) { "Invalid block size in OPUS header: $idHeaderLength" }
         val idHeaderSize = idHeaderLength.toInt()
         if (buffer.remaining() < idHeaderSize) {
             LogContext.log.e(TAG, "Not enough data in OPUS header (invalid size: $idHeaderSize)")
@@ -101,7 +108,9 @@ object AudioCodecUtil {
             val idDly = buffer.long
             if (idDly == IAudioMediaCodec.OPUS_AOPUSDLY) {
                 val idDlyLength = buffer.long
-                require(idDlyLength in 0..0x7ffffffe) { "Invalid block size in OPUS DLY: $idDlyLength" }
+                require(
+                    idDlyLength in 0..0x7ffffffe
+                ) { "Invalid block size in OPUS DLY: $idDlyLength" }
                 val idDlySize = idDlyLength.toInt()
                 if (buffer.remaining() < idDlySize) {
                     LogContext.log.e(TAG, "Not enough data in OPUS DLY (invalid size: $idDlySize)")
@@ -117,7 +126,9 @@ object AudioCodecUtil {
             val idPrl = buffer.long
             if (idPrl == IAudioMediaCodec.OPUS_AOPUSPRL) {
                 val idPrlLength = buffer.long
-                require(idPrlLength in 0..0x7ffffffe) { "Invalid block size in OPUS PRL: $idPrlLength" }
+                require(
+                    idPrlLength in 0..0x7ffffffe
+                ) { "Invalid block size in OPUS PRL: $idPrlLength" }
                 val idPrlSize = idPrlLength.toInt()
                 if (buffer.remaining() < idPrlSize) {
                     LogContext.log.e(TAG, "Not enough data in OPUS PRL (invalid size: $idPrlSize)")

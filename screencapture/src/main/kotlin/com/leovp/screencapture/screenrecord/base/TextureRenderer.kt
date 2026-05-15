@@ -93,10 +93,20 @@ class TextureRenderer {
         GLES20.glGenBuffers(2, bufferHandles, 0)
 
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferHandles[0])
-        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, vertices.size * 4, vertexBuffer, GLES20.GL_DYNAMIC_DRAW)
+        GLES20.glBufferData(
+            GLES20.GL_ARRAY_BUFFER,
+            vertices.size * 4,
+            vertexBuffer,
+            GLES20.GL_DYNAMIC_DRAW
+        )
 
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferHandles[1])
-        GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, indices.size * 4, indexBuffer, GLES20.GL_DYNAMIC_DRAW)
+        GLES20.glBufferData(
+            GLES20.GL_ELEMENT_ARRAY_BUFFER,
+            indices.size * 4,
+            indexBuffer,
+            GLES20.GL_DYNAMIC_DRAW
+        )
 
         // Init texture handle
         GLES20.glGenTextures(1, textureHandle, 0)
@@ -106,10 +116,11 @@ class TextureRenderer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int = GLES20.glCreateShader(type).also { shader ->
-        GLES20.glShaderSource(shader, shaderCode)
-        GLES20.glCompileShader(shader)
-    }
+    private fun loadShader(type: Int, shaderCode: String): Int =
+        GLES20.glCreateShader(type).also { shader ->
+            GLES20.glShaderSource(shader, shaderCode)
+            GLES20.glCompileShader(shader)
+        }
 
     fun draw(viewportWidth: Int, viewportHeight: Int, bitmap: Bitmap, mvpMatrix: FloatArray) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
@@ -127,8 +138,16 @@ class TextureRenderer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0])
         GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1)
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST)
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST)
+        GLES20.glTexParameteri(
+            GLES20.GL_TEXTURE_2D,
+            GLES20.GL_TEXTURE_MIN_FILTER,
+            GLES20.GL_NEAREST
+        )
+        GLES20.glTexParameteri(
+            GLES20.GL_TEXTURE_2D,
+            GLES20.GL_TEXTURE_MAG_FILTER,
+            GLES20.GL_NEAREST
+        )
 
         // Prepare buffers with vertices and indices & draw
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferHandles[0])

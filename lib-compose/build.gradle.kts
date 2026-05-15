@@ -19,7 +19,8 @@ android {
 // composeCompiler {
 //     // deprecated
 //     // enableStrongSkippingMode = true
-//     // featureFlags.addAll(ComposeFeatureFlag.StrongSkipping, ComposeFeatureFlag.OptimizeNonSkippingGroups)
+// // featureFlags.addAll(ComposeFeatureFlag.StrongSkipping,
+// ComposeFeatureFlag.OptimizeNonSkippingGroups)
 //     includeSourceInformation = true
 // }
 

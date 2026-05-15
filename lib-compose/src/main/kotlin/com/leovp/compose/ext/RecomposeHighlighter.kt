@@ -119,7 +119,8 @@ private class RecomposeHighlighterModifier :
         // Draw actual content.
         drawContent()
 
-        // Below is to draw the highlight, if necessary. A lot of the logic is copied from Modifier.border
+        // Below is to draw the highlight, if necessary. A lot of the logic is copied from
+        // Modifier.border
 
         val hasValidBorderParams = size.minDimension > 0f
         if (!hasValidBorderParams || totalCompositions <= 0) {

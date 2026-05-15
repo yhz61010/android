@@ -16,7 +16,8 @@ import com.leovp.demo.databinding.ActivityAccessibilityBinding
 import com.leovp.log.base.ITAG
 import org.greenrobot.eventbus.EventBus
 
-class AccessibilityActivity : BaseDemonstrationActivity<ActivityAccessibilityBinding>(R.layout.activity_accessibility) {
+class AccessibilityActivity :
+    BaseDemonstrationActivity<ActivityAccessibilityBinding>(R.layout.activity_accessibility) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAccessibilityBinding =

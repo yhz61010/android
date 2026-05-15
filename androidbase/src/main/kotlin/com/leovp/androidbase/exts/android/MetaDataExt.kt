@@ -15,12 +15,12 @@ import com.leovp.android.exts.getCompatContextInfo
  */
 
 /**
- * Get meta data in specified context.
+ * Get metadata in specified context.
  * The context can be either Activity, Application, Service or Broadcast.
  *
  * https://developer.android.com/guide/topics/manifest/meta-data-element?hl=zh-cn
  *
- * @param key   The meta data key
+ * @param key   The metadata key
  * @return The value of meta data
  */
 inline fun <reified T : Any> Context.getMetaData(key: String): T? {
@@ -32,11 +32,11 @@ inline fun <reified T : Any> Context.getMetaData(key: String): T? {
 }
 
 /**
- * Get meta data with BroadcastReceiver.
+ * Get metadata with BroadcastReceiver.
  *
  * https://developer.android.com/guide/topics/manifest/meta-data-element?hl=zh-cn
  *
- * @param key   The meta data key
+ * @param key   The metadata key
  * @return The value of meta data
  */
 inline fun <reified T : Any> BroadcastReceiver.getMetaData(ctx: Context, key: String): T? {
@@ -45,10 +45,11 @@ inline fun <reified T : Any> BroadcastReceiver.getMetaData(ctx: Context, key: St
     return genericMetaDataResult(info, key)
 }
 
-inline fun <reified T : Any> genericMetaDataResult(info: PackageItemInfo, key: String): T? = when (T::class) {
-    String::class -> info.metaData.getString(key) as? T
-    Int::class -> info.metaData.getInt(key) as? T
-    Boolean::class -> info.metaData.getBoolean(key) as? T
-    Float::class -> info.metaData.getFloat(key) as? T
-    else -> null
-}
+inline fun <reified T : Any> genericMetaDataResult(info: PackageItemInfo, key: String): T? =
+    when (T::class) {
+        String::class -> info.metaData.getString(key) as? T
+        Int::class -> info.metaData.getInt(key) as? T
+        Boolean::class -> info.metaData.getBoolean(key) as? T
+        Float::class -> info.metaData.getFloat(key) as? T
+        else -> null
+    }

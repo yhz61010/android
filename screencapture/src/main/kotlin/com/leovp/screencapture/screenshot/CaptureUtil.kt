@@ -18,7 +18,8 @@ object CaptureUtil {
      *
      * You can **ONLY** record the specified view or activity window .
      *
-     * For activity window, the known components that can not be recorded are list here:(including but not limited to these components)
+     * For activity window, the known components that can not be recorded are list here:(including
+     * but not limited to these components)
      *
      * - Toast
      * - Soft keyboard
@@ -26,18 +27,20 @@ object CaptureUtil {
      * Using `window.decorView.rootView` to capture the whole screen
      */
     @Suppress("WeakerAccess")
-    fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? = runCatching {
-        Bitmap.createBitmap(view.width, view.height, config).also {
-            view.draw(Canvas(it))
-        }
-    }.getOrNull()
+    fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
+        runCatching {
+            Bitmap.createBitmap(view.width, view.height, config).also {
+                view.draw(Canvas(it))
+            }
+        }.getOrNull()
 
     /**
      * **Limitation**
      *
      * You can **ONLY** record the activity window.
      *
-     * The known components that can not be recorded are list here:(including but not limited to these components)
+     * The known components that can not be recorded are list here:(including but not limited to
+     * these components)
      *
      * - Toast
      * - Soft keyboard
@@ -45,6 +48,8 @@ object CaptureUtil {
     fun takeScreenshot(win: Window, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
         takeScreenshot(win.decorView.rootView, config)
 
-    fun takeScreenshot(act: WeakReference<Activity>, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
-        Falcon.takeScreenshotBitmap(act, config)
+    fun takeScreenshot(
+        act: WeakReference<Activity>,
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888
+    ): Bitmap? = Falcon.takeScreenshotBitmap(act, config)
 }

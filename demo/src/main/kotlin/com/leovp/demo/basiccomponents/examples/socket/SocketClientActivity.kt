@@ -22,7 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBinding>(R.layout.activity_socket_client) {
+class SocketClientActivity :
+    BaseDemonstrationActivity<ActivitySocketClientBinding>(R.layout.activity_socket_client) {
     override fun getTagName(): String = ITAG
 
     private val cs = CoroutineScope(Dispatchers.IO)
@@ -42,7 +43,10 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
             LogContext.log.i(TAG, "onReceivedData: ${data?.toJsonString()}")
-            runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
+            runOnUiThread {
+                binding.txtView.text =
+                    binding.txtView.text.toString() + data?.toJsonString() + "\n"
+            }
         }
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
@@ -78,7 +82,8 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
             repeat(1) {
                 createSocket().connect()
 
-                // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
+                // You can also create multiple sockets at the same time like this(It's thread safe
+                // so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
                 // val socketClientHandler = SocketClientHandler(socketClient)
                 // socketClient.initHandler(socketClientHandler)
@@ -123,12 +128,14 @@ class SocketClientActivity : BaseDemonstrationActivity<ActivitySocketClientBindi
     }
 
     @ChannelHandler.Sharable
-    class SocketClientHandler(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<String>(netty) {
+    class SocketClientHandler(private val netty: BaseNettyClient) :
+        BaseClientChannelInboundHandler<String>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: String) {
             netty.connectionListener.onReceivedData(netty, msg)
         }
 
-        fun sendMsgToServer(msg: String): Boolean = netty.executeCommand(msg, "Send msg to server", "SocketCmd")
+        fun sendMsgToServer(msg: String): Boolean =
+            netty.executeCommand(msg, "Send msg to server", "SocketCmd")
 
         override fun release() {
         }

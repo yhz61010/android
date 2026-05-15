@@ -61,7 +61,8 @@ object LogContext {
     // var enableLog = true
     //     set(value) {
     //         field = value
-    //         if (!LogContext::log.isInitialized) throw IllegalAccessException("You must call setLogImp() first")
+    // if (!LogContext::log.isInitialized) throw IllegalAccessException("You must call setLogImp()
+    // first")
     //         log.enableLog = value
     //     }
 
@@ -69,7 +70,11 @@ object LogContext {
 
     var log: AbsLog
         get() {
-            return _log ?: LLog(tagPrefix = "__NO_LOG_OUTPUT__", logLevel = LogLevel.VERB, enableLog = false).also {
+            return _log ?: LLog(
+                tagPrefix = "__NO_LOG_OUTPUT__",
+                logLevel = LogLevel.VERB,
+                enableLog = false
+            ).also {
                 _log = it
             }
         }

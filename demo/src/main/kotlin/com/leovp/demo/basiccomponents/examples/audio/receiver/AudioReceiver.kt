@@ -76,9 +76,15 @@ class AudioReceiver {
             startPlayThread()
         }
 
-        override fun onReceivedData(netty: BaseNettyServer, clientChannel: Channel, data: Any?, action: Int) {
+        override fun onReceivedData(
+            netty: BaseNettyServer,
+            clientChannel: Channel,
+            data: Any?,
+            action: Int
+        ) {
             val audioData = data as ByteArray
-            // LogContext.log.i(TAG, "onReceivedData Length=${audioData.size} Queue=${receiveAudioQueue.size} " +
+            // LogContext.log.i(TAG, "onReceivedData Length=${audioData.size}
+            // Queue=${receiveAudioQueue.size} " +
             //     "from ${clientChannel.remoteAddress()}") // hex=${audioData.toHexStringLE()}
             // runCatching { opusOs?.write(data) }.onFailure { it.printStackTrace() }
             receiveAudioQueue.offer(audioData)
@@ -100,7 +106,11 @@ class AudioReceiver {
             micRecorder = MicRecorder(
                 AudioActivity.audioEncoderInfo,
                 object : MicRecorder.RecordCallback {
-                    override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                    override fun onRecording(
+                        data: ByteArray,
+                        isConfig: Boolean,
+                        isKeyFrame: Boolean
+                    ) {
                         recAudioQueue.offer(data)
                         if (BuildConfig.DEBUG) {
                             LogContext.log.d(
@@ -126,7 +136,9 @@ class AudioReceiver {
                     ensureActive()
                     runCatching {
                         // LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                        recAudioQueue.poll()?.let { receiverHandler?.sendAudioToClient(clientChannel!!, it) }
+                        recAudioQueue.poll()?.let {
+                            receiverHandler?.sendAudioToClient(clientChannel!!, it)
+                        }
                         delay(10)
                     }.onFailure { it.printStackTrace() }
                 }
@@ -168,11 +180,14 @@ class AudioReceiver {
         // micOs?.closeQuietly()
         // rcvOs?.closeQuietly()
         ioScope.cancel()
-        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you release it.
+        // Please initialize AudioTrack with sufficient buffer, or else, it will crash when you
+        // release it.
         //
-        // And you must release AudioTrack first, otherwise, you will crash due to following exception:
+        // And you must release AudioTrack first, otherwise, you will crash due to following
+        // exception:
         // releaseBuffer() track 0xde4c9100 disabled due to previous underrun, restarting
-        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <= mFrameCount)
+        // AudioTrackShared: Assertion failed: !(stepCount <= mUnreleased && mUnreleased <=
+        // mFrameCount)
         // Fatal signal 6 (SIGABRT), code -6 in tid 26866 (DefaultDispatch)
         audioPlayer?.release()
         micRecorder?.stopRecord()

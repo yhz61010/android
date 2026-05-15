@@ -28,7 +28,8 @@ interface WordDao {
     suspend fun deleteAll()
 
     /**
-     * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     * @param word The `word` to be modified. Attention, the `word` must be with the primary key
+     * that to be modified.
      *
      * Or you can do update like this below:
      * ```kotlin
@@ -40,7 +41,8 @@ interface WordDao {
     suspend fun update(word: Word)
 
     /**
-     * @param word The `word` to be modified. Attention, the `word` must be with the primary key that to be modified.
+     * @param word The `word` to be modified. Attention, the `word` must be with the primary key
+     * that to be modified.
      *
      * Or you can do delete like this below:
      * ```kotlin

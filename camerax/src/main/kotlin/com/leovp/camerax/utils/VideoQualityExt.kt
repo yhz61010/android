@@ -29,7 +29,11 @@ internal fun Quality.getAspectRatioString(portraitMode: Boolean): String {
         else -> throw UnsupportedOperationException()
     }
 
-    return if (portraitMode) "V,${ratio.second}:${ratio.first}" else "H,${ratio.first}:${ratio.second}"
+    return if (portraitMode) {
+        "V,${ratio.second}:${ratio.first}"
+    } else {
+        "H,${ratio.first}:${ratio.second}"
+    }
 }
 
 /**

@@ -132,7 +132,8 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         logger.log(requestStartMessage)
         if (logHeaders) {
             if (hasRequestBody) {
-                // Request body headers are only present when installed as a network interceptor. Force
+                // Request body headers are only present when installed as a network interceptor.
+                // Force
                 // them to be included (when available) so there values are known.
                 requestBody.contentType()?.let {
                     logger.log("Content-Type: $it")
@@ -163,7 +164,8 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 logger.log("--> END ${request.method} (encoded body omitted)")
             } else if (hasBoundary) {
                 logger.log(
-                    "--> END ${request.method} (Found boundary ${requestBody.contentLength()}-byte body omitted)"
+                    "--> END ${request.method} (Found boundary " +
+                        "${requestBody.contentLength()}-byte body omitted)"
                 )
             } else {
                 val buffer = Buffer()
@@ -176,9 +178,14 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 if (isPlaintext(buffer)) {
                     val content = buffer.readString(charset)
                     logger.log(content)
-                    logger.log("--> END ${request.method} (${requestBody.contentLength()}-byte body)")
+                    logger.log(
+                        "--> END ${request.method} (${requestBody.contentLength()}-byte body)"
+                    )
                 } else {
-                    logger.log("--> END ${request.method} (binary ${requestBody.contentLength()}-byte body omitted)")
+                    logger.log(
+                        "--> END ${request.method} (binary ${requestBody.contentLength()}-byte " +
+                            "body omitted)"
+                    )
                 }
             }
             logger.log(DIVIDER)
@@ -257,8 +264,10 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         private const val TAG = "HTTP"
 
         /**
-         * Returns true if the body in question probably contains human readable text. Uses a small sample
-         * of code points to detect unicode control characters commonly used in binary file signatures.
+         * Returns true if the body in question probably contains human readable text. Uses a small
+         * sample
+         * of code points to detect unicode control characters commonly used in binary file
+         * signatures.
          */
         fun isPlaintext(buffer: Buffer): Boolean {
             return runCatching {

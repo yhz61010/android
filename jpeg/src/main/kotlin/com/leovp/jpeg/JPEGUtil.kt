@@ -17,5 +17,10 @@ object JPEGUtil {
      * This method is not only slower but also generated larger file
      * than Android [Bitmap.compress] method.
      */
-    external fun compressBitmap(bitmap: Bitmap, quality: Int, outFilPath: String, optimize: Boolean): Int
+    external fun compressBitmap(
+        bitmap: Bitmap,
+        quality: Int,
+        outFilPath: String,
+        optimize: Boolean
+    ): Int
 }

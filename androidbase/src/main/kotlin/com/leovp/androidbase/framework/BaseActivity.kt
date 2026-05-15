@@ -176,7 +176,12 @@ abstract class BaseActivity<B : ViewBinding>(
                 val y = event.rawY + focusView.top - focusViewLocationOnScreen[1]
                 if (defaultConfig.autoHideSoftKeyboard &&
                     event.action == MotionEvent.ACTION_DOWN &&
-                    (x < focusView.left || x > focusView.right || y < focusView.top || y > focusView.bottom)
+                    (
+                        x < focusView.left ||
+                            x > focusView.right ||
+                            y < focusView.top ||
+                            y > focusView.bottom
+                        )
                 ) {
                     closeSoftKeyboard()
                 }
@@ -213,7 +218,10 @@ abstract class BaseActivity<B : ViewBinding>(
         var trafficConfig: TrafficConfig = TrafficConfig(),
     )
 
-    data class TrafficConfig(var allowToOutputDefaultWifiTrafficInfo: Boolean = false, var frequencyInSecond: Int = 3,)
+    data class TrafficConfig(
+        var allowToOutputDefaultWifiTrafficInfo: Boolean = false,
+        var frequencyInSecond: Int = 3,
+    )
 
     // ==============================
 
@@ -222,8 +230,16 @@ abstract class BaseActivity<B : ViewBinding>(
         networkMonitor = null
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
-    fun startTrafficNetwork(domain: String, callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null) {
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
+    fun startTrafficNetwork(
+        domain: String,
+        callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null
+    ) {
         if (networkMonitor?.get() != null) {
             LogContext.log.w(tag, "networkMonitor had already existed! Do NOT create it again!")
             return
@@ -246,7 +262,9 @@ abstract class BaseActivity<B : ViewBinding>(
                 NetworkMonitor(this@BaseActivity, socketIp) { info ->
                     callback?.let { runOnUiThread { it(info) } }
 
-                    if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) return@NetworkMonitor
+                    if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) {
+                        return@NetworkMonitor
+                    }
 
                     val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
                     val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
@@ -266,7 +284,11 @@ abstract class BaseActivity<B : ViewBinding>(
                         Locale.ENGLISH,
                         "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr, uploadSpeedStr,
-                        if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
+                        if (latencyStatus.isNullOrBlank()) {
+                            "${info.ping}ms"
+                        } else {
+                            "${info.ping}ms($latencyStatus)"
+                        },
                         info.linkSpeed,
                         info.rssi, info.wifiScoreIn5, info.wifiScore,
                         if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"

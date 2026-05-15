@@ -85,7 +85,10 @@ open class Employee(employeeId: String, deptId: Int, val p: Person) : Person(p.n
         10
     )
 
-    fun stopWorking(time: Long): String = action("${p.name}[$employeeId] stops working at $time.", -10)
+    fun stopWorking(time: Long): String = action(
+        "${p.name}[$employeeId] stops working at $time.",
+        -10
+    )
 
     private fun privateTalk(content: String): String = "$name private talk: $content"
 
@@ -111,7 +114,8 @@ open class Person(name: String, sex: Char, age: Int) : Creature() {
 
     private fun privateSay(content: String): String = "$name private says: $content"
 
-    fun action(action: String, exceptResult: Int): String = "$name do [$action] with exceptResult: $exceptResult."
+    fun action(action: String, exceptResult: Int): String =
+        "$name do [$action] with exceptResult: $exceptResult."
 
     fun changeName(newName: String) {
         name = newName

@@ -20,7 +20,11 @@ android {
     }
 
     val releaseSigning = signingConfigs.create("releaseSigning") {
-        storeFile = File(System.getenv("KEYSTORE") ?: "${projectDir.absolutePath}/../10-configs/sign/debug.keystore")
+        storeFile =
+            File(
+                System.getenv("KEYSTORE")
+                    ?: "${projectDir.absolutePath}/../10-configs/sign/debug.keystore"
+            )
         keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
         keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
         storePassword = System.getenv("KEY_PASSWORD") ?: "android"

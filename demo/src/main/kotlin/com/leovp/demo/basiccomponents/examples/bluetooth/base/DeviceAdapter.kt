@@ -18,19 +18,26 @@ class DeviceAdapter : RecyclerView.Adapter<DeviceAdapter.ItemViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        binding = RecyclerviewBluetoothDeviceItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        binding =
+            RecyclerviewBluetoothDeviceItemBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
         return ItemViewHolder(binding.root)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpositio
+        // n-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.bindingAdapterPosition]
-//        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
+// LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
         currentItem.index = holder.bindingAdapterPosition + 1
         holder.bind(currentItem)
         holder.itemView.setOnClickListener {
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(currentItem, holder.layoutPosition)
         }
     }

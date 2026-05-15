@@ -30,12 +30,25 @@ class IdleState(view: View) : State(view) {
             )
             internalIcon = context.getDrawable(iconResId)!!
             iconTint = attr.getColor(R.styleable.CircleProgressbar_idleIconTintColor, DEF_ICON_TINT)
-            width = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_idleIconWidth, getIcon().minimumWidth)
-            height = attr.getDimensionPixelSize(R.styleable.CircleProgressbar_idleIconHeight, getIcon().minimumHeight)
+            width = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_idleIconWidth,
+                getIcon().minimumWidth
+            )
+            height = attr.getDimensionPixelSize(
+                R.styleable.CircleProgressbar_idleIconHeight,
+                getIcon().minimumHeight
+            )
 
-            val backgroundResId = attr.getResourceId(R.styleable.CircleProgressbar_idleBackgroundDrawable, -1)
-            backgroundDrawable = if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
-            backgroundColor = attr.getColor(R.styleable.CircleProgressbar_idleBackgroundColor, defColor)
+            val backgroundResId = attr.getResourceId(
+                R.styleable.CircleProgressbar_idleBackgroundDrawable,
+                -1
+            )
+            backgroundDrawable =
+                if (backgroundResId != -1) context.getDrawable(backgroundResId) else defDrawable
+            backgroundColor = attr.getColor(
+                R.styleable.CircleProgressbar_idleBackgroundColor,
+                defColor
+            )
         } else {
             internalIcon = context.getDrawable(R.drawable.ic_default_idle)!!
             width = getIcon().minimumWidth

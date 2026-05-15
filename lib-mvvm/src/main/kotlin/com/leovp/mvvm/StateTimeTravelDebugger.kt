@@ -70,7 +70,11 @@ class StateTimeTravelDebugger(private val viewClassName: String,) {
         w(TAG) { "<-- Action & State - End -----------------------------" }
     }
 
-    private fun getLogLine(oldState: BaseState, newState: BaseState, propertyName: String,): String {
+    private fun getLogLine(
+        oldState: BaseState,
+        newState: BaseState,
+        propertyName: String,
+    ): String {
         val oldValue = getPropertyValue(oldState, propertyName)
         val newValue = getPropertyValue(newState, propertyName)
         val indent = "\t"
@@ -105,5 +109,9 @@ class StateTimeTravelDebugger(private val viewClassName: String,) {
         return ""
     }
 
-    private data class StateTransition(val oldState: BaseState, val action: BaseAction<*>, val newState: BaseState,)
+    private data class StateTransition(
+        val oldState: BaseState,
+        val action: BaseAction<*>,
+        val newState: BaseState,
+    )
 }

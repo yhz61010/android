@@ -78,7 +78,8 @@ val Context.screenInch
     }
 
 /**
- * @return The returned height value includes the height of status bar but excludes the height of navigation bar.
+ * @return The returned height value includes the height of status bar but excludes the height of
+ * navigation bar.
  */
 val Context.screenAvailableResolution: Size
     get() {
@@ -211,7 +212,8 @@ val Context.isFullScreenDevice get(): Boolean = screenRatio >= 1.97f
  * Need to investigate Window.ID_ANDROID_CONTENT
  */
 
-//    fun getTitleHeight(activity: Activity) = activity.window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
+// fun getTitleHeight(activity: Activity) =
+// activity.window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
 
 // val Context.isNavigationGestureEnabled
 //    @SuppressLint("ObsoleteSdkInt")
@@ -237,7 +239,8 @@ private fun Context.getNavigationBarName(): String {
 }
 
 /**
- * So far, the only valid way to check whether the navigation bar is shown is using the difference between screen real height
+ * So far, the only valid way to check whether the navigation bar is shown is using the difference
+ * between screen real height
  * and available height.
  * This is the only way that I've known works.
  */
@@ -245,12 +248,13 @@ val Context.isNavigationBarShown
     get(): Boolean {
         return screenRealHeight - screenAvailableHeight > 0
 
-        // //        val view = activity.findViewById<View>(android.R.id.navigationBarBackground) ?: return false
+        // // val view = activity.findViewById<View>(android.R.id.navigationBarBackground) ?: return
+        // false
         // //        val visible = view.visibility
         // //        return !(visible == View.GONE || visible == View.INVISIBLE)
         //
         //        // In full screen(AKA all screen) device, this method will return `true`.
-        //        val resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android")
+        // val resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android")
         //        return if (resourceId > 0) {
         //            resources.getBoolean(resourceId)
         //        } else false
@@ -261,7 +265,8 @@ val Context.isNavigationBarShown
 //    return runCatching {
 //        // IWindowManager windowManagerService = WindowManagerGlobal.getWindowManagerService();
 //        val windowManagerGlobalClass = Class.forName("android.view.WindowManagerGlobal")
-//        val getWmServiceMethod: Method = windowManagerGlobalClass.getDeclaredMethod("getWindowManagerService")
+// val getWmServiceMethod: Method =
+// windowManagerGlobalClass.getDeclaredMethod("getWindowManagerService")
 //        getWmServiceMethod.isAccessible = true
 //        // getWindowManagerService is a static method, so invoke with null
 //        val iWindowManager: Any = getWmServiceMethod.invoke(null)!!
@@ -291,7 +296,7 @@ val Context.isNavigationBarShown
  *
  *
  * ⎸             ⎸ ⎺↓⎺
- * ⎸ ◀︎  ●   ◼   ⎸        The height of navigation bar in [2/3-button navigation] mode in some devices.
+ * ⎸ ◀︎ ● ◼ ⎸ The height of navigation bar in [2/3-button navigation] mode in some devices.
  * ⎸             ⎸ ⎽↑⎽
  * ```
  */
@@ -299,7 +304,8 @@ val Context.navigationBarHeight
     get(): Int {
 
         // var result = 0
-        // val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        // val resourceId = this.resources.getIdentifier("navigation_bar_height", "dimen",
+        // "android")
         // if (resourceId > 0) {
         //     result = this.resources.getDimensionPixelSize(resourceId)
         // }
@@ -432,10 +438,15 @@ fun Context.isTablet(): Boolean = (
 
 // ================================
 
-fun Context.isDeviceInPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean =
-    isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
+fun Context.isDeviceInPortrait(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean = isNormalPortrait(degree, prevOrientation) || isReversePortrait(degree, prevOrientation)
 
-fun Context.isDeviceInLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean =
+fun Context.isDeviceInLandscape(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean =
     isNormalLandscape(degree, prevOrientation) || isReverseLandscape(degree, prevOrientation)
 
 // ---------------
@@ -456,7 +467,8 @@ fun isPortrait(surfaceRotation: Int): Boolean =
 
 /**
  * **Attention:**
- * Only if the device is in landscape mode regardless of **Normal Landscape** or **Reverse Landscape**,
+ * Only if the device is in landscape mode regardless of **Normal Landscape** or **Reverse
+ * Landscape**,
  * `true` will be returned.
  *
  * @param surfaceRotation The value may be
@@ -480,7 +492,10 @@ fun isLandscape(surfaceRotation: Int): Boolean =
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isNormalPortrait(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean {
     // If device is already in normal portrait mode, the wide range is:
     // [300, 359], [0, 60]
 
@@ -516,7 +531,10 @@ fun Context.isNormalPortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrie
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isNormalLandscape(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean {
     // If device is already in normal landscape mode, the wide range is:
     // [210, 270], [270, 330]
 
@@ -542,7 +560,10 @@ fun Context.isNormalLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isReverseLandscape(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean {
     // If device is already in reverse landscape mode, the wide range is:
     // [30, 90], [90, 150]
 
@@ -568,7 +589,10 @@ fun Context.isReverseLandscape(@IntRange(from = 0, to = 359) degree: Int, prevOr
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - Any other value will be ignored.
  */
-fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Boolean {
+fun Context.isReversePortrait(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Boolean {
     // If device is already in reverse portrait mode, the wide range is:
     // [120, 180], [180, 240]
 
@@ -584,7 +608,8 @@ fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOri
     }
 
     // val ssr = screenSurfaceRotation
-    // return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT == prevOrientation) {
+    // return if (Surface.ROTATION_180 == ssr || SCREEN_ORIENTATION_REVERSE_PORTRAIT ==
+    // prevOrientation) {
     //     if (Surface.ROTATION_180 == ssr && degree == 240) true
     //     else if (Surface.ROTATION_90 == ssr) false
     //     else degree in 121 until 240 // wide range
@@ -602,7 +627,10 @@ fun Context.isReversePortrait(@IntRange(from = 0, to = 359) degree: Int, prevOri
  * - ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
  * - -1 means unknown or the orientation is not changed.
  */
-fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prevOrientation: Int = -1): Int = when {
+fun Context.getDeviceOrientation(
+    @IntRange(from = 0, to = 359) degree: Int,
+    prevOrientation: Int = -1
+): Int = when {
     isNormalPortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_PORTRAIT
     isReversePortrait(degree, prevOrientation) -> SCREEN_ORIENTATION_REVERSE_PORTRAIT
     isNormalLandscape(degree, prevOrientation) -> SCREEN_ORIENTATION_LANDSCAPE
@@ -614,7 +642,8 @@ fun Context.getDeviceOrientation(@IntRange(from = 0, to = 359) degree: Int, prev
  * The context can only be either Activity(Fragment) or Service.<p>
  *
  * **Attention**, on some Android 11+ devices, like Google Pixel 4a(5G) (Android 14),
- * if you rotate the screen continuously, _context.display?.rotation_ is likely to return incorrect values (always return 0).
+ * if you rotate the screen continuously, _context.display?.rotation_ is likely to return incorrect
+ * values (always return 0).
  *
  * You can also reproduce the issue using the following steps:
  * 1. With "Auto-rotate" enabled, rotate the screen several times.
@@ -644,7 +673,8 @@ val Context.screenSurfaceRotation: Int
                 // On Android 11+, we can't get `display` directly from Service, it will cause
                 // the following exception:
                 // Tried to obtain display from a Context not associated with one.
-                // Only visual Contexts (such as Activity or one created with Context#createWindowContext)
+                // Only visual Contexts (such as Activity or one created with
+                // Context#createWindowContext)
                 // or ones created with Context#createDisplayContext are associated with displays.
                 // Other types of Contexts are typically related to background entities
                 // and may return an arbitrary display.

@@ -47,7 +47,7 @@ class SerializationConverter(private val decoder: Json = defaultJson) : NetConve
                     // multiCatch(
                     //     runBlock = {
                     //         // Business error.
-                    //         val errorRes: ApiResponseResult = decoder.decodeFromString(bodyString)
+                    // val errorRes: ApiResponseResult = decoder.decodeFromString(bodyString)
                     //         throw ApiException(errorRes.code, errorRes.message, e)
                     //     },
                     //     exceptions = arrayOf(

@@ -10,7 +10,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityNewWordBinding
 import com.leovp.log.base.ITAG
 
-class NewWordActivity : BaseDemonstrationActivity<ActivityNewWordBinding>(R.layout.activity_new_word) {
+class NewWordActivity :
+    BaseDemonstrationActivity<ActivityNewWordBinding>(R.layout.activity_new_word) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityNewWordBinding =

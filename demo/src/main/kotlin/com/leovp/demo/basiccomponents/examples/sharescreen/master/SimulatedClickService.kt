@@ -42,7 +42,13 @@ class SimulatedClickService : AccessibilityService() {
         when (touchBean.touchType) {
             ScreenShareClientActivity.TouchType.DRAG -> {
                 // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                dispatchGestureDrag(touchBean.x, touchBean.y, touchBean.dstX, touchBean.dstY, touchBean.duration)
+                dispatchGestureDrag(
+                    touchBean.x,
+                    touchBean.y,
+                    touchBean.dstX,
+                    touchBean.dstY,
+                    touchBean.duration
+                )
                 // } else {
                 //     LogContext.log.w(TAG, "Simulate drag only available as of Android 8.0")
                 // }
@@ -57,7 +63,8 @@ class SimulatedClickService : AccessibilityService() {
 
     // Attention: this callback is calling from main thread.
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        // The package names that you want to monitor which have been set in accessibility_service_config.
+        // The package names that you want to monitor which have been set in
+        // accessibility_service_config.
         // If you does not set it, it means monitor all application.
         //        val packageName: String = event.packageName.toString()
         val eventType: Int = event.eventType
@@ -77,18 +84,30 @@ class SimulatedClickService : AccessibilityService() {
         val path = Path()
         path.moveTo(x.toFloat(), y.toFloat())
         val clickGesture = GestureDescription.StrokeDescription(path, 0, 100)
-        val click: Boolean = dispatchGesture(GestureDescription.Builder().addStroke(clickGesture).build(), null, null)
+        val click: Boolean =
+            dispatchGesture(
+                GestureDescription.Builder().addStroke(clickGesture).build(),
+                null,
+                null
+            )
         LogContext.log.i(TAG, "dispatchGestureClick: $click")
     }
 
     // Simulates an L-shaped drag path: 200 pixels right, then 200 pixels down.
-    private fun dispatchGestureDrag(srcX: Float, srcY: Float, dstX: Float, dstY: Float, duration: Long) {
+    private fun dispatchGestureDrag(
+        srcX: Float,
+        srcY: Float,
+        dstX: Float,
+        dstY: Float,
+        duration: Long
+    ) {
         val dragPath = Path().apply {
             moveTo(srcX, srcY)
             lineTo(dstX, dstY)
         }
         val dragGesture = GestureDescription.StrokeDescription(dragPath, 0, duration)
-        val drag: Boolean = dispatchGesture(GestureDescription.Builder().addStroke(dragGesture).build(), null, null)
+        val drag: Boolean =
+            dispatchGesture(GestureDescription.Builder().addStroke(dragGesture).build(), null, null)
         LogContext.log.i(TAG, "dispatchGestureDrag: $drag")
     }
 

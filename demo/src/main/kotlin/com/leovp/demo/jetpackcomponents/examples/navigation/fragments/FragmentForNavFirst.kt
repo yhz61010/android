@@ -13,7 +13,8 @@ import com.leovp.demo.databinding.FragmentForNavFirstBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fragment_for_nav_first) {
+class FragmentForNavFirst :
+    BaseFragment<FragmentForNavFirstBinding>(R.layout.fragment_for_nav_first) {
     //    companion object {
     //        private const val ARG_PARAM1 = "param1"
     //        private const val ARG_PARAM2 = "param2"
@@ -38,7 +39,11 @@ class FragmentForNavFirst : BaseFragment<FragmentForNavFirstBinding>(R.layout.fr
     //        }
     //    }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         LogContext.log.w(ITAG, "FragmentForNavFirst")
         binding.gotoSecondActivity.setOnSingleClickListener {

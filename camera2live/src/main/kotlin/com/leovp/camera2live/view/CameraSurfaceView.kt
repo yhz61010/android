@@ -13,8 +13,11 @@ import kotlin.math.roundToInt
  * Author: Michael Leo
  * Date: 20-3-24 下午16:00
  */
-class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyle: Int = 0) :
-    SurfaceView(context, attrs, defStyle) {
+class CameraSurfaceView @JvmOverloads constructor(
+    context: Context?,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0
+) : SurfaceView(context, attrs, defStyle) {
 
     private var aspectRatio = 0f
 
@@ -61,7 +64,8 @@ class CameraSurfaceView @JvmOverloads constructor(context: Context?, attrs: Attr
             }
             LogContext.log.d(
                 TAG,
-                "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight aspectRatio=$aspectRatio"
+                "setMeasuredDimension newWidth=$newWidth newHeight=$newHeight " +
+                    "aspectRatio=$aspectRatio"
             )
             setMeasuredDimension(newWidth, newHeight)
         }

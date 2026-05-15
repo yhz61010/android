@@ -11,7 +11,8 @@ android {
     namespace = "com.leovp.jpeg"
 
     defaultConfig {
-        // Specific your ndk.abiFilters in your project, not here. So that it will include the proper abiFilters automatically.
+        // Specific your ndk.abiFilters in your project, not here. So that it will include the
+        // proper abiFilters automatically.
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
@@ -81,7 +82,6 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
                 artifactId = "jpeg"
-                version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())
                 from(components["release"])

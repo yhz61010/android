@@ -11,8 +11,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Suppress("unused")
-class MovableFloatingActionButton(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,) :
-    FloatingActionButton(context, attrs, defStyleAttr),
+class MovableFloatingActionButton(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : FloatingActionButton(context, attrs, defStyleAttr),
     OnTouchListener {
     init {
         setOnTouchListener(this)
@@ -67,7 +70,8 @@ class MovableFloatingActionButton(context: Context, attrs: AttributeSet? = null,
     }
 
     companion object {
-        // Often, there will be a slight, unintentional, drag when the user taps the FAB, so we need to account for this.
+        // Often, there will be a slight, unintentional, drag when the user taps the FAB, so we need
+        // to account for this.
         private const val CLICK_DRAG_TOLERANCE = 10f
     }
 }

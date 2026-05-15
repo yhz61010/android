@@ -37,7 +37,12 @@ class NetworkMonitorActivity :
 
     private var networkMonitor: NetworkMonitor? = null
 
-    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -66,7 +71,13 @@ class NetworkMonitorActivity :
                         "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr,
                         uploadSpeedStr,
-                        if (latencyStatus.isNullOrBlank()) "${info.ping}ms" else "${info.ping}ms($latencyStatus)",
+                        if (
+                            latencyStatus.isNullOrBlank()
+                        ) {
+                            "${info.ping}ms"
+                        } else {
+                            "${info.ping}ms($latencyStatus)"
+                        },
                         info.linkSpeed,
                         info.rssi,
                         info.wifiScoreIn5,

@@ -117,7 +117,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             else -> heightNecessaryOffset
         }
         val curScreenOrientationSize = context.getScreenSize(orientation, realRes)
-        return Size(curScreenOrientationSize.width, curScreenOrientationSize.height - finalHeightNecessaryOffset)
+        return Size(
+            curScreenOrientationSize.width,
+            curScreenOrientationSize.height - finalHeightNecessaryOffset
+        )
     }
 
     @Volatile private var lastScrOri = context.screenSurfaceRotation.takeIf {
@@ -143,7 +146,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 firstX = lastX
                 firstY = lastY
                 isClickGesture = true
-                touchConsumedByMove = config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
+                touchConsumedByMove =
+                    config.touchEventListener?.touchDown(view, lastX, lastY) ?: false
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
@@ -151,7 +155,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     startDockAnim(layoutParams.x, layoutParams.y, config.dockEdge)
                 }
                 touchConsumedByMove =
-                    config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture) ?: !isClickGesture
+                    config.touchEventListener?.touchUp(view, lastX, lastY, isClickGesture)
+                        ?: !isClickGesture
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -159,7 +164,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 val deltaY = event.rawY.toInt() - lastY
                 lastX = event.rawX.toInt()
                 lastY = event.rawY.toInt()
-                if (abs(totalDeltaX) >= config.touchToleranceInPx || abs(totalDeltaY) >= config.touchToleranceInPx) {
+                if (abs(totalDeltaX) >= config.touchToleranceInPx ||
+                    abs(totalDeltaY) >= config.touchToleranceInPx
+                ) {
                     isClickGesture = false
                     view.isPressed = false
                     if (!consumeIsAlwaysFalse) {
@@ -181,7 +188,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     touchConsumedByMove = false
                 }
                 touchConsumedByMove =
-                    config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture) ?: touchConsumedByMove
+                    config.touchEventListener?.touchMove(view, lastX, lastY, isClickGesture)
+                        ?: touchConsumedByMove
             }
 
             else -> Unit
@@ -258,7 +266,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     val distToLeft = left - config.edgeMargin
                     val distToRight = screenOrientSz.width - (left + viewWidth) - config.edgeMargin
                     val distToTop = top - getTopHeightOffset() - config.edgeMargin
-                    val distToBottom = screenOrientSz.height - (top + viewHeight) - config.edgeMargin
+                    val distToBottom =
+                        screenOrientSz.height - (top + viewHeight) - config.edgeMargin
 
                     if (floatViewCenterX <= screenOrientSz.width / 2) { // On left screen
                         if (floatViewCenterY <= screenOrientSz.height / 2) { // Top left
@@ -440,7 +449,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         layoutParams = WindowManager.LayoutParams().apply {
             format = PixelFormat.TRANSLUCENT
             flags = if (config.touchable) {
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             } else {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -452,7 +462,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     else -> {
                         @Suppress("DEPRECATION")
-                        WindowManager.LayoutParams.TYPE_TOAST or WindowManager.LayoutParams.TYPE_PHONE
+                        WindowManager.LayoutParams.TYPE_TOAST or
+                            WindowManager.LayoutParams.TYPE_PHONE
                     }
                 }
             }
@@ -508,11 +519,13 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
         // Scale position proportionally to maintain relative position after orientation change
         if (oldScreenSize.width > 0 && oldScreenSize.width != screenOrientSz.width) {
-            layoutParams.x = (layoutParams.x.toFloat() / oldScreenSize.width * screenOrientSz.width).toInt()
+            layoutParams.x =
+                (layoutParams.x.toFloat() / oldScreenSize.width * screenOrientSz.width).toInt()
             layoutParams.x = adjustPosX(layoutParams.x, config.edgeMargin)
         }
         if (oldScreenSize.height > 0 && oldScreenSize.height != screenOrientSz.height) {
-            layoutParams.y = (layoutParams.y.toFloat() / oldScreenSize.height * screenOrientSz.height).toInt()
+            layoutParams.y =
+                (layoutParams.y.toFloat() / oldScreenSize.height * screenOrientSz.height).toInt()
             layoutParams.y = adjustPosY(layoutParams.y, config.edgeMargin)
         }
 

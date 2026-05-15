@@ -6,7 +6,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityProviderBinding
 import com.leovp.log.base.ITAG
 
-class ProviderActivity : BaseDemonstrationActivity<ActivityProviderBinding>(R.layout.activity_provider) {
+class ProviderActivity :
+    BaseDemonstrationActivity<ActivityProviderBinding>(R.layout.activity_provider) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityProviderBinding =

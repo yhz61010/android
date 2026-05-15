@@ -34,14 +34,22 @@ class PermissionsFragment : Fragment() {
                     val allGranted = deniedList.isEmpty()
                     if (allGranted) {
                         // Take the user to the success fragment when permission is granted
-                        Toast.makeText(context, "Permission request granted", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Permission request granted",
+                            Toast.LENGTH_LONG
+                        ).show()
                         navigateToCamera()
                     } else {
                         //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
                         //      this@PermissionsFragment.requireActivity(),
                         //      deniedList
                         //  )
-                        Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Permission request denied",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
         }

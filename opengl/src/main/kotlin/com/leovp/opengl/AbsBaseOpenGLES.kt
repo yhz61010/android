@@ -59,19 +59,27 @@ abstract class AbsBaseOpenGLES {
             "makeProgram() programObjId=$programObjId",
             outputType = LogOutType.FRAMEWORK
         )
-        if (!validateProgram(programObjId)) throw RuntimeException("OpenGL ES: Make program exception.")
+        if (!validateProgram(programObjId)) {
+            throw RuntimeException(
+                "OpenGL ES: Make program exception."
+            )
+        }
 
         GLES20.glUseProgram(programObjId)
         checkGlError("glUseProgram")
     }
 
     protected fun getUniform(name: String): Int {
-        require(programObjId >= 1) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
+        require(
+            programObjId >= 1
+        ) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
         return GLES20.glGetUniformLocation(programObjId, name)
     }
 
     protected fun getAttrib(name: String): Int {
-        require(programObjId >= 1) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
+        require(
+            programObjId >= 1
+        ) { "Program ID=$programObjId is not valid. Make sure to call makeProgram() first." }
         return GLES20.glGetAttribLocation(programObjId, name)
     }
 }

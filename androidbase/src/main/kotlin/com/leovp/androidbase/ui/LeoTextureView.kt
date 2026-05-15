@@ -25,8 +25,11 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2021/4/28 10:30 AM
  */
-class LeoTextureView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,) :
-    TextureView(context, attrs, defStyleAttr),
+class LeoTextureView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : TextureView(context, attrs, defStyleAttr),
     SurfaceTextureListener {
     companion object {
         private const val TAG = "LTV"
@@ -60,7 +63,11 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
 
     var videoOutputFormatChangeEvent: VideoOutputFormatChangeEvent? = null
 
-    override fun onSurfaceTextureAvailable(pSurfaceTexture: SurfaceTexture, width: Int, height: Int) {
+    override fun onSurfaceTextureAvailable(
+        pSurfaceTexture: SurfaceTexture,
+        width: Int,
+        height: Int
+    ) {
         LogContext.log.i(TAG, "onSurfaceTextureAvailable() width=$width height=$height")
         mySurfaceTexture?.let { setSurfaceTexture(it) }
         this.surface = Surface(pSurfaceTexture)
@@ -98,7 +105,8 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
 
     // ----------------------------------------
 
-    override fun onTouchEvent(event: MotionEvent): Boolean = touchHelper?.onTouchEvent(event) ?: performClick()
+    override fun onTouchEvent(event: MotionEvent): Boolean =
+        touchHelper?.onTouchEvent(event) ?: performClick()
 
     override fun performClick(): Boolean {
         super.performClick()
@@ -130,7 +138,8 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
             val csd0 = vps!! + sps + pps
             format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
             // avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
-            // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC, "c2.android.hevc.decoder", encoder = false)) {
+            // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_HEVC,
+            // "c2.android.hevc.decoder", encoder = false)) {
             //     MediaCodec.createByCodecName("c2.android.hevc.decoder")
             // } else {
             //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
@@ -140,7 +149,8 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
             format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
             format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
             //                avcDecoder = MediaCodec.createByCodecName("OMX.google.h264.decoder")
-            //                if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "c2.android.avc.decoder", encoder = false)) {
+            // if (CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC,
+            // "c2.android.avc.decoder", encoder = false)) {
             //                    MediaCodec.createByCodecName("c2.android.avc.decoder")
             //                } else {
             //                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
@@ -164,7 +174,11 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
                 LogContext.log.w(TAG, "Try to release videoDecoder")
                 videoDecoder?.release()
             }.onFailure {
-                LogContext.log.e(TAG, "Release videoDecoder error. Known issue. msg=${it.message}", it)
+                LogContext.log.e(
+                    TAG,
+                    "Release videoDecoder error. Known issue. msg=${it.message}",
+                    it
+                )
             }.also {
                 videoDecoder = null
                 System.gc()
@@ -181,16 +195,28 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
                 inputBuffer?.clear()
                 val data = queue.poll()?.also { inputBuffer?.put(it) }
                 //                data?.let { videoData ->
-                //                    val naluTypeName = if (isH265) H265Util.getNaluTypeName(videoData) else H264Util.getNaluTypeName(videoData)
-                //                    if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "RVID[${videoData.size.toString().padStart(5)}\t$naluTypeName]")
+                // val naluTypeName = if (isH265) H265Util.getNaluTypeName(videoData) else
+                // H264Util.getNaluTypeName(videoData)
+                // if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG,
+                // "RVID[${videoData.size.toString().padStart(5)}\t$naluTypeName]")
                 //                }
-                codec.queueInputBuffer(inputBufferId, 0, data?.size ?: 0, computePresentationTimeUs(++frameCount), 0)
+                codec.queueInputBuffer(
+                    inputBufferId,
+                    0,
+                    data?.size ?: 0,
+                    computePresentationTimeUs(++frameCount),
+                    0
+                )
             }.onFailure {
                 LogContext.log.v(TAG, "You can ignore this error. ${it.message}")
             }
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
@@ -202,7 +228,10 @@ class LeoTextureView @JvmOverloads constructor(context: Context, attrs: Attribut
                         MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
                             val decodedData = ByteArray(info.size)
                             it.get(decodedData)
-                            LogContext.log.w(TAG, "Found SPS/PPS frame: ${decodedData.contentToString()}")
+                            LogContext.log.w(
+                                TAG,
+                                "Found SPS/PPS frame: ${decodedData.contentToString()}"
+                            )
                         }
 
                         MediaCodec.BUFFER_FLAG_KEY_FRAME -> {

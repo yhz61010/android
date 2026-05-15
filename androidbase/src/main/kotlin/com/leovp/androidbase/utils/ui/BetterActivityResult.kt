@@ -11,7 +11,8 @@ import androidx.activity.result.contract.ActivityResultContract
  * Usage:
  * ```kotlin
  * private val myActivityLauncher =
- *      BetterActivityResult.registerForActivityResult(this, ActivityResultContracts.StartActivityForResult()) { result ->
+ * BetterActivityResult.registerForActivityResult(this,
+ * ActivityResultContracts.StartActivityForResult()) { result ->
  *          if(result.resultCode == Activity.RESULT_OK) {
  *              val result = result.data?.getStringExtra("extra")
  *          }
@@ -26,17 +27,22 @@ class BetterActivityResult<I, O> private constructor(
 ) {
     private var internalResult: ((O) -> Unit)? = null
 
-    private val launcher: ActivityResultLauncher<I> = caller.registerForActivityResult(contract) { re: O ->
-        val finalResult = (this.internalResult ?: this.defaultResult) ?: error("The [Result] can not be null.")
-        finalResult(re)
-    }
+    private val launcher: ActivityResultLauncher<I> =
+        caller.registerForActivityResult(contract) { re: O ->
+            val finalResult =
+                (this.internalResult ?: this.defaultResult)
+                    ?: error("The [Result] can not be null.")
+            finalResult(re)
+        }
 
     /**
      * Launch activity, same as [ActivityResultLauncher.launch] except that it allows a callback
      * executed after receiving a result from the target activity.
      *
-     * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.registerForActivityResult].
-     * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in [launch] will be used first.
+     * @param result If this parameter is `null`, make sure you have already set the `result` when
+     * call [BetterActivityResult.registerForActivityResult].
+     * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in
+     * [launch] will be used first.
      */
     @JvmOverloads
     fun launch(input: I, result: ((O) -> Unit)? = null) {
@@ -46,11 +52,14 @@ class BetterActivityResult<I, O> private constructor(
 
     companion object {
         /**
-         * Register activity result using a [ActivityResultContract] and an in-place activity result callback like
+         * Register activity result using a [ActivityResultContract] and an in-place activity result
+         * callback like
          * the default approach. You can still customise callback using [launch].
          *
-         * @param result If this parameter is `null`, make sure you have already set the `result` when call [BetterActivityResult.launch]
-         * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in [launch] will be used first.
+         * @param result If this parameter is `null`, make sure you have already set the `result`
+         * when call [BetterActivityResult.launch]
+         * If you set `result` in both [launch] and BetterActivityResult constructor, the `result`
+         * in [launch] will be used first.
          */
         fun <I, O> registerForActivityResult(
             caller: ActivityResultCaller,

@@ -587,7 +587,7 @@ style:
     maxChainedCalls: 5
   MaxLineLength:
     active: true
-    maxLineLength: 180 # 120
+    maxLineLength: 100
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: false
@@ -734,7 +734,7 @@ formatting:
     active: false # true
     autoCorrect: true
     indentSize: 4
-    maxLineLength: 140 # 120
+    maxLineLength: 100
   BlockCommentInitialStarAlignment:
     active: false
     autoCorrect: true
@@ -771,7 +771,7 @@ formatting:
     autoCorrect: true
     forceMultilineWhenParameterCountGreaterOrEqualThan: 2147483647
     functionBodyExpressionWrapping: 'default'
-    maxLineLength: 120
+    maxLineLength: 100
     indentSize: 4
   FunctionStartOfBodySpacing:
     active: false
@@ -793,7 +793,7 @@ formatting:
     indentSize: 4
   MaximumLineLength:
     active: true
-    maxLineLength: 140 # 120
+    maxLineLength: 100
     ignoreBackTickedIdentifier: false
   ModifierListSpacing:
     active: false
@@ -855,7 +855,7 @@ formatting:
   ParameterListWrapping:
     active: true
     autoCorrect: true
-    maxLineLength: 140 # 120
+    maxLineLength: 100
   SpacingAroundAngleBrackets:
     active: false # true
     autoCorrect: true

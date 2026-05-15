@@ -29,7 +29,8 @@ class JetpackFragment : BaseFragment<FragmentJetpackBinding>(R.layout.fragment_j
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val colorBaseAdapter = ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
+        val colorBaseAdapter =
+            ColorBaseAdapter(featureArray.map { it.first }.toTypedArray(), colors)
         colorBaseAdapter.onItemClickListener = object : ColorBaseAdapter.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 startActivity(

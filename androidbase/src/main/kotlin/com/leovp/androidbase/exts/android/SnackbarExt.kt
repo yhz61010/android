@@ -34,7 +34,11 @@ inline fun View.snack(
  * }
  * ```
  */
-inline fun View.snack(message: String, length: Int = Snackbar.LENGTH_LONG, crossinline f: Snackbar.() -> Unit) {
+inline fun View.snack(
+    message: String,
+    length: Int = Snackbar.LENGTH_LONG,
+    crossinline f: Snackbar.() -> Unit
+) {
     val snack = Snackbar.make(this, message, length)
     snack.f()
     snack.show()
@@ -47,7 +51,11 @@ inline fun View.snack(message: String, length: Int = Snackbar.LENGTH_LONG, cross
  * ContextCompat.getColor(context, R.color.design_default_color_primary)
  * ```
  */
-fun Snackbar.action(@StringRes actionRes: Int, @ColorInt color: Int? = null, listener: (View) -> Unit) {
+fun Snackbar.action(
+    @StringRes actionRes: Int,
+    @ColorInt color: Int? = null,
+    listener: (View) -> Unit
+) {
     action(view.resources.getString(actionRes), color, listener)
 }
 

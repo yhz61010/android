@@ -41,7 +41,8 @@ class Apm(
         // is unavailable. It operates in a similar fashion to the adaptive analog
         // mode, but with scaling instead applied in the digital domain. As with
         // the analog mode, it additionally uses a digital compression stage.
-        AdaptiveDigital,  // Fixed mode which enables only the digital compression stage also used by
+        // Fixed mode which enables only the digital compression stage also used by
+        AdaptiveDigital,
 
         // the two adaptive modes.
         //
@@ -167,7 +168,8 @@ class Apm(
         return ProcessStream(nearEnd, offset)
     }
 
-    // processReverseStream: It is only necessary to provide this if echo processing is enabled, as the
+    // processReverseStream: It is only necessary to provide this if echo processing is enabled, as
+    // the
     // reverse stream forms the echo reference signal. It is recommended, but not
     // necessary, to provide if gain control is enabled.
     // may modify |farEnd| if intelligibility is enabled.
@@ -254,7 +256,10 @@ class Apm(
 
     // Sets the |minimum| and |maximum| analog levels of the audio capture device.
     // Must be set if and only if an analog mode is used. Limited to [0, 65535].
-    private external fun agc_set_analog_level_limits(minimum: Int, maximum: Int): Int // limit to [0, 65535]
+    private external fun agc_set_analog_level_limits(minimum: Int, maximum: Int): Int // limit to [
+        0,
+        65535
+    ]
     private external fun agc_set_mode(mode: Int): Int // [0, 1, 2]
 
     // When an analog mode is set, this must be called prior to |ProcessStream()|

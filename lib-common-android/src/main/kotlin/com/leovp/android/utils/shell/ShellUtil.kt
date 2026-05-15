@@ -32,12 +32,23 @@ object ShellUtil {
      *
      * @return root for true otherwise false
      */
-    fun checkRootPermission(): Boolean = execCmd("echo root", isRoot = true, isNeedResultMsg = false).result == 0
+    fun checkRootPermission(): Boolean = execCmd(
+        "echo root",
+        isRoot = true,
+        isNeedResultMsg = false
+    ).result == 0
 
-    fun execCmd(command: String, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult =
-        execCmd(listOf(command), isRoot, isNeedResultMsg)
+    fun execCmd(
+        command: String,
+        isRoot: Boolean = false,
+        isNeedResultMsg: Boolean = true
+    ): CommandResult = execCmd(listOf(command), isRoot, isNeedResultMsg)
 
-    fun execCmd(commands: List<String>, isRoot: Boolean = false, isNeedResultMsg: Boolean = true): CommandResult {
+    fun execCmd(
+        commands: List<String>,
+        isRoot: Boolean = false,
+        isNeedResultMsg: Boolean = true
+    ): CommandResult {
         var result = -1
         if (commands.isEmpty()) {
             return CommandResult(result, "", "Command is empty.")
@@ -130,9 +141,10 @@ object ShellUtil {
      * @param name   Specific process named
      * @return Return found process list or return empty list.
      */
-    fun findProcessByName(name: String, isRoot: Boolean = false): List<LinuxProcess> = getProcessesList(isRoot)
-        .filter { process -> name.equals(process.name, true) }
-        .toCollection(arrayListOf())
+    fun findProcessByName(name: String, isRoot: Boolean = false): List<LinuxProcess> =
+        getProcessesList(isRoot)
+            .filter { process -> name.equals(process.name, true) }
+            .toCollection(arrayListOf())
 
     fun killProcessByName(processName: String, isRoot: Boolean = false) {
         // As of API level 24: java.lang.Iterable#forEach
@@ -200,7 +212,12 @@ object ShellUtil {
             if (line != null) {
                 /*
                 Samsung 9350: /dev/block/dm-0 on /system type ext4 (ro,seclabel,relatime,norecovery)
-                Nexus 6(root): /dev/block/mmcblk0p41 on /system type ext4 (ro,seclabel,relatime,data=ordered)
+                Nexus 6(root): /dev/block/mmcblk0p41 on /system type ext4 (
+                    ro,
+                    seclabel,
+                    relatime,
+                    data=ordered
+                )
                  */
                 val params = line!!.split(" ".toRegex()).toTypedArray()
                 // cmd:

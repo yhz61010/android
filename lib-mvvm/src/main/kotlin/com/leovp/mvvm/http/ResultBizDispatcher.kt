@@ -125,9 +125,10 @@ suspend fun <R, T : R> extractBizData(
     return data
 }
 
-suspend fun ResultException.trySendReloginEvt(uiEvtMgr: UiEventManager): Boolean = if (this is ReloginException) {
-    uiEvtMgr.sendEvent(UiEvent.Relogin)
-    true
-} else {
-    false
-}
+suspend fun ResultException.trySendReloginEvt(uiEvtMgr: UiEventManager): Boolean =
+    if (this is ReloginException) {
+        uiEvtMgr.sendEvent(UiEvent.Relogin)
+        true
+    } else {
+        false
+    }

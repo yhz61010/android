@@ -46,7 +46,8 @@ import javax.net.ssl.X509TrustManager
  *
  * ```kotlin
  * val builder = OkHttpClient.Builder()
- * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"), SslUtils.systemDefaultTrustManager())
+ * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"),
+ * SslUtils.systemDefaultTrustManager())
  * builder.hostnameVerifier(SslUtils.doNotVerifier)
  * val client = builder.build()
  * ```
@@ -55,8 +56,8 @@ import javax.net.ssl.X509TrustManager
 object SslUtils {
     //    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
     //        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    //        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-    //        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+    // override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+    // override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
     //    })
 
     // TLSv1.2
@@ -84,7 +85,8 @@ object SslUtils {
      * SslUtils.hostnames = arrayOf("postman-echo.com")
      * ```
      *
-     * You can put your certification file in `assets` folder. Then call following codes to get input stream:
+     * You can put your certification file in `assets` folder. Then call following codes to get
+     * input stream:
      * ```kotlin
      * resources.assets.open("cert/certificate.pem")
      * ```
@@ -106,7 +108,9 @@ object SslUtils {
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->
-        requireNotNull(hostnames) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
+        requireNotNull(
+            hostnames
+        ) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
         hostnames!!.contains(hostname)
         // else {
         //     val hv = HttpsURLConnection.getDefaultHostnameVerifier()
@@ -128,7 +132,8 @@ object SslUtils {
     }.socketFactory
 
     fun systemDefaultTrustManager(): X509TrustManager {
-        val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        val trustManagerFactory =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
         trustManagerFactory.init(null as KeyStore?)
         val trustManagers: Array<TrustManager> = trustManagerFactory.trustManagers
         check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
@@ -144,9 +149,10 @@ object SslUtils {
         keyStore.load(null, null)
         keyStore.setCertificateEntry("ca", certificateFactory.generateCertificate(certInputStream))
 
-        val trustMgrFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
-            init(keyStore)
-        }
+        val trustMgrFactory =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
+                init(keyStore)
+            }
 
         //        val kmf: KeyManagerFactory = KeyManagerFactory.getInstance("X509")
         //        kmf.init(keyStore, null)

@@ -29,7 +29,8 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * https://stackoverflow.com/a/52718543
  */
-class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLiveData.ConnectionStatus>() {
+class ConnectionLiveData(private val context: Context) :
+    LiveData<ConnectionLiveData.ConnectionStatus>() {
     companion object {
         private const val TAG = "Connection"
     }
@@ -119,15 +120,24 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
     private fun getConnectivityMarshmallowManagerCallback(): ConnectivityManager.NetworkCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManagerCallback = object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                    if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                        networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
+                ) {
+                    if (networkCapabilities.hasCapability(
+                            NetworkCapabilities.NET_CAPABILITY_INTERNET
+                        ) &&
+                        networkCapabilities.hasCapability(
+                            NetworkCapabilities.NET_CAPABILITY_VALIDATED
+                        )
                     ) {
                         val connectionType = when {
                             networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
                                 NetworkUtil.TYPE_WIFI
 
-                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                            networkCapabilities.hasTransport(
+                                NetworkCapabilities.TRANSPORT_CELLULAR
+                            ) ->
                                 NetworkUtil.TYPE_CELLULAR
 
                             else -> NetworkUtil.TYPE_OTHER
@@ -165,7 +175,8 @@ class ConnectionLiveData(private val context: Context) : LiveData<ConnectionLive
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    private fun getNetworkType(): String = NetworkUtil.getNetworkTypeName(context) ?: NetworkUtil.TYPE_OTHER
+    private fun getNetworkType(): String =
+        NetworkUtil.getNetworkTypeName(context) ?: NetworkUtil.TYPE_OTHER
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun updateConnection() {

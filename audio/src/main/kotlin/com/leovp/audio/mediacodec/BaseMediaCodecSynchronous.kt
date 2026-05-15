@@ -49,7 +49,13 @@ abstract class BaseMediaCodecSynchronous(
                 val pts = computePresentationTimeUs()
                 if (pts < 0) {
                     isFinish = true
-                    codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                    codec.queueInputBuffer(
+                        inputIndex,
+                        0,
+                        0,
+                        0,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    )
                 } else {
                     codec.queueInputBuffer(inputIndex, 0, size, pts, 0)
                 }
@@ -79,7 +85,8 @@ abstract class BaseMediaCodecSynchronous(
                     else -> onOutputData(buffer, bufferInfo, isConfig = false, isKeyFrame = false)
                 }
 
-                // Must clear decoded data before next loop. Otherwise, you will get the same data while looping.
+                // Must clear decoded data before next loop. Otherwise, you will get the same data
+                // while looping.
                 codec.releaseOutputBuffer(outputIndex, false)
                 // Get data again.
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)

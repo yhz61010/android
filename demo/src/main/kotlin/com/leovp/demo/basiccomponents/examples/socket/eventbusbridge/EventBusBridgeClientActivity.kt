@@ -34,7 +34,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class EventBusBridgeClientActivity :
-    BaseDemonstrationActivity<ActivityEventBusBridgeClientBinding>(R.layout.activity_event_bus_bridge_client) {
+    BaseDemonstrationActivity<ActivityEventBusBridgeClientBinding>(
+        R.layout.activity_event_bus_bridge_client
+    ) {
 
     override fun getTagName(): String = ITAG
 
@@ -119,8 +121,12 @@ class EventBusBridgeClientActivity :
                     val receivedByteBuf = msg.content().retain()
 
                     val receivedBytes = ByteBufUtil.getBytes(receivedByteBuf)
-                    // val showDebugData = if (receivedBytes.size >= 80) receivedBytes.toHexStringLE().substring(0, 80) else receivedBytes.toHexStringLE()
-                    // if (LogContext.enableLog && GlobalConstants.DEBUG) LogContext.log.e(LogTag.TAG_PT, "ORI_VID[${receivedBytes.size}][${msg.isFinalFragment}]=$showDebugData")
+                    // val showDebugData = if (receivedBytes.size >= 80)
+                    // receivedBytes.toHexStringLE().substring(0, 80) else
+                    // receivedBytes.toHexStringLE()
+                    // if (LogContext.enableLog && GlobalConstants.DEBUG)
+                    // LogContext.log.e(LogTag.TAG_PT,
+                    // "ORI_VID[${receivedBytes.size}][${msg.isFinalFragment}]=$showDebugData")
 
                     val savedByteArray = totalFrameData.get()
                     var totalByteArray = ByteUtil.mergeBytes(savedByteArray, receivedBytes)
@@ -132,23 +138,26 @@ class EventBusBridgeClientActivity :
                         totalFrameData.set(ByteArray(0))
                         receivedByteBuf.release()
                     } else {
-                        // if (LogContext.enableLog) LogContext.log.d(TAG, "Found ContinuationWebSocketFrame.")
+                        // if (LogContext.enableLog) LogContext.log.d(TAG, "Found
+                        // ContinuationWebSocketFrame.")
                         receivedByteBuf.release()
                         return
                     }
 
                     LogContext.log.i(TAG, "totalByteArray=${totalByteArray.decodeToString()}")
 
-                    // TODO process your eventbus handler/replyHandler with address/replyAddress. For example:
+                    // TODO process your eventbus handler/replyHandler with address/replyAddress.
+                    // For example:
                     //   replyAddress?.let { replyAddress ->
-                    // //       LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing replyAddress...")
+                    // // LogContext.log.i(TAG, "ReplyAddress[$replyAddress] Processing
+                    // replyAddress...")
                     //       EventBus.processReplyHandler(replyAddress) { h ->
                     //           h.handle(totalFrameData)
                     //       }
                     //   }
                     //   address?.let { address ->
                     //       EventBus.processHandlers(address) { idx, h ->
-                    // //           LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
+                    // // LogContext.log.i(TAG, "Address[$address] Processing handler[$idx]...")
                     //           h.handle(totalFrameData)
                     //       }
                     //   }

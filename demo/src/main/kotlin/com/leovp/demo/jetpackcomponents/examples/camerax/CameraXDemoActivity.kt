@@ -52,14 +52,16 @@ class CameraXDemoActivity : CameraXActivity() {
             override fun onSavedImageUri(savedImage: CaptureImage.ImageUri?, exc: Exception?) {
                 LogContext.log.w(
                     ITAG,
-                    "onSavedImageUri uri=${savedImage?.fileUri} path=${savedImage?.fileUri?.path} Exc: $exc"
+                    "onSavedImageUri uri=${savedImage?.fileUri} " +
+                        "path=${savedImage?.fileUri?.path} Exc: $exc"
                 )
 
                 if (savedImage == null) return
 
                 // To verify the original bitmap orientation.
                 // val bmp = BitmapFactory.decodeFile(savedImage.fileUri.path!!)
-                // val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CameraX")
+                // val newFile = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                // "CameraX")
                 // bmp.writeToFile(File(newFile, "new.jpg"))
             }
 
@@ -74,7 +76,10 @@ class CameraXDemoActivity : CameraXActivity() {
                 )?.apply {
                     val oriOutFile = File(
                         getBaseDirString("Leo"),
-                        "${SimpleDateFormat(FILENAME, Locale.US).format(System.currentTimeMillis())}.jpg"
+                        SimpleDateFormat(
+                            FILENAME,
+                            Locale.US
+                        ).format(System.currentTimeMillis()) + ".jpg"
                     )
                     writeToFile(oriOutFile)
                     recycle()
@@ -82,13 +87,14 @@ class CameraXDemoActivity : CameraXActivity() {
                 }
 
                 //            val outUri: Uri? =
-                //                    getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
+                // getContentUriForFilePath(outFile.absolutePath, this@CameraXDemoActivity)
                 //            LogContext.log.i(ITAG, "outUri=$outUri")
                 //            outUri?.let { uri ->
-                //                setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
+                // setOrientation(uri, savedImage.rotationDegrees, this@CameraXDemoActivity)
                 //            }
 
-                //            ExifUtil.saveExif(outFile.absolutePath, savedImage.width, savedImage.height, savedImage)
+                // ExifUtil.saveExif(outFile.absolutePath, savedImage.width, savedImage.height,
+                // savedImage)
             }
         }
 
@@ -122,7 +128,8 @@ class CameraXDemoActivity : CameraXActivity() {
         //            null)?.use { cursor ->
         //            if (cursor.moveToNext()) {
         //                val mediaId: Long = cursor.getLong(0)
-        //                result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId)
+        // result = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        // mediaId)
         //            }
         //        }
         //        return result

@@ -7,7 +7,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDrawableAnimBinding
 import com.leovp.log.base.ITAG
 
-class DrawableAnimActivity : BaseDemonstrationActivity<ActivityDrawableAnimBinding>(R.layout.activity_drawable_anim) {
+class DrawableAnimActivity :
+    BaseDemonstrationActivity<ActivityDrawableAnimBinding>(R.layout.activity_drawable_anim) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityDrawableAnimBinding =
@@ -22,7 +23,8 @@ class DrawableAnimActivity : BaseDemonstrationActivity<ActivityDrawableAnimBindi
         binding.ivDrawableAnim.setBackgroundResource(R.drawable.drawable_anim_list)
 
         // Get the background, which has been compiled to an AnimationDrawable object.
-        val frameAnimation: AnimationDrawable = binding.ivDrawableAnim.background as AnimationDrawable
+        val frameAnimation: AnimationDrawable =
+            binding.ivDrawableAnim.background as AnimationDrawable
 
         // Start the animation (looped playback by default).
         frameAnimation.start()

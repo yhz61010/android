@@ -24,7 +24,10 @@ class StringUnitTest {
     @Test
     fun testString() {
         val string = "abcABC012"
-        assertArrayEquals(byteArrayOf(97, 98, 99, 65, 66, 67, 48, 49, 50), string.toAsciiByteArray())
+        assertArrayEquals(
+            byteArrayOf(97, 98, 99, 65, 66, 67, 48, 49, 50),
+            string.toAsciiByteArray()
+        )
 
         val hexString = "010203040506070809A0B1C2"
         assertArrayEquals(

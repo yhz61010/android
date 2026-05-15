@@ -35,14 +35,16 @@ import com.leovp.log.base.ITAG
  * <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
  * or
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
- * Each foreground app can scan four times in a 2-minute period. This allows for a burst of scans in a short time.
+ * Each foreground app can scan four times in a 2-minute period. This allows for a burst of scans in
+ * a short time.
  * All background apps combined can scan one time in a 30-minute period.
  *
  * On Android 10 besides Android 8.x permission, you also need to add following permission:
  * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
  * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
  * The same throttling limits from Android 9 apply.
- * There is a new developer option to toggle the throttling off for local testing (under Developer Options > Networking > Wi-Fi scan throttling).
+ * There is a new developer option to toggle the throttling off for local testing (under Developer
+ * Options > Networking > Wi-Fi scan throttling).
  */
 class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.activity_wifi) {
     override fun getTagName(): String = ITAG
@@ -55,7 +57,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
         @RequiresApi(Build.VERSION_CODES.M)
-        @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+        @RequiresPermission(
+            allOf = [
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_WIFI_STATE
+            ]
+        )
         override fun onReceive(context: Context, intent: Intent) {
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (success) {
@@ -66,7 +73,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         }
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initView()
@@ -76,7 +88,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         LogContext.log.e(ITAG, "current ssid=${wifi.getCurrentSsid()}")
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     private fun initData() {
         val previousScanResults: List<ScanResult>? = wifiManager.scanResults
         if (previousScanResults?.isEmpty() == true) {
@@ -143,7 +160,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         adapter?.clearAndAddList(mergedWifiList)
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     private fun scanFailure() {
         LogContext.log.w(tag, "scanFailure")
         toast("scanFailure")
@@ -158,14 +180,24 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
         unregisterReceiver(wifiScanReceiver)
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     fun onSetWifiClick(@Suppress("unused") view: View) {
         val ssid = binding.etWifiName.text.toString()
         val pwd = binding.etWifiPwd.text.toString()
         wifi.connectWifi(ssid, pwd)
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     fun onScanWifiClick(@Suppress("unused") view: View) {
         LogContext.log.w(tag, "Scan manually.")
         toast("Scan manually.")
@@ -180,7 +212,12 @@ class WifiActivity : BaseDemonstrationActivity<ActivityWifiBinding>(R.layout.act
      * https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
      */
     @Deprecated("WifiManager#startScan() was deprecated in API level 28(Android 9).")
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
+        ]
+    )
     private fun doScan() {
         // https://developer.android.com/guide/topics/connectivity/wifi-scan#wifi-scan-throttling
         @Suppress("DEPRECATION")

@@ -40,7 +40,8 @@ class DecoderVideoFileManager {
                 val height = format.getInteger(MediaFormat.KEY_HEIGHT)
                 val keyFrameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE)
                 val csd0 = format.getByteBuffer("csd-0")!!
-                // We must make a copy of that csd0 value from format. Or else the video will not be played.
+                // We must make a copy of that csd0 value from format. Or else the video will not be
+                // played.
                 val copiedCsd0 = csd0.duplicate()
 //                val csd1 = format.getByteBuffer("csd-1")!!
                 val csd0ByteArray = ByteArray(copiedCsd0.remaining())
@@ -53,7 +54,10 @@ class DecoderVideoFileManager {
 //                videoRawDataFile.write(csd1ByteArray)
                 videoWidth = width
                 videoHeight = height
-                LogContext.log.w(TAG, "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate")
+                LogContext.log.w(
+                    TAG,
+                    "mime=$mime width=$width height=$height keyFrameRate=$keyFrameRate"
+                )
                 if (mime.startsWith("video")) {
                     mediaExtractor.selectTrack(i)
                     // MediaFormat.MIMETYPE_VIDEO_AVC  MediaFormat.MIMETYPE_VIDEO_HEVC
@@ -93,7 +97,11 @@ class DecoderVideoFileManager {
             }
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            index: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 LogContext.log.d(TAG, "bufferInfo.presentationTime=${info.presentationTimeUs}")
                 mSpeedController.preRender(info.presentationTimeUs)

@@ -68,26 +68,32 @@ import com.leovp.log.LogContext
  *                    nal_unit_type 值为 16, BLA_W_LP 属于 IRAP picture (Check comments below)
  *                    nal_unit_type 值为 17, BLA_W_RADL 属于 IRAP picture (Check comments below)
  *                    nal_unit_type 值为 18, BLA_N_LP 属于 IRAP picture (Check comments below)
- * 00 00 00 01 26 01  nal_unit_type 值为 19，IDR_W_RADL 属于 IDR picture 语义为可能有 RADL 图像的 IDR 图像的 SS(Slice Segment) 编码数据
+ * 00 00 00 01 26 01 nal_unit_type 值为 19，IDR_W_RADL 属于 IDR picture 语义为可能有 RADL 图像的 IDR 图像的 SS(Slice
+ * Segment) 编码数据
  * 00 00 00 01 28 01  nal_unit_type 值为 20，IDR_N_LP 属于 IDR picture
  *                    nal_unit_type 值为 21, CRA_NUT 属于 RAP picture
  *
  * 00 00 00 01 02 01  nal_unit_type 值为 1，P 语义为被参考的后置图像，且非 TSA、非 STSA 的 SS(Slice Segment) 编码数据
  * ```
  *
- * According to some articles, NALU type from 0~9 indicates P frame(NOT verified), 16~23 indicates I frame(verified).
+ * According to some articles, NALU type from 0~9 indicates P frame(NOT verified), 16~23 indicates I
+ * frame(verified).
  *
  * BLA access unit: An access unit in which the coded picture is a BLA picture.
- * BLA picture: An IRAP picture for which each VCL NAL unit has nal_unit_type equal to BLA_W_LP, BLA_W_RADL, or BLA_N_LP.
+ * BLA picture: An IRAP picture for which each VCL NAL unit has nal_unit_type equal to BLA_W_LP,
+ * BLA_W_RADL, or BLA_N_LP.
  *
- * Informative note: An IRAP access unit may be an IDR access unit, a BLA access unit, or a CRA access unit.
+ * Informative note: An IRAP access unit may be an IDR access unit, a BLA access unit, or a CRA
+ * access unit.
  *
  * CRA access unit: An access unit in which the coded picture is a CRA picture.
  * CRA picture: A RAP picture for which each VCL NAL unit has nal_unit_type equal to CRA_NUT.
  * IDR access unit: An access unit in which the coded picture is an IDR picture.
- * IDR picture: A RAP picture for which each VCL NAL unit has nal_unit_type equal to IDR_W_RADL or IDR_N_LP.
+ * IDR picture: A RAP picture for which each VCL NAL unit has nal_unit_type equal to IDR_W_RADL or
+ * IDR_N_LP.
  * IRAP access unit: An access unit in which the coded picture is an IRAP picture.
- * IRAP picture: A coded picture for which each VCL NAL unit has nal_unit_type in the range of BLA_W_LP (16) to RSV_IRAP_VCL23 (23), inclusive.
+ * IRAP picture: A coded picture for which each VCL NAL unit has nal_unit_type in the range of
+ * BLA_W_LP (16) to RSV_IRAP_VCL23 (23), inclusive.
  * [Reference](https://datatracker.ietf.org/doc/html/rfc7798#page-16)
  *
  *
@@ -186,13 +192,16 @@ object H265Util {
     }
 
     /**
-     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+     * data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80
+     * ,
+     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,9
+     * 0,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned vps data contains the delimiter prefix 0,0,0,1
      */
@@ -201,13 +210,17 @@ object H265Util {
             null
         } else {
             try {
-                // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+                // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+                // data are in hexadecimal)
                 // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
                 // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
-                // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
+                // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B
+                // 2,
                 // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-                // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-                // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+                // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0
+                // ,2D,C6,C0,80,
+                // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3
+                // F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
                 for (i in 4 until data.size) {
                     if (data[i].toInt() == 0 &&
                         data[i + 1].toInt() == 0 &&
@@ -228,26 +241,32 @@ object H265Util {
     }
 
     /**
-     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+     * data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80
+     * ,
+     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,9
+     * 0,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned sps data contains the delimiter prefix 0,0,0,1
      */
     fun getSps(data: ByteArray): ByteArray? {
         if (!CodecUtil.findStartCode(data)) return null
         return try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+            // data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,
+            // C6,C0,80,
+            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6
+            // ,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             var startIndex = 0
             for (i in 3 until data.size) {
                 if (CodecUtil.findStartCode(data, i)) {
@@ -271,26 +290,32 @@ object H265Util {
     }
 
     /**
-     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+     * data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
-     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80
+     * ,
+     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,9
+     * 0,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned pps data contains the delimiter prefix 0,0,0,1
      */
     fun getPps(data: ByteArray): ByteArray? {
         if (!CodecUtil.findStartCode(data)) return null
         return try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+            // data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,
+            // C6,C0,80,
+            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6
+            // ,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             var startIndex = 0
             for (i in 3 until data.size) {
                 if (CodecUtil.findStartCode(data, i)) {
@@ -314,26 +339,32 @@ object H265Util {
     }
 
     /**
-     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+     * @param data The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+     * data are in hexadecimal)
      * Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
      * 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
      * 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
      * 0,0,0,1,44,1,C0,66,3C,E,C6,40
-     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+     * 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80
+     * ,
+     * 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,9
+     * 0,39,69,B4,B4,80,12,5E,C9,D
      *
      * @return The returned sei data contains the delimiter prefix 0,0,0,1
      */
     fun getSei(data: ByteArray): ByteArray? {
         if (!CodecUtil.findStartCode(data)) return null
         return try {
-            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All data are in hexadecimal)
+            // The following example contains NALU_TYPE_VPS, NALU_TYPE_SPS and NALU_TYPE_PPS(All
+            // data are in hexadecimal)
             // Example: 0,0,0,1,0x40,x,x,x,0,0,0,1,0x42,x,x,x,0,0,0,1,0x44,x,x,x,0,0,0,1,x,x,x
             // 0,0,0,1,40,1,C,1,FF,FF,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,2C,9,
             // 0,0,0,1,42,1,1,1,60,0,0,3,0,0,3,0,0,3,0,0,3,0,78,A0,4,62,0,FC,7C,BA,2D,24,B0,4B,B2,
             // 0,0,0,1,44,1,C0,66,3C,E,C6,40,
-            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,C6,C0,80,
-            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
+            // 0,0,0,1,4E,1,5,1A,47,56,4A,DC,5C,4C,43,3F,94,EF,C5,11,3C,D1,43,A8,3,EE,0,0,EE,2,0,2D,
+            // C6,C0,80,
+            // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3F,B6
+            // ,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
             var startIndex = 0
             for (i in 3 until data.size) {
                 if (CodecUtil.findStartCode(data, i)) {

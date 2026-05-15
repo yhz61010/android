@@ -15,7 +15,9 @@ internal object FloatViewManager {
         if (!windowMap.containsKey(config.tag)) {
             windowMap[config.tag] = FloatViewImpl(context, config)
         } else {
-            throw IllegalAccessError("Float view tag[${config.tag}] has already exist. Can't recreate it!")
+            throw IllegalAccessError(
+                "Float view tag[${config.tag}] has already exist. Can't recreate it!"
+            )
         }
     }
 

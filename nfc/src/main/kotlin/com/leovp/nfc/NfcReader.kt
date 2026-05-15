@@ -31,7 +31,8 @@ class NfcReader {
 
     @RequiresPermission(Manifest.permission.NFC)
     fun handleIntent(intent: Intent) {
-        val tag = intent.getParcelableExtraOrNull<Parcelable>(NfcAdapter.EXTRA_TAG) as? Tag ?: return
+        val tag =
+            intent.getParcelableExtraOrNull<Parcelable>(NfcAdapter.EXTRA_TAG) as? Tag ?: return
         i {
             this.tag = TAG
             message = "tag=$tag"
@@ -57,7 +58,8 @@ class NfcReader {
         try {
             ndef.connect()
             val message = ndef.ndefMessage
-            val payloads = message.records.joinToString("\n") { String(it.payload.drop(3).toByteArray()) }
+            val payloads =
+                message.records.joinToString("\n") { String(it.payload.drop(3).toByteArray()) }
             i {
                 this.tag = TAG
                 this.message = "NDEF 内容:\n$payloads"
@@ -84,7 +86,8 @@ class NfcReader {
                 val data = mfc.readBlock(block)
                 i {
                     this.tag = TAG
-                    message = "MifareClassic 数据: ${data.joinToString(" ") { it.toUByte().toString(16) }}"
+                    message =
+                        "MifareClassic 数据: ${data.joinToString(" ") { it.toUByte().toString(16) }}"
                     outputType = logTypeNfc
                 }
             } else {
@@ -133,7 +136,8 @@ class NfcReader {
             i {
                 this.tag = TAG
                 message =
-                    "NfcB tag connected: ${nfcB.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
+                    "NfcB tag connected: " +
+                    "${nfcB.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {
@@ -167,7 +171,9 @@ class NfcReader {
             // )
             i {
                 this.tag = TAG
-                message = "NfcF tag UID: ${nfcF.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
+                message =
+                    "NfcF tag UID: " +
+                    "${nfcF.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {

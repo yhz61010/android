@@ -66,7 +66,8 @@ object ScreenCapture {
         // ==================================================
         // ===== Only For H26x
         // ==================================================
-        fun setGoogleEncoder(useGoogleEncoder: Boolean) = apply { this.useGoogleEncoder = useGoogleEncoder }
+        fun setGoogleEncoder(useGoogleEncoder: Boolean) =
+            apply { this.useGoogleEncoder = useGoogleEncoder }
 
         // ==================================================
         // ===== Only For Image
@@ -80,12 +81,20 @@ object ScreenCapture {
         fun build(): ScreenProcessor {
             LogContext.log.i(
                 TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi captureType=$captureType " +
-                    "fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate " +
-                    "iFrameInterval=$iFrameInterval sampleSize=$sampleSize useGoogleEncoder=$useGoogleEncoder"
+                "encodeType=$encodeType width=$width height=$height dpi=$dpi " +
+                    "captureType=$captureType " +
+                    "fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode " +
+                    "keyFrameRate=$keyFrameRate " +
+                    "iFrameInterval=$iFrameInterval sampleSize=$sampleSize " +
+                    "useGoogleEncoder=$useGoogleEncoder"
             )
             return when (captureType) {
-                BY_IMAGE_2_H26X -> Screenshot2H26xStrategy.Builder(width, height, dpi, screenDataListener)
+                BY_IMAGE_2_H26X -> Screenshot2H26xStrategy.Builder(
+                    width,
+                    height,
+                    dpi,
+                    screenDataListener
+                )
                     .setEncodeType(encodeType)
                     .setFps(fps)
                     .setBitrate(bitrate)
@@ -118,7 +127,7 @@ object ScreenCapture {
                     screenDataListener
                 ).setFps(fps).build()
                 else -> throw IllegalAccessException("Not support strategy.")
-//                    ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
+// ScreenRecordX264Strategy.Builder(width, height, dpi, mediaProjection, screenDataListener)
 //                        .setFps(fps)
 //                        .setBitrate(bitrate)
 //                        .build()

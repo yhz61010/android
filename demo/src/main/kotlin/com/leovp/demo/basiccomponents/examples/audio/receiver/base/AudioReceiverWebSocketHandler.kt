@@ -15,7 +15,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame
  * Date: 20-11-10 上午10:15
  */
 @ChannelHandler.Sharable
-class AudioReceiverWebSocketHandler(private val netty: BaseNettyServer) : BaseServerChannelInboundHandler<Any>(netty) {
+class AudioReceiverWebSocketHandler(private val netty: BaseNettyServer) :
+    BaseServerChannelInboundHandler<Any>(netty) {
     override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
         val receivedByteBuf = (msg as WebSocketFrame).content().retain()
         // Data Length

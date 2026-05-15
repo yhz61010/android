@@ -46,8 +46,11 @@ object FileDocumentUtil {
      * </provider>
      * ```
      */
-    fun getFileUri(context: Context, file: File): Uri =
-        FileProvider.getUriForFile(context, "${context.applicationContext.packageName}.fileprovider", file)
+    fun getFileUri(context: Context, file: File): Uri = FileProvider.getUriForFile(
+        context,
+        "${context.applicationContext.packageName}.fileprovider",
+        file
+    )
 
     @SuppressLint("NewApi", "ObsoleteSdkInt")
     fun getFileRealPath(context: Context, uri: Uri): String? {
@@ -117,7 +120,9 @@ object FileDocumentUtil {
                 )
                 if (cursor != null && cursor.moveToFirst()) {
                     val fileName = cursor.getString(0)
-                    val path = Environment.getExternalStorageDirectory().toString() + "/Download/" + fileName
+                    val path =
+                        Environment.getExternalStorageDirectory()
+                            .toString() + "/Download/" + fileName
                     if (!TextUtils.isEmpty(path)) {
                         return path
                     }
@@ -301,32 +306,42 @@ object FileDocumentUtil {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
-    private fun isExternalStorageDocument(uri: Uri): Boolean = "com.android.externalstorage.documents" == uri.authority
+    private fun isExternalStorageDocument(uri: Uri): Boolean =
+        "com.android.externalstorage.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
-    private fun isDownloadsDocument(uri: Uri): Boolean = "com.android.providers.downloads.documents" == uri.authority
+    private fun isDownloadsDocument(uri: Uri): Boolean =
+        "com.android.providers.downloads.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
-    private fun isMediaDocument(uri: Uri): Boolean = "com.android.providers.media.documents" == uri.authority
+    private fun isMediaDocument(uri: Uri): Boolean =
+        "com.android.providers.media.documents" == uri.authority
 
     /**
      * @param uri The Uri to check.
      * @return Whether the Uri authority is Google Photos.
      */
-    private fun isGooglePhotosUri(uri: Uri): Boolean = "com.google.android.apps.photos.content" == uri.authority
+    private fun isGooglePhotosUri(uri: Uri): Boolean =
+        "com.google.android.apps.photos.content" == uri.authority
 
     fun isWhatsAppFile(uri: Uri): Boolean = "com.whatsapp.provider.media" == uri.authority
 
-    private fun isGoogleDriveUri(uri: Uri): Boolean = "com.google.android.apps.docs.storage" == uri.authority ||
-        "com.google.android.apps.docs.storage.legacy" == uri.authority
+    private fun isGoogleDriveUri(uri: Uri): Boolean =
+        "com.google.android.apps.docs.storage" == uri.authority ||
+            "com.google.android.apps.docs.storage.legacy" == uri.authority
 
-    private fun getDataColumn(context: Context, uri: Uri, selection: String?, selectionArgs: Array<String>?): String? {
+    private fun getDataColumn(
+        context: Context,
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<String>?
+    ): String? {
         // MediaStore.Images.Media.DATA
         // MediaStore.Images.Media._ID
         val column = MediaStore.Images.Media.DATA
@@ -343,7 +358,7 @@ object FileDocumentUtil {
     //    "com.leovp.androidbase.utils.file.FileDocumentUtils"))
     //    private fun getImagePath(ctx: Context, uri: Uri, selection: String?): String? {
     //        ctx.contentResolver.query(uri, null, selection, null, null)?.use {
-    //            if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
+    // if (it.moveToFirst()) return it.getString(it.getColumnIndex(MediaStore.Images.Media.DATA))
     //        }
     //        return null
     //    }
@@ -393,14 +408,14 @@ object FileDocumentUtil {
     //                val split = docId.split(":".toRegex()).toTypedArray()
     //                val type = split[0]
     //                if ("primary".equals(type, ignoreCase = true)) {
-    //                    return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+    // return Environment.getExternalStorageDirectory().toString() + "/" + split[1]
     //                }
     //
     //                // T O D O: handle non-primary volumes
     //            } else if (isDownloadsDocument(uri)) {
     //                val id = DocumentsContract.getDocumentId(uri)
     //                val contentUri = ContentUris.withAppendedId(
-    //                    Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
+    // Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
     //                )
     //                return getDataColumn(context, contentUri, null, null)
     //            } else if (isMediaDocument(uri)) {

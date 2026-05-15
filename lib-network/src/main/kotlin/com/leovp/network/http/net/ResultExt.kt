@@ -32,7 +32,8 @@ import kotlinx.coroutines.withContext
  *
  * Note that, this function is very useful when you wrap your http request block.
  *
- * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure] parameter will be:
+ * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure]
+ * parameter will be:
  * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
  * - For 500 response code, it is the [ResultServerException] instance.
  * - For JSON serialize exception, it is the [ResultConvertException] instance.

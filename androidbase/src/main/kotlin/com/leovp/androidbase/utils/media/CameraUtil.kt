@@ -119,7 +119,10 @@ object CameraUtil {
     fun handleImageAboveKitKat(ctx: Context, data: Intent?): List<String> {
         val selectedImage: MutableList<String> = ArrayList()
         data?.data?.let { url ->
-            FileDocumentUtil.getFileRealPath(ctx, url)?.let { imagePath -> selectedImage.add(imagePath) }
+            FileDocumentUtil.getFileRealPath(
+                ctx,
+                url
+            )?.let { imagePath -> selectedImage.add(imagePath) }
         }
         data?.clipData?.let {
             for (i in 0 until it.itemCount) {

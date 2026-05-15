@@ -33,12 +33,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
  * If the created [ViewModel] does not match the requested class, an [IllegalArgumentException]
  * exception is thrown.
  */
-fun <VM : ViewModel> viewModelProviderFactoryOf(create: () -> VM): ViewModelProvider.Factory = SimpleFactory(create)
+fun <VM : ViewModel> viewModelProviderFactoryOf(create: () -> VM): ViewModelProvider.Factory =
+    SimpleFactory(create)
 
 /**
  * This needs to be a named class currently to work around a compiler issue: b/163807311
  */
-private class SimpleFactory<VM : ViewModel>(private val create: () -> VM) : ViewModelProvider.Factory {
+private class SimpleFactory<VM : ViewModel>(private val create: () -> VM) :
+    ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val vm = create()
         if (modelClass.isInstance(vm)) {
@@ -81,7 +83,7 @@ private class SimpleFactory<VM : ViewModel>(private val create: () -> VM) : View
  *         val homeVM: HomeViewModel = viewModel(
  *             viewModelStoreOwner = backStackEntry,
  *             factory = HomeViewModel.Factory,
- *             extras = backStackEntry.defaultViewModelCreationExtras + MutableCreationExtras().apply {
+ * extras = backStackEntry.defaultViewModelCreationExtras + MutableCreationExtras().apply {
  *                 set(USE_CASE_KEY, UseCase(RepositoryImpl()))
  *             },
  *         )
@@ -136,7 +138,7 @@ inline fun <reified VM : ViewModel, reified Param> viewModelFactory(
  *         val homeVM: YourViewModel = viewModel(
  *             viewModelStoreOwner = backStackEntry,
  *             factory = YourViewModel.Factory,
- *             extras = backStackEntry.defaultViewModelCreationExtras + MutableCreationExtras().apply {
+ * extras = backStackEntry.defaultViewModelCreationExtras + MutableCreationExtras().apply {
  *                 set(USE_CASE_KEY, YourUseCase(YourRepositoryImpl()))
  *             },
  *         )
@@ -200,11 +202,21 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2> viewModelFac
  * )
  * ```
  */
-inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3> viewModelFactory(
+inline fun <
+    reified VM : ViewModel,
+    reified Param1,
+    reified Param2,
+    reified Param3
+    > viewModelFactory(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     key3: CreationExtras.Key<Param3>,
-    crossinline create: (savedStateHandle: SavedStateHandle, param1: Param1, param2: Param2, param3: Param3) -> VM,
+    crossinline create: (
+        savedStateHandle: SavedStateHandle,
+        param1: Param1,
+        param2: Param2,
+        param3: Param3
+    ) -> VM,
 ): ViewModelProvider.Factory = viewModelFactory {
     initializer {
         val savedStateHandle = createSavedStateHandle()
@@ -225,7 +237,13 @@ inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Para
  * @param key4 The nullable key to retrieve the parameter from [CreationExtras]
  * @param create Lambda to create the ViewModel with [SavedStateHandle] and the parameter
  */
-inline fun <reified VM : ViewModel, reified Param1, reified Param2, reified Param3, reified Param4> viewModelFactory(
+inline fun <
+    reified VM : ViewModel,
+    reified Param1,
+    reified Param2,
+    reified Param3,
+    reified Param4
+    > viewModelFactory(
     key1: CreationExtras.Key<Param1>,
     key2: CreationExtras.Key<Param2>,
     key3: CreationExtras.Key<Param3>,

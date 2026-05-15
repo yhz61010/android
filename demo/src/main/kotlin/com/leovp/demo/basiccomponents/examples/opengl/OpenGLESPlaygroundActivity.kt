@@ -20,7 +20,9 @@ import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 class OpenGLESPlaygroundActivity :
-    BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>(R.layout.activity_open_glesplayground) {
+    BaseDemonstrationActivity<ActivityOpenGlesplaygroundBinding>(
+        R.layout.activity_open_glesplayground
+    ) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityOpenGlesplaygroundBinding =

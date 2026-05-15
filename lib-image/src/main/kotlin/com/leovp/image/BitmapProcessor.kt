@@ -45,7 +45,13 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
     private external fun rotateBitmapCw90(handler: ByteBuffer)
     private external fun rotateBitmap180(handler: ByteBuffer)
 
-    private external fun cropBitmap(handler: ByteBuffer, left: Int, top: Int, right: Int, bottom: Int)
+    private external fun cropBitmap(
+        handler: ByteBuffer,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int
+    )
 
     private external fun scaleNNBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
     private external fun scaleBIBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
@@ -75,7 +81,11 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
         return bmp
     }
 
-    fun scaleBitmap(newWidth: Int, newHeight: Int, scaleMethod: ScaleMethod = ScaleMethod.NearestNeighbour) {
+    fun scaleBitmap(
+        newWidth: Int,
+        newHeight: Int,
+        scaleMethod: ScaleMethod = ScaleMethod.NearestNeighbour
+    ) {
         val innerHandler = bitmapByteBuffer ?: return
         when (scaleMethod) {
             ScaleMethod.BilinearInterpolation -> scaleBIBitmap(innerHandler, newWidth, newHeight)
@@ -114,7 +124,8 @@ class BitmapProcessor(bitmap: Bitmap) : Closeable {
     }
 
     /**
-     * To override finalize(), all you need to do is simply declare it, without using the override keyword.
+     * To override finalize(), all you need to do is simply declare it, without using the override
+     * keyword.
      *
      * https://kotlinlang.org/docs/java-interop.html#finalize
      */

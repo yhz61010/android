@@ -44,7 +44,11 @@ abstract class BaseMediaCodecAsynchronous(
             }.onFailure { it.printStackTrace() }
         }
 
-        override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
+        override fun onOutputBufferAvailable(
+            codec: MediaCodec,
+            index: Int,
+            info: MediaCodec.BufferInfo
+        ) {
             runCatching {
                 val outputBuffer: ByteBuffer? = codec.getOutputBuffer(index) // little endian
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
@@ -54,7 +58,9 @@ abstract class BaseMediaCodecAsynchronous(
                     // LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
                     // val copiedBuffer = it.copyAll()
                     // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
-                    //     "copiedBuffer ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()}")
+                    // "copiedBuffer
+                    // ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()
+                    // }")
                     // val outBytes = it.toByteArray()
                     when {
                         (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
@@ -63,7 +69,10 @@ abstract class BaseMediaCodecAsynchronous(
                         (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
                             onOutputData(it, info, isConfig = false, isKeyFrame = true)
 
-                        (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 -> onEndOfStream()
+                        (
+                            info.flags and
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            ) != 0 -> onEndOfStream()
                         else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
                     }
                     codec.releaseOutputBuffer(index, false)

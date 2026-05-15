@@ -10,7 +10,8 @@ object CrashHandler {
     private var defaultExceptionHandler: Thread.UncaughtExceptionHandler? = null
 
     fun initCrashHandler(customExceptionHandler: Thread.UncaughtExceptionHandler? = null) {
-        defaultExceptionHandler = customExceptionHandler ?: Thread.getDefaultUncaughtExceptionHandler()
+        defaultExceptionHandler =
+            customExceptionHandler ?: Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler(defaultExceptionHandler)
     }
 }

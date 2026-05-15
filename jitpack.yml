@@ -1,6 +1,11 @@
 jdk:
   - openjdk17
 
+before_install:
+  - if ! command -v git-lfs >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y git-lfs; fi
+  - git lfs install --local
+  - git lfs pull
+
 #before_install:
 #  - yes | sdkmanager --install "ndk;21.1.6352462" "cmake;3.18.1"
 

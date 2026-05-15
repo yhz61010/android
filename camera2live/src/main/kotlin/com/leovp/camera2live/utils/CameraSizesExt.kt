@@ -36,20 +36,27 @@ internal fun getDisplaySmartSize(ctx: Context): SmartSize {
 }
 
 /** Returns a [SmartSize] object for the given [Size] */
-internal fun getDisplaySmartSize(designSize: Size): SmartSize = SmartSize(designSize.width, designSize.height)
+internal fun getDisplaySmartSize(designSize: Size): SmartSize =
+    SmartSize(designSize.width, designSize.height)
 
 /**
  * Returns the largest available PREVIEW size. For more information, see:
  * [CameraDevice](https://d.android.com/reference/android/hardware/camera2/CameraDevice) and
- * [StreamConfigurationMap](https://developer.android.com/reference/android/hardware/camera2/params/StreamConfigurationMap)
+ * [StreamConfigurationMap](https://developer.android.com/reference/android/hardware/camera2/params/
+ * StreamConfigurationMap)
  *
  * @param targetClass The following list is generally usable for outputs:
- * - [android.media.ImageReader] - Recommended for image processing or streaming to external resources (such as a file or network)
+ * - [android.media.ImageReader] - Recommended for image processing or streaming to external
+ * resources (such as a file or network)
  * - [android.media.MediaRecorder] - Recommended for recording video (simple to use)
- * - [android.media.MediaCodec] - Recommended for recording video (more complicated to use, with more flexibility)
- * - [android.renderscript.Allocation] - Recommended for image processing with {@link android.renderscript RenderScript}
- * - [android.view.SurfaceHolder] - Recommended for low-power camera preview with {@link android.view.SurfaceView}
- * - [android.graphics.SurfaceTexture] - Recommended for OpenGL-accelerated preview processing or compositing with
+ * - [android.media.MediaCodec] - Recommended for recording video (more complicated to use, with
+ * more flexibility)
+ * - [android.renderscript.Allocation] - Recommended for image processing with {@link
+ * android.renderscript RenderScript}
+ * - [android.view.SurfaceHolder] - Recommended for low-power camera preview with {@link
+ * android.view.SurfaceView}
+ * - [android.graphics.SurfaceTexture] - Recommended for OpenGL-accelerated preview processing or
+ * compositing with
  * - [android.view.TextureView]
  * @param format an image format from either `ImageFormat` or `PixelFormat`
  */
@@ -71,7 +78,11 @@ fun <T> getPreviewOutputSize(
     } else {
         require(config.isOutputSupportedFor(format))
     }
-    val allSizes = if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
+    val allSizes = if (format == null) {
+        config.getOutputSizes(targetClass)
+    } else {
+        config.getOutputSizes(format)
+    }
 
     // Get available sizes and sort them by area from largest to smallest
     val validSizes = allSizes.sortedWith(compareBy { it.height * it.width })

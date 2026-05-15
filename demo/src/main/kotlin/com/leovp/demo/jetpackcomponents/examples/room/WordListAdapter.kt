@@ -14,7 +14,8 @@ import com.leovp.demo.jetpackcomponents.examples.room.entity.Word
  * Author: Michael Leo
  * Date: 2020/9/4 下午1:47
  */
-class WordListAdapter internal constructor(context: Context) : RecyclerView.Adapter<WordListAdapter.WordViewHolder>() {
+class WordListAdapter internal constructor(context: Context) :
+    RecyclerView.Adapter<WordListAdapter.WordViewHolder>() {
     var onItemClickListener: OnItemClickListener? = null
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)

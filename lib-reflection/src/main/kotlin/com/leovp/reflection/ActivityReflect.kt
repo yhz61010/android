@@ -129,14 +129,16 @@ object ActivityReflect {
         return list
     }
 
-    private fun getActivityThread(): Any = runCatching { getActivityThreadInActivityThreadStaticField() }.getOrElse {
-        getActivityThreadInActivityThreadStaticMethod()
-    }
+    private fun getActivityThread(): Any =
+        runCatching { getActivityThreadInActivityThreadStaticField() }.getOrElse {
+            getActivityThreadInActivityThreadStaticMethod()
+        }
 
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
     private fun getActivityThreadInActivityThreadStaticField(): Any = try {
         val activityThreadClass = Class.forName("android.app.ActivityThread")
-        val sCurrentActivityThreadField: Field = activityThreadClass.getDeclaredField("sCurrentActivityThread")
+        val sCurrentActivityThreadField: Field =
+            activityThreadClass.getDeclaredField("sCurrentActivityThread")
         sCurrentActivityThreadField.isAccessible = true
         sCurrentActivityThreadField.get(null)
     } catch (e: Exception) {

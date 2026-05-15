@@ -36,7 +36,8 @@ open class BaseHttpRequest {
         } else {
             httpClientBuilder.hostnameVerifier(SslUtils.customVerifier)
             requireNotNull(SslUtils.certificateInputStream) {
-                "For HTTPS, the certification must not be null. Did you forget to set SslUtils.certificateInputStream?"
+                "For HTTPS, the certification must not be null. Did you forget to set " +
+                    "SslUtils.certificateInputStream?"
             }
             val sslContext = SslUtils.getSSLContext(SslUtils.certificateInputStream!!)
             httpClientBuilder.sslSocketFactory(sslContext.first.socketFactory, sslContext.second)
@@ -94,21 +95,29 @@ open class BaseHttpRequest {
         private const val DEFAULT_CONNECTION_TIMEOUT_IN_MS = 30_000L
 
         /**
-         * The read timeout starts to pay attention once the connection is established and then watches
-         * how fast (or slow) every byte gets transferred. If the time between two bytes gets larger than
-         * the read timeout, it'll count the request as failed. The counter resets after every incoming byte.
+         * The read timeout starts to pay attention once the connection is established and then
+         * watches
+         * how fast (or slow) every byte gets transferred. If the time between two bytes gets larger
+         * than
+         * the read timeout, it'll count the request as failed. The counter resets after every
+         * incoming byte.
          * Thus, if your response has 120 bytes and it takes five seconds between each byte,
-         * the read timeout will not be triggered and the response will take ten minutes to be completed.
+         * the read timeout will not be triggered and the response will take ten minutes to be
+         * completed.
          *
          *
-         * Again, this is not only limited to the server. Slow read times can be caused by the Internet connection as well.
+         * Again, this is not only limited to the server. Slow read times can be caused by the
+         * Internet connection as well.
          */
         private const val DEFAULT_READ_TIMEOUT_IN_MS = 30_000L
 
         /**
-         * The write timeout is the opposite direction of the read timeout. It checks how fast you can
-         * send bytes to the server. Of course, it also gets reset after every successful byte. However,
-         * if sending a single byte takes longer than the configured write timeout limit, Retrofit will
+         * The write timeout is the opposite direction of the read timeout. It checks how fast you
+         * can
+         * send bytes to the server. Of course, it also gets reset after every successful byte.
+         * However,
+         * if sending a single byte takes longer than the configured write timeout limit, Retrofit
+         * will
          * count the request as failed.
          */
         private const val DEFAULT_WRITE_TIMEOUT_IN_MS = 30_000L

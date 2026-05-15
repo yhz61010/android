@@ -26,7 +26,12 @@ object PcmToWavUtil {
      * @return Wave data
      */
     @Suppress("unused")
-    fun pcmToWav(pcmData: ByteArray, numChannels: Int, sampleRate: Int, bitPerSample: Int): ByteArray {
+    fun pcmToWav(
+        pcmData: ByteArray,
+        numChannels: Int,
+        sampleRate: Int,
+        bitPerSample: Int
+    ): ByteArray {
         val wavData = ByteArray(pcmData.size + 44)
         val header =
             wavHeader(pcmData.size, numChannels, sampleRate, bitPerSample)
@@ -109,7 +114,7 @@ object PcmToWavUtil {
     }
 
     /**
-     * @param srcPcmFile    raw PCM data limit of file size for wave file: < 2^(2*4) - 36 bytes (~4GB)
+     * @param srcPcmFile raw PCM data limit of file size for wave file: < 2^(2*4) - 36 bytes (~4GB)
      * @param dstWavFile    file to encode to in wav format
      * @param channelCount  number of channels: 1 for mono, 2 for stereo, etc.
      * @param sampleRate    sample rate of PCM audio
@@ -121,7 +126,13 @@ object PcmToWavUtil {
      */
     @Suppress("unused")
     @Throws(IOException::class)
-    fun pcmToWav(srcPcmFile: File, dstWavFile: File, channelCount: Int, sampleRate: Int, bitsPerSample: Int) {
+    fun pcmToWav(
+        srcPcmFile: File,
+        dstWavFile: File,
+        channelCount: Int,
+        sampleRate: Int,
+        bitsPerSample: Int
+    ) {
         val inputSize = srcPcmFile.length().toInt()
         FileOutputStream(dstWavFile).use { encoded ->
             // WAVE RIFF header
@@ -185,6 +196,9 @@ object PcmToWavUtil {
     }
 
     @Throws(IOException::class)
-    private fun copy(source: InputStream, output: OutputStream, bufferSize: Int = TRANSFER_BUFFER_SIZE) =
-        source.copyTo(output, bufferSize)
+    private fun copy(
+        source: InputStream,
+        output: OutputStream,
+        bufferSize: Int = TRANSFER_BUFFER_SIZE
+    ) = source.copyTo(output, bufferSize)
 }

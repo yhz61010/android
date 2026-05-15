@@ -11,7 +11,9 @@ import com.leovp.log.base.ITAG
  * implementation "androidx.navigation:navigation-ui-ktx:$navVersion"
  * ```
  *
- * [Ensure type-safety by using Safe Args](https://developer.android.com/guide/navigation/navigation-getting-started#ensure_type-safety_by_using_safe_args)
+ * [Ensure type-safety by using Safe
+ * Args](https://developer.android.com/guide/navigation/navigation-getting-started#ensure_type-safet
+ * y_by_using_safe_args)
  *
  * Add the following `classpath` in **TOP** level `build.gradle` file.
  * ```kotlin
@@ -39,7 +41,8 @@ class NavigationMainActivity : BaseActivity<ActivityNavigationMainBinding>() {
     //    override fun onCreate(savedInstanceState: Bundle?) {
     //        super.onCreate(savedInstanceState)
     //
-    // //        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+    // // val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as
+    // NavHostFragment
     // //        val navController = navHostFragment.navController
     //        // setupBottomNavMenu(navController)
     //

@@ -59,13 +59,18 @@ class AudioPlayer(
                     type,
                     audioDecoderInfo,
                     object : OutputCallback {
-                        override fun output(out: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                        override fun output(
+                            out: ByteArray,
+                            isConfig: Boolean,
+                            isKeyFrame: Boolean
+                        ) {
                             val st = SystemClock.elapsedRealtime()
                             audioTrackPlayer.write(out)
                             if (BuildConfig.DEBUG) {
                                 LogContext.log.d(
                                     TAG,
-                                    "Play audio[${out.size}] cost=${SystemClock.elapsedRealtime() - st}"
+                                    "Play audio[${out.size}] " +
+                                        "cost=${SystemClock.elapsedRealtime() - st}"
                                 )
                             }
                         }
@@ -162,7 +167,8 @@ class AudioPlayer(
         opusStreamPlayer?.stopPlaying()
     }
 
-    fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
+    fun computePresentationTimeUs(frameIndex: Long) =
+        frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
     fun getAudioTimeUs(): Long = runCatching {
         val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition

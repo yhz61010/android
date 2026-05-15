@@ -71,46 +71,55 @@ class ReflectManagerKotlinTest {
         assertEquals("Get a PrivateConstructor with paramA=100 paramB=LeoVP.", pcClass3.toString())
 
         val pcClass4: Any = ReflectManager
-            .reflect("com.leovp.reflection.testclass.PrivateConstructor", ClassLoader.getSystemClassLoader())
+            .reflect(
+                "com.leovp.reflection.testclass.PrivateConstructor",
+                ClassLoader.getSystemClassLoader()
+            )
             .newInstance(123, "Baidu")
             .get()
         assertEquals("Get a PrivateConstructor with paramA=123 paramB=Baidu.", pcClass4.toString())
 
-        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(PrivateConstructor::class.java).newInstance(1).get()
-        }
+        val exception1 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(PrivateConstructor::class.java).newInstance(1).get()
+            }
         assertIs<ReflectManager.ReflectException>(exception1)
 
-        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager
-                .reflect("com.leovp.reflection.testclass.PrivateConstructor")
-                .newInstance(1)
-                .get()
-        }
+        val exception2 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager
+                    .reflect("com.leovp.reflection.testclass.PrivateConstructor")
+                    .newInstance(1)
+                    .get()
+            }
         assertIs<ReflectManager.ReflectException>(exception2)
 
-        val exception3 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance().get()
-        }
+        val exception3 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance().get()
+            }
         assertIs<ReflectManager.ReflectException>(exception3)
     }
 
     @Test
     fun newInstanceNoArgument() {
-        val exception = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(Creature::class).newInstance(1, 2, 3, 4, 5).get()
-        }
+        val exception =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(Creature::class).newInstance(1, 2, 3, 4, 5).get()
+            }
         assertIs<ReflectManager.ReflectException>(exception)
 
-        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance().get()
-        }
+        val exception2 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance().get()
+            }
         assertIs<ReflectManager.ReflectException>(exception2)
 
         val rfltCreature1: Creature = ReflectManager.reflect(Creature::class).newInstance().get()
         assertEquals("Get a new creature.", rfltCreature1.toString())
 
-        val rfltCreature2 = ReflectManager.reflect(Creature::class.java).newInstance().get<Creature>()
+        val rfltCreature2 =
+            ReflectManager.reflect(Creature::class.java).newInstance().get<Creature>()
         assertEquals("Get a new creature.", rfltCreature2.toString())
 
         val rfltCreature3: Any = ReflectManager
@@ -131,15 +140,24 @@ class ReflectManagerKotlinTest {
 
     @Test
     fun newInstanceWithArgument() {
-        val exception = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(Person::class).newInstance(1, 2, 3).get()
-        }
+        val exception =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(Person::class).newInstance(1, 2, 3).get()
+            }
         assertIs<ReflectManager.ReflectException>(exception)
 
-        val rfltPerson1: Person = ReflectManager.reflect(Person::class).newInstance("Man1", 'M', 38).get()
+        val rfltPerson1: Person = ReflectManager.reflect(Person::class).newInstance(
+            "Man1",
+            'M',
+            38
+        ).get()
         assertEquals("Man1[M] is 38 years old.", rfltPerson1.toString())
 
-        val rfltPerson2 = ReflectManager.reflect(Person::class.java).newInstance("Man2", 'M', 28).get<Person>()
+        val rfltPerson2 = ReflectManager.reflect(Person::class.java).newInstance(
+            "Man2",
+            'M',
+            28
+        ).get<Person>()
         assertEquals("Man2[M] is 28 years old.", rfltPerson2.toString())
 
         val rfltPerson3: Any = ReflectManager
@@ -154,21 +172,35 @@ class ReflectManagerKotlinTest {
             .get()
         assertEquals("Woman2[F] is 21 years old.", rfltPerson3Case2.toString())
 
-        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance(1, 2, 3).get()
-        }
+        val exception2 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect("com.leovp.reflection.DummyClass").newInstance(1, 2, 3).get()
+            }
         assertIs<ReflectManager.ReflectException>(exception2)
 
-        val rfltPerson4: Person = ReflectManager.reflect(rfltPerson1).newInstance("Woman2", 'F', 19).get()
+        val rfltPerson4: Person = ReflectManager.reflect(rfltPerson1).newInstance(
+            "Woman2",
+            'F',
+            19
+        ).get()
         assertEquals("Woman2[F] is 19 years old.", rfltPerson4.toString())
 
-        val tc1: TestClass = ReflectManager.reflect(TestClass::class).newInstance(1, "str2", "str3", 2).get()
+        val tc1: TestClass = ReflectManager.reflect(TestClass::class).newInstance(
+            1,
+            "str2",
+            "str3",
+            2
+        ).get()
         assertEquals("1 str2 str3 2", tc1.toString())
 
         val tc2: TestClass = ReflectManager.reflect(TestClass::class).newInstance(11, "str33").get()
         assertEquals("11 -2 str33 0", tc2.toString())
 
-        val reflectedPerson: Person = ReflectManager.reflect(Person::class).newInstance("Jim", 'M', 23).get()
+        val reflectedPerson: Person = ReflectManager.reflect(Person::class).newInstance(
+            "Jim",
+            'M',
+            23
+        ).get()
         val employee: Employee = ReflectManager
             .reflect(Employee::class)
             .newInstance("e2003241067", reflectedPerson)
@@ -177,7 +209,8 @@ class ReflectManagerKotlinTest {
             .property("comment", "No comment.")
             .get()
         assertEquals(
-            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 departure. Salary: 3500.",
+            "[Leo Group] Employee(Jim[M] is 23 years old.) with ID e2003241067 works in 1000 " +
+                "departure. Salary: 3500.",
             employee.toString()
         )
         assertEquals("No comment.", employee.comment)
@@ -185,12 +218,14 @@ class ReflectManagerKotlinTest {
 
     @Test
     fun newInstanceDataClass() {
-        val exception = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(DataClassOneArg::class).newInstance(1, 2, 3).get()
-        }
+        val exception =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(DataClassOneArg::class).newInstance(1, 2, 3).get()
+            }
         assertIs<ReflectManager.ReflectException>(exception)
 
-        val dataClass1: DataClassOneArg = ReflectManager.reflect(DataClassOneArg::class).newInstance("DC1").get()
+        val dataClass1: DataClassOneArg =
+            ReflectManager.reflect(DataClassOneArg::class).newInstance("DC1").get()
         assertEquals("DataClassOneArg(arg1=DC1)", dataClass1.toString())
 
         val dataClass2: Any = ReflectManager
@@ -201,7 +236,10 @@ class ReflectManagerKotlinTest {
         assertEquals("DataClassTwoArg(arg1=DC2, num=20021008)", dataClass2.toString())
 
         val dataClass3: Any = ReflectManager
-            .reflect("com.leovp.reflection.testclass.DataClassTwoArg", ClassLoader.getSystemClassLoader())
+            .reflect(
+                "com.leovp.reflection.testclass.DataClassTwoArg",
+                ClassLoader.getSystemClassLoader()
+            )
             .newInstance("DC3", 20221013)
             .get()
         println("dataClass2=${dataClass3::class.java}")
@@ -221,22 +259,29 @@ class ReflectManagerKotlinTest {
         ReflectManager.reflect(privateConstructor).property("paramB", "World")
         assertEquals("World", ReflectManager.reflect(privateConstructor).property("paramB").get())
 
-        val exceptionGet = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(Employee::class).property("param_dummy").get()
-        }
+        val exceptionGet =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(Employee::class).property("param_dummy").get()
+            }
         assertIs<ReflectManager.ReflectException>(exceptionGet)
 
-        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(privateConstructor).property("param_dummy", "123").get()
-        }
+        val exception1 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(privateConstructor).property("param_dummy", "123").get()
+            }
         assertIs<ReflectManager.ReflectException>(exception1)
 
-        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(privateConstructor).property("paramA", "123").get()
-        }
+        val exception2 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(privateConstructor).property("paramA", "123").get()
+            }
         assertIs<ReflectManager.ReflectException>(exception2)
 
-        val person: Person = ReflectManager.reflect(Person::class).newInstance("Michael", 'M', 22).get()
+        val person: Person = ReflectManager.reflect(Person::class).newInstance(
+            "Michael",
+            'M',
+            22
+        ).get()
         ReflectManager.reflect(person).property("name", "Leo")
         assertEquals("Leo", ReflectManager.reflect(person).property("name").get())
         ReflectManager.reflect(person).property("sex", '-')
@@ -268,9 +313,10 @@ class ReflectManagerKotlinTest {
         employeeRM.property("privateValPropForBaseClass", 8888)
         assertEquals(8888, employeeRM.property("privateValPropForBaseClass").get())
 
-        val exceptionFinal = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(Employee::class).property("sex", 4).get()
-        }
+        val exceptionFinal =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(Employee::class).property("sex", 4).get()
+            }
         assertIs<ReflectManager.ReflectException>(exceptionFinal)
     }
 
@@ -288,9 +334,10 @@ class ReflectManagerKotlinTest {
             .newInstance("argument1").property("arg1").get<String>()
         assertEquals("argument1", dcArg1)
 
-        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(DataClassOneArg::class).property("param_dummy").get()
-        }
+        val exception1 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(DataClassOneArg::class).property("param_dummy").get()
+            }
         assertIs<ReflectManager.ReflectException>(exception1)
 
         val rmReflectManager: ReflectManager = ReflectManager.reflect(DataClassTwoArg::class)
@@ -304,30 +351,36 @@ class ReflectManagerKotlinTest {
         // TODO Try to fix me.
         // https://stackoverflow.com/a/14102192/1685062
         // ReflectManager.reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL", "abc")
-        // assertEquals("abc", ReflectManager.reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL").get())
+        // assertEquals("abc",
+        // ReflectManager.reflect(DataClassOneArg::class).property("PRIVATE_CONST_VAL").get())
 
         // TODO Try to fix me.
         // https://stackoverflow.com/a/14102192/1685062
         // ReflectManager.reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL", "ABC123")
-        // assertEquals("ABC123", ReflectManager.reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL").get())
+        // assertEquals("ABC123",
+        // ReflectManager.reflect(DataClassOneArg::class).property("PUBLIC_CONST_VAL").get())
 
-        val dcOneArg: DataClassOneArg = ReflectManager.reflect(DataClassOneArg::class).newInstance("xyz").get()
+        val dcOneArg: DataClassOneArg =
+            ReflectManager.reflect(DataClassOneArg::class).newInstance("xyz").get()
         ReflectManager.reflect(dcOneArg).property("arg1", "ag1")
         assertEquals("ag1", ReflectManager.reflect(dcOneArg).property("arg1").get())
 
-        val exception1 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(DataClassOneArg::class).property("param_dummy", 123)
-        }
+        val exception1 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(DataClassOneArg::class).property("param_dummy", 123)
+            }
         assertIs<ReflectManager.ReflectException>(exception1)
 
-        val exception2 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(DataClassOneArg::class).property("argument1", 123)
-        }
+        val exception2 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(DataClassOneArg::class).property("argument1", 123)
+            }
         assertIs<ReflectManager.ReflectException>(exception2)
 
-        val exception3 = assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
-            ReflectManager.reflect(dcOneArg).property("arg1", 123)
-        }
+        val exception3 =
+            assertThrows<ReflectManager.ReflectException>("Should throw ReflectException") {
+                ReflectManager.reflect(dcOneArg).property("arg1", 123)
+            }
         assertIs<ReflectManager.ReflectException>(exception3)
 
         val dcTwoArg: DataClassTwoArg = ReflectManager
@@ -364,7 +417,8 @@ class ReflectManagerKotlinTest {
             .newInstance("e00000001", DEPT_ID_DEV, person)
             .method("stopWorking", 20221008100549).get()
         assertEquals(
-            "Michael do [Michael[e00000001] stops working at 20221008100549.] with exceptResult: -10.",
+            "Michael do [Michael[e00000001] stops working at 20221008100549.] with exceptResult: " +
+                "-10.",
             stopWorkingResult
         )
 

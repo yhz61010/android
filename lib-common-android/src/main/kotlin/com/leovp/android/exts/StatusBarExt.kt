@@ -32,7 +32,8 @@ fun Activity.statusBarColor(@ColorInt color: Int) {
 }
 
 /** Set status bar color by resource id. */
-fun Activity.statusBarColorRes(@ColorRes colorRes: Int) = statusBarColor(ContextCompat.getColor(this, colorRes))
+fun Activity.statusBarColorRes(@ColorRes colorRes: Int) =
+    statusBarColor(ContextCompat.getColor(this, colorRes))
 
 // </editor-fold>
 
@@ -40,7 +41,8 @@ fun Activity.statusBarColorRes(@ColorRes colorRes: Int) = statusBarColor(Context
 
 /**
  * Use the background color of view as status bar's.
- * @param v The background color of status bar according to this view. This method doesn't work if no background of view.
+ * @param v The background color of status bar according to this view. This method doesn't work if
+ * no background of view.
  * @param darkMode Whether to use dark mode or not.
  */
 fun Activity.immersive(v: View, darkMode: Boolean? = null) {
@@ -81,8 +83,10 @@ fun Activity.immersive(@ColorInt color: Int = Color.TRANSPARENT, darkMode: Boole
     // Window insets represent the areas of the window that are not covered by UI elements,
     // such as the status bar or navigation bar.
     //
-    // In order to deal with immersive modes, we have to make a request to update the view's layout or behavior
-    // to accommodate any changes in the window insets, where the view needs to be aware of the system window areas
+    // In order to deal with immersive modes, we have to make a request to update the view's layout
+    // or behavior
+    // to accommodate any changes in the window insets, where the view needs to be aware of the
+    // system window areas
     // to ensure proper rendering and interaction.
     ViewCompat.requestApplyInsets(window.decorView)
 
@@ -102,7 +106,8 @@ fun Activity.immersiveExit(darkMode: Boolean? = null) {
 
     // if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) { // < Android 11
     //     window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-    //     window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    // window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE and
+    // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     // }
 
     val typedArray = obtainStyledAttributes(intArrayOf(android.R.attr.statusBarColor))
@@ -113,8 +118,10 @@ fun Activity.immersiveExit(darkMode: Boolean? = null) {
     // Window insets represent the areas of the window that are not covered by UI elements,
     // such as the status bar or navigation bar.
     //
-    // In order to deal with immersive modes, we have to make a request to update the view's layout or behavior
-    // to accommodate any changes in the window insets, where the view needs to be aware of the system window areas
+    // In order to deal with immersive modes, we have to make a request to update the view's layout
+    // or behavior
+    // to accommodate any changes in the window insets, where the view needs to be aware of the
+    // system window areas
     // to ensure proper rendering and interaction.
     ViewCompat.requestApplyInsets(window.decorView)
 
@@ -142,27 +149,31 @@ fun Activity.statusBarDarkMode(darkMode: Boolean = true) {
     val controller = WindowCompat.getInsetsController(window, window.decorView)
     controller.isAppearanceLightStatusBars = !darkMode
     // controller.isAppearanceLightNavigationBars = !darkMode
-    // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    // controller.systemBarsBehavior =
+    // WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
     // when {
     //     Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
     //         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
     //             controller.isAppearanceLightStatusBars = !darkMode
     //             controller.isAppearanceLightNavigationBars = !darkMode
-    //             // controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    // // controller.systemBarsBehavior =
+    // WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     //         }
     //     }
     //     else -> {
     //         var systemUiVisibility = window.decorView.systemUiVisibility
     //         systemUiVisibility = if (darkMode) {
     //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    //                 systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+    // systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+    // View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
     //             } else {
     //                 systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
     //             }
     //         } else {
     //             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    //                 systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+    // systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
+    // View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
     //             } else {
     //                 systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
     //             }
@@ -178,7 +189,8 @@ fun Activity.statusBarDarkMode(darkMode: Boolean = true) {
 
 /**
  * Increase the view _paddingTop_ by status bar height.
- * Do NOT support _RelativeLayout_ due to the displaying problem about _centerInParent_-like attributes.
+ * Do NOT support _RelativeLayout_ due to the displaying problem about _centerInParent_-like
+ * attributes.
  *
  * @param remove If remove if true, decrease the view _paddingTop_ by status bar height.
  * If current view's _paddingTop_ is less than the status bar's height,

@@ -22,7 +22,8 @@ class TouchHelper(private val touchListener: TouchListener) {
             //            pointerCount = GlobalConstants.MAX_TOUCH_POINTS
             return true
         }
-        //        if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "M=${event.actionMasked} pointerCount=$pointerCount actionIndex=$actionIndex")
+        // if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "M=${event.actionMasked}
+        // pointerCount=$pointerCount actionIndex=$actionIndex")
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 val actionIndex = event.actionIndex
@@ -70,7 +71,8 @@ class TouchHelper(private val touchListener: TouchListener) {
     private fun processTouchUp(event: MotionEvent) {
         //        if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(
         //            TAG,
-        //            "processTouchUp count=${event.pointerCount} actionIndex: ${event.actionIndex} ${event.x.roundToInt()} ${event.y.roundToInt()}"
+        // "processTouchUp count=${event.pointerCount} actionIndex: ${event.actionIndex}
+        // ${event.x.roundToInt()} ${event.y.roundToInt()}"
         //        )
         runCatching {
             val activePointerId: Int = event.getPointerId(event.actionIndex)
@@ -105,7 +107,8 @@ class TouchHelper(private val touchListener: TouchListener) {
 
     private fun processTouchDown(event: MotionEvent, activePointerId: Int, activePressure: Float) {
         //        if (GlobalConstants.OUTPUT_LOG) {
-        //            if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "processTouchDown activePointerId: $activePointerId ${event.x.roundToInt()} ${event.y.roundToInt()}")
+        // if (GlobalConstants.OUTPUT_LOG) LogContext.log.d(TAG, "processTouchDown activePointerId:
+        // $activePointerId ${event.x.roundToInt()} ${event.y.roundToInt()}")
         //        }
         runCatching {
             touchListener.onEvent(
@@ -123,6 +126,13 @@ class TouchHelper(private val touchListener: TouchListener) {
         /**
          * @param type MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP
          */
-        fun onEvent(type: Int, activePointerId: Int, x: Int, y: Int, activePressure: Int, timeDelta: Long)
+        fun onEvent(
+            type: Int,
+            activePointerId: Int,
+            x: Int,
+            y: Int,
+            activePressure: Int,
+            timeDelta: Long
+        )
     }
 }

@@ -34,13 +34,19 @@ fun Context.getBaseDirString(baseFolderName: String = "", type: String? = null):
         if (!it.exists()) it.mkdirs()
     }
 
-fun Context.createFile(fileName: String, type: String? = null): File = File(this.getExternalFilesDir(type), fileName)
+fun Context.createFile(fileName: String, type: String? = null): File = File(
+    this.getExternalFilesDir(type),
+    fileName
+)
 
 fun Context.createFile(baseFolderName: String, fileName: String, type: String? = null): File =
     File(getBaseDirString(baseFolderName, type), fileName)
 
-fun Context.createTmpFile(suffix: String?, type: String? = null): File =
-    this.createFile("tmp", "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}", type)
+fun Context.createTmpFile(suffix: String?, type: String? = null): File = this.createFile(
+    "tmp",
+    "${System.currentTimeMillis()}${if (suffix.isNullOrBlank()) "" else suffix}",
+    type
+)
 
 @Deprecated(
     "Alternatives such as Context.getExternalFilesDir(String), " +
@@ -59,5 +65,8 @@ fun fileExists(filePath: String): Boolean = File(filePath).exists()
  */
 fun Context.createImageFile(extension: String): File {
     val sdf = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
-    return File(this.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "IMG_${sdf.format(Date())}.$extension")
+    return File(
+        this.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+        "IMG_${sdf.format(Date())}.$extension"
+    )
 }

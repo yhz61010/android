@@ -32,7 +32,8 @@ object ApplicationManager {
         @SuppressLint("PrivateApi")
         val activityThread = Class.forName("android.app.ActivityThread")
         val at = activityThread.getMethod("currentActivityThread").invoke(null)
-        val app = activityThread.getMethod("getApplication").invoke(at) ?: error("u should init first")
+        val app =
+            activityThread.getMethod("getApplication").invoke(at) ?: error("u should init first")
         init(app as Application)
         return app
     }

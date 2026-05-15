@@ -10,8 +10,10 @@ import com.leovp.audio.base.iters.OutputCallback
  * Author: Michael Leo
  * Date: 20-11-14 上午11:03
  */
-class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallback: OutputCallback,) :
-    AudioEncoderWrapper {
+class AacEncoderWrapper(
+    encoderInfo: AudioEncoderInfo,
+    private val outputCallback: OutputCallback,
+) : AudioEncoderWrapper {
 
     private var encoder = AacEncoder(
         sampleRate = encoderInfo.sampleRate,
@@ -19,7 +21,11 @@ class AacEncoderWrapper(encoderInfo: AudioEncoderInfo, private val outputCallbac
         bitrate = encoderInfo.bitrate,
         audioFormat = encoderInfo.audioFormat,
         callback = object : IEncodeCallback {
-            override fun onEncoded(encodedBytes: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+            override fun onEncoded(
+                encodedBytes: ByteArray,
+                isConfig: Boolean,
+                isKeyFrame: Boolean
+            ) {
                 outputCallback.output(encodedBytes, isConfig, isKeyFrame)
             }
         }

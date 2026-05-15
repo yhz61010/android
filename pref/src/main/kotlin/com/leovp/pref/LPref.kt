@@ -69,5 +69,6 @@ class LPref(ctx: Context, name: String = ctx.packageName) : AbsPref() {
 
     override fun getString(key: String, default: String?): String? = pref.getString(key, default)
 
-    override fun getStringSet(key: String, default: Set<String>?): Set<String>? = pref.getStringSet(key, default)
+    override fun getStringSet(key: String, default: Set<String>?): Set<String>? =
+        pref.getStringSet(key, default)
 }

@@ -92,7 +92,10 @@ abstract class AbsPref :
     }
 
     /** Get object */
-    inline fun <reified T> getObject(key: String): T? = getString(key, null)?.toObject(object : TypeToken<T>() {}.type)
+    inline fun <reified T> getObject(key: String): T? = getString(
+        key,
+        null
+    )?.toObject(object : TypeToken<T>() {}.type)
 
     // -----
 

@@ -19,7 +19,8 @@ import com.leovp.screencapture.screenrecord.base.ScreenProcessor
  * Author: Michael Leo
  * Date: 21-3-16 上午11:37
  */
-class ScreenRecordRawBmpStrategy private constructor(private val builder: Builder) : ScreenProcessor {
+class ScreenRecordRawBmpStrategy private constructor(private val builder: Builder) :
+    ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
 
@@ -56,7 +57,8 @@ class ScreenRecordRawBmpStrategy private constructor(private val builder: Builde
         ).apply {
             setOnImageAvailableListener({ reader ->
                 runCatching {
-                    val image: Image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+                    val image: Image =
+                        reader.acquireLatestImage() ?: return@setOnImageAvailableListener
                     val bitmap = image.createBitmap()
                     image.close()
                     builder.screenDataListener.onDataUpdate(bitmap)

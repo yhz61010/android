@@ -101,7 +101,13 @@ class L11DynamicPointRenderer(@Suppress("unused") private val ctx: Context) : Ba
         )
         vertexData.position(0)
 
-        GLES20.glUniform4f(uColorLocation, random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0f)
+        GLES20.glUniform4f(
+            uColorLocation,
+            random.nextFloat(),
+            random.nextFloat(),
+            random.nextFloat(),
+            1.0f
+        )
 
         // 使用数组绘制图形：1.绘制的图形类型；2.从顶点数组读取的起点；3.从顶点数组读取的顶点个数
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, POINT_DATA.size / TWO_DIMEN_POS_COMPONENT_COUNT)

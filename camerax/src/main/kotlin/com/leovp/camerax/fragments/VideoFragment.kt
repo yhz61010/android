@@ -98,7 +98,13 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     // Selector showing which flash mode is selected (on, off)
     private var flashMode by Delegates.observable(ImageCapture.FLASH_MODE_OFF) { _, _, new ->
         val flashDrawable =
-            if (new == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off
+            if (new ==
+                ImageCapture.FLASH_MODE_ON
+            ) {
+                R.drawable.ic_flash_on
+            } else {
+                R.drawable.ic_flash_off
+            }
         binding.btnFlash.setImageResource(flashDrawable)
     }
 
@@ -157,7 +163,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     private suspend fun setUpCamera() {
         configCamera()
         touchListener = object : CameraXTouchListener {
-            override fun onStartFocusing(x: Float, y: Float) = binding.focusView.startFocus(x.toInt(), y.toInt())
+            override fun onStartFocusing(x: Float, y: Float) =
+                binding.focusView.startFocus(x.toInt(), y.toInt())
 
             override fun onFocusSuccess() = binding.focusView.focusSuccess()
 
@@ -189,7 +196,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * the main thread.
      */
     private fun bindCaptureUseCase(enableUI: Boolean = true) {
-        //        showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*, binding.btnRatio*/)
+        // showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*,
+        // binding.btnRatio*/)
 
         val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
@@ -198,16 +206,21 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         //        //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
         //
         //        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        //        val characteristics: CameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+        // val characteristics: CameraCharacteristics =
+        // cameraManager.getCameraCharacteristics(cameraId)
         //        val tempSupportedSize: SmartSize? = when (selectedRatio) {
-        //            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "16:9" }
-        //            CameraRatio.R1v1  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "1:1" }
-        //            CameraRatio.R4v3  -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it) == "4:3" }
+        // CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it)
+        // == "16:9" }
+        // CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it)
+        // == "1:1" }
+        // CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull { getRatio(it)
+        // == "4:3" }
         //            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
-        //                (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
+        // (it.long * 1.0 / it.short).round(1) == (metrics.height * 1.0 / metrics.width).round(1)
         //            }
         //        }
-        //        val supportedSize = tempSupportedSize ?: throw IllegalStateException("Unknown camera size $tempSupportedSize")
+        // val supportedSize = tempSupportedSize ?: throw IllegalStateException("Unknown camera size
+        // $tempSupportedSize")
         //        val targetSize = Size(supportedSize.short, supportedSize.long)
 
         // create the user required QualitySelector (video resolution): we know this is
@@ -231,7 +244,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         incPreviewGridBinding.viewFinder.updateLayoutParams<ConstraintLayout.LayoutParams> {
             val orientation = this@VideoFragment.resources.configuration.orientation
             val ratioString =
-                selectedQuality.getAspectRatioString((orientation == Configuration.ORIENTATION_PORTRAIT))
+                selectedQuality.getAspectRatioString(
+                    (
+                        orientation ==
+                            Configuration.ORIENTATION_PORTRAIT
+                        )
+                )
             when (ratioString) {
                 "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
                 "V,3:4" -> updateRatioUI(CameraRatio.R4v3, incPreviewGridBinding.viewFinder)
@@ -266,7 +284,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         videoCapture = VideoCapture.withOutput(recorder)
 
         val camProvider = cameraProvider
-        checkNotNull(camProvider) { "Camera initialization failed. Did you call configCamera() method?" }
+        checkNotNull(camProvider) {
+            "Camera initialization failed. Did you call configCamera() method?"
+        }
         try {
             // Must unbind the use-cases before rebinding them
             camProvider.unbindAll()
@@ -309,7 +329,10 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
      * to VideoRecordEvent for the current recording status.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    private fun startRecording(saveInGallery: Boolean = true, baseFolderName: String = BASE_FOLDER_NAME) {
+    private fun startRecording(
+        saveInGallery: Boolean = true,
+        baseFolderName: String = BASE_FOLDER_NAME
+    ) {
         val outFileName = createFile(outputVideoDirectory, FILENAME, VIDEO_EXTENSION)
 
         // Configure Recorder and Start recording to the mediaStoreOutput.
@@ -365,10 +388,18 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                     val camera = provider.bindToLifecycle(viewLifecycleOwner, camSelector)
                     val supportedQualities = Recorder.getVideoCapabilities(camera.cameraInfo)
                         .getSupportedQualities(DynamicRange.SDR)
-                    val camName = if (camSelector == CameraSelector.DEFAULT_FRONT_CAMERA) "Front" else "Back"
+                    val camName = if (camSelector ==
+                        CameraSelector.DEFAULT_FRONT_CAMERA
+                    ) {
+                        "Front"
+                    } else {
+                        "Back"
+                    }
                     LogContext.log.w(
                         logTag,
-                        "$camName camera supported qualities=${supportedQualities.map { it.getNameString() }}"
+                        "$camName camera supported qualities=${supportedQualities.map {
+                            it.getNameString()
+                        }}"
                     )
                     supportedQualities.filter { quality ->
                         listOf(Quality.UHD, Quality.FHD, Quality.HD).contains(quality)
@@ -403,7 +434,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // React to user touching the capture button
         binding.btnRecordVideo.apply {
             setOnClickListener {
-                if (!this@VideoFragment::recordingState.isInitialized || recordingState is VideoRecordEvent.Finalize) {
+                if (!this@VideoFragment::recordingState.isInitialized ||
+                    recordingState is VideoRecordEvent.Finalize
+                ) {
                     LogContext.log.i(logTag, "Start recording...")
                     enableUI(false) // Our eventListener will turn on the Recording UI.
                     startRecording()
@@ -420,7 +453,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
 
         val hasGrid = prefs.getBoolean(KEY_GRID, false)
-        binding.btnGrid.setImageResource(if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off)
+        binding.btnGrid.setImageResource(
+            if (hasGrid) R.drawable.ic_grid_on else R.drawable.ic_grid_off
+        )
         binding.btnGrid.setOnSingleClickListener { toggleGrid() }
         binding.btnMicrophone.setImageResource(
             if (audioEnabled) {
@@ -454,7 +489,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                         val filePath = fileRealPath.substringBeforeLast('/')
                         LogContext.log.i(
                             logTag,
-                            "Click Gallery button with uri=$it | real file path=$fileRealPath | real path=$filePath"
+                            "Click Gallery button with uri=$it | real file path=$fileRealPath | " +
+                                "real path=$filePath"
                         )
                         navController.navigate(
                             VideoFragmentDirections.actionVideoFragmentToGalleryFragment(filePath)
@@ -467,7 +503,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
                             "Click Gallery button with file=${it.absolutePath}"
                         )
                         navController.navigate(
-                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(it.absolutePath)
+                            VideoFragmentDirections.actionVideoFragmentToGalleryFragment(
+                                it.absolutePath
+                            )
                         )
                     }
                 }
@@ -509,7 +547,8 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     ) { flag ->
         LogContext.log.w(
             logTag,
-            "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | Turn ${if (flag) "on" else "off"} flash"
+            "Has Flash: ${camera?.cameraInfo?.hasFlashUnit()} | " +
+                "Turn ${if (flag) "on" else "off"} flash"
         )
         torchEnabled = flag
         flashMode = if (flag) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF

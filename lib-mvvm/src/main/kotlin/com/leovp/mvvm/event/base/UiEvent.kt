@@ -36,11 +36,15 @@ interface UiEvent {
     ) : UiEvent
 
     @Keep
-    data class NavigateString(val route: String, val arguments: String? = null, val extras: NavExtras? = null,) :
-        UiEvent
+    data class NavigateString(
+        val route: String,
+        val arguments: String? = null,
+        val extras: NavExtras? = null,
+    ) : UiEvent
 
     @Keep
-    data class NavigateRouteBuilder<T>(val route: T, val builder: NavOptionsBuilder.() -> Unit) : UiEvent
+    data class NavigateRouteBuilder<T>(val route: T, val builder: NavOptionsBuilder.() -> Unit) :
+        UiEvent
 
     @Keep
     data class Navigate<T>(

@@ -24,7 +24,9 @@ import org.greenrobot.eventbus.EventBus
  * - If you set language in `zh`, you should create `values-zh` folder in `values` folder.
  */
 class ChangeAppLanguageActivity :
-    BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>(R.layout.activity_change_app_language) {
+    BaseDemonstrationActivity<ActivityChangeAppLanguageBinding>(
+        R.layout.activity_change_app_language
+    ) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityChangeAppLanguageBinding =
@@ -42,11 +44,13 @@ class ChangeAppLanguageActivity :
         LogContext.log.i(
             tag,
             "Default language: ${langUtil.getDefaultDisplayLanguage()}" +
-                "[${langUtil.getDefaultLanguageCountryCode()}][${langUtil.getDefaultLanguageFullCode()}]"
+                "[${langUtil.getDefaultLanguageCountryCode()}]" +
+                "[${langUtil.getDefaultLanguageFullCode()}]"
         )
         LogContext.log.i(
             tag,
-            "Device locale: ${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]"
+            "Device locale: " +
+                "${langUtil.getDeviceLocale()}[${langUtil.getDeviceLanguageCountryCode()}]"
         )
         LogContext.log.i(tag, "========================================================")
 

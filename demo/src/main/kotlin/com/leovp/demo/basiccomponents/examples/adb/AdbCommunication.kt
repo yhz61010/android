@@ -13,7 +13,9 @@ import kotlin.concurrent.thread
  * https://juejin.cn/post/6844903746464399367
  */
 class AdbCommunication :
-    BaseDemonstrationActivity<ActivityAdbCommunicationBinding>(R.layout.activity_adb_communication) {
+    BaseDemonstrationActivity<ActivityAdbCommunicationBinding>(
+        R.layout.activity_adb_communication
+    ) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAdbCommunicationBinding =

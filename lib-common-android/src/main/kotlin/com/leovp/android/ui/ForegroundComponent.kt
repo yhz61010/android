@@ -54,7 +54,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * }
  * ```
  */
-class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) : ActivityLifecycleCallbacks {
+class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) :
+    ActivityLifecycleCallbacks {
     @Suppress("WeakerAccess")
     var isForeground = false
         private set
@@ -97,14 +98,14 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             //                try {
             //                    it.onBecameForeground()
             //                } catch (e: Exception) {
-            //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+            // LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
             //                }
             //            }
             for (listener in listeners) {
                 try {
                     listener.onBecameForeground()
                 } catch (_: Exception) {
-                    //                    LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
+                    // LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
                     Log.e(TAG, "onActivityResumed() exception")
                 }
             }
@@ -129,14 +130,15 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                     //                    try {
                     //                        it.onBecameBackground()
                     //                    } catch (e: Exception) {
-                    //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                    // LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
                     //                    }
                     //                }
                     for (lis in listeners) {
                         try {
                             lis.onBecameBackground()
                         } catch (e: Exception) {
-                            //                        LogContext.log.e(TAG, "onBecameBackground threw exception! msg=${e.message}")
+                            // LogContext.log.e(TAG, "onBecameBackground threw exception!
+                            // msg=${e.message}")
                             e.printStackTrace()
                         }
                     }
@@ -179,7 +181,10 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
          * @param application The application object
          * @return an initialised Foreground instance
          */
-        fun init(application: Application, becameBackgroundDelay: Long = CHECK_DELAY): ForegroundComponent {
+        fun init(
+            application: Application,
+            becameBackgroundDelay: Long = CHECK_DELAY
+        ): ForegroundComponent {
             if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
                     if (instance == null) {
@@ -193,7 +198,8 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
 
         fun get(): ForegroundComponent {
             checkNotNull(instance) {
-                "ForegroundComponent is not initialised - invoke at least once with parameterised init/get"
+                "ForegroundComponent is not initialised - invoke at least once with " +
+                    "parameterised init/get"
             }
             return instance!!
         }

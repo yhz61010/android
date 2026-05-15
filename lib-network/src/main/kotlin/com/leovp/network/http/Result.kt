@@ -69,10 +69,11 @@ fun <T> Result<T>.exceptionOrNull(): ResultException? = when {
     else -> null
 }
 
-fun <T> Result<T>.exception(): ResultException = when (val err: ResultException? = this.exceptionOrNull()) {
-    null -> error("No exception!")
-    else -> err
-}
+fun <T> Result<T>.exception(): ResultException =
+    when (val err: ResultException? = this.exceptionOrNull()) {
+        null -> error("No exception!")
+        else -> err
+    }
 
 inline fun <T> Result<T>.onSuccess(action: (value: T) -> Unit): Result<T> {
     if (isSuccess) action((this as Result.Success<T>).data)
@@ -84,8 +85,10 @@ inline fun <T> Result<T>.onFailure(action: (exception: ResultException) -> Unit)
     return this
 }
 
-inline fun <T, R> Result<T>.fold(onSuccess: (value: T) -> R, onFailure: (exception: ResultException) -> R): R =
-    when (val exception = exceptionOrNull()) {
-        null -> onSuccess((this as Result.Success<T>).data)
-        else -> onFailure(exception)
-    }
+inline fun <T, R> Result<T>.fold(
+    onSuccess: (value: T) -> R,
+    onFailure: (exception: ResultException) -> R
+): R = when (val exception = exceptionOrNull()) {
+    null -> onSuccess((this as Result.Success<T>).data)
+    else -> onFailure(exception)
+}

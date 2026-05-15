@@ -14,7 +14,10 @@ internal class OppoDisplayCutout : DisplayCutout {
 
     override fun fillDisplayCutout(activity: Activity) = Unit
 
-    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
+    override fun cutoutAreaRect(
+        activity: Activity,
+        callback: DisplayCutout.CutoutAreaRectCallback
+    ) {
         runCatching {
             val notchPosition = notchPosition
             if (!TextUtils.isEmpty(notchPosition)) {
@@ -50,7 +53,8 @@ internal class OppoDisplayCutout : DisplayCutout {
         /**
          * Get notch position
          *
-         * @return The result is like "0,0:104,72" which means the top left position and bottom right position
+         * @return The result is like "0,0:104,72" which means the top left position and bottom
+         * right position
          */
         private val notchPosition = DeviceProp.getSystemProperty("ro.oppo.screen.heteromorphism")
     }

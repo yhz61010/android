@@ -36,7 +36,8 @@ class AudioTrackPlayer(
         private const val TAG = "AudioTrackPlayer"
     }
 
-    private val audioManager: AudioManager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val audioManager: AudioManager =
+        ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val audioTrack: AudioTrack
 
     init {
@@ -47,7 +48,8 @@ class AudioTrackPlayer(
         ) * minPlayBufferSizeRatio
         LogContext.log.w(
             TAG,
-            "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio minBufferSize=$minBufferSize"
+            "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio " +
+                "minBufferSize=$minBufferSize"
         )
         // val sessionId = audioManager.generateAudioSessionId()
         val audioAttributesBuilder = AudioAttributes.Builder()
@@ -66,7 +68,8 @@ class AudioTrackPlayer(
             .build()
         // If buffer size is not insufficient, it will crash when you release it.
         // Please check [AudioReceiver#stopServer]
-        // audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode, sessionId)
+        // audioTrack = AudioTrack(audioAttributesBuilder.build(), audioFormat, minBufferSize, mode,
+        // sessionId)
         audioTrack = AudioTrack(
             audioAttributesBuilder.build(),
             audioFormat,
@@ -93,7 +96,8 @@ class AudioTrackPlayer(
     }
 
     /**
-     * @return zero or the positive number of bytes that were written, or error codes will be returned.
+     * @return zero or the positive number of bytes that were written, or error codes will be
+     * returned.
      * See [AudioTrack.write] for more details.
      */
     fun write(pcmBytes: ByteArray): Int {
@@ -177,7 +181,13 @@ class AudioTrackPlayer(
         }
         pause()
         LogContext.log.w(TAG, "stop()")
-        runCatching { if (audioTrack.state == STATE_INITIALIZED) audioTrack.stop() }.onFailure { it.printStackTrace() }
+        runCatching {
+            if (
+                audioTrack.state == STATE_INITIALIZED
+            ) {
+                audioTrack.stop()
+            }
+        }.onFailure { it.printStackTrace() }
     }
 
     fun release() {

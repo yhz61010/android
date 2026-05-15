@@ -49,12 +49,15 @@ fun Bitmap.toBytes(): ByteArray {
 /**
  * Convert ARGB bitmap bytes to Bitmap.
  */
-fun ByteArray.toBitmapFromBytes(width: Int, height: Int, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
-    runCatching {
-        Bitmap.createBitmap(width, height, config).also {
-            it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
-        }
-    }.getOrNull()
+fun ByteArray.toBitmapFromBytes(
+    width: Int,
+    height: Int,
+    config: Bitmap.Config = Bitmap.Config.ARGB_8888
+): Bitmap? = runCatching {
+    Bitmap.createBitmap(width, height, config).also {
+        it.copyPixelsFromBuffer(ByteBuffer.wrap(this))
+    }
+}.getOrNull()
 
 fun Drawable.getBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? {
     if (this is BitmapDrawable) {
@@ -111,7 +114,8 @@ fun Bitmap.compressBitmap(
 }
 
 /**
- * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in memory.
+ * Bitmap.compress() method will only reduce the bitmap file size. Not the bitmap size loaded in
+ * memory.
  */
 fun Bitmap.writeToFile(
     outputFile: File,
@@ -125,7 +129,8 @@ fun Bitmap.writeToFile(
     }
 }
 
-fun File?.getBitmap(): Bitmap? = if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
+fun File?.getBitmap(): Bitmap? =
+    if (this == null) null else BitmapFactory.decodeFile(this.absolutePath)
 
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
@@ -154,7 +159,12 @@ fun Bitmap.flipVertical(x: Float = width / 2f, y: Float = height / 2f): Bitmap {
  * @param x The center x position of image.
  * @param y The center y position of image.
  */
-fun Bitmap.flip(horizontal: Boolean, vertical: Boolean, x: Float = width / 2f, y: Float = height / 2f): Bitmap {
+fun Bitmap.flip(
+    horizontal: Boolean,
+    vertical: Boolean,
+    x: Float = width / 2f,
+    y: Float = height / 2f
+): Bitmap {
     val matrix = Matrix().apply {
         postScale(if (horizontal) -1f else 1f, if (vertical) -1f else 1f, x, y)
     }

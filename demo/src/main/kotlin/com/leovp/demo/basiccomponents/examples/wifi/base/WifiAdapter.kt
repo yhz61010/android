@@ -17,36 +17,55 @@ import com.leovp.demo.databinding.RecyclerviewWifiItemBinding
  * Author: Michael Leo
  * Date: 21-3-6 下午3:59
  */
-class WifiAdapter(private val currentSsid: String?) : RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
+class WifiAdapter(private val currentSsid: String?) :
+    RecyclerView.Adapter<WifiAdapter.ItemViewHolder>() {
     private lateinit var binding: RecyclerviewWifiItemBinding
 
     private val dataArray: MutableList<WifiModel> = mutableListOf()
     var onItemClickListener: OnItemClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        binding = RecyclerviewWifiItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        binding =
+            RecyclerviewWifiItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ItemViewHolder(binding.root)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpositio
+        // n-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.bindingAdapterPosition]
-        //        LogContext.log.d(ITAG, "Current item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
+        // LogContext.log.d(ITAG, "Current
+        // item[${holder.adapterPosition}]=${currentItem.toJsonString()}")
         currentItem.index = holder.bindingAdapterPosition + 1
         holder.bind(currentItem)
         val cardView = holder.view.findViewById<CardView>(R.id.cardView)
         if (currentSsid == currentItem.name) {
-            cardView.setCardBackgroundColor(ContextCompat.getColor(holder.view.context, R.color.purple_200))
+            cardView.setCardBackgroundColor(
+                ContextCompat.getColor(
+                    holder.view.context,
+                    R.color.purple_200
+                )
+            )
             val innerViewGroup = cardView.children.first() as ViewGroup
-            innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.WHITE) }
+            innerViewGroup.children.filter {
+                it is TextView
+            }.forEach { (it as TextView).setTextColor(Color.WHITE) }
         } else {
-            cardView.setCardBackgroundColor(ContextCompat.getColor(holder.view.context, android.R.color.white))
+            cardView.setCardBackgroundColor(
+                ContextCompat.getColor(
+                    holder.view.context,
+                    android.R.color.white
+                )
+            )
             val innerViewGroup = cardView.children.first() as ViewGroup
-            innerViewGroup.children.filter { it is TextView }.forEach { (it as TextView).setTextColor(Color.BLACK) }
+            innerViewGroup.children.filter {
+                it is TextView
+            }.forEach { (it as TextView).setTextColor(Color.BLACK) }
         }
         holder.itemView.setOnClickListener {
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(currentItem, holder.layoutPosition)
         }
     }

@@ -34,12 +34,14 @@ import kotlinx.coroutines.withContext
  * Note that, this function is very useful when you wrap your http request block.
  *
  * In your custom http implementation, you must throw specific exception which is listed below:
- * - For 4xx response code or converting exception, you should throw [ApiResponseException] instance.
+ * - For 4xx response code or converting exception, you should throw [ApiResponseException]
+ * instance.
  * - For 500 response code, you should throw [ApiServerException] instance.
  * - For JSON serialize exception, you should throw [ApiSerializationException] instance.
  * - For unexpected exception, you should throw [ApiException] instance.
  *
- * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure] parameter will be:
+ * If the [com.leovp.network.http.Result] is failure, the [com.leovp.network.http.Result.Failure]
+ * parameter will be:
  * - For 4xx response code or converting exception, it is the [ResultResponseException] instance.
  * - For 500 response code, it is the [ResultServerException] instance.
  * - For JSON serialize exception, it is the [ResultConvertException] instance.

@@ -79,27 +79,35 @@ abstract class BaseNettyServer protected constructor(
             override fun initChannel(socketChannel: SocketChannel) {
                 with(socketChannel.pipeline()) {
                     if (isWebSocket) {
-                        //   if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
+                        // if ((webSocketPath?.scheme ?: "").startsWith("wss", ignoreCase = true)) {
                         //       LogContext.log.w(tag, "Working in wss mode")
-                        //       val sslCtx: SslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+                        // val sslCtx: SslContext =
+                        // SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.IN
+                        // STANCE).build()
                         //       // FIXME
-                        // //   pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host, port))
+                        // // pipeline.addFirst(sslCtx.newHandler(serverSocketChannel.alloc(), host,
+                        // port))
                         //   }
                         addLast(HttpServerCodec())
                         addLast(HttpObjectAggregator(65536))
-                        /** A [ChannelHandler] that adds support for writing a large data stream asynchronously
-                         * neither spending a lot of memory nor getting [OutOfMemoryError]. */
+                        /**
+                         * A [ChannelHandler] that adds support for writing a large data stream
+                         * asynchronously neither spending a lot of memory nor getting
+                         * [OutOfMemoryError].
+                         */
                         addLast(ChunkedWriteHandler())
                         // FIXME If add this, the server can not receive client message.
                         //                        addLast(WebSocketServerCompressionHandler())
                         addLast(WebSocketServerProtocolHandler(webSocketPath))
                     } else {
-                        //                        addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
+                        // addLast(DelimiterBasedFrameDecoder(65535, *Delimiters.lineDelimiter()))
                         //                        addLast(StringDecoder())
                         //                        addLast(StringEncoder())
                     }
                     addLastToPipeline(this)
-                    defaultServerInboundHandler?.let { addLast("default-server-inbound-handler", it) }
+                    defaultServerInboundHandler?.let {
+                        addLast("default-server-inbound-handler", it)
+                    }
                 }
             }
         }
@@ -123,30 +131,46 @@ abstract class BaseNettyServer protected constructor(
             connectState.set(ServerConnectStatus.STARTED)
             LogContext.log.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
-            // After running this line below, the process will stuck there and waiting client connection
+            // After running this line below, the process will stuck there and waiting client
+            // connection
             serverChannel.closeFuture().sync()
             // When serverChannel.close be executed, the process will continue to run.
             LogContext.log.i(tag, "===== Stopping server... =====")
         } catch (e: RejectedExecutionException) {
             LogContext.log.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
-            LogContext.log.e(tag, "Netty server had already been released. You must re-initialize it again.")
+            LogContext.log.e(
+                tag,
+                "Netty server had already been released. You must re-initialize it again."
+            )
             connectState.set(ServerConnectStatus.FAILED)
-            connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED, e.message)
+            connectionListener.onStartFailed(
+                this,
+                ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED,
+                e.message
+            )
         } catch (e: Exception) {
             connectState.set(ServerConnectStatus.FAILED)
-            connectionListener.onStartFailed(this, ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR, e.message)
+            connectionListener.onStartFailed(
+                this,
+                ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR,
+                e.message
+            )
         }
     }
 
     /**
-     * Stop and release server using **syncUninterruptibly** method.(Full release will cost almost 4s.) So you'd better NOT call this method in main thread.
+     * Stop and release server using **syncUninterruptibly** method.(Full release will cost almost
+     * 4s.) So you'd better NOT call this method in main thread.
      *
-     * Once you call this method, you can not start server again simply by calling [startServer] because of the Server Netty object will be released.
+     * Once you call this method, you can not start server again simply by calling [startServer]
+     * because of the Server Netty object will be released.
      * If you want to start server again, you must recreate the Server Netty object.
      */
     fun stopServer(): Boolean {
         LogContext.log.w(tag, "===== stopServer() current state=${connectState.get().name} =====")
-        if (!::serverChannel.isInitialized || ServerConnectStatus.UNINITIALIZED == connectState.get()) {
+        if (!::serverChannel.isInitialized ||
+            ServerConnectStatus.UNINITIALIZED == connectState.get()
+        ) {
             LogContext.log.w(tag, "Already released or not initialized")
             return false
         }
@@ -184,12 +208,18 @@ abstract class BaseNettyServer protected constructor(
 
     // ================================================
 
-    private fun isValidExecuteCommandEnv(clientChannel: Channel, cmdTag: String, cmd: Any?): Boolean {
+    private fun isValidExecuteCommandEnv(
+        clientChannel: Channel,
+        cmdTag: String,
+        cmd: Any?
+    ): Boolean {
         if (cmd == null) {
             LogContext.log.e(cmdTag, "The command is null. Stop processing.")
             return false
         }
-        require(cmd is String || cmd is ByteArray) { "$cmdTag: Command must be either String or ByteArray." }
+        require(cmd is String || cmd is ByteArray) {
+            "$cmdTag: Command must be either String or ByteArray."
+        }
         return if (!clientChannel.isActive) {
             LogContext.log.e(cmdTag, "Client channel is not active. Can not send command.")
             false
@@ -229,7 +259,11 @@ abstract class BaseNettyServer protected constructor(
                 bytesCmd = null
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.length}]"
-                    LogContext.log.i(cmdTag, if (showContent) "$cmdMsg=$cmd" else cmdMsg, fullOutput = fullOutput)
+                    LogContext.log.i(
+                        cmdTag,
+                        if (showContent) "$cmdMsg=$cmd" else cmdMsg,
+                        fullOutput = fullOutput
+                    )
                 }
             }
 
@@ -240,15 +274,33 @@ abstract class BaseNettyServer protected constructor(
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
                     val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN == byteOrder) cmd.toHexString() else cmd.toHexString()
+                        if (ByteOrder.BIG_ENDIAN ==
+                            byteOrder
+                        ) {
+                            cmd.toHexString()
+                        } else {
+                            cmd.toHexString()
+                        }
                     } else {
                         null
                     }
-                    LogContext.log.i(cmdTag, if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]", fullOutput = fullOutput)
+                    LogContext.log.i(
+                        cmdTag,
+                        if (hex ==
+                            null
+                        ) {
+                            cmdMsg
+                        } else {
+                            "$cmdMsg=HEX[$hex]"
+                        },
+                        fullOutput = fullOutput
+                    )
                 }
             }
 
-            else -> throw IllegalArgumentException("$cmdTag: Command must be either String or ByteArray")
+            else -> throw IllegalArgumentException(
+                "$cmdTag: Command must be either String or ByteArray"
+            )
         }
 
         if (isWebSocket) {
@@ -275,7 +327,10 @@ abstract class BaseNettyServer protected constructor(
         return true
     }
 
-    /** For general socket(NOT WebSocket), when send string to server, the `\n` will be appended automatically. */
+    /**
+     * For general socket(NOT WebSocket), when send string to server,
+     * the `\n` will be appended automatically.
+     */
     @JvmOverloads
     fun executeCommand(
         clientChannel: Channel,

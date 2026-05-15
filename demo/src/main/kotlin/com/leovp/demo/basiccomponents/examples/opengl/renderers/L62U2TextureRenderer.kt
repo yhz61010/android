@@ -131,12 +131,15 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         )
     )
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD)
-    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTextureBeauty(POINT_DATA_BEAUTY))
+    private val textureBufferBeauty: FloatBuffer =
+        createFloatBuffer(vertexToTextureBeauty(POINT_DATA_BEAUTY))
     private var textureLocationFireL: Int = 0
     private var textureLocationBeauty: Int = 0
     private var aPositionLocation: Int = 0
 
-    private fun vertexToTextureBeauty(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray = floatArrayOf(
+    private fun vertexToTextureBeauty(
+        @Suppress("SameParameterValue") vertex: FloatArray
+    ): FloatArray = floatArrayOf(
         // -0.4f, 1.4f,
         // -0.4f, -0.4f,
         // 1.4f, -0.4f,
@@ -233,11 +236,15 @@ class L62U2TextureRenderer(@Suppress("unused") private val ctx: Context) : BaseR
         drawFireL()
         drawBeauty()
 
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：
+        // http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_FAN, 0,
+            POINT_DATA_BEAUTY.size / TWO_DIMEN_POS_COMPONENT_COUNT
+        )
     }
 
     private fun drawFireL() {

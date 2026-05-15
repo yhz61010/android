@@ -169,7 +169,8 @@ class BytesConversionUnitTest {
         assertArrayEquals(byteArrayOf(0x80.toByte()), 128.asByteAndForceToBytes())
         assertArrayEquals(byteArrayOf(0xFE.toByte()), 254.asByteAndForceToBytes())
         assertArrayEquals(byteArrayOf(0xFF.toByte()), 255.asByteAndForceToBytes())
-        // If value is greater than 255, [asByteAndForceToBytes()] will only return the least significant 8 bits
+        // If value is greater than 255, [asByteAndForceToBytes()] will only return the least
+        // significant 8 bits
         assertArrayEquals(byteArrayOf(0x00), 256.asByteAndForceToBytes())
         assertArrayEquals(byteArrayOf(0x01), 257.asByteAndForceToBytes())
 
@@ -370,7 +371,8 @@ class BytesConversionUnitTest {
             65535L.toBytesLE()
         )
 
-        // If value is greater than 65535, [toShort()] will only return the least significant 16 bits
+        // If value is greater than 65535, [toShort()] will only return the least significant 16
+        // bits
         assertArrayEquals(byteArrayOf(0x00, 0x00), (65536.toShort()).toBytes())
         assertArrayEquals(byteArrayOf(0x00, 0x00), (65536.toShort()).toBytesLE())
         assertArrayEquals(byteArrayOf(0x00, 0x01, 0x00, 0x00), 65536.toBytes())
@@ -384,7 +386,8 @@ class BytesConversionUnitTest {
             65536L.toBytesLE()
         )
 
-        // If value is greater than 65535, [toShort()] will only return the least significant 16 bits
+        // If value is greater than 65535, [toShort()] will only return the least significant 16
+        // bits
         assertArrayEquals(byteArrayOf(0x09, 0x32), (67890.toShort()).toBytes())
         assertArrayEquals(byteArrayOf(0x32, 0x09), (67890.toShort()).toBytesLE())
         assertArrayEquals(byteArrayOf(0x00, 0x01, 0x09, 0x32), 67890.toBytes())
@@ -398,7 +401,8 @@ class BytesConversionUnitTest {
             67890L.toBytesLE()
         )
 
-        // If value is greater than 65535, [toShort()] will only return the least significant 16 bits
+        // If value is greater than 65535, [toShort()] will only return the least significant 16
+        // bits
         assertArrayEquals(
             byteArrayOf(0xE2.toByte(), 0x40),
             (123456.toShort()).toBytes()
@@ -427,7 +431,8 @@ class BytesConversionUnitTest {
             123456L.toBytesLE()
         )
 
-        // If value is greater than 65535, [toShort()] will only return the least significant 16 bits
+        // If value is greater than 65535, [toShort()] will only return the least significant 16
+        // bits
         assertArrayEquals(
             byteArrayOf(0x02, 0xD2.toByte()),
             (1234567890.toShort()).toBytes()

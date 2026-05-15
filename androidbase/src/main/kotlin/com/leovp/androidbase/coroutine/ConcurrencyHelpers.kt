@@ -68,11 +68,13 @@ class SingleRunner {
 /**
  * A controlled runner decides what to do when new tasks are run.
  *
- * By calling [joinPreviousOrRun], the new task will be discarded and the result of the previous task
+ * By calling [joinPreviousOrRun],
+ * the new task will be discarded and the result of the previous task
  * will be returned. This is useful when you want to ensure that a network request to the same
  * resource does not flood.
  *
- * By calling [cancelPreviousThenRun], the old task will *always* be cancelled and then the new task will
+ * By calling [cancelPreviousThenRun],
+ * the old task will *always* be canceled and then the new task will
  * be run. This is useful in situations where a new event implies that the previous work is no
  * longer relevant such as sorting or filtering a list.
  */
@@ -91,10 +93,10 @@ class ControlledRunner<T> {
      * Cancel all previous tasks before calling block.
      *
      * When several coroutines call cancelPreviousThenRun at the same time, only one will run and
-     * the others will be cancelled.
+     * the others will be canceled.
      *
      * In the following example, only one sort operation will execute and any previous sorts will be
-     * cancelled.
+     * canceled.
      *
      * ```
      * class Products {
@@ -110,8 +112,8 @@ class ControlledRunner<T> {
      * }
      * ```
      *
-     * @param block the code to run after previous work is cancelled.
-     * @return the result of block, if this call was not cancelled prior to returning.
+     * @param block the code to run after previous work is canceled.
+     * @return the result of block, if this call was not canceled prior to returning.
      */
     @Suppress("WeakerAccess")
     suspend fun cancelPreviousThenRun(block: suspend () -> T): T {
@@ -136,8 +138,8 @@ class ControlledRunner<T> {
             // inside the while(true) loop.
             val result: T
 
-            // Loop until we are sure that newTask is ready to execute (all previous tasks are
-            // cancelled)
+            // Loop until we are sure that newTask is ready to execute
+            // (all previous tasks are canceled)
             while (true) {
                 if (!activeTask.compareAndSet(null, newTask)) {
                     // some other task started before newTask got set to activeTask, so see if it's
@@ -163,7 +165,7 @@ class ControlledRunner<T> {
 
     /**
      * Don't run the new block if a previous block is running, instead wait for the previous block
-     * and return it's result.
+     * and return its result.
      *
      * When several coroutines call jonPreviousOrRun at the same time, only one will run and
      * the others will return the result from the winner.

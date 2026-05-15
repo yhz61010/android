@@ -16,7 +16,10 @@ import kotlin.reflect.KClass
 /**
  * https://dwz.win/azW6
  */
-class ReflectJavaManager private constructor(private var type: Class<*>, private var obj: Any? = type) {
+class ReflectJavaManager private constructor(
+    private var type: Class<*>,
+    private var obj: Any? = type
+) {
     companion object {
         /**
          * Reflect the class.
@@ -149,14 +152,15 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         )
     }
 
-    private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager = try {
-        ReflectJavaManager(
-            constructor.declaringClass,
-            accessible(constructor)!!.newInstance(*args)
-        )
-    } catch (e: Exception) {
-        throw ReflectException(e)
-    }
+    private fun newInstance(constructor: Constructor<*>, vararg args: Any?): ReflectJavaManager =
+        try {
+            ReflectJavaManager(
+                constructor.declaringClass,
+                accessible(constructor)!!.newInstance(*args)
+            )
+        } catch (e: Exception) {
+            throw ReflectException(e)
+        }
 
     // ==================================
     // ============ property ============
@@ -374,7 +378,10 @@ class ReflectJavaManager private constructor(private var type: Class<*>, private
         //     if (Modifier.isPublic(accessible.modifiers)
         //         && Modifier.isPublic(accessible.declaringClass.modifiers)) {
         //         // Check the following case:
-        //         // ReflectJavaManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
+        // //
+        // ReflectJavaManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL
+        // _INT",
+        // 10086)
         //         // If you set Java Public Static Final field as above, when run into here,
         //         // although its a public filed, its `accessible` is still `false`.
         //         // So I need to set `accessible` to `true` anyway.

@@ -26,7 +26,9 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Utility class to take screenshots of activity screen
  *
- * This class is copied mainly from [jraska/Falcon](https://github.com/jraska/Falcon/blob/master/falcon/src/main/java/com/jraska/falcon/Falcon.java).
+ * This class is copied mainly from
+ * [jraska/Falcon](https://github.com/jraska/Falcon/blob/master/falcon/src/main/java/com/jraska/falc
+ * on/Falcon.java).
  * Just adjust it to Kotlin
  */
 object Falcon {
@@ -42,7 +44,8 @@ object Falcon {
      * @param weakAct WeakReference<Activity> of which the screenshot will be taken.
      * @param toFile   File where the screenshot will be saved.
      * If there is some content it will be overwritten
-     * @throws UnableToTakeScreenshotException When there is unexpected error during taking screenshot
+     * @throws UnableToTakeScreenshotException When there is unexpected error during taking
+     * screenshot
      */
     @Suppress("unused")
     fun takeScreenshot(weakAct: WeakReference<Activity>, toFile: File?) {
@@ -53,7 +56,10 @@ object Falcon {
             writeBitmap(bitmap, toFile)
         } catch (e: Exception) {
             val message =
-                ("Unable to take screenshot to file ${toFile.absolutePath} of activity ${weakAct.javaClass.name}")
+                (
+                    "Unable to take screenshot to file ${toFile.absolutePath} of activity " +
+                        "${weakAct.javaClass.name}"
+                    )
             LogContext.log.e(TAG, message, e)
             throw UnableToTakeScreenshotException(message, e)
         } finally {
@@ -121,7 +127,12 @@ object Falcon {
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
         weakAct.get()?.runOnUiThread {
-            runCatching { drawRootsToBitmap(viewRoots, bitmap) }.getOrElse { errorInMainThread.set(it) }
+            runCatching {
+                drawRootsToBitmap(
+                    viewRoots,
+                    bitmap
+                )
+            }.getOrElse { errorInMainThread.set(it) }
                 .also { latch.countDown() }
         } ?: latch.countDown()
         latch.await()
@@ -170,7 +181,8 @@ object Falcon {
     @SuppressLint("ObsoleteSdkInt")
     @Suppress("UNCHECKED_CAST")
     fun getRootViews(weakAct: WeakReference<Activity>): List<ViewRootData> {
-        // val globalWindowManager: Any = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
+        // val globalWindowManager: Any = if (Build.VERSION.SDK_INT <=
+        // Build.VERSION_CODES.JELLY_BEAN) {
         //     getFieldValue("mWindowManager", weakAct.get()?.windowManager)!!
         // } else {
         //     getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
@@ -198,7 +210,10 @@ object Falcon {
         return rootViews
     }
 
-    private fun viewRootData(roots: Array<Any>, params: Array<WindowManager.LayoutParams>): MutableList<ViewRootData> {
+    private fun viewRootData(
+        roots: Array<Any>,
+        params: Array<WindowManager.LayoutParams>
+    ): MutableList<ViewRootData> {
         val rootViews: MutableList<ViewRootData> = ArrayList()
         for (i in roots.indices) {
             val root = roots[i]
@@ -255,7 +270,9 @@ object Falcon {
             }
             for (parentIndex in dialogIndex + 1 until viewRoots.size) {
                 val possibleParent = viewRoots[parentIndex]
-                if (possibleParent.isActivityType && possibleParent.windowToken === viewRoot.windowToken) {
+                if (possibleParent.isActivityType &&
+                    possibleParent.windowToken === viewRoot.windowToken
+                ) {
                     viewRoots.remove(possibleParent)
                     viewRoots.add(dialogIndex, possibleParent)
                     break
@@ -312,15 +329,20 @@ object Falcon {
              * Method to avoid multiple wrapping. If there is already our exception,
              * just wrap the cause again
              */
-            private fun extractException(ex: Throwable): Throwable? = if (ex is UnableToTakeScreenshotException) {
-                ex.cause
-            } else {
-                ex
-            }
+            private fun extractException(ex: Throwable): Throwable? =
+                if (ex is UnableToTakeScreenshotException) {
+                    ex.cause
+                } else {
+                    ex
+                }
         }
     }
 
-    class ViewRootData(val view: View, val winFrame: Rect, val layoutParams: WindowManager.LayoutParams) {
+    class ViewRootData(
+        val view: View,
+        val winFrame: Rect,
+        val layoutParams: WindowManager.LayoutParams
+    ) {
         val isDialogType: Boolean
             get() = layoutParams.type == WindowManager.LayoutParams.TYPE_APPLICATION
 

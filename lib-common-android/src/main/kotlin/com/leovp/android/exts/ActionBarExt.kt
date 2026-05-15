@@ -19,7 +19,10 @@ val Activity.actionBarHeight
         val tv = TypedValue()
         var actionBarHeight = 0
         if (this.theme.resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, resources.displayMetrics)
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(
+                tv.data,
+                resources.displayMetrics
+            )
         }
         return actionBarHeight
     }

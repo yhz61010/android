@@ -41,7 +41,9 @@ class BluetoothScanActivity :
     private var adapter: DeviceAdapter? = null
     private val bluetoothDeviceMap = mutableMapOf<String, DeviceModel>()
 
-    private val bluetooth: BluetoothUtil by lazy { BluetoothUtil.getInstance(bluetoothManager.adapter) }
+    private val bluetooth: BluetoothUtil by lazy {
+        BluetoothUtil.getInstance(bluetoothManager.adapter)
+    }
 
     @SuppressLint("InlinedApi")
     @RequiresPermission(
@@ -92,7 +94,12 @@ class BluetoothScanActivity :
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     override fun onDestroy() {
         super.onDestroy()
         bluetooth.release()
@@ -104,7 +111,12 @@ class BluetoothScanActivity :
         adapter = DeviceAdapter().apply {
             @SuppressLint("InlinedApi")
             onItemClickListener = object : DeviceAdapter.OnItemClickListener {
-                @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+                @RequiresPermission(
+                    allOf = [
+                        Manifest.permission.BLUETOOTH_ADMIN,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    ]
+                )
                 override fun onItemClick(item: DeviceModel, position: Int) {
                     bluetooth.cancelDiscovery()
                     startActivity<BluetoothClientActivity>({ intent ->
@@ -124,7 +136,12 @@ class BluetoothScanActivity :
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     private fun initBluetooth() {
         if (!bluetooth.isSupportBle(packageManager)) {
             toast("Does not support bluetooth!")
@@ -135,7 +152,12 @@ class BluetoothScanActivity :
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     private fun doDiscovery() {
         bluetoothDeviceMap.clear()
         binding.btnDiscovery.text = "Discovery"
@@ -144,7 +166,12 @@ class BluetoothScanActivity :
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun onDiscoveryClick(@Suppress("unused") view: View) {
         LogContext.log.w(ITAG, "onDiscoveryClick")
         toast("onDiscoveryClick")
@@ -161,13 +188,21 @@ class BluetoothScanActivity :
         ]
     )
     fun onScanClick(@Suppress("unused") view: View) {
-        LogContext.log.w(ITAG, "onScanClick Before Scanning, please stop it first if you don't do that.")
+        LogContext.log.w(
+            ITAG,
+            "onScanClick Before Scanning, please stop it first if you don't do that."
+        )
         toast("onScanClick Before Scanning, please stop it first if you don't do that.")
         doScan()
     }
 
     @SuppressLint("InlinedApi")
-    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_SCAN])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN
+        ]
+    )
     fun onStopScan(@Suppress("unused") view: View) {
         LogContext.log.w(ITAG, "onStopScan")
         toast("onStopScan")
@@ -193,7 +228,8 @@ class BluetoothScanActivity :
             override fun onScanned(device: BluetoothDevice, rssi: Int, result: ScanResult?) {
                 // if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 if (result?.isConnectable == false) {
-                    // Call [device.name] needs <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
+                    // Call [device.name] needs <uses-permission
+                    // android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
                     LogContext.log.e(ITAG, "Ignore device:${device.name}|${device.address}")
                     return
                 }
@@ -202,7 +238,8 @@ class BluetoothScanActivity :
                 if (bluetoothDeviceMap.containsKey(device.address)) {
                     return
                 }
-                // Call [device.name] needs <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
+                // Call [device.name] needs <uses-permission
+                // android:name="android.permission.BLUETOOTH_CONNECT" /> permission.
                 val model = DeviceModel(device, device.name, device.address, rssi.toString())
                 bluetoothDeviceMap[device.address] = model
                 binding.btnDoScan.text = "Scan(${bluetoothDeviceMap.size})"

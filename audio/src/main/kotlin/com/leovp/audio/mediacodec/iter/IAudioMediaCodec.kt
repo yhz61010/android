@@ -26,7 +26,12 @@ interface IAudioMediaCodec {
      */
     fun onInputData(inBuf: ByteBuffer): Int
 
-    fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean)
+    fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean
+    )
 
     fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {}
 
@@ -37,7 +42,8 @@ interface IAudioMediaCodec {
      *
      * For audio encoder, the formula is:
      * ```
-     * presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate / channelCount
+     * presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate /
+     * channelCount
      * ```
      * - totalPcmBytes: The total bytes of pcm data.
      * - bitPerSample: Common values are 8bit, 16bit, 24bit, 32bit.
@@ -62,7 +68,8 @@ interface IAudioMediaCodec {
      *
      * https://avmedia.0voice.com/?id=478
      *
-     * @return The calculated presentation time in microseconds or -1 if no more samples are available.
+     * @return The calculated presentation time in microseconds or -1 if no more samples are
+     * available.
      */
     fun computePresentationTimeUs(): Long
 

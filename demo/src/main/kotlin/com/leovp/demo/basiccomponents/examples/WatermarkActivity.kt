@@ -12,7 +12,8 @@ import com.leovp.demo.databinding.ActivityWatermarkBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class WatermarkActivity : BaseDemonstrationActivity<ActivityWatermarkBinding>(R.layout.activity_watermark) {
+class WatermarkActivity :
+    BaseDemonstrationActivity<ActivityWatermarkBinding>(R.layout.activity_watermark) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityWatermarkBinding =

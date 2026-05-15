@@ -18,7 +18,8 @@ import com.leovp.demo.databinding.ActivityCamera2LiveBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding>(R.layout.activity_camera2_live) {
+class Camera2LiveActivity :
+    BaseDemonstrationActivity<ActivityCamera2LiveBinding>(R.layout.activity_camera2_live) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityCamera2LiveBinding =
@@ -91,7 +92,9 @@ class Camera2LiveActivity : BaseDemonstrationActivity<ActivityCamera2LiveBinding
     }
 
     override fun onDestroy() {
-        supportFragmentManager.beginTransaction().remove(cameraViewFragment).commitAllowingStateLoss()
+        supportFragmentManager.beginTransaction().remove(
+            cameraViewFragment
+        ).commitAllowingStateLoss()
         super.onDestroy()
     }
 

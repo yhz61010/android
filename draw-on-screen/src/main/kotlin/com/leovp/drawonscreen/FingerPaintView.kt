@@ -106,16 +106,41 @@ class FingerPaintView @JvmOverloads constructor(
 
     init {
         attrs?.let {
-            context.theme.obtainStyledAttributes(it, R.styleable.FingerPaintImageView, defStyleAttr, defStyleRes).run {
+            context.theme.obtainStyledAttributes(
+                it,
+                R.styleable.FingerPaintImageView,
+                defStyleAttr,
+                defStyleRes
+            ).run {
                 runCatching {
-                    strokeColor = getColor(R.styleable.FingerPaintImageView_strokeColor, DEFAULT_STROKE_COLOR)
-                    strokeWidth = getDimension(R.styleable.FingerPaintImageView_strokeWidth, DEFAULT_STROKE_WIDTH)
-                    inEditMode = getBoolean(R.styleable.FingerPaintImageView_inEditMode, DEF_EDIT_MODE)
-                    touchTolerance = getFloat(R.styleable.FingerPaintImageView_touchTolerance, DEFAULT_TOUCH_TOLERANCE)
+                    strokeColor = getColor(
+                        R.styleable.FingerPaintImageView_strokeColor,
+                        DEFAULT_STROKE_COLOR
+                    )
+                    strokeWidth = getDimension(
+                        R.styleable.FingerPaintImageView_strokeWidth,
+                        DEFAULT_STROKE_WIDTH
+                    )
+                    inEditMode = getBoolean(
+                        R.styleable.FingerPaintImageView_inEditMode,
+                        DEF_EDIT_MODE
+                    )
+                    touchTolerance = getFloat(
+                        R.styleable.FingerPaintImageView_touchTolerance,
+                        DEFAULT_TOUCH_TOLERANCE
+                    )
                 }.also { recycle() }
             }
         }
-        if (drawable == null) setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.onebyone, null))
+        if (drawable == null) {
+            setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.onebyone,
+                    null
+                )
+            )
+        }
         scaleType = ScaleType.CENTER_CROP
     }
 
@@ -124,7 +149,11 @@ class FingerPaintView @JvmOverloads constructor(
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        brushBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { brushCanvas = Canvas(it) }
+        brushBitmap = Bitmap.createBitmap(
+            w,
+            h,
+            Bitmap.Config.ARGB_8888
+        ).also { brushCanvas = Canvas(it) }
     }
 
     /**
@@ -140,13 +169,18 @@ class FingerPaintView @JvmOverloads constructor(
 
             runCatching {
                 // draw original bitmap
-                val result = Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
+                val result = Bitmap.createBitmap(
+                    it.intrinsicWidth,
+                    it.intrinsicHeight,
+                    Bitmap.Config.ARGB_8888
+                )
                 val canvas = Canvas(result)
                 it.draw(canvas)
 
                 val transformedPath = Path()
                 val transformedPaint = Paint()
-                // Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]
+                // Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
+                // [NewApi]
                 //                paths.forEach { (path, paint) ->
                 //                    path.transform(inverse, transformedPath)
                 //                    transformedPaint.set(paint)
@@ -220,14 +254,25 @@ class FingerPaintView @JvmOverloads constructor(
         val yTranslation = matrixValues[Matrix.MTRANS_Y]
         val scale = matrixValues[Matrix.MSCALE_X]
 
-        val xPos = event.x.coerceIn(xTranslation, xTranslation + sourceBitmap.intrinsicWidth * scale)
-        val yPos = event.y.coerceIn(yTranslation, yTranslation + sourceBitmap.intrinsicHeight * scale)
+        val xPos = event.x.coerceIn(
+            xTranslation,
+            xTranslation + sourceBitmap.intrinsicWidth * scale
+        )
+        val yPos = event.y.coerceIn(
+            yTranslation,
+            yTranslation + sourceBitmap.intrinsicHeight * scale
+        )
 
         val dx = abs(xPos - currentX)
         val dy = abs(yPos - currentY)
 
         if (dx >= touchTolerance || dy >= touchTolerance) {
-            getCurrentPath()?.quadTo(currentX, currentY, (xPos + currentX) / 2, (yPos + currentY) / 2)
+            getCurrentPath()?.quadTo(
+                currentX,
+                currentY,
+                (xPos + currentX) / 2,
+                (yPos + currentY) / 2
+            )
             currentX = xPos
             currentY = yPos
         }

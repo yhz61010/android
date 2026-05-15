@@ -27,7 +27,10 @@ internal class VivoDisplayCutout : DisplayCutout {
     /** vivo will not render on notch */
     override fun fillDisplayCutout(activity: Activity) = Unit
 
-    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
+    override fun cutoutAreaRect(
+        activity: Activity,
+        callback: DisplayCutout.CutoutAreaRectCallback
+    ) {
         val rectList = ArrayList<Rect>()
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
         rectList.add(rect)

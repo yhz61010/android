@@ -21,7 +21,9 @@ object VibrationUtil {
     @RequiresPermission(android.Manifest.permission.VIBRATE)
     fun vibrate(context: Context, milliseconds: Long = 500) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator.vibrate(
+            (
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                ).defaultVibrator.vibrate(
                 VibrationEffect.createOneShot(
                     milliseconds,
                     VibrationEffect.DEFAULT_AMPLITUDE

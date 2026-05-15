@@ -159,7 +159,10 @@ class ScreenCountdownManager(
         startCountdown()
     }
 
-    data class CountdownState(val remainingTimeMillis: Long? = null, val isCountingDown: Boolean = false,) {
+    data class CountdownState(
+        val remainingTimeMillis: Long? = null,
+        val isCountingDown: Boolean = false,
+    ) {
         @Suppress("UNUSED_PARAMETER")
         val remainingSeconds: Long?
             get() = remainingTimeMillis?.div(1000)

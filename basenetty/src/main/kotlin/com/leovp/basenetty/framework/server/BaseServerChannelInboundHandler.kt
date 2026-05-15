@@ -49,7 +49,10 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
     }
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        LogContext.log.i(tag, "===== Client Channel is active: ${ctx.channel().remoteAddress()} =====")
+        LogContext.log.i(
+            tag,
+            "===== Client Channel is active: ${ctx.channel().remoteAddress()} ====="
+        )
         val clientChannel = ctx.channel()
         // Add active client to server
         clients.add(clientChannel)
@@ -128,7 +131,8 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
                 LogContext.log.i(
                     tag,
                     "Response status=${msg.status()} " +
-                        "isSuccess=${msg.decoderResult().isSuccess} protocolVersion=${msg.protocolVersion()}"
+                        "isSuccess=${msg.decoderResult().isSuccess} " +
+                        "protocolVersion=${msg.protocolVersion()}"
                 )
                 handleHttpRequest(ctx, msg.retain())
                 return
@@ -162,11 +166,11 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
 
             //            if (handshaker?.isHandshakeComplete == false) {
             //                try {
-            //                    handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
+            // handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
             //                    LogContext.log.w(tag, "=====> WebSocket client connected <=====")
             //                    channelPromise?.setSuccess()
             //                } catch (e: WebSocketHandshakeException) {
-            //                    LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
+            // LogContext.log.e(tag, "=====> WebSocket client failed to connect <=====")
             //                    channelPromise?.setFailure(e)
             //                }
             //                return

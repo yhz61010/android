@@ -9,7 +9,8 @@ plugins {
 android {
     namespace = "com.leovp.camera2live"
 
-    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flamingo-release-da34616bb946
+    // https://medium.com/androiddevelopers/5-ways-to-prepare-your-app-build-for-android-studio-flam
+    // ingo-release-da34616bb946
     buildFeatures {
         // Generate BuildConfig.java file
         buildConfig = true
@@ -62,7 +63,6 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
                 artifactId = "camera2live"
-                version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())
                 from(components["release"])

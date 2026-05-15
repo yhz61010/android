@@ -5,8 +5,10 @@ import android.util.Log
 /**
  * Inherit this class and just implement `printXXXLog` methods.
  *
- * The `outputType` parameter in `printXXXLog` methods is just the handy parameter for you to identify the log output type.
- * So that you can control how to output the log. For example, just output some logs on console or send some logs to server.
+ * The `outputType` parameter in `printXXXLog` methods is just the handy parameter for you to
+ * identify the log output type.
+ * So that you can control how to output the log. For example, just output some logs on console or
+ * send some logs to server.
  *
  * Author: Michael Leo
  * Date: 2020/10/16 下午5:33
@@ -24,7 +26,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("v(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun v(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     v(ITAG, message, throwable, fullOutput, outputType)
 
     fun v(
@@ -52,7 +55,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("d(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun d(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     d(ITAG, message, throwable, fullOutput, outputType)
 
     fun d(
@@ -80,7 +84,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("i(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun i(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     i(ITAG, message, throwable, fullOutput, outputType)
 
     fun i(
@@ -108,7 +113,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("w(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun w(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     w(ITAG, message, throwable, fullOutput, outputType)
 
     fun w(
@@ -136,7 +142,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("e(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun e(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     e(ITAG, message, throwable, fullOutput, outputType)
 
     fun e(
@@ -164,7 +171,8 @@ abstract class AbsLog(
     //     message = "Use the function with the 'tag' parameter.",
     //     replaceWith = ReplaceWith("f(TAG, message, throwable, fullOutput, outputType)"),
     // )
-    // fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false, outputType: LogOutType = LogOutType.COMMON,) =
+    // fun f(message: String?, throwable: Throwable? = null, fullOutput: Boolean = false,
+    // outputType: LogOutType = LogOutType.COMMON,) =
     //     f(ITAG, message, throwable, fullOutput, outputType)
 
     fun f(

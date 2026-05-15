@@ -63,10 +63,12 @@ class WebSocketClientActivity :
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.i(tag, "onConnectClick at ${SystemClock.elapsedRealtime()}")
 
-        // For none-ssl websocket or trust all certificates websocket, you can create just one socket object,
+        // For none-ssl websocket or trust all certificates websocket, you can create just one
+        // socket object,
         // then disconnect it and connect it again for many times as you wish.
         // However, for self-signed certificate, once you disconnect the socket,
-        // you must recreate the socket object again then connect it or else you can **NOT** connect it any more.
+        // you must recreate the socket object again then connect it or else you can **NOT** connect
+        // it anymore.
         // Example:
         // For none-ssl websocket or trust all certificates:
         // create socket ──> connect() ──> disconnectManually()
@@ -86,9 +88,12 @@ class WebSocketClientActivity :
                 webSocketClient?.connect()
                 // webSocketClient?.disconnectManually()
                 // webSocketClient?.release()
-                // LogContext.log.i(tag, "= released ================================================================================")
+                // LogContext.log.i(tag, "= released
+                // ================================================================================"
+                // )
 
-                // You can also create multiple sockets at the same time like this(It's thread safe so you can create them freely):
+                // You can also create multiple sockets at the same time like this(It's thread safe
+                // so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
                 // val socketClientHandler = SocketClientHandler(socketClient)
                 // socketClient.initHandler(socketClientHandler)
@@ -126,7 +131,10 @@ class WebSocketClientActivity :
         @SuppressLint("SetTextI18n")
         override fun onReceivedData(netty: BaseNettyClient, data: Any?, action: Int) {
             LogContext.log.i(tag, "onReceivedData: ${data?.toJsonString()}")
-            runOnUiThread { binding.txtView.text = binding.txtView.text.toString() + data?.toJsonString() + "\n" }
+            runOnUiThread {
+                binding.txtView.text =
+                    binding.txtView.text.toString() + data?.toJsonString() + "\n"
+            }
         }
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
@@ -163,7 +171,8 @@ class WebSocketClientActivity :
                             netty.release()
                             LogContext.log.w(
                                 tag,
-                                "= Start Reconnecting ========================================================"
+                                "= Start Reconnecting " +
+                                    "========================================================"
                             )
                             webSocketClient = createSocket().apply { connect() }
                         }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
@@ -186,7 +195,8 @@ class WebSocketClientActivity :
     }
 
     @ChannelHandler.Sharable
-    class WebSocketClientHandlerDemo(private val netty: BaseNettyClient) : BaseClientChannelInboundHandler<Any>(netty) {
+    class WebSocketClientHandlerDemo(private val netty: BaseNettyClient) :
+        BaseClientChannelInboundHandler<Any>(netty) {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) {
             val receivedString: String?
             val frame = msg as WebSocketFrame
@@ -206,7 +216,8 @@ class WebSocketClientActivity :
             netty.connectionListener.onReceivedData(netty, receivedString)
         }
 
-        fun sendMsgToServer(msg: String): Boolean = netty.executeCommand(msg, "Send msg to server", "WebSocketCmd")
+        fun sendMsgToServer(msg: String): Boolean =
+            netty.executeCommand(msg, "Send msg to server", "WebSocketCmd")
 
         override fun release() {
         }
@@ -217,7 +228,8 @@ class WebSocketClientActivity :
     fun sendMsg(@Suppress("UNUSED_PARAMETER") view: View) {
         cs.launch {
             if (::webSocketClientHandler.isInitialized) {
-                val result = webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
+                val result =
+                    webSocketClientHandler.sendMsgToServer(binding.editText.text.toString())
                 withContext(Dispatchers.Main) {
                     binding.editText.text.clear()
                     if (!result) toast("Send command error", debug = true, error = true)

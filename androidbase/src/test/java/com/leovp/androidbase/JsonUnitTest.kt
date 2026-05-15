@@ -37,7 +37,8 @@ class JsonUnitTest {
 
         val excludeBean = ExcludeBean(3, "Name2", "This is a cool guy2.")
         assertEquals("{\"id\":3,\"desc\":\"This is a cool guy2.\"}", excludeBean.toJsonString())
-        val convExcludeBean = "{\"id\":4,\"name\":\"Name2\",\"desc\":\"I'm a cool man2!\"}".toObject<ExcludeBean>()!!
+        val convExcludeBean =
+            "{\"id\":4,\"name\":\"Name2\",\"desc\":\"I'm a cool man2!\"}".toObject<ExcludeBean>()!!
         assertEquals("id: 4, name: null, desc: I'm a cool man2!", convExcludeBean.toString())
         type = object : TypeToken<ExcludeBean>() {}.type
         val convExcludeTypeBean = "{\"id\":44,\"name\":\"Name22\",\"desc\":\"I'm a cool man22!\"}"
@@ -50,10 +51,14 @@ class JsonUnitTest {
         assertEquals("{\"id\":5,\"name\":\"Name3\"}", serializeExcludeBean.toJsonString())
         val convSerializeExcludeBean = "{\"id\":6,\"name\":\"Name3\",\"desc\":\"I'm a cool man3!\"}"
             .toObject<SerializeExcludeBean>()!!
-        assertEquals("id: 6, name: Name3, desc: I'm a cool man3!", convSerializeExcludeBean.toString())
+        assertEquals(
+            "id: 6, name: Name3, desc: I'm a cool man3!",
+            convSerializeExcludeBean.toString()
+        )
         type = object : TypeToken<SerializeExcludeBean>() {}.type
-        val convSerializeExcludeTypeBean = "{\"id\":66,\"name\":\"Name33\",\"desc\":\"I'm a cool man33!\"}"
-            .toObject<SerializeExcludeBean>(type)!!
+        val convSerializeExcludeTypeBean =
+            "{\"id\":66,\"name\":\"Name33\",\"desc\":\"I'm a cool man33!\"}"
+                .toObject<SerializeExcludeBean>(type)!!
         assertEquals(
             "id: 66, name: Name33, desc: I'm a cool man33!",
             convSerializeExcludeTypeBean.toString()
@@ -63,15 +68,17 @@ class JsonUnitTest {
 
         val serializeExcludeBean2 = SerializeExcludeBean2(50, "Name30", "This is a cool guy30.")
         assertEquals("{\"id\":50,\"name\":\"Name30\"}", serializeExcludeBean2.toJsonString())
-        val convSerializeExcludeBean2 = "{\"id\":66,\"name\":\"Name33\",\"desc\":\"I'm a cool man33!\"}"
-            .toObject<SerializeExcludeBean2>()!!
+        val convSerializeExcludeBean2 =
+            "{\"id\":66,\"name\":\"Name33\",\"desc\":\"I'm a cool man33!\"}"
+                .toObject<SerializeExcludeBean2>()!!
         assertEquals(
             "id: 66, name: Name33, desc: I'm a cool man33!",
             convSerializeExcludeBean2.toString()
         )
         type = object : TypeToken<SerializeExcludeBean2>() {}.type
-        val convSerializeExcludeTypeBean2 = "{\"id\":666,\"name\":\"Name333\",\"desc\":\"I'm a cool man333!\"}"
-            .toObject<SerializeExcludeBean2>(type)!!
+        val convSerializeExcludeTypeBean2 =
+            "{\"id\":666,\"name\":\"Name333\",\"desc\":\"I'm a cool man333!\"}"
+                .toObject<SerializeExcludeBean2>(type)!!
         assertEquals(
             "id: 666, name: Name333, desc: I'm a cool man333!",
             convSerializeExcludeTypeBean2.toString()
@@ -84,12 +91,14 @@ class JsonUnitTest {
             "{\"id\":7,\"name\":\"Name4\",\"desc\":\"This is a cool guy4.\"}",
             deserializeExcludeBean.toJsonString()
         )
-        val convDeserializeExcludeBean = "{\"id\":8,\"name\":\"Name4\",\"desc\":\"I'm a cool man4!\"}"
-            .toObject<DeserializeExcludeBean>()!!
+        val convDeserializeExcludeBean =
+            "{\"id\":8,\"name\":\"Name4\",\"desc\":\"I'm a cool man4!\"}"
+                .toObject<DeserializeExcludeBean>()!!
         assertEquals("id: 8, name: Name4, desc: null", convDeserializeExcludeBean.toString())
         type = object : TypeToken<DeserializeExcludeBean>() {}.type
-        val convDeserializeExcludeTypeBean = "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}"
-            .toObject<DeserializeExcludeBean>(type)!!
+        val convDeserializeExcludeTypeBean =
+            "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}"
+                .toObject<DeserializeExcludeBean>(type)!!
         assertEquals("id: 88, name: Name44, desc: null", convDeserializeExcludeTypeBean.toString())
 
         // ===========================
@@ -99,13 +108,18 @@ class JsonUnitTest {
             "{\"id\":70,\"name\":\"Name40\",\"desc\":\"This is a cool guy40.\"}",
             deserializeExcludeBean2.toJsonString()
         )
-        val convDeserializeExcludeBean2 = "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}"
-            .toObject<DeserializeExcludeBean2>()!!
+        val convDeserializeExcludeBean2 =
+            "{\"id\":88,\"name\":\"Name44\",\"desc\":\"I'm a cool man44!\"}"
+                .toObject<DeserializeExcludeBean2>()!!
         assertEquals("id: 88, name: Name44, desc: null", convDeserializeExcludeBean2.toString())
         type = object : TypeToken<DeserializeExcludeBean2>() {}.type
-        val convDeserializeExcludeTypeBean2 = "{\"id\":888,\"name\":\"Name444\",\"desc\":\"I'm a cool man444!\"}"
-            .toObject<DeserializeExcludeBean2>(type)!!
-        assertEquals("id: 888, name: Name444, desc: null", convDeserializeExcludeTypeBean2.toString())
+        val convDeserializeExcludeTypeBean2 =
+            "{\"id\":888,\"name\":\"Name444\",\"desc\":\"I'm a cool man444!\"}"
+                .toObject<DeserializeExcludeBean2>(type)!!
+        assertEquals(
+            "id: 888, name: Name444, desc: null",
+            convDeserializeExcludeTypeBean2.toString()
+        )
     }
 
     data class TransientBean(val id: Int, val name: String, @Transient val desc: String) {
@@ -116,19 +130,35 @@ class JsonUnitTest {
         override fun toString(): String = "id: $id, name: $name, desc: $desc"
     }
 
-    data class SerializeExcludeBean(val id: Int, val name: String, @Exclude(deserialize = false) val desc: String) {
+    data class SerializeExcludeBean(
+        val id: Int,
+        val name: String,
+        @Exclude(deserialize = false) val desc: String
+    ) {
         override fun toString(): String = "id: $id, name: $name, desc: $desc"
     }
 
-    data class DeserializeExcludeBean(val id: Int, val name: String, @Exclude(serialize = false) val desc: String) {
+    data class DeserializeExcludeBean(
+        val id: Int,
+        val name: String,
+        @Exclude(serialize = false) val desc: String
+    ) {
         override fun toString(): String = "id: $id, name: $name, desc: $desc"
     }
 
-    data class SerializeExcludeBean2(val id: Int, val name: String, @ExcludeSerialize val desc: String) {
+    data class SerializeExcludeBean2(
+        val id: Int,
+        val name: String,
+        @ExcludeSerialize val desc: String
+    ) {
         override fun toString(): String = "id: $id, name: $name, desc: $desc"
     }
 
-    data class DeserializeExcludeBean2(val id: Int, val name: String, @ExcludeDeserialize val desc: String) {
+    data class DeserializeExcludeBean2(
+        val id: Int,
+        val name: String,
+        @ExcludeDeserialize val desc: String
+    ) {
         override fun toString(): String = "id: $id, name: $name, desc: $desc"
     }
 }

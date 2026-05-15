@@ -9,5 +9,6 @@ import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 class ExponentRetry(private val maxTimes: Int = 5, private val base: Long = 1L) : RetryStrategy {
     override fun getMaxTimes(): Int = maxTimes
 
-    override fun getDelayInMillSec(currentRetryTimes: Int): Long = (base shl (currentRetryTimes - 1)) * 1000
+    override fun getDelayInMillSec(currentRetryTimes: Int): Long =
+        (base shl (currentRetryTimes - 1)) * 1000
 }

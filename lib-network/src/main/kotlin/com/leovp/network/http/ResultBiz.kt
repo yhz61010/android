@@ -26,7 +26,8 @@ sealed interface ResultBiz<out R> {
     /**
      * Response with business error.
      */
-    data class BusinessError<out T>(val exception: BusinessException, val data: T? = null) : ResultBiz<T>
+    data class BusinessError<out T>(val exception: BusinessException, val data: T? = null) :
+        ResultBiz<T>
 
     /**
      * A special business error that needs to relogin.
@@ -99,10 +100,11 @@ fun <T> ResultBiz<T>.exceptionOrNull(): ResultException? = when {
     else -> null
 }
 
-fun <T> ResultBiz<T>.exception(): ResultException = when (val err: ResultException? = this.exceptionOrNull()) {
-    null -> error("No exception!")
-    else -> err
-}
+fun <T> ResultBiz<T>.exception(): ResultException =
+    when (val err: ResultException? = this.exceptionOrNull()) {
+        null -> error("No exception!")
+        else -> err
+    }
 
 inline fun <T> ResultBiz<T>.onSuccess(action: (value: T) -> Unit): ResultBiz<T> {
     if (isSuccess) action((this as ResultBiz.Success<T>).data)
@@ -114,8 +116,10 @@ inline fun <T> ResultBiz<T>.onFailure(action: (exception: ResultException) -> Un
     return this
 }
 
-inline fun <T, R> ResultBiz<T>.fold(onSuccess: (value: T) -> R, onFailure: (exception: ResultException) -> R): R =
-    when (val exception = exceptionOrNull()) {
-        null -> onSuccess((this as ResultBiz.Success<T>).data)
-        else -> onFailure(exception)
-    }
+inline fun <T, R> ResultBiz<T>.fold(
+    onSuccess: (value: T) -> R,
+    onFailure: (exception: ResultException) -> R
+): R = when (val exception = exceptionOrNull()) {
+    null -> onSuccess((this as ResultBiz.Success<T>).data)
+    else -> onFailure(exception)
+}

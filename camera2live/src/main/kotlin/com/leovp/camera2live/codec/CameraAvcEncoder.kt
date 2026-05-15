@@ -46,9 +46,16 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 "frameRate=$frameRate bitrateMode=$bitrateMode iFrameInterval=$iFrameInterval"
         )
 
-        val mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
+        val mediaFormat = MediaFormat.createVideoFormat(
+            MediaFormat.MIMETYPE_VIDEO_AVC,
+            width,
+            height
+        )
         with(mediaFormat) {
-            setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
+            setInteger(
+                MediaFormat.KEY_COLOR_FORMAT,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+            )
             setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
             setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
@@ -60,13 +67,25 @@ class CameraAvcEncoder @JvmOverloads constructor(
             // 8/65536(0x10000)             76K/s
             // 2/65536(0x10000)             76K/s
             // 1/65536(0x10000)             76K/s
-            val profileLevelPair = CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
-                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline }
-                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh }
-                //                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain }
-                .firstOrNull { it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline }
+            val profileLevelPair =
+                CodecUtil.getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+                    // .firstOrNull {
+                    //     it.profile ==
+                    //         MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline
+                    // }
+                    // .firstOrNull {
+                    //     it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh
+                    // }
+                    // .firstOrNull {
+                    //     it.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileMain
+                    // }
+                    .firstOrNull {
+                        it.profile ==
+                            MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                    }
             //                .maxByOrNull { it.profile }
-            val usedProfile = profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+            val usedProfile =
+                profileLevelPair?.profile ?: MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
             val usedLevel = profileLevelPair?.level ?: MediaCodecInfo.CodecProfileLevel.AVCLevel4
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -74,7 +93,10 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 setInteger(MediaFormat.KEY_PROFILE, usedProfile)
             } else {
                 LogContext.log.w(TAG, "KEY_PROFILE static: AVCProfileBaseline")
-                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+                setInteger(
+                    MediaFormat.KEY_PROFILE,
+                    MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                )
             }
             //            setInteger(MediaFormat.KEY_COMPLEXITY, bitrateMode)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -88,7 +110,8 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+ so you can use it safely only if your device is Android 6.0+.
+                // Actually, this key has been used in Android 6.0+ so you can use it safely only if
+                // your device is Android 6.0+.
                 // It's merely being opened as of Android 10.
                 setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, frameRate.toFloat())
             }
@@ -115,7 +138,11 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 }
             }
 
-            override fun onOutputBufferAvailable(codec: MediaCodec, outputBufferId: Int, info: MediaCodec.BufferInfo) {
+            override fun onOutputBufferAvailable(
+                codec: MediaCodec,
+                outputBufferId: Int,
+                info: MediaCodec.BufferInfo
+            ) {
                 val outputBuffer = codec.getOutputBuffer(outputBufferId)
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
@@ -130,7 +157,10 @@ class CameraAvcEncoder @JvmOverloads constructor(
                             LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexString()}]")
                         }
 
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(
+                            TAG,
+                            "Found Key Frame[" + info.size + "]"
+                        )
                         MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
                             // Do nothing
                         }

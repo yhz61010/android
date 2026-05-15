@@ -28,7 +28,9 @@ class SoundManager private constructor(val ctx: Context) {
     suspend fun loadSounds() = withContext(Dispatchers.IO) {
         soundPool = SoundPool.Builder()
             .setMaxStreams(6)
-            .setAudioAttributes(AudioAttributes.Builder().setLegacyStreamType(AudioManager.STREAM_MUSIC).build())
+            .setAudioAttributes(
+                AudioAttributes.Builder().setLegacyStreamType(AudioManager.STREAM_MUSIC).build()
+            )
             .build()
             .apply {
                 soundIdCountdown1 = load(ctx, R.raw.camera_timer, 1)
@@ -48,7 +50,16 @@ class SoundManager private constructor(val ctx: Context) {
         if (leftTime == 2) {
             playSound(soundIdCountdownFinal, getSoundVolume())
         } else if (leftTime > 2) {
-            playSound(if (leftTime % 2 == 0) soundIdCountdown1 else soundIdCountdown2, getSoundVolume())
+            playSound(
+                if (leftTime % 2 ==
+                    0
+                ) {
+                    soundIdCountdown1
+                } else {
+                    soundIdCountdown2
+                },
+                getSoundVolume()
+            )
         }
     }
 
@@ -62,12 +73,14 @@ class SoundManager private constructor(val ctx: Context) {
         }
     }
 
-    private fun playSound(soundId: Int, volume: Float) = soundPool.play(soundId, volume, volume, 1, 0, 1f)
+    private fun playSound(soundId: Int, volume: Float) =
+        soundPool.play(soundId, volume, volume, 1, 0, 1f)
 
     private fun getSoundVolume(): Float =
-        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audioManager.getStreamMaxVolume(
-            AudioManager.STREAM_MUSIC
-        )
+        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
+            audioManager.getStreamMaxVolume(
+                AudioManager.STREAM_MUSIC
+            )
 
     companion object : SingletonHolder<SoundManager, Context>(::SoundManager)
 }

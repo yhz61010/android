@@ -140,7 +140,8 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
     private val vertexBufferFireL: FloatBuffer = createFloatBuffer(VERTEX_DATA_FIRE_L)
 
     private val textureBufferFireL: FloatBuffer = createFloatBuffer(TEX_COORD_FIRE_L)
-    private val textureBufferBeauty: FloatBuffer = createFloatBuffer(vertexToTexture(VERTEX_DATA_BEAUTY))
+    private val textureBufferBeauty: FloatBuffer =
+        createFloatBuffer(vertexToTexture(VERTEX_DATA_BEAUTY))
 
     private var textureLocationFireL: Int = 0
     private var textureLocationBeauty: Int = 0
@@ -154,16 +155,17 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
 
     private lateinit var projectionMatrixHelper: ProjectionMatrixHelper
 
-    private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray = floatArrayOf(
-        -(vertex[2] + 1.0f) / 2.0f,
-        2 - (vertex[3] + 1.0f) / 2.0f,
-        -(vertex[0] + 1.0f) / 2.0f,
-        -(vertex[1] + 1.0f) / 2.0f,
-        2 - (vertex[6] + 1.0f) / 2.0f,
-        -(vertex[7] + 1.0f) / 2.0f,
-        2 - (vertex[4] + 1.0f) / 2.0f,
-        2 - (vertex[5] + 1.0f) / 2.0f
-    )
+    private fun vertexToTexture(@Suppress("SameParameterValue") vertex: FloatArray): FloatArray =
+        floatArrayOf(
+            -(vertex[2] + 1.0f) / 2.0f,
+            2 - (vertex[3] + 1.0f) / 2.0f,
+            -(vertex[0] + 1.0f) / 2.0f,
+            -(vertex[1] + 1.0f) / 2.0f,
+            2 - (vertex[6] + 1.0f) / 2.0f,
+            -(vertex[7] + 1.0f) / 2.0f,
+            2 - (vertex[4] + 1.0f) / 2.0f,
+            2 - (vertex[5] + 1.0f) / 2.0f
+        )
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(210f / 255, 216f / 255, 209f / 255, 1f)
@@ -235,11 +237,15 @@ class L6U2Sub3TextureRenderer(@Suppress("unused") private val ctx: Context) : Ba
             0,
             vertexBufferFireL
         )
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // 几何图形相关定义：
+        // http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLES：每隔三个顶点构成一个三角形，为多个三角形组成。例如：ABC，DEF，GHI
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         // GL_TRIANGLE_FAN：第一个点和之后所有相邻的 2 个点构成一个三角形。
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VERTEX_DATA_FIRE_L.size / TWO_DIMEN_POS_COMPONENT_COUNT)
+        GLES20.glDrawArrays(
+            GLES20.GL_TRIANGLE_FAN, 0,
+            VERTEX_DATA_FIRE_L.size / TWO_DIMEN_POS_COMPONENT_COUNT
+        )
     }
 
     private fun drawFireL() {

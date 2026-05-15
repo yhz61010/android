@@ -72,7 +72,9 @@ open class CameraXActivity : AppCompatActivity() {
 
     private fun getCameraFragment(): CameraFragment? {
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment_container_camerax) as NavHostFragment
+            supportFragmentManager.findFragmentById(
+                R.id.fragment_container_camerax
+            ) as NavHostFragment
         return navHostFragment.childFragmentManager.primaryNavigationFragment as? CameraFragment
     }
 

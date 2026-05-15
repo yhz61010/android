@@ -45,7 +45,12 @@ class H264HevcDecoder {
     external fun getVersion(): String
 
     @Keep
-    class DecodedVideoFrame(val yuvOrRgbBytes: ByteArray, val format: Int, val width: Int, val height: Int)
+    class DecodedVideoFrame(
+        val yuvOrRgbBytes: ByteArray,
+        val format: Int,
+        val width: Int,
+        val height: Int
+    )
 
     @Keep
     class DecodeVideoInfo(

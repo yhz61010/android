@@ -41,6 +41,7 @@ inline fun <reified T : Any> prefGet(key: String, default: T): T = pref.get(key,
  */
 fun prefGetNullableStr(key: String, default: String? = null): String? = pref.getString(key, default)
 
-fun prefGetSet(key: String, default: Set<String>? = null): Set<String>? = pref.getStringSet(key, default)
+fun prefGetSet(key: String, default: Set<String>? = null): Set<String>? =
+    pref.getStringSet(key, default)
 
 inline fun <reified T> prefGetObj(key: String): T? = pref.getObject(key)

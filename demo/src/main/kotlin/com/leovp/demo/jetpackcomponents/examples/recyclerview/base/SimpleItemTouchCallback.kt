@@ -24,14 +24,20 @@ abstract class SimpleItemTouchCallback(context: Context) :
         // or ItemTouchHelper.UP or ItemTouchHelper.DOWN
         ItemTouchHelper.LEFT
     ) {
-    private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_outline_delete_forever)!!
+    private val deleteIcon = ContextCompat.getDrawable(
+        context,
+        R.drawable.ic_outline_delete_forever
+    )!!
     private val intrinsicWidth = deleteIcon.intrinsicWidth
     private val intrinsicHeight = deleteIcon.intrinsicHeight
     private val background = ColorDrawable()
     private val backgroundColor = ContextCompat.getColor(context, R.color.purple_500)
     private val clearPaint = Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) }
 
-    override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+    override fun getMovementFlags(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder
+    ): Int {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
             /**
@@ -40,7 +46,8 @@ abstract class SimpleItemTouchCallback(context: Context) :
              * if (viewHolder?.itemViewType == YourAdapter.SOME_TYPE) return 0
              * if (viewHolder?.adapterPosition == 0) return 0
              */
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             LogContext.log.d(
                 ITAG,
                 "viewHolder.adapterPosition=${viewHolder.bindingAdapterPosition}"
@@ -58,7 +65,8 @@ abstract class SimpleItemTouchCallback(context: Context) :
     ): Boolean {
         val adapter = recyclerView.adapter as SimpleAdapter
         return if (adapter.editMode) {
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             adapter.itemMove(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
             true
         } else {
@@ -97,7 +105,12 @@ abstract class SimpleItemTouchCallback(context: Context) :
 
         // Draw the red delete background
         background.color = backgroundColor
-        background.setBounds(itemView.right + dX.toInt(), itemView.top, itemView.right, itemView.bottom)
+        background.setBounds(
+            itemView.right + dX.toInt(),
+            itemView.top,
+            itemView.right,
+            itemView.bottom
+        )
         background.draw(c)
 
         // Calculate position of delete icon

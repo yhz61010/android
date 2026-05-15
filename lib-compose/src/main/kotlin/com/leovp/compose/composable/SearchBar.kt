@@ -84,7 +84,11 @@ fun SearchBar(
             Text(
                 modifier = Modifier.weight(1f),
                 text = searchText ?: "",
-                color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray,
+                color = if (isSystemInDarkTheme()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    Color.Gray
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

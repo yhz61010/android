@@ -10,7 +10,8 @@ import com.leovp.demo.databinding.ActivityKeepAliveBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 
-class KeepAliveActivity : BaseDemonstrationActivity<ActivityKeepAliveBinding>(R.layout.activity_keep_alive) {
+class KeepAliveActivity :
+    BaseDemonstrationActivity<ActivityKeepAliveBinding>(R.layout.activity_keep_alive) {
     override fun getTagName(): String = ITAG
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityKeepAliveBinding =

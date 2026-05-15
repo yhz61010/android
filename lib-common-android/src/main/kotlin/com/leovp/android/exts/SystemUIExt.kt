@@ -93,7 +93,8 @@ fun Window.requestFullScreenAfterVisible() {
         this.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
     // or
-    //        act.window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    // act.window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+    // WindowManager.LayoutParams.FLAG_FULLSCREEN)
 }
 
 /**
@@ -136,7 +137,8 @@ fun Window.hideNavigationBar(rootView: View = decorView) {
         WindowInsetsControllerCompat(this, rootView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.statusBars())
             controller.hide(WindowInsetsCompat.Type.navigationBars())
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     } else {
         // https://blog.csdn.net/c15522627353/article/details/52452490
@@ -152,7 +154,8 @@ fun Window.hideNavigationBar(rootView: View = decorView) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         // https://blog.csdn.net/weixin_37997371/article/details/83536953
         val lp = this.attributes
-        lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        lp.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         this.attributes = lp
     }
 }
@@ -169,7 +172,8 @@ private fun doShare(ctx: Context, uri: Uri, title: String) {
 }
 
 /**
- * For devices with notches at the top of the display, you can add the following to your v27 theme.xml file
+ * For devices with notches at the top of the display, you can add the following to your v27
+ * theme.xml file
  * make the UI appear either side of the notch:
  * ```xml
  * <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
@@ -181,12 +185,14 @@ private fun doShare(ctx: Context, uri: Uri, title: String) {
 //    WindowCompat.setDecorFitsSystemWindows(this, false)
 //    WindowInsetsControllerCompat(this, mainContainer).let { controller ->
 //        controller.hide(WindowInsetsCompat.Type.systemBars())
-//        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+// controller.systemBarsBehavior =
+// WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 //    }
 // }
 
 /**
- * For devices with notches at the top of the display, you can add the following to your v27 theme.xml file
+ * For devices with notches at the top of the display, you can add the following to your v27
+ * theme.xml file
  * make the UI appear either side of the notch:
  * ```xml
  * <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>

@@ -47,26 +47,31 @@ class ReflectManagerJavaTest {
         val javaPerson1Name: String = ReflectManager.reflect(javaPerson1).property("name").get()
         assertEquals("Kotlin", javaPerson1Name)
 
-        val javaPerson1OpenField: String = ReflectManager.reflect(javaPerson1).property("openField").get()
+        val javaPerson1OpenField: String =
+            ReflectManager.reflect(javaPerson1).property("openField").get()
         assertEquals("Open Field", javaPerson1OpenField)
 
         val rfltPerson1: JavaTestClass.JavaPerson = ReflectManager
             .reflect(JavaTestClass.JavaPerson::class)
             .newInstance("Reflected Person", 'F', 18)
             .get()
-        val javaPerson1PublicStatic: String = ReflectManager.reflect(rfltPerson1).property("PUBLIC_FINAL").get()
+        val javaPerson1PublicStatic: String =
+            ReflectManager.reflect(rfltPerson1).property("PUBLIC_FINAL").get()
         assertEquals("Public Final", javaPerson1PublicStatic)
 
-        val javaPerson1PrivateStatic: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
+        val javaPerson1PrivateStatic: String =
+            ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
         assertEquals("Private Final", javaPerson1PrivateStatic)
 
         val rfltPersonName: String = ReflectManager.reflect(rfltPerson1).property("name").get()
         assertEquals("Reflected Person", rfltPersonName)
 
-        val javaPerson1PublicFinal: String = ReflectManager.reflect(rfltPerson1).property("PUBLIC_FINAL").get()
+        val javaPerson1PublicFinal: String =
+            ReflectManager.reflect(rfltPerson1).property("PUBLIC_FINAL").get()
         assertEquals("Public Final", javaPerson1PublicFinal)
 
-        val javaPerson1PrivateFinal: String = ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
+        val javaPerson1PrivateFinal: String =
+            ReflectManager.reflect(rfltPerson1).property("PRIVATE_FINAL").get()
         assertEquals("Private Final", javaPerson1PrivateFinal)
 
 //        val publicStaticFinalInt: Int = ReflectManager
@@ -77,7 +82,9 @@ class ReflectManagerJavaTest {
 
         // TODO Try to fix me.
         // https://stackoverflow.com/a/14102192/1685062
-        // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT", 10086)
+        // ReflectManager.reflect(JavaTestClass.JavaPerson::class).property("PUBLIC_STATIC_FINAL_INT
+        // ",
+        // 10086)
         // assertEquals(10086, JavaTestClass.JavaPerson.PUBLIC_STATIC_FINAL_INT)
 
         val rfltPerson2: JavaTestClass.JavaPerson = ReflectManager
@@ -89,7 +96,8 @@ class ReflectManagerJavaTest {
         assertEquals("Modified public final", rfltPerson2.PUBLIC_FINAL)
 
         ReflectManager.reflect(rfltPerson2).property("PRIVATE_FINAL", "Modified private final")
-        val privateFinal: String = ReflectManager.reflect(rfltPerson2).property("PRIVATE_FINAL").get()
+        val privateFinal: String =
+            ReflectManager.reflect(rfltPerson2).property("PRIVATE_FINAL").get()
         assertEquals("Modified private final", privateFinal)
     }
 
@@ -118,7 +126,10 @@ class ReflectManagerJavaTest {
         noArgClass.secret = 10010
         assertEquals(10010, noArgClass.secret)
 
-        val fixedCode = ReflectManager.reflect(NoArgClass::class).newInstance().method("getFixedCode").get<Int>()
+        val fixedCode =
+            ReflectManager.reflect(
+                NoArgClass::class
+            ).newInstance().method("getFixedCode").get<Int>()
         assertEquals(10086, fixedCode)
 
         val javaPerson2: JavaTestClass.JavaPerson = ReflectManager

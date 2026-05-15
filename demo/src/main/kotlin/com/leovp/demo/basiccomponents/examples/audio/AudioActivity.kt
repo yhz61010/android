@@ -38,7 +38,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     companion object {
         private const val TAG = "AudioActivity"
 
-        // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start.html
+        // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start
+        // .html
         // Check comments in OpusEncoder.kt file.
         val audioEncoderInfo = AudioEncoderInfo(
             48000,
@@ -193,7 +194,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 AudioType.AAC -> {
                     LogContext.log.i(
                         TAG,
-                        "Get encoded AAC Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
+                        "Get encoded AAC Data[${data.size}] isConfig=$isConfig " +
+                            "isKeyFrame=$isKeyFrame"
                     )
                     runCatching { aacOs?.write(data) }.onFailure { it.printStackTrace() }
                 }
@@ -201,7 +203,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 AudioType.OPUS -> {
                     LogContext.log.i(
                         TAG,
-                        "Get encoded OPUS Data[${data.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
+                        "Get encoded OPUS Data[${data.size}] isConfig=$isConfig " +
+                            "isKeyFrame=$isKeyFrame"
                     )
                     runCatching {
                         opusOs?.write(OpusFilePlayer.START_CODE.encodeToByteArray())

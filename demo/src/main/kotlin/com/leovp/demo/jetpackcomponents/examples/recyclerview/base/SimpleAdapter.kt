@@ -55,7 +55,8 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+        // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpositio
+        // n-and-getlayoutposition-in-recyclerview-80279a2711d1
         val currentItem = dataArray[holder.bindingAdapterPosition]
         LogContext.log.d(
             ITAG,
@@ -69,12 +70,14 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
             if (editMode) {
                 holder.selectBtn.isChecked = !(holder.selectBtn.isChecked)
             }
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
 
         holder.itemView.setOnLongClickListener {
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemLongClick(holder.itemView, holder.layoutPosition)
             true
         }
@@ -87,15 +90,24 @@ class SimpleAdapter(private val dataArray: MutableList<ItemBean>) :
         }
 
         holder.selectBtn.setOnCheckedChangeListener { _, isChecked ->
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             val selectedItem = dataArray[holder.layoutPosition]
             selectedItem.checked = isChecked
             if (isChecked) {
                 selectedItems.add(selectedItem)
             } else {
-                if (selectedItems.isNotEmpty()) selectedItems.remove(selectedItems.first { it.id == selectedItem.id })
+                if (selectedItems.isNotEmpty()) {
+                    selectedItems.remove(
+                        selectedItems.first {
+                            it.id ==
+                                selectedItem.id
+                        }
+                    )
+                }
             }
-            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterposition-and-getlayoutposition-in-recyclerview-80279a2711d1
+            // https://medium.com/@noureldeen.abouelkassem/difference-between-position-getadapterpos
+            // ition-and-getlayoutposition-in-recyclerview-80279a2711d1
             onItemClickListener?.onItemClick(holder.itemView, holder.layoutPosition)
         }
         val translationXOffset = 110F

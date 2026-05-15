@@ -98,21 +98,27 @@ inline fun <reified T : Context> Fragment.startActivity(
  * Launch an Activity
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to
+ * [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+// fun Activity.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) ->
+// Intent)? = null, flags: Int? = null, options: Bundle? = null) {
 //    val intent = Intent(this, cls).apply { flags?.let { addFlags(it) } }
 //    startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
 // }
@@ -121,42 +127,54 @@ inline fun <reified T : Context> Fragment.startActivity(
  * Launch an Activity
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to
+ * [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// fun Activity.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent)
+// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
  * Launch an Activity
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to
+ * [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_T ASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent)
+// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
 // -----
@@ -165,21 +183,26 @@ inline fun <reified T : Context> Fragment.startActivity(
  * Launch an Activity in Fragment
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) {
+// fun Fragment.startActivityForResult(cls: Class<*>, requestCode: Int, extras: ((intent: Intent) ->
+// Intent)? = null, flags: Int? = null, options: Bundle? = null) {
 //    val intent = Intent(requireContext(), cls).apply { flags?.let { addFlags(it) } }
 //    startActivityForResult(if (extras == null) intent else extras(intent), requestCode, options)
 // }
@@ -188,42 +211,52 @@ inline fun <reified T : Context> Fragment.startActivity(
  * Launch an Activity in Fragment
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent)
+// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
 /**
  * Launch an Activity in Fragment
  *
  * Attention:
- * According to [Official document](https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
+ * According to [Official document]
+ * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
  *
- * > This flag can not be used when the caller is requesting a result from the activity being launched.
+ * > This flag can not be used when the caller is requesting a result from the activity being
+ * launched.
  *
  * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was added can not return a result.
+ * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
+ * added can not return a result.
  *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags FLAG_ACTIVITY_NEW_TASK</a>
+ * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
+ * FLAG_ACTIVITY_NEW_TASK</a>
  */
 // @JvmOverloads
 // @Deprecated(
-//    "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
+// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
 //    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
 // )
-// fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent) -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
+// fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent)
+// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
 // ============================================================
@@ -245,8 +278,12 @@ fun Context.startAppDetailSetting() =
  * Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Fragment.startAppDetailSetting() =
-    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri))
+fun Fragment.startAppDetailSetting() = startActivity(
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        this.requireContext().packageUri
+    )
+)
 
 /**
  * Launch applications detail page
@@ -256,7 +293,11 @@ fun Fragment.startAppDetailSetting() =
  */
 @JvmOverloads
 fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) =
-    startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri), requestCode, options)
+    startActivityForResult(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.packageUri),
+        requestCode,
+        options
+    )
 
 /**
  * Launch applications detail page
@@ -266,7 +307,8 @@ fun Activity.startAppDetailSettingForResult(requestCode: Int, options: Bundle? =
  */
 // @JvmOverloads
 // fun Fragment.startAppDetailSettingForResult(requestCode: Int, options: Bundle? = null) {
-//    startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, this.requireContext().packageUri), requestCode, options)
+// startActivityForResult(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+// this.requireContext().packageUri), requestCode, options)
 // }
 
 // --------------------------------------------------
@@ -286,8 +328,12 @@ fun Context.startAppStorageSettings() =
  *  Attention:
  * In some cases, a matching Activity may not exist, so ensure you safeguard against this.
  */
-fun Fragment.startAppStorageSettings() =
-    startActivity(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri))
+fun Fragment.startAppStorageSettings() = startActivity(
+    Intent(
+        Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+        this.requireContext().packageUri
+    )
+)
 
 /**
  * Launch internal storage settings page
@@ -297,7 +343,11 @@ fun Fragment.startAppStorageSettings() =
  */
 @JvmOverloads
 fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) =
-    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri), requestCode, options)
+    startActivityForResult(
+        Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.packageUri),
+        requestCode,
+        options
+    )
 
 /**
  * Launch internal storage settings page
@@ -307,7 +357,8 @@ fun Activity.startAppStorageSettingsForResult(requestCode: Int, options: Bundle?
  */
 // @JvmOverloads
 // fun Fragment.startAppStorageSettingsForResult(requestCode: Int, options: Bundle? = null) {
-//    startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS, this.requireContext().packageUri), requestCode, options)
+// startActivityForResult(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS,
+// this.requireContext().packageUri), requestCode, options)
 // }
 
 // --------------------------------------------------
@@ -332,7 +383,12 @@ fun Context.startManageDrawOverlaysPermission() {
  */
 fun Fragment.startManageDrawOverlaysPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.requireContext().packageUri))
+        startActivity(
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                this.requireContext().packageUri
+            )
+        )
     }
 }
 
@@ -345,7 +401,11 @@ fun Fragment.startManageDrawOverlaysPermission() {
 @JvmOverloads
 fun Activity.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.packageUri), requestCode, options)
+        startActivityForResult(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.packageUri),
+            requestCode,
+            options
+        )
     }
 }
 
@@ -358,7 +418,8 @@ fun Activity.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle
 // @JvmOverloads
 // fun Fragment.startManageDrawOverlaysPermission(requestCode: Int, options: Bundle? = null) {
 //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//        startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, this.requireContext().packageUri), requestCode, options)
+// startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+// this.requireContext().packageUri), requestCode, options)
 //    }
 // }
 
@@ -410,7 +471,7 @@ fun Activity.startUnitySettingPage(action: String, requestCode: Int, options: Bu
 // @JvmOverloads
 // fun Fragment.startUnitySettingPage(action: String, requestCode: Int, options: Bundle? = null) {
 //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//        startActivityForResult(Intent(action, this.requireContext().packageUri), requestCode, options)
+// startActivityForResult(Intent(action, this.requireContext().packageUri), requestCode, options)
 //    }
 // }
 

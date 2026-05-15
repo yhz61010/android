@@ -10,7 +10,8 @@ import javax.microedition.khronos.opengles.GL10
  *
  * 点击屏幕查看效果
  */
-class L3U2RefactorOrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) : L2U2PolygonRenderer(ctx) {
+class L3U2RefactorOrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) :
+    L2U2PolygonRenderer(ctx) {
     override fun getTagName(): String = L3U2RefactorOrthoPolygonRenderer::class.java.simpleName
 
     private companion object {

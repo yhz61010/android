@@ -24,7 +24,11 @@ import java.util.concurrent.TimeUnit
  * networkMonitor.stopMonitor()
  * ```
  */
-class NetworkMonitor(private val ctx: Context, private val ip: String, callback: (NetworkMonitorResult) -> Unit,) {
+class NetworkMonitor(
+    private val ctx: Context,
+    private val ip: String,
+    callback: (NetworkMonitorResult) -> Unit,
+) {
     companion object {
         private const val TAG = "NM"
     }
@@ -75,10 +79,14 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, callback:
                 }
                 val strengthIn100Score = globalWifiSignal?.score ?: -1
                 if (strengthIn100Score != Int.MIN_VALUE) {
-                    if (strengthIn100Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD && strengthCountdown < 1) {
+                    if (strengthIn100Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD &&
+                        strengthCountdown < 1
+                    ) {
                         showWifiSignalStatus = NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD
                         strengthCountdown = MAX_COUNT
-                    } else if (strengthIn100Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD && strengthCountdown < 1) {
+                    } else if (strengthIn100Score <= NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD &&
+                        strengthCountdown < 1
+                    ) {
                         showWifiSignalStatus = NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD
                         strengthCountdown = MAX_COUNT
                     }
@@ -120,7 +128,12 @@ class NetworkMonitor(private val ctx: Context, private val ip: String, callback:
      * <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
      * ```
      */
-    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
     fun startMonitor(freq: Int = 1) {
         LogContext.log.i(TAG, "startMonitor()")
         val interval: Int = if (freq < 1) 1 else freq

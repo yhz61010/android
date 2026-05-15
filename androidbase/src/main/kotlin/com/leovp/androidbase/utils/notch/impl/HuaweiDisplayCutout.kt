@@ -28,7 +28,10 @@ internal class HuaweiDisplayCutout : DisplayCutout {
         }.onFailure { it.printStackTrace() }
     }
 
-    override fun cutoutAreaRect(activity: Activity, callback: DisplayCutout.CutoutAreaRectCallback) {
+    override fun cutoutAreaRect(
+        activity: Activity,
+        callback: DisplayCutout.CutoutAreaRectCallback
+    ) {
         runCatching {
             val cl = activity.classLoader
             val hwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil")
@@ -54,9 +57,15 @@ internal class HuaweiDisplayCutout : DisplayCutout {
                 val layoutParamsExCls = Class.forName("com.huawei.android.view.LayoutParamsEx")
                 val con = layoutParamsExCls.getConstructor(WindowManager.LayoutParams::class.java)
                 val layoutParamsExObj = con.newInstance(layoutParams)
-                val method = layoutParamsExCls.getMethod("clearHwFlags", Int::class.javaPrimitiveType)
+                val method = layoutParamsExCls.getMethod(
+                    "clearHwFlags",
+                    Int::class.javaPrimitiveType
+                )
                 method.invoke(layoutParamsExObj, FLAG_NOTCH_SUPPORT)
-                window.windowManager.updateViewLayout(window.decorView, window.decorView.layoutParams)
+                window.windowManager.updateViewLayout(
+                    window.decorView,
+                    window.decorView.layoutParams
+                )
             }.onFailure { it.printStackTrace() }
         }
     }

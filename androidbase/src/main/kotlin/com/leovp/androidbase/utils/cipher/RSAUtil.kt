@@ -28,35 +28,38 @@ object RSAUtil {
      * - RSA/ECB/OAEPWithSHA-256AndMGF1Padding
      * - RSA/ECB/OAEPWithSHA-384AndMGF1Padding
      *
-     * The ECB mode can be used for RSA when "None" is not available with the security provider used.
+     * The ECB mode can be used for RSA when "None" is not available with the security provider
+     * used.
      * In that case, ECB will be treated as "None" for RSA.
      *
      * It's better not to use **RSA/ECB/PKCS1Padding**.
      */
     private const val CIPHER_TRANSFORMATION = "RSA"
 
-    // private val sp = OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA1, PSource.PSpecified.DEFAULT)
+    // private val sp = OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA1,
+    // PSource.PSpecified.DEFAULT)
 
     // The RSA key MUST BE 2048 bits or higher.
     private const val KEY_SIZE = 2048
     private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 11
     private const val MAX_DECRYPT_LEN = KEY_SIZE / 8
 
-    fun getKeyPair(): KeyPair = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
-        // initialize(KeyGenParameterSpec.Builder(
-        //     "leo-rsa-keypair",
-        //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-        //     .setDigests(
-        //         KeyProperties.DIGEST_SHA1,
-        //         KeyProperties.DIGEST_SHA256,
-        //         KeyProperties.DIGEST_SHA384,
-        //         KeyProperties.DIGEST_SHA512,
-        //     )
-        //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
-        //     .setKeySize(KEY_SIZE)
-        //     .build())
-        initialize(KEY_SIZE)
-    }.generateKeyPair()
+    fun getKeyPair(): KeyPair =
+        KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
+            // initialize(KeyGenParameterSpec.Builder(
+            //     "leo-rsa-keypair",
+            //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            //     .setDigests(
+            //         KeyProperties.DIGEST_SHA1,
+            //         KeyProperties.DIGEST_SHA256,
+            //         KeyProperties.DIGEST_SHA384,
+            //         KeyProperties.DIGEST_SHA512,
+            //     )
+            //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+            //     .setKeySize(KEY_SIZE)
+            //     .build())
+            initialize(KEY_SIZE)
+        }.generateKeyPair()
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
@@ -141,7 +144,8 @@ object RSAUtil {
      * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
      * ```
      */
-    fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? = sign(encodedPriKey, plainText.toByteArray())
+    fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? =
+        sign(encodedPriKey, plainText.toByteArray())
 
     /**
      * Signature will encrypt data by private key which can get from [getKeyPair] method.
@@ -191,11 +195,12 @@ object RSAUtil {
 
     // =====
 
-    private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? = runCatching {
-        val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-        cipher.init(opmode, key)
-        cipher.doFinal(data)
-    }.getOrNull()
+    private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? =
+        runCatching {
+            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
+            cipher.init(opmode, key)
+            cipher.doFinal(data)
+        }.getOrNull()
 
     // ==========
 

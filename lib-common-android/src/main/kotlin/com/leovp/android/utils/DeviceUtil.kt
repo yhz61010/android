@@ -63,7 +63,10 @@ class DeviceUtil private constructor(private val ctx: Context) {
     val hardware: String? = Build.HARDWARE
     val cpuQualifiedName =
         runCatching {
-            ShellUtil.execCmd("cat /proc/cpuinfo | grep -i hardware", false).successMsg.replaceFirst(
+            ShellUtil.execCmd(
+                "cat /proc/cpuinfo | grep -i hardware",
+                false
+            ).successMsg.replaceFirst(
                 Regex("hardware[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
                 ""
             )
@@ -79,7 +82,8 @@ class DeviceUtil private constructor(private val ctx: Context) {
         else -> "NA"
     }
     //        runCatching {
-    //        ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor", false).successMsg.split('\n')[0].replaceFirst(
+    // ShellUtil.execCmd("cat /proc/cpuinfo | grep -i Processor",
+    // false).successMsg.split('\n')[0].replaceFirst(
     //            Regex("Processor[\\s\\t]*:[\\s\\t]*", RegexOption.IGNORE_CASE),
     //            ""
     //        )
@@ -117,7 +121,10 @@ class DeviceUtil private constructor(private val ctx: Context) {
         File("/sys/devices/system/cpu/").listFiles { file: File? ->
             file?.name?.matches(Regex("cpu\\d+")) ?: false
         }?.maxOfOrNull { file ->
-            ShellUtil.execCmd("cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq", false).successMsg.toInt()
+            ShellUtil.execCmd(
+                "cat ${file.absolutePath}/cpufreq/cpuinfo_max_freq",
+                false
+            ).successMsg.toInt()
         } ?: -1
     }.getOrDefault(-2)
 
@@ -196,7 +203,8 @@ class DeviceUtil private constructor(private val ctx: Context) {
                 val used = pair.second - pair.first
                 val usedPercent: Float = used * 100F / pair.second
                 sb.append(
-                    "[$index]=${used.outputFormatByte()}/${pair.second.outputFormatByte()} ${usedPercent.round()}% Used"
+                    "[$index]=${used.outputFormatByte()}/${pair.second.outputFormatByte()} " +
+                        "${usedPercent.round()}% Used"
                 )
                 sb.append("\n")
             }
@@ -220,7 +228,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
         val configInfo: ConfigurationInfo = ctx.activityManager.deviceConfigurationInfo
         val cpuInfo = "$cpuQualifiedName($cpuCoreCount cores @ " +
             "${cpuMinFreq / 1000}MHz~${"%.2f".format(cpuMaxFreq / 1000_000F)}GHz)"
-        val memUsage = "${(memInfo.second - memInfo.first).outputFormatByte()}/${memInfo.second.outputFormatByte()}"
+        val memUsage =
+            "${(memInfo.second - memInfo.first).outputFormatByte()}/" +
+                memInfo.second.outputFormatByte()
         val screenInfo = "${screenSize.width}x${screenSize.height} ${ctx.screenInch} inches " +
             "RefreshRate=${defaultDisplay?.refreshRate?.toInt()}  " +
             "(${getRatio(screenSize.toSmartSize())}=${ctx.screenRatio.round()})  " +
@@ -232,7 +242,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
             App version      : ${ctx.versionName}(${ctx.versionCode})
             Device locale    : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
             Default locale   : ${LangUtil.getInstance(ctx).getDefaultLanguageCountryCode()}
-            Network Type     : ${NetworkUtil.getNetworkTypeName(ctx)}(${NetworkUtil.getNetworkGeneration(ctx)})
+            Network Type     : ${NetworkUtil.getNetworkTypeName(ctx)}(
+                ${NetworkUtil.getNetworkGeneration(ctx)}
+            )
             Manufacturer     : $manufacturer
             Brand            : $brand
             Board            : $board
@@ -245,7 +257,9 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Hardware         : $hardware
             CPU              : $cpuInfo
             CPU Arch         : $cpuArch
-            OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(configInfo.reqGlEsVersion)}]
+            OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(
+            configInfo.reqGlEsVersion
+        )}]
             Supported ABIS   : ${supportedCpuArchs.contentToString()}
             Display          : $display
             Screen           : $screenInfo

@@ -22,12 +22,15 @@ import java.util.concurrent.ArrayBlockingQueue
  * https://datatracker.ietf.org/doc/html/rfc6716
  *
  * - Opus supports bitrates: 6kbit/s ~ 510 kbit/s
- * - Opus supports frame size in milliseconds: 2.5ms, 5ms, 10ms, 20ms, 40ms, 60ms (20ms frames are a good choice for most applications)
+ * - Opus supports frame size in milliseconds: 2.5ms, 5ms, 10ms, 20ms, 40ms, 60ms (20ms frames are a
+ * good choice for most applications)
  * - Opus supports sample rate: 8kHz, 12kHz, 16kHz, 24kHz, 48Khz
  *
  * Attention:
- * Anyway, in practice, on the devices I tested, opus encoder by MediaCodec _ONLY_ supports 48kHz as sample rate
- * and the frame size seems like 960 samples (20ms). Most important, all the above parameters are not configurable.
+ * Anyway, in practice, on the devices I tested, opus encoder by MediaCodec _ONLY_ supports 48kHz as
+ * sample rate
+ * and the frame size seems like 960 samples (20ms). Most important, all the above parameters are
+ * not configurable.
  *
  * We use 48kHz as example:
  * The samples per millisecond:
@@ -80,16 +83,19 @@ import java.util.concurrent.ArrayBlockingQueue
  * The fields in the identification (ID) header have the following meaning:
  *
  * 1. Magic Signature:
- *      The magic numbers: "OpusHead"，8-octet (64-bits). 0x4F 'O' | 0x70 'p' | 0x75 'u' | 0x73 's' | 0x48 'H' | 0x65 'e' | 0x61 'a' | 0x64 'd'
+ * The magic numbers: "OpusHead"，8-octet (64-bits). 0x4F 'O' | 0x70 'p' | 0x75 'u' | 0x73 's' | 0x48
+ * 'H' | 0x65 'e' | 0x61 'a' | 0x64 'd'
  * 2. Version (8 bits, unsigned):
  *      Must always be `1`.
  * 3. Output Channel Count (8 bits, unsigned):
  *      This is the number of output channels. This value MUST NOT be zero.
  * 4. Pre-skip (16 bits, unsigned, little endian):
- *      This is the number of samples (at 48 kHz) to discard from the decoder output when starting playback, and also the number to
+ * This is the number of samples (at 48 kHz) to discard from the decoder output when starting
+ * playback, and also the number to
  *      subtract from a page's granule position to calculate its PCM sample position.
  * 5. Input Sample Rate (32 bits, unsigned, little endian):
- *      This is the sample rate of the original input (before encoding), in Hz. This field is _not_ the sample rate to use for playback of the encoded data.
+ * This is the sample rate of the original input (before encoding), in Hz. This field is _not_ the
+ * sample rate to use for playback of the encoded data.
  * 6. Output Gain (16 bits, signed, little endian):
  *      This is a gain to be applied when decoding.
  * 7. Channel Mapping Family (8 bits, unsigned):
@@ -102,15 +108,17 @@ import java.util.concurrent.ArrayBlockingQueue
  * CSD buffer #0:
  *      Identification header
  * CSD buffer #1:
- *      Pre-skip in nanosecs (unsigned 64-bit native-order integer.) This overrides the pre-skip value in the identification header.
+ * Pre-skip in nanosecs (unsigned 64-bit native-order integer.) This overrides the pre-skip value in
+ * the identification header.
  * CSD buffer #2:
  *      Seek Pre-roll in nanosecs (unsigned 64-bit native-order integer.)
  *
  * Here is an example of the config packet received for an OPUS stream (From MediaCodec):
  * 00000000  41 4f 50 55 53 48 44 52  13 00 00 00 00 00 00 00  |AOPUSHDR........|
  * -------------- BELOW IS THE PART WE MUST PUT AS EXTRADATA  -------------------
- * 00000010  4f 70 75 73 48 65 61 64  01 02 38 01 80 bb 00 00  |OpusHead..8.....|  <- Identification header
- * 00000020  00 00 00                                          |...             |  <- Identification header
+ * 00000010 4f 70 75 73 48 65 61 64 01 02 38 01 80 bb 00 00 |OpusHead..8.....| <- Identification
+ * header
+ * 00000020 00 00 00 |... | <- Identification header
  * ------------------------------------------------------------------------------
  * 00000020           41 4f 50 55 53  44 4c 59 08 00 00 00 00  |   AOPUSDLY.....|
  * 00000030  00 00 00 a0 2e 63 00 00  00 00 00                 |.....c.....     |
@@ -189,7 +197,12 @@ class OpusEncoder(
         it.size.also { size -> totalPcmBytes += size }
     } ?: 0
 
-    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean
+    ) {
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
             val opusCsd = AudioCodecUtil.parseOpusConfigFrame(outBuf) // little endian

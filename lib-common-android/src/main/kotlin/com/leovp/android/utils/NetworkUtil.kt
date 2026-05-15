@@ -159,7 +159,8 @@ object NetworkUtil {
      * System will issue NUMBER_OF_PACKTETS ICMP Echo Request packet each having size of 56 bytes
      * every second, and returns the avg latency of them.
      *
-     * @return Return the latency which getting from ping command. Return -2 which indicates network is offline.
+     * @return Return the latency which getting from ping command. Return -2 which indicates network
+     * is offline.
      * Return -1 indicates get ping error.
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -195,7 +196,7 @@ object NetworkUtil {
 
         // Extracting the average round trip time from the inputLine string
         return runCatching {
-            val afterEqual = inputLine!!.substring(inputLine!!.indexOf("=")).trim { it <= ' ' }
+            val afterEqual = inputLine!!.substring(inputLine.indexOf("=")).trim { it <= ' ' }
             val afterFirstSlash =
                 afterEqual.substring(afterEqual.indexOf('/') + 1).trim { it <= ' ' }
             val strAvgRtt = afterFirstSlash.substring(0, afterFirstSlash.indexOf('/'))
@@ -219,7 +220,12 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.READ_PHONE_STATE" />
      * ```
      */
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_PHONE_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.READ_PHONE_STATE
+        ]
+    )
     fun getNetworkGeneration(ctx: Context): String? {
         return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
             return when {
@@ -246,7 +252,12 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
      */
-    @RequiresPermission(allOf = [Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.ACCESS_NETWORK_STATE])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ]
+    )
     fun getWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val request = NetworkRequest.Builder()
@@ -255,7 +266,10 @@ object NetworkUtil {
             val connectivityManager = ctx.connectivityManager
             val networkCallback = object : ConnectivityManager.NetworkCallback() {
                 @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
+                ) {
                     val wifiInfo: WifiInfo =
                         networkCapabilities.transportInfo as? WifiInfo ?: return
                     if (isWifiActive(ctx)) {
@@ -306,7 +320,12 @@ object NetworkUtil {
     }
 
     @WorkerThread
-    fun isHostReachable(hostname: String?, port: Int, timeoutInMillis: Int, proxyInfo: ProxyInfo? = null): Boolean {
+    fun isHostReachable(
+        hostname: String?,
+        port: Int,
+        timeoutInMillis: Int,
+        proxyInfo: ProxyInfo? = null
+    ): Boolean {
         var connected = false
         runCatching {
             val proxy = if (proxyInfo == null) {
@@ -337,14 +356,27 @@ object NetworkUtil {
      * ```
      */
     @SuppressLint("HardwareIds", "MissingPermission")
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ]
+    )
     @Suppress("DEPRECATION")
     private fun getMacAddressBeforeAndroidM(ctx: Context): String =
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
             val wifiInf = ctx.wifiManager.connectionInfo
             // DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00"
             // Please check WifiInfo#DEFAULT_MAC_ADDRESS
-            if ("02:00:00:00:00:00".equals(wifiInf.macAddress, ignoreCase = true)) "" else wifiInf.macAddress
+            if ("02:00:00:00:00:00".equals(
+                    wifiInf.macAddress,
+                    ignoreCase = true
+                )
+            ) {
+                ""
+            } else {
+                wifiInf.macAddress
+            }
         } else {
             ""
         }
@@ -356,7 +388,12 @@ object NetworkUtil {
      * <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
      * ```
      */
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.ACCESS_FINE_LOCATION])
+    @RequiresPermission(
+        allOf = [
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ]
+    )
     fun getMacAddress(ctx: Context): String {
         return runCatching {
             var address = getMacAddressBeforeAndroidM(ctx)
@@ -396,7 +433,10 @@ object NetworkUtil {
         runCatching {
             for (ni: NetworkInterface in NetworkInterface.getNetworkInterfaces()) {
                 for (addr in ni.inetAddresses) {
-                    if (!addr.isLoopbackAddress && !addr.isLinkLocalAddress && addr.isSiteLocalAddress) {
+                    if (!addr.isLoopbackAddress &&
+                        !addr.isLinkLocalAddress &&
+                        addr.isSiteLocalAddress
+                    ) {
                         addr.hostAddress?.let { address -> ifconfig.add(address) }
                     }
                 }

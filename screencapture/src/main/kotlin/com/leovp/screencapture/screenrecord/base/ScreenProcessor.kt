@@ -40,7 +40,8 @@ interface ScreenProcessor {
 
     /**
      * After `onStop()`, you can do `onStart()` again.
-     * However, once do `onRelease()` you can not start again. Please call `onInit()` then `onStart()`
+     * However, once do `onRelease()` you can not start again. Please call `onInit()` then
+     * `onStart()`
      */
     fun onStop()
 
@@ -62,7 +63,8 @@ interface ScreenProcessor {
 
     // ==================================================
 
-    fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long = (frameIndex * 1_000_000 / fps).toLong()
+    fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long =
+        (frameIndex * 1_000_000 / fps).toLong()
 
     // MediaCodecList.ALL_CODECS
     fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> =

@@ -20,11 +20,12 @@ abstract class WordRoomDatabase : RoomDatabase() {
 
     abstract fun wordDao(): WordDao
 
-    private class WordDatabaseCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
+    private class WordDatabaseCallback(private val scope: CoroutineScope) :
+        RoomDatabase.Callback() {
 
         //        override fun onCreate(db: SupportSQLiteDatabase) {
         //            super.onCreate(db)
-        //            // Note: If you only want to populate the database the first time the app is launched,
+        // // Note: If you only want to populate the database the first time the app is launched,
         //            // you can override the onCreate() method within the RoomDatabase.Callback.
         //        }
 

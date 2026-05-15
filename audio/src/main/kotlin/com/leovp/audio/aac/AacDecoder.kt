@@ -85,7 +85,12 @@ class AacDecoder(
         it.size
     }
 
-    override fun onOutputData(outBuf: ByteBuffer, info: MediaCodec.BufferInfo, isConfig: Boolean, isKeyFrame: Boolean) {
+    override fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean
+    ) {
         // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
         frameCount++
         callback.onDecoded(outBuf.toByteArray())

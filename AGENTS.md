@@ -56,6 +56,7 @@ The following rules are important enough to be enforced directly by CodeX withou
 
 - Use Chinese for contributor conversations.
 - Use English for code comments, documentation, Markdown content, and git commit messages.
+- When creating documentation files, generate both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
 - Save documentation under `00-documents` instead of `docs`.
 - Do not add `Co-Authored-By` trailers to commit messages.
 

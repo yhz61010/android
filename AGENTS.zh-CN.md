@@ -56,6 +56,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 
 - 与贡献者沟通时使用中文。
 - 代码注释、文档、Markdown 内容和 git commit message 使用英文。
+- 创建文档文件时，同时生成英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
 - 文档保存到 `00-documents`，不要放到 `docs`。
 - commit message 中不要添加 `Co-Authored-By` trailer。
 

@@ -3,7 +3,9 @@
 package com.leovp.audio.exts
 
 import android.content.Context
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.os.Build
 import com.leovp.log.LogContext
 
 /**
@@ -25,20 +27,35 @@ private const val TAG = "AudioExt"
 fun Context.useBuildInSpeaker(on: Boolean, mode: Int? = null) {
     LogContext.log.w(TAG, "useSpeaker=$on")
     val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    // if (on) {
-    //     audioManager.mode = AudioManager.MODE_NORMAL
-    //     audioManager.isSpeakerphoneOn = true
-    // } else {
-    //     audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-    //     audioManager.isSpeakerphoneOn = false
-    // }
     mode?.let { setAudioManagerMode(it) }
-    audioManager.isSpeakerphoneOn = on
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val targetType = if (on) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
+        val targetDevice = audioManager.availableCommunicationDevices.firstOrNull { it.type == targetType }
+        if (targetDevice != null) {
+            audioManager.setCommunicationDevice(targetDevice)
+        } else if (!on) {
+            audioManager.clearCommunicationDevice()
+        }
+    } else {
+        @Suppress("DEPRECATION")
+        run {
+            audioManager.isSpeakerphoneOn = on
+        }
+    }
 }
 
 fun Context.resetPlaybackOutputSource() {
     LogContext.log.w(TAG, "resetPlayOutputSource()")
     setAudioManagerMode(AudioManager.MODE_NORMAL)
+    val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        audioManager.clearCommunicationDevice()
+    } else {
+        @Suppress("DEPRECATION")
+        run {
+            audioManager.isSpeakerphoneOn = false
+        }
+    }
 }
 
 /**

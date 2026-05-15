@@ -29,6 +29,7 @@ import java.util.*
  * ```
  */
 abstract class PhoneCallReceiver : BroadcastReceiver() {
+    @Suppress("DEPRECATION")
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == null) {
             LogContext.log.e(TAG, "onReceive intent or action is null")

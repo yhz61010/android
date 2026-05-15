@@ -198,7 +198,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             "──────────────────────────────────────────────────────────────────────────────────────────────────"
         )
         val responseBody = response.body
-        val contentLength = responseBody?.contentLength() ?: -1
+        val contentLength = responseBody.contentLength()
         val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
         logger.log(
             "<-- ${response.code} ${response.message} ${response.request.url} " +
@@ -225,23 +225,23 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             } else if (hasInlineFile) {
                 logger.log("<-- END HTTP (inline file omitted)")
             } else {
-                val source = responseBody?.source()
-                source?.request(Long.MAX_VALUE)
+                val source = responseBody.source()
+                source.request(Long.MAX_VALUE)
                 // Buffer the entire body.
-                val buffer = source?.buffer
+                val buffer = source.buffer
                 var charset = DEFAULT_CHARSET
-                val contentType = responseBody?.contentType()
+                val contentType = responseBody.contentType()
                 if (contentType != null) {
                     charset = contentType.charset(DEFAULT_CHARSET)!!
                 }
-                if (buffer != null && !isPlaintext(buffer)) {
+                if (!isPlaintext(buffer)) {
                     logger.log(" \n<-- END HTTP (binary ${buffer.size}-byte body omitted)")
                     return response
                 }
                 if (contentLength != 0L) {
-                    logger.log(" \n${buffer?.clone()?.readString(charset)}")
+                    logger.log(" \n${buffer.clone().readString(charset)}")
                 }
-                logger.log("<-- END HTTP (${buffer?.size}-byte body)")
+                logger.log("<-- END HTTP (${buffer.size}-byte body)")
             }
         }
         logger.log(

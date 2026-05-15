@@ -20,6 +20,8 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -303,12 +305,23 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         //            }")
         //        }
 
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setResolutionStrategy(
+                ResolutionStrategy(
+                    targetSize,
+                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                )
+            )
+            .build()
+
         // Preview
         preview = Preview.Builder()
             // We request aspect ratio but no resolution
             //            .setTargetAspectRatio(screenAspectRatio)
             // Set initial target rotation
-            .setTargetRotation(deviceRotation).setTargetResolution(targetSize).build().apply {
+            .setTargetRotation(deviceRotation)
+            .setResolutionSelector(resolutionSelector)
+            .build().apply {
                 // Attach the viewfinder's surface provider to preview use case
                 surfaceProvider = incPreviewGridBinding.viewFinder.surfaceProvider
             }
@@ -322,7 +335,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // CameraX optimize for whatever specific resolution best fits our use cases
                 // .setTargetAspectRatio(screenAspectRatio)
                 // The size must be the camera supported size.
-                .setTargetResolution(targetSize)
+                .setResolutionSelector(resolutionSelector)
                 // Set initial target rotation, we will have to call this again if rotation changes
                 // during the lifecycle of this use case
                 .setTargetRotation(deviceRotation).build()
@@ -331,7 +344,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         imageAnalyzer = ImageAnalysis.Builder()
             // We request aspect ratio but no resolution
             //            .setTargetAspectRatio(screenAspectRatio)
-            .setTargetResolution(targetSize)
+            .setResolutionSelector(resolutionSelector)
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(deviceRotation)

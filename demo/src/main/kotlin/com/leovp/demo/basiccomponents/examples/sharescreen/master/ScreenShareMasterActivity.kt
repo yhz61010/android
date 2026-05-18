@@ -259,23 +259,23 @@ class ScreenShareMasterActivity :
     }
 
     private fun startManageDrawOverlaysPermission() {
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            "package:${applicationContext.packageName}".toUri()
-        ).let {
-            simpleActivityLauncher.launch(it) {
-                if (canDrawOverlays) {
-                    if (FloatView.default().exist()) {
-                        FloatView.removeAll()
-                        createFloatView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:${applicationContext.packageName}".toUri()
+            ).let {
+                simpleActivityLauncher.launch(it) {
+                    if (canDrawOverlays) {
+                        if (FloatView.default().exist()) {
+                            FloatView.removeAll()
+                            createFloatView()
+                        }
+                    } else {
+                        toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
                     }
-                } else {
-                    toast("Permission[ACTION_MANAGE_OVERLAY_PERMISSION] is not granted!")
                 }
             }
         }
-        // }
     }
 
     override fun onDestroy() {
@@ -392,7 +392,7 @@ class ScreenShareMasterActivity :
             netty: BaseNettyServer,
             clientChannel: Channel,
             data: Any?,
-            action: Int
+            action: Int,
         ) {
             LogContext.log.i(ITAG, "onReceivedData from ${clientChannel.remoteAddress()}: $data")
             cs.launch {
@@ -401,12 +401,10 @@ class ScreenShareMasterActivity :
                 when (cmdBean.cmdId) {
                     CMD_TOUCH_EVENT -> {
                         val touchBean = cmdBean.touchBean!!
-                        touchBean.x =
-                            currentRealResolution.width / clientScreenInfo!!.width.toFloat() *
-                            touchBean.x
-                        touchBean.y =
-                            currentRealResolution.height / clientScreenInfo!!.height.toFloat() *
-                            touchBean.y
+                        touchBean.x *=
+                            currentRealResolution.width / clientScreenInfo!!.width.toFloat()
+                        touchBean.y *=
+                            currentRealResolution.height / clientScreenInfo!!.height.toFloat()
                         EventBus.getDefault().post(touchBean)
                     }
 
@@ -444,14 +442,14 @@ class ScreenShareMasterActivity :
 
                                 ScreenShareClientActivity.TouchType.MOVE -> userPath.lastOrNull()
                                     ?.first
-                                    .lineTo(
+                                    ?.lineTo(
                                         calX,
                                         calY
                                     )
 
                                 ScreenShareClientActivity.TouchType.UP -> userPath.lastOrNull()
                                     ?.first
-                                    .lineTo(
+                                    ?.lineTo(
                                         calX,
                                         calY
                                     )

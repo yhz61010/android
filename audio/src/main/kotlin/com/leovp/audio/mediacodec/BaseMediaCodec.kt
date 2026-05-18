@@ -83,14 +83,10 @@ abstract class BaseMediaCodec(
     open fun createCodec() {
         LogContext.log.w(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")
         codec =
-            if (
-                isEncoding
-            ) {
+            if (isEncoding) {
                 MediaCodec.createEncoderByType(codecName)
             } else {
-                MediaCodec.createDecoderByType(
-                    codecName
-                )
+                MediaCodec.createDecoderByType(codecName)
             }
         codec.configure(format, null, null, if (isEncoding) MediaCodec.CONFIGURE_FLAG_ENCODE else 0)
         setMediaCodecOptions(codec)

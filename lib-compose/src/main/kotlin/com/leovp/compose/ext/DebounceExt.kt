@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
  * ```
  */
 @Composable
-fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit,): () -> Unit {
+fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit): () -> Unit {
     var isClickable by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
 
@@ -68,10 +68,8 @@ fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit
  * ```
  */
 @Composable
-fun rememberDebounceHandler(
-    debounceTime: Long =
-        1000L
-): DebounceHandler = remember { DebounceHandler(debounceTime) }
+fun rememberDebounceHandler(debounceTime: Long = 1000L): DebounceHandler =
+    remember { DebounceHandler(debounceTime) }
 
 /**
  * Advanced version of _rememberDebounceHandler_.
@@ -164,7 +162,7 @@ class DebounceHandler(private val defaultDebounceTime: Long = 1000L) {
 class MultiDebounceHandler {
     private val debounceMap = mutableMapOf<String, Long>()
 
-    fun handle(key: String, debounceTime: Long = 1000L, action: () -> Unit,) {
+    fun handle(key: String, debounceTime: Long = 1000L, action: () -> Unit) {
         val currentTime = System.currentTimeMillis()
         val lastTime = debounceMap[key] ?: 0L
 

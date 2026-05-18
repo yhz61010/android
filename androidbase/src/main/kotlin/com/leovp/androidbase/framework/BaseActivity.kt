@@ -262,9 +262,7 @@ abstract class BaseActivity<B : ViewBinding>(
                 NetworkMonitor(this@BaseActivity, socketIp) { info ->
                     callback?.let { runOnUiThread { it(info) } }
 
-                    if (
-                        !defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo
-                    ) {
+                    if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) {
                         return@NetworkMonitor
                     }
 
@@ -286,9 +284,7 @@ abstract class BaseActivity<B : ViewBinding>(
                         Locale.ENGLISH,
                         "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
                         downloadSpeedStr, uploadSpeedStr,
-                        if (
-                            latencyStatus.isNullOrBlank()
-                        ) {
+                        if (latencyStatus.isNullOrBlank()) {
                             "${info.ping}ms"
                         } else {
                             "${info.ping}ms($latencyStatus)"

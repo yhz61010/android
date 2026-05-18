@@ -18,7 +18,7 @@ import java.nio.charset.Charset
  * Convert String to base64 String
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output
@@ -37,7 +37,7 @@ fun String.toBase64(flag: Int = Base64.DEFAULT): String =
  * Decode base64 String to String
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output
@@ -56,7 +56,7 @@ fun String.fromBase64(flag: Int = Base64.DEFAULT): String =
  * Decode base64 String to ByteArray
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output
@@ -109,7 +109,7 @@ val String.fromMimeBase64: String
  * Decode base64 ByteArray to ByteArray
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output
@@ -127,7 +127,7 @@ fun ByteArray.fromBase64(flag: Int = Base64.DEFAULT): ByteArray = Base64.decode(
  * Convert ByteArray to base64 ByteArray
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output
@@ -145,7 +145,7 @@ fun ByteArray.toBase64ByteArray(flag: Int = Base64.DEFAULT): ByteArray = Base64.
  * Convert ByteArray to base64 String
  *
  * @param flag
- * Base64.DEFAULT    -> Default values for encoder/decoder flags.
+ * Base64.DEFAULT -> Default values for encoder/decoder flags.
  * Base64.CRLF -> Encoder flag bit to indicate lines should be terminated with a CRLF pair instead
  * of just an LF. Has no effect if {@code NO_WRAP} is specified as well.
  * Base64.NO_PADDING -> Encoder flag bit to omit the padding '=' characters at the end of the output

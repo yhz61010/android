@@ -42,27 +42,13 @@ class H264UtilTest {
         assertEquals("SPS", H264Util.getNaluTypeName(sps!!))
         assertEquals("PPS", H264Util.getNaluTypeName(pps!!))
 
-        byteArray = byteArrayOf(
-            0,
-            0,
-            0,
-            1,
-            103,
-            66,
-            -128,
-            31,
-            -23,
-            3,
-            -64,
-            -41,
-            64,
-            54,
-            -123,
-            9,
-            -88
-        )
+        byteArray =
+            byteArrayOf(0, 0, 0, 1, 103, 66, -128, 31, -23, 3, -64, -41, 64, 54, -123, 9, -88)
         sps = H264Util.getSps(byteArray)
-        assertEquals("[0,0,0,1,103,66,-128,31,-23,3,-64,-41,64,54,-123,9,-88]", sps.toJsonString())
+        assertEquals(
+            "[0,0,0,1,103,66,-128,31,-23,3,-64,-41,64,54,-123,9,-88]",
+            sps.toJsonString()
+        )
         pps = H264Util.getPps(byteArray)
         assertNull(pps)
 

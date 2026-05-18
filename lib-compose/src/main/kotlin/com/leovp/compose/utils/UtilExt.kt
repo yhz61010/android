@@ -28,10 +28,8 @@ fun Long.toCounterBadgeText(limitation: Int = 99): String = when {
     else -> "$limitation+"
 }
 
-fun Int.toCounterBadgeText(
-    limitation: Int =
-        99
-): String = this.toLong().toCounterBadgeText(limitation)
+fun Int.toCounterBadgeText(limitation: Int = 99): String =
+    this.toLong().toCounterBadgeText(limitation)
 
 val monthDateFormat =
     SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }

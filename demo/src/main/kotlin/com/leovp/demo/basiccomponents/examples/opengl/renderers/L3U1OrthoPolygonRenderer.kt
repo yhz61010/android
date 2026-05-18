@@ -52,9 +52,7 @@ class L3U1OrthoPolygonRenderer(@Suppress("unused") private val ctx: Context) :
         super.onSurfaceChanged(gl, width, height)
 
         // 边长比(>=1)，非宽高比
-        val aspectRatio: Float = if (width >
-            height
-        ) {
+        val aspectRatio: Float = if (width > height) {
             width.toFloat() / height
         } else {
             height.toFloat() / width

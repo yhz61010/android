@@ -160,7 +160,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected fun hasFrontCamera(): Boolean =
         cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
 
-    // This property will be initialize in updateOrientationLiveData()
+    // This property will be initialized in updateOrientationLiveData()
     //    var deviceOrientationListener: OrientationListener? = null
     protected var cameraRotationInDegree = -1
 

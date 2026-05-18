@@ -68,7 +68,7 @@ class WebSocketClientActivity :
         // then disconnect it and connect it again for many times as you wish.
         // However, for self-signed certificate, once you disconnect the socket,
         // you must recreate the socket object again then connect it or else you can **NOT** connect
-        // it any more.
+        // it anymore.
         // Example:
         // For none-ssl websocket or trust all certificates:
         // create socket ──> connect() ──> disconnectManually()

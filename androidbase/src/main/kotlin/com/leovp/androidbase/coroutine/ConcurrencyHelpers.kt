@@ -10,8 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.yield
 
-// https://gist.githubusercontent.com/objcode/7ab4e7b1df8acd88696cb0ccecad16f7/raw/935b7596ced06ee42
-// bc9ecf8bf8a7fd40c667a05/ConcurrencyHelpers.kt
+// https://gist.githubusercontent.com/objcode/7ab4e7b1df8acd88696cb0ccecad16f7/raw/935b7596ced06ee42bc9ecf8bf8a7fd40c667a05/ConcurrencyHelpers.kt
 
 /**
  * A helper class to execute tasks sequentially in coroutines.
@@ -69,13 +68,13 @@ class SingleRunner {
 /**
  * A controlled runner decides what to do when new tasks are run.
  *
- * By calling [joinPreviousOrRun], the new task will be discarded and the result of the previous
- * task
+ * By calling [joinPreviousOrRun],
+ * the new task will be discarded and the result of the previous task
  * will be returned. This is useful when you want to ensure that a network request to the same
  * resource does not flood.
  *
- * By calling [cancelPreviousThenRun], the old task will *always* be cancelled and then the new task
- * will
+ * By calling [cancelPreviousThenRun],
+ * the old task will *always* be canceled and then the new task will
  * be run. This is useful in situations where a new event implies that the previous work is no
  * longer relevant such as sorting or filtering a list.
  */

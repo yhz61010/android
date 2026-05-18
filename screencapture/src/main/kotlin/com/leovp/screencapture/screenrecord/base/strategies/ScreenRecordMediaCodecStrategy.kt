@@ -403,8 +403,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                 imageReader.setOnImageAvailableListener(null, videoDataSendHandler)
                 runCatching { imageReader.close() }.onFailure { it.printStackTrace() }
                 runCatching { virtualDisplayForImageReader?.release() }.onFailure {
-                    it
-                        .printStackTrace()
+                    it.printStackTrace()
                 }
             }.also { image.close() }
         }, null)

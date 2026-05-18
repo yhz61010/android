@@ -196,7 +196,7 @@ object NetworkUtil {
 
         // Extracting the average round trip time from the inputLine string
         return runCatching {
-            val afterEqual = inputLine!!.substring(inputLine!!.indexOf("=")).trim { it <= ' ' }
+            val afterEqual = inputLine!!.substring(inputLine.indexOf("=")).trim { it <= ' ' }
             val afterFirstSlash =
                 afterEqual.substring(afterEqual.indexOf('/') + 1).trim { it <= ' ' }
             val strAvgRtt = afterFirstSlash.substring(0, afterFirstSlash.indexOf('/'))

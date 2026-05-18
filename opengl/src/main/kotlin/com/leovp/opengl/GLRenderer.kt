@@ -334,8 +334,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
         // 第 3 个参数：从顶点数组读取的数据长度
         // https://www.jianshu.com/p/a772bfc2276b
         // 注意：这里一定要先上色，再绘制图形，否则会导致颜色在当前这一帧使用失败，要下一帧才能生效。
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
-        // ml
+        // 几何图形相关定义：
+        // http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
         // GL_TRIANGLE_STRIP: 每相邻三个顶点组成一个三角形，为一系列相接三角形构成。例如：ABC、BCD、CDE、DEF
         GLES20.glDrawArrays(
             GLES20.GL_TRIANGLE_STRIP,

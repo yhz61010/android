@@ -18,10 +18,7 @@ import com.leovp.mvvm.ScreenCountdownManager.CountdownEvent
 @Composable
 fun DispatchTouchEvent(
     interactionSource: MutableInteractionSource,
-    viewModel: BaseViewModel<
-        *,
-        *
-        >,
+    viewModel: BaseViewModel<*, *>,
 ) {
     LaunchedEffect(interactionSource) {
         // interactionSource.interactions.collect {

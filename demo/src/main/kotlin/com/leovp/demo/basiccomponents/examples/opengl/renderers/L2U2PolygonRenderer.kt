@@ -98,9 +98,9 @@ open class L2U2PolygonRenderer(@Suppress("unused") private val ctx: Context,) :
 
         updateVertexData()
 
-        // 几何图形相关定义：http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.ht
-        // ml
-        // Drawing sequence priority. The latter the higher.
+        // 几何图形相关定义：
+        // http://wiki.jikexueyuan.com/project/opengl-es-guide/basic-geometry-definition.html
+        // Drawing sequence priority. The latter, the higher.
         drawShape()
         drawLine()
         drawPoint()

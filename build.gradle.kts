@@ -164,8 +164,7 @@ allprojects {
         useJUnitPlatform()
     }
 
-    // https://medium.com/kacper.wojciechowski/kotlin-2-0-android-project-migration-guide-b1234fbbff
-    // 65
+    // https://medium.com/kacper.wojciechowski/kotlin-2-0-android-project-migration-guide-b1234fbbff65
     // Configure it in your each compose module.
     // composeCompiler {
     //     enableStrongSkippingMode = true

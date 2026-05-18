@@ -78,9 +78,7 @@ fun <T> getPreviewOutputSize(
     } else {
         require(config.isOutputSupportedFor(format))
     }
-    val allSizes = if (format ==
-        null
-    ) {
+    val allSizes = if (format == null) {
         config.getOutputSizes(targetClass)
     } else {
         config.getOutputSizes(format)

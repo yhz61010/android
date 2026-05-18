@@ -63,7 +63,6 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
                 artifactId = "camera2live"
-                version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())
                 from(components["release"])

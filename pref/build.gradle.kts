@@ -42,7 +42,6 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
                 artifactId = "pref"
-                version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())
 

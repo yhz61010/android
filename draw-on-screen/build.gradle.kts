@@ -40,7 +40,6 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = mavenGroupId
                 artifactId = "drawonscreen"
-                version = libs.versions.leo.version.get()
 
                 artifact(sourceJar.get())
                 from(components["release"])

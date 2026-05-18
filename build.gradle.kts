@@ -113,7 +113,7 @@ allprojects {
     group = mavenGroupId
     version = findProperty("version")?.toString()
         ?.takeIf { it != "unspecified" }
-        ?: libs.versions.leo.version.get()
+        ?: rootProject.libs.versions.leo.version.get()
 
     // We want to apply ktlint at all project level because it also checks Gradle config files
     // (*.kts)

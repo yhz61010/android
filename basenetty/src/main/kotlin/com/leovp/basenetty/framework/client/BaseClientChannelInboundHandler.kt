@@ -92,7 +92,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
     /**
      * According to the
-     * [official example](https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime/UptimeClientHandler.java),
+     * [official example]
+     * (https://github.com/netty/netty/blob/master/example/src/main/java/io/netty/example/uptime
+     * /UptimeClientHandler.java),
      * if connection is disconnected after connecting,
      * reconnect it here.
      */

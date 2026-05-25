@@ -174,12 +174,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         //        if (isChannelActive) {
         //            ctx.close()
         //        }
-        runCatching {
-            ctx.close().sync()
-        }.onFailure {
-            LogContext.log.e(tag, "close channel error.", it)
-            it.printStackTrace()
-        }
+        ctx.close()
 
         LogContext.log.e(tag, "============================")
 

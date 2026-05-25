@@ -5,32 +5,34 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 
 /**
+ * Custom byte stream decoder with a 4-byte little-endian length prefix.
+ *
+ * Frame format: [4-byte LE length][payload bytes]
+ *
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */
 class CustomSocketByteStreamDecoder : ByteToMessageDecoder() {
-    override fun decode(ctx: ChannelHandlerContext, inBuf: ByteBuf, out: MutableList<Any>) {
-//        val readableSize = inBuf.readableBytes()
-//        if (readableSize < 6) {
-//            return
-//        }
-//        val beginIndex = inBuf.readerIndex()
-//        val length = inBuf.readIntLE()
-//        if (readableSize < length + 4) {
-//            inBuf.readerIndex(beginIndex)
-//            return
-//        }
-//        inBuf.readerIndex(beginIndex + length + 4)
-//        val otherByteBufRef = inBuf.slice(beginIndex, length + 4)
-//        otherByteBufRef.retain()
-//        out.add(otherByteBufRef)
+    companion object {
+        /** Maximum allowed frame payload size (10 MB). */
+        const val MAX_FRAME_SIZE = 10 * 1024 * 1024
+    }
 
-        val bufLen = inBuf.readableBytes()
-        if (bufLen < 6) {
-            return
-        }
+    override fun decode(
+        ctx: ChannelHandlerContext,
+        inBuf: ByteBuf,
+        out: MutableList<Any>
+    ) {
+        if (inBuf.readableBytes() < Int.SIZE_BYTES) return
+
         inBuf.markReaderIndex()
         val dataLen = inBuf.readIntLE()
+
+        if (dataLen < 0 || dataLen > MAX_FRAME_SIZE) {
+            ctx.close()
+            return
+        }
+
         if (inBuf.readableBytes() < dataLen) {
             inBuf.resetReaderIndex()
             return

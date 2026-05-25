@@ -1,7 +1,6 @@
 package com.leovp.basenetty.framework.server
 
 import com.leovp.basenetty.framework.base.ReadSocketDataListener
-import com.leovp.basenetty.framework.base.ServerConnectStatus
 import com.leovp.log.LogContext
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -57,7 +56,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         // Add active client to server
         clients.add(clientChannel)
         super.channelActive(ctx)
-        netty.connectState.set(ServerConnectStatus.CLIENT_CONNECTED)
         netty.connectionListener.onClientConnected(netty, clientChannel)
     }
 
@@ -71,7 +69,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         }
         super.channelInactive(ctx)
 
-        netty.connectState.set(ServerConnectStatus.CLIENT_DISCONNECTED)
         netty.connectionListener.onClientDisconnected(netty, clientChannel)
     }
 
@@ -85,9 +82,6 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         super.handlerRemoved(ctx)
     }
 
-    /**
-     * Call [ctx.close().syncUninterruptibly()] synchronized.
-     */
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         val exceptionType = when (cause) {
@@ -97,22 +91,7 @@ abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettySe
         }
         LogContext.log.e(tag, "===== Caught $exceptionType =====")
         LogContext.log.e(tag, "Exception: ${cause.message}", cause)
-
-        //        val channel = ctx.channel()
-        //        val isChannelActive = channel.isActive
-        //        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
-        //        if (isChannelActive) {
-        //            ctx.close()
-        //        }
-        ctx.close().syncUninterruptibly()
-
-        netty.connectState.set(ServerConnectStatus.FAILED)
-        netty.connectionListener.onStartFailed(
-            netty,
-            ServerConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
-            "Caught exception"
-        )
-
+        ctx.close()
         LogContext.log.e(tag, "============================")
     }
 

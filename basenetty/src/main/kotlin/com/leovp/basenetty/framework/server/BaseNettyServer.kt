@@ -249,7 +249,6 @@ abstract class BaseNettyServer protected constructor(
         showContent: Boolean,
         showLog: Boolean,
         fullOutput: Boolean,
-        byteOrder: ByteOrder,
     ): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmdTag, cmd)) {
             return false
@@ -279,26 +278,11 @@ abstract class BaseNettyServer protected constructor(
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
-                    val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN ==
-                            byteOrder
-                        ) {
-                            cmd.toHexString()
-                        } else {
-                            cmd.toHexString()
-                        }
-                    } else {
-                        null
-                    }
+                    val hex: String? =
+                        if (showContent) cmd.toHexString() else null
                     LogContext.log.i(
                         cmdTag,
-                        if (hex ==
-                            null
-                        ) {
-                            cmdMsg
-                        } else {
-                            "$cmdMsg=HEX[$hex]"
-                        },
+                        if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]",
                         fullOutput = fullOutput
                     )
                 }
@@ -336,6 +320,9 @@ abstract class BaseNettyServer protected constructor(
     /**
      * For general socket(NOT WebSocket), when send string to server,
      * the `\n` will be appended automatically.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
      */
     @JvmOverloads
     fun executeCommand(
@@ -349,10 +336,15 @@ abstract class BaseNettyServer protected constructor(
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = false,
-        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput
     )
 
-    /** This method only works in WebSocket mode. */
+    /**
+     * This method only works in WebSocket mode.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
+     */
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
@@ -366,7 +358,7 @@ abstract class BaseNettyServer protected constructor(
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = true,
-        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput
     )
 
     // ================================================

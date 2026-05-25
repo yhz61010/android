@@ -701,7 +701,6 @@ abstract class BaseNettyClient protected constructor(
         showContent: Boolean,
         showLog: Boolean = true,
         fullOutput: Boolean = false,
-        byteOrder: ByteOrder,
     ): Boolean {
         if (!isValidExecuteCommandEnv(cmdTag, cmd)) {
             return false
@@ -731,17 +730,8 @@ abstract class BaseNettyClient protected constructor(
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
-                    val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN ==
-                            byteOrder
-                        ) {
-                            cmd.toHexString()
-                        } else {
-                            cmd.toHexString()
-                        }
-                    } else {
-                        null
-                    }
+                    val hex: String? =
+                        if (showContent) cmd.toHexString() else null
                     LogContext.log.i(
                         cmdTag,
                         if (hex ==
@@ -790,6 +780,9 @@ abstract class BaseNettyClient protected constructor(
     /**
      * For general socket(NOT WebSocket), when send string to server,
      * the `\n` will be appended automatically.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
      */
     @JvmOverloads
     fun executeCommand(
@@ -807,11 +800,15 @@ abstract class BaseNettyClient protected constructor(
         isPing = false,
         showContent = showContent,
         showLog = showLog,
-        fullOutput = fullOutput,
-        byteOrder = byteOrder
+        fullOutput = fullOutput
     )
 
-    /** This method only works in WebSocket mode. */
+    /**
+     * This method only works in WebSocket mode.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
+     */
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
@@ -829,8 +826,7 @@ abstract class BaseNettyClient protected constructor(
         isPing = true,
         showContent = showContent,
         showLog = showLog,
-        fullOutput = fullOutput,
-        byteOrder = byteOrder
+        fullOutput = fullOutput
     )
 
     // ================================================

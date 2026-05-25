@@ -41,7 +41,7 @@ val useResourcePrefix = false
 
 /**
  * resourcePrefix 的校验规则：
- * 1. 针对可识别类型的文件夹中的非 `values` 文件夹目录，校验 `xml` 文件的文件前缀是否符合规则。
+ * 1. 针对可识别类型的文件夹中的非 `values` 文件夹目录，校验 `XML` 文件的文件前缀是否符合规则。
  * 2. 针对 `values` 文件夹中的文件，不校验文件前缀，校验文件中 name 元素的值。
  * 3. 针对二进制文件，校验文件前缀。
  * 4. 图片资源通常来说也应该被检验文件前缀，但是我们通常会进行如下 lint 设置 abortOnError = false 因此错误提示被忽略了。
@@ -53,9 +53,9 @@ val useResourcePrefix = false
  */
 
 /**
- * Reads the properties in local.properties that is used in the AndroidManifest or Gradle file.
+ * Reads the properties in local.properties that are used in the AndroidManifest or Gradle file.
  *
- * You can use it in subproject like this:
+ * You can use it in a subproject like this:
  * val localProperties: Properties by rootProject.extra
  *
  * Don't forget to import the following package:
@@ -68,12 +68,12 @@ val localProperties: Properties by extra { gradleLocalProperties(rootProject.roo
 
 // https://developer.android.com/studio/build?hl=zh-cn#top-level
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file where you can add configuration options common to all subprojects/modules.
 plugins {
     /**
      * You should use `apply false` in the top-level build.gradle file
      * to add a Gradle plugin as a build dependency, but not apply it to the
-     * current (root) project. You should not use `apply false` in sub-projects.
+     * current (root) project. You should not use `apply false` in subprojects.
      * For more information, see
      * Applying external plugins with same version to subprojects.
      */
@@ -108,7 +108,7 @@ jacoco {
 val detektFormatting: Provider<MinimalExternalModuleDependency> =
     libs.detekt.formatting
 
-// all projects = root project + sub projects
+// all projects = root project + subprojects
 allprojects {
     group = mavenGroupId
     version = findProperty("version")?.toString()
@@ -144,13 +144,14 @@ allprojects {
         )
     }
 
-    // Ktlint configuration for sub-projects
+    // Ktlint configuration for subprojects
     ktlint {
         verbose.set(true)
         android.set(true)
         ignoreFailures.set(false)
 
-        // Uncomment below line and run .\gradlew ktlintCheck to see check ktlint experimental rules
+        // Uncomment the line below and run .\gradlew ktlintCheck to check ktlint
+        // experimental rules.
         // enableExperimentalRules.set(true)
 
         reporters {

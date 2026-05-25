@@ -21,7 +21,7 @@ import com.leovp.android.exts.getCompatContextInfo
  * https://developer.android.com/guide/topics/manifest/meta-data-element?hl=zh-cn
  *
  * @param key   The metadata key
- * @return The value of meta data
+ * @return The value of metadata
  */
 inline fun <reified T : Any> Context.getMetaData(key: String): T? {
     // ActivityInfo
@@ -37,7 +37,7 @@ inline fun <reified T : Any> Context.getMetaData(key: String): T? {
  * https://developer.android.com/guide/topics/manifest/meta-data-element?hl=zh-cn
  *
  * @param key   The metadata key
- * @return The value of meta data
+ * @return The value of metadata
  */
 inline fun <reified T : Any> BroadcastReceiver.getMetaData(ctx: Context, key: String): T? {
     // ActivityInfo

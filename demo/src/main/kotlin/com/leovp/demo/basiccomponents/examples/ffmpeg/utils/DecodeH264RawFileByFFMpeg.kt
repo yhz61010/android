@@ -162,7 +162,7 @@ class DecodeH264RawFileByFFMpeg {
 
     fun startDecoding() {
         // FIXME
-        // If use coroutines here, the video will be displayed. I don't know why!!!
+        // If you use coroutines here, the video will be displayed. I don't know why!!!
         isDecoding = true
         ioScope.launch {
             val startIdx = 4

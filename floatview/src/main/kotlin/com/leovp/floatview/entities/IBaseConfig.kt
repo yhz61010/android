@@ -25,10 +25,10 @@ interface IBaseConfig {
     var enableAlphaAnimation: Boolean
 
     /**
-     * **Recommend** to initialise the proper screen orientation when create float view.
-     * Otherwise, the float view may display at unexpected position on Android 12+
-     * when your app in background or the float view is just created after screen orientation
-     * changed.
+     * It is recommended to initialize the proper screen orientation when creating a float view.
+     * Otherwise, the float view may be displayed in an unexpected position on Android 12+
+     * when your app is in the background or the float view has just been created after
+     * a screen orientation change.
      *
      * Surface.ROTATION_0
      * Surface.ROTATION_90

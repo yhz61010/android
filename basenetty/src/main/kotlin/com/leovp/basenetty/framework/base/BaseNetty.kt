@@ -24,8 +24,8 @@ enum class ClientConnectStatus {
     CONNECTED,
 
     /**
-     * After connecting, this connection is **ONLY** be working in this status if you do intent to
-     * disconnect to server as you expect.
+     * After connecting, this connection is **ONLY** working in this status if you intend to
+     * disconnect from the server as expected.
      *
      * **Attention:** [FAILED] listener will **NOT** trigger [DISCONNECTED] listener.
      */
@@ -48,11 +48,9 @@ enum class ClientConnectStatus {
      * **PRIVATE status** for library.
      * **DO NOT** use it in your codes
      *
-     * Because of [CONNECTED] status is an asynchronous status, when user do connect to server
-     * successively,
-     * it will create more than one connection than you expect. So we need this status to tell user
-     * you're
-     * doing a connect now.
+     * Because [CONNECTED] status is asynchronous, when users connect to the server successively,
+     * it will create more connections than expected. So we need this status to tell the user that
+     * a connection is in progress.
      */
     CONNECTING,
 
@@ -83,8 +81,8 @@ enum class ServerConnectStatus {
     CLIENT_CONNECTED,
 
     /**
-     * After connecting, this connection is **ONLY** be working in this status if you do intent to
-     * disconnect to server as you expect.
+     * After connecting, this connection is **ONLY** working in this status if you intend to
+     * disconnect from the server as expected.
      *
      * **Attention:** [FAILED] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
      */

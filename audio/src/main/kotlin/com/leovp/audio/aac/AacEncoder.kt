@@ -77,7 +77,7 @@ class AacEncoder(
         outBuf.position(info.offset)
         outBuf.limit(info.offset + aacDataLength)
 
-        // Add ADTS header to pcm data array which length is pcm data length plus 7.
+        // Add the ADTS header to the PCM data array, whose length is the PCM data length plus 7.
         val aacDataWithAdts = ByteArray(aacDataSizeWithAdtsLength)
         addAdtsToDataWithoutCRC(aacDataWithAdts, aacDataSizeWithAdtsLength)
         outBuf.get(aacDataWithAdts, 7, aacDataLength)
@@ -140,10 +140,11 @@ class AacEncoder(
         // }
 
         // ByteBuffer key
-        // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-        // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+        // AAC Profile 5 bits | SampleRate 4 bits | Channel Count 4 bits
+        // Others 3 bits (normally 0)
+        // Example: AAC LC, 44.1 kHz, Mono. Separate values: 2, 4, 1.
         // Convert them to binary value: 0b10, 0b100, 0b1
-        // According to AAC required, convert theirs values to binary bits:
+        // According to AAC requirements, convert their values to binary bits:
         // 00010 0100 0001 000
         // The corresponding hex value：
         // 0001 0010 0000 1000
@@ -161,7 +162,7 @@ class AacEncoder(
             // AAC LC. If you change this value, DO NOT forget to change KEY_AAC_PROFILE while
             // configuring MediaCodec
             val profile: Int = (it[0].toInt() shr 3) and 0x1F
-            // 4: 44.1KHz 8: 16Khz 11: 8Khz
+            // 4: 44.1 kHz 8: 16 kHz 11: 8 kHz
             val freqIdx: Int = ((it[0].toInt() and 0x7) shl 1) or ((it[1].toInt() shr 7) and 0x1)
             // 1: single_channel_element 2: CPE(channel_pair_element)
             val channelCfg: Int = (it[1].toInt() shr 3) and 0xF
@@ -185,7 +186,7 @@ class AacEncoder(
 
     // https://cloud.tencent.com/developer/ask/61404
     // FIXME
-    // Has bug!!! when parameter are 2(AAC LC), 8(16Khz), 1(mono)
+    // Has a bug when the parameters are 2(AAC LC), 8(16 kHz), 1(mono).
     @Suppress("SameParameterValue")
     private fun getAudioEncodingCsd0(
         aacProfile: Int,

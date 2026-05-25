@@ -37,7 +37,7 @@ internal fun Quality.getAspectRatioString(portraitMode: Boolean): String {
 }
 
 /**
- * Get the name (a string) from the given Video.Quality object.
+ * Get the name string for the given Video quality object.
  */
 internal fun Quality.getNameString(): String = when (this) {
     Quality.UHD -> "QUALITY_UHD(2160p)"
@@ -48,7 +48,7 @@ internal fun Quality.getNameString(): String = when (this) {
 }
 
 /**
- * Translate Video.Quality name(a string) to its Quality object.
+ * Translate a Video.Quality name (a string) to its Quality object.
  */
 internal fun Quality.getQualityObject(name: String): Quality = when (name) {
     Quality.UHD.getNameString() -> Quality.UHD

@@ -446,7 +446,7 @@ class Camera2ComponentHelper(
     /** [Handler] corresponding to [imageReaderThread] */
     private val imageReaderHandler = Handler(imageReaderThread.looper)
 
-    /** The [CameraDevice] that will be opened in this fragment */
+    /** The [CameraDevice] that this helper opens */
     private lateinit var camera: CameraDevice
 
     /** Internal reference to the ongoing [CameraCaptureSession] configured with our parameters */
@@ -525,12 +525,12 @@ class Camera2ComponentHelper(
                         it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface
                     )
                 }
-                // Auto focus
+                // Autofocus
                 set(
                     CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
                 )
-                // Auto exposure. The flash will be open automatically in dark.
+                // Auto exposure. The flash will open automatically in the dark.
                 set(
                     CaptureRequest.CONTROL_AE_MODE,
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
@@ -580,7 +580,7 @@ class Camera2ComponentHelper(
             }
         }
 
-    /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
+    /** Opens the camera and returns the opened device as the result of the suspending coroutine. */
     @RequiresPermission(android.Manifest.permission.CAMERA)
     private suspend fun openCamera(
         manager: CameraManager,
@@ -826,7 +826,7 @@ class Camera2ComponentHelper(
                     LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
                     // Sets user requested FPS for all targets
                     set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-                    // Auto focus
+                    // Autofocus
                     set(
                         CaptureRequest.CONTROL_AF_MODE,
                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
@@ -1016,7 +1016,7 @@ class Camera2ComponentHelper(
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
-        // Otherwise the flash will not be on.
+        // Otherwise, the flash will not be on.
         capturePreviewRequestBuilder.set(
             CaptureRequest.CONTROL_AE_MODE,
             CaptureRequest.CONTROL_AE_MODE_ON
@@ -1043,7 +1043,7 @@ class Camera2ComponentHelper(
             return
         }
         // On Samsung, you must also set CONTROL_AE_MODE to CONTROL_AE_MODE_ON.
-        // Otherwise the flash will not be off.
+        // Otherwise, the flash will not be off.
         capturePreviewRequestBuilder.set(
             CaptureRequest.CONTROL_AE_MODE,
             CaptureRequest.CONTROL_AE_MODE_ON
@@ -1188,12 +1188,11 @@ class Camera2ComponentHelper(
     }
 
     /**
-     * Once you called this method, you must reinitialized this class again if you want to use
-     * again.
-     * Most of the time, when you don't need camera, just call [closeCamera] method, so that you can
-     * reuse it again.
-     * This method only should be called when you do want to release camera resources and do not
-     * want to use it any more.
+     * Once you call this method, you must reinitialize this class if you want to use it again.
+     * Most of the time, when you don't need the camera, just call [closeCamera], so that you can
+     * reuse it later.
+     * This method should only be called when you want to release camera resources and do not
+     * want to use them anymore.
      */
     @Suppress("WeakerAccess")
     fun stopCameraThread() {
@@ -1254,7 +1253,7 @@ class Camera2ComponentHelper(
         /**
          * This is the desired size.
          * In order to use it for camera preview size and avc encode size,
-         * this value will be changed to a appropriate size which area is near desired size.
+         * this value will be changed to an appropriate size whose area is near the desired size.
          */
         val CAMERA_SIZE_FOR_VIDEO_CHAT_NORMAL = Size(360, 640)
 

@@ -112,7 +112,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // hardware level)
     private var enableHdr = false
 
-    // Selector showing is there any selected timer and it's value (3s or 10s)
+    // Selector showing whether a timer is selected and its value (3s or 10s)
     private var selectedTimer = CameraTimer.OFF
 
     private var selectedRatio = CameraRatio.R4v3
@@ -271,7 +271,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         }
         LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
 
-        // Get screen metrics used to setup camera for full screen resolution
+        // Get screen metrics used to set up camera for full screen resolution
         val metrics = requireContext().screenRealResolution
         //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
 
@@ -469,7 +469,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     // CameraState.Type.OPENING -> Toast.makeText(context, "CameraState: Opening",
     // Toast.LENGTH_SHORT)
     //                        .show()
-    //                    // Setup Camera resources and begin processing
+    //                    // Set up camera resources and begin processing
     // CameraState.Type.OPEN -> Toast.makeText(context, "CameraState: Open", Toast.LENGTH_SHORT)
     //                        .show()
     //                    // Close camera UI
@@ -485,7 +485,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     //            cameraState.error?.let { error ->
     //                when (error.code) {
     //                    // Open errors
-    //                    // Make sure to setup the use cases properly
+    //                    // Make sure to set up the use cases properly
     //                    CameraState.ERROR_STREAM_CONFIG               -> Toast.makeText(context,
     //                        "Stream config error",
     //                        Toast.LENGTH_SHORT).show()

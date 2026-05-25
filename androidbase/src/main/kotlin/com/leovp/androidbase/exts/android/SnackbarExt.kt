@@ -46,7 +46,7 @@ inline fun View.snack(
 
 /**
  * @param color The action text color. DO NOT use color resource id directly.
- * If you want use color resource id, do like this:
+ * If you want to use a color resource id, do like this:
  * ```kotlin
  * ContextCompat.getColor(context, R.color.design_default_color_primary)
  * ```
@@ -61,7 +61,7 @@ fun Snackbar.action(
 
 /**
  * @param color The action text color. DO NOT use color resource id directly.
- * If you want use color resource id, do like this:
+ * If you want to use a color resource id, do like this:
  * ```kotlin
  * ContextCompat.getColor(context, R.color.design_default_color_primary)
  * ```

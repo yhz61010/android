@@ -109,8 +109,8 @@ class LeoToast private constructor(private val ctx: Context) {
 
     /**
      * **Attention:**
-     * This method must be called for Android R(Android 11) or above.
-     * Otherwise, the custom toast doesn't work when app in background.
+     * This method must be called for Android R (Android 11) or above.
+     * Otherwise, the custom toast doesn't work when the app is in the background.
      */
     private fun initForegroundComponentForToast(app: Application, delay: Long = 500) {
         ForegroundComponent.init(app, delay)

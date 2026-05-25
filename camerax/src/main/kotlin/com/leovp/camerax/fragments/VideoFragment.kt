@@ -201,7 +201,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         val rotation = incPreviewGridBinding.viewFinder.display.rotation
 
-        //        // Get screen metrics used to setup camera for full screen resolution
+        //        // Get screen metrics used to set up camera for full screen resolution
         //        val metrics = requireContext().screenRealResolution
         //        //        val screenAspectRatio = aspectRatio(metrics.width, metrics.height)
         //
@@ -682,7 +682,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
     /**
      * Initialize UI for recording:
-     *  - at recording: hide audio, qualitySelection,change camera UI; enable stop button
+     *  - at recording: hide audio, qualitySelection, and change camera UI; enable stop button
      *  - otherwise: show all except the stop button
      */
     @SuppressLint("MissingPermission")

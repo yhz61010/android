@@ -110,7 +110,7 @@ class ScreenShareClientActivity :
             override fun surfaceCreated(holder: SurfaceHolder) {
                 LogContext.log.w(ITAG, "=====> surfaceCreated <=====")
                 // When surface recreated, we need to redraw screen again.
-                // The surface will be recreated if you reopen you app from background
+                // The surface will be recreated if you reopen your app from background
                 if (sps != null && pps != null) {
                     initDecoder(vps, sps!!, pps!!)
                     webSocketClientHandler?.triggerIFrame()

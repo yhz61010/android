@@ -187,13 +187,13 @@ public class ScreenshotDex {
         if (screenRotation != 0) {
             assert bitmap != null;
 //            switch (screenRotation) {
-//                case 1: // 90 degree rotation (counter-clockwise)
+//                case 1: // 90-degree rotation (counter-clockwise)
 //                    bitmap = displayUtil.rotateBitmap(bitmap, -90f);
 //                    break;
-//                case 3: // 270 degree rotation
+//                case 3: // 270-degree rotation
 //                    bitmap = displayUtil.rotateBitmap(bitmap, 90f);
 //                    break;
-//                case 2: // 180 degree rotation
+//                case 2: // 180-degree rotation
 //                    bitmap = displayUtil.rotateBitmap(bitmap, 180f);
 //                    break;
 //                default:

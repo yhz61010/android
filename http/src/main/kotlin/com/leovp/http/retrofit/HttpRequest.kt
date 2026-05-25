@@ -16,7 +16,7 @@ object HttpRequest : BaseHttpRequest() {
     private var builder: Retrofit.Builder = getRetrofitBuilder()
 
     /**
-     * If you want to re-init header, you must call this method everytime.
+     * If you want to re-init header, you must call this method every time.
      */
     fun initWithHeader(headerMap: Map<String, String>) {
         builder = getRetrofitBuilder(headerMap)

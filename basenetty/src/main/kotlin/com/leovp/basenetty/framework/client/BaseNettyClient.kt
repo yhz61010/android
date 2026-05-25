@@ -348,16 +348,16 @@ abstract class BaseNettyClient protected constructor(
             }
             connectStatus.set(ClientConnectStatus.CONNECTING)
         }
-        try { // You call connect() with sync() method like this bellow:
+        try { // You call connect() with sync() method like this below:
             // bootstrap.connect(host, port).sync()
-            // you must handle exception by yourself, because of you want to
-            // process connection synchronously. And the connection listener will be ignored
+            // You must handle exceptions yourself because you want to process the connection
+            // synchronously. The connection listener will be ignored
             // regardless of whether you add it.
             //
-            // If you want your connection listener work, do like this:
+            // If you want your connection listener to work, do like this:
             // bootstrap.connect(host, port).addListener(connectFutureListener)
             // In some cases, although you add your connection listener, you still need to catch
-            // some exceptions what your listener can not deal with
+            // some exceptions that your listener cannot deal with
             // Just like RejectedExecutionException exception. However, I never catch
             // RejectedExecutionException as I expect. Who can tell me why?
 
@@ -423,7 +423,8 @@ abstract class BaseNettyClient protected constructor(
                 // status and
             )
             // listener will be triggered at that time.
-            // However, if netty client had been release, call [connect] again will cause exception.
+            // However, if netty client has been released, calling [connect] again will cause an
+            // exception.
             // So we handle it here.
             connectStatus.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(
@@ -613,7 +614,8 @@ abstract class BaseNettyClient protected constructor(
                 LogContext.log.w(tag, "Closing channel...")
                 runCatching {
                     pipeline().removeAll { true }
-                    // closeFuture().syncUninterruptibly() // syncUninterruptibly() will stuck here.
+                    // closeFuture().syncUninterruptibly()
+                    // syncUninterruptibly() will get stuck here.
                     // Why???
                     //         closeFuture()
                     close().syncUninterruptibly()
@@ -623,7 +625,7 @@ abstract class BaseNettyClient protected constructor(
 
         runCatching {
             LogContext.log.w(tag, "Releasing socket...")
-            workerGroup.shutdownGracefully() // syncUninterruptibly() will not stuck here.
+            workerGroup.shutdownGracefully() // syncUninterruptibly() will not get stuck here.
                 .addListener { f ->
                     if (f.isSuccess) {
                         connectStatus.set(ClientConnectStatus.UNINITIALIZED)

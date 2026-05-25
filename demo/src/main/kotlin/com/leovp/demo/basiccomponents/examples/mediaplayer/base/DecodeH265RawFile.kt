@@ -305,7 +305,7 @@ class DecodeH265RawFile {
 
     fun startDecoding() {
         // FIXME
-        // If use coroutines here, the video will be displayed. I don't know why!!!
+        // If you use coroutines here, the video will be displayed. I don't know why!!!
         ioScope.launch {
             val startIdx = 4
             runCatching {

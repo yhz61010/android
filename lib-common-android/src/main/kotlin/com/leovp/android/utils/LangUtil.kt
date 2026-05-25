@@ -186,7 +186,7 @@ class LangUtil private constructor(private val ctx: Context) {
     fun getDefaultLanguageFullCode(): String = Locale.getDefault().toString()
 
     /**
-     * @return The result is only contains language and country, just like this: `zh_CN`.
+     * @return The result only contains language and country, just like this: `zh_CN`.
      */
     fun getDefaultLanguageCountryCode(): String = getLanguageCountryCode(Locale.getDefault())
 
@@ -206,8 +206,8 @@ class LangUtil private constructor(private val ctx: Context) {
     }
 
     /**
-     * @return The result is only contains language and country, just like this: `zh_CN`. Please
-     * notice the difference with [getDefaultLanguageFullCode].
+     * @return The result only contains language and country, just like this: `zh_CN`. Note the
+     * difference from [getDefaultLanguageFullCode].
      */
     fun getDeviceLanguageCountryCode(): String = getLanguageCountryCode(getDeviceLocale())
 

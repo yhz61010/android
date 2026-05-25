@@ -198,10 +198,10 @@ object FileDocumentUtil {
         }
 
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
-        // so we cannot relay on it.
+        // so we cannot rely on it.
         //
-        // instead, for each possible path, check if file exists
-        // we'll start with secondary storage as this could be our (physically) removable sd card
+        // Instead, for each possible path, check if the file exists.
+        // We'll start with secondary storage as this could be our (physically) removable SD card.
         fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
         if (fileExists(fullPath)) {
             return fullPath

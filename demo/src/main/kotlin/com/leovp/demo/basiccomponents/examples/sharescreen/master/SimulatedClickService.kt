@@ -65,13 +65,13 @@ class SimulatedClickService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // The package names that you want to monitor which have been set in
         // accessibility_service_config.
-        // If you does not set it, it means monitor all application.
+        // If you do not set it, it means monitor all applications.
         //        val packageName: String = event.packageName.toString()
         val eventType: Int = event.eventType
         val className: String? = event.className?.toString()
         // eventType: AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
         val st = SystemClock.elapsedRealtimeNanos()
-        // FIXME Can I initialized AccessibilityUtil in onCreate()?
+        // FIXME Can I initialize AccessibilityUtil in onCreate()?
         AccessibilityUtil.init(this)
         LogContext.log.i(
             TAG,

@@ -43,10 +43,10 @@ class AacDecoder(
     val queueSize: Int get() = queue.size
 
     // ByteBuffer key
-    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+    // AAC Profile 5 bits | SampleRate 4 bits | Channel Count 4 bits | Others 3 bits (normally 0)
+    // Example: AAC LC, 44.1 kHz, Mono. Separate values: 2, 4, 1.
     // Convert them to binary value: 0b10, 0b100, 0b1
-    // According to AAC required, convert theirs values to binary bits:
+    // According to AAC requirements, convert their values to binary bits:
     // 00010 0100 0001 000
     // The corresponding hex value：
     // 0001 0010 0000 1000
@@ -55,10 +55,10 @@ class AacDecoder(
     // AAC CSD: Decoder-specific information from ESDS
     //
     // ByteBuffer key
-    // AAC Profile 5bits | SampleRate 4bits | Channel Count 4bits | Others 3bits（Normally 0)
-    // Example: AAC LC，44.1Khz，Mono. Separately values: 2，4，1.
+    // AAC Profile 5 bits | SampleRate 4 bits | Channel Count 4 bits | Others 3 bits (normally 0)
+    // Example: AAC LC, 44.1 kHz, Mono. Separate values: 2, 4, 1.
     // Convert them to binary value: 0b10, 0b100, 0b1
-    // According to AAC required, convert theirs values to binary bits:
+    // According to AAC requirements, convert their values to binary bits:
     // 00010 0100 0001 000
     // The corresponding hex value：
     // 0001 0010 0000 1000

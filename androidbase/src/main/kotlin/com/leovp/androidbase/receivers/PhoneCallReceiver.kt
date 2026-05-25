@@ -74,9 +74,9 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
     protected abstract fun onMissedCall(ctx: Context, number: String?, start: Date?)
 
     // Deals with actual events
-    // Incoming call- goes from IDLE to RINGING when it rings, to OFFHOOK when it's answered, to
-    // IDLE when its hung up
-    // Outgoing call-  goes from IDLE to OFFHOOK when it dials out, to IDLE when hung up
+    // Incoming calls move from IDLE to RINGING while ringing, then to OFFHOOK when answered,
+    // and finally to IDLE when hung up.
+    // Outgoing calls move from IDLE to OFFHOOK when dialing out, then to IDLE when hung up.
     private fun onCallStateChanged(context: Context, state: Int, number: String?) {
         if (lastState == state) {
             // No change, debounce extras
@@ -89,7 +89,7 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
                 savedNumber = number
                 onIncomingCallReceived(context, number, callStartTime)
             }
-            // Transition of ringing->offhook are pickups of incoming calls.  Nothing done on them
+            // Transitions from RINGING to OFFHOOK are pickups of incoming calls. Nothing is done.
             TelephonyManager.CALL_STATE_OFFHOOK ->
                 if (lastState != TelephonyManager.CALL_STATE_RINGING) {
                     isIncoming = false

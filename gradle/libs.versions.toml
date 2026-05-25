@@ -321,7 +321,7 @@ java-activation = { module = "com.sun.mail:android-activation", version.ref = "j
 # So what's the magic?
 # https://mvnrepository.com/artifact/com.jcraft/jzlib
 jzlib = { module = "com.jcraft:jzlib", version.ref = "jzlib" }
-# As of bson4jackson 2.13.0, you need add fasterxml jackson manually.
+# As of bson4jackson 2.13.0, you need to add FasterXML Jackson manually.
 bson = { module = "de.undercouch:bson4jackson", version.ref = "bson" }
 fasterxml-jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "fasterxml" }
 fasterxml-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "fasterxml" }
@@ -438,7 +438,7 @@ fasterxml = [
     "fasterxml-jackson-databind",
     "fasterxml-jackson-annotations"
 ]
-# As of bson4jackson 2.13.0, you need add fasterxml jackson manually.
+# As of bson4jackson 2.13.0, you need to add FasterXML Jackson manually.
 bson = [
     "bson",
     "fasterxml-jackson-core",

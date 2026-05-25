@@ -102,7 +102,7 @@ private class RecomposeHighlighterModifier :
     }
 
     /**
-     * Start the timeout, and reset everytime there's a recomposition.
+     * Start the timeout, and reset it every time there's a recomposition.
      */
     private fun restartTimer() {
         if (!isAttached) return

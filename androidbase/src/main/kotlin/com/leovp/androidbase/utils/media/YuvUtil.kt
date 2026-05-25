@@ -339,7 +339,7 @@ object YuvUtil {
     }
 
     // ============================================================
-    // Lens back. 90 degree clockwise rotation.
+    // Lens back. 90-degree clockwise rotation.
     // Input yuvSrc is in YYYYYYYYUUVV
     fun yuvRotate90(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
         val desYuv = ByteArray(width * height * 3 / 2)
@@ -370,7 +370,7 @@ object YuvUtil {
         return desYuv
     }
 
-    // Lens front. 270 degree clockwise rotation AKA 90 degree anticlockwise rotation
+    // Lens front. 270-degree clockwise rotation AKA 90-degree anticlockwise rotation
     fun yuvRotate270(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
         val desYuv = ByteArray(width * height * 3 / 2)
         var n = 0
@@ -904,7 +904,7 @@ object YuvUtil {
     //        assert (pixelStride == image.getPlanes()[1].getPixelStride());
     //
     //        if (pixelStride == 2 && rowStride == width && uBuffer.get(0) == vBuffer.get(1)) {
-    // // maybe V an U planes overlap as per NV21, which means vBuffer[1] is alias of uBuffer[0]
+    // // maybe V and U planes overlap as per NV21, which means vBuffer[1] is alias of uBuffer[0]
     //            byte savePixel = vBuffer.get(1);
     //            try {
     //                vBuffer.put(1, (byte) ~savePixel);

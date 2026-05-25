@@ -34,10 +34,10 @@ public final class SurfaceControl {
     }
 
     /**
-     * @param rotation 0: 0 degree rotation (natural orientation)<br/>
-     *                 1: 90 degree rotation<br/>
-     *                 2: 180 degree rotation<br/>
-     *                 3: 270 degree rotation
+     * @param rotation 0: 0-degree rotation (natural orientation)<br/>
+     *                 1: 90-degree rotation<br/>
+     *                 2: 180-degree rotation<br/>
+     *                 3: 270-degree rotation
      */
     @SuppressLint({"PrivateApi", "BlockedPrivateApi"})
     @Nullable

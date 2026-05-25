@@ -17,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Usage:
  *
  * 1. Get the ForegroundComponent Singleton, passing a Context or Application object unless you
- * are sure that the Singleton has definitely already been initialised elsewhere.
+ * are sure that the Singleton has definitely already been initialized elsewhere.
  * ```
  * ForegroundComponent.init(application, 500)
  * ```
@@ -173,13 +173,13 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         private var instance: ForegroundComponent? = null
 
         /**
-         * Its not strictly necessary to use this method - _usually_ invoking
+         * It's not strictly necessary to use this method - _usually_ invoking
          * get with a Context gives us a path to retrieve the Application and
-         * initialise, but sometimes (e.g. in test harness) the ApplicationContext
+         * initialize, but sometimes (e.g. in test harness) the ApplicationContext
          * is != the Application, and the docs make no guarantees.
          *
          * @param application The application object
-         * @return an initialised Foreground instance
+         * @return an initialized Foreground instance
          */
         fun init(
             application: Application,

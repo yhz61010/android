@@ -87,7 +87,11 @@ class NfcReader {
                 i {
                     this.tag = TAG
                     message =
-                        "MifareClassic 数据: ${data.joinToString(" ") { it.toUByte().toString(16) }}"
+                        "MifareClassic 数据: ${
+                            data.joinToString(" ") {
+                                it.toUByte().toString(16)
+                            }
+                        }"
                     outputType = logTypeNfc
                 }
             } else {
@@ -135,9 +139,8 @@ class NfcReader {
             nfcB.connect()
             i {
                 this.tag = TAG
-                message =
-                    "NfcB tag connected: " +
-                    "${nfcB.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
+                message = "NfcB tag connected: " +
+                    nfcB.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {
@@ -171,9 +174,8 @@ class NfcReader {
             // )
             i {
                 this.tag = TAG
-                message =
-                    "NfcF tag UID: " +
-                    "${nfcF.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }}"
+                message = "NfcF tag UID: " +
+                    nfcF.tag.id.joinToString(" ") { String.format(Locale.US, "%02X", it) }
                 outputType = logTypeNfc
             }
         } catch (e: Exception) {

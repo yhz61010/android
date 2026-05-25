@@ -131,10 +131,10 @@ abstract class BaseNettyServer protected constructor(
             connectState.set(ServerConnectStatus.STARTED)
             LogContext.log.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
-            // After running this line below, the process will stuck there and waiting client
+            // After running the line below, the process will get stuck there and wait for client
             // connection
             serverChannel.closeFuture().sync()
-            // When serverChannel.close be executed, the process will continue to run.
+            // When serverChannel.close is executed, the process will continue to run.
             LogContext.log.i(tag, "===== Stopping server... =====")
         } catch (e: RejectedExecutionException) {
             LogContext.log.e(tag, "===== RejectedExecutionException: ${e.message} =====", e)
@@ -192,12 +192,12 @@ abstract class BaseNettyServer protected constructor(
 
         runCatching {
             LogContext.log.w(tag, "Releasing bossGroup...")
-            bossGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+            bossGroup.shutdownGracefully().syncUninterruptibly() // Will not get stuck here.
         }.onFailure { LogContext.log.e(tag, "Shutdown bossGroup error.", it) }
 
         runCatching {
             LogContext.log.w(tag, "Releasing workerGroup...")
-            workerGroup.shutdownGracefully().syncUninterruptibly() // Will not stuck here.
+            workerGroup.shutdownGracefully().syncUninterruptibly() // Will not get stuck here.
         }.onFailure { LogContext.log.e(tag, "Shutdown workerGroup error.", it) }
 
         LogContext.log.w(tag, "=====> Server released <=====")

@@ -25,13 +25,13 @@ object AESUtil {
     /**
      * Encrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainText: String, secKey: String, useSHA512: Boolean = true): String =
         encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
@@ -39,14 +39,14 @@ object AESUtil {
     /**
      * Decrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherText Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
         decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
@@ -56,20 +56,20 @@ object AESUtil {
     /**
      * Encrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
-     * If can use your SecretKey or generate it like this:
+     * You can use your SecretKey or generate it like this:
      * ```
      * val secKey: SecretKey = AESUtil.generateKey()
      * // or
      * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
      * ```
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
         encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
@@ -77,15 +77,15 @@ object AESUtil {
     /**
      * Decrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
-     * @param secKey You must use the same SecretKey or else the decryption will be failed.
+     * @param cipherText Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
+     * @param secKey You must use the same SecretKey or else the decryption will fail.
      */
     fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
         decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
@@ -95,8 +95,8 @@ object AESUtil {
     /**
      * Encrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -109,10 +109,10 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
         encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
@@ -120,8 +120,8 @@ object AESUtil {
     /**
      * Decrypt string with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -134,11 +134,11 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherText Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherText Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
         decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
@@ -148,8 +148,8 @@ object AESUtil {
     /**
      * Encrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -163,10 +163,10 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
         encrypt(plainBytes, secKey.toByteArray(), useSHA512)
@@ -174,8 +174,8 @@ object AESUtil {
     /**
      * Decrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -189,11 +189,11 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
         decrypt(cipherBytes, secKey.toByteArray(), useSHA512)
@@ -203,8 +203,8 @@ object AESUtil {
     /**
      * Encrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -220,10 +220,10 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainData: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
         encrypt(plainData, secKey.encoded, useSHA512)
@@ -231,11 +231,11 @@ object AESUtil {
     /**
      * Decrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -251,11 +251,11 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
         decrypt(cipherBytes, secKey.encoded, useSHA512)
@@ -264,8 +264,8 @@ object AESUtil {
     /**
      * Encrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -280,10 +280,10 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @return The result includes the salt prefix which length is DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @return The result includes a salt prefix of DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun encrypt(plainData: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
         val cipher = Cipher.getInstance(CIPHER_AES)
@@ -306,8 +306,8 @@ object AESUtil {
     /**
      * Encrypt bytes with specified secure key.
      *
-     * If API level is less than Android 8.0(Oreo) Level 26,
-     * the parameter [useSHA512] will be ignored and the SHA1 will be used.
+     * If the API level is lower than Android 8.0 (Oreo), API level 26,
+     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -322,11 +322,11 @@ object AESUtil {
      *
      * You can encrypt and decrypt any binary data.
      *
-     * AES allows 128(16*8), 192(24*8) and 256(32*8) bit of key length.
-     * In other words 16, 24 or 32 byte.
+     * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
+     * In other words, 16, 24, or 32 bytes.
      *
-     * @param cipherBytes Notice that, the cipher data includes the salt prefix which length is
-     * DEFAULT_PRE_SALT_LENGTH(4 bytes).
+     * @param cipherBytes Notice that the cipher data includes the salt prefix whose length is
+     * DEFAULT_PRE_SALT_LENGTH (4 bytes).
      */
     fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
         val salt: ByteArray = cipherBytes.copyOfRange(0, DEFAULT_PRE_SALT_LENGTH)

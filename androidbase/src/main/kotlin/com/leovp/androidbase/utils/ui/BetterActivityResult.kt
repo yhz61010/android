@@ -36,11 +36,11 @@ class BetterActivityResult<I, O> private constructor(
         }
 
     /**
-     * Launch activity, same as [ActivityResultLauncher.launch] except that it allows a callback
-     * executed after receiving a result from the target activity.
+     * Launch an activity, same as [ActivityResultLauncher.launch] except that it allows a callback
+     * to execute after receiving a result from the target activity.
      *
      * @param result If this parameter is `null`, make sure you have already set the `result` when
-     * call [BetterActivityResult.registerForActivityResult].
+     * calling [BetterActivityResult.registerForActivityResult].
      * If you set `result` in both [launch] and BetterActivityResult constructor, the `result` in
      * [launch] will be used first.
      */
@@ -52,12 +52,12 @@ class BetterActivityResult<I, O> private constructor(
 
     companion object {
         /**
-         * Register activity result using a [ActivityResultContract] and an in-place activity result
-         * callback like
-         * the default approach. You can still customise callback using [launch].
+         * Register an activity result using an [ActivityResultContract] and an inline activity
+         * result callback, like the default approach. You can still customize the callback using
+         * [launch].
          *
          * @param result If this parameter is `null`, make sure you have already set the `result`
-         * when call [BetterActivityResult.launch]
+         * when calling [BetterActivityResult.launch].
          * If you set `result` in both [launch] and BetterActivityResult constructor, the `result`
          * in [launch] will be used first.
          */

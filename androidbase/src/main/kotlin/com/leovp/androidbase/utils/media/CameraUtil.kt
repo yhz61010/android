@@ -42,7 +42,7 @@ object CameraUtil {
             //            boolean deleteFlag = imageFile.delete();
             //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
             val imageUri =
-                // Above Android 7.0, we need convert File to Uri through FileProvider.
+                // Above Android 7.0, we need to convert File to Uri through FileProvider.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", imageFile)
                 } else { // Below Android 7.0. Directly using Uri to convert File to Uri.

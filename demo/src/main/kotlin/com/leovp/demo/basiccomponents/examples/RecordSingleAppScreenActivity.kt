@@ -87,7 +87,7 @@ class RecordSingleAppScreenActivity :
             (screenInfo.height * 0.8F / 16).toInt() * 16,
             densityDpi
         )
-        // FIXME Seems does not work. Check bellow setKeyFrameRate
+        // FIXME This does not seem to work. Check below setKeyFrameRate
         setting.fps = 5f
 
         val screenProcessor = ScreenCapture.Builder(

@@ -19,8 +19,8 @@ import androidx.core.content.res.ResourcesCompat
 import kotlin.math.abs
 
 /**
- * The component is inheriting [ImageView], so the the `android:src` attribute is mandatory.
- * The default `android:src` is a transparent 1x1 Pixel png.
+ * The component inherits from [ImageView], so the `android:src` attribute is mandatory.
+ * The default `android:src` is a transparent 1x1 pixel PNG.
  * The default `android:scaleType` is `centerCrop`
  *
  * Author: Michael Leo

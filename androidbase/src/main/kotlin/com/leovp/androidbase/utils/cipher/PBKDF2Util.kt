@@ -28,7 +28,7 @@ object PBKDF2Util {
     private const val ALGORITHM_SHA1 = "PBKDF2WithHmacSHA1"
 
     /**
-     * As of Android 8.0(Oreo) Level 26
+     * As of Android 8.0 (Oreo), API level 26
      *
      * Check this [link](https://developer.android.com/reference/javax/crypto/SecretKeyFactory)
      * to see supported SecretKeyFactory algorithms.
@@ -262,7 +262,7 @@ object PBKDF2Util {
      * to take >100ms.
      *
      * @param outputKeyLengthInBits Default value 32 shl 3 = 256
-     * AES allows 128, 192 and 256 bit of key length. In other words 16, 24 or 32 byte.
+     * AES allows 128, 192, and 256 bits of key length. In other words, 16, 24, or 32 bytes.
      *
      * val random = SecureRandom()
      * val salt = ByteArray(32)

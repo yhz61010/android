@@ -12,6 +12,8 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
 import io.netty.channel.ChannelPipeline
+import io.netty.channel.group.ChannelGroup
+import io.netty.channel.group.DefaultChannelGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -23,6 +25,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.handler.stream.ChunkedWriteHandler
 import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
@@ -65,6 +68,9 @@ abstract class BaseNettyServer protected constructor(
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultServerInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
+
+    internal val clients: ChannelGroup =
+        DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
     @Volatile
     internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(

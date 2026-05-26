@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.util.CharsetUtil
@@ -111,10 +110,14 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         // business requirement(only one single user logged-in allowed),
         // I must do reconnect here to make sure worker thread had already been released.
         if (!caughtException) {
-            if (netty.disconnectManually) {
+            if (netty.disconnectManually ||
+                netty.connectStatus.get() == ClientConnectStatus.DISCONNECTED
+            ) {
                 LogContext.log.i(
                     tag,
-                    "handlerRemoved(disconnect) manually=${netty.disconnectManually}"
+                    "handlerRemoved(disconnect) " +
+                        "manually=${netty.disconnectManually} " +
+                        "status=${netty.connectStatus.get().name}"
                 )
                 //                netty.connectState.set(ClientConnectState.DISCONNECTED)
                 //                netty.connectionListener.onDisconnected(netty)
@@ -206,6 +209,16 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
         if (netty.isWebSocket) {
+            // Handle CloseFrame first — even before handshake completes — so state is set
+            // correctly before channel.close() triggers handlerRemoved.
+            if (msg is CloseWebSocketFrame) {
+                LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
+                netty.connectStatus.set(ClientConnectStatus.DISCONNECTED)
+                netty.connectionListener.onDisconnected(netty, true)
+                ctx.channel().close()
+                return
+            }
+
             if (handshaker?.isHandshakeComplete == false) {
                 try {
                     handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
@@ -230,15 +243,6 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                     "protocolVersion=${msg.protocolVersion()}"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)
-            }
-
-            val frame = msg as WebSocketFrame
-            if (frame is CloseWebSocketFrame) {
-                LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
-                ctx.channel().close()
-                netty.connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                netty.connectionListener.onDisconnected(netty, true)
-                return
             }
         }
 

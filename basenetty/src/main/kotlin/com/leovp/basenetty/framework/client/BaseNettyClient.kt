@@ -386,7 +386,22 @@ abstract class BaseNettyClient protected constructor(
             retryTimes.set(0)
             disconnectManually = false
             if (isWebSocket) {
-                defaultInboundHandler?.channelPromise?.addListener {
+                val promise = defaultInboundHandler?.channelPromise
+                if (promise == null) {
+                    LogContext.log.e(
+                        tag,
+                        "WebSocket channelPromise is null. " +
+                            "Handler not initialized properly."
+                    )
+                    channel.close()
+                    handleConnectFailure(
+                        ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
+                        "WebSocket channelPromise not initialized",
+                        retry = false
+                    )
+                    return@suspendCancellableCoroutine
+                }
+                promise.addListener {
                     if (it.isSuccess) {
                         LogContext.log.i(tag, "=====> WebSocket Connect success <=====")
                         connectStatus.set(ClientConnectStatus.CONNECTED)
@@ -482,6 +497,12 @@ abstract class BaseNettyClient protected constructor(
                 return connectStatus.get()
             } else if (ClientConnectStatus.DISCONNECTING == connectStatus.get()) {
                 LogContext.log.w(tag, "Socket is disconnecting. Stop processing.")
+                return connectStatus.get()
+            } else if (ClientConnectStatus.CONNECTING == connectStatus.get()) {
+                LogContext.log.w(
+                    tag,
+                    "Socket is connecting. Cannot disconnect during connection attempt."
+                )
                 return connectStatus.get()
             }
             connectStatus.set(ClientConnectStatus.DISCONNECTING)

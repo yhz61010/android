@@ -150,9 +150,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         }
     }
 
-    /**
-     * Call [ctx.close().syncUninterruptibly()] synchronized.
-     */
+    /** Close asynchronously; channelInactive/handlerRemoved handle cleanup. */
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (caughtException) {

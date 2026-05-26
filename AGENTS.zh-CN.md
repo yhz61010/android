@@ -38,7 +38,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 最近的提交历史同时包含普通祈使句标题和带 Conventional Commit 风格前缀的标题，例如 `docs(readme): ...`。优先使用简短的祈使句提交标题；当作用域能提升可读性时，可加作用域前缀，例如 `fix(lib-network): handle empty response`。Pull Request 应尽量聚焦，说明受影响模块，列出验证命令；涉及 UI 或 demo 应用变更时附上截图。对于签名、native 库或 Gradle 配置变更，需要明确标注。
 
 ## 面向代理的说明
-在本仓库中与贡献者沟通时使用中文。文档、Markdown 内容和代码注释使用英文。
+在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。
 
 ## Claude 与 CodeX 互操作
 保留所有现有 Claude Code 文件，包括 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 以及 `.claude/` 下的全部内容，除非用户明确要求修改。
@@ -56,7 +56,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 以下规则足够重要，CodeX 应直接执行，而不依赖额外文件：
 
 - 与贡献者沟通时使用中文。
-- 代码注释、文档、Markdown 内容和 git commit message 使用英文。
+- 代码注释与 commit 内容使用英文。
 - 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
 - 文档保存到 `00-documents`，不要放到 `docs`。
 - 更新 `AGENTS.md` 时，对 `AGENTS.zh-CN.md` 做等价同步。

@@ -1,9 +1,9 @@
 # basenetty Module Refactoring Design
 
-**Date:** 2026-05-25  
-**Scope:** Fix 12 issues identified in code review, add unit tests  
-**Branch:** `fix/basenetty-refactoring`  
-**Approach:** Extract helper methods (Option B) — preserve public API, restructure internals  
+**Date:** 2026-05-25
+**Scope:** Fix 12 issues identified in code review, add unit tests
+**Branch:** `fix/basenetty-refactoring`
+**Approach:** Extract helper methods (Option B) — preserve public API, restructure internals
 **Revision:** v2 — incorporates ChatGPT review feedback (6 adjustments)
 
 ---

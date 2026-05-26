@@ -39,4 +39,3 @@ References:
 - [3] `module-point-compose/build.gradle.kts` contains: `id("org.jetbrains.kotlinx.kover")`, `testImplementation("io.mockk:mockk:1.13.13")`, and `lint { abortOnError = false }`.
 - [4] `git log --oneline -8` sample history: `f99dd731b fix(dcd): update result field types to use Long for monetary values in extractResultFields`, `b0b14fcf8 feat(dcd): enhance DCD command handling with processing state and timeout management`.
 - [5] Final validation: `file -bi AGENTS.md` returned `text/plain; charset=utf-8` and `wc -w AGENTS.md` returned `377` words before the Chinese rewrite.
-

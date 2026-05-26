@@ -1,5 +1,9 @@
 # Never modify Claude files
 
+Consolidated: this note is retained as historical evidence. Use
+`2026-05-22T16-23-10-never-modify-claude-files.md` as the current consolidated
+Claude read-only note.
+
 User explicitly said: "记住，任何时候都不要修改 Claude 的文件。"
 
 Default rule for all future work: never modify Claude-related files, including but not limited to `CLAUDE.md`, `.claude/**`, and StarPay external `Claude/` memory files. Treat them as read-only reference material.

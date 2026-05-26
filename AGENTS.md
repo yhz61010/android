@@ -48,7 +48,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - 除本文件外，还应将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 视为补充项目说明。
 - fresh clone 后读取共享 Codex 记忆时，先读 [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md)，再加载 `00-documents/codex-memory/memory_summary.md`、`00-documents/codex-memory/MEMORY.md`、`00-documents/codex-memory/extensions/ad_hoc/notes/`，以及相关的 `00-documents/codex-memory/rollout_summaries/` 文件。
 - 优先按需读取现有 Claude 材料，而不是盲目重复其内容。
-- 当任务涉及个人或仓库工作风格时，读取 `.claude/rules/personal-style.md` 和 `.claude/memory/MEMORY.md`。
+- 当任务涉及个人或仓库工作风格时，读取 `.claude/memory/MEMORY.md`；如果 `.claude/rules/personal-style.md` 存在，再作为补充读取。
 - 当任务涉及 Android UI 或 UX 设计时，读取 `.claude/skills/mobile-android-design/SKILL.md`。
 - 当用户询问如何查找、创建或安装 skills 时，读取 `.claude/skills/find-skills/SKILL.md`。
 - 保留 `.claude/commands`、`.claude/memory`、`.claude/rules`、`.claude/skills` 以及 Claude 生成的文件，除非用户明确要求修改它们。

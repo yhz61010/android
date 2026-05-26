@@ -1,7 +1,4 @@
 - [No Co-Authored-By](feedback_no_coauthored_by.md) — Never add Co-Authored-By or anthropic email in commits
 - [User profile](user_profile.md) — Michael Leo, Git email yhzemail61010@aliyun.com, GitHub yhz61010
 - [Docs in 00-documents](feedback_docs_location.md) — All generated docs go under 00-documents/, not docs/
-- [Bilingual docs](feedback_bilingual_docs.md) — Always generate both Chinese and English versions for documentation
-- [English for code](feedback_english_code_commits.md) — Code comments and git commits always in English
-- [Language preference](user_language.md) — Communicate in Chinese; code/commits in English
-- [CMake/NDK versions](project_cmake_ndk_versions.md) — CMake 3.22.1, NDK 29.0.14206865, managed via libs.versions.toml
+- [Sync memory to repo](feedback_sync_memory.md) — Always sync memory updates to project .claude/memory/ and commit

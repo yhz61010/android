@@ -91,11 +91,22 @@ abstract class BaseNettyClient protected constructor(
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     private val headers: Map<String, String>? = null,
     timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
-    retryDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseNetty {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
         private const val DISCONNECT_TIMEOUT_IN_MILLS = 5_000L
+    }
+
+    internal constructor(
+        host: String,
+        port: Int,
+        connectionListener: ClientConnectListener<BaseNettyClient>,
+        retryStrategy: RetryStrategy = ConstantRetry(),
+        headers: Map<String, String>? = null,
+        timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
+        retryDispatcher: CoroutineDispatcher,
+    ) : this(host, port, connectionListener, retryStrategy, headers, timeout) {
+        retryScope = createRetryScope(retryDispatcher)
     }
 
     protected constructor(
@@ -188,12 +199,16 @@ abstract class BaseNettyClient protected constructor(
     fun getCertificateInputStream(): InputStream? =
         certificateBytes?.let { ByteArrayInputStream(it) }
 
-    private val retryScope = CoroutineScope(SupervisorJob() + retryDispatcher)
+    private fun createRetryScope(dispatcher: CoroutineDispatcher): CoroutineScope =
+        CoroutineScope(SupervisorJob() + dispatcher)
+
+    private var retryScope = createRetryScope(Dispatchers.IO)
 
     private val retryLock = Any()
     private var retryJob: Job? = null
 
-    @Volatile private var released = false
+    @Volatile
+    private var released = false
 
     internal var disconnectTimeoutInMillis: Long = DISCONNECT_TIMEOUT_IN_MILLS
 
@@ -327,7 +342,7 @@ abstract class BaseNettyClient protected constructor(
             code: Int,
             msg: String?,
             cause: Throwable? = null,
-            retry: Boolean = true
+            retry: Boolean = true,
         ) {
             connectStatus.set(ClientConnectStatus.FAILED)
             connectionListener.onFailed(this@BaseNettyClient, code, msg, cause)
@@ -380,7 +395,7 @@ abstract class BaseNettyClient protected constructor(
 
             // Note: sync() blocks the current thread for up to CONNECTION_TIMEOUT_IN_MILLS.
             // This is acceptable on Dispatchers.IO but could starve threads under heavy load.
-            // TODO: Consider migrating to fully async addListener-based connection in the future.
+            // Future improvement: migrate to fully async addListener-based connection.
             val f = bootstrap.connect(host, port).sync()
             channel = f.channel()
             retryTimes.set(0)
@@ -543,7 +558,10 @@ abstract class BaseNettyClient protected constructor(
                                 )
                             }
                         } else {
-                            LogContext.log.w(tag, "===== disconnectManually() failed =====")
+                            LogContext.log.w(
+                                tag,
+                                "===== disconnectManually() failed ====="
+                            )
                             complete(ClientConnectStatus.FAILED) {
                                 connectStatus.set(ClientConnectStatus.FAILED)
                                 connectionListener.onFailed(
@@ -642,13 +660,19 @@ abstract class BaseNettyClient protected constructor(
      * any exception will be ignored.
      */
     suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
-        LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
+        LogContext.log.w(
+            tag,
+            "===== release() current state=${connectStatus.get().name} ====="
+        )
         synchronized(this) {
             if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() ||
                 ClientConnectStatus.RELEASING == connectStatus.get() ||
                 ClientConnectStatus.DISCONNECTING == connectStatus.get()
             ) {
-                LogContext.log.w(tag, "Releasing now or already released or disconnecting or not initialized")
+                LogContext.log.w(
+                    tag,
+                    "Releasing now or already released or disconnecting or not initialized"
+                )
                 cont.resume(false)
                 return@suspendCancellableCoroutine
             }

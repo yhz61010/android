@@ -16,11 +16,8 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.DefaultChannelPromise
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
-import java.net.URI
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,7 +29,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import java.lang.reflect.Modifier
+import java.net.URI
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @Timeout(value = 60, unit = TimeUnit.SECONDS)
 class BaseNettyLifecycleTest {
@@ -178,15 +178,14 @@ class BaseNettyLifecycleTest {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
     }
 
-    private class TestWebSocketClient(
-        listener: ClientConnectListener<BaseNettyClient>,
-    ) : BaseNettyClient(
-        webSocketUri = URI("ws://127.0.0.1:1/ws"),
-        connectionListener = listener,
-        trustAllServers = true,
-        retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 1L),
-        timeout = 200
-    ) {
+    private class TestWebSocketClient(listener: ClientConnectListener<BaseNettyClient>) :
+        BaseNettyClient(
+            webSocketUri = URI("ws://127.0.0.1:1/ws"),
+            connectionListener = listener,
+            trustAllServers = true,
+            retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 1L),
+            timeout = 200
+        ) {
         val retryAttempts = AtomicInteger(0)
 
         override fun getTagName(): String = "TestWebSocketClient"
@@ -234,7 +233,7 @@ class BaseNettyLifecycleTest {
             netty: BaseNettyServer,
             clientChannel: Channel,
             data: Any?,
-            action: Int
+            action: Int,
         ) = Unit
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) = Unit

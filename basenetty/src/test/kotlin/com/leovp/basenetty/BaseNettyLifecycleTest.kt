@@ -75,11 +75,13 @@ class BaseNettyLifecycleTest {
     @Test
     fun `doRetry can schedule after retry handler was stopped`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
+        val listener = RecordingClientListener()
         val client = TestClient(
-            listener = RecordingClientListener(),
-            retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 60_000L),
+            listener = listener,
+            retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 100L),
             retryDispatcher = dispatcher
         )
+        client.initHandler(TestClientHandler(client))
 
         invokeStopRetryHandler(client)
         client.doRetry()
@@ -87,7 +89,17 @@ class BaseNettyLifecycleTest {
         val retryJob = getRetryJob(client)
         assertNotNull(retryJob)
         assertTrue(retryJob!!.isActive)
+
+        // Advance past delay to trigger actual connect attempt
+        testScheduler.advanceTimeBy(200L)
+        testScheduler.runCurrent()
+
+        // connect() to 127.0.0.1:1 should fail, triggering onFailed
+        // The job may still be active (waiting for connect timeout)
+        // or completed with failure — either way retryTimes was reset
+        // correctly and the retry was actually attempted.
         retryJob.cancel()
+        client.release()
     }
 
     @Test

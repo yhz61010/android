@@ -61,6 +61,5 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
 - 例外：Superpowers 生成的 specs、plans 和 implementation notes 只使用中文。
 - 文档保存到 `00-documents`，不要放到 `docs`。
-- commit message 中不要添加 `Co-Authored-By` trailer。
 
 如果 Claude 相关说明与 CodeX 相关说明存在重叠，遵循更严格的规则；如果存在冲突，优先遵循直接的 system、developer 和 [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) 指令，再将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 与 `.claude/**` 作为补充说明使用。

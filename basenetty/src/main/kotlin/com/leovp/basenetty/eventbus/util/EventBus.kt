@@ -88,9 +88,11 @@ object EventBus {
     // =============================================
 
     private fun addHandler(address: String, handler: EventBusHandler) {
-        handlers.computeIfAbsent(address) {
-            CopyOnWriteArrayList()
-        }.add(handler)
+        val list = handlers[address] ?: run {
+            val newList = CopyOnWriteArrayList<EventBusHandler>()
+            handlers.putIfAbsent(address, newList) ?: newList
+        }
+        list.add(handler)
     }
 
     private fun addReplyHandler(address: String, handler: EventBusHandler) {

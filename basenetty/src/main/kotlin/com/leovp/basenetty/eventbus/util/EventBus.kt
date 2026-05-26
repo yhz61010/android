@@ -94,7 +94,7 @@ object EventBus {
     }
 
     private fun addReplyHandler(address: String, handler: EventBusHandler) {
-        replyHandlers.putIfAbsent(address, handler)
+        replyHandlers[address] = handler
     }
 
     // =============================================

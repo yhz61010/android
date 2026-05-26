@@ -378,7 +378,9 @@ abstract class BaseNettyClient protected constructor(
             // Just like RejectedExecutionException exception. However, I never catch
             // RejectedExecutionException as I expect. Who can tell me why?
 
-            // Add sync() here, so that the listener of ChannelPromise will be triggered here.
+            // Note: sync() blocks the current thread for up to CONNECTION_TIMEOUT_IN_MILLS.
+            // This is acceptable on Dispatchers.IO but could starve threads under heavy load.
+            // TODO: Consider migrating to fully async addListener-based connection in the future.
             val f = bootstrap.connect(host, port).sync()
             channel = f.channel()
             retryTimes.set(0)
@@ -512,8 +514,8 @@ abstract class BaseNettyClient protected constructor(
                     future.addListener { f ->
                         if (f.isSuccess) {
                             LogContext.log.w(tag, "===== disconnectManually() done =====")
-                            connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                            complete(connectStatus.get()) {
+                            complete(ClientConnectStatus.DISCONNECTED) {
+                                connectStatus.set(ClientConnectStatus.DISCONNECTED)
                                 connectionListener.onDisconnected(
                                     this@BaseNettyClient,
                                     byRemote = false
@@ -521,8 +523,8 @@ abstract class BaseNettyClient protected constructor(
                             }
                         } else {
                             LogContext.log.w(tag, "===== disconnectManually() failed =====")
-                            connectStatus.set(ClientConnectStatus.FAILED)
-                            complete(connectStatus.get()) {
+                            complete(ClientConnectStatus.FAILED) {
+                                connectStatus.set(ClientConnectStatus.FAILED)
                                 connectionListener.onFailed(
                                     this@BaseNettyClient,
                                     ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
@@ -533,8 +535,8 @@ abstract class BaseNettyClient protected constructor(
                     }
                 }.onFailure {
                     LogContext.log.e(tag, "disconnectManually error.", it)
-                    connectStatus.set(ClientConnectStatus.FAILED)
-                    complete(connectStatus.get()) {
+                    complete(ClientConnectStatus.FAILED) {
+                        connectStatus.set(ClientConnectStatus.FAILED)
                         connectionListener.onFailed(
                             this@BaseNettyClient,
                             ClientConnectListener.DISCONNECT_MANUALLY_EXCEPTION,
@@ -579,6 +581,7 @@ abstract class BaseNettyClient protected constructor(
                     "${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | " +
                     "current state=${connectStatus.get().name}"
             )
+            retryJob?.cancel()
             retryJob = retryScope.launch {
                 runCatching {
                     delay(retryStrategy.getDelayInMillSec(retryTimes.get()))

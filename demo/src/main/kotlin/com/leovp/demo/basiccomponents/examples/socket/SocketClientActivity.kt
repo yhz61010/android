@@ -63,7 +63,7 @@ class SocketClientActivity :
     private fun createSocket(): SocketClient {
         val svrIp = binding.etSvrIp.text.toString().substringBeforeLast(':')
         val svrPort = binding.etSvrIp.text.toString().substringAfterLast(':').toInt()
-        socketClient = SocketClient(svrIp, svrPort, connectionListener, ExponentRetry(5, 1))
+        socketClient = SocketClient(svrIp, svrPort, connectionListener, ExponentRetry(3, 1))
         socketClientHandler = SocketClientHandler(socketClient)
         socketClient.initHandler(socketClientHandler)
 
@@ -82,8 +82,8 @@ class SocketClientActivity :
             repeat(1) {
                 createSocket().connect()
 
-                // You can also create multiple sockets at the same time like this(It's thread safe
-                // so you can create them freely):
+                // You can also create multiple sockets at the same time, like this
+                // (It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
                 // val socketClientHandler = SocketClientHandler(socketClient)
                 // socketClient.initHandler(socketClientHandler)

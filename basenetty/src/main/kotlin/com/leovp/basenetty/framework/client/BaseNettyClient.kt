@@ -471,17 +471,22 @@ abstract class BaseNettyClient protected constructor(
             )
         } catch (e: ConnectException) {
             LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
+            // retry = false: handlerRemoved will fire (channel was registered)
+            // and handle the retry there to avoid double doRetry().
             handleConnectFailure(
                 ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
                 e.message,
-                e
+                e,
+                retry = false
             )
         } catch (e: Exception) {
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
+            // retry = false: same reason as ConnectException above.
             handleConnectFailure(
                 ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
                 e.message,
-                e
+                e,
+                retry = false
             )
         }
     }

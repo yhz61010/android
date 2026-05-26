@@ -153,8 +153,6 @@ class WebSocketClientActivity :
         retryStrategy: RetryStrategy,
     ) : BaseNettyClient(webSocketUri, connectionListener, trustAllServers, retryStrategy) {
         override fun getTagName() = "WebSocketClient"
-
-        override fun retryProcess(): Boolean = true
     }
 
     @ChannelHandler.Sharable

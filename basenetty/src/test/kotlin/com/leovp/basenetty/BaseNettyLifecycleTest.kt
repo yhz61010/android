@@ -15,6 +15,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.DefaultChannelPromise
 import io.netty.channel.embedded.EmbeddedChannel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import java.lang.reflect.Modifier
 import java.util.concurrent.TimeUnit
 
 @Timeout(value = 60, unit = TimeUnit.SECONDS)
@@ -73,6 +75,7 @@ class BaseNettyLifecycleTest {
         }
 
     @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun `doRetry can schedule after retry handler was stopped`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val listener = RecordingClientListener()
@@ -109,6 +112,26 @@ class BaseNettyLifecycleTest {
         val handler = TestServerHandler(server)
 
         assertSame(server.clients, handler.clients)
+    }
+
+    @Test
+    fun `BaseNettyClient preserves protected JVM constructor signature`() {
+        val expectedParameterTypes = arrayOf<Class<*>>(
+            String::class.java,
+            Int::class.javaPrimitiveType!!,
+            ClientConnectListener::class.java,
+            RetryStrategy::class.java,
+            Map::class.java,
+            Int::class.javaPrimitiveType!!
+        )
+
+        val hasOriginalConstructor = BaseNettyClient::class.java.declaredConstructors.any {
+            !it.isSynthetic &&
+                Modifier.isProtected(it.modifiers) &&
+                it.parameterTypes.contentEquals(expectedParameterTypes)
+        }
+
+        assertTrue(hasOriginalConstructor)
     }
 
     private class TestClient(

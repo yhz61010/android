@@ -26,15 +26,14 @@ object EventBus {
         message: Any? = null,
         headers: Map<String, Any>? = null,
         handler: EventBusHandler? = null,
-    ): Map<String, Any> =
-        constructData(
-            EventBusAttributes.TYPE_SEND,
-            address,
-            message,
-            headers,
-            null,
-            handler
-        )
+    ): Map<String, Any> = constructData(
+        EventBusAttributes.TYPE_SEND,
+        address,
+        message,
+        headers,
+        null,
+        handler
+    )
 
     fun publish(
         address: String,
@@ -59,10 +58,7 @@ object EventBus {
         handler
     )
 
-    fun unregister(
-        address: String,
-        headers: Map<String, Any>? = null
-    ): Map<String, Any> {
+    fun unregister(address: String, headers: Map<String, Any>? = null): Map<String, Any> {
         handlers.remove(address)
         return constructData(
             EventBusAttributes.TYPE_UNREGISTER, address, null, headers
@@ -71,15 +67,10 @@ object EventBus {
 
     // =============================================
 
-    fun processHandlers(
-        address: String,
-        handle: (idx: Int, h: EventBusHandler) -> Unit
-    ) = handlers[address]?.forEachIndexed { idx, h -> handle(idx, h) }
+    fun processHandlers(address: String, handle: (idx: Int, h: EventBusHandler) -> Unit) =
+        handlers[address]?.forEachIndexed { idx, h -> handle(idx, h) }
 
-    fun processReplyHandler(
-        address: String,
-        handle: (h: EventBusHandler) -> Unit
-    ) {
+    fun processReplyHandler(address: String, handle: (h: EventBusHandler) -> Unit) {
         replyHandlers.remove(address)?.let { handle(it) }
     }
 
@@ -102,10 +93,7 @@ object EventBus {
         }.add(handler)
     }
 
-    private fun addReplyHandler(
-        address: String,
-        handler: EventBusHandler
-    ) {
+    private fun addReplyHandler(address: String, handler: EventBusHandler) {
         replyHandlers.putIfAbsent(address, handler)
     }
 

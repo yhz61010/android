@@ -12,11 +12,17 @@ import java.io.IOException
  * Author: Michael Leo
  * Date: 20-8-5 下午8:18
  */
-abstract class BaseServerChannelInboundHandler<T>(
-    private val netty: BaseNettyServer
-) : SimpleChannelInboundHandler<T>(), ReadSocketDataListener<T> {
+abstract class BaseServerChannelInboundHandler<T>(private val netty: BaseNettyServer) :
+    SimpleChannelInboundHandler<T>(),
+    ReadSocketDataListener<T> {
 
     private val tag = netty.tag
+
+    @Deprecated(
+        "Use BaseNettyServer clients state instead.",
+        level = DeprecationLevel.WARNING
+    )
+    val clients get() = netty.clients
 
     abstract fun release()
 
@@ -74,10 +80,7 @@ abstract class BaseServerChannelInboundHandler<T>(
     }
 
     @Deprecated("Deprecated in Java")
-    override fun exceptionCaught(
-        ctx: ChannelHandlerContext,
-        cause: Throwable
-    ) {
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         val exceptionType = when (cause) {
             is IOException -> "IOException"
             is IllegalArgumentException -> "IllegalArgumentException"
@@ -89,10 +92,7 @@ abstract class BaseServerChannelInboundHandler<T>(
         LogContext.log.e(tag, "============================")
     }
 
-    override fun userEventTriggered(
-        ctx: ChannelHandlerContext,
-        evt: Any?
-    ) {
+    override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
         LogContext.log.i(
             tag, "===== userEventTriggered ($evt) ====="
         )

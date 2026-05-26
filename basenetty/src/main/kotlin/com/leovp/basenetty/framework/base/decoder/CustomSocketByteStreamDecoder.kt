@@ -18,11 +18,7 @@ class CustomSocketByteStreamDecoder : ByteToMessageDecoder() {
         const val MAX_FRAME_SIZE = 10 * 1024 * 1024
     }
 
-    override fun decode(
-        ctx: ChannelHandlerContext,
-        inBuf: ByteBuf,
-        out: MutableList<Any>
-    ) {
+    override fun decode(ctx: ChannelHandlerContext, inBuf: ByteBuf, out: MutableList<Any>) {
         if (inBuf.readableBytes() < Int.SIZE_BYTES) return
 
         inBuf.markReaderIndex()

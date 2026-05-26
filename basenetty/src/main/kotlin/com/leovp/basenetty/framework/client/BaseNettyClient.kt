@@ -42,9 +42,11 @@ import java.net.ConnectException
 import java.net.URI
 import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,6 +56,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * A thread-safe class
@@ -88,9 +91,11 @@ abstract class BaseNettyClient protected constructor(
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     private val headers: Map<String, String>? = null,
     timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
+    private val retryDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseNetty {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
+        private const val DISCONNECT_TIMEOUT_IN_MILLS = 5_000L
     }
 
     protected constructor(
@@ -183,9 +188,14 @@ abstract class BaseNettyClient protected constructor(
     fun getCertificateInputStream(): InputStream? =
         certificateBytes?.let { ByteArrayInputStream(it) }
 
-    private val retryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val retryScope = CoroutineScope(SupervisorJob() + retryDispatcher)
+
+    @Volatile
     private var retryJob: Job? = null
+
     @Volatile private var released = false
+
+    internal var disconnectTimeoutInMillis: Long = DISCONNECT_TIMEOUT_IN_MILLS
 
     internal var webSocketUri: URI? = null
     internal val isWebSocket: Boolean by lazy { webSocketUri != null }
@@ -306,11 +316,30 @@ abstract class BaseNettyClient protected constructor(
      */
     suspend fun connect(): ClientConnectStatus = suspendCancellableCoroutine { cont ->
         LogContext.log.i(tag, "===== connect() current state=${connectStatus.get().name} =====")
+        val resumed = AtomicBoolean(false)
+        fun resumeOnce(status: ClientConnectStatus) {
+            if (cont.isActive && resumed.compareAndSet(false, true)) {
+                cont.resume(status)
+            }
+        }
+
+        fun handleConnectFailure(
+            code: Int,
+            msg: String?,
+            cause: Throwable? = null,
+            retry: Boolean = true
+        ) {
+            connectStatus.set(ClientConnectStatus.FAILED)
+            connectionListener.onFailed(this@BaseNettyClient, code, msg, cause)
+            resumeOnce(connectStatus.get())
+            if (retry) doRetry()
+        }
+
         synchronized(this) {
             when (connectStatus.get()) {
                 ClientConnectStatus.CONNECTING, ClientConnectStatus.CONNECTED -> {
                     LogContext.log.w(tag, "===== Connecting or already connected =====")
-                    cont.resume(connectStatus.get())
+                    resumeOnce(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -319,7 +348,7 @@ abstract class BaseNettyClient protected constructor(
                         tag,
                         "===== Releasing now. DO NOT connect and stop processing. ====="
                     )
-                    cont.resume(connectStatus.get())
+                    resumeOnce(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -328,7 +357,7 @@ abstract class BaseNettyClient protected constructor(
                         tag,
                         "===== Disconnecting now. DO NOT connect and stop processing. ====="
                     )
-                    cont.resume(connectStatus.get())
+                    resumeOnce(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -360,19 +389,14 @@ abstract class BaseNettyClient protected constructor(
                         LogContext.log.i(tag, "=====> WebSocket Connect success <=====")
                         connectStatus.set(ClientConnectStatus.CONNECTED)
                         connectionListener.onConnected(this@BaseNettyClient)
-                        cont.resume(connectStatus.get())
+                        resumeOnce(connectStatus.get())
                     } else {
                         LogContext.log.i(tag, "=====> WebSocket Connect failed <=====")
-                        connectStatus.set(ClientConnectStatus.FAILED)
-                        connectionListener.onFailed(
-                            this,
+                        handleConnectFailure(
                             ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
                             "WebSocket Connect failed",
                             it.cause()
                         )
-                        cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
-                        //                        LogContext.log.e(tag, "=====> CHK1 <=====")
-                        doRetry()
                     }
                 }
             } else {
@@ -387,18 +411,13 @@ abstract class BaseNettyClient protected constructor(
                         LogContext.log.i(tag, "=====> Connect success <=====")
                         connectStatus.set(ClientConnectStatus.CONNECTED)
                         connectionListener.onConnected(this@BaseNettyClient)
-                        cont.resume(connectStatus.get())
+                        resumeOnce(connectStatus.get())
                     } else {
                         LogContext.log.i(tag, "=====> Connect failed <=====")
-                        connectStatus.set(ClientConnectStatus.FAILED)
-                        connectionListener.onFailed(
-                            this,
+                        handleConnectFailure(
                             ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
                             "Connect failed"
                         )
-                        cont.resume(connectStatus.get()) // Do NOT know how to reproduce this case
-                        //                        LogContext.log.e(tag, "=====> CHK2 <=====")
-                        doRetry()
                     }
                 }
             }
@@ -413,33 +432,25 @@ abstract class BaseNettyClient protected constructor(
             // listener will be triggered at that time.
             // However, if netty client had been release, call [connect] again will cause exception.
             // So we handle it here.
-            connectStatus.set(ClientConnectStatus.FAILED)
-            connectionListener.onFailed(
-                this,
+            handleConnectFailure(
                 ClientConnectListener.CONNECTION_ERROR_ALREADY_RELEASED,
-                e.message
+                e.message,
+                retry = false
             )
-            cont.resume(connectStatus.get())
         } catch (e: ConnectException) {
             LogContext.log.e(tag, "===== ConnectException: ${e.message} =====")
-            //            connectStatus.set(ClientConnectStatus.FAILED)
-            // connectionListener.onFailed(this,
-            // ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION, e.message)
-            // This exception will trigger handlerRemoved(), so we retry at that time.
-            cont.resume(ClientConnectStatus.FAILED)
-
-            //            LogContext.log.e(tag, "=====> CHK3 <=====")
-            //            doRetry()
+            handleConnectFailure(
+                ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
+                e.message,
+                e
+            )
         } catch (e: Exception) {
             LogContext.log.e(tag, "===== Exception: ${e.message} =====", e)
-            //            connectStatus.set(ClientConnectStatus.FAILED)
-            // connectionListener.onFailed(this,
-            // ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION, e.message, e)
-            // This exception will trigger handlerRemoved(), so we retry at that time.
-            cont.resume(ClientConnectStatus.FAILED)
-
-            //            LogContext.log.e(tag, "=====> CHK4 <=====")
-            //            doRetry()
+            handleConnectFailure(
+                ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
+                e.message,
+                e
+            )
         }
     }
 
@@ -452,104 +463,97 @@ abstract class BaseNettyClient protected constructor(
      *
      * **Remember**, If you call this method, it will not trigger retry process.
      */
-    suspend fun disconnectManually(): ClientConnectStatus =
-        suspendCancellableCoroutine { cont ->
-            val resumed =
-                java.util.concurrent.atomic.AtomicBoolean(false)
-            fun resumeOnce(status: ClientConnectStatus) {
-                if (resumed.compareAndSet(false, true)) {
-                    cont.resume(status)
-                }
-            }
-
-            LogContext.log.w(
-                tag,
-                "===== disconnectManually() " +
-                    "current state=${connectStatus.get().name} ====="
-            )
-            synchronized(this) {
-                val connStatus = connectStatus.get()
-                if (ClientConnectStatus.DISCONNECTED == connStatus ||
-                    ClientConnectStatus.UNINITIALIZED == connStatus
-                ) {
-                    LogContext.log.w(
-                        tag,
-                        "Socket is not connected or already " +
-                            "disconnected or not initialized."
-                    )
-                    resumeOnce(connectStatus.get())
-                    return@suspendCancellableCoroutine
-                } else if (ClientConnectStatus.DISCONNECTING ==
-                    connectStatus.get()
-                ) {
-                    LogContext.log.w(
-                        tag,
-                        "Socket is disconnecting. Stop processing."
-                    )
-                    resumeOnce(connectStatus.get())
-                    return@suspendCancellableCoroutine
-                }
-                connectStatus.set(ClientConnectStatus.DISCONNECTING)
-            }
-            disconnectManually = true
-
-            stopRetryHandler()
-            defaultInboundHandler?.release()
-
-            if (!::channel.isInitialized) {
+    suspend fun disconnectManually(): ClientConnectStatus {
+        LogContext.log.w(
+            tag,
+            "===== disconnectManually() current state=${connectStatus.get().name} ====="
+        )
+        synchronized(this) {
+            val connStatus = connectStatus.get()
+            if (ClientConnectStatus.DISCONNECTED == connStatus ||
+                ClientConnectStatus.UNINITIALIZED == connStatus
+            ) {
                 LogContext.log.w(
                     tag,
-                    "Channel not initialized. Set DISCONNECTED."
+                    "Socket is not connected or already disconnected or not initialized."
                 )
-                connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                connectionListener.onDisconnected(
-                    this, byRemote = false
-                )
-                resumeOnce(connectStatus.get())
-                return@suspendCancellableCoroutine
+                return connectStatus.get()
+            } else if (ClientConnectStatus.DISCONNECTING == connectStatus.get()) {
+                LogContext.log.w(tag, "Socket is disconnecting. Stop processing.")
+                return connectStatus.get()
             }
+            connectStatus.set(ClientConnectStatus.DISCONNECTING)
+        }
+        disconnectManually = true
 
-            runCatching {
-                channel.disconnect().addListener { f ->
-                    if (f.isSuccess) {
-                        LogContext.log.w(
-                            tag,
-                            "===== disconnectManually() done ====="
-                        )
-                        connectStatus.set(
-                            ClientConnectStatus.DISCONNECTED
-                        )
-                        connectionListener.onDisconnected(
-                            this, byRemote = false
-                        )
-                        resumeOnce(connectStatus.get())
-                    } else {
-                        LogContext.log.w(
-                            tag,
-                            "===== disconnectManually() failed ====="
-                        )
-                        connectStatus.set(ClientConnectStatus.FAILED)
+        stopRetryHandler()
+        defaultInboundHandler?.release()
+
+        if (!::channel.isInitialized) {
+            LogContext.log.w(tag, "Channel not initialized. Set DISCONNECTED.")
+            connectStatus.set(ClientConnectStatus.DISCONNECTED)
+            connectionListener.onDisconnected(this@BaseNettyClient, byRemote = false)
+            return connectStatus.get()
+        }
+
+        return withTimeoutOrNull(disconnectTimeoutInMillis) {
+            suspendCancellableCoroutine { cont ->
+                val resumed = AtomicBoolean(false)
+
+                fun complete(status: ClientConnectStatus, notify: () -> Unit) {
+                    if (!cont.isActive || !resumed.compareAndSet(false, true)) return
+                    notify()
+                    cont.resume(status)
+                }
+
+                runCatching {
+                    val future = channel.disconnect()
+                    cont.invokeOnCancellation { future.cancel(false) }
+                    future.addListener { f ->
+                        if (f.isSuccess) {
+                            LogContext.log.w(tag, "===== disconnectManually() done =====")
+                            connectStatus.set(ClientConnectStatus.DISCONNECTED)
+                            complete(connectStatus.get()) {
+                                connectionListener.onDisconnected(
+                                    this@BaseNettyClient,
+                                    byRemote = false
+                                )
+                            }
+                        } else {
+                            LogContext.log.w(tag, "===== disconnectManually() failed =====")
+                            connectStatus.set(ClientConnectStatus.FAILED)
+                            complete(connectStatus.get()) {
+                                connectionListener.onFailed(
+                                    this@BaseNettyClient,
+                                    ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
+                                    "Disconnect manually failed"
+                                )
+                            }
+                        }
+                    }
+                }.onFailure {
+                    LogContext.log.e(tag, "disconnectManually error.", it)
+                    connectStatus.set(ClientConnectStatus.FAILED)
+                    complete(connectStatus.get()) {
                         connectionListener.onFailed(
-                            this,
-                            ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
-                            "Disconnect manually failed"
+                            this@BaseNettyClient,
+                            ClientConnectListener.DISCONNECT_MANUALLY_EXCEPTION,
+                            "Disconnect manually exception"
                         )
-                        resumeOnce(connectStatus.get())
                     }
                 }
-            }.onFailure {
-                LogContext.log.e(
-                    tag, "disconnectManually error.", it
-                )
-                connectStatus.set(ClientConnectStatus.FAILED)
-                connectionListener.onFailed(
-                    this,
-                    ClientConnectListener.DISCONNECT_MANUALLY_EXCEPTION,
-                    "Disconnect manually exception"
-                )
-                resumeOnce(connectStatus.get())
             }
+        } ?: run {
+            LogContext.log.e(tag, "disconnectManually timeout.")
+            connectStatus.set(ClientConnectStatus.FAILED)
+            connectionListener.onFailed(
+                this@BaseNettyClient,
+                ClientConnectListener.DISCONNECT_MANUALLY_ERROR,
+                "Disconnect manually timeout"
+            )
+            connectStatus.get()
         }
+    }
 
     fun doRetry() {
         if (released) return

@@ -169,7 +169,7 @@ class BaseNettyLifecycleTest {
 
     @Test
     fun `BaseNettyClient preserves protected JVM constructor signature`() {
-        val expectedParameterTypes = arrayOf<Class<*>>(
+        val expectedParameterTypes = arrayOf(
             String::class.java,
             Int::class.javaPrimitiveType!!,
             ClientConnectListener::class.java,

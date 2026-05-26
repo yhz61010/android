@@ -103,11 +103,13 @@ class BaseNettyLifecycleTest {
         listener: ClientConnectListener<BaseNettyClient>,
         retryStrategy: RetryStrategy = ConstantRetry(),
         retryDispatcher: CoroutineDispatcher = StandardTestDispatcher(),
+        timeout: Int = 200,
     ) : BaseNettyClient(
         host = "127.0.0.1",
         port = 1,
         connectionListener = listener,
         retryStrategy = retryStrategy,
+        timeout = timeout,
         retryDispatcher = retryDispatcher
     ) {
         override fun getTagName(): String = "BaseNettyLifecycleTest"

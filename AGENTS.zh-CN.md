@@ -46,6 +46,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 对于本仓库中的 CodeX：
 
 - 除本文件外，还应将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 视为补充项目说明。
+- fresh clone 后读取共享 Codex 记忆时，先读 [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md)，再加载 `00-documents/codex-memory/memory_summary.md`、`00-documents/codex-memory/MEMORY.md`、`00-documents/codex-memory/extensions/ad_hoc/notes/`，以及相关的 `00-documents/codex-memory/rollout_summaries/` 文件。
 - 优先按需读取现有 Claude 材料，而不是盲目重复其内容。
 - 当任务涉及个人或仓库工作风格时，读取 `.claude/rules/personal-style.md` 和 `.claude/memory/MEMORY.md`。
 - 当任务涉及 Android UI 或 UX 设计时，读取 `.claude/skills/mobile-android-design/SKILL.md`。
@@ -56,8 +57,9 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 
 - 与贡献者沟通时使用中文。
 - 代码注释、文档、Markdown 内容和 git commit message 使用英文。
-- 创建文档文件时，同时生成英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
+- 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
 - 文档保存到 `00-documents`，不要放到 `docs`。
+- 更新 `AGENTS.md` 时，对 `AGENTS.zh-CN.md` 做等价同步。
 - commit message 中不要添加 `Co-Authored-By` trailer。
 
 如果 Claude 相关说明与 CodeX 相关说明存在重叠，遵循更严格的规则；如果存在冲突，优先遵循直接的 system、developer 和 [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) 指令，再将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 与 `.claude/**` 作为补充说明使用。

@@ -46,6 +46,7 @@ Keep all existing Claude Code files, including [CLAUDE.md](/home/yhz61010/Studio
 For CodeX in this repository:
 
 - Treat [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) as supplemental project guidance in addition to this file.
+- For shared Codex memory after a fresh clone, read [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md), then load `00-documents/codex-memory/memory_summary.md`, `00-documents/codex-memory/MEMORY.md`, `00-documents/codex-memory/extensions/ad_hoc/notes/`, and relevant `00-documents/codex-memory/rollout_summaries/` files.
 - Reuse the existing Claude materials by reading them on demand instead of duplicating them blindly.
 - When the task is about personal or repository working style, read `.claude/rules/personal-style.md` and `.claude/memory/MEMORY.md`.
 - When the task is about Android UI or UX design, read `.claude/skills/mobile-android-design/SKILL.md`.
@@ -56,8 +57,9 @@ The following rules are important enough to be enforced directly by CodeX withou
 
 - Use Chinese for contributor conversations.
 - Use English for code comments, documentation, Markdown content, and git commit messages.
-- When creating documentation files, generate both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
+- When creating or updating documentation files, maintain both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
 - Save documentation under `00-documents` instead of `docs`.
+- When updating `AGENTS.md`, apply equivalent updates to `AGENTS.zh-CN.md`.
 - Do not add `Co-Authored-By` trailers to commit messages.
 
 If Claude-specific and CodeX-specific instructions overlap, follow the stricter rule. If they conflict, follow direct system, developer, and [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) instructions first, then use [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) and `.claude/**` as supplemental guidance.

@@ -110,17 +110,23 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         // business requirement(only one single user logged-in allowed),
         // I must do reconnect here to make sure worker thread had already been released.
         if (!caughtException) {
+            val status = netty.connectStatus.get()
             if (netty.disconnectManually ||
-                netty.connectStatus.get() == ClientConnectStatus.DISCONNECTED
+                status == ClientConnectStatus.DISCONNECTED
             ) {
                 LogContext.log.i(
                     tag,
                     "handlerRemoved(disconnect) " +
                         "manually=${netty.disconnectManually} " +
-                        "status=${netty.connectStatus.get().name}"
+                        "status=${status.name}"
                 )
-                //                netty.connectState.set(ClientConnectState.DISCONNECTED)
-                //                netty.connectionListener.onDisconnected(netty)
+            } else if (status == ClientConnectStatus.FAILED) {
+                // connect() already called onFailed; just retry without duplicate callback.
+                LogContext.log.i(
+                    tag,
+                    "handlerRemoved: connect already reported failure, retrying"
+                )
+                netty.doRetry()
             } else {
                 LogContext.log.i(tag, "Set failed exception status.")
                 netty.connectStatus.set(ClientConnectStatus.FAILED)
@@ -129,9 +135,6 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                     ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
                     "Connect exception or disconnect"
                 )
-                // For instance, "Unable to resolve host xxx" error will go into here when you
-                // connect to server without network.
-                //                LogContext.log.e(tag, "=====> CHK11 <=====")
                 netty.doRetry()
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")

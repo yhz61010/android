@@ -583,6 +583,7 @@ abstract class BaseNettyClient protected constructor(
         if (retryProcess()) return
 
         retryTimes.getAndIncrement()
+        if (released) return
         if (retryTimes.get() > retryStrategy.getMaxTimes()) {
             LogContext.log.e(
                 tag,
@@ -596,6 +597,7 @@ abstract class BaseNettyClient protected constructor(
                 "Exceed max retry times."
             )
         } else {
+            if (released) return
             LogContext.log.w(
                 tag,
                 "Reconnect($retryTimes) in " +

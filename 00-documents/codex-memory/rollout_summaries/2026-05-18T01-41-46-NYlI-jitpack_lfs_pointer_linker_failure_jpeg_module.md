@@ -56,4 +56,3 @@ References:
 - [4] `jpeg/CMakeLists.txt` imports `libjpeg.so` and `libturbojpeg.so` from `${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/...`
 - [5] `git ls-tree -l HEAD jpeg/libs/arm64-v8a/libjpeg.so jpeg/libs/arm64-v8a/libturbojpeg.so` showed `132`-byte blobs, consistent with pointer files in git history
 - [6] Local verification: `file jpeg/libs/arm64-v8a/libjpeg.so jpeg/libs/arm64-v8a/libturbojpeg.so` reported real ELF shared objects
-

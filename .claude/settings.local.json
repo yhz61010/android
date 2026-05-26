@@ -35,8 +35,7 @@
       "Bash(python3:*)",
       "Bash(git ls-tree:*)",
       "Bash(npx skills:*)",
-      "Bash(git config:*)",
-      "Bash(git:*)"
+      "Bash(git config:*)"
     ],
     "ask": [
       "Bash(rm -rf *)",

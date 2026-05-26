@@ -38,7 +38,7 @@ JUnit 5 is enabled for all Gradle `Test` tasks through `useJUnitPlatform()`. And
 Recent history mixes plain imperative subjects with Conventional Commit-style prefixes such as `docs(readme): ...`. Prefer short imperative commit messages and use a scoped prefix when it adds clarity, for example `fix(lib-network): handle empty response`. Keep pull requests narrow, describe impacted modules, list verification commands, and attach screenshots for UI or demo-app changes. Call out changes to signing, native libraries, or Gradle configuration explicitly.
 
 ## Agent-Specific Instructions
-Use Chinese for contributor conversations in this repository. Write documentation, Markdown content, and code comments in English.
+Use Chinese for contributor conversations in this repository. Use English for code comments and commit content.
 
 ## Claude And CodeX Interop
 Keep all existing Claude Code files, including [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) and everything under `.claude/`, unchanged unless the user explicitly asks otherwise.
@@ -56,7 +56,7 @@ For CodeX in this repository:
 The following rules are important enough to be enforced directly by CodeX without depending on extra files:
 
 - Use Chinese for contributor conversations.
-- Use English for code comments, documentation, Markdown content, and git commit messages.
+- Use English for code comments and commit content.
 - When creating or updating documentation files, maintain both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
 - Save documentation under `00-documents` instead of `docs`.
 - When updating `AGENTS.md`, apply equivalent updates to `AGENTS.zh-CN.md`.

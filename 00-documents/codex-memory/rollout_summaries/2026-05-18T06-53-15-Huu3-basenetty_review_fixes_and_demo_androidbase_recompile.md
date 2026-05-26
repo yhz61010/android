@@ -106,4 +106,3 @@ References:
   - `androidbase/build/intermediates/.../SnackbarExtKt.class`
 - [4] Unblock command: `./gradlew :androidbase:compileDebugKotlin --rerun-tasks`
 - [5] Final successful verification: `./gradlew :demo:assembleDevDebug`
-

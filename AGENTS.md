@@ -1,66 +1,66 @@
-# Repository Guidelines
+# 仓库指南
 
-## Project Structure & Module Organization
-This repository is a multi-module Android project built with Gradle Kotlin DSL. Shared build logic and version constraints live in [build.gradle.kts](/home/yhz61010/StudioProjects/android/build.gradle.kts), [settings.gradle.kts](/home/yhz61010/StudioProjects/android/settings.gradle.kts), and [gradle/libs.versions.toml](/home/yhz61010/StudioProjects/android/gradle/libs.versions.toml).
+## 项目结构与模块组织
+这是一个使用 Gradle Kotlin DSL 构建的多模块 Android 项目。共享构建逻辑和版本约束位于 [build.gradle.kts](/home/yhz61010/StudioProjects/android/build.gradle.kts)、[settings.gradle.kts](/home/yhz61010/StudioProjects/android/settings.gradle.kts) 和 [gradle/libs.versions.toml](/home/yhz61010/StudioProjects/android/gradle/libs.versions.toml)。
 
-Included Gradle modules are defined in `settings.gradle.kts`. The current module layout is easiest to understand by category:
+已纳入 Gradle 构建的模块以 `settings.gradle.kts` 为准。当前模块结构更适合按类别理解：
 
-- Demo apps: `demo`, `demo-dex`
-- Core and shared libraries: `androidbase`, `log`, `pref`, `http`, `lib-common-android`, `lib-common-kotlin`, `lib-bytes`, `lib-json`, `lib-compress`, `lib-network`, `lib-reflection`, `lib-image`, `lib-exif`, `lib-mvvm`, `lib-compose`
-- Media and codec modules: `audio`, `ffmpeg-javacpp`, `adpcm-ima-qt-codec`, `h264-hevc-decoder`, `adpcm-ima-qt-codec-h264-hevc-decoder`, `yuv`, `jpeg`
-- Device, graphics, and feature modules: `camerax`, `camera2live`, `screencapture`, `draw-on-screen`, `floatview`, `opengl`, `nfc`, `basenetty`, `aidl-client`, `dex`, `circle-progressbar`
+- Demo 应用：`demo`、`demo-dex`
+- 核心与共享库：`androidbase`、`log`、`pref`、`http`、`lib-common-android`、`lib-common-kotlin`、`lib-bytes`、`lib-json`、`lib-compress`、`lib-network`、`lib-reflection`、`lib-image`、`lib-exif`、`lib-mvvm`、`lib-compose`
+- 媒体与编解码模块：`audio`、`ffmpeg-javacpp`、`adpcm-ima-qt-codec`、`h264-hevc-decoder`、`adpcm-ima-qt-codec-h264-hevc-decoder`、`yuv`、`jpeg`
+- 设备、图形与功能模块：`camerax`、`camera2live`、`screencapture`、`draw-on-screen`、`floatview`、`opengl`、`nfc`、`basenetty`、`aidl-client`、`dex`、`circle-progressbar`
 
-Some root directories contain native sources, build helpers, or archived experiments but are not active Gradle modules unless they are included in `settings.gradle.kts`. Examples include `ffmpeg-sdk`, `webrtc`, `x264`, `libjpeg-turbo`, and `libyuv`.
+仓库根目录下还有一些原生源码、构建辅助目录或历史实验目录，但除非它们被写入 `settings.gradle.kts`，否则都不是当前激活的 Gradle 模块。例如 `ffmpeg-sdk`、`webrtc`、`x264`、`libjpeg-turbo` 和 `libyuv`。
 
-Android resources usually live under `src/main/res`. Native build entry points may live either under `src/main/cpp` or in a module-root `CMakeLists.txt`, depending on the module.
+Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src/main/cpp`，也可能是模块根目录下的 `CMakeLists.txt`，取决于具体模块。
 
-## Build, Test, and Development Commands
-Use JDK 17 and the checked-in wrapper. The current version catalog targets `compileSdk`/`targetSdk` 36, `minSdk` 21, NDK `29.0.14206865`, and CMake `3.22.1`.
+## 构建、测试与开发命令
+使用 JDK 17 和仓库内置的 Gradle Wrapper。当前版本目录配置的目标环境为 `compileSdk`/`targetSdk` 36、`minSdk` 21、NDK `29.0.14206865`、CMake `3.22.1`。
 
-- `./gradlew assemble`: build all configured modules.
-- `./gradlew :demo:assembleDevDebug`: build the demo app’s main debug variant.
-- `./gradlew testDebugUnitTest`: run debug unit tests across Android modules.
-- `./gradlew :androidbase:testDebugUnitTest`: run one library module’s unit tests. Substitute another module name as needed.
-- `./gradlew :demo:testDevDebugUnitTest`: run unit tests for the demo app’s `devDebug` variant.
-- `./gradlew :demo:connectedDevDebugAndroidTest`: run instrumentation tests on a connected device/emulator.
-- `./gradlew ktlintCheck detekt`: run formatting and static analysis.
-- `./gradlew clean`: remove Gradle build outputs.
+- `./gradlew assemble`：构建所有已配置模块。
+- `./gradlew :demo:assembleDevDebug`：构建 demo 应用的主要调试变体。
+- `./gradlew testDebugUnitTest`：运行 Android 模块的 debug 单元测试。
+- `./gradlew :androidbase:testDebugUnitTest`：运行单个库模块的单元测试；可按需替换为其他模块名。
+- `./gradlew :demo:testDevDebugUnitTest`：运行 demo 应用 `devDebug` 变体的单元测试。
+- `./gradlew :demo:connectedDevDebugAndroidTest`：在已连接设备或模拟器上运行仪器测试。
+- `./gradlew ktlintCheck detekt`：运行格式检查与静态分析。
+- `./gradlew clean`：清理 Gradle 构建产物。
 
-Before building, copy `gradle.properties.template` to `gradle.properties`. Install Git LFS as noted in `README.md` and `00-documents/git-lfs-guide.md`.
+构建前请将 `gradle.properties.template` 复制为 `gradle.properties`。按照 `README.md` 和 `00-documents/git-lfs-guide.md` 中的说明安装 Git LFS。
 
-## Coding Style & Naming Conventions
-Follow Kotlin-first conventions with 4-space indentation and Gradle Kotlin DSL for build files. Keep package names under `com.leovp.*`. Match existing naming: classes and objects in `UpperCamelCase`, functions and properties in `lowerCamelCase`, constants in `UPPER_SNAKE_CASE`. Test classes typically end with `Test` or `UnitTest`. Run `ktlintCheck` and `detekt` before submitting changes; root config uses `10-configs/detekt.yml`. Detekt and ktlint are applied from the root project across all modules.
+## 代码风格与命名规范
+遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块。
 
-## Testing Guidelines
-JUnit 5 is enabled for all Gradle `Test` tasks through `useJUnitPlatform()`. Android unit tests are configured with `isReturnDefaultValues = true` and `isIncludeAndroidResources = true`. The `demo` app uses `AndroidJUnitRunner` with `de.mannodermaus.junit5.AndroidJUnit5Builder` for instrumentation tests. Place JVM tests in `src/test/kotlin` or `src/test/java`; place device tests in `src/androidTest`. Prefer focused tests near the affected module, for example `androidbase/src/test/.../RSAUtilTest.kt`.
+## 测试指南
+所有 Gradle `Test` 任务都通过 `useJUnitPlatform()` 启用 JUnit 5。Android 单元测试启用了 `isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`。`demo` 应用的仪器测试使用 `AndroidJUnitRunner`，并通过 `de.mannodermaus.junit5.AndroidJUnit5Builder` 接入 JUnit 5。JVM 测试放在 `src/test/kotlin` 或 `src/test/java`；设备测试放在 `src/androidTest`。优先将测试放在受影响模块附近，例如 `androidbase/src/test/.../RSAUtilTest.kt`。
 
-## Commit & Pull Request Guidelines
-Recent history mixes plain imperative subjects with Conventional Commit-style prefixes such as `docs(readme): ...`. Prefer short imperative commit messages and use a scoped prefix when it adds clarity, for example `fix(lib-network): handle empty response`. Keep pull requests narrow, describe impacted modules, list verification commands, and attach screenshots for UI or demo-app changes. Call out changes to signing, native libraries, or Gradle configuration explicitly.
+## Commit 与 Pull Request 指南
+最近的提交历史同时包含普通祈使句标题和带 Conventional Commit 风格前缀的标题，例如 `docs(readme): ...`。优先使用简短的祈使句提交标题；当作用域能提升可读性时，可加作用域前缀，例如 `fix(lib-network): handle empty response`。Pull Request 应尽量聚焦，说明受影响模块，列出验证命令；涉及 UI 或 demo 应用变更时附上截图。对于签名、native 库或 Gradle 配置变更，需要明确标注。
 
-## Agent-Specific Instructions
-Use Chinese for contributor conversations in this repository. Use English for code comments and commit content.
+## 面向代理的说明
+在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。
 
-## Claude And CodeX Interop
-Keep all existing Claude Code files, including [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) and everything under `.claude/`, unchanged unless the user explicitly asks otherwise.
+## Claude 与 CodeX 互操作
+保留所有现有 Claude Code 文件，包括 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 以及 `.claude/` 下的全部内容，除非用户明确要求修改。
 
-For CodeX in this repository:
+对于本仓库中的 CodeX：
 
-- Treat [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) as supplemental project guidance in addition to this file.
-- For shared Codex memory after a fresh clone, read [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md), then load `00-documents/codex-memory/memory_summary.md`, `00-documents/codex-memory/MEMORY.md`, `00-documents/codex-memory/extensions/ad_hoc/notes/`, and relevant `00-documents/codex-memory/rollout_summaries/` files.
-- Reuse the existing Claude materials by reading them on demand instead of duplicating them blindly.
-- When the task is about personal or repository working style, read `.claude/rules/personal-style.md` and `.claude/memory/MEMORY.md`.
-- When the task is about Android UI or UX design, read `.claude/skills/mobile-android-design/SKILL.md`.
-- When the user asks about finding, creating, or installing skills, read `.claude/skills/find-skills/SKILL.md`.
-- Preserve `.claude/commands`, `.claude/memory`, `.claude/rules`, `.claude/skills`, and Claude-generated files unless the user explicitly requests changes to them.
+- 除本文件外，还应将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 视为补充项目说明。
+- fresh clone 后读取共享 Codex 记忆时，先读 [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md)，再加载 `00-documents/codex-memory/memory_summary.md`、`00-documents/codex-memory/MEMORY.md`、`00-documents/codex-memory/extensions/ad_hoc/notes/`，以及相关的 `00-documents/codex-memory/rollout_summaries/` 文件。
+- 优先按需读取现有 Claude 材料，而不是盲目重复其内容。
+- 当任务涉及个人或仓库工作风格时，读取 `.claude/rules/personal-style.md` 和 `.claude/memory/MEMORY.md`。
+- 当任务涉及 Android UI 或 UX 设计时，读取 `.claude/skills/mobile-android-design/SKILL.md`。
+- 当用户询问如何查找、创建或安装 skills 时，读取 `.claude/skills/find-skills/SKILL.md`。
+- 保留 `.claude/commands`、`.claude/memory`、`.claude/rules`、`.claude/skills` 以及 Claude 生成的文件，除非用户明确要求修改它们。
 
-The following rules are important enough to be enforced directly by CodeX without depending on extra files:
+以下规则足够重要，CodeX 应直接执行，而不依赖额外文件：
 
-- Use Chinese for contributor conversations.
-- Use English for code comments and commit content.
-- When creating or updating documentation files, maintain both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
-- Exception: Superpowers-generated specs, plans, and implementation notes use Chinese only.
-- Save documentation under `00-documents` instead of `docs`.
-- When updating `AGENTS.md`, apply equivalent updates to `AGENTS.zh-CN.md`.
-- Do not add `Co-Authored-By` trailers to commit messages.
+- 与贡献者沟通时使用中文。
+- `AGENTS.md` 只使用中文；不再维护 `AGENTS.zh-CN.md`。
+- 代码注释与 commit 内容使用英文。
+- 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
+- 例外：Superpowers 生成的 specs、plans 和 implementation notes 只使用中文。
+- 文档保存到 `00-documents`，不要放到 `docs`。
+- commit message 中不要添加 `Co-Authored-By` trailer。
 
-If Claude-specific and CodeX-specific instructions overlap, follow the stricter rule. If they conflict, follow direct system, developer, and [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) instructions first, then use [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) and `.claude/**` as supplemental guidance.
+如果 Claude 相关说明与 CodeX 相关说明存在重叠，遵循更严格的规则；如果存在冲突，优先遵循直接的 system、developer 和 [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) 指令，再将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 与 `.claude/**` 作为补充说明使用。

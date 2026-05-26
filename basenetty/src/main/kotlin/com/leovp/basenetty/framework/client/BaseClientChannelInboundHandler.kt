@@ -136,20 +136,33 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {
-            LogContext.log.e(
-                tag,
-                "Caught socket exception! DO NOT fire ClientConnectListener#onDisconnected() " +
-                    "method!"
-            )
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
-            netty.connectionListener.onFailed(
-                netty,
-                ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION,
-                "Socket Exception"
-            )
-            // When network lost, you will go into here.
-            //            LogContext.log.e(tag, "=====> CHK13 <=====")
-            netty.doRetry()
+            val status = netty.connectStatus.get()
+            if (netty.disconnectManually ||
+                status == ClientConnectStatus.DISCONNECTING ||
+                status == ClientConnectStatus.DISCONNECTED
+            ) {
+                LogContext.log.i(
+                    tag,
+                    "handlerRemoved(exception) ignored because " +
+                        "disconnect is already handled. " +
+                        "manually=${netty.disconnectManually} " +
+                        "status=${status.name}"
+                )
+            } else {
+                LogContext.log.e(
+                    tag,
+                    "Caught socket exception! DO NOT fire " +
+                        "ClientConnectListener#onDisconnected() method!"
+                )
+                netty.connectStatus.set(ClientConnectStatus.FAILED)
+                netty.connectionListener.onFailed(
+                    netty,
+                    ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION,
+                    "Socket Exception"
+                )
+                // When network lost, you will go into here.
+                netty.doRetry()
+            }
         }
     }
 

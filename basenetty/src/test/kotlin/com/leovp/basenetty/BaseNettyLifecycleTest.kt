@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import java.io.IOException
 import java.lang.reflect.Modifier
 import java.net.URI
 import java.util.concurrent.CopyOnWriteArrayList
@@ -134,6 +135,36 @@ class BaseNettyLifecycleTest {
         assertTrue(listener.disconnectedByRemote.contains(true))
         assertTrue(listener.failedCodes.isEmpty(), "Should not trigger onFailed after CloseFrame")
         assertEquals(0, client.retryAttempts.get(), "Should not trigger doRetry after CloseFrame")
+    }
+
+    @Test
+    fun `exception during manual disconnect does not fire onFailed`() {
+        val listener = RecordingClientListener()
+        val client = TestWebSocketClient(listener = listener)
+        val handler = TestClientHandler(client)
+        client.initHandler(handler)
+
+        val ch = EmbeddedChannel(handler)
+        client.connectStatus.set(ClientConnectStatus.CONNECTED)
+
+        // Simulate manual disconnect in progress
+        setDisconnectManually(client, true)
+
+        // Capture context before exceptionCaught removes handler from pipeline
+        val ctx = ch.pipeline().context(handler)
+        // Simulate exception + handlerRemoved sequence
+        handler.exceptionCaught(ctx, IOException("connection reset"))
+        handler.handlerRemoved(ctx)
+
+        assertTrue(
+            listener.failedCodes.isEmpty(),
+            "Should not trigger onFailed during manual disconnect"
+        )
+        assertEquals(
+            0,
+            client.retryAttempts.get(),
+            "Should not trigger doRetry during manual disconnect"
+        )
     }
 
     @Test
@@ -260,5 +291,12 @@ class BaseNettyLifecycleTest {
                 isAccessible = true
                 get(client) as Job?
             }
+
+        fun setDisconnectManually(client: BaseNettyClient, value: Boolean) {
+            BaseNettyClient::class.java.getDeclaredField("disconnectManually").apply {
+                isAccessible = true
+                set(client, value)
+            }
+        }
     }
 }

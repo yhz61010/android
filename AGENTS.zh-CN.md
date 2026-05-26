@@ -58,6 +58,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - 与贡献者沟通时使用中文。
 - 代码注释与 commit 内容使用英文。
 - 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
+- 例外：Superpowers 生成的 specs、plans 和 implementation notes 只使用中文。
 - 文档保存到 `00-documents`，不要放到 `docs`。
 - 更新 `AGENTS.md` 时，对 `AGENTS.zh-CN.md` 做等价同步。
 - commit message 中不要添加 `Co-Authored-By` trailer。

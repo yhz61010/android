@@ -58,6 +58,7 @@ The following rules are important enough to be enforced directly by CodeX withou
 - Use Chinese for contributor conversations.
 - Use English for code comments and commit content.
 - When creating or updating documentation files, maintain both English and Chinese versions; keep English as the primary Markdown/code-comment language unless the file is the Chinese companion document.
+- Exception: Superpowers-generated specs, plans, and implementation notes use Chinese only.
 - Save documentation under `00-documents` instead of `docs`.
 - When updating `AGENTS.md`, apply equivalent updates to `AGENTS.zh-CN.md`.
 - Do not add `Co-Authored-By` trailers to commit messages.

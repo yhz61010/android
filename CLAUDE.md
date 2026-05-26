@@ -95,3 +95,7 @@ Release builds use keystore properties from either `gradle.properties` (local) o
 ## SDK Constraints
 
 `minSdk` is 21 (Android 5.0) due to external project constraints. This limits some dependency upgrades.
+
+## AI Memory
+
+Project-level memory (preferences, conventions, feedback) is stored in `.claude/memory/`. New sessions should read `.claude/memory/MEMORY.md` to load project context and collaboration history.

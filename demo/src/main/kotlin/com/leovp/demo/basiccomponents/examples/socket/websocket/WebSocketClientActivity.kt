@@ -23,11 +23,9 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import java.net.URI
 import java.nio.charset.Charset
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,8 +42,6 @@ class WebSocketClientActivity :
     private var webSocketClient: WebSocketClientDemo? = null
     private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
     private val constantRetry = ConstantRetry(10, 2000)
-
-    private val retryTimes = AtomicInteger(0)
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
@@ -123,9 +119,6 @@ class WebSocketClientActivity :
             LogContext.log.w(tag, "onConnected")
             LogContext.log.i(tag, "- connected -------------------------------------------------")
             toast("onConnected", debug = true)
-
-            // Reset retry counter
-            retryTimes.set(0)
         }
 
         @SuppressLint("SetTextI18n")
@@ -146,39 +139,9 @@ class WebSocketClientActivity :
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             LogContext.log.w(tag, "onFailed code: $code e=$e message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
-
-            if (code == ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION ||
-                code == ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION ||
-                code == ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION ||
-                code == ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST
-            ) {
-                if (retryTimes.incrementAndGet() > constantRetry.getMaxTimes()) {
-                    LogContext.log.e(tag, "===== Connect failed - Exceed max retry times. =====")
-                    toast("Exceed max retry times.", debug = true)
-
-                    // Reset retry counter
-                    retryTimes.set(0)
-                } else {
-                    LogContext.log.w(
-                        tag,
-                        "Reconnect(${retryTimes.get()}) in " +
-                            "${constantRetry.getDelayInMillSec(retryTimes.get())}ms"
-                    )
-                    cs.launch {
-                        runCatching {
-                            delay(constantRetry.getDelayInMillSec(retryTimes.get()))
-                            ensureActive()
-                            netty.release()
-                            LogContext.log.w(
-                                tag,
-                                "= Start Reconnecting " +
-                                    "========================================================"
-                            )
-                            webSocketClient = createSocket().apply { connect() }
-                        }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
-                    } // launch
-                } // else
-            } // if for exception
+            // Retry is handled automatically by the library's built-in RetryStrategy.
+            // Do NOT create a new BaseNettyClient here — doing so leaks NioEventLoopGroups
+            // and causes "Too many open files" / OOM on repeated failures.
         }
     }
 

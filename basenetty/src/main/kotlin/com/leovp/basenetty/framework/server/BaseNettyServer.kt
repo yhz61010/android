@@ -137,7 +137,7 @@ abstract class BaseNettyServer protected constructor(
             connectState.set(ServerConnectStatus.STARTED)
             LogContext.log.i(tag, "===== Start successfully =====")
             connectionListener.onStarted(this)
-            // After running this line below, the process will stuck there and waiting client
+            // After running this line below, the process will be stuck there and waiting client
             // connection
             serverChannel.closeFuture().sync()
             // When serverChannel.close be executed, the process will continue to run.

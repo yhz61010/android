@@ -1,5 +1,9 @@
 # AGENTS.zh-CN sync and bilingual documentation update rule
 
+Superseded: `AGENTS.zh-CN.md` has been deleted. The current rule is to keep
+`AGENTS.md` in Chinese only and not recreate `AGENTS.zh-CN.md`. See
+`2026-05-26T10-24-24+0800-agents-md-chinese-only.md`.
+
 For `/home/yhz61010/StudioProjects/android`, treat `AGENTS.md` as the latest primary agent guide
 and keep `AGENTS.zh-CN.md` synchronized with equivalent Chinese content whenever `AGENTS.md` is
 updated.

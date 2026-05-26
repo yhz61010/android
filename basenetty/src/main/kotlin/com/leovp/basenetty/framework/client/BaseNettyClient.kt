@@ -91,7 +91,7 @@ abstract class BaseNettyClient protected constructor(
     private val retryStrategy: RetryStrategy = ConstantRetry(),
     private val headers: Map<String, String>? = null,
     timeout: Int = CONNECTION_TIMEOUT_IN_MILLS,
-    private val retryDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    retryDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : BaseNetty {
     companion object {
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000

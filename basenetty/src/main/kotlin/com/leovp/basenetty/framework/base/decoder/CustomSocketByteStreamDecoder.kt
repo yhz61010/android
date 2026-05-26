@@ -28,7 +28,7 @@ class CustomSocketByteStreamDecoder : ByteToMessageDecoder() {
         inBuf.markReaderIndex()
         val dataLen = inBuf.readIntLE()
 
-        if (dataLen < 0 || dataLen > MAX_FRAME_SIZE) {
+        if (dataLen !in 0..MAX_FRAME_SIZE) {
             inBuf.resetReaderIndex()
             ctx.close()
             return

@@ -9,6 +9,10 @@ import io.netty.handler.codec.ByteToMessageDecoder
  *
  * Frame format: [4-byte LE length][payload bytes]
  *
+ * Note: Zero-length frames (dataLen == 0) are valid and will be
+ * passed downstream as empty ByteBuf. Downstream handlers must
+ * handle readableBytes() == 0 gracefully.
+ *
  * Author: Michael Leo
  * Date: 20-5-13 下午4:39
  */

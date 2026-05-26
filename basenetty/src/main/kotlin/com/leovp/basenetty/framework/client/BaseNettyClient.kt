@@ -506,8 +506,8 @@ abstract class BaseNettyClient protected constructor(
                 return connectStatus.get()
             }
             connectStatus.set(ClientConnectStatus.DISCONNECTING)
+            disconnectManually = true
         }
-        disconnectManually = true
 
         stopRetryHandler()
         defaultInboundHandler?.release()
@@ -583,7 +583,7 @@ abstract class BaseNettyClient protected constructor(
         if (retryProcess()) return
 
         synchronized(retryLock) {
-            if (released) return
+            if (released || disconnectManually) return
             retryTimes.getAndIncrement()
             if (retryTimes.get() > retryStrategy.getMaxTimes()) {
                 LogContext.log.e(
@@ -645,9 +645,10 @@ abstract class BaseNettyClient protected constructor(
         LogContext.log.w(tag, "===== release() current state=${connectStatus.get().name} =====")
         synchronized(this) {
             if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() ||
-                ClientConnectStatus.RELEASING == connectStatus.get()
+                ClientConnectStatus.RELEASING == connectStatus.get() ||
+                ClientConnectStatus.DISCONNECTING == connectStatus.get()
             ) {
-                LogContext.log.w(tag, "Releasing now or already released or not initialized")
+                LogContext.log.w(tag, "Releasing now or already released or disconnecting or not initialized")
                 cont.resume(false)
                 return@suspendCancellableCoroutine
             }

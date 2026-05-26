@@ -15,6 +15,10 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.DefaultChannelPromise
 import io.netty.channel.embedded.EmbeddedChannel
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
+import java.net.URI
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -115,6 +119,24 @@ class BaseNettyLifecycleTest {
     }
 
     @Test
+    fun `WebSocket CloseFrame triggers only onDisconnected not onFailed`() {
+        val listener = RecordingClientListener()
+        val client = TestWebSocketClient(listener = listener)
+        val handler = TestClientHandler(client)
+        client.initHandler(handler)
+
+        val ch = EmbeddedChannel(handler)
+        client.connectStatus.set(ClientConnectStatus.CONNECTED)
+
+        ch.writeInbound(CloseWebSocketFrame())
+
+        assertEquals(ClientConnectStatus.DISCONNECTED, client.connectStatus.get())
+        assertTrue(listener.disconnectedByRemote.contains(true))
+        assertTrue(listener.failedCodes.isEmpty(), "Should not trigger onFailed after CloseFrame")
+        assertEquals(0, client.retryAttempts.get(), "Should not trigger doRetry after CloseFrame")
+    }
+
+    @Test
     fun `BaseNettyClient preserves protected JVM constructor signature`() {
         val expectedParameterTypes = arrayOf<Class<*>>(
             String::class.java,
@@ -156,6 +178,25 @@ class BaseNettyLifecycleTest {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
     }
 
+    private class TestWebSocketClient(
+        listener: ClientConnectListener<BaseNettyClient>,
+    ) : BaseNettyClient(
+        webSocketUri = URI("ws://127.0.0.1:1/ws"),
+        connectionListener = listener,
+        trustAllServers = true,
+        retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 1L),
+        timeout = 200
+    ) {
+        val retryAttempts = AtomicInteger(0)
+
+        override fun getTagName(): String = "TestWebSocketClient"
+
+        override fun retryProcess(): Boolean {
+            retryAttempts.incrementAndGet()
+            return true
+        }
+    }
+
     private class TestServer :
         BaseNettyServer(
             port = 0,
@@ -171,10 +212,14 @@ class BaseNettyLifecycleTest {
     }
 
     private class RecordingClientListener : ClientConnectListener<BaseNettyClient> {
-        val failedCodes = mutableListOf<Int>()
+        val failedCodes = CopyOnWriteArrayList<Int>()
+        val disconnectedByRemote = CopyOnWriteArrayList<Boolean>()
 
         override fun onConnected(netty: BaseNettyClient) = Unit
-        override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) = Unit
+
+        override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
+            disconnectedByRemote.add(byRemote)
+        }
 
         override fun onFailed(netty: BaseNettyClient, code: Int, msg: String?, e: Throwable?) {
             failedCodes.add(code)

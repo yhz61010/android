@@ -190,7 +190,7 @@ abstract class BaseNettyClient protected constructor(
 
     private val retryScope = CoroutineScope(SupervisorJob() + retryDispatcher)
 
-    @Volatile
+    private val retryLock = Any()
     private var retryJob: Job? = null
 
     @Volatile private var released = false
@@ -582,35 +582,41 @@ abstract class BaseNettyClient protected constructor(
         if (released) return
         if (retryProcess()) return
 
-        retryTimes.getAndIncrement()
-        if (released) return
-        if (retryTimes.get() > retryStrategy.getMaxTimes()) {
-            LogContext.log.e(
-                tag,
-                "===== Connect failed in doRetry() - Exceed max retry times. ====="
-            )
-            stopRetryHandler()
-            connectStatus.set(ClientConnectStatus.FAILED)
-            connectionListener.onFailed(
-                this@BaseNettyClient,
-                ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
-                "Exceed max retry times."
-            )
-        } else {
+        synchronized(retryLock) {
             if (released) return
-            LogContext.log.w(
-                tag,
-                "Reconnect($retryTimes) in " +
-                    "${retryStrategy.getDelayInMillSec(retryTimes.get())}ms | " +
-                    "current state=${connectStatus.get().name}"
-            )
-            retryJob?.cancel()
-            retryJob = retryScope.launch {
-                runCatching {
-                    delay(retryStrategy.getDelayInMillSec(retryTimes.get()))
-                    ensureActive()
-                    connect()
-                }.onFailure { LogContext.log.e(tag, "Do retry failed.", it) }
+            retryTimes.getAndIncrement()
+            if (retryTimes.get() > retryStrategy.getMaxTimes()) {
+                LogContext.log.e(
+                    tag,
+                    "===== Connect failed in doRetry() " +
+                        "- Exceed max retry times. ====="
+                )
+                stopRetryHandler()
+                connectStatus.set(ClientConnectStatus.FAILED)
+                connectionListener.onFailed(
+                    this@BaseNettyClient,
+                    ClientConnectListener.CONNECTION_ERROR_EXCEED_MAX_RETRY_TIMES,
+                    "Exceed max retry times."
+                )
+            } else {
+                LogContext.log.w(
+                    tag,
+                    "Reconnect($retryTimes) in " +
+                        "${retryStrategy.getDelayInMillSec(retryTimes.get())}ms" +
+                        " | current state=${connectStatus.get().name}"
+                )
+                retryJob?.cancel()
+                retryJob = retryScope.launch {
+                    runCatching {
+                        delay(
+                            retryStrategy.getDelayInMillSec(retryTimes.get())
+                        )
+                        ensureActive()
+                        connect()
+                    }.onFailure {
+                        LogContext.log.e(tag, "Do retry failed.", it)
+                    }
+                }
             }
         }
     }
@@ -693,9 +699,11 @@ abstract class BaseNettyClient protected constructor(
 
     private fun stopRetryHandler() {
         LogContext.log.i(tag, "stopRetryHandler()")
-        retryJob?.cancel()
-        retryJob = null
-        retryTimes.set(0)
+        synchronized(retryLock) {
+            retryJob?.cancel()
+            retryJob = null
+            retryTimes.set(0)
+        }
     }
 
     // ================================================

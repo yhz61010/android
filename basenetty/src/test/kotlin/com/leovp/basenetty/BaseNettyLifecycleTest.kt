@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class BaseNettyLifecycleTest {
 
     @Test
-    fun `connect failure updates stored state to failed`() = runBlocking {
+    fun `connect failure updates stored state to failed`(): Unit = runBlocking {
         val listener = RecordingClientListener()
         val client = TestClient(
             listener = listener,
@@ -56,7 +56,7 @@ class BaseNettyLifecycleTest {
     }
 
     @Test
-    fun `disconnectManually fails instead of hanging when channel future never completes`() =
+    fun `disconnectManually fails instead of hanging when channel future never completes`(): Unit =
         runBlocking {
             val listener = RecordingClientListener()
             val client = TestClient(listener = listener)

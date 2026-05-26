@@ -41,7 +41,7 @@ class WebSocketClientActivity :
 
     private var webSocketClient: WebSocketClientDemo? = null
     private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
-    private val constantRetry = ConstantRetry(10, 2000)
+    private val constantRetry = ConstantRetry(3, 2000)
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
@@ -88,8 +88,8 @@ class WebSocketClientActivity :
                 // ================================================================================"
                 // )
 
-                // You can also create multiple sockets at the same time like this(It's thread safe
-                // so you can create them freely):
+                // You can also create multiple sockets at the same time, like this:
+                // (It's thread safe so you can create them freely):
                 // val socketClient = SocketClient("50d.win", 8080, connectionListener)
                 // val socketClientHandler = SocketClientHandler(socketClient)
                 // socketClient.initHandler(socketClientHandler)
@@ -117,7 +117,6 @@ class WebSocketClientActivity :
     private val connectionListener = object : ClientConnectListener<BaseNettyClient> {
         override fun onConnected(netty: BaseNettyClient) {
             LogContext.log.w(tag, "onConnected")
-            LogContext.log.i(tag, "- connected -------------------------------------------------")
             toast("onConnected", debug = true)
         }
 
@@ -132,7 +131,6 @@ class WebSocketClientActivity :
 
         override fun onDisconnected(netty: BaseNettyClient, byRemote: Boolean) {
             LogContext.log.w(tag, "onDisconnected byRemote=$byRemote")
-            LogContext.log.i(tag, "~ disconnectManually done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             toast("onDisconnected byRemote=$byRemote", debug = true)
         }
 

@@ -151,6 +151,16 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                         "manually=${netty.disconnectManually} " +
                         "status=${status.name}"
                 )
+            } else if (status == ClientConnectStatus.FAILED) {
+                // exceptionCaught() already called onFailed for non-IOException;
+                // just retry without duplicate callback.
+                // For IOException, exceptionCaught() only sets FAILED and defers
+                // onFailed + doRetry to here.
+                LogContext.log.i(
+                    tag,
+                    "handlerRemoved(exception): failure already reported, retrying"
+                )
+                netty.doRetry()
             } else {
                 LogContext.log.e(
                     tag,
@@ -195,17 +205,31 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
         LogContext.log.e(tag, "============================")
 
+        // Set FAILED and report onFailed here; handlerRemoved() sees FAILED status
+        // and only calls doRetry() without duplicate onFailed callback.
+        // Skip onFailed if disconnect is already in progress (manual disconnect or releasing).
+        val status = netty.connectStatus.get()
+        if (netty.disconnectManually ||
+            status == ClientConnectStatus.DISCONNECTING ||
+            status == ClientConnectStatus.DISCONNECTED
+        ) {
+            LogContext.log.i(
+                tag,
+                "exceptionCaught: skipping onFailed because disconnect is in progress. " +
+                    "manually=${netty.disconnectManually} status=${status.name}"
+            )
+            return
+        }
+        netty.connectStatus.set(ClientConnectStatus.FAILED)
         if ("IOException" == exceptionType) {
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
             LogContext.log.w(tag, "Network lost")
-            // This exception will trigger handlerRemoved(), so we retry at that time.
-
-            // netty.connectionListener.onFailed(netty,
-            // ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-            //            LogContext.log.e(tag, "=====> CHK12 <=====")
-            //            netty.doRetry()
+            netty.connectionListener.onFailed(
+                netty,
+                ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST,
+                "Network lost",
+                cause
+            )
         } else {
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(
                 netty,
                 ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,

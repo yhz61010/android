@@ -84,7 +84,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             LogContext.log.i(tag, "Closing handshaker for websocket")
             runCatching {
                 handshaker?.close(ctx.channel(), CloseWebSocketFrame())
-            }.onFailure { it.printStackTrace() }
+            }.onFailure {
+                LogContext.log.e(tag, "Closing handshaker for websocket", it)
+            }
         }
         super.channelInactive(ctx)
     }
@@ -103,7 +105,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     }
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LogContext.log.i(tag, "===== handlerRemoved =====")
+        LogContext.log.i(tag, "===== handlerRemoved =====  caughtException=$caughtException")
         super.handlerRemoved(ctx)
 
         // In theory, we should do reconnect in channelUnregistered. However, according to our
@@ -111,31 +113,29 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         // I must do reconnect here to make sure worker thread had already been released.
         if (!caughtException) {
             val status = netty.connectStatus.get()
-            if (netty.disconnectManually ||
-                status == ClientConnectStatus.DISCONNECTED
-            ) {
-                LogContext.log.i(
-                    tag,
-                    "handlerRemoved(disconnect) " +
-                        "manually=${netty.disconnectManually} " +
-                        "status=${status.name}"
-                )
-            } else if (status == ClientConnectStatus.FAILED) {
-                // connect() already called onFailed; just retry without duplicate callback.
-                LogContext.log.i(
-                    tag,
-                    "handlerRemoved: connect already reported failure, retrying"
-                )
-                netty.doRetry()
-            } else {
-                LogContext.log.i(tag, "Set failed exception status.")
-                netty.connectStatus.set(ClientConnectStatus.FAILED)
-                netty.connectionListener.onFailed(
-                    netty,
-                    ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
-                    "Connect exception or disconnect"
-                )
-                netty.doRetry()
+            LogContext.log.i(
+                tag,
+                "handlerRemoved(disconnect) " +
+                    "manually=${netty.disconnectManually} status=${status.name}"
+            )
+            if (!netty.disconnectManually && status != ClientConnectStatus.DISCONNECTED) {
+                if (status == ClientConnectStatus.FAILED) {
+                    // connect() already called onFailed; just retry without duplicate callback.
+                    LogContext.log.i(
+                        tag,
+                        "handlerRemoved: connect already reported failure, retrying"
+                    )
+                    netty.doRetry()
+                } else {
+                    LogContext.log.i(tag, "Set failed exception status.")
+                    netty.connectStatus.set(ClientConnectStatus.FAILED)
+                    netty.connectionListener.onFailed(
+                        netty,
+                        ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
+                        "Connect exception or disconnect"
+                    )
+                    netty.doRetry()
+                }
             }
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {

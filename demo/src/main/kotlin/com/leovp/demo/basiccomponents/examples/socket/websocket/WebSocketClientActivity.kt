@@ -41,7 +41,7 @@ class WebSocketClientActivity :
 
     private var webSocketClient: WebSocketClientDemo? = null
     private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
-    private val constantRetry = ConstantRetry(3, 2000)
+    private val constantRetry = ConstantRetry(5, 2000)
 
     private fun createSocket(): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(

@@ -107,7 +107,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
         LogContext.log.i(tag, "===== handlerRemoved =====  caughtException=$caughtException")
 
-        // No matter which side is lost network, the `caughtException` will be `true`.
+        // When Netty reports an exception, retry is deferred until handler removal
+        // so the worker thread has finished cleanup.
 
         super.handlerRemoved(ctx)
 
@@ -146,7 +147,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             val status = netty.connectStatus.get()
             if (netty.disconnectManually ||
                 status == ClientConnectStatus.DISCONNECTING ||
-                status == ClientConnectStatus.DISCONNECTED
+                status == ClientConnectStatus.DISCONNECTED ||
+                status == ClientConnectStatus.RELEASING
             ) {
                 LogContext.log.i(
                     tag,
@@ -156,10 +158,8 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                         "status=${status.name}"
                 )
             } else if (status == ClientConnectStatus.FAILED) {
-                // exceptionCaught() already called onFailed for non-IOException;
-                // just retry without duplicate callback.
-                // For IOException, exceptionCaught() only sets FAILED and defers
-                // onFailed + doRetry to here.
+                // exceptionCaught() already reported onFailed before closing.
+                // Retry is deferred until handler removal so cleanup has completed.
                 LogContext.log.i(
                     tag,
                     "handlerRemoved(exception): failure already reported, retrying"
@@ -183,7 +183,11 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         }
     }
 
-    /** Close asynchronously; channelInactive/handlerRemoved handle cleanup. */
+    /**
+     * exceptionCaught() decides the failure type and reports onFailed exactly once.
+     * handlerRemoved() is only responsible for retry after cleanup.
+     * Manual disconnect / release skips onFailed entirely.
+     */
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         if (caughtException) {
@@ -191,6 +195,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             return
         }
         caughtException = true
+        val isIOException = cause is IOException
         val exceptionType = when (cause) {
             is IOException -> "IOException"
             is IllegalArgumentException -> "IllegalArgumentException"
@@ -199,33 +204,27 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.e(tag, "===== Caught $exceptionType =====")
         LogContext.log.e(tag, "Exception: ${cause.message}", cause)
 
-        //        val channel = ctx.channel()
-        //        val isChannelActive = channel.isActive
-        //        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
-        //        if (isChannelActive) {
-        //            ctx.close()
-        //        }
-        ctx.close()
-
-        LogContext.log.e(tag, "============================")
-
-        // Set FAILED and report onFailed here; handlerRemoved() sees FAILED status
-        // and only calls doRetry() without duplicate onFailed callback.
-        // Skip onFailed if disconnect is already in progress (manual disconnect or releasing).
+        // Check whether disconnect / release is already in progress.
+        // If so, skip onFailed and just close the channel.
         val status = netty.connectStatus.get()
         if (netty.disconnectManually ||
             status == ClientConnectStatus.DISCONNECTING ||
-            status == ClientConnectStatus.DISCONNECTED
+            status == ClientConnectStatus.DISCONNECTED ||
+            status == ClientConnectStatus.RELEASING
         ) {
             LogContext.log.i(
                 tag,
                 "exceptionCaught: skipping onFailed because disconnect is in progress. " +
                     "manually=${netty.disconnectManually} status=${status.name}"
             )
+            ctx.close()
             return
         }
+
+        // Set FAILED and report onFailed BEFORE ctx.close(), so that handlerRemoved()
+        // always sees FAILED status and only does doRetry() without duplicate callback.
         netty.connectStatus.set(ClientConnectStatus.FAILED)
-        if ("IOException" == exceptionType) {
+        if (isIOException) {
             LogContext.log.w(tag, "Network lost")
             netty.connectionListener.onFailed(
                 netty,
@@ -241,6 +240,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 cause
             )
         }
+
+        // Close after onFailed so handlerRemoved sees the FAILED status.
+        ctx.close()
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {

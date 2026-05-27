@@ -168,6 +168,64 @@ class BaseNettyLifecycleTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    fun `non-IOException triggers exactly one onFailed and one retry`() {
+        val listener = RecordingClientListener()
+        val client = TestWebSocketClient(listener = listener)
+        val handler = TestClientHandler(client)
+        client.initHandler(handler)
+
+        val ch = EmbeddedChannel(handler)
+        client.connectStatus.set(ClientConnectStatus.CONNECTED)
+
+        // ctx.close() inside exceptionCaught triggers handlerRemoved via the pipeline,
+        // so we do NOT call handlerRemoved explicitly.
+        val ctx = ch.pipeline().context(handler)
+        handler.exceptionCaught(ctx, IllegalStateException("bad frame"))
+
+        assertEquals(
+            listOf(ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION),
+            listener.failedCodes.toList(),
+            "Should fire exactly one onFailed with UNEXPECTED_EXCEPTION"
+        )
+        assertEquals(
+            1,
+            client.retryAttempts.get(),
+            "Should trigger exactly one retry"
+        )
+        assertEquals(ClientConnectStatus.FAILED, client.connectStatus.get())
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `IOException triggers exactly one onFailed and one retry`() {
+        val listener = RecordingClientListener()
+        val client = TestWebSocketClient(listener = listener)
+        val handler = TestClientHandler(client)
+        client.initHandler(handler)
+
+        val ch = EmbeddedChannel(handler)
+        client.connectStatus.set(ClientConnectStatus.CONNECTED)
+
+        // ctx.close() inside exceptionCaught triggers handlerRemoved via the pipeline,
+        // so we do NOT call handlerRemoved explicitly.
+        val ctx = ch.pipeline().context(handler)
+        handler.exceptionCaught(ctx, IOException("connection reset"))
+
+        assertEquals(
+            listOf(ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST),
+            listener.failedCodes.toList(),
+            "Should fire exactly one onFailed with NETWORK_LOST"
+        )
+        assertEquals(
+            1,
+            client.retryAttempts.get(),
+            "Should trigger exactly one retry"
+        )
+        assertEquals(ClientConnectStatus.FAILED, client.connectStatus.get())
+    }
+
+    @Test
     fun `BaseNettyClient preserves protected JVM constructor signature`() {
         val expectedParameterTypes = arrayOf(
             String::class.java,

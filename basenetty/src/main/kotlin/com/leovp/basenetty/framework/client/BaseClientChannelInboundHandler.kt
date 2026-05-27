@@ -106,6 +106,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
         LogContext.log.i(tag, "===== handlerRemoved =====  caughtException=$caughtException")
+
+        // No matter which side is lost network, the `caughtException` will be `true`.
+
         super.handlerRemoved(ctx)
 
         // In theory, we should do reconnect in channelUnregistered. However, according to our
@@ -137,6 +140,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                     netty.doRetry()
                 }
             }
+            // In else block, this means the client is stopped manually.
             LogContext.log.w(tag, "=====> Socket disconnected <=====")
         } else {
             val status = netty.connectStatus.get()

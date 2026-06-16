@@ -36,6 +36,7 @@ import java.net.ServerSocket
 import java.net.URI
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 @Timeout(value = 60, unit = TimeUnit.SECONDS)
@@ -104,6 +105,71 @@ class BaseNettyLifecycleTest {
         assertTrue(!pendingChannel.isOpen)
         verify { connectFuture.cancel(false) }
         pendingChannel.finishAndReleaseAll()
+    }
+
+    @Test
+    fun `re-entrant connect early-return keeps active external resume handle`(): Unit =
+        runBlocking {
+            val client = TestClient(listener = RecordingClientListener())
+            // Simulate an in-flight attempt that already won the state transition.
+            client.connectStatus.set(ClientConnectStatus.CONNECTING)
+            val sentinelFired = AtomicBoolean(false)
+            setConnectResume(client) { sentinelFired.set(true) }
+
+            // A re-entrant connect() sees CONNECTING and must early-return WITHOUT
+            // touching the active attempt's external wake-up entry.
+            val status = client.connect()
+
+            assertEquals(ClientConnectStatus.CONNECTING, status)
+            val resume = requireNotNull(getConnectResume(client))
+            resume.invoke(ClientConnectStatus.DISCONNECTED)
+            assertTrue(sentinelFired.get())
+        }
+
+    @Test
+    fun `external resume invokes active handle at most once`() {
+        val client = TestClient(listener = RecordingClientListener())
+        val count = AtomicInteger(0)
+        val guard = AtomicBoolean(false)
+        setConnectResume(client) { if (guard.compareAndSet(false, true)) count.incrementAndGet() }
+
+        invokeResumeConnectContinuation(client, ClientConnectStatus.DISCONNECTED)
+        invokeResumeConnectContinuation(client, ClientConnectStatus.FAILED)
+
+        assertEquals(1, count.get())
+    }
+
+    @Test
+    fun `websocket handshake failure fails connection once and retries`() = runBlocking {
+        val server = ServerSocket(0)
+        val serverThread = Thread {
+            // Accept the TCP connection then immediately close it so the WebSocket
+            // handshake promise fails (distinct from the handshake timeout path).
+            runCatching { server.accept().use { it.close() } }
+        }
+        serverThread.start()
+
+        try {
+            val listener = RecordingClientListener()
+            val client = TestWebSocketClient(
+                listener = listener,
+                uri = URI("ws://127.0.0.1:${server.localPort}/ws")
+            )
+            client.handshakeTimeoutInMillis = 2_000L
+            client.initHandler(TestClientHandler(client))
+
+            val status = client.connect()
+
+            assertEquals(ClientConnectStatus.FAILED, status)
+            assertTrue(
+                ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION in listener.failedCodes
+            )
+            assertEquals(1, client.retryAttempts.get())
+            client.release()
+        } finally {
+            server.close()
+            serverThread.join(1_000L)
+        }
     }
 
     @Test
@@ -436,6 +502,29 @@ class BaseNettyLifecycleTest {
                 isAccessible = true
                 set(client, future)
             }
+        }
+
+        fun setConnectResume(client: BaseNettyClient, resume: (ClientConnectStatus) -> Unit,) {
+            BaseNettyClient::class.java.getDeclaredField("connectResume").apply {
+                isAccessible = true
+                set(client, resume)
+            }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        fun getConnectResume(client: BaseNettyClient): ((ClientConnectStatus) -> Unit)? =
+            BaseNettyClient::class.java.getDeclaredField("connectResume").run {
+                isAccessible = true
+                get(client) as ((ClientConnectStatus) -> Unit)?
+            }
+
+        fun invokeResumeConnectContinuation(client: BaseNettyClient, status: ClientConnectStatus,) {
+            BaseNettyClient::class.java
+                .getDeclaredMethod("resumeConnectContinuation", ClientConnectStatus::class.java)
+                .apply {
+                    isAccessible = true
+                    invoke(client, status)
+                }
         }
 
         fun invokeStopRetryHandler(client: BaseNettyClient) {

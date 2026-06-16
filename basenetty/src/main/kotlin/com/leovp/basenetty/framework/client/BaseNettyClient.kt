@@ -214,6 +214,9 @@ abstract class BaseNettyClient protected constructor(
     private var connectContinuation: CancellableContinuation<ClientConnectStatus>? = null
 
     @Volatile
+    private var connectResume: ((ClientConnectStatus) -> Unit)? = null
+
+    @Volatile
     private var released = false
 
     internal var disconnectTimeoutInMillis: Long = DISCONNECT_TIMEOUT_IN_MILLS
@@ -338,17 +341,12 @@ abstract class BaseNettyClient protected constructor(
      */
     suspend fun connect(): ClientConnectStatus = suspendCancellableCoroutine { cont ->
         LogContext.log.i(tag, "===== connect() current state=${connectStatus.get().name} =====")
-        connectContinuation = cont
         val resumed = AtomicBoolean(false)
         fun resumeOnce(status: ClientConnectStatus) {
             if (cont.isActive && resumed.compareAndSet(false, true)) {
-                connectContinuation = null
+                clearConnectResume(cont)
                 cont.resume(status)
             }
-        }
-        cont.invokeOnCancellation {
-            connectContinuation = null
-            cancelConnectFuture()
         }
 
         fun handleConnectFailure(
@@ -367,7 +365,7 @@ abstract class BaseNettyClient protected constructor(
             when (connectStatus.get()) {
                 ClientConnectStatus.CONNECTING, ClientConnectStatus.CONNECTED -> {
                     LogContext.log.w(tag, "===== Connecting or already connected =====")
-                    resumeOnce(connectStatus.get())
+                    if (cont.isActive) cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -376,7 +374,7 @@ abstract class BaseNettyClient protected constructor(
                         tag,
                         "===== Releasing now. DO NOT connect and stop processing. ====="
                     )
-                    resumeOnce(connectStatus.get())
+                    if (cont.isActive) cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -385,7 +383,7 @@ abstract class BaseNettyClient protected constructor(
                         tag,
                         "===== Disconnecting now. DO NOT connect and stop processing. ====="
                     )
-                    resumeOnce(connectStatus.get())
+                    if (cont.isActive) cont.resume(connectStatus.get())
                     return@suspendCancellableCoroutine
                 }
 
@@ -393,6 +391,14 @@ abstract class BaseNettyClient protected constructor(
             }
             connectStatus.set(ClientConnectStatus.CONNECTING)
             disconnectManually = false
+            // This call won the state transition: register the external wake-up entry for
+            // THIS attempt only, so re-entrant early-return connect() calls cannot orphan it.
+            connectContinuation = cont
+            connectResume = ::resumeOnce
+        }
+        cont.invokeOnCancellation {
+            clearConnectResume(cont)
+            cancelConnectFuture()
         }
         try { // You call connect() with sync() method like this bellow:
             // bootstrap.connect(host, port).sync()
@@ -556,6 +562,8 @@ abstract class BaseNettyClient protected constructor(
                 "WebSocket Connect failed",
                 result.cause()
             )
+            // Retry is triggered from handlerRemoved() after the channel closes, to avoid
+            // retrying before cleanup completes (consistent with exceptionCaught()/connect()).
             closeChannel()
             completeHandshake(connectStatus.get())
         }
@@ -714,11 +722,21 @@ abstract class BaseNettyClient protected constructor(
         connectFuture = null
     }
 
-    private fun resumeConnectContinuation(status: ClientConnectStatus) {
-        connectContinuation?.let {
-            if (it.isActive) it.resume(status)
+    private fun clearConnectResume(cont: CancellableContinuation<ClientConnectStatus>) {
+        synchronized(this) {
+            // Identity guard: only the attempt that currently owns the entry may clear it,
+            // so a finishing/re-entrant attempt never wipes another active attempt's entry.
+            if (connectContinuation === cont) {
+                connectContinuation = null
+                connectResume = null
+            }
         }
-        connectContinuation = null
+    }
+
+    private fun resumeConnectContinuation(status: ClientConnectStatus) {
+        // Route external wake-ups (disconnect/release) through the active attempt's own
+        // guarded resumeOnce, so internal and external paths share ONE single-shot guard.
+        connectResume?.invoke(status)
     }
 
     private fun closeChannel(

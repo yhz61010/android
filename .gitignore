@@ -89,14 +89,11 @@ google-services.json
 local.properties
 gradle.properties
 
-# Keystore files
-# Uncomment the following lines if you do not want to check your keystore files in.
+# Keystore files — never commit release signing keys.
+# Provide release keystore + passwords via environment variables / CI secrets
+# (KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD) at build time.
 *.jks
 *.keystore
 *.p12
 *.pfx
-
-# Keep specific keystore if needed (uncomment only if absolutely necessary)
-!leo-anroid-release.jks
-!**/leo-anroid-release.jks
 **/.cxx/

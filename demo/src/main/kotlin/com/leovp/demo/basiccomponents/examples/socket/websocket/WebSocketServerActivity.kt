@@ -40,14 +40,27 @@ class WebSocketServerActivity :
 
     private val cs = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var webSocketServer: WebSocketServer
-    private lateinit var webSocketServerHandler: WebSocketServerHandler
+    /**
+     * Holds the single active server instance, or `null` when no server is running.
+     *
+     * A [BaseNettyServer] instance is single-use: once [BaseNettyServer.stopServer] is
+     * called it cannot be restarted, so each start must create a fresh instance. This
+     * reference is the guard that prevents starting a second instance while one is still
+     * bound to the port — overwriting it would orphan a running server that keeps holding
+     * the port, which is exactly what caused the "Address already in use" failures.
+     */
+    @Volatile
+    private var webSocketServer: WebSocketServer? = null
+
+    @Volatile
+    private var webSocketServerHandler: WebSocketServerHandler? = null
 
     private val connectionListener = object : ServerConnectListener<BaseNettyServer> {
         override fun onStarted(netty: BaseNettyServer) {
             LogContext.log.i(tag, "onStarted on port: $PORT")
             toast("onStarted on port: $PORT", debug = true)
             runOnUiThread {
+                binding.btnStop.isEnabled = true
                 binding.txtResponse.text = "Server started on port: $PORT"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
@@ -56,7 +69,12 @@ class WebSocketServerActivity :
         override fun onStopped() {
             LogContext.log.i(tag, "onStop")
             toast("onStop", debug = true)
+            // Release the reference so the next start creates a fresh instance.
+            webSocketServer = null
+            webSocketServerHandler = null
             runOnUiThread {
+                binding.btnStartServer.isEnabled = true
+                binding.btnStop.isEnabled = false
                 binding.txtResponse.text = "${binding.txtResponse.text}\nServer stopped"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
@@ -85,7 +103,7 @@ class WebSocketServerActivity :
                     "${binding.txtResponse.text}\n${clientChannel.remoteAddress()}: $data"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
             }
-            webSocketServerHandler.responseClientMsg(clientChannel, "Server received: $data")
+            webSocketServerHandler?.responseClientMsg(clientChannel, "Server received: $data")
         }
 
         override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
@@ -102,7 +120,12 @@ class WebSocketServerActivity :
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(tag, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
+            // Release the reference so the user can retry once the port is free again.
+            webSocketServer = null
+            webSocketServerHandler = null
             runOnUiThread {
+                binding.btnStartServer.isEnabled = true
+                binding.btnStop.isEnabled = false
                 binding.txtResponse.text =
                     "${binding.txtResponse.text}\nStart failed $code $msg"
                 binding.sv.fullScroll(View.FOCUS_DOWN)
@@ -114,30 +137,41 @@ class WebSocketServerActivity :
         super.onCreate(savedInstanceState)
 
         binding.tvServerIp.text = NetworkUtil.getIp()[0]
+        binding.btnStop.isEnabled = false
 
         binding.btnStop.setOnSingleClickListener {
             LogContext.log.d(tag, "Stop button clicked.")
-            cs.launch {
-                if (::webSocketServer.isInitialized) webSocketServer.stopServer()
+            val server = webSocketServer
+            if (server == null) {
+                toast("Server is not running", debug = true)
+                return@setOnSingleClickListener
             }
+            binding.btnStop.isEnabled = false
+            cs.launch { server.stopServer() }
         }
     }
 
     fun onStartServerClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch {
-            repeat(1) {
-                webSocketServer = WebSocketServer(PORT, connectionListener)
-                webSocketServerHandler = WebSocketServerHandler(webSocketServer)
-                webSocketServer.initHandler(webSocketServerHandler)
-                webSocketServer.startServer()
-            }
+        // Guard against starting a second server while one is already running. Each
+        // BaseNettyServer is single-use, so overwriting the reference here would orphan
+        // the running instance that still holds the port -> "Address already in use".
+        if (webSocketServer != null) {
+            toast("Server is already running on port: $PORT", debug = true)
+            return
         }
+        val server = WebSocketServer(PORT, connectionListener)
+        val handler = WebSocketServerHandler(server)
+        server.initHandler(handler)
+        webSocketServer = server
+        webSocketServerHandler = handler
+        binding.btnStartServer.isEnabled = false
+        // startServer() blocks at closeFuture().sync() for the server's whole lifetime,
+        // so it must run off the main thread.
+        cs.launch { server.startServer() }
     }
 
     override fun onDestroy() {
-        cs.launch {
-            if (::webSocketServer.isInitialized) webSocketServer.stopServer()
-        }
+        webSocketServer?.let { server -> cs.launch { server.stopServer() } }
         super.onDestroy()
     }
 

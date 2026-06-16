@@ -35,7 +35,9 @@
       "Bash(python3:*)",
       "Bash(git ls-tree:*)",
       "Bash(npx skills:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(echo \"name=$\\(git config user.name\\)\")",
+      "Bash(echo \"email=$\\(git config user.email\\)\")"
     ],
     "ask": [
       "Bash(rm -rf *)",

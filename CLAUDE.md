@@ -1,97 +1,119 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件为 Claude Code (claude.ai/code) 在本仓库中工作时提供指导。
 
-## Project Overview
+## 项目概述
 
-**LeoAndroidBaseUtil** is a multi-module Android library project (`com.leovp.android`) published via JitPack. It contains 40+ modules providing reusable utilities for Android development: byte operations, JSON, image processing, networking, MVVM architecture, Jetpack Compose components, media codecs (H.264/HEVC, ADPCM), camera, NFC, WebRTC, and more.
+**LeoAndroidBaseUtil** 是一个多模块 Android 库项目 (`com.leovp.android`)，通过 JitPack 发布。包含 40+ 个模块，提供 Android 开发常用工具：字节操作、JSON、图像处理、网络、MVVM 架构、Jetpack Compose 组件、媒体编解码（H.264/HEVC、ADPCM）、相机、NFC、WebRTC 等。
 
-## Build & Development
+## 构建与开发
 
-- **Kotlin-only** codebase with Kotlin DSL for Gradle
-- **Requires**: JDK 17, Android SDK 36, NDK 29.0.14206865, CMake 3.22.1+
-- **Setup**: Copy `gradle.properties.template` to `gradle.properties` and configure keystore properties
+- **纯 Kotlin** 代码库，使用 Kotlin DSL 编写 Gradle 构建脚本
+- **环境要求**：JDK 17、Android SDK 36、NDK 29.0.14206865、CMake 3.22.1+
+- **初始化**：将 `gradle.properties.template` 复制为 `gradle.properties` 并配置 keystore 属性
 
-### Common Commands
+### 常用命令
 
 ```bash
-./gradlew assembleDebug                    # Build debug APK (demo app)
-./gradlew assembleRelease                  # Build release APK
-./gradlew testDebugUnitTest                # Run all unit tests
-./gradlew :lib-bytes:testDebugUnitTest     # Run tests for a single module
-./gradlew staticCheck                      # Run all quality checks (lint, detekt, ktlint, tests)
-./gradlew detekt                           # Run detekt code analysis
-./gradlew ktlintCheck                      # Run ktlint style check
-./gradlew ktlintFormat                     # Auto-fix ktlint issues
-./gradlew dependencyUpdates                # Check for dependency updates
-./gradlew clean                            # Clean build outputs
+./gradlew assembleDebug                    # 构建 debug APK（demo 应用）
+./gradlew assembleRelease                  # 构建 release APK
+./gradlew testDebugUnitTest                # 运行所有单元测试
+./gradlew :lib-bytes:testDebugUnitTest     # 运行单个模块的测试
+./gradlew staticCheck                      # 运行所有质量检查（lint、detekt、ktlint、测试）
+./gradlew detekt                           # 运行 detekt 代码分析
+./gradlew ktlintCheck                      # 运行 ktlint 风格检查
+./gradlew ktlintFormat                     # 自动修复 ktlint 问题
+./gradlew dependencyUpdates                # 检查依赖更新
+./gradlew clean                            # 清理构建产物
 ```
 
-## Build Architecture
+## 构建架构
 
-All build configuration is centralized in the root `build.gradle.kts`:
-- `configureApplication()` — applied to modules with the `android.application` plugin (demo app)
-- `configureLibrary()` — applied to all library modules automatically
-- `configureCompileTasks()` — Java/Kotlin compiler settings applied to all projects
-- Java 17 source/target compatibility, JUnit Platform for all test tasks
-- Detekt config lives at `10-configs/detekt.yml` with zero-issue tolerance
-- Ktlint runs in Android mode with checkstyle reporter
+所有构建配置集中在根目录 `build.gradle.kts` 中：
+- `configureApplication()` — 应用于包含 `android.application` 插件的模块（demo 应用）
+- `configureLibrary()` — 自动应用于所有库模块
+- `configureCompileTasks()` — Java/Kotlin 编译器设置，应用于所有项目
+- Java 17 源码/目标兼容性，所有测试任务使用 JUnit Platform
+- Detekt 配置位于 `10-configs/detekt.yml`，零容忍策略
+- Ktlint 使用 Android 模式运行，带 checkstyle 报告
 
-Version catalog at `gradle/libs.versions.toml` manages all dependency versions, SDK versions, and defines dependency bundles (e.g., `androidx-full`, `lifecycle-full`, `test`, `android-test`).
+版本目录 `gradle/libs.versions.toml` 管理所有依赖版本、SDK 版本，并定义依赖 bundle（如 `androidx-full`、`lifecycle-full`、`test`、`android-test`）。
 
-## Native Build (CMake)
+## 原生构建（CMake）
 
-Native modules use **CMake** (migrated from Android.mk/ndk-build):
-- `lib-image` — Bitmap rotation JNI library (`leo-bitmap`)
-- `yuv` — libyuv wrapper (`leo-yuv`)
-- `jpeg` — libjpeg-turbo wrapper (`leo-jpeg`)
-- `ffmpeg-sdk` — Three native libraries: `h264-hevc-decoder`, `adpcm-ima-qt-decoder`, `adpcm-ima-qt-encoder` (links prebuilt FFmpeg libs)
+原生模块使用 **CMake**（已从 Android.mk/ndk-build 迁移）：
+- `lib-image` — Bitmap 旋转 JNI 库（`leo-bitmap`）
+- `yuv` — libyuv 封装（`leo-yuv`）
+- `jpeg` — libjpeg-turbo 封装（`leo-jpeg`）
+- `ffmpeg-sdk` — 三个原生库：`h264-hevc-decoder`、`adpcm-ima-qt-decoder`、`adpcm-ima-qt-encoder`（链接预编译的 FFmpeg 库）
 
-All native targets include 16KB page alignment (`-Wl,-z,max-page-size=16384`) for Android compatibility. CMakeLists.txt files are under each module's root or `src/main/cpp/` directory.
+所有原生目标包含 16KB 页面对齐（`-Wl,-z,max-page-size=16384`）以兼容 Android。CMakeLists.txt 文件位于各模块根目录或 `src/main/cpp/` 目录下。
 
-**External native library sources** (not Gradle modules, used for offline compilation):
-- `libjpeg-turbo/` — libjpeg-turbo build scripts and source archive (produces `.so` for `jpeg` module)
-- `ffmpeg-sdk/src/main/ffmpeg_build/` — FFmpeg build scripts and source archives
+**外部原生库源码**（非 Gradle 模块，用于离线编译）：
+- `libjpeg-turbo/` — libjpeg-turbo 构建脚本和源码压缩包（为 `jpeg` 模块生成 `.so`）
+- `ffmpeg-sdk/src/main/ffmpeg_build/` — FFmpeg 构建脚本和源码压缩包
 
-**JNI nativeHandle pattern**: Native modules use an instance-based architecture where each Kotlin object holds a `nativeHandle: Long` field storing the C++ object pointer. This replaces the previous global-variable approach and enables multi-instance + thread-safe usage. See `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md` for details.
+**JNI nativeHandle 模式**：原生模块采用基于实例的架构，每个 Kotlin 对象持有一个 `nativeHandle: Long` 字段存储 C++ 对象指针。该模式替代了之前的全局变量方式，支持多实例和线程安全。详见 `ffmpeg-sdk/docs/native-handle-pattern-en-zh.md`。
 
-## Module Organization
+## 模块组织
 
-Key module categories:
-- **lib-*** — Pure utility libraries (lib-bytes, lib-json, lib-compress, lib-common-kotlin, lib-common-android, lib-image, lib-reflection, lib-network)
-- **lib-mvvm** — MVVM architecture components (BaseViewModel, BaseState, BaseAction, UiEventManager)
-- **lib-compose** — Jetpack Compose extensions and composables
-- **androidbase** — Core Android utilities, depends on many lib-* modules
-- **Media modules** — audio, h264-hevc-decoder, adpcm-ima-qt-codec, ffmpeg-javacpp, ffmpeg-sdk, yuv, jpeg, x264
-- **Feature modules** — camerax, camera2live, opengl, nfc, webrtc, screencapture, basenetty, floatview (uses `DisplayManager.DisplayListener` + `OrientationEventListener` for orientation tracking)
-- **pref** — Preferences (MMKV-based)
-- **log** — Logging system
-- **demo** — Main demo application showcasing all modules
+主要模块分类：
+- **lib-*** — 纯工具库（lib-bytes、lib-json、lib-compress、lib-common-kotlin、lib-common-android、lib-image、lib-reflection、lib-network）
+- **lib-mvvm** — MVVM 架构组件（BaseViewModel、BaseState、BaseAction、UiEventManager）
+- **lib-compose** — Jetpack Compose 扩展和组合式组件
+- **androidbase** — 核心 Android 工具，依赖多个 lib-* 模块
+- **媒体模块** — audio、h264-hevc-decoder、adpcm-ima-qt-codec、ffmpeg-javacpp、ffmpeg-sdk、yuv、jpeg、x264
+- **功能模块** — camerax、camera2live、opengl、nfc、webrtc、screencapture、basenetty、floatview（使用 `DisplayManager.DisplayListener` + `OrientationEventListener` 进行方向追踪）
+- **pref** — 偏好设置（基于 MMKV）
+- **log** — 日志系统
+- **demo** — 展示所有模块的主 demo 应用
 
-## Architecture Pattern
+## 架构模式
 
-MVVM + Clean Architecture (Presentation → Domain → Data layers). Key components in `lib-mvvm`:
-- `BaseViewModel` with `BaseState` and `BaseAction` interfaces
-- `UiEventManager` for UI event handling
-- Compose integration via `lib-compose`
+MVVM + Clean Architecture（表现层 → 领域层 → 数据层）。`lib-mvvm` 中的核心组件：
+- `BaseViewModel` 搭配 `BaseState` 和 `BaseAction` 接口
+- `UiEventManager` 处理 UI 事件
+- 通过 `lib-compose` 集成 Compose
 
-DI uses Koin (not Hilt).
+依赖注入使用 Koin（非 Hilt）。
 
-## Testing
+## 测试
 
-- **JUnit 5** (Jupiter) as the primary test framework
-- **Mockk** for mocking, **Kluent** for assertions, **Robolectric** for Android unit tests
-- Tests run in parallel: `maxParallelForks = availableProcessors / 2`
-- `unitTests.isReturnDefaultValues = true` and `isIncludeAndroidResources = true` set globally
+- **JUnit 5**（Jupiter）作为主要测试框架
+- **Mockk** 用于 Mock、**Kluent** 用于断言、**Robolectric** 用于 Android 单元测试
+- 测试并行运行：`maxParallelForks = availableProcessors / 2`
+- 全局设置 `unitTests.isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`
 
-## Code Quality
+## 代码质量
 
-Detekt and Ktlint are applied to **all projects** (including root). Both are strict — `ignoreFailures = false` and detekt max issues = 0. Run `./gradlew staticCheck` to execute the full verification suite locally.
+Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是严格模式 — `ignoreFailures = false`，detekt 最大问题数 = 0。在本地运行 `./gradlew staticCheck` 执行完整的验证套件。
 
-## Signing
+## 签名
 
-Release builds use keystore properties from either `gradle.properties` (local) or environment variables (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`) for CI/CD. V1–V4 signing enabled.
+Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_PATH`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`）中的 keystore 属性用于 CI/CD。V1–V4 签名均已启用。
 
-## SDK Constraints
+## SDK 约束
 
-`minSdk` is 21 (Android 5.0) due to external project constraints. This limits some dependency upgrades.
+`minSdk` 为 21（Android 5.0），因外部项目约束限制。这会限制部分依赖的升级。
+
+## 语言约定
+- Git commit message 和代码注释统一使用**英文**。
+
+## 外部文档路径
+
+本项目的 AI 生成文档统一管理在项目 `00-documents/` 目录下：
+
+| 路径 | 用途 |
+|------|------|
+| `00-documents/superpowers/` | superpowers 插件产物（specs/、plans/） |
+
+## AI 交互规则
+
+- 若有不明白或不明确的地方，一定要先问我。不要自己幻想或无中生有。
+- 用户偏好使用中文对话。
+
+## 项目记忆
+
+项目级记忆（偏好、约定、反馈）存储在 `.claude/memory/` 目录中，包含跨会话的协作约定和工作流偏好。
+
+新会话开始时，请先读取 `.claude/memory/MEMORY.md` 了解已有的记忆内容。

@@ -1,6 +1,6 @@
-- [Docs save location](feedback_docs_directory.md) — Save docs to ./00-documents, not ./docs
-- [Bilingual docs](feedback_bilingual_docs.md) — Always generate both English and Chinese versions for documentation
-- [English commits & comments](feedback_english_code_commits.md) — Code comments and git commits must be in English
-- [Language preference](user_language.md) — Communicate in Chinese; code/commits in English
-- [No Co-Authored-By](feedback_no_coauthor.md) — Do not add Co-Authored-By trailer in commit messages
-- [CMake & NDK versions](project_cmake_ndk_versions.md) — CMake 3.22.1, NDK 29.0.14206865
+- [User profile](user_profile.md) — Michael Leo, Git email yhzemail61010@aliyun.com, language preferences
+- [Git and code language](feedback_git_and_code_language.md) — Commits/comments in English, no Co-Authored-By
+- [Docs in 00-documents](feedback_docs_location.md) — All generated docs go under 00-documents/, superpowers docs Chinese only
+- [Bilingual docs](feedback_bilingual_docs.md) — Documentation in both Chinese and English (except superpowers)
+- [Sync memory to repo](feedback_sync_memory.md) — Always sync memory updates to project .claude/memory/ and commit
+- [记忆同步策略](feedback_memory_sync_policy.md) — 无敏感信息保存到项目记忆，有敏感信息不写入并告知

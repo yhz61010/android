@@ -34,7 +34,10 @@
       "Bash(git add:*)",
       "Bash(python3:*)",
       "Bash(git ls-tree:*)",
-      "Bash(npx skills:*)"
+      "Bash(npx skills:*)",
+      "Bash(git config:*)",
+      "Bash(echo \"name=$\\(git config user.name\\)\")",
+      "Bash(echo \"email=$\\(git config user.email\\)\")"
     ],
     "ask": [
       "Bash(rm -rf *)",
@@ -42,7 +45,6 @@
       "Bash(bash -n *)"
     ]
   },
-  "autoMemoryDirectory": ".claude/memory",
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
@@ -52,6 +54,8 @@
     "claude-md-management@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true
-  }
+    "security-guidance@claude-plugins-official": true,
+    "ecc@ecc": true
+  },
+  "autoMemoryDirectory": ".claude/memory"
 }

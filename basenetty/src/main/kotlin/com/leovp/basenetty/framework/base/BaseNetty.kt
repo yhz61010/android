@@ -78,6 +78,11 @@ enum class ServerConnectStatus {
 
     STARTED,
     STOPPED,
+
+    @Deprecated(
+        "Use ServerConnectListener.onClientConnected callback instead.",
+        level = DeprecationLevel.WARNING
+    )
     CLIENT_CONNECTED,
 
     /**
@@ -86,6 +91,10 @@ enum class ServerConnectStatus {
      *
      * **Attention:** [FAILED] listeners will **NOT** trigger [CLIENT_DISCONNECTED] listener.
      */
+    @Deprecated(
+        "Use ServerConnectListener.onClientDisconnected callback instead.",
+        level = DeprecationLevel.WARNING
+    )
     CLIENT_DISCONNECTED,
 
     /**

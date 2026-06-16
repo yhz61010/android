@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.util.CharsetUtil
@@ -85,7 +84,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             LogContext.log.i(tag, "Closing handshaker for websocket")
             runCatching {
                 handshaker?.close(ctx.channel(), CloseWebSocketFrame())
-            }.onFailure { it.printStackTrace() }
+            }.onFailure {
+                LogContext.log.e(tag, "Closing handshaker for websocket", it)
+            }
         }
         super.channelInactive(ctx)
     }
@@ -104,54 +105,88 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
     }
 
     override fun handlerRemoved(ctx: ChannelHandlerContext) {
-        LogContext.log.i(tag, "===== handlerRemoved =====")
+        LogContext.log.i(tag, "===== handlerRemoved =====  caughtException=$caughtException")
+
+        // When Netty reports an exception, retry is deferred until handler removal
+        // so the worker thread has finished cleanup.
+
         super.handlerRemoved(ctx)
 
         // In theory, we should do reconnect in channelUnregistered. However, according to our
         // business requirement(only one single user logged-in allowed),
         // I must do reconnect here to make sure worker thread had already been released.
         if (!caughtException) {
-            if (netty.disconnectManually) {
+            val status = netty.connectStatus.get()
+            LogContext.log.i(
+                tag,
+                "handlerRemoved(disconnect) " +
+                    "manually=${netty.disconnectManually} status=${status.name}"
+            )
+            if (!netty.disconnectManually && status != ClientConnectStatus.DISCONNECTED) {
+                if (status == ClientConnectStatus.FAILED) {
+                    // connect() already called onFailed; just retry without duplicate callback.
+                    LogContext.log.i(
+                        tag,
+                        "handlerRemoved: connect already reported failure, retrying"
+                    )
+                    netty.doRetry()
+                } else {
+                    LogContext.log.i(tag, "Set failed exception status.")
+                    netty.connectStatus.set(ClientConnectStatus.FAILED)
+                    netty.connectionListener.onFailed(
+                        netty,
+                        ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
+                        "Connect exception or disconnect"
+                    )
+                    netty.doRetry()
+                }
+            }
+            // In else block, this means the client is stopped manually.
+            LogContext.log.w(tag, "=====> Socket disconnected <=====")
+        } else {
+            val status = netty.connectStatus.get()
+            if (netty.disconnectManually ||
+                status == ClientConnectStatus.DISCONNECTING ||
+                status == ClientConnectStatus.DISCONNECTED ||
+                status == ClientConnectStatus.RELEASING
+            ) {
                 LogContext.log.i(
                     tag,
-                    "handlerRemoved(disconnect) manually=${netty.disconnectManually}"
+                    "handlerRemoved(exception) ignored because " +
+                        "disconnect is already handled. " +
+                        "manually=${netty.disconnectManually} " +
+                        "status=${status.name}"
                 )
-                //                netty.connectState.set(ClientConnectState.DISCONNECTED)
-                //                netty.connectionListener.onDisconnected(netty)
+            } else if (status == ClientConnectStatus.FAILED) {
+                // exceptionCaught() already reported onFailed before closing.
+                // Retry is deferred until handler removal so cleanup has completed.
+                LogContext.log.i(
+                    tag,
+                    "handlerRemoved(exception): failure already reported, retrying"
+                )
+                netty.doRetry()
             } else {
-                LogContext.log.i(tag, "Set failed exception status.")
+                LogContext.log.e(
+                    tag,
+                    "Caught socket exception! DO NOT fire " +
+                        "ClientConnectListener#onDisconnected() method!"
+                )
                 netty.connectStatus.set(ClientConnectStatus.FAILED)
                 netty.connectionListener.onFailed(
                     netty,
-                    ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION,
-                    "Connect exception or disconnect"
+                    ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION,
+                    "Socket Exception"
                 )
-                // For instance, "Unable to resolve host xxx" error will go into here when you
-                // connect to server without network.
-                //                LogContext.log.e(tag, "=====> CHK11 <=====")
+                // When network lost, you will go into here.
                 netty.doRetry()
             }
-            LogContext.log.w(tag, "=====> Socket disconnected <=====")
-        } else {
-            LogContext.log.e(
-                tag,
-                "Caught socket exception! DO NOT fire ClientConnectListener#onDisconnected() " +
-                    "method!"
-            )
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
-            netty.connectionListener.onFailed(
-                netty,
-                ClientConnectListener.CONNECTION_ERROR_SOCKET_EXCEPTION,
-                "Socket Exception"
-            )
-            // When network lost, you will go into here.
-            //            LogContext.log.e(tag, "=====> CHK13 <=====")
-            netty.doRetry()
         }
     }
 
     /**
-     * Call [ctx.close().syncUninterruptibly()] synchronized.
+     * exceptionCaught() decides the failure type and reports onFailed exactly once.
+     * handlerRemoved() is only responsible for retry after cleanup.
+     * Manual disconnect / release skips onFailed entirely.
      */
     @Deprecated("Deprecated in Java")
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
@@ -160,6 +195,7 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
             return
         }
         caughtException = true
+        val isIOException = cause is IOException
         val exceptionType = when (cause) {
             is IOException -> "IOException"
             is IllegalArgumentException -> "IllegalArgumentException"
@@ -168,32 +204,35 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
         LogContext.log.e(tag, "===== Caught $exceptionType =====")
         LogContext.log.e(tag, "Exception: ${cause.message}", cause)
 
-        //        val channel = ctx.channel()
-        //        val isChannelActive = channel.isActive
-        //        LogContext.log.e(tagName, "Channel is active: $isChannelActive")
-        //        if (isChannelActive) {
-        //            ctx.close()
-        //        }
-        runCatching {
-            ctx.close().sync()
-        }.onFailure {
-            LogContext.log.e(tag, "close channel error.", it)
-            it.printStackTrace()
+        // Check whether disconnect / release is already in progress.
+        // If so, skip onFailed and just close the channel.
+        val status = netty.connectStatus.get()
+        if (netty.disconnectManually ||
+            status == ClientConnectStatus.DISCONNECTING ||
+            status == ClientConnectStatus.DISCONNECTED ||
+            status == ClientConnectStatus.RELEASING
+        ) {
+            LogContext.log.i(
+                tag,
+                "exceptionCaught: skipping onFailed because disconnect is in progress. " +
+                    "manually=${netty.disconnectManually} status=${status.name}"
+            )
+            ctx.close()
+            return
         }
 
-        LogContext.log.e(tag, "============================")
-
-        if ("IOException" == exceptionType) {
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
+        // Set FAILED and report onFailed BEFORE ctx.close(), so that handlerRemoved()
+        // always sees FAILED status and only does doRetry() without duplicate callback.
+        netty.connectStatus.set(ClientConnectStatus.FAILED)
+        if (isIOException) {
             LogContext.log.w(tag, "Network lost")
-            // This exception will trigger handlerRemoved(), so we retry at that time.
-
-            // netty.connectionListener.onFailed(netty,
-            // ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST, "Network lost")
-            //            LogContext.log.e(tag, "=====> CHK12 <=====")
-            //            netty.doRetry()
+            netty.connectionListener.onFailed(
+                netty,
+                ClientConnectListener.CONNECTION_ERROR_NETWORK_LOST,
+                "Network lost",
+                cause
+            )
         } else {
-            netty.connectStatus.set(ClientConnectStatus.FAILED)
             netty.connectionListener.onFailed(
                 netty,
                 ClientConnectListener.CONNECTION_ERROR_UNEXPECTED_EXCEPTION,
@@ -201,6 +240,9 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                 cause
             )
         }
+
+        // Close after onFailed so handlerRemoved sees the FAILED status.
+        ctx.close()
     }
 
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
@@ -213,6 +255,16 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
      */
     override fun channelRead0(ctx: ChannelHandlerContext, msg: T) {
         if (netty.isWebSocket) {
+            // Handle CloseFrame first — even before handshake completes — so state is set
+            // correctly before channel.close() triggers handlerRemoved.
+            if (msg is CloseWebSocketFrame) {
+                LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
+                netty.connectStatus.set(ClientConnectStatus.DISCONNECTED)
+                netty.connectionListener.onDisconnected(netty, true)
+                ctx.channel().close()
+                return
+            }
+
             if (handshaker?.isHandshakeComplete == false) {
                 try {
                     handshaker?.finishHandshake(ctx.channel(), msg as FullHttpResponse)
@@ -237,15 +289,6 @@ abstract class BaseClientChannelInboundHandler<T>(private val netty: BaseNettyCl
                     "protocolVersion=${msg.protocolVersion()}"
                 LogContext.log.e(tag, exceptionInfo)
                 throw IllegalStateException(exceptionInfo)
-            }
-
-            val frame = msg as WebSocketFrame
-            if (frame is CloseWebSocketFrame) {
-                LogContext.log.w(tag, "=====> WebSocket Client received close frame <=====")
-                ctx.channel().close()
-                netty.connectStatus.set(ClientConnectStatus.DISCONNECTED)
-                netty.connectionListener.onDisconnected(netty, true)
-                return
             }
         }
 

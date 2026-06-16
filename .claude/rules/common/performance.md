@@ -12,7 +12,7 @@
 - Orchestrating multi-agent workflows
 - Complex coding tasks
 
-**Opus 4.6** (Deepest reasoning):
+**Opus 4.8** (Deepest reasoning):
 - Complex architectural decisions
 - Maximum reasoning requirements
 - Research and analysis tasks

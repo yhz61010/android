@@ -10,7 +10,7 @@ Code review ensures quality, security, and maintainability before code is merged
 
 - After writing or modifying code
 - Before any commit to shared branches
-- When security-sensitive code is changed (auth, payments, user data)
+- When security-sensitive code is changed (auth, secrets/keystore, user data, native/JNI)
 - When architectural changes are made
 - Before merging pull requests
 
@@ -32,21 +32,21 @@ Before marking code complete:
 - [ ] No deep nesting (>4 levels)
 - [ ] Errors are handled explicitly
 - [ ] No hardcoded secrets or credentials
-- [ ] No console.log or debug statements
+- [ ] No leftover debug logging (use the project `log` module, gated by level)
 - [ ] Tests exist for new functionality
-- [ ] Test coverage meets 80% minimum
+- [ ] Test coverage meets target (see testing.md) where practically testable
 
 ## Security Review Triggers
 
 **STOP and use security-reviewer agent when:**
 
 - Authentication or authorization code
-- User input handling
-- Database queries
+- External input handling (network payloads, IPC/Intent extras)
+- Room/SQLite queries
 - File system operations
-- External API calls
-- Cryptographic operations
-- Payment or financial code
+- Network calls / WebView usage
+- Cryptographic operations or secret/keystore handling
+- Native/JNI code crossing the Kotlin boundary
 
 ## Review Severity Levels
 
@@ -65,10 +65,8 @@ Use these agents for code review:
 |-------|---------|
 | **code-reviewer** | General code quality, patterns, best practices |
 | **security-reviewer** | Security vulnerabilities, OWASP Top 10 |
-| **typescript-reviewer** | TypeScript/JavaScript specific issues |
-| **python-reviewer** | Python specific issues |
-| **go-reviewer** | Go specific issues |
-| **rust-reviewer** | Rust specific issues |
+| **kotlin-reviewer** | Kotlin / Android-specific issues (primary for this project) |
+| **cpp-reviewer** | C/C++ / JNI native code issues |
 
 ## Review Workflow
 
@@ -85,12 +83,12 @@ Use these agents for code review:
 
 ### Security
 
-- Hardcoded credentials (API keys, passwords, tokens)
-- SQL injection (string concatenation in queries)
-- XSS vulnerabilities (unescaped user input)
+- Hardcoded credentials (API keys, passwords, tokens, keystore passwords)
+- SQL injection in Room/SQLite (string concatenation in queries)
 - Path traversal (unsanitized file paths)
-- CSRF protection missing
+- Cleartext network traffic / missing certificate pinning
 - Authentication bypasses
+- Native/JNI memory safety (unchecked buffer sizes, leaked `nativeHandle`)
 
 ### Code Quality
 
@@ -98,14 +96,14 @@ Use these agents for code review:
 - Large files (>800 lines) - extract modules
 - Deep nesting (>4 levels) - use early returns
 - Missing error handling - handle explicitly
-- Mutation patterns - prefer immutable operations
+- Mutation patterns - prefer immutable operations (except justified perf/native paths)
 - Missing tests - add test coverage
 
 ### Performance
 
-- N+1 queries - use JOINs or batching
-- Missing pagination - add LIMIT to queries
-- Unbounded queries - add constraints
+- Allocations in hot loops (media/codec paths) - reuse buffers
+- Main-thread blocking - move I/O and heavy work off the UI thread
+- Unbounded collections/caches - add constraints
 - Missing caching - cache expensive operations
 
 ## Approval Criteria

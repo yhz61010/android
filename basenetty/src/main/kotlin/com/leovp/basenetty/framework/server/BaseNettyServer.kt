@@ -12,6 +12,8 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
 import io.netty.channel.ChannelPipeline
+import io.netty.channel.group.ChannelGroup
+import io.netty.channel.group.DefaultChannelGroup
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -23,6 +25,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import io.netty.util.concurrent.GlobalEventExecutor
 import io.netty.handler.stream.ChunkedWriteHandler
 import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
@@ -65,6 +68,9 @@ abstract class BaseNettyServer protected constructor(
     private var channelInitializer: ChannelInitializer<*>? = null
     var defaultServerInboundHandler: BaseServerChannelInboundHandler<*>? = null
         protected set
+
+    internal val clients: ChannelGroup =
+        DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
 
     @Volatile
     internal var connectState: AtomicReference<ServerConnectStatus> = AtomicReference(
@@ -243,7 +249,6 @@ abstract class BaseNettyServer protected constructor(
         showContent: Boolean,
         showLog: Boolean,
         fullOutput: Boolean,
-        byteOrder: ByteOrder,
     ): Boolean {
         if (!isValidExecuteCommandEnv(clientChannel, cmdTag, cmd)) {
             return false
@@ -273,26 +278,11 @@ abstract class BaseNettyServer protected constructor(
                 bytesCmd = Unpooled.wrappedBuffer(cmd)
                 if (showLog) {
                     val cmdMsg = "$logPrefix[${cmd.size}]"
-                    val hex: String? = if (showContent) {
-                        if (ByteOrder.BIG_ENDIAN ==
-                            byteOrder
-                        ) {
-                            cmd.toHexString()
-                        } else {
-                            cmd.toHexString()
-                        }
-                    } else {
-                        null
-                    }
+                    val hex: String? =
+                        if (showContent) cmd.toHexString() else null
                     LogContext.log.i(
                         cmdTag,
-                        if (hex ==
-                            null
-                        ) {
-                            cmdMsg
-                        } else {
-                            "$cmdMsg=HEX[$hex]"
-                        },
+                        if (hex == null) cmdMsg else "$cmdMsg=HEX[$hex]",
                         fullOutput = fullOutput
                     )
                 }
@@ -330,6 +320,9 @@ abstract class BaseNettyServer protected constructor(
     /**
      * For general socket(NOT WebSocket), when send string to server,
      * the `\n` will be appended automatically.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
      */
     @JvmOverloads
     fun executeCommand(
@@ -343,10 +336,15 @@ abstract class BaseNettyServer protected constructor(
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = false,
-        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput
     )
 
-    /** This method only works in WebSocket mode. */
+    /**
+     * This method only works in WebSocket mode.
+     *
+     * @param byteOrder **Deprecated — has no effect.** The byte array
+     *   is sent as-is regardless of byte order.
+     */
     @Suppress("unused")
     @JvmOverloads
     fun executePingCommand(
@@ -360,7 +358,7 @@ abstract class BaseNettyServer protected constructor(
         byteOrder: ByteOrder = ByteOrder.LITTLE_ENDIAN,
     ) = executeUnifiedCommand(
         clientChannel, cmdTag, cmdDesc, cmd, isPing = true,
-        showContent = showContent, showLog = showLog, fullOutput = fullOutput, byteOrder = byteOrder
+        showContent = showContent, showLog = showLog, fullOutput = fullOutput
     )
 
     // ================================================

@@ -33,6 +33,9 @@ dependencies {
     api(projects.log)
     api(projects.libBytes)
     api(projects.libNetwork)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

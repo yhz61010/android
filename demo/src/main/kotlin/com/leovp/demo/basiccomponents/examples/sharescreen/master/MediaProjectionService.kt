@@ -40,7 +40,7 @@ import okhttp3.internal.closeQuietly
  * 2. Request permission to capture screen.
  * 3. If permission is granted, then start your foreground service by calling `startForeground`.
  *
- * Please note that, request permission first, then start your your foreground service by calling
+ * Please note that, request permission first, then start your foreground service by calling
  * `startForeground`.
  * Make sure you run in correct steps, otherwise, your app will crash.
  *

@@ -11,7 +11,9 @@ import com.leovp.basenetty.framework.server.BaseServerChannelInboundHandler
 import com.leovp.basenetty.framework.server.ServerConnectListener
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.netty.channel.Channel
+import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.DefaultChannelPromise
 import io.netty.channel.embedded.EmbeddedChannel
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import java.io.IOException
 import java.lang.reflect.Modifier
+import java.net.ServerSocket
 import java.net.URI
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -67,6 +70,7 @@ class BaseNettyLifecycleTest {
             val neverCompletes = DefaultChannelPromise(backingChannel)
             val channel = mockk<Channel>()
             every { channel.disconnect() } returns neverCompletes
+            every { channel.close() } returns DefaultChannelPromise(backingChannel).setSuccess()
             setChannel(client, channel)
 
             val status = client.disconnectManually()
@@ -76,8 +80,67 @@ class BaseNettyLifecycleTest {
             assertTrue(
                 ClientConnectListener.DISCONNECT_MANUALLY_ERROR in listener.failedCodes
             )
+            verify { channel.close() }
             backingChannel.finishAndReleaseAll()
         }
+
+    @Test
+    fun `disconnectManually cancels in-flight connection attempt`(): Unit = runBlocking {
+        val listener = RecordingClientListener()
+        val client = TestClient(listener = listener)
+        client.connectStatus.set(ClientConnectStatus.CONNECTING)
+
+        val pendingChannel = EmbeddedChannel()
+        val connectFuture = mockk<ChannelFuture>()
+        every { connectFuture.channel() } returns pendingChannel
+        every { connectFuture.cancel(false) } returns true
+        setConnectFuture(client, connectFuture)
+
+        val status = client.disconnectManually()
+
+        assertEquals(ClientConnectStatus.DISCONNECTED, status)
+        assertEquals(ClientConnectStatus.DISCONNECTED, client.connectStatus.get())
+        assertEquals(listOf(false), listener.disconnectedByRemote.toList())
+        assertTrue(!pendingChannel.isOpen)
+        verify { connectFuture.cancel(false) }
+        pendingChannel.finishAndReleaseAll()
+    }
+
+    @Test
+    fun `websocket handshake timeout fails connection and retries`() = runBlocking {
+        val server = ServerSocket(0)
+        val serverThread = Thread {
+            runCatching {
+                server.accept().use { socket ->
+                    Thread.sleep(500L)
+                    socket.close()
+                }
+            }
+        }
+        serverThread.start()
+
+        try {
+            val listener = RecordingClientListener()
+            val client = TestWebSocketClient(
+                listener = listener,
+                uri = URI("ws://127.0.0.1:${server.localPort}/ws")
+            )
+            client.handshakeTimeoutInMillis = 50L
+            client.initHandler(TestClientHandler(client))
+
+            val status = client.connect()
+
+            assertEquals(ClientConnectStatus.FAILED, status)
+            assertTrue(
+                ClientConnectListener.CONNECTION_ERROR_CONNECT_EXCEPTION in listener.failedCodes
+            )
+            assertEquals(1, client.retryAttempts.get())
+            client.release()
+        } finally {
+            server.close()
+            serverThread.join(1_000L)
+        }
+    }
 
     @Test
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -117,6 +180,26 @@ class BaseNettyLifecycleTest {
         val handler = TestServerHandler(server)
 
         assertSame(server.clients, handler.clients)
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `server client exception only disconnects that client`() {
+        val listener = RecordingServerListener()
+        val server = TestServer(listener)
+        val handler = TestServerHandler(server)
+        val ch = EmbeddedChannel(handler)
+        val ctx = ch.pipeline().context(handler)
+        if (server.clients.isEmpty()) {
+            handler.channelActive(ctx)
+        }
+
+        handler.exceptionCaught(ctx, IOException("client reset"))
+
+        assertEquals(0, server.clients.size)
+        assertEquals(1, listener.disconnectedCount.get())
+        assertTrue(listener.startFailedCodes.isEmpty())
+        ch.finishAndReleaseAll()
     }
 
     @Test
@@ -267,14 +350,16 @@ class BaseNettyLifecycleTest {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
     }
 
-    private class TestWebSocketClient(listener: ClientConnectListener<BaseNettyClient>) :
-        BaseNettyClient(
-            webSocketUri = URI("ws://127.0.0.1:1/ws"),
-            connectionListener = listener,
-            trustAllServers = true,
-            retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 1L),
-            timeout = 200
-        ) {
+    private class TestWebSocketClient(
+        listener: ClientConnectListener<BaseNettyClient>,
+        uri: URI = URI("ws://127.0.0.1:1/ws"),
+    ) : BaseNettyClient(
+        webSocketUri = uri,
+        connectionListener = listener,
+        trustAllServers = true,
+        retryStrategy = ConstantRetry(maxTimes = 1, delayInMillSec = 1L),
+        timeout = 200
+    ) {
         val retryAttempts = AtomicInteger(0)
 
         override fun getTagName(): String = "TestWebSocketClient"
@@ -285,11 +370,12 @@ class BaseNettyLifecycleTest {
         }
     }
 
-    private class TestServer :
-        BaseNettyServer(
-            port = 0,
-            connectionListener = RecordingServerListener()
-        ) {
+    private class TestServer(
+        listener: ServerConnectListener<BaseNettyServer> = RecordingServerListener(),
+    ) : BaseNettyServer(
+        port = 0,
+        connectionListener = listener
+    ) {
         override fun getTagName(): String = "BaseNettyServerLifecycleTest"
     }
 
@@ -315,9 +401,15 @@ class BaseNettyLifecycleTest {
     }
 
     private class RecordingServerListener : ServerConnectListener<BaseNettyServer> {
+        val startFailedCodes = CopyOnWriteArrayList<Int>()
+        val disconnectedCount = AtomicInteger(0)
+
         override fun onStarted(netty: BaseNettyServer) = Unit
         override fun onStopped() = Unit
-        override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) = Unit
+        override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
+            startFailedCodes.add(code)
+        }
+
         override fun onReceivedData(
             netty: BaseNettyServer,
             clientChannel: Channel,
@@ -326,7 +418,9 @@ class BaseNettyLifecycleTest {
         ) = Unit
 
         override fun onClientConnected(netty: BaseNettyServer, clientChannel: Channel) = Unit
-        override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) = Unit
+        override fun onClientDisconnected(netty: BaseNettyServer, clientChannel: Channel) {
+            disconnectedCount.incrementAndGet()
+        }
     }
 
     private companion object {
@@ -334,6 +428,13 @@ class BaseNettyLifecycleTest {
             BaseNettyClient::class.java.getDeclaredField("channel").apply {
                 isAccessible = true
                 set(client, channel)
+            }
+        }
+
+        fun setConnectFuture(client: BaseNettyClient, future: ChannelFuture) {
+            BaseNettyClient::class.java.getDeclaredField("connectFuture").apply {
+                isAccessible = true
+                set(client, future)
             }
         }
 

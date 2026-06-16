@@ -99,6 +99,21 @@ Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_
 ## 语言约定
 - Git commit message 和代码注释统一使用**英文**。
 
-## AI 记忆
+## 外部文档路径
 
-项目级记忆（偏好、约定、反馈）存储在 `.claude/memory/` 中。新会话应读取 `.claude/memory/MEMORY.md` 以加载项目上下文和协作历史。
+本项目的 AI 生成文档统一管理在项目 `00-documents/` 目录下：
+
+| 路径 | 用途 |
+|------|------|
+| `00-documents/superpowers/` | superpowers 插件产物（specs/、plans/） |
+
+## AI 交互规则
+
+- 若有不明白或不明确的地方，一定要先问我。不要自己幻想或无中生有。
+- 用户偏好使用中文对话。
+
+## 项目记忆
+
+项目级记忆（偏好、约定、反馈）存储在 `.claude/memory/` 目录中，包含跨会话的协作约定和工作流偏好。
+
+新会话开始时，请先读取 `.claude/memory/MEMORY.md` 了解已有的记忆内容。

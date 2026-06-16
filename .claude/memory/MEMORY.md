@@ -3,3 +3,4 @@
 - [Docs in 00-documents](feedback_docs_location.md) — All generated docs go under 00-documents/, superpowers docs Chinese only
 - [Bilingual docs](feedback_bilingual_docs.md) — Documentation in both Chinese and English (except superpowers)
 - [Sync memory to repo](feedback_sync_memory.md) — Always sync memory updates to project .claude/memory/ and commit
+- [记忆同步策略](feedback_memory_sync_policy.md) — 无敏感信息保存到项目记忆，有敏感信息不写入并告知

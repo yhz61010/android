@@ -40,12 +40,17 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 ## 面向代理的说明
 在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。
 
+做分支或 PR 审查时，先确认当前仓库真实主线，不要假设一定是 `main`。截至当前仓库状态，远端默认主线是 `origin/master`；审查前仍应以 `git symbolic-ref refs/remotes/origin/HEAD`、`git branch -r --list 'origin/main' 'origin/master'` 和当前 refs 为准。
+
+需要真实验证 Gradle 测试时，不要只依赖 `UP-TO-DATE` 结果；对风险较高或刚改过的路径，可加 `--rerun-tasks` 强制重跑目标任务。
+
 ## Claude 与 CodeX 互操作
 保留所有现有 Claude Code 文件，包括 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 以及 `.claude/` 下的全部内容，除非用户明确要求修改。
 
 对于本仓库中的 CodeX：
 
 - 除本文件外，还应将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 视为补充项目说明。
+- 本机存在主 Codex 记忆时，优先使用当前主记忆；仓库内 `00-documents/codex-memory/` 是可共享快照，用于 fresh clone 或跨环境恢复。主记忆更新且需要共享给未来 clone 时，再刷新该目录。
 - fresh clone 后读取共享 Codex 记忆时，先读 [00-documents/codex-memory/README.md](/home/yhz61010/StudioProjects/android/00-documents/codex-memory/README.md)，再加载 `00-documents/codex-memory/memory_summary.md`、`00-documents/codex-memory/MEMORY.md`、`00-documents/codex-memory/extensions/ad_hoc/notes/`，以及相关的 `00-documents/codex-memory/rollout_summaries/` 文件。
 - 优先按需读取现有 Claude 材料，而不是盲目重复其内容。
 - 当任务涉及个人或仓库工作风格时，读取 `.claude/memory/MEMORY.md`；如果 `.claude/rules/personal-style.md` 存在，再作为补充读取。

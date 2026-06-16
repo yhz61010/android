@@ -15,8 +15,9 @@ Located in `~/.claude/agents/`:
 | e2e-runner | E2E testing | Critical user flows |
 | refactor-cleaner | Dead code cleanup | Code maintenance |
 | doc-updater | Documentation | Updating docs |
-| rust-reviewer | Rust code review | Rust projects |
-| harmonyos-app-resolver | HarmonyOS app development | HarmonyOS/ArkTS projects |
+| kotlin-reviewer | Kotlin/Android code review | After writing Kotlin code (primary for this project) |
+| cpp-reviewer | C/C++ / JNI native code review | After writing native code |
+| kotlin-build-resolver | Fix Kotlin/Gradle build errors | When Gradle build fails |
 
 ## Immediate Agent Usage
 

@@ -5,36 +5,48 @@ paths:
 ---
 # Kotlin Testing
 
-> This file extends [common/testing.md](../common/testing.md) with Kotlin and Android/KMP-specific content.
+> This file extends [common/testing.md](../common/testing.md) with Kotlin and Android-specific content.
 
-## Test Framework
+## Test Framework (this project)
 
-- **kotlin.test** for multiplatform (KMP) — `@Test`, `assertEquals`, `assertTrue`
-- **JUnit 4/5** for Android-specific tests
-- **Turbine** for testing Flows and StateFlow
-- **kotlinx-coroutines-test** for coroutine testing (`runTest`, `TestDispatcher`)
+- **JUnit 5 (Jupiter)** — primary framework (`@Test`, runs on JUnit Platform)
+- **Mockk** — mocking (`mockk`, `every`, `coEvery`, `verify`)
+- **Kluent** — fluent assertions (`shouldBeEqualTo`, `shouldBe`, `shouldContain`)
+- **Robolectric** — Android unit tests without a device
+- **kotlinx-coroutines-test** — coroutine testing (`runTest`, `TestDispatcher`)
 
-## ViewModel Testing with Turbine
+## ViewModel / StateFlow Testing
+
+Drive events under `runTest`, advance the dispatcher, then assert on `state.value`
+with Kluent. Inject a `TestDispatcher` so coroutines run on the test scheduler.
 
 ```kotlin
 @Test
-fun `loading state emitted then data`() = runTest {
-    val repo = FakeItemRepository()
-    repo.addItem(testItem)
+fun `load populates items in state`() = runTest {
+    val repo = FakeItemRepository().apply { addItem(testItem) }
     val viewModel = ItemListViewModel(GetItemsUseCase(repo))
 
-    viewModel.state.test {
-        assertEquals(ItemListState(), awaitItem())     // initial state
-        viewModel.onEvent(ItemListEvent.Load)
-        assertTrue(awaitItem().isLoading)               // loading
-        assertEquals(listOf(testItem), awaitItem().items) // loaded
-    }
+    viewModel.state.value shouldBeEqualTo ItemListState() // initial
+    viewModel.onEvent(ItemListEvent.Load)
+    advanceUntilIdle()
+    viewModel.state.value.items shouldBeEqualTo listOf(testItem)
 }
 ```
 
-## Fakes Over Mocks
+## Mocks and Fakes
 
-Prefer hand-written fakes over mocking frameworks:
+**Mockk** is the project's mocking tool. Use it for collaborators whose behavior
+you stub per-test:
+
+```kotlin
+val repo = mockk<ItemRepository>()
+coEvery { repo.getAll() } returns Result.success(listOf(testItem))
+// ...
+coVerify { repo.getAll() }
+```
+
+Prefer **hand-written fakes** for stateful collaborators (repositories with
+in-memory data) — they read more clearly than heavily-stubbed mocks:
 
 ```kotlin
 class FakeItemRepository : ItemRepository {
@@ -67,40 +79,26 @@ fun `parallel operations complete`() = runTest {
 
 Use `runTest` — it auto-advances virtual time and provides `TestScope`.
 
-## Ktor MockEngine
+## Room Testing
 
-```kotlin
-val mockEngine = MockEngine { request ->
-    when (request.url.encodedPath) {
-        "/api/items" -> respond(
-            content = Json.encodeToString(testItems),
-            headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-        )
-        else -> respondError(HttpStatusCode.NotFound)
-    }
-}
-
-val client = HttpClient(mockEngine) {
-    install(ContentNegotiation) { json() }
-}
-```
-
-## Room/SQLDelight Testing
-
-- Room: Use `Room.inMemoryDatabaseBuilder()` for in-memory testing
-- SQLDelight: Use `JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)` for JVM tests
+Use an in-memory database for Room tests (the `demo` module's Room example shows the setup):
 
 ```kotlin
 @Test
-fun `insert and query items`() = runTest {
-    val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    Database.Schema.create(driver)
-    val db = Database(driver)
+fun `insert word into in-memory db`() = runTest {
+    val db = Room.inMemoryDatabaseBuilder(
+        ApplicationProvider.getApplicationContext(),
+        WordRoomDatabase::class.java
+    ).allowMainThreadQueries().build()
+    val dao = db.wordDao()
 
-    db.itemQueries.insert("1", "Sample Item", "description")
-    val items = db.itemQueries.getAll().executeAsList()
-    assertEquals(1, items.size)
+    dao.insert(Word("hello"))   // suspend DAO ops run on the test scheduler
+    dao.deleteAll()
+
+    db.close()
 }
+// getAlphabetizedWords() returns LiveData<List<Word>> — to assert query results,
+// add InstantTaskExecutorRule and observe via a getOrAwaitValue() helper.
 ```
 
 ## Test Naming
@@ -119,10 +117,11 @@ fun `delete item emits updated list without deleted item`() = runTest { }
 
 ```
 src/
-├── commonTest/kotlin/     # Shared tests (ViewModel, UseCase, Repository)
-├── androidUnitTest/kotlin/ # Android unit tests (JUnit)
-├── androidInstrumentedTest/kotlin/  # Instrumented tests (Room, UI)
-└── iosTest/kotlin/        # iOS-specific tests
+├── test/kotlin/        # JVM/Robolectric unit tests (JUnit 5 + Mockk + Kluent)
+└── androidTest/kotlin/ # Instrumented tests on device/emulator (Room, UI)
 ```
 
-Minimum test coverage: ViewModel + UseCase for every feature.
+Tests run in parallel (`maxParallelForks = availableProcessors / 2`) and use
+`unitTests.isReturnDefaultValues = true` + `isIncludeAndroidResources = true`.
+
+Cover ViewModel + UseCase + pure-logic utilities for every feature.

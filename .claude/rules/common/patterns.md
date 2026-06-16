@@ -22,10 +22,9 @@ Encapsulate data access behind a consistent interface:
 - Business logic depends on the abstract interface, not the storage mechanism
 - Enables easy swapping of data sources and simplifies testing with mocks
 
-### API Response Format
+### Result Wrapping
 
-Use a consistent envelope for all API responses:
-- Include a success/status indicator
-- Include the data payload (nullable on error)
-- Include an error message field (nullable on success)
-- Include metadata for paginated responses (total, page, limit)
+Return outcomes in a consistent, type-safe wrapper rather than throwing across layers:
+- Use Kotlin `Result<T>` or a custom `sealed` result type
+- Carry the value on success and a typed error on failure
+- Let callers handle both branches exhaustively via `when`

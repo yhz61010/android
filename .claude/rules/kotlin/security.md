@@ -5,14 +5,14 @@ paths:
 ---
 # Kotlin Security
 
-> This file extends [common/security.md](../common/security.md) with Kotlin and Android/KMP-specific content.
+> This file extends [common/security.md](../common/security.md) with Kotlin and Android-specific content.
 
 ## Secrets Management
 
 - Never hardcode API keys, tokens, or credentials in source code
 - Use `local.properties` (git-ignored) for local development secrets
 - Use `BuildConfig` fields generated from CI secrets for release builds
-- Use `EncryptedSharedPreferences` (Android) or Keychain (iOS) for runtime secret storage
+- Use `EncryptedSharedPreferences` for runtime secret storage
 
 ```kotlin
 // BAD
@@ -28,7 +28,7 @@ val token = secureStorage.get("auth_token")
 ## Network Security
 
 - Use HTTPS exclusively — configure `network_security_config.xml` to block cleartext
-- Pin certificates for sensitive endpoints using OkHttp `CertificatePinner` or Ktor equivalent
+- Pin certificates for sensitive endpoints using OkHttp `CertificatePinner`
 - Set timeouts on all HTTP clients — never leave defaults (which may be infinite)
 - Validate and sanitize all server responses before use
 
@@ -42,7 +42,7 @@ val token = secureStorage.get("auth_token")
 ## Input Validation
 
 - Validate all user input before processing or sending to API
-- Use parameterized queries for Room/SQLDelight — never concatenate user input into SQL
+- Use parameterized queries for Room — never concatenate user input into SQL
 - Sanitize file paths from user input to prevent path traversal
 
 ```kotlin

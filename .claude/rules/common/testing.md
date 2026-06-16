@@ -1,11 +1,16 @@
 # Testing Requirements
 
-## Minimum Test Coverage: 80%
+## Coverage Target: 80% (where practically testable)
 
-Test Types (ALL required):
-1. **Unit Tests** - Individual functions, utilities, components
-2. **Integration Tests** - API endpoints, database operations
-3. **E2E Tests** - Critical user flows (framework chosen per language)
+Aim for 80%+ on pure-logic modules. This is an Android utility library — large
+parts (native/JNI codecs, camera, NFC, WebRTC, screen capture, OpenGL) depend on
+hardware or the Android framework and are not meaningfully unit-testable; do not
+force coverage on them.
+
+Test Types:
+1. **Unit Tests** (required for pure-logic modules) — functions, utilities, codecs' Kotlin layer
+2. **Robolectric Tests** — code needing a stubbed Android framework
+3. **Instrumented / E2E Tests** (only where applicable) — device-dependent flows; N/A for most library modules
 
 ## Test-Driven Development
 
@@ -28,30 +33,39 @@ MANDATORY workflow:
 
 - **tdd-guide** - Use PROACTIVELY for new features, enforces write-tests-first
 
+## Test Stack (this project)
+
+- **JUnit 5 (Jupiter)** — primary test framework
+- **Mockk** — mocking
+- **Kluent** — fluent assertions
+- **Robolectric** — Android unit tests without a device
+
+See [kotlin/testing.md](../kotlin/testing.md) for Kotlin/coroutine specifics.
+
 ## Test Structure (AAA Pattern)
 
 Prefer Arrange-Act-Assert structure for tests:
 
-```typescript
-test('calculates similarity correctly', () => {
-  // Arrange
-  const vector1 = [1, 0, 0]
-  const vector2 = [0, 1, 0]
+```kotlin
+@Test
+fun `cosine similarity of orthogonal vectors is zero`() {
+    // Arrange
+    val v1 = floatArrayOf(1f, 0f, 0f)
+    val v2 = floatArrayOf(0f, 1f, 0f)
 
-  // Act
-  const similarity = calculateCosineSimilarity(vector1, vector2)
+    // Act
+    val similarity = cosineSimilarity(v1, v2)
 
-  // Assert
-  expect(similarity).toBe(0)
-})
+    // Assert
+    similarity shouldBeEqualTo 0f
+}
 ```
 
 ### Test Naming
 
-Use descriptive names that explain the behavior under test:
+Use backtick-quoted descriptive names that explain the behavior under test:
 
-```typescript
-test('returns empty array when no markets match query', () => {})
-test('throws error when API key is missing', () => {})
-test('falls back to substring search when Redis is unavailable', () => {})
+```kotlin
+@Test fun `returns empty list when no items match query`() {}
+@Test fun `throws when required key is missing`() {}
 ```

@@ -5,11 +5,12 @@ paths:
 ---
 # Kotlin Patterns
 
-> This file extends [common/patterns.md](../common/patterns.md) with Kotlin and Android/KMP-specific content.
+> This file extends [common/patterns.md](../common/patterns.md) with Kotlin and Android-specific content.
 
 ## Dependency Injection
 
-Prefer constructor injection. Use Koin (KMP) or Hilt (Android-only):
+This project uses **Koin** (not Hilt). Prefer constructor injection and declare
+bindings in Koin modules:
 
 ```kotlin
 // Koin — declare modules
@@ -18,12 +19,6 @@ val dataModule = module {
     factory { GetItemsUseCase(get()) }
     viewModelOf(::ItemListViewModel)
 }
-
-// Hilt — annotations
-@HiltViewModel
-class ItemListViewModel @Inject constructor(
-    private val getItems: GetItemsUseCase
-) : ViewModel()
 ```
 
 ## ViewModel Pattern
@@ -78,33 +73,6 @@ class GetItemsUseCase(private val repository: ItemRepository) {
     suspend operator fun invoke(): Result<List<Item>> {
         return repository.getAll()
     }
-}
-```
-
-## expect/actual (KMP)
-
-Use for platform-specific implementations:
-
-```kotlin
-// commonMain
-expect fun platformName(): String
-expect class SecureStorage {
-    fun save(key: String, value: String)
-    fun get(key: String): String?
-}
-
-// androidMain
-actual fun platformName(): String = "Android"
-actual class SecureStorage {
-    actual fun save(key: String, value: String) { /* EncryptedSharedPreferences */ }
-    actual fun get(key: String): String? = null /* ... */
-}
-
-// iosMain
-actual fun platformName(): String = "iOS"
-actual class SecureStorage {
-    actual fun save(key: String, value: String) { /* Keychain */ }
-    actual fun get(key: String): String? = null /* ... */
 }
 ```
 

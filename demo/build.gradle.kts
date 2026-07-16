@@ -382,6 +382,7 @@ dependencies {
     implementation(projects.libImage)
     implementation(projects.libReflection)
     implementation(projects.nfc)
+    implementation(projects.androidRestricted)
 
     // You can enable either [ffmpeg-sdk] or [ffmpeg-javacpp-sdk]
     // implementation(projects.ffmpegSdk)

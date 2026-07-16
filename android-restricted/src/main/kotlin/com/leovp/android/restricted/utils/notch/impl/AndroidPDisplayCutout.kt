@@ -1,4 +1,4 @@
-package com.leovp.androidbase.utils.notch.impl
+package com.leovp.android.restricted.utils.notch.impl
 
 import android.app.Activity
 import android.os.Build
@@ -7,7 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.leovp.androidbase.utils.notch.DisplayCutout
+import com.leovp.android.restricted.utils.notch.DisplayCutout
 
 @RequiresApi(Build.VERSION_CODES.P)
 internal class AndroidPDisplayCutout : DisplayCutout {

@@ -1,12 +1,12 @@
-package com.leovp.androidbase.utils.notch.impl
+package com.leovp.android.restricted.utils.notch.impl
 
 import android.app.Activity
 import android.content.Context
 import android.view.Window
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.getDimenInPixel
-import com.leovp.android.utils.DeviceProp
-import com.leovp.androidbase.utils.notch.DisplayCutout
+import com.leovp.android.restricted.utils.DeviceProp
+import com.leovp.android.restricted.utils.notch.DisplayCutout
 
 internal class XiaoMiDisplayCutout : DisplayCutout {
     override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
@@ -23,7 +23,7 @@ internal class XiaoMiDisplayCutout : DisplayCutout {
 
     override fun cutoutAreaRect(
         activity: Activity,
-        callback: DisplayCutout.CutoutAreaRectCallback
+        callback: DisplayCutout.CutoutAreaRectCallback,
     ) {
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))
         callback.onResult(arrayListOf(rect))

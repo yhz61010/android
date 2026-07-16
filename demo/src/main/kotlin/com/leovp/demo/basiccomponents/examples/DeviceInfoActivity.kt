@@ -3,11 +3,12 @@ package com.leovp.demo.basiccomponents.examples
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.restricted.utils.getSerialNumber
+import com.leovp.android.restricted.utils.notch.DisplayCutoutManager
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.H264Util
 import com.leovp.androidbase.utils.media.H265Util
-import com.leovp.androidbase.utils.notch.DisplayCutoutManager
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityDeviceInfoBinding
@@ -32,7 +33,11 @@ class DeviceInfoActivity :
         // LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
-        val deviceInfo = DeviceUtil.getInstance(this).getDeviceInfo()
+        val deviceInfo = DeviceUtil.getInstance(this).getDeviceInfo() +
+            "\nSerial Number    : ${getSerialNumber()}" +
+            "\nBattery Capacity : ${
+                com.leovp.android.restricted.utils.DeviceUtil.getInstance(this).batteryCapacity
+            }"
         binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 

@@ -26,7 +26,7 @@ import com.leovp.android.exts.statusBarHeight
 import com.leovp.android.exts.toast
 import com.leovp.android.exts.xdpi
 import com.leovp.android.exts.ydpi
-import com.leovp.android.utils.ApplicationManager
+import com.leovp.android.restricted.utils.ApplicationManager
 import com.leovp.android.utils.NetworkUtil
 import com.leovp.androidbase.exts.android.getMetaData
 import com.leovp.androidbase.utils.media.CodecUtil.printMediaCodecsList

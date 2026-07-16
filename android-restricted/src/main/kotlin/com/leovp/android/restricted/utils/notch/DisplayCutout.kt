@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.utils.notch
+package com.leovp.android.restricted.utils.notch
 
 import android.app.Activity
 import android.graphics.Rect

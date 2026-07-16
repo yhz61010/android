@@ -42,14 +42,6 @@ fun Context.startActivity(
 ) = startActivity(kcls.java, extras, flags, options)
 
 /** Launch an Activity */
-fun Context.startActivity(
-    clsStr: String,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null,
-) = startActivity(Class.forName(clsStr), extras, flags, options)
-
-/** Launch an Activity */
 inline fun <reified T : Context> Context.startActivity(
     noinline extras: ((intent: Intent) -> Intent)? = null,
     flags: Int? = null,
@@ -76,14 +68,6 @@ fun Fragment.startActivity(
     flags: Int? = null,
     options: Bundle? = null,
 ) = startActivity(kcls.java, extras, flags, options)
-
-/** Launch an Activity in Fragment */
-fun Fragment.startActivity(
-    clsStr: String,
-    extras: ((intent: Intent) -> Intent)? = null,
-    flags: Int? = null,
-    options: Bundle? = null,
-) = startActivity(Class.forName(clsStr), extras, flags, options)
 
 /** Launch an Activity in Fragment */
 inline fun <reified T : Context> Fragment.startActivity(
@@ -150,33 +134,6 @@ inline fun <reified T : Context> Fragment.startActivity(
 // -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
 
-/**
- * Launch an Activity
- *
- * Attention:
- * According to
- * [Official document]
- * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_T ASK):
- *
- * > This flag can not be used when the caller is requesting a result from the activity being
- * launched.
- *
- * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
- * added can not return a result.
- *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
- * FLAG_ACTIVITY_NEW_TASK</a>
- */
-// @JvmOverloads
-// @Deprecated(
-// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
-//    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-// )
-// fun Activity.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent)
-// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-//    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
-
 // -----
 
 /**
@@ -232,32 +189,6 @@ inline fun <reified T : Context> Fragment.startActivity(
 // fun Fragment.startActivityForResult(kcls: KClass<*>, requestCode: Int, extras: ((intent: Intent)
 // -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
 //    startActivityForResult(kcls.java, requestCode, extras, flags, options)
-
-/**
- * Launch an Activity in Fragment
- *
- * Attention:
- * According to [Official document]
- * (https://developer.android.com/reference/android/content/Intent.html#FLAG_ACTIVITY_NEW_TASK):
- *
- * > This flag can not be used when the caller is requesting a result from the activity being
- * launched.
- *
- * The flag `Intent.FLAG_ACTIVITY_NEW_TASK` is incompatible with `startActivityForResult`.
- * So any activity that is started by an `Intent` to which the flag "FLAG_ACTIVITY_NEW_TASK" was
- * added can not return a result.
- *
- * @see <a href="https://stackoverflow.com/a/48177487">Using `startActivityForResult` with Flags
- * FLAG_ACTIVITY_NEW_TASK</a>
- */
-// @JvmOverloads
-// @Deprecated(
-// "Using BetterActivityResult#registerForActivityResult and BetterActivityResult#launch instead",
-//    ReplaceWith("BetterActivityResult", "com.leovp.androidbase.utils.ui.BetterActivityResult")
-// )
-// fun Fragment.startActivityForResult(clsStr: String, requestCode: Int, extras: ((intent: Intent)
-// -> Intent)? = null, flags: Int? = null, options: Bundle? = null) =
-//    startActivityForResult(Class.forName(clsStr), requestCode, extras, flags, options)
 
 // ============================================================
 // ====== Open Settings ==========

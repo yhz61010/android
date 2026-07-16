@@ -1,10 +1,10 @@
-package com.leovp.androidbase.utils.notch.impl
+package com.leovp.android.restricted.utils.notch.impl
 
 import android.app.Activity
 import android.graphics.Rect
 import android.view.WindowManager
 import com.leovp.android.exts.calculateNotchRect
-import com.leovp.androidbase.utils.notch.DisplayCutout
+import com.leovp.android.restricted.utils.notch.DisplayCutout
 
 @Suppress("unused")
 internal class HuaweiDisplayCutout : DisplayCutout {

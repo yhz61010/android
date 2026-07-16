@@ -2,6 +2,7 @@ package com.leovp.demo.basiccomponents.examples.log
 
 import android.os.Bundle
 import android.util.Log
+import com.leovp.android.restricted.utils.getSerialNumber
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
@@ -50,7 +51,16 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
         w {
             tag = TAG
             outputType = LogOutType(13)
-            message = "2Device Info:\n${DeviceUtil.getInstance(this@LogActivity).getDeviceInfo()}"
+            message = "2Device Info:\n${
+                DeviceUtil.getInstance(this@LogActivity).getDeviceInfo() +
+                    "\nSerial Number    : ${getSerialNumber()}\n" +
+                    "\nBattery Capacity : ${
+                        com.leovp.android.restricted.utils
+                            .DeviceUtil
+                            .getInstance(this@LogActivity)
+                            .batteryCapacity
+                    }"
+            }"
         }
 
         val sb = StringBuilder()

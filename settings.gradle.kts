@@ -106,6 +106,7 @@ include(
     ":screencapture",
     ":basenetty",
     ":androidbase",
+    ":android-restricted",
     ":camera2live",
     ":camerax",
     ":audio",

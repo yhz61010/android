@@ -24,7 +24,6 @@ import android.view.Surface
 import android.view.WindowInsets
 import androidx.annotation.IntRange
 import androidx.annotation.UiContext
-import com.leovp.android.utils.DeviceProp
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.kotlin.exts.round
 import java.util.UUID
@@ -281,7 +280,7 @@ val Context.isNavigationBarShown
 /**
  * In some devices(Like Google Pixel), although I've selected [Gesture navigation],
  * the real height of navigation bar is still the same as the height of [2/3-button navigation].
- * In order to get the exactly height of navigation bar,
+ * In order to get the exact height of navigation bar,
  * I can not use the value which get from `navigation_bar_height`.
  *
  * ```
@@ -405,6 +404,9 @@ fun Context.getDimenInPixel(name: String): Int {
     return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else -1
 }
 
+/**
+ * You'd better also check `DeviceProp.getSystemProperty("ro.kernel.qemu") == "1"`.
+ */
 fun isProbablyAnEmulator(): Boolean = (
     Build.FINGERPRINT.startsWith("google/sdk_gphone_") &&
         Build.FINGERPRINT.endsWith(":user/release-keys") &&
@@ -427,9 +429,7 @@ fun isProbablyAnEmulator(): Boolean = (
     Build.HOST.startsWith("Build") ||
     // MSI App Player
     (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
-    Build.PRODUCT == "google_sdk" ||
-    // another Android SDK emulator check
-    DeviceProp.getSystemProperty("ro.kernel.qemu") == "1"
+    Build.PRODUCT == "google_sdk"
 
 fun Context.isTablet(): Boolean = (
     resources.configuration.screenLayout

@@ -1,4 +1,4 @@
-package com.leovp.android.utils
+package com.leovp.android.restricted.utils
 
 import android.annotation.SuppressLint
 import android.app.Application

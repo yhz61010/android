@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.utils.notch.impl
+package com.leovp.android.restricted.utils.notch.impl
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -8,7 +8,7 @@ import android.content.Context
 import android.graphics.Rect
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.densityDpi
-import com.leovp.androidbase.utils.notch.DisplayCutout
+import com.leovp.android.restricted.utils.notch.DisplayCutout
 
 /** vivo will not render on notch */
 internal class VivoDisplayCutout : DisplayCutout {
@@ -29,7 +29,7 @@ internal class VivoDisplayCutout : DisplayCutout {
 
     override fun cutoutAreaRect(
         activity: Activity,
-        callback: DisplayCutout.CutoutAreaRectCallback
+        callback: DisplayCutout.CutoutAreaRectCallback,
     ) {
         val rectList = ArrayList<Rect>()
         val rect = calculateNotchRect(activity, getNotchWidth(activity), getNotchHeight(activity))

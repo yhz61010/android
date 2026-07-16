@@ -11,7 +11,6 @@ import android.os.StatFs
 import android.os.SystemClock
 import android.view.Display
 import androidx.annotation.Keep
-import androidx.core.content.ContextCompat
 import com.leovp.android.exts.activityManager
 import com.leovp.android.exts.density
 import com.leovp.android.exts.densityDpi
@@ -91,20 +90,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
     //        ""
     //    )
 
-    fun getSerialNumber(): String {
-        var serialNo = DeviceProp.getSystemProperty("ro.serialno")
-        if (serialNo.isNotBlank()) return serialNo
-        serialNo = DeviceProp.getSystemProperty("ro.boot.serialno")
-        if (serialNo.isNotBlank()) return serialNo
-        serialNo = DeviceProp.getSystemProperty("ril.serialnumber")
-        if (serialNo.isNotBlank()) return serialNo
-        serialNo = DeviceProp.getSystemProperty("sys.serialnumber")
-        if (serialNo.isNotBlank()) return serialNo
-        serialNo = DeviceProp.getSystemProperty("gsm.sn1")
-        if (serialNo.isNotBlank()) return serialNo
-        return ""
-    }
-
     val cpuCoreCount = File("/sys/devices/system/cpu/").listFiles { file: File? ->
         file?.name?.matches(Regex("cpu\\d+")) ?: false
     }?.size ?: 0
@@ -151,19 +136,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
     data class CpuCoreInfo(val online: Boolean, val minFreq: Int, val maxFreq: Int)
 
     /**
-     * Unit: mAh
-     */
-    val batteryCapacity = runCatching {
-        val powerProfileClass = "com.android.internal.os.PowerProfile"
-        val powerProfile = Class.forName(powerProfileClass)
-            .getConstructor(Context::class.java)
-            .newInstance(ctx)
-        Class.forName(powerProfileClass)
-            .getMethod("getBatteryCapacity")
-            .invoke(powerProfile) as Double
-    }.getOrDefault(0.0)
-
-    /**
      * The result is:
      * [0]: Available memory in bytes
      * [1]: Total memory in bytes
@@ -186,7 +158,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
      */
     fun getExternalStorageInBytes(): ArrayList<Triple<Long, Long, Float>> {
         val bytesAvailable: ArrayList<Triple<Long, Long, Float>> = ArrayList()
-        val externalStorageDirs = ContextCompat.getExternalFilesDirs(ctx, null)
+        val externalStorageDirs = ctx.getExternalFilesDirs(null)
         for (storageDir in externalStorageDirs) {
             val availableSizeInBytes = StatFs(storageDir.path).availableBytes
             val totalSizeInBytes = StatFs(storageDir.path).totalBytes
@@ -211,6 +183,13 @@ class DeviceUtil private constructor(private val ctx: Context) {
             return sb.deleteAt(sb.length - 1).toString()
         }
 
+    /**
+     * Other information:
+     * ```
+     * Serial Number    : ${getSerialNumber()}
+     * Battery Capacity : $batteryCapacity
+     * ```
+     */
     @SuppressLint("MissingPermission")
     fun getDeviceInfo(): String = runCatching {
         @Suppress("DEPRECATION")
@@ -249,7 +228,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Brand            : $brand
             Board            : $board
             OsVersion        : $osVersion($osVersionSdkInt)
-            Serial Number    : ${getSerialNumber()}
             DeviceName       : $deviceName
             Model            : $model
             Product          : $product
@@ -257,9 +235,11 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Hardware         : $hardware
             CPU              : $cpuInfo
             CPU Arch         : $cpuArch
-            OpenGL ES Version: ${configInfo.glEsVersion} [0x${Integer.toHexString(
-            configInfo.reqGlEsVersion
-        )}]
+            OpenGL ES Version: ${configInfo.glEsVersion} [0x${
+            Integer.toHexString(
+                configInfo.reqGlEsVersion
+            )
+        }]
             Supported ABIS   : ${supportedCpuArchs.contentToString()}
             Display          : $display
             Screen           : $screenInfo
@@ -269,7 +249,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
             Fingerprint      : ${Build.FINGERPRINT}
             Tablet           : ${ctx.isTablet()}
             Emulator         : ${isProbablyAnEmulator()}
-            Battery Capacity : $batteryCapacity
             MAC              : ${NetworkUtil.getMacAddress(ctx)}
             IMEI:
                     slot0: ${getImei(ctx, 0) ?: "NA"}

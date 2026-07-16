@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * Author: Michael Leo
  * Date: 20-6-12 下午4:19
  *
- * Monitor the speed, ping and wifi signal.
+ * Monitor the speed, ping and Wi-Fi signal.
  *
  * Usage:
  * ```kotlin

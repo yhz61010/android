@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.leovp.androidbase.utils.notch
+package com.leovp.android.restricted.utils.notch
 
 import android.app.Activity
 import android.os.Build
@@ -9,10 +9,10 @@ import com.leovp.android.exts.isHuaWei
 import com.leovp.android.exts.isOppo
 import com.leovp.android.exts.isVivo
 import com.leovp.android.exts.isXiaoMi
-import com.leovp.androidbase.utils.notch.impl.AndroidPDisplayCutout
-import com.leovp.androidbase.utils.notch.impl.HuaweiDisplayCutout
-import com.leovp.androidbase.utils.notch.impl.OppoDisplayCutout
-import com.leovp.androidbase.utils.notch.impl.XiaoMiDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.AndroidPDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.HuaweiDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.OppoDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.XiaoMiDisplayCutout
 import com.leovp.kotlin.utils.SingletonHolder
 
 /**

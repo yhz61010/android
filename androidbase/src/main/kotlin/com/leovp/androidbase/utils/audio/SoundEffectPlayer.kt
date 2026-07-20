@@ -8,6 +8,7 @@ import android.media.SoundPool
 import com.leovp.log.base.d
 import com.leovp.log.base.e
 import com.leovp.log.base.w
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Author: Michael Leo
@@ -18,8 +19,11 @@ object SoundEffectPlayer {
     private const val MAX_STREAMS = 3
 
     private var soundPool: SoundPool? = null
-    private val soundMap = mutableMapOf<String, Int>()
-    private val loadedSounds = mutableSetOf<Int>()
+
+    // Mutated from both caller threads (play/preload) and the SoundPool load-complete
+    // callback thread, so these must be concurrent collections.
+    private val soundMap = ConcurrentHashMap<String, Int>()
+    private val loadedSounds = ConcurrentHashMap.newKeySet<Int>()
 
     private fun ensureSoundPool() {
         if (soundPool == null) {
@@ -80,9 +84,7 @@ object SoundEffectPlayer {
         soundMap[fileName] ?: loadSound(context, fileName)
 
     private fun loadSound(context: Context, fileName: String): Int? = try {
-        val afd = context.assets.openFd(fileName)
-        val soundId = soundPool?.load(afd, 1)
-        afd.close()
+        val soundId = context.assets.openFd(fileName).use { afd -> soundPool?.load(afd, 1) }
         if (soundId != null && soundId > 0) {
             soundMap[fileName] = soundId
             d(TAG) { "Loading sound: $fileName with ID: $soundId" }

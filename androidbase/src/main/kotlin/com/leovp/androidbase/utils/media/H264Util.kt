@@ -104,7 +104,7 @@ object H264Util {
                 }
                 data
             } catch (e: Exception) {
-                LogContext.log.e(TAG, "getSps error msg=${e.message}")
+                LogContext.log.e(TAG, "getSps error", e)
                 null
             }
         }
@@ -147,7 +147,7 @@ object H264Util {
             }
             if (isPps(data)) data else null
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getPps error msg=${e.message}")
+            LogContext.log.e(TAG, "getPps error", e)
             null
         }
     }

@@ -169,7 +169,9 @@ abstract class BaseActivity<B : ViewBinding>(
         val ret = super.dispatchTouchEvent(event)
         try {
             if (v is EditText) {
-                val focusView = currentFocus!!
+                // Reuse the focus captured before super.dispatchTouchEvent(); reading
+                // currentFocus again here could be null and crash on the !! assertion.
+                val focusView = v
                 val focusViewLocationOnScreen = IntArray(2)
                 focusView.getLocationOnScreen(focusViewLocationOnScreen)
                 val x = event.rawX + focusView.left - focusViewLocationOnScreen[0]

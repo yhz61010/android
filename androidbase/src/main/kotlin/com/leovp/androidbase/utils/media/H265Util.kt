@@ -230,7 +230,7 @@ object H265Util {
                 }
                 data
             } catch (e: Exception) {
-                LogContext.log.e(TAG, "getVps error msg=${e.message}")
+                LogContext.log.e(TAG, "getVps error", e)
                 null
             }
         }
@@ -280,7 +280,7 @@ object H265Util {
             }
             if (isSps(data)) data else null
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getSps error msg=${e.message}")
+            LogContext.log.e(TAG, "getSps error", e)
             null
         }
     }
@@ -329,7 +329,7 @@ object H265Util {
             }
             if (isPps(data)) data else null
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getPps error msg=${e.message}")
+            LogContext.log.e(TAG, "getPps error", e)
             null
         }
     }
@@ -378,7 +378,7 @@ object H265Util {
             }
             if (isSei(data)) data else null
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "getSei error msg=${e.message}")
+            LogContext.log.e(TAG, "getSei error", e)
             null
         }
     }

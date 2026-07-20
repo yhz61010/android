@@ -97,7 +97,7 @@ class ConnectionLiveData(private val context: Context) :
                     ConnectionStatus(
                         online = true,
                         changed = lastNetworkType.get() != networkType,
-                        type = NetworkUtil.TYPE_OFFLINE
+                        type = networkType
                     )
                 )
                 lastNetworkType.set(networkType)

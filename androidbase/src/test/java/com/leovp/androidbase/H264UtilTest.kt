@@ -78,4 +78,19 @@ class H264UtilTest {
         assertEquals(false, H264Util.isIdrFrame(noneIdrBytes))
         assertEquals("B/P", H264Util.getNaluTypeName(noneIdrBytes))
     }
+
+    @Test
+    fun malformedStartCodeIsRejected() {
+        // Second byte is non-zero, so this is NOT a valid "00 00 00 01" start code.
+        // The old operator-precedence bug (`b0!=0 || b1!=0 && b2!=0 || b3!=1`) let this
+        // through as a valid IDR frame. With the fix it must be rejected.
+        val malformed = byteArrayOf(0, 5, 0, 1, 0x65, 1, 2, 3, 4)
+        assertEquals(-1, H264Util.getNaluType(malformed))
+        assertEquals(false, H264Util.isIdrFrame(malformed))
+        assertEquals("Unknown", H264Util.getNaluTypeName(malformed))
+
+        // Third byte non-zero is likewise invalid.
+        val malformed2 = byteArrayOf(0, 0, 7, 1, 0x65, 1, 2, 3, 4)
+        assertEquals(-1, H264Util.getNaluType(malformed2))
+    }
 }

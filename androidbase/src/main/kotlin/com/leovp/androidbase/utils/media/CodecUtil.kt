@@ -157,7 +157,7 @@ object CodecUtil {
 
     // Find NALU prefix "00 00 00 01"
     fun findStartCode(data: ByteArray, offSet: Int = 0): Boolean {
-        if (offSet < 0 || data.size < 4) return false
+        if (offSet < 0 || offSet + 4 > data.size) return false
         return data[offSet].toInt() == 0 &&
             data[offSet + 1].toInt() == 0 &&
             data[offSet + 2].toInt() == 0 &&

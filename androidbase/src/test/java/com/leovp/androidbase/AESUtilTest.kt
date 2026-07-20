@@ -59,6 +59,25 @@ class AESUtilTest {
         assertFalse(result != null && result.contentEquals(data))
     }
 
+    @Test fun `decryptStrict round-trips new-format data`() {
+        val data = "strict payload 严格".toByteArray()
+        val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
+
+        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
+
+        assertTrue(data.contentEquals(decrypted))
+    }
+
+    @Test fun `decryptStrict throws on a tampered ciphertext instead of falling back`() {
+        val data = "sensitive payload".toByteArray()
+        val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
+        val tampered = encrypted.copyOf().also { it[it.size - 1] = (it[it.size - 1] + 1).toByte() }
+
+        // Unlike decrypt(), strict decryption must never silently fall back to the legacy path.
+        val result = runCatching { AESUtil.decryptStrict(tampered, secKey.toByteArray()) }
+        assertTrue(result.isFailure)
+    }
+
     @Test fun `generateKey produces a 256-bit AES key`() {
         val key = AESUtil.generateKey()
 

@@ -40,7 +40,7 @@ class WifiUtil private constructor(private val ctx: Context) {
             Manifest.permission.ACCESS_WIFI_STATE
         ]
     )
-    fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WEP) {
+    fun connectWifi(wifiSsid: String, wifiPwd: String, enc: WifiEncType? = WifiEncType.WPA) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { // Android 10
             val wifiNetworkSpecifier =
                 WifiNetworkSpecifier.Builder().setSsid(wifiSsid).setWpa2Passphrase(wifiPwd).build()

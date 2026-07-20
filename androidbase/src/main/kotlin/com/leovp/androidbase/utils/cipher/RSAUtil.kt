@@ -6,6 +6,7 @@ import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.RSAUtil.getKeyPair
 import com.leovp.bytes.toHexString
+import com.leovp.log.LogContext
 import java.io.ByteArrayOutputStream
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -23,6 +24,8 @@ import javax.crypto.Cipher
  */
 @Suppress("unused")
 object RSAUtil {
+    private const val TAG = "RSAUtil"
+
     /**
      * Recommended for RSA:
      * - RSA/None/OAEPWithSHA-256AndMGF1Padding
@@ -108,7 +111,7 @@ object RSAUtil {
         val factory = KeyFactory.getInstance(KEY_ALGORITHM)
         val pubKey = factory.generatePublic(spec)
         cipherDoFinal(Cipher.ENCRYPT_MODE, pubKey, plainData)
-    }.getOrNull()
+    }.onFailure { LogContext.log.e(TAG, "encrypt error", it) }.getOrNull()
 
     /**
      * Decrypt by private key which can get from [getKeyPair] method.
@@ -131,7 +134,7 @@ object RSAUtil {
         val factory = KeyFactory.getInstance(KEY_ALGORITHM)
         val priKey = factory.generatePrivate(spec)
         cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
-    }.getOrNull()
+    }.onFailure { LogContext.log.e(TAG, "decrypt error", it) }.getOrNull()
 
     // ----------
 
@@ -164,7 +167,7 @@ object RSAUtil {
             update(data)
             sign()
         }
-    }.getOrNull()
+    }.onFailure { LogContext.log.e(TAG, "sign error", it) }.getOrNull()
 
     /**
      * Verify an RSA digital signature ([SIGN_ALGORITHM]) produced by [sign].
@@ -192,7 +195,7 @@ object RSAUtil {
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
             cipher.init(opmode, key)
             cipher.doFinal(data)
-        }.getOrNull()
+        }.onFailure { LogContext.log.e(TAG, "cipherDoFinal error", it) }.getOrNull()
 
     // ==========
 

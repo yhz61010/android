@@ -4,7 +4,10 @@ package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import com.leovp.android.utils.API
+import com.leovp.bytes.toBytes
+import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import javax.crypto.Mac
 import javax.crypto.SecretKey
@@ -418,22 +421,48 @@ object PBKDF2Util {
 
         // PBKDF2WithHmacSHA1
         // PBKDF2WithHmacSHA512
-        return runCatching {
+        val providerDerivation: () -> SecretKey = {
             val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
             val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
             secretKeyFactory.generateSecret(keySpec)
-        }.getOrElse {
-            if (algorithm != ALGORITHM_SHA256) throw it
-            SecretKeySpec(
-                pbkdf2HmacSha256Fallback(
-                    plainPassphrase,
-                    salt,
-                    iterations,
-                    outputKeyLengthInBits
-                ),
-                ALGORITHM_SHA256
-            )
         }
+        return if (algorithm == ALGORITHM_SHA256) {
+            sha256KeyWithFallback(
+                plainPassphrase,
+                salt,
+                iterations,
+                outputKeyLengthInBits,
+                providerDerivation
+            )
+        } else {
+            providerDerivation()
+        }
+    }
+
+    /**
+     * Derive a PBKDF2-HMAC-SHA256 key via [providerDerivation]; only when the JCA provider does not
+     * expose `PBKDF2WithHmacSHA256` (API 21-25, [NoSuchAlgorithmException]) fall back to the manual
+     * [pbkdf2HmacSha256Fallback]. Any other failure (e.g. a malformed spec) propagates unchanged so
+     * genuine errors are not masked by the fallback.
+     */
+    @VisibleForTesting
+    internal fun sha256KeyWithFallback(
+        plainPassphrase: CharArray,
+        salt: ByteArray,
+        iterations: Int,
+        outputKeyLengthInBits: Int,
+        providerDerivation: () -> SecretKey
+    ): SecretKey = runCatching { providerDerivation() }.getOrElse {
+        if (it !is NoSuchAlgorithmException) throw it
+        SecretKeySpec(
+            pbkdf2HmacSha256Fallback(
+                plainPassphrase,
+                salt,
+                iterations,
+                outputKeyLengthInBits
+            ),
+            ALGORITHM_SHA256
+        )
     }
 
     /**
@@ -462,7 +491,7 @@ object PBKDF2Util {
         val output = ByteArray(blocks * hLen)
 
         for (blockIndex in 1..blocks) {
-            val block = intToBigEndian(blockIndex)
+            val block = blockIndex.toBytes()
             mac.update(salt)
             var u = mac.doFinal(block)
             val t = u.copyOf()
@@ -476,13 +505,6 @@ object PBKDF2Util {
         }
         return output.copyOf(dkLen)
     }
-
-    private fun intToBigEndian(value: Int): ByteArray = byteArrayOf(
-        (value ushr 24).toByte(),
-        (value ushr 16).toByte(),
-        (value ushr 8).toByte(),
-        value.toByte()
-    )
 
     // =====================================
 

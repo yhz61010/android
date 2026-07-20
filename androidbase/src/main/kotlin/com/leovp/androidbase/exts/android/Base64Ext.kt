@@ -12,7 +12,6 @@ import androidx.core.graphics.drawable.toDrawable
 import com.leovp.android.utils.API
 import com.leovp.image.getBitmap
 import java.io.ByteArrayOutputStream
-import java.nio.charset.Charset
 
 /**
  * Convert String to base64 String
@@ -50,7 +49,7 @@ fun String.toBase64(flag: Int = Base64.DEFAULT): String =
  */
 @JvmOverloads
 fun String.fromBase64(flag: Int = Base64.DEFAULT): String =
-    Base64.decode(this, flag).toString(Charset.forName("US-ASCII"))
+    Base64.decode(this, flag).toString(Charsets.UTF_8)
 
 /**
  * Decode base64 String to ByteArray

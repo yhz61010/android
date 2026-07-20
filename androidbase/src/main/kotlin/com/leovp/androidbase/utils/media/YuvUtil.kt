@@ -19,6 +19,21 @@ object YuvUtil {
 
     const val COLOR_FORMAT_NV21 = 2
 
+    /**
+     * Validate that [yuvSrc] holds at least a full YUV420 frame of [width] x [height]
+     * (`width * height * 3 / 2` bytes) before any index-based access, so malformed or
+     * truncated input fails fast with a clear message instead of an
+     * [IndexOutOfBoundsException] deep inside a rotation loop.
+     */
+    private fun requireFullYuv420Frame(yuvSrc: ByteArray, width: Int, height: Int) {
+        require(width > 0 && height > 0) { "Invalid frame size: ${width}x$height" }
+        val expected = width * height * 3 / 2
+        require(yuvSrc.size >= expected) {
+            "YUV data too small: ${yuvSrc.size} bytes, expected at least $expected " +
+                "for ${width}x$height"
+        }
+    }
+
     private fun isImageFormatSupported(image: Image): Boolean {
         when (image.format) {
             ImageFormat.YUV_420_888, ImageFormat.NV21, ImageFormat.YV12 -> return true
@@ -218,6 +233,7 @@ object YuvUtil {
     // The input imageBytes is in YYYYYYYYUVUV(NV12)
     // Return data in YYYYYYYYUVUV(NV12)
     fun rotateYUV420Degree90(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        requireFullYuv420Frame(imageBytes, imageWidth, imageHeight)
         // Rotate the Y luma
         val yuv =
             ByteArray(
@@ -242,6 +258,7 @@ object YuvUtil {
     }
 
     fun rotateYUV420Degree270(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        requireFullYuv420Frame(imageBytes, imageWidth, imageHeight)
         val yuv = ByteArray(imageWidth * imageHeight * 3 / 2) // Rotate the Y luma
         var i = 0
         for (x in imageWidth - 1 downTo 0) {
@@ -269,6 +286,7 @@ object YuvUtil {
         imageWidth: Int,
         imageHeight: Int
     ): ByteArray {
+        requireFullYuv420Frame(imageBytes, imageWidth, imageHeight)
         val yuv = ByteArray(imageWidth * imageHeight * 3 / 2) // Rotate and mirror the Y luma
         var i = 0
         var maxY: Int
@@ -297,6 +315,7 @@ object YuvUtil {
     }
 
     fun rotateYUV420Degree180(imageBytes: ByteArray, imageWidth: Int, imageHeight: Int): ByteArray {
+        requireFullYuv420Frame(imageBytes, imageWidth, imageHeight)
         val yuv = ByteArray(imageWidth * imageHeight * 3 / 2)
         var count = 0
 
@@ -342,6 +361,7 @@ object YuvUtil {
     // Lens back. 90-degree clockwise rotation.
     // Input yuvSrc is in YYYYYYYYUUVV
     fun yuvRotate90(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
+        requireFullYuv420Frame(yuvSrc, width, height)
         val desYuv = ByteArray(width * height * 3 / 2)
 
         var n = 0
@@ -372,11 +392,12 @@ object YuvUtil {
 
     // Lens front. 270-degree clockwise rotation AKA 90-degree anticlockwise rotation
     fun yuvRotate270(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
+        requireFullYuv420Frame(yuvSrc, width, height)
         val desYuv = ByteArray(width * height * 3 / 2)
         var n = 0
         val hw = width / 2
         val hh = height / 2 // copy y
-        for (j in width downTo 1) {
+        for (j in width - 1 downTo 0) {
             for (i in 0 until height) {
                 desYuv[n++] = yuvSrc[width * i + j]
             }
@@ -416,6 +437,7 @@ object YuvUtil {
      * @return The horizontal flipped YUV data
      */
     fun yuvFlipHorizontal(yuvSrc: ByteArray, width: Int, height: Int): ByteArray {
+        requireFullYuv420Frame(yuvSrc, width, height)
         val desYuv = ByteArray(width * height * 3 / 2)
 
         var n = 0

@@ -222,11 +222,7 @@ object H265Util {
                 // 0,0,0,1,28,1,AF,78,CD,3B,31,6,1E,D,6E,C,54,39,B4,3F,C0,9B,EA,7E,28,E6,81,6,7,CF,3
                 // F,B6,EA,E0,90,39,69,B4,B4,80,12,5E,C9,D
                 for (i in 4 until data.size) {
-                    if (data[i].toInt() == 0 &&
-                        data[i + 1].toInt() == 0 &&
-                        data[i + 2].toInt() == 0 &&
-                        data[i + 3].toInt() == 1
-                    ) {
+                    if (CodecUtil.findStartCode(data, i)) {
                         val vps = ByteArray(i)
                         System.arraycopy(data, 0, vps, 0, i)
                         return vps
@@ -401,7 +397,7 @@ object H265Util {
             )
         }
         return if (data[0].toInt() != 0x0 ||
-            data[1].toInt() != 0x0 &&
+            data[1].toInt() != 0x0 ||
             data[2].toInt() != 0x0 ||
             data[3].toInt() != 0x1
         ) {

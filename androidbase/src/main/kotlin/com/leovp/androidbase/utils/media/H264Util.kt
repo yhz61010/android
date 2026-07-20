@@ -167,7 +167,7 @@ object H264Util {
         }
         return if (
             data[0].toInt() != 0x0 ||
-            data[1].toInt() != 0x0 &&
+            data[1].toInt() != 0x0 ||
             data[2].toInt() != 0x0 ||
             data[3].toInt() != 0x1
         ) {

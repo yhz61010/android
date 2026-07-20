@@ -39,7 +39,9 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
         // We listen to two intents. The new outgoing call only tells us of an outgoing call. We use
         // it to get the number.
         if (intent.action == Intent.ACTION_NEW_OUTGOING_CALL) {
-            savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER)
+            synchronized(CallState) {
+                CallState.savedNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER)
+            }
         } else {
             val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
             val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
@@ -78,52 +80,85 @@ abstract class PhoneCallReceiver : BroadcastReceiver() {
     // and finally to IDLE when hung up.
     // Outgoing calls move from IDLE to OFFHOOK when dialing out, then to IDLE when hung up.
     private fun onCallStateChanged(context: Context, state: Int, number: String?) {
-        if (lastState == state) {
-            // No change, debounce extras
-            return
-        }
-        when (state) {
-            TelephonyManager.CALL_STATE_RINGING -> {
-                isIncoming = true
-                callStartTime = Date()
-                savedNumber = number
-                onIncomingCallReceived(context, number, callStartTime)
+        // A device has a single telephony state, but PHONE_STATE broadcasts may be delivered to
+        // freshly created receiver instances (manifest-registered) and possibly on different
+        // threads. Guarding the whole transition on the shared [CallState] monitor keeps the FSM
+        // consistent across instances and threads instead of relying on unsynchronized statics.
+        synchronized(CallState) {
+            if (CallState.lastState == state) {
+                // No change, debounce extras
+                return
             }
-            // Transitions from RINGING to OFFHOOK are pickups of incoming calls. Nothing is done.
-            TelephonyManager.CALL_STATE_OFFHOOK ->
-                if (lastState != TelephonyManager.CALL_STATE_RINGING) {
-                    isIncoming = false
-                    callStartTime = Date()
-                    onOutgoingCallStarted(context, savedNumber, callStartTime)
-                } else {
-                    isIncoming = true
-                    callStartTime = Date()
-                    onIncomingCallAnswered(context, savedNumber, callStartTime)
+            when (state) {
+                TelephonyManager.CALL_STATE_RINGING -> {
+                    CallState.isIncoming = true
+                    CallState.callStartTime = Date()
+                    CallState.savedNumber = number
+                    onIncomingCallReceived(context, number, CallState.callStartTime)
                 }
-            // Went to idle - this is the end of a call.  What type depends on previous state(s)
-            TelephonyManager.CALL_STATE_IDLE ->
-                when {
-                    lastState == TelephonyManager.CALL_STATE_RINGING -> {
-                        // Ring but no pickup - a miss
-                        onMissedCall(context, savedNumber, callStartTime)
+                // Transitions from RINGING to OFFHOOK are pickups of incoming calls.
+                TelephonyManager.CALL_STATE_OFFHOOK ->
+                    if (CallState.lastState != TelephonyManager.CALL_STATE_RINGING) {
+                        CallState.isIncoming = false
+                        CallState.callStartTime = Date()
+                        onOutgoingCallStarted(
+                            context,
+                            CallState.savedNumber,
+                            CallState.callStartTime
+                        )
+                    } else {
+                        CallState.isIncoming = true
+                        CallState.callStartTime = Date()
+                        onIncomingCallAnswered(
+                            context,
+                            CallState.savedNumber,
+                            CallState.callStartTime
+                        )
                     }
-                    isIncoming -> {
-                        onIncomingCallEnded(context, savedNumber, callStartTime, Date())
+                // Went to idle - end of a call. What type depends on previous state(s).
+                TelephonyManager.CALL_STATE_IDLE ->
+                    when {
+                        CallState.lastState == TelephonyManager.CALL_STATE_RINGING -> {
+                            // Ring but no pickup - a miss
+                            onMissedCall(context, CallState.savedNumber, CallState.callStartTime)
+                        }
+                        CallState.isIncoming -> {
+                            onIncomingCallEnded(
+                                context,
+                                CallState.savedNumber,
+                                CallState.callStartTime,
+                                Date()
+                            )
+                        }
+                        else -> {
+                            onOutgoingCallEnded(
+                                context,
+                                CallState.savedNumber,
+                                CallState.callStartTime,
+                                Date()
+                            )
+                        }
                     }
-                    else -> {
-                        onOutgoingCallEnded(context, savedNumber, callStartTime, Date())
-                    }
-                }
+            }
+            CallState.lastState = state
         }
-        lastState = state
     }
 
     companion object {
         private const val TAG = "PCR"
-        private var lastState = TelephonyManager.CALL_STATE_IDLE
-        private var callStartTime: Date? = null
-        private var isIncoming = false
-        private var savedNumber: String? =
-            null // because the passed incoming is only valid in ringing
+    }
+
+    /**
+     * Thread-safe holder for the shared phone-call FSM state. Kept as a single process-wide
+     * holder (rather than per-receiver-instance fields) so state survives across the separate
+     * broadcasts that make up one call, and mutated only under `synchronized(CallState)`.
+     */
+    private object CallState {
+        var lastState = TelephonyManager.CALL_STATE_IDLE
+        var callStartTime: Date? = null
+        var isIncoming = false
+
+        // The passed incoming number is only valid while ringing, so it is cached here.
+        var savedNumber: String? = null
     }
 }

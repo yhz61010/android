@@ -54,10 +54,13 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * `/Settings/src/com/android/settings/bluetooth/CachedBluetoothDevice.java`
      */
-    fun createBond(bluetoothDeviceClass: Class<*>, btDevice: BluetoothDevice?): Boolean {
-        val createBondMethod = bluetoothDeviceClass.getMethod("createBond")
-        return createBondMethod.invoke(btDevice) as Boolean
-    }
+    fun createBond(bluetoothDeviceClass: Class<*>, btDevice: BluetoothDevice?): Boolean =
+        runCatching {
+            bluetoothDeviceClass.getMethod("createBond").invoke(btDevice) as Boolean
+        }.getOrElse {
+            LogContext.log.e(ITAG, "createBond error", it)
+            false
+        }
 
     /**
      * Remove bond
@@ -66,9 +69,12 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
      *
      * /Settings/src/com/android/settings/bluetooth/CachedBluetoothDevice.java
      */
-    fun removeBond(bluetoothClass: Class<*>, btDevice: BluetoothDevice?): Boolean {
+    fun removeBond(bluetoothClass: Class<*>, btDevice: BluetoothDevice?): Boolean = runCatching {
         val removeBondMethod: Method = bluetoothClass.getMethod("removeBond")
-        return removeBondMethod.invoke(btDevice) as Boolean
+        removeBondMethod.invoke(btDevice) as Boolean
+    }.getOrElse {
+        LogContext.log.e(ITAG, "removeBond error", it)
+        false
     }
 
     /**
@@ -92,30 +98,40 @@ class BluetoothUtil private constructor(private val bluetoothAdapter: BluetoothA
     /**
      * Cancel input
      */
-    fun cancelPairingUserInput(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean {
-        val createBondMethod = bluetoothClass.getMethod("cancelPairingUserInput")
-        // cancelBondProcess(bluetoothClass, device)
-        return createBondMethod.invoke(device) as Boolean
-    }
+    fun cancelPairingUserInput(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean =
+        runCatching {
+            // cancelBondProcess(bluetoothClass, device)
+            bluetoothClass.getMethod("cancelPairingUserInput").invoke(device) as Boolean
+        }.getOrElse {
+            LogContext.log.e(ITAG, "cancelPairingUserInput error", it)
+            false
+        }
 
     /**
      * Cancel bond
      */
-    fun cancelBondProcess(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean {
-        val createBondMethod = bluetoothClass.getMethod("cancelBondProcess")
-        return createBondMethod.invoke(device) as Boolean
-    }
+    fun cancelBondProcess(bluetoothClass: Class<*>, device: BluetoothDevice?): Boolean =
+        runCatching {
+            bluetoothClass.getMethod("cancelBondProcess").invoke(device) as Boolean
+        }.getOrElse {
+            LogContext.log.e(ITAG, "cancelBondProcess error", it)
+            false
+        }
 
     /**
      *  Confirm pairing
      */
-    fun setPairingConfirmation(btClass: Class<*>, device: BluetoothDevice?, isConfirm: Boolean) {
-        val setPairingConfirmation =
-            btClass.getDeclaredMethod(
-                "setPairingConfirmation",
-                Boolean::class.javaPrimitiveType
-            )
-        setPairingConfirmation.invoke(device, isConfirm)
+    fun setPairingConfirmation(
+        btClass: Class<*>,
+        device: BluetoothDevice?,
+        isConfirm: Boolean
+    ): Boolean = runCatching {
+        btClass.getDeclaredMethod("setPairingConfirmation", Boolean::class.javaPrimitiveType)
+            .invoke(device, isConfirm)
+        true
+    }.getOrElse {
+        LogContext.log.e(ITAG, "setPairingConfirmation error", it)
+        false
     }
 
     fun printAllInformation(clsShow: Class<*>) {

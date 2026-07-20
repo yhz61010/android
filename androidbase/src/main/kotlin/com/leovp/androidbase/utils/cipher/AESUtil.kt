@@ -370,6 +370,13 @@ object AESUtil {
      *
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
+     * @param useSHA512 affects ONLY the deprecated legacy decrypt path (selecting the SHA-512 vs
+     * SHA-1 legacy derivation on API 26+); it has no effect on the new AES-GCM format, whose KDF
+     * is chosen by the recorded version byte.
+     *
+     * Note: each call runs a full-strength PBKDF2 derivation (hundreds of thousands of rounds).
+     * That is intentional, but avoid calling this in a tight loop over attacker-supplied blobs;
+     * for known new-format data that must fail on tampering, prefer [decryptStrict].
      */
     @Suppress("DEPRECATION")
     fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
@@ -381,6 +388,23 @@ object AESUtil {
             runCatching { return decryptGcm(cipherBytes, secKey) }
         }
         return legacyDecrypt(cipherBytes, secKey, useSHA512)
+    }
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     * Throws [IllegalArgumentException] if the input is not the AES-GCM format, or a
+     * [javax.crypto.AEADBadTagException] if authentication fails.
+     *
+     * Prefer this over [decrypt] whenever the data is known to be in the new format and you want
+     * tamper detection rather than the lenient legacy fallback.
+     */
+    fun decryptStrict(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
+        val version: Byte? = cipherBytes.firstOrNull()
+        require(version == VERSION_GCM_SHA256 || version == VERSION_GCM_SHA1) {
+            "Not the AES-GCM format: unexpected leading version byte."
+        }
+        return decryptGcm(cipherBytes, secKey)
     }
 
     private fun decryptGcm(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {

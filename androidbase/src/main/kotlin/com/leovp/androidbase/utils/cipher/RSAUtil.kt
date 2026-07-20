@@ -6,9 +6,11 @@ import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.RSAUtil.getKeyPair
 import com.leovp.bytes.toHexString
+import java.io.ByteArrayOutputStream
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
+import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
@@ -34,14 +36,19 @@ object RSAUtil {
      *
      * It's better not to use **RSA/ECB/PKCS1Padding**.
      */
-    private const val CIPHER_TRANSFORMATION = "RSA"
+    private const val CIPHER_TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"
 
-    // private val sp = OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA1,
-    // PSource.PSpecified.DEFAULT)
+    /** Key algorithm for [KeyFactory] / [KeyPairGenerator] — must stay the bare "RSA". */
+    private const val KEY_ALGORITHM = "RSA"
+
+    /** Digital signature algorithm: SHA-256 digest signed with RSA. */
+    private const val SIGN_ALGORITHM = "SHA256withRSA"
 
     // The RSA key MUST BE 2048 bits or higher.
     private const val KEY_SIZE = 2048
-    private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 11
+
+    // OAEP-SHA256 overhead: 2 * hLen (32) + 2 bytes. For a 2048-bit key: 256 - 66 = 190.
+    private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 2 * 32 - 2
     private const val MAX_DECRYPT_LEN = KEY_SIZE / 8
 
     fun getKeyPair(): KeyPair =
@@ -98,7 +105,7 @@ object RSAUtil {
      */
     fun encrypt(encodedPubKey: ByteArray, plainData: ByteArray): ByteArray? = runCatching {
         val spec = X509EncodedKeySpec(encodedPubKey)
-        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val factory = KeyFactory.getInstance(KEY_ALGORITHM)
         val pubKey = factory.generatePublic(spec)
         cipherDoFinal(Cipher.ENCRYPT_MODE, pubKey, plainData)
     }.getOrNull()
@@ -121,7 +128,7 @@ object RSAUtil {
      */
     fun decrypt(encodedPriKey: ByteArray, encryptedData: ByteArray?): ByteArray? = runCatching {
         val spec = PKCS8EncodedKeySpec(encodedPriKey)
-        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
+        val factory = KeyFactory.getInstance(KEY_ALGORITHM)
         val priKey = factory.generatePrivate(spec)
         cipherDoFinal(Cipher.DECRYPT_MODE, priKey, encryptedData)
     }.getOrNull()
@@ -129,7 +136,8 @@ object RSAUtil {
     // ----------
 
     /**
-     * Signature will encrypt data by private key which can get from [getKeyPair] method.
+     * Create a real RSA digital signature ([SIGN_ALGORITHM]) over [plainText] using the
+     * private key from [getKeyPair].
      *
      * Example:
      * ```
@@ -137,61 +145,48 @@ object RSAUtil {
      * val priKey = keyPair.private.encoded
      * val pubKey = keyPair.public.encoded
      *
-     * val encrypted = RSAUtil.sign(priKey, plainText)!!
-     * val encryptedStr = encrypted.toHexStringLE(true, "")
-     *
-     * val decryptBytes = RSAUtil.verify(pubKey, encrypted)
-     * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
+     * val signature = RSAUtil.sign(priKey, plainText)!!
+     * val valid = RSAUtil.verify(pubKey, plainText.toByteArray(), signature)
      * ```
      */
     fun sign(encodedPriKey: ByteArray, plainText: String): ByteArray? =
         sign(encodedPriKey, plainText.toByteArray())
 
     /**
-     * Signature will encrypt data by private key which can get from [getKeyPair] method.
-     *
-     * Example:
-     * ```
-     * val keyPair = RSAUtil.getKeyPair()
-     * val priKey = keyPair.private.encoded
-     * val pubKey = keyPair.public.encoded
-     *
-     * val encrypted = RSAUtil.sign(priKey, plainData)!!
-     * val encryptedStr = encrypted.toHexStringLE(true, "")
-     *
-     * val decryptBytes = RSAUtil.verify(pubKey, encrypted)
-     * val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
-     * ```
+     * Create a real RSA digital signature ([SIGN_ALGORITHM]) over [data] using the private
+     * key from [getKeyPair]. Returns `null` if signing fails.
      */
-    fun sign(encodedPriKey: ByteArray, plainData: ByteArray): ByteArray? = runCatching {
-        val spec = PKCS8EncodedKeySpec(encodedPriKey)
-        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-        val priKey = factory.generatePrivate(spec)
-        cipherDoFinal(Cipher.ENCRYPT_MODE, priKey, plainData)
+    fun sign(encodedPriKey: ByteArray, data: ByteArray): ByteArray? = runCatching {
+        val priKey = KeyFactory.getInstance(KEY_ALGORITHM)
+            .generatePrivate(PKCS8EncodedKeySpec(encodedPriKey))
+        Signature.getInstance(SIGN_ALGORITHM).run {
+            initSign(priKey)
+            update(data)
+            sign()
+        }
     }.getOrNull()
 
     /**
-     * Signature will decrypt data by public key which can get from [getKeyPair] method.
+     * Verify an RSA digital signature ([SIGN_ALGORITHM]) produced by [sign].
      *
-     * Example:
-     * ```
-     * val keyPair = RSAUtil.getKeyPair()
-     * val priKey = keyPair.private.encoded
-     * val pubKey = keyPair.public.encoded
-     *
-     * val encrypted = RSAUtil.encrypt(pubKey, plainText)!!
-     * val encryptedStr = encrypted.toHexStringLE(true, "")
-     *
-     * val decryptBytes = RSAUtil.decrypt(priKey, encrypted)
-     * val decryptString = RSAUtil.decrypt(priKey, encryptedStr.hexToByteArray())
-     * ```
+     * @param encodedPubKey The public key from [getKeyPair].
+     * @param data The original signed data.
+     * @param signature The signature bytes to verify.
+     * @return `true` only when [signature] is a valid signature of [data]; `false` otherwise.
      */
-    fun verify(encodedPubKey: ByteArray, encryptedData: ByteArray?): ByteArray? = runCatching {
-        val spec = X509EncodedKeySpec(encodedPubKey)
-        val factory = KeyFactory.getInstance(CIPHER_TRANSFORMATION)
-        val pubKey = factory.generatePublic(spec)
-        cipherDoFinal(Cipher.DECRYPT_MODE, pubKey, encryptedData)
-    }.getOrNull()
+    fun verify(
+        encodedPubKey: ByteArray,
+        data: ByteArray,
+        signature: ByteArray
+    ): Boolean = runCatching {
+        val pubKey = KeyFactory.getInstance(KEY_ALGORITHM)
+            .generatePublic(X509EncodedKeySpec(encodedPubKey))
+        Signature.getInstance(SIGN_ALGORITHM).run {
+            initVerify(pubKey)
+            update(data)
+            verify(signature)
+        }
+    }.getOrDefault(false)
 
     // =====
 
@@ -206,33 +201,38 @@ object RSAUtil {
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
+     *
+     * The plain text is fragmented by **bytes** (not characters) so multi-byte UTF-8
+     * characters are never split in a way that exceeds [MAX_ENCRYPT_LEN]. Each fragment's
+     * hex is joined with a newline separator.
      */
-    fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? =
-        if (plainText.length > MAX_ENCRYPT_LEN) {
-            val str1 = plainText.substring(0, MAX_ENCRYPT_LEN)
-            val str2 = plainText.substring(MAX_ENCRYPT_LEN)
-            """
-     |${encrypt(pubKey, str1)?.toHexString(true, "")}
-     |${encryptStringByFragment(pubKey, str2)}
-            """.trimMargin()
-        } else {
-            encrypt(pubKey, plainText)?.toHexString(true, "")
+    fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? = runCatching {
+        val bytes: ByteArray = plainText.toByteArray()
+        val sb = StringBuilder()
+        var offset = 0
+        while (offset < bytes.size) {
+            val end = minOf(offset + MAX_ENCRYPT_LEN, bytes.size)
+            val chunk = bytes.copyOfRange(offset, end)
+            val encHex = encrypt(pubKey, chunk)?.toHexString(true, "") ?: return null
+            if (sb.isNotEmpty()) sb.append('\n')
+            sb.append(encHex)
+            offset = end
         }
+        sb.toString()
+    }.getOrNull()
 
     /**
      * Decrypt by private key which can get from [getKeyPair] method.
+     *
+     * The decrypted bytes of every fragment are reassembled first and decoded to a String
+     * only once, so multi-byte characters split across fragments are reconstructed correctly.
      */
     fun decryptStringByFragment(priKey: ByteArray, encryptedText: String): String? = runCatching {
-        val result = StringBuilder()
-        val configParts = encryptedText.split('\n')
-        var decryptedStr: String?
-        for (part in configParts) {
-            decryptedStr = decrypt(priKey, part.hexToByteArray())?.decodeToString()
-            if (decryptedStr == null) {
-                return null
-            }
-            result.append(decryptedStr)
+        val out = ByteArrayOutputStream()
+        for (part in encryptedText.split('\n')) {
+            val decrypted = decrypt(priKey, part.hexToByteArray()) ?: return null
+            out.write(decrypted)
         }
-        result.toString()
+        out.toByteArray().decodeToString()
     }.getOrNull()
 }

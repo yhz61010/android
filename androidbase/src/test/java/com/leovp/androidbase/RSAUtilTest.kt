@@ -6,6 +6,8 @@ import com.leovp.androidbase.utils.cipher.RSAUtil
 import com.leovp.bytes.toHexString
 import kotlin.test.assertContentEquals
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.powermock.core.classloader.annotations.PrepareForTest
@@ -67,22 +69,17 @@ class RSAUtilTest {
         val keyPair = RSAUtil.getKeyPair()
         val priKey = keyPair.private.encoded
         val pubKey = keyPair.public.encoded
-        // println("private key=${priKey.toHexStringLE(true, "")}")
-        // println("public  key=${pubKey.toHexStringLE(true, "")}")
 
-        val encrypted = RSAUtil.sign(priKey, plainText)!!
-        val encryptedStr = encrypted.toHexString(true, "")
-        // println("encrypted=$encryptedStr")
+        val signature = RSAUtil.sign(priKey, plainText)!!
 
-        val decryptBytes = RSAUtil.verify(pubKey, encrypted)
-        // println("decrypted  bytes=${decryptedBytes?.decodeToString()}")
-        val decryptString = RSAUtil.verify(pubKey, encryptedStr.hexToByteArray())
-        // println("decrypted string=${decryptedString?.decodeToString()}")
+        // A valid signature over the original data verifies as true.
+        assertTrue(RSAUtil.verify(pubKey, plainText.toByteArray(), signature))
 
-        assertEquals(plainText, decryptBytes?.decodeToString())
-        assertEquals(plainText, decryptString?.decodeToString())
+        // Tampered data must not verify against the original signature.
+        assertFalse(RSAUtil.verify(pubKey, "I have a scheme.".toByteArray(), signature))
 
-        // assertContentEquals(plainBytes, RSAUtil.verify(priKey, RSAUtil.sign(pubKey,
-        // plainBytes)!!))
+        // A tampered signature must not verify either.
+        val tamperedSignature = signature.copyOf().also { it[0] = (it[0] + 1).toByte() }
+        assertFalse(RSAUtil.verify(pubKey, plainText.toByteArray(), tamperedSignature))
     }
 }

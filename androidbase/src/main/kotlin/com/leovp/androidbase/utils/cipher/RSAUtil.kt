@@ -4,7 +4,6 @@ package com.leovp.androidbase.utils.cipher
 
 import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.androidbase.utils.cipher.RSAUtil.getKeyPair
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.io.ByteArrayOutputStream
@@ -12,9 +11,12 @@ import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.Signature
+import java.security.spec.MGF1ParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
+import javax.crypto.spec.OAEPParameterSpec
+import javax.crypto.spec.PSource
 
 /**
  * The RSA key MUST BE 2048 bits or higher.
@@ -52,7 +54,18 @@ object RSAUtil {
 
     // OAEP-SHA256 overhead: 2 * hLen (32) + 2 bytes. For a 2048-bit key: 256 - 66 = 190.
     private const val MAX_ENCRYPT_LEN = KEY_SIZE / 8 - 2 * 32 - 2
-    private const val MAX_DECRYPT_LEN = KEY_SIZE / 8
+
+    /**
+     * Explicit OAEP parameters so BOTH the primary digest and the MGF1 mask digest are SHA-256.
+     * The transformation string alone leaves MGF1 at its SHA-1 default on standard JCA providers,
+     * which is a config mismatch and an interop hazard.
+     */
+    private val OAEP_SPEC = OAEPParameterSpec(
+        "SHA-256",
+        "MGF1",
+        MGF1ParameterSpec.SHA256,
+        PSource.PSpecified.DEFAULT
+    )
 
     fun getKeyPair(): KeyPair =
         KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
@@ -193,7 +206,7 @@ object RSAUtil {
     private fun cipherDoFinal(opmode: Int, key: java.security.Key, data: ByteArray?): ByteArray? =
         runCatching {
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(opmode, key)
+            cipher.init(opmode, key, OAEP_SPEC)
             cipher.doFinal(data)
         }.onFailure { LogContext.log.e(TAG, "cipherDoFinal error", it) }.getOrNull()
 

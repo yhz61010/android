@@ -324,6 +324,9 @@ object AESUtil {
 
         val cipherBytes: ByteArray = Cipher.getInstance(CIPHER_GCM).run {
             init(Cipher.ENCRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+            // Authenticate the non-secret framing (version + salt) so it cannot be tampered
+            // with independently of the ciphertext.
+            updateAAD(byteArrayOf(version) + salt)
             doFinal(plainData)
         }
         return byteArrayOf(version) + salt + iv + cipherBytes
@@ -391,6 +394,8 @@ object AESUtil {
         val rawKey: SecretKey = deriveKey(secKey.toHexString(true, ""), salt, useSha256)
         return Cipher.getInstance(CIPHER_GCM).run {
             init(Cipher.DECRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+            // Must match the AAD bound at encryption time: version byte + salt.
+            updateAAD(byteArrayOf(cipherBytes[0]) + salt)
             doFinal(ct)
         }
     }
@@ -408,10 +413,20 @@ object AESUtil {
         val salt: ByteArray = cipherBytes.copyOfRange(0, LEGACY_PRE_SALT_LENGTH)
         val oriCipherBytes: ByteArray =
             cipherBytes.copyOfRange(LEGACY_PRE_SALT_LENGTH, cipherBytes.size)
+        // Reproduce the original legacy derivation: 1000 iterations. Must pass this explicitly
+        // now that the SHA512/SHA1 overloads default to the higher OWASP iteration counts.
         val rawKey: SecretKey = if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PBKDF2Util.generateKeyWithSHA512(secKey.toHexString(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA512(
+                secKey.toHexString(true, ""),
+                salt,
+                PBKDF2Util.ITERATIONS_LEGACY
+            )
         } else {
-            PBKDF2Util.generateKeyWithSHA1(secKey.toHexString(true, ""), salt)
+            PBKDF2Util.generateKeyWithSHA1(
+                secKey.toHexString(true, ""),
+                salt,
+                PBKDF2Util.ITERATIONS_LEGACY
+            )
         }
         return Cipher.getInstance(CIPHER_AES_LEGACY).run {
             init(Cipher.DECRYPT_MODE, rawKey, IvParameterSpec(ByteArray(blockSize)))

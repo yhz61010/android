@@ -15,20 +15,34 @@ import com.leovp.log.LogContext
 object DeviceSound {
     private const val TAG = "DeviceSound"
 
+    // Reuse a single MediaActionSound instance (load once, play many) instead of allocating a
+    // new native object per call and leaking it. Call [release] when the sounds are no longer
+    // needed (e.g. when the camera screen is torn down).
+    private var actionSound: MediaActionSound? = null
+
+    private fun actionSound(): MediaActionSound =
+        actionSound ?: MediaActionSound().also { actionSound = it }
+
     fun playShutterClick() {
-        MediaActionSound().play(MediaActionSound.SHUTTER_CLICK)
+        actionSound().play(MediaActionSound.SHUTTER_CLICK)
     }
 
     fun playFocusComplete() {
-        MediaActionSound().play(MediaActionSound.FOCUS_COMPLETE)
+        actionSound().play(MediaActionSound.FOCUS_COMPLETE)
     }
 
     fun playStartVideoRecording() {
-        MediaActionSound().play(MediaActionSound.START_VIDEO_RECORDING)
+        actionSound().play(MediaActionSound.START_VIDEO_RECORDING)
     }
 
     fun playStopVideoRecording() {
-        MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
+        actionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
+    }
+
+    /** Release the shared [MediaActionSound] and its native resources. */
+    fun release() {
+        actionSound?.release()
+        actionSound = null
     }
 
     fun playDefaultNotification(ctx: Context) {

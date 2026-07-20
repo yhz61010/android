@@ -70,9 +70,12 @@ object CameraUtil {
             //            cropIntent.putExtra("outputY", 256);
             //            //retrieve data on return
             //            cropIntent.putExtra("return-data", true);
-            // You must grant read uri permission. Or else app will be crashed.
+            // You must grant read (and write, for the output) uri permission, or the crop app
+            // will be unable to read the source / write the cropped result.
             // start the activity - we handle returning in onActivityResult
-            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            cropIntent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
             //             startActivityForResult(cropIntent, PIC_CROP);
             val croppedImageFile = ctx.createImageFile("jpg")
             LogContext.log.w(
@@ -81,13 +84,20 @@ object CameraUtil {
             ) //            boolean deleteFlag = imageFile.delete();
             //            LogContext.log.w(TAG, "deleteFlag=" + deleteFlag);
 
-            // Only Uri#fromeFile can be used for cropping output Uri.
-            // You CAN NOT use FileProvider.getUriForFile
+            // Crop apps historically require a file:// output Uri; many reject a content://
+            // (FileProvider) output, so we deliberately do NOT use FileProvider here.
+            // WARNING: on API 24+, passing a file:// Uri to another app can raise
+            // FileUriExposedException under StrictMode. This path needs on-device verification
+            // against the target crop app before any switch to FileProvider.
             croppedImageUri = Uri.fromFile(croppedImageFile)
             cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, croppedImageUri)
             ctx.startActivityForResult(cropIntent, REQUEST_CODE_CAMERA_CROP)
         } catch (e: ActivityNotFoundException) {
+            LogContext.log.e(TAG, "performCrop: no crop activity available", e)
+        } catch (e: Exception) {
+            // e.g. FileUriExposedException from the file:// output on API 24+.
             LogContext.log.e(TAG, "performCrop error", e)
+            croppedImageUri = null
         }
         return croppedImageUri
     }

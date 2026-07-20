@@ -6,7 +6,7 @@
   - [`2026-07-17-androidbase-code-review-zh.md`](./2026-07-17-androidbase-code-review-zh.md)（原始审查）
   - [`2026-07-17-androidbase-fix-plan-zh.md`](./2026-07-17-androidbase-fix-plan-zh.md)（修改方案）
   - [`2026-07-20-androidbase-cipher-security-review-zh.md`](./2026-07-20-androidbase-cipher-security-review-zh.md)（cipher 复核报告）
-- **状态：** `fix/androidbase-security-review` 分支既有安全修复 + Codex 复核后续修复（`c7e17f9db`）均已提交并推送到远端；最新一轮 review 后续修复（PBKDF2 SHA256 fallback 派发收窄，`4d44fe4d4`）已本地提交，**尚未推送**。
+- **状态：** `fix/androidbase-security-review` 分支的全部安全审查/修复提交（含 Codex 后续修复 `c7e17f9db` 与 PBKDF2 fallback 派发收窄 `4d44fe4d4`）均已提交并推送到远端。
 
 ---
 
@@ -14,7 +14,7 @@
 
 | # | 事项 | 状态 | 说明 |
 |---|------|------|------|
-| 1 | 推送最新本地提交 | ⏳ 待办 | Codex 复核修复已推送；仅 `4d44fe4d4`（fallback 派发收窄）待推送 |
+| 1 | 推送提交到远端 | ✅ 已完成 | 分支全部安全修复提交（至 `4d44fe4d4`）已推送 |
 | 2 | 主版本号 bump | ⏳ 待办 | 本次含破坏性变更（见 §2），应升主版本 |
 | 3 | 编写 CHANGELOG / 迁移说明 | ⏳ 待办 | 可直接引用本文 §2/§3 |
 | 4 | 修正 `staticCheck` | ⏳ 待办 | 依赖不存在的 `:app` 模块，见 §5 |
@@ -24,14 +24,9 @@
 
 ## 1. 推送状态
 
-`fix/androidbase-security-review` 分支上的既有安全修复提交，以及 Codex 复核后续修复（AES 跨 API SHA256 KDF、CrashHandler 重复初始化递归、RSA 空字符串分片，提交 `c7e17f9db`）均已推送到远端。仅最新一轮 review 后续修复（PBKDF2 SHA256 fallback 派发收窄 + DRY + 测试，提交 `4d44fe4d4`）为本地提交，尚未推送。
+`fix/androidbase-security-review` 分支的全部安全审查/修复提交（至 `4d44fe4d4`）均已推送到 `origin`，本地与远端一致。
 
-后续推送如需重新认证，请注意：
-
-1. 之前用于推送的 PAT 已在会话中暴露、应视为泄露，**须到 https://github.com/settings/tokens 撤销**。
-2. 本机存储凭据（leizhiliang）对 `yhz61010/android` **无写权限**。
-
-推送时请提供有效写权限凭据并明确授权。
+> 安全备注：此前会话中暴露过的 PAT 应视为泄露，若仍有效**须到 https://github.com/settings/tokens 撤销**。
 
 ---
 

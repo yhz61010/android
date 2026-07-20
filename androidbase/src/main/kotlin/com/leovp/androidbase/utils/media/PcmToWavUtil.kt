@@ -165,7 +165,7 @@ object PcmToWavUtil {
             // SUB CHUNK 2 (AUDIO DATA)
             writeToOutput(encoded, "data") // subchunk 2 id
             writeToOutput(encoded, inputSize) // subchunk 2 size
-            copy(FileInputStream(srcPcmFile), encoded)
+            FileInputStream(srcPcmFile).use { copy(it, encoded) }
         }
     }
 

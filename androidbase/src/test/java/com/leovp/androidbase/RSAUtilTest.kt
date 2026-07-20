@@ -65,6 +65,17 @@ class RSAUtilTest {
         assertEquals(longPlainText, decryptedStr)
     }
 
+    @Test fun `fragment round-trips empty string`() {
+        val keyPair = RSAUtil.getKeyPair()
+        val priKey = keyPair.private.encoded
+        val pubKey = keyPair.public.encoded
+
+        val encryptedStr = RSAUtil.encryptStringByFragment(pubKey, "")
+        val decryptedStr = RSAUtil.decryptStringByFragment(priKey, encryptedStr!!)
+
+        assertEquals("", decryptedStr)
+    }
+
     @Test fun signAndVerify() {
         val keyPair = RSAUtil.getKeyPair()
         val priKey = keyPair.private.encoded

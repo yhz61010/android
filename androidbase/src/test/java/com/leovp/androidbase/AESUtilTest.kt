@@ -1,10 +1,15 @@
 package com.leovp.androidbase
 
 import com.leovp.androidbase.utils.cipher.AESUtil
+import com.leovp.androidbase.utils.cipher.PBKDF2Util
+import com.leovp.bytes.toHexString
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import javax.crypto.Cipher
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Author: Michael Leo
@@ -63,6 +68,30 @@ class AESUtilTest {
         val data = "strict payload 严格".toByteArray()
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
 
+        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
+
+        assertTrue(data.contentEquals(decrypted))
+    }
+
+    @Test fun `decryptStrict reads SHA256 version data when SDK is below O`() {
+        val data = "sha256 version payload".toByteArray()
+        val salt = ByteArray(16) { it.toByte() }
+        val iv = ByteArray(12) { (it + 16).toByte() }
+        val version = 0x01.toByte()
+        val passphrase = secKey.toByteArray().toHexString(true, "")
+        val derived = PBKDF2Util
+            .generateKeyWithSHA256(passphrase, salt, PBKDF2Util.ITERATIONS_SHA256)
+            .encoded
+
+        val cipherText = Cipher.getInstance("AES/GCM/NoPadding").run {
+            init(Cipher.ENCRYPT_MODE, SecretKeySpec(derived, "AES"), GCMParameterSpec(128, iv))
+            updateAAD(byteArrayOf(version) + salt)
+            doFinal(data)
+        }
+        val encrypted = byteArrayOf(version) + salt + iv + cipherText
+
+        // JVM unit tests have Build.VERSION.SDK_INT == 0, matching the API 21-25 branch.
+        // Version 0x01 must still select SHA256, not silently fall back to SHA1.
         val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))

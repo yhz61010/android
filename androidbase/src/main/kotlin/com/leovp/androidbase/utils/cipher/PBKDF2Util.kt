@@ -6,9 +6,11 @@ import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
 import com.leovp.android.utils.API
 import java.security.SecureRandom
+import javax.crypto.Mac
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * - PBKDF(Password-based-Key-Derivative-Function, a successor of PBKDF1)
@@ -35,11 +37,8 @@ object PBKDF2Util {
      */
     private const val ALGORITHM_SHA512 = "PBKDF2WithHmacSHA512"
 
-    /**
-     * PBKDF2WithHmacSHA256 is only guaranteed since Android 8.0 (Oreo), API level 26,
-     * the same constraint that applies to [ALGORITHM_SHA512].
-     */
     private const val ALGORITHM_SHA256 = "PBKDF2WithHmacSHA256"
+    private const val HMAC_SHA256 = "HmacSHA256"
 
     private const val DEFAULT_SALT_LENGTH = 32
 
@@ -187,7 +186,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: CharArray,
         salt: ByteArray,
@@ -205,7 +203,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: CharArray,
         salt: String,
@@ -222,7 +219,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: String,
         salt: String,
@@ -239,7 +235,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: String,
         salt: ByteArray,
@@ -256,7 +251,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: CharArray,
         saltLength: Int = DEFAULT_SALT_LENGTH,
@@ -273,7 +267,6 @@ object PBKDF2Util {
      * @return The generated SecretKey. If you just want to get the result in ByteArray, just call
      * [SecretKey#encoded]
      */
-    @RequiresApi(api = API.O)
     fun generateKeyWithSHA256(
         plainPassphrase: String,
         saltLength: Int = DEFAULT_SALT_LENGTH,
@@ -425,10 +418,71 @@ object PBKDF2Util {
 
         // PBKDF2WithHmacSHA1
         // PBKDF2WithHmacSHA512
-        val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
-        val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-        return secretKeyFactory.generateSecret(keySpec)
+        return runCatching {
+            val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
+            val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
+            secretKeyFactory.generateSecret(keySpec)
+        }.getOrElse {
+            if (algorithm != ALGORITHM_SHA256) throw it
+            SecretKeySpec(
+                pbkdf2HmacSha256Fallback(
+                    plainPassphrase,
+                    salt,
+                    iterations,
+                    outputKeyLengthInBits
+                ),
+                ALGORITHM_SHA256
+            )
+        }
     }
+
+    /**
+     * Standard PBKDF2-HMAC-SHA256 fallback for Android API 21-25, where
+     * SecretKeyFactory may not expose PBKDF2WithHmacSHA256 but HmacSHA256 is available.
+     */
+    private fun pbkdf2HmacSha256Fallback(
+        plainPassphrase: CharArray,
+        salt: ByteArray,
+        iterations: Int,
+        outputKeyLengthInBits: Int
+    ): ByteArray {
+        require(iterations > 0) { "iterations must be positive" }
+        require(outputKeyLengthInBits > 0 && outputKeyLengthInBits % 8 == 0) {
+            "outputKeyLengthInBits must be a positive multiple of 8"
+        }
+
+        val passwordBytes = String(plainPassphrase).toByteArray(Charsets.UTF_8)
+        val mac = Mac.getInstance(HMAC_SHA256)
+        mac.init(SecretKeySpec(passwordBytes, HMAC_SHA256))
+        passwordBytes.fill(0)
+
+        val hLen = mac.macLength
+        val dkLen = outputKeyLengthInBits / 8
+        val blocks = (dkLen + hLen - 1) / hLen
+        val output = ByteArray(blocks * hLen)
+
+        for (blockIndex in 1..blocks) {
+            val block = intToBigEndian(blockIndex)
+            mac.update(salt)
+            var u = mac.doFinal(block)
+            val t = u.copyOf()
+            repeat(iterations - 1) {
+                u = mac.doFinal(u)
+                for (i in t.indices) {
+                    t[i] = (t[i].toInt() xor u[i].toInt()).toByte()
+                }
+            }
+            System.arraycopy(t, 0, output, (blockIndex - 1) * hLen, hLen)
+        }
+        return output.copyOf(dkLen)
+    }
+
+    private fun intToBigEndian(value: Int): ByteArray = byteArrayOf(
+        (value ushr 24).toByte(),
+        (value ushr 16).toByte(),
+        (value ushr 8).toByte(),
+        value.toByte()
+    )
 
     // =====================================
 

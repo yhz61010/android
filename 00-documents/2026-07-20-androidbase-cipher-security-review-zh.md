@@ -73,16 +73,16 @@
 
 ## 待办清单（发版前评估）
 
-> **处理进度（提交 `a655446ca`）：** H1、M2、M3、LOW-3、LOW-4 已修复；M1、LOW-1/2/5 作为已记录的既定取舍/确认类保留。
+> **处理进度：** 提交 `a655446ca`（H1/M2/M3/LOW-3/LOW-4）与 `a6c307f83`（M1/LOW-1/LOW-2）已修复/处理全部条目；LOW-5 经确认为可接受，无需改代码。
 
 | 编号 | 严重度 | 摘要 | 状态 |
 |------|--------|------|------|
 | H1 | HIGH | PBKDF2Util SHA512/SHA1 公共重载默认迭代太低 | ✅ 已修：默认改 OWASP 常量，新增 `ITERATIONS_LEGACY`，legacyDecrypt 显式传 1000，加回归测试 |
-| M1 | MEDIUM | GCM 失败回落 legacy 的完整性 gap | 🔸 保留：已测试的既定取舍（M2 后 version/salt 篡改已被 AAD 拒绝） |
+| M1 | MEDIUM | GCM 失败回落 legacy 的完整性 gap | ✅ 已处理：新增 `decryptStrict()`（永不回落、认证失败即抛）；`decrypt()` 保留兼容回落。M2 后 version/salt 篡改已被 AAD 拒绝 |
 | M2 | MEDIUM | version/salt 未作 AAD | ✅ 已修：encrypt/decrypt 两侧 `updateAAD(version‖salt)`（新格式未发版，无兼容影响） |
 | M3 | MEDIUM | OAEP MGF1 默认 SHA-1 与主哈希 SHA-256 不一致 | ✅ 已修：显式 `OAEPParameterSpec(SHA-256/MGF1-SHA256)`（OAEP-SHA256 未发版，无兼容影响） |
-| LOW-1 | LOW | 每次调用重跑满强度 PBKDF2 | 🔸 保留：性能/本地 DoS 提示，未改行为 |
-| LOW-2 | LOW | `useSHA512` 参数易误读 | 🔸 保留：仍被 legacy 路径使用，迁移后再 deprecate |
+| LOW-1 | LOW | 每次调用重跑满强度 PBKDF2 | ✅ 已处理：`decrypt()` KDoc 记录成本与本地 DoS 提示（不缓存——盐每消息随机，缓存无益且留存密钥更不安全） |
+| LOW-2 | LOW | `useSHA512` 参数易误读 | ✅ 已处理：`decrypt()` KDoc 明确其仅影响 legacy 路径 |
 | LOW-3 | LOW | `RSAUtil.MAX_DECRYPT_LEN` 死代码 | ✅ 已删 |
 | LOW-4 | LOW | `RSAUtil` self-import | ✅ 已删 |
-| LOW-5 | LOW | RSA 错误日志含 Throwable | 🔸 保留：待确认 release sink（JCE 异常不含明文，风险低） |
+| LOW-5 | LOW | RSA 错误日志含 Throwable | ✅ 已确认可接受：`log` 模块经 `enableLog`/level 门控、输出走按应用隔离的 Logcat，JCE 异常不含明文/密钥，风险低，无需改代码 |

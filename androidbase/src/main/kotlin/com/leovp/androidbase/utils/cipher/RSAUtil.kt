@@ -174,19 +174,16 @@ object RSAUtil {
      * @param signature The signature bytes to verify.
      * @return `true` only when [signature] is a valid signature of [data]; `false` otherwise.
      */
-    fun verify(
-        encodedPubKey: ByteArray,
-        data: ByteArray,
-        signature: ByteArray
-    ): Boolean = runCatching {
-        val pubKey = KeyFactory.getInstance(KEY_ALGORITHM)
-            .generatePublic(X509EncodedKeySpec(encodedPubKey))
-        Signature.getInstance(SIGN_ALGORITHM).run {
-            initVerify(pubKey)
-            update(data)
-            verify(signature)
-        }
-    }.getOrDefault(false)
+    fun verify(encodedPubKey: ByteArray, data: ByteArray, signature: ByteArray): Boolean =
+        runCatching {
+            val pubKey = KeyFactory.getInstance(KEY_ALGORITHM)
+                .generatePublic(X509EncodedKeySpec(encodedPubKey))
+            Signature.getInstance(SIGN_ALGORITHM).run {
+                initVerify(pubKey)
+                update(data)
+                verify(signature)
+            }
+        }.getOrDefault(false)
 
     // =====
 

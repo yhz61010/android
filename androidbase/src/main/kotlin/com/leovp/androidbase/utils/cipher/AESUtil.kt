@@ -333,12 +333,12 @@ object AESUtil {
     }
 
     /**
-     * Derive an AES key from [passphrase] and [salt] using PBKDF2 with the current OWASP
-     * iteration counts. [useSha256] selects PBKDF2-HMAC-SHA256 (API 26+); otherwise
-     * PBKDF2-HMAC-SHA1 is used. The derived material is wrapped as a raw AES key.
+     * Derive an AES key from [passphrase] and [salt] using the KDF recorded by the version byte.
+     * PBKDF2-HMAC-SHA256 uses a provider-backed implementation when available, with a standard
+     * HMAC-SHA256 fallback for API 21-25 so version-1 data remains cross-device readable.
      */
     private fun deriveKey(passphrase: String, salt: ByteArray, useSha256: Boolean): SecretKey {
-        val derived: SecretKey = if (useSha256 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val derived: SecretKey = if (useSha256) {
             PBKDF2Util.generateKeyWithSHA256(passphrase, salt, PBKDF2Util.ITERATIONS_SHA256)
         } else {
             PBKDF2Util.generateKeyWithSHA1(passphrase, salt, PBKDF2Util.ITERATIONS_SHA1)

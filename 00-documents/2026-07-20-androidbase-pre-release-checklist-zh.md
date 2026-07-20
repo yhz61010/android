@@ -6,7 +6,7 @@
   - [`2026-07-17-androidbase-code-review-zh.md`](./2026-07-17-androidbase-code-review-zh.md)（原始审查）
   - [`2026-07-17-androidbase-fix-plan-zh.md`](./2026-07-17-androidbase-fix-plan-zh.md)（修改方案）
   - [`2026-07-20-androidbase-cipher-security-review-zh.md`](./2026-07-20-androidbase-cipher-security-review-zh.md)（cipher 复核报告）
-- **状态：** 代码修改已完成并**本地提交**，**尚未推送**。
+- **状态：** `fix/androidbase-security-review` 分支已推送到远端；本轮 Codex 复核后新增修复仍是工作区改动，尚未提交/推送。
 
 ---
 
@@ -14,7 +14,7 @@
 
 | # | 事项 | 状态 | 说明 |
 |---|------|------|------|
-| 1 | 推送提交到远端 | ⏳ 待办 | 需有效写权限凭据；此前对话暴露的 PAT 应已撤销 |
+| 1 | 提交并推送本轮新增修复 | ⏳ 待办 | 当前分支已有远端基线；本轮 Codex 复核修复仍需单独提交/推送 |
 | 2 | 主版本号 bump | ⏳ 待办 | 本次含破坏性变更（见 §2），应升主版本 |
 | 3 | 编写 CHANGELOG / 迁移说明 | ⏳ 待办 | 可直接引用本文 §2/§3 |
 | 4 | 修正 `staticCheck` | ⏳ 待办 | 依赖不存在的 `:app` 模块，见 §5 |
@@ -24,7 +24,9 @@
 
 ## 1. 推送状态
 
-本次全部提交仍**本地未推送**。无法自动推送的原因：
+`fix/androidbase-security-review` 分支上的既有安全修复提交已推送到远端。本轮 Codex 复核后新增的修复（AES 跨 API SHA256 KDF、CrashHandler 重复初始化、RSA 空字符串分片）仍是工作区改动，尚未提交/推送。
+
+后续推送如需重新认证，请注意：
 
 1. 之前用于推送的 PAT 已在会话中暴露、应视为泄露，**须到 https://github.com/settings/tokens 撤销**。
 2. 本机存储凭据（leizhiliang）对 `yhz61010/android` **无写权限**。
@@ -42,6 +44,7 @@
 - **密文格式变更**：由 `AES/CBC` + 静态零 IV + 4 字节盐 + 1000 次 PBKDF2，改为 **AES-GCM 认证加密**，新格式 `[version:1][salt:16][iv:12][ciphertext+tag]`，并把 `version‖salt` 绑为 GCM AAD。
   - `version=0x01`：GCM + PBKDF2-HMAC-SHA256 / 600k（API 26+）
   - `version=0x02`：GCM + PBKDF2-HMAC-SHA1 / 1.4M（API 21–25）
+  - API 21–25 解密 `version=0x01` 时使用标准 PBKDF2-HMAC-SHA256 fallback，保证跨设备读取 SHA256 新格式密文。
 - **向后兼容**：`decrypt(...)` 读版本字节，旧密文走 `@Deprecated legacyDecrypt`（4 字节盐、零 IV、1000 迭代）仍可解；`encrypt(...)` 一律输出新格式。
 - **⚠️ 单向兼容**：**新版本加密的数据无法被旧版本库解密**。跨版本共享密文的场景需协调升级。
 - **新增** `decryptStrict(cipherBytes, secKey)`：只接受新 GCM 格式、认证失败即抛，永不回落 legacy（需要 AEAD 保证时用它）。

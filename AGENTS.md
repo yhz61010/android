@@ -1,21 +1,21 @@
 # 仓库指南
 
 ## 项目结构与模块组织
-这是一个使用 Gradle Kotlin DSL 构建的多模块 Android 项目。共享构建逻辑和版本约束位于 [build.gradle.kts](/home/yhz61010/StudioProjects/android/build.gradle.kts)、[settings.gradle.kts](/home/yhz61010/StudioProjects/android/settings.gradle.kts) 和 [gradle/libs.versions.toml](/home/yhz61010/StudioProjects/android/gradle/libs.versions.toml)。
+这是一个使用 Gradle Kotlin DSL 构建、通过 JitPack 发布的多模块 Android 库项目。共享构建逻辑和版本约束位于 [build.gradle.kts](/home/yhz61010/StudioProjects/android/build.gradle.kts)、[settings.gradle.kts](/home/yhz61010/StudioProjects/android/settings.gradle.kts) 和 [gradle/libs.versions.toml](/home/yhz61010/StudioProjects/android/gradle/libs.versions.toml)。
 
 已纳入 Gradle 构建的模块以 `settings.gradle.kts` 为准。当前模块结构更适合按类别理解：
 
 - Demo 应用：`demo`、`demo-dex`
-- 核心与共享库：`androidbase`、`log`、`pref`、`http`、`lib-common-android`、`lib-common-kotlin`、`lib-bytes`、`lib-json`、`lib-compress`、`lib-network`、`lib-reflection`、`lib-image`、`lib-exif`、`lib-mvvm`、`lib-compose`
+- 核心与共享库：`androidbase`、`android-restricted`、`log`、`pref`、`http`、`lib-common-android`、`lib-common-kotlin`、`lib-bytes`、`lib-json`、`lib-compress`、`lib-network`、`lib-reflection`、`lib-image`、`lib-exif`、`lib-mvvm`、`lib-compose`
 - 媒体与编解码模块：`audio`、`ffmpeg-javacpp`、`adpcm-ima-qt-codec`、`h264-hevc-decoder`、`adpcm-ima-qt-codec-h264-hevc-decoder`、`yuv`、`jpeg`
 - 设备、图形与功能模块：`camerax`、`camera2live`、`screencapture`、`draw-on-screen`、`floatview`、`opengl`、`nfc`、`basenetty`、`aidl-client`、`dex`、`circle-progressbar`
 
-仓库根目录下还有一些原生源码、构建辅助目录或历史实验目录，但除非它们被写入 `settings.gradle.kts`，否则都不是当前激活的 Gradle 模块。例如 `ffmpeg-sdk`、`webrtc`、`x264`、`libjpeg-turbo` 和 `libyuv`。
+仓库根目录下还有一些原生源码、构建辅助目录或历史实验目录，但除非它们被写入 `settings.gradle.kts`，否则都不是当前激活的 Gradle 模块。例如当前未启用的 `ffmpeg-sdk`、`webrtc`、`x264`、`libjpeg-turbo` 和 `libyuv`。
 
 Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src/main/cpp`，也可能是模块根目录下的 `CMakeLists.txt`，取决于具体模块。
 
 ## 构建、测试与开发命令
-使用 JDK 17 和仓库内置的 Gradle Wrapper。当前版本目录配置的目标环境为 `compileSdk`/`targetSdk` 36、`minSdk` 21、NDK `29.0.14206865`、CMake `3.22.1`。
+使用 JDK 17 和仓库内置的 Gradle Wrapper。当前 Wrapper 为 Gradle `9.4.0`，版本目录配置为 AGP `9.0.1`、Kotlin `2.3.10`、库发布版本 `5.15.8`、`compileSdk`/`targetSdk` 36、`minSdk` 21、NDK `29.0.14206865`、CMake `3.22.1`。
 
 - `./gradlew assemble`：构建所有已配置模块。
 - `./gradlew :demo:assembleDevDebug`：构建 demo 应用的主要调试变体。
@@ -24,18 +24,25 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - `./gradlew :demo:testDevDebugUnitTest`：运行 demo 应用 `devDebug` 变体的单元测试。
 - `./gradlew :demo:connectedDevDebugAndroidTest`：在已连接设备或模拟器上运行仪器测试。
 - `./gradlew ktlintCheck detekt`：运行格式检查与静态分析。
+- `./gradlew publishToMavenLocal`：本地验证 Maven/JitPack 发布链路。
+- `./gradlew :android-restricted:mergeReleaseConsumerProguardFiles --rerun-tasks`：针对 `android-restricted` consumer ProGuard 问题的最窄验证任务。
 - `./gradlew clean`：清理 Gradle 构建产物。
 
 构建前请将 `gradle.properties.template` 复制为 `gradle.properties`。按照 `README.md` 和 `00-documents/git-lfs-guide.md` 中的说明安装 Git LFS。
 
 ## 代码风格与命名规范
-遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块。
+遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下，其中需要受限或敏感权限的工具应优先放在 `android-restricted`，避免重新把敏感权限依赖混入 `androidbase`。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块。
 
 ## 测试指南
 所有 Gradle `Test` 任务都通过 `useJUnitPlatform()` 启用 JUnit 5。Android 单元测试启用了 `isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`。`demo` 应用的仪器测试使用 `AndroidJUnitRunner`，并通过 `de.mannodermaus.junit5.AndroidJUnit5Builder` 接入 JUnit 5。JVM 测试放在 `src/test/kotlin` 或 `src/test/java`；设备测试放在 `src/androidTest`。优先将测试放在受影响模块附近，例如 `androidbase/src/test/.../RSAUtilTest.kt`。
 
 ## Commit 与 Pull Request 指南
 最近的提交历史同时包含普通祈使句标题和带 Conventional Commit 风格前缀的标题，例如 `docs(readme): ...`。优先使用简短的祈使句提交标题；当作用域能提升可读性时，可加作用域前缀，例如 `fix(lib-network): handle empty response`。Pull Request 应尽量聚焦，说明受影响模块，列出验证命令；涉及 UI 或 demo 应用变更时附上截图。对于签名、native 库或 Gradle 配置变更，需要明确标注。
+
+## 发布与二进制文件注意事项
+所有 Android library 子项目默认通过根构建逻辑配置 `consumerProguardFiles("consumer-rules.pro")`。新增库模块时必须在模块根目录提供 `consumer-rules.pro`，即使当前没有保留规则也应保留空文件，否则 release consumer ProGuard 合并和 JitPack 发布会失败。
+
+仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
 
 ## 面向代理的说明
 在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。

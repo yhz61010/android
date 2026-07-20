@@ -221,6 +221,8 @@ object RSAUtil {
      */
     fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? = runCatching {
         val bytes: ByteArray = plainText.toByteArray()
+        if (bytes.isEmpty()) return encrypt(pubKey, bytes)?.toHexString(true, "")
+
         val sb = StringBuilder()
         var offset = 0
         while (offset < bytes.size) {

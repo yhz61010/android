@@ -258,6 +258,12 @@ abstract class BaseActivity<B : ViewBinding>(
                 LogContext.log.e(tag, "networkMonitor had already existed! Do NOT create it again!")
                 return@getIpsByHost
             }
+            // The DNS lookup above is async; the Activity may already be gone by the time it
+            // returns. Creating a NetworkMonitor (which starts a HandlerThread) now would leak it.
+            if (isDestroyed || isFinishing) {
+                LogContext.log.w(tag, "Activity is destroyed/finishing. Skip NetworkMonitor.")
+                return@getIpsByHost
+            }
             networkMonitor = AtomicReference(
                 NetworkMonitor(this@BaseActivity, socketIp) { info ->
                     callback?.let { runOnUiThread { it(info) } }

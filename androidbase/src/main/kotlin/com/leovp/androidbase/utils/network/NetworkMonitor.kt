@@ -157,7 +157,9 @@ class NetworkMonitor(
         LogContext.log.w(TAG, "releaseMonitorThread()")
         runCatching {
             monitorHandler.removeCallbacksAndMessages(null)
-            monitorThread.interrupt()
+            // quitSafely() stops the HandlerThread's Looper after pending work drains;
+            // interrupt() left the Looper running and leaked the thread.
+            monitorThread.quitSafely()
         }.getOrNull()
     }
 

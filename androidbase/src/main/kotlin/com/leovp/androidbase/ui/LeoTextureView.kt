@@ -69,8 +69,14 @@ class LeoTextureView @JvmOverloads constructor(
         height: Int
     ) {
         LogContext.log.i(TAG, "onSurfaceTextureAvailable() width=$width height=$height")
-        mySurfaceTexture?.let { setSurfaceTexture(it) }
-        this.surface = Surface(pSurfaceTexture)
+        // Reuse the previously saved SurfaceTexture when present (Samsung decoder quirk),
+        // otherwise adopt the one the system just provided. Build the Surface from whichever
+        // texture is actually attached so the decoder renders into the live texture.
+        val activeTexture = mySurfaceTexture?.also { setSurfaceTexture(it) } ?: pSurfaceTexture
+        mySurfaceTexture = null
+        // Release the previous Surface before overwriting it to avoid leaking the native surface.
+        surface?.release()
+        surface = Surface(activeTexture)
     }
 
     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {

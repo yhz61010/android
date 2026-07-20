@@ -1,11 +1,14 @@
 package com.leovp.androidbase
 
 import com.leovp.androidbase.utils.cipher.PBKDF2Util
+import java.security.NoSuchAlgorithmException
+import java.security.spec.InvalidKeySpecException
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import kotlin.test.assertContentEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Author: Michael Leo
@@ -57,5 +60,45 @@ class PBKDF2UtilTest {
         ) as ByteArray
 
         assertContentEquals(providerKey, fallbackKey)
+    }
+
+    @Test
+    fun `sha256KeyWithFallback uses manual PBKDF2 when provider is unavailable`() {
+        val passphrase = "passphrase".toCharArray()
+        val salt = ByteArray(16) { it.toByte() }
+        val iterations = 1024
+        val keyLengthBits = 256
+
+        // Reference: the real JCA provider result for the same inputs (available on plain JVM).
+        val providerKey = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+            .generateSecret(PBEKeySpec(passphrase, salt, iterations, keyLengthBits))
+            .encoded
+
+        // Simulate an API 21-25 device whose provider does not expose PBKDF2WithHmacSHA256.
+        // The dispatch must route to the manual fallback and produce the same key material.
+        val derived = PBKDF2Util.sha256KeyWithFallback(
+            passphrase,
+            salt,
+            iterations,
+            keyLengthBits
+        ) {
+            throw NoSuchAlgorithmException("PBKDF2WithHmacSHA256 not available")
+        }
+
+        assertContentEquals(providerKey, derived.encoded)
+    }
+
+    @Test
+    fun `sha256KeyWithFallback rethrows non-availability failures instead of masking them`() {
+        val passphrase = "passphrase".toCharArray()
+        val salt = ByteArray(16) { it.toByte() }
+
+        // A malformed-spec style failure is NOT "provider unavailable"; it must propagate rather
+        // than be silently swallowed by the SHA256 fallback path.
+        assertThrows<InvalidKeySpecException> {
+            PBKDF2Util.sha256KeyWithFallback(passphrase, salt, 1024, 256) {
+                throw InvalidKeySpecException("malformed spec")
+            }
+        }
     }
 }

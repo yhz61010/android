@@ -8,6 +8,7 @@ import android.media.SoundPool
 import com.leovp.log.base.d
 import com.leovp.log.base.e
 import com.leovp.log.base.w
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -23,7 +24,7 @@ object SoundEffectPlayer {
     // Mutated from both caller threads (play/preload) and the SoundPool load-complete
     // callback thread, so these must be concurrent collections.
     private val soundMap = ConcurrentHashMap<String, Int>()
-    private val loadedSounds = ConcurrentHashMap.newKeySet<Int>()
+    private val loadedSounds = Collections.newSetFromMap(ConcurrentHashMap<Int, Boolean>())
 
     private fun ensureSoundPool() {
         if (soundPool == null) {

@@ -17,7 +17,7 @@
 | 1 | 推送提交到远端 | ✅ 已完成 | 分支全部安全修复提交（至 `4d44fe4d4`）已推送 |
 | 2 | 主版本号 bump | ⏳ 待办 | 本次含破坏性变更（见 §2），应升主版本 |
 | 3 | 编写 CHANGELOG / 迁移说明 | ⏳ 待办 | 可直接引用本文 §2/§3 |
-| 4 | 修正 `staticCheck` | ⏳ 待办 | 依赖不存在的 `:app` 模块，见 §5 |
+| 4 | 修正 `staticCheck` | ✅ 已完成 | 见 §5：改用 `gradle.projectsEvaluated` + `findByName` 自适应任务图，去 `:app` 硬编码与非法 `afterEvaluate` |
 | 5 | 全量单测 + 静态检查 | ✅ 分模块已验 | `:androidbase` compile/detekt/ktlint + cipher/media 单测全绿 |
 
 ---
@@ -113,10 +113,15 @@
 
 ## 5. `staticCheck` 可用性
 
-根 `build.gradle.kts` 的 `staticCheck` 依赖 `app:assembleAndroidTest`，但 `settings.gradle.kts` 中**无 `:app` 模块**，可能跑不通。
+~~根 `build.gradle.kts` 的 `staticCheck` 依赖 `app:assembleAndroidTest`，但 `settings.gradle.kts` 中**无 `:app` 模块**，可能跑不通。~~
 
-- **建议**：核对并修正 `staticCheck` 依赖（改为存在的模块，或移除该依赖）。
-- **临时替代**：使用模块级命令
+**✅ 已修复。** 两处根因：
+1. `:app` 模块早已改名为 `:demo`，任务名 `app:*` 指向不存在的项目。
+2. 更根本的是，任务配置 action 内调用 `project.afterEvaluate {}` 在 Gradle 9 下非法（根项目已评估完毕），导致 `staticCheck` 根本无法配置。此外 `:demo` 带 `dev` product flavor，其任务名为 `lintDevDebug`/`testDevDebugUnitTest`，硬编码的 `lintDebug`/`testDebugUnitTest` 对它无效。
+
+改法：改用 `gradle.projectsEvaluated { staticCheck.configure { … } }`，对每个子项目用 `tasks.findByName(...)` **只依赖实际存在的任务**（自适应 library / 非 flavored app / flavored app 三类），application 模块（`demo`/`demo-dex`/`aidl-client`）额外挂 `assembleAndroidTest`。已用 `./gradlew staticCheck --dry-run` 验证任务图解析通过、无 `:app` 残留。
+
+- **临时替代**（仍可用）：使用模块级命令
   ```bash
   ./gradlew :androidbase:testDebugUnitTest
   ./gradlew :androidbase:detekt

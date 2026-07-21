@@ -6,7 +6,7 @@
   - [`2026-07-17-androidbase-code-review-zh.md`](./2026-07-17-androidbase-code-review-zh.md)（原始审查）
   - [`2026-07-17-androidbase-fix-plan-zh.md`](./2026-07-17-androidbase-fix-plan-zh.md)（修改方案）
   - [`2026-07-20-androidbase-cipher-security-review-zh.md`](./2026-07-20-androidbase-cipher-security-review-zh.md)（cipher 复核报告）
-- **状态：** `fix/androidbase-security-review` 分支的全部安全审查/修复提交（含 Codex 后续修复 `c7e17f9db` 与 PBKDF2 fallback 派发收窄 `4d44fe4d4`）均已提交并推送到远端。
+- **状态：** `fix/androidbase-security-review` 分支的全部安全审查/修复提交（至 `159fefbd9`，含 cipher 复核 F1–F8、`staticCheck` 修复、F4/F5 硬化）均已提交并推送到远端，本地与远端一致。剩余仅主版本号 bump 与真机 crop 验证两项（由维护者在发版/真机环境完成）。
 
 ---
 
@@ -16,7 +16,7 @@
 |---|------|------|------|
 | 1 | 推送提交到远端 | ✅ 已完成 | 分支全部安全修复提交（至 `4d44fe4d4`）已推送 |
 | 2 | 主版本号 bump | ⏳ 待办 | 本次含破坏性变更（见 §2），应升主版本 |
-| 3 | 编写 CHANGELOG / 迁移说明 | ⏳ 待办 | 可直接引用本文 §2/§3 |
+| 3 | 编写 CHANGELOG / 迁移说明 | ✅ 已完成 | 见 [`changelog-migration`](./2026-07-20-androidbase-changelog-migration.md)（中英双份，版本号留占位符待发版填） |
 | 4 | 修正 `staticCheck` | ✅ 已完成 | 见 §5：改用 `gradle.projectsEvaluated` + `findByName` 自适应任务图，去 `:app` 硬编码与非法 `afterEvaluate` |
 | 5 | 全量单测 + 静态检查 | ✅ 分模块已验 | `:androidbase` compile/detekt/ktlint + cipher/media 单测全绿 |
 
@@ -148,6 +148,12 @@
 ### 已推送到远端（origin/fix/androidbase-security-review）
 
 ```
+159fefbd9 refactor(cipher): close review notes F6/F7/F8
+d6c2f53b2 fix(build): make staticCheck configurable and drop stale :app task refs
+0edda19c9 fix(cipher): harden PBKDF2 passphrase wiping and CrashHandler chaining
+8bc11e1cd docs: mark push task complete; branch is in sync with origin
+f2dd0e157 docs: record cipher fallback follow-up review and push status
+4d44fe4d4 refactor(cipher): narrow PBKDF2 SHA256 fallback dispatch and add coverage
 c7e17f9db fix(androidbase): address security review follow-ups
 f8e9d332c docs: add androidbase pre-release checklist and migration notes
 f6164d73f refactor(androidbase): deprecate unused public YuvUtil functions (P3)
@@ -165,10 +171,4 @@ c97254328 style(cipher): reformat RSAUtil.verify to satisfy both ktlint and dete
 76a0371f8 fix(cipher): harden AES/RSA per security review P0 (C1-C6)
 ```
 
-> 注：`f8e9d332c` 之前的提交此前记为"本地未推送"，现已随 `c7e17f9db` 一并推送到远端。
-
-### 本地已提交，尚未推送
-
-```
-4d44fe4d4 refactor(cipher): narrow PBKDF2 SHA256 fallback dispatch and add coverage
-```
+> 注：截至 `159fefbd9`，本分支全部提交均已推送，本地与远端一致；本轮 review 条目 F1–F8 全部关闭。

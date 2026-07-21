@@ -2,8 +2,6 @@ package com.leovp.androidbase.utils.cipher
 
 import android.os.Build
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
-import com.leovp.androidbase.utils.cipher.AESUtil.decrypt
-import com.leovp.androidbase.utils.cipher.AESUtil.decryptStrict
 import com.leovp.bytes.toHexString
 import java.security.SecureRandom
 import javax.crypto.Cipher

@@ -34,7 +34,6 @@ class AESUtilTest {
 
     @Test fun `byte round-trip returns the original data`() {
         val data = ByteArray(64) { it.toByte() }
-        println("data=${data.toHexString()}")
 
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
         val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())

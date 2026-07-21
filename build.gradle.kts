@@ -413,28 +413,36 @@ tasks.withType<Detekt>().configureEach {
  * parallel execution
  * and separate reports for each of the checks (multiple statuses e.g. on GitHub PR page).
  */
-tasks.register("staticCheck", fun Task.() {
+val staticCheck = tasks.register("staticCheck") {
     group = "verification"
+    // Aggregate check with no work of its own; real dependencies are wired below.
+}
 
-    afterEvaluate {
-        // Filter modules with "lintDebug" task (non-Android modules do not have lintDebug task)
-        val lintTasks = subprojects.mapNotNull { "${it.name}:lintDebug" }
+// Snapshot the modules while the root script still has a Project receiver.
+val staticCheckModules = subprojects
 
-        // Get modules with "testDebugUnitTest" task (app module does not have it)
-        val testTasks = subprojects.mapNotNull { "${it.name}:testDebugUnitTest" }
-            .filter { it != "app:testDebugUnitTest" }
-
-        // All task dependencies
-        val taskDependencies =
-            mutableListOf("app:assembleAndroidTest", "ktlintCheck", "detekt").also {
-                it.addAll(lintTasks)
-                it.addAll(testTasks)
+// Wire the dependencies once every subproject has been evaluated, so their Android task graphs
+// (lint / unit test / androidTest) exist and can be queried. This intentionally uses
+// gradle.projectsEvaluated instead of Project#afterEvaluate inside the task action: the latter is
+// illegal once the root project is already evaluated (Gradle 9+), which previously left this task
+// impossible to configure. Depending only on tasks that actually exist (via findByName) keeps this
+// robust across library modules, non-flavored app modules, and the flavored demo app — whose tasks
+// are lintDevDebug / testDevDebugUnitTest rather than the plain lintDebug / testDebugUnitTest.
+gradle.projectsEvaluated {
+    staticCheck.configure {
+        dependsOn("ktlintCheck", "detekt")
+        staticCheckModules.forEach { module ->
+            // Unit tests + lint on the standard debug variant, where the module exposes them.
+            module.tasks.findByName("testDebugUnitTest")?.let { dependsOn(it) }
+            module.tasks.findByName("lintDebug")?.let { dependsOn(it) }
+            // Build the instrumentation-test APK for application modules to catch androidTest
+            // compile errors (mirrors the original app:assembleAndroidTest intent).
+            if (module.plugins.hasPlugin("com.android.application")) {
+                module.tasks.findByName("assembleAndroidTest")?.let { dependsOn(it) }
             }
-
-        // By defining Gradle dependency all dependent tasks will run before this "empty" task
-        dependsOn(taskDependencies)
+        }
     }
-})
+}
 
 // https://github.com/ben-manes/gradle-versions-plugin
 tasks.withType<DependencyUpdatesTask> {

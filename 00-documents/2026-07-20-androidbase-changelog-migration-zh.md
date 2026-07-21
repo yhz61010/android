@@ -1,7 +1,5 @@
 # 变更日志与迁移指南 — `androidbase` 安全审查
 
-> English version: [`2026-07-20-androidbase-changelog-migration.md`](./2026-07-20-androidbase-changelog-migration.md)
-
 本次发版汇集 `fix/androidbase-security-review` 分支：对 cipher、媒体、Android 工具层的一轮安全审查与硬化。含对**公共 API 与密文/存储格式的破坏性变更**，因此**必须升主版本号**。
 
 - **格式：** 参考 [Keep a Changelog](https://keepachangelog.com/)。
@@ -21,9 +19,12 @@
   - `version=0x01`：GCM + PBKDF2-HMAC-SHA256 / 600k（API 26+）
   - `version=0x02`：GCM + PBKDF2-HMAC-SHA1 / 1.4M（API 21–25）
   - API 21–25 解密 `version=0x01` 时使用标准 PBKDF2-HMAC-SHA256 fallback，保证 SHA256 密文跨设备可读。
-- **单向兼容。** `decrypt(...)` 读版本字节，旧密文仍可经 `@Deprecated legacyDecrypt` 路径解开
+- **单向兼容。** 已弃用的 `decrypt(...)` 兼容入口会读版本字节，旧密文仍可经 legacy 路径解开
   （4 字节盐、零 IV、1000 迭代）。但**本版本加密的数据无法被旧版本库解密**。跨版本共享密文的场景需协调升级。
-- **`useSHA512` 参数** 现**仅影响 legacy 解密路径**；新 GCM 格式的 KDF 由版本字节决定，`useSHA512` 被忽略。
+- **解密 API 迁移。** 所有公开 `decrypt(...)` 重载均已标记 `@Deprecated`，并提供
+  `ReplaceWith("decryptStrict(...)")`。已确认输入为新 AES-GCM 格式时，应优先使用 `decryptStrict(...)`；
+  只有读取旧 CBC 存量密文时才继续保留 `decrypt(...)`。
+- **`useSHA512` 参数** 已从所有 `encrypt(...)` 重载移除。它只保留在 `decrypt(...)` 重载中，并且**仅影响 legacy 解密路径**；新 GCM 格式的 KDF 由版本字节决定。
 - 移除基于 `SystemClock` 播种的 `generateKeyBySHA512/SHA1`，改为 `generateKey(bits = 256)`
   （`KeyGenerator` + 系统熵）。移除 `@RequiresApi(O)`。
 
@@ -55,8 +56,10 @@
 
 ### 新增
 
-- `AESUtil.decryptStrict(cipherBytes, secKey)`：**仅**接受新 GCM 格式，认证失败即抛，永不回落 legacy。
-  需要 AEAD 保证时使用。
+- `AESUtil.decryptStrict(...)`：**仅**接受新 GCM 格式，认证失败即抛，永不回落 legacy。
+  需要 AEAD 保证时使用。新增重载覆盖 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合：
+  `decryptStrict(String, String)`、`decryptStrict(String, ByteArray)`、`decryptStrict(String, SecretKey)`、
+  `decryptStrict(ByteArray, String)`、`decryptStrict(ByteArray, ByteArray)`、`decryptStrict(ByteArray, SecretKey)`。
 - `PBKDF2Util`：`generateKeyWithSHA256(...)` 系列重载，以及常量
   `ITERATIONS_SHA256 = 600_000`、`ITERATIONS_SHA512`、`ITERATIONS_SHA1`、
   `ITERATIONS_LEGACY = 1000`（仅供 legacy 解密显式传入）。
@@ -74,8 +77,9 @@
   取代 `interrupt()`（消除线程泄漏）；`BaseActivity` 异步 DNS 回调前判 `isDestroyed/isFinishing`，
   去 `currentFocus!!`。
 - **资源 / 生命周期：** `LeoTextureView` Surface 复用/释放；`PcmToWavUtil` 用 `use{}` 关流；
-  `SoundEffectPlayer` 并发集合 + `openFd().use{}`；`DeviceSound` 复用单一 `MediaActionSound` +
-  `release()`（消除 native 泄漏）。
+  `SoundEffectPlayer` 并发集合 + `openFd().use{}`，并改用
+  `Collections.newSetFromMap(ConcurrentHashMap())` 代替 `ConcurrentHashMap.newKeySet()`，避免 API 21
+  运行时兼容风险；`DeviceSound` 复用单一 `MediaActionSound` + `release()`（消除 native 泄漏）。
 - **`CrashHandler`：** previous handler 改为每次 init 的局部 `val`（修复重复初始化的 `StackOverflowError`），
   并把 custom 与 previous handler 调用都包 `runCatching`，避免行为异常的上报器中断链式调用。
 - **`BluetoothUtil`：** 5 处反射调用统一 `runCatching`（log + 返回 `false`）。
@@ -113,7 +117,9 @@ if (ok) { /* 可信 */ }
 
 - 本版本加密的数据**无法**被升级前的客户端读取。若跨 app/库版本共享密文，须同时升级生产方与消费方，
   或对存量数据重新加密。
-- 读旧数据仍自动可用（版本字节 → legacy 路径）。当必须拒绝一切非认证 GCM 格式时，使用 `decryptStrict(...)`。
+- 读旧数据仍可通过已弃用的 `decrypt(...)` 自动兼容（版本字节 → legacy 路径）。当必须拒绝一切非认证 GCM 格式时，使用 `decryptStrict(...)`。
+- `encrypt(...)` 不再接受 `useSHA512` 参数；若有命名参数或三参调用，迁移为两参调用。`decrypt(...)`
+  可继续传 `useSHA512`，但它只用于读取旧 CBC 数据。
 
 ### 3. RSA 密文不向后兼容
 

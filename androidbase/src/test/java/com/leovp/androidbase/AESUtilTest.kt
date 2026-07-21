@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
  *
  * Under plain JVM unit tests `Build.VERSION.SDK_INT` resolves to 0, so encryption exercises
  * the API 21-25 fallback path (VERSION_GCM_SHA1). Round-trip correctness is identical across
- * both KDF paths, so the behaviour under test is fully covered here.
+ * both KDF paths, so the behavior under test is fully covered here.
  */
 class AESUtilTest {
     private val secKey = "I'm a secret key."
@@ -27,16 +27,17 @@ class AESUtilTest {
         val plain = "I have a dream. 我有一个梦想。🚀"
 
         val encrypted = AESUtil.encrypt(plain, secKey)
-        val decrypted = AESUtil.decrypt(encrypted, secKey)
+        val decrypted = AESUtil.decryptStrict(encrypted, secKey)
 
         assertEquals(plain, decrypted)
     }
 
     @Test fun `byte round-trip returns the original data`() {
         val data = ByteArray(64) { it.toByte() }
+        println("data=${data.toHexString()}")
 
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
-        val decrypted = AESUtil.decrypt(encrypted, secKey.toByteArray())
+        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))
     }
@@ -51,7 +52,9 @@ class AESUtilTest {
         assertFalse(first.contentEquals(second))
     }
 
-    @Test fun `tampered cipher text never decrypts back to the original`() {
+    @Suppress("DEPRECATION")
+    @Test
+    fun `tampered cipher text never decrypts back to the original`() {
         val data = "sensitive payload".toByteArray()
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
 
@@ -71,6 +74,22 @@ class AESUtilTest {
         val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))
+    }
+
+    @Test fun `decryptStrict overloads round-trip new-format data`() {
+        val plain = "strict overload payload"
+        val keyBytes = secKey.toByteArray()
+        val secretKey = AESUtil.generateKey()
+
+        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, secKey), secKey))
+        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, keyBytes), keyBytes))
+        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, secretKey), secretKey))
+
+        val data = plain.toByteArray()
+        assertTrue(data.contentEquals(AESUtil.decryptStrict(AESUtil.encrypt(data, secKey), secKey)))
+        assertTrue(
+            data.contentEquals(AESUtil.decryptStrict(AESUtil.encrypt(data, secretKey), secretKey))
+        )
     }
 
     @Test fun `decryptStrict reads SHA256 version data when SDK is below O`() {

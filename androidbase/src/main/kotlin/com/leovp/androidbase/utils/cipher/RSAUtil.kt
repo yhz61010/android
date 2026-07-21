@@ -2,7 +2,6 @@
 
 package com.leovp.androidbase.utils.cipher
 
-import android.security.keystore.KeyProperties
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
@@ -67,22 +66,21 @@ object RSAUtil {
         PSource.PSpecified.DEFAULT
     )
 
-    fun getKeyPair(): KeyPair =
-        KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA).apply {
-            // initialize(KeyGenParameterSpec.Builder(
-            //     "leo-rsa-keypair",
-            //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-            //     .setDigests(
-            //         KeyProperties.DIGEST_SHA1,
-            //         KeyProperties.DIGEST_SHA256,
-            //         KeyProperties.DIGEST_SHA384,
-            //         KeyProperties.DIGEST_SHA512,
-            //     )
-            //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
-            //     .setKeySize(KEY_SIZE)
-            //     .build())
-            initialize(KEY_SIZE)
-        }.generateKeyPair()
+    fun getKeyPair(): KeyPair = KeyPairGenerator.getInstance(KEY_ALGORITHM).apply {
+        // initialize(KeyGenParameterSpec.Builder(
+        //     "leo-rsa-keypair",
+        //     KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+        //     .setDigests(
+        //         KeyProperties.DIGEST_SHA1,
+        //         KeyProperties.DIGEST_SHA256,
+        //         KeyProperties.DIGEST_SHA384,
+        //         KeyProperties.DIGEST_SHA512,
+        //     )
+        //     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+        //     .setKeySize(KEY_SIZE)
+        //     .build())
+        initialize(KEY_SIZE)
+    }.generateKeyPair()
 
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
@@ -215,7 +213,7 @@ object RSAUtil {
     /**
      * Encrypt by public key which can get from [getKeyPair] method.
      *
-     * The plain text is fragmented by **bytes** (not characters) so multi-byte UTF-8
+     * The plain text is fragmented by **bytes** (not characters) so multibyte UTF-8
      * characters are never split in a way that exceeds [MAX_ENCRYPT_LEN]. Each fragment's
      * hex is joined with a newline separator.
      */
@@ -245,7 +243,7 @@ object RSAUtil {
      * Decrypt by private key which can get from [getKeyPair] method.
      *
      * The decrypted bytes of every fragment are reassembled first and decoded to a String
-     * only once, so multi-byte characters split across fragments are reconstructed correctly.
+     * only once, so multibyte characters split across fragments are reconstructed correctly.
      */
     fun decryptStringByFragment(priKey: ByteArray, encryptedText: String): String? = runCatching {
         val out = ByteArrayOutputStream()

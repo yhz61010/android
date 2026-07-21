@@ -421,20 +421,33 @@ val staticCheck = tasks.register("staticCheck") {
 // Snapshot the modules while the root script still has a Project receiver.
 val staticCheckModules = subprojects
 
+val staticCheckDebugLintTaskName = Regex("^lint[A-Z].*Debug$")
+val staticCheckDebugUnitTestTaskName = Regex("^test[A-Z].*DebugUnitTest$")
+val staticCheckNonPrimaryLintPrefixes = listOf("lintAnalyze", "lintReport", "lintFix")
+
+fun Project.staticCheckDebugLintTasks() = tasks.matching {
+    staticCheckDebugLintTaskName.matches(it.name) &&
+        staticCheckNonPrimaryLintPrefixes.none { prefix -> it.name.startsWith(prefix) }
+}.toList()
+
+fun Project.staticCheckDebugUnitTestTasks() = tasks.matching {
+    staticCheckDebugUnitTestTaskName.matches(it.name)
+}.toList()
+
 // Wire the dependencies once every subproject has been evaluated, so their Android task graphs
 // (lint / unit test / androidTest) exist and can be queried. This intentionally uses
 // gradle.projectsEvaluated instead of Project#afterEvaluate inside the task action: the latter is
 // illegal once the root project is already evaluated (Gradle 9+), which previously left this task
-// impossible to configure. Depending only on tasks that actually exist (via findByName) keeps this
-// robust across library modules, non-flavored app modules, and the flavored demo app — whose tasks
-// are lintDevDebug / testDevDebugUnitTest rather than the plain lintDebug / testDebugUnitTest.
+// impossible to configure. Depending only on tasks that actually exist keeps this robust across
+// library modules, non-flavored app modules, and flavored apps — whose tasks are lintDevDebug /
+// testDevDebugUnitTest rather than the plain lintDebug / testDebugUnitTest.
 gradle.projectsEvaluated {
     staticCheck.configure {
         dependsOn("ktlintCheck", "detekt")
         staticCheckModules.forEach { module ->
-            // Unit tests + lint on the standard debug variant, where the module exposes them.
-            module.tasks.findByName("testDebugUnitTest")?.let { dependsOn(it) }
-            module.tasks.findByName("lintDebug")?.let { dependsOn(it) }
+            // Unit tests + lint for all debug variants exposed by the module, including flavors.
+            dependsOn(module.staticCheckDebugUnitTestTasks())
+            dependsOn(module.staticCheckDebugLintTasks())
             // Build the instrumentation-test APK for application modules to catch androidTest
             // compile errors (mirrors the original app:assembleAndroidTest intent).
             if (module.plugins.hasPlugin("com.android.application")) {

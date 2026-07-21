@@ -2,6 +2,8 @@ package com.leovp.androidbase.utils.cipher
 
 import android.os.Build
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
+import com.leovp.androidbase.utils.cipher.AESUtil.decrypt
+import com.leovp.androidbase.utils.cipher.AESUtil.decryptStrict
 import com.leovp.bytes.toHexString
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -44,6 +46,9 @@ object AESUtil {
     /** New format version: AES-GCM, PBKDF2-HMAC-SHA1, high iteration count (API 21-25 fallback). */
     private const val VERSION_GCM_SHA1: Byte = 0x02
 
+    private const val DECRYPT_DEPRECATED_MESSAGE =
+        "Use decryptStrict() for AES-GCM data. Keep decrypt() only for legacy CBC ciphertext."
+
     // ---- Legacy (insecure) format, kept only for decrypting old data ----
     private const val CIPHER_AES_LEGACY = "AES/CBC/PKCS7Padding"
     private const val LEGACY_PRE_SALT_LENGTH = 4
@@ -51,16 +56,13 @@ object AESUtil {
     /**
      * Encrypt string with specified secure key.
      *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
-     *
      * AES supports 128-bit (16-byte), 192-bit (24-byte), and 256-bit (32-byte) keys.
      * In other words, 16, 24, or 32 bytes.
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainText: String, secKey: String, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
+    fun encrypt(plainText: String, secKey: String): String =
+        encrypt(plainText.toByteArray(), secKey).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -74,16 +76,21 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
+    )
     fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
-        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+        decryptLenient(
+            cipherText.hexToByteArray(),
+            secKey.toByteArray(),
+            useSHA512
+        ).decodeToString()
 
     // ==============================================================
 
     /**
      * Encrypt string with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * You can use your SecretKey or generate it like this:
      * ```
@@ -97,8 +104,8 @@ object AESUtil {
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
+    fun encrypt(plainText: String, secKey: SecretKey): String =
+        encrypt(plainText.toByteArray(), secKey).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
@@ -113,16 +120,17 @@ object AESUtil {
      * ciphertext; the format is detected automatically from the leading version byte.
      * @param secKey You must use the same SecretKey or else the decryption will fail.
      */
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
+    )
     fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
-        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+        decryptLenient(cipherText.hexToByteArray(), secKey.encoded, useSHA512).decodeToString()
 
     // ==============================================================
 
     /**
      * Encrypt string with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -130,7 +138,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
-     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decryptStrict(encryptedString, secKey.toByteArray())
      * ```
      *
      * You can encrypt and decrypt any binary data.
@@ -140,14 +148,11 @@ object AESUtil {
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
-        encrypt(plainText.toByteArray(), secKey, useSHA512).toHexString(true, "")
+    fun encrypt(plainText: String, secKey: ByteArray): String =
+        encrypt(plainText.toByteArray(), secKey).toHexString(true, "")
 
     /**
      * Decrypt string with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -155,7 +160,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
-     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decryptStrict(encryptedString, secKey.toByteArray())
      * ```
      *
      * You can encrypt and decrypt any binary data.
@@ -166,16 +171,17 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
+    )
     fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
-        decrypt(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
+        decryptLenient(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
     // ==============================================================
 
     /**
      * Encrypt bytes with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -183,7 +189,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -194,14 +200,11 @@ object AESUtil {
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
-        encrypt(plainBytes, secKey.toByteArray(), useSHA512)
+    fun encrypt(plainBytes: ByteArray, secKey: String): ByteArray =
+        encrypt(plainBytes, secKey.toByteArray())
 
     /**
      * Decrypt bytes with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -209,7 +212,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -221,16 +224,17 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
+    )
     fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
-        decrypt(cipherBytes, secKey.toByteArray(), useSHA512)
+        decryptLenient(cipherBytes, secKey.toByteArray(), useSHA512)
 
     // ==============================================================
 
     /**
      * Encrypt bytes with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -240,7 +244,7 @@ object AESUtil {
      * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -251,14 +255,11 @@ object AESUtil {
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainData: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
-        encrypt(plainData, secKey.encoded, useSHA512)
+    fun encrypt(plainData: ByteArray, secKey: SecretKey): ByteArray =
+        encrypt(plainData, secKey.encoded)
 
     /**
      * Decrypt bytes with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * If the API level is lower than Android 8.0 (Oreo), API level 26,
      * the [useSHA512] parameter is ignored and SHA-1 is used.
@@ -271,7 +272,7 @@ object AESUtil {
      * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -283,15 +284,16 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
+    )
     fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
-        decrypt(cipherBytes, secKey.encoded, useSHA512)
+        decryptLenient(cipherBytes, secKey.encoded, useSHA512)
 
     // ==============================================================
     /**
      * Encrypt bytes with specified secure key.
-     *
-     * If the API level is lower than Android 8.0 (Oreo), API level 26,
-     * the [useSHA512] parameter is ignored and SHA-1 is used.
      *
      * Example:
      * ```
@@ -300,7 +302,7 @@ object AESUtil {
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
      * secKey.toByteArray())
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -311,10 +313,9 @@ object AESUtil {
      *
      * @return AES-GCM cipher data: [version:1][salt:16][iv:12][ciphertext+tag].
      */
-    fun encrypt(plainData: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
-        // AES-GCM authenticated encryption. The [useSHA512] flag is ignored for encryption:
-        // the KDF is chosen by API level (SHA256 on API 26+, SHA1 on API 21-25) and recorded
-        // in the version byte so decryption can reproduce it.
+    fun encrypt(plainData: ByteArray, secKey: ByteArray): ByteArray {
+        // AES-GCM authenticated encryption. The KDF is chosen by API level (SHA256 on API 26+,
+        // SHA1 on API 21-25) and recorded in the version byte so decryption can reproduce it.
         val useSha256: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
         val version: Byte = if (useSha256) VERSION_GCM_SHA256 else VERSION_GCM_SHA1
         val salt: ByteArray = PBKDF2Util.generateSalt(SALT_LEN)
@@ -360,7 +361,7 @@ object AESUtil {
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
      * secKey.toByteArray())
-     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -379,8 +380,18 @@ object AESUtil {
      * That is intentional, but avoid calling this in a tight loop over attacker-supplied blobs;
      * for known new-format data that must fail on tampering, prefer [decryptStrict].
      */
-    @Suppress("DEPRECATION")
-    fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray {
+    @Deprecated(
+        message = DECRYPT_DEPRECATED_MESSAGE,
+        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
+    )
+    fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray =
+        decryptLenient(cipherBytes, secKey, useSHA512)
+
+    private fun decryptLenient(
+        cipherBytes: ByteArray,
+        secKey: ByteArray,
+        useSHA512: Boolean,
+    ): ByteArray {
         val version: Byte? = cipherBytes.firstOrNull()
         if (version == VERSION_GCM_SHA256 || version == VERSION_GCM_SHA1) {
             // Try the new AES-GCM format first. If authentication fails, the byte stream is
@@ -397,7 +408,47 @@ object AESUtil {
      * Throws [IllegalArgumentException] if the input is not the AES-GCM format, or a
      * [javax.crypto.AEADBadTagException] if authentication fails.
      *
-     * Prefer this over [decrypt] whenever the data is known to be in the new format and you want
+     * Prefer this over [decrypt] whenever the data is known to be in the new format, and you want
+     * tamper detection rather than the lenient legacy fallback.
+     */
+    fun decryptStrict(cipherText: String, secKey: String): String =
+        decryptStrict(cipherText.hexToByteArray(), secKey.toByteArray()).decodeToString()
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     */
+    fun decryptStrict(cipherText: String, secKey: SecretKey): String =
+        decryptStrict(cipherText.hexToByteArray(), secKey.encoded).decodeToString()
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     */
+    fun decryptStrict(cipherText: String, secKey: ByteArray): String =
+        decryptStrict(cipherText.hexToByteArray(), secKey).decodeToString()
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     */
+    fun decryptStrict(cipherBytes: ByteArray, secKey: String): ByteArray =
+        decryptStrict(cipherBytes, secKey.toByteArray())
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     */
+    fun decryptStrict(cipherBytes: ByteArray, secKey: SecretKey): ByteArray =
+        decryptStrict(cipherBytes, secKey.encoded)
+
+    /**
+     * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
+     * to the legacy path, so a successful return always means the data was authenticated (AEAD).
+     * Throws [IllegalArgumentException] if the input is not the AES-GCM format, or a
+     * [javax.crypto.AEADBadTagException] if authentication fails.
+     *
+     * Prefer this over [decrypt] whenever the data is known to be in the new format, and you want
      * tamper detection rather than the lenient legacy fallback.
      */
     fun decryptStrict(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
@@ -429,11 +480,10 @@ object AESUtil {
      * Decrypt data produced by older versions of this library: AES/CBC with a static zero IV,
      * a 4-byte salt prefix and 1000 PBKDF2 iterations. Retained only for backward compatibility.
      */
-    @Deprecated("Insecure legacy format. Only used to read data encrypted by old versions.")
     private fun legacyDecrypt(
         cipherBytes: ByteArray,
         secKey: ByteArray,
-        useSHA512: Boolean
+        useSHA512: Boolean,
     ): ByteArray {
         val salt: ByteArray = cipherBytes.copyOfRange(0, LEGACY_PRE_SALT_LENGTH)
         val oriCipherBytes: ByteArray =
@@ -471,7 +521,7 @@ object AESUtil {
 
     // ==============================================================
 
-    private fun generateIv(length: Int): ByteArray {
+    private fun generateIv(@Suppress("SameParameterValue") length: Int): ByteArray {
         val iv = ByteArray(length)
         // Do NOT seed secureRandom! Automatically seeded from system entropy.
         SecureRandom().nextBytes(iv)

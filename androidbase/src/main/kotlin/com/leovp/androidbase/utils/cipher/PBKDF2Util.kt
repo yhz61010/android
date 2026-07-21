@@ -519,7 +519,7 @@ object PBKDF2Util {
     /**
      * Encode [chars] to UTF-8 bytes WITHOUT materialising an intermediate [String]. A `String`
      * built from the passphrase would be an immutable heap object that cannot be wiped and would
-     * linger until GC; encoding through NIO lets the caller zero every transient buffer afterwards.
+     * linger until GC; encoding through NIO lets the caller zero every transient buffer afterward.
      */
     private fun charsToUtf8Bytes(chars: CharArray): ByteArray {
         val charBuffer = CharBuffer.wrap(chars)

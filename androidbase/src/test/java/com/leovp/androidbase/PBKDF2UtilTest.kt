@@ -63,6 +63,24 @@ class PBKDF2UtilTest {
     }
 
     @Test
+    fun `charsToUtf8Bytes encodes multi-byte passphrase identically to String toByteArray`() {
+        // Guards the wipe-friendly NIO encoding (review finding F4) against the previous
+        // String(passphrase).toByteArray(UTF_8) path: output must be byte-for-byte identical,
+        // including multi-byte (CJK / symbol / emoji) code points, so key material never shifts.
+        val passphrase = "pa55wörd—✓密码🔐".toCharArray()
+        val expected = String(passphrase).toByteArray(Charsets.UTF_8)
+
+        val method = PBKDF2Util::class.java.getDeclaredMethod(
+            "charsToUtf8Bytes",
+            CharArray::class.java
+        )
+        method.isAccessible = true
+        val actual = method.invoke(PBKDF2Util, passphrase) as ByteArray
+
+        assertContentEquals(expected, actual)
+    }
+
+    @Test
     fun `sha256KeyWithFallback uses manual PBKDF2 when provider is unavailable`() {
         val passphrase = "passphrase".toCharArray()
         val salt = ByteArray(16) { it.toByte() }

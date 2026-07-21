@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import com.leovp.android.utils.API
 import com.leovp.bytes.toBytes
+import java.nio.CharBuffer
 import java.security.NoSuchAlgorithmException
 import java.security.SecureRandom
 import javax.crypto.Mac
@@ -480,7 +481,7 @@ object PBKDF2Util {
             "outputKeyLengthInBits must be a positive multiple of 8"
         }
 
-        val passwordBytes = String(plainPassphrase).toByteArray(Charsets.UTF_8)
+        val passwordBytes = charsToUtf8Bytes(plainPassphrase)
         val mac = Mac.getInstance(HMAC_SHA256)
         mac.init(SecretKeySpec(passwordBytes, HMAC_SHA256))
         passwordBytes.fill(0)
@@ -504,6 +505,19 @@ object PBKDF2Util {
             System.arraycopy(t, 0, output, (blockIndex - 1) * hLen, hLen)
         }
         return output.copyOf(dkLen)
+    }
+
+    /**
+     * Encode [chars] to UTF-8 bytes WITHOUT materialising an intermediate [String]. A `String`
+     * built from the passphrase would be an immutable heap object that cannot be wiped and would
+     * linger until GC; encoding through NIO lets the caller zero every transient buffer afterwards.
+     */
+    private fun charsToUtf8Bytes(chars: CharArray): ByteArray {
+        val charBuffer = CharBuffer.wrap(chars)
+        val byteBuffer = Charsets.UTF_8.encode(charBuffer)
+        val bytes = byteBuffer.array().copyOfRange(byteBuffer.position(), byteBuffer.limit())
+        byteBuffer.array().fill(0) // wipe the transient encoding buffer
+        return bytes
     }
 
     // =====================================

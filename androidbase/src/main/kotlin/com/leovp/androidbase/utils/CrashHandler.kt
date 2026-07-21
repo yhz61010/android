@@ -20,7 +20,9 @@ object CrashHandler {
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             // A throwing custom handler must not stop us from chaining to the previous one.
             runCatching { customExceptionHandler?.uncaughtException(thread, throwable) }
-            previousExceptionHandler?.uncaughtException(thread, throwable)
+            // Symmetrically, a throwing previous handler (e.g. a misbehaving third-party reporter)
+            // must not escape this default handler; swallow it so the crash flow stays contained.
+            runCatching { previousExceptionHandler?.uncaughtException(thread, throwable) }
         }
     }
 }

@@ -333,9 +333,10 @@ object AESUtil {
     }
 
     /**
-     * Derive an AES key from [passphrase] and [salt] using the KDF recorded by the version byte.
-     * PBKDF2-HMAC-SHA256 uses a provider-backed implementation when available, with a standard
-     * HMAC-SHA256 fallback for API 21-25 so version-1 data remains cross-device readable.
+     * Derive an AES key from [passphrase] and [salt]. [useSha256] selects the KDF: when `true`,
+     * PBKDF2-HMAC-SHA256 (provider-backed when available, with a standard HMAC-SHA256 fallback for
+     * API 21-25 so version-1 data stays cross-device readable); otherwise PBKDF2-HMAC-SHA1. The
+     * caller derives [useSha256] from the format version byte; this function does not read it.
      */
     private fun deriveKey(passphrase: String, salt: ByteArray, useSha256: Boolean): SecretKey {
         val derived: SecretKey = if (useSha256) {

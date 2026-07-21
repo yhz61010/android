@@ -25,6 +25,15 @@ import javax.crypto.spec.SecretKeySpec
  * https://stackoverflow.com/questions/13433529/android-4-2-broke-my-encrypt-decrypt-code-and-the-pr
  * ovided-solutions-dont-work/39002997#39002997
  *
+ * ### Cross-API portability of non-ASCII passphrases
+ *
+ * On API 26+ the provider-backed `PBKDF2WithHmacSHA256` encodes the passphrase internally, whereas
+ * the API 21-25 fallback encodes it as UTF-8. For ASCII passphrases the two are identical, but a
+ * non-ASCII passphrase could in theory derive different key material across API levels/providers,
+ * making data non-portable. Callers needing cross-device SHA256 interop should restrict passphrases
+ * to ASCII (e.g. a hex/Base64 string), which is exactly what [AESUtil] does — so AESUtil is
+ * unaffected. Only direct callers passing raw non-ASCII passphrases need to take note.
+ *
  * Author: Michael Leo
  * Date: 20-12-21 下午8:15
  */

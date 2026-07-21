@@ -221,19 +221,24 @@ object RSAUtil {
      */
     fun encryptStringByFragment(pubKey: ByteArray, plainText: String): String? = runCatching {
         val bytes: ByteArray = plainText.toByteArray()
-        if (bytes.isEmpty()) return encrypt(pubKey, bytes)?.toHexString(true, "")
-
-        val sb = StringBuilder()
-        var offset = 0
-        while (offset < bytes.size) {
-            val end = minOf(offset + MAX_ENCRYPT_LEN, bytes.size)
-            val chunk = bytes.copyOfRange(offset, end)
-            val encHex = encrypt(pubKey, chunk)?.toHexString(true, "") ?: return null
-            if (sb.isNotEmpty()) sb.append('\n')
-            sb.append(encHex)
-            offset = end
+        if (bytes.isEmpty()) {
+            // Empty input is a single (empty) block, so encrypt/decrypt stay symmetric.
+            encrypt(pubKey, bytes)?.toHexString(true, "")
+        } else {
+            val sb = StringBuilder()
+            var offset = 0
+            while (offset < bytes.size) {
+                val end = minOf(offset + MAX_ENCRYPT_LEN, bytes.size)
+                val chunk = bytes.copyOfRange(offset, end)
+                // Any fragment failing to encrypt makes the whole result undefined; bail with null.
+                val encHex = encrypt(pubKey, chunk)?.toHexString(true, "")
+                    ?: return@runCatching null
+                if (sb.isNotEmpty()) sb.append('\n')
+                sb.append(encHex)
+                offset = end
+            }
+            sb.toString()
         }
-        sb.toString()
     }.getOrNull()
 
     /**

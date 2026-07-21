@@ -112,8 +112,8 @@
 | F3 | MEDIUM | fallback 派发分支无端到端测试（反射仅测纯算法） | ✅ 已修：抽 `internal sha256KeyWithFallback` seam，加派发/rethrow 确定性测试（`4d44fe4d4`） |
 | F4 | MEDIUM | 口令经 `String(plainPassphrase)` 中间态无法擦除（堆上残留） | ✅ 已修：改用 NIO `CharBuffer`→UTF-8 编码（`charsToUtf8Bytes`），绕过 `String`，编码后清零临时缓冲；输出字节不变，加多字节回归测试 |
 | F5 | MEDIUM | CrashHandler 链式 previous handler 调用未包 `runCatching`（既有代码，非本轮引入） | ✅ 已修：previous handler 调用同样包 `runCatching`，与 custom handler 对称，异常不逃逸默认处理器；加抛异常 previous handler 回归测试 |
-| F6 | LOW | `RSAUtil.encryptStringByFragment` runCatching 内非局部 `return` 绕过 `.getOrNull()` | ⏳ 保留：当前安全（`encrypt` 不抛），但脆弱，建议改 tail 表达式 |
-| F7 | LOW | `deriveKey` KDoc 措辞暗示其读版本字节，实际只收 `useSha256: Boolean` | ⏳ 保留：措辞小瑕疵 |
-| F8 | INFO | 非 ASCII 口令跨 API 直调可能 UTF-8 与 provider 内部编码不一致 | 不影响 AESUtil；仅外部直调者需注意 |
+| F6 | LOW | `RSAUtil.encryptStringByFragment` runCatching 内非局部 `return` 绕过 `.getOrNull()` | ✅ 已修：改为分支表达式 + `return@runCatching`，控制流全部留在 runCatching 内，行为不变 |
+| F7 | LOW | `deriveKey` KDoc 措辞暗示其读版本字节，实际只收 `useSha256: Boolean` | ✅ 已修：KDoc 改为明确"调用方从版本字节推出 `useSha256`，本函数不读版本" |
+| F8 | INFO | 非 ASCII 口令跨 API 直调可能 UTF-8 与 provider 内部编码不一致 | ✅ 已记：`PBKDF2Util` 对象级 KDoc 增加跨 API 可移植性注记；确认 AESUtil 口令恒为 hex（ASCII）不受影响 |
 
-> **F4/F5** 已作为可选硬化项修复（见上表状态）；**F6/F7/F8** 为记录性备注，暂保留。
+> **F4/F5** 已作为可选硬化项修复；**F6/F7/F8** 亦已处理（F6 重构、F7 修正 KDoc、F8 补充可移植性注记）。本轮 review 全部条目关闭。

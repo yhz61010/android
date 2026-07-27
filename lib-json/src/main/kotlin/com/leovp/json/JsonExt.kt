@@ -5,6 +5,7 @@ import com.google.gson.FieldAttributes
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Author: Michael Leo
@@ -57,7 +58,13 @@ val gson: Gson
         override fun shouldSkipClass(clazz: Class<*>?) = false
     }).create()
 
-fun Any?.toJsonString(): String = runCatching { gson.toJson(this) }.getOrElse { "" }
+fun Any?.toJsonString(onError: (Throwable) -> Unit = {}): String = try {
+    gson.toJson(this)
+} catch (e: Exception) {
+    if (e is CancellationException) throw e
+    onError(e)
+    ""
+}
 
 /**
  * Convert JSON string to object.
@@ -71,12 +78,13 @@ fun Any?.toJsonString(): String = runCatching { gson.toJson(this) }.getOrElse { 
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-inline fun <reified T> String?.toObject(): T? = runCatching {
-    gson.fromJson(
-        this,
-        T::class.java
-    )
-}.getOrNull()
+inline fun <reified T> String?.toObject(noinline onError: (Throwable) -> Unit = {}): T? = try {
+    gson.fromJson(this, T::class.java)
+} catch (e: Exception) {
+    if (e is CancellationException) throw e
+    onError(e)
+    null
+}
 
 /**
  * Convert JSON string to object
@@ -91,9 +99,10 @@ inline fun <reified T> String?.toObject(): T? = runCatching {
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-fun <T> String?.toObject(type: Type): T? = runCatching {
-    return gson.fromJson(
-        this,
-        type
-    )
-}.getOrNull()
+fun <T> String?.toObject(type: Type, onError: (Throwable) -> Unit = {}): T? = try {
+    gson.fromJson(this, type)
+} catch (e: Exception) {
+    if (e is CancellationException) throw e
+    onError(e)
+    null
+}

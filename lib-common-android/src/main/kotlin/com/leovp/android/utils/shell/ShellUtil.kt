@@ -4,6 +4,7 @@ package com.leovp.android.utils.shell
 
 import android.util.Log
 import androidx.annotation.Keep
+import androidx.annotation.VisibleForTesting
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.OutputStreamWriter
@@ -27,6 +28,20 @@ object ShellUtil {
     private const val CMD_EXIT = "exit"
     private val LINE_SEP = System.getProperty("line.separator")!!
 
+    private val PACKAGE_NAME_REGEX =
+        Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+    /**
+     * Validates an Android package name before it is interpolated into a shell command, closing the
+     * command-injection vector in [forceStop] / [uninstallApk] (remediation C2). Rejects anything
+     * containing shell metacharacters or otherwise not matching the package-name grammar.
+     */
+    @VisibleForTesting
+    internal fun requireValidPackage(pkgName: String): String {
+        require(PACKAGE_NAME_REGEX.matches(pkgName)) { "Illegal package name: $pkgName" }
+        return pkgName
+    }
+
     /**
      * Check root permission.
      *
@@ -38,6 +53,12 @@ object ShellUtil {
         isNeedResultMsg = false
     ).result == 0
 
+    /**
+     * Executes a raw shell command. The command string is interpreted by a real shell (`sh`/`su`),
+     * so shell metacharacters are live. The caller MUST guarantee the command is trusted / already
+     * validated — never interpolate unsanitized external input (see [requireValidPackage]). This is
+     * a low-level primitive by design.
+     */
     fun execCmd(
         command: String,
         isRoot: Boolean = false,
@@ -92,7 +113,7 @@ object ShellUtil {
     }
 
     fun forceStop(pkgName: String) {
-        execCmd("am force-stop $pkgName", true)
+        execCmd("am force-stop ${requireValidPackage(pkgName)}", true)
     }
 
     // ========================================================================
@@ -176,7 +197,7 @@ object ShellUtil {
 
     // unverified
     fun uninstallApk(pkgName: String) {
-        execCmd("pm uninstall $pkgName", true)
+        execCmd("pm uninstall ${requireValidPackage(pkgName)}", true)
     }
 
     // unverified

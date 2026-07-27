@@ -130,7 +130,7 @@ fun HorizontalAutoPager(
 
         if (underDragging.not() && auto) {
             LaunchedEffect(underDragging) {
-                runCatching {
+                try {
                     while (true) {
                         yield()
                         delay(delay)
@@ -157,7 +157,12 @@ fun HorizontalAutoPager(
                             }
                         }
                     }
-                } // catch CancellationException
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // Cancellation must propagate so the effect actually stops (remediation H13).
+                    throw e
+                } catch (e: Exception) {
+                    // Swallow only transient scroll errors, never cancellation.
+                }
             } // end of LaunchedEffect
         }
     }

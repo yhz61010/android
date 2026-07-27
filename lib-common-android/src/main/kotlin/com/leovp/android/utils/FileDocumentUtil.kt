@@ -15,6 +15,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.leovp.android.exts.fileExists
@@ -58,7 +59,7 @@ object FileDocumentUtil {
             isExternalStorageDocument(uri) -> {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray() //                val type = split[0]
-                getPathFromExtSD(split).takeIf { it.isNotBlank() }
+                getPathFromExtSD(split)?.takeIf { it.isNotBlank() }
             } // DownloadsProvider
             isDownloadsDocument(uri) -> getDownloadsDocumentRealPath(context, uri) // MediaProvider
             isMediaDocument(uri) -> {
@@ -180,10 +181,52 @@ object FileDocumentUtil {
             context.resources.getResourceEntryName(resId)
         ).toUri()
 
-    private fun getPathFromExtSD(pathData: Array<String>): String {
+    /**
+     * Sanitizes an externally-supplied file name (e.g. a content Uri DISPLAY_NAME) down to a bare
+     * file name, stripping any path segments so it cannot be used to escape a target directory.
+     * See remediation C1: content DISPLAY_NAME must never be trusted for path construction.
+     */
+    @VisibleForTesting
+    internal fun sanitizedFileName(rawName: String): String {
+        val name = File(rawName).name
+        require(name.isNotBlank() && name != "." && name != "..") { "Invalid file name" }
+        require(!name.contains('/') && !name.contains('\\')) { "Illegal path separator in name" }
+        return name
+    }
+
+    /**
+     * Resolves [childName] under [base], rejecting any result that escapes [base] after
+     * canonicalization. Guards against path-traversal writes (remediation C1).
+     */
+    @VisibleForTesting
+    internal fun resolveWithinBase(base: File, childName: String): File {
+        val target = File(base, sanitizedFileName(childName)).canonicalFile
+        val baseCanonical = base.canonicalFile.canonicalPath
+        require(target.canonicalPath.startsWith(baseCanonical + File.separator)) {
+            "Path escapes base directory"
+        }
+        return target
+    }
+
+    /**
+     * Returns [candidate] only when it exists AND stays within [base] after canonicalization,
+     * otherwise null. Prevents a `..` in a docId relative path from escaping the storage root.
+     */
+    private fun containedRealPath(candidate: String, base: File): String? {
+        val canonical = File(candidate).canonicalFile
+        val baseCanonical = base.canonicalFile.canonicalPath
+        val contained = canonical.canonicalPath == baseCanonical ||
+            canonical.canonicalPath.startsWith(baseCanonical + File.separator)
+        if (!contained) return null
+        return if (fileExists(canonical.path)) canonical.path else null
+    }
+
+    @VisibleForTesting
+    internal fun getPathFromExtSD(pathData: Array<String>): String? {
+        // Malformed docId (no relative-path segment) must not crash with index-out-of-bounds.
+        if (pathData.size < 2) return null
         val type = pathData[0]
         val relativePath = "/" + pathData[1]
-        var fullPath: String
 
         // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
         // something like "71F8-2C0A", some kind of unique id per storage
@@ -191,23 +234,20 @@ object FileDocumentUtil {
         //
         // so no "primary" type, but let the check here for other devices
         if ("primary".equals(type, ignoreCase = true)) {
-            fullPath = Environment.getExternalStorageDirectory().toString() + relativePath
-            if (fileExists(fullPath)) {
-                return fullPath
-            }
+            val root = Environment.getExternalStorageDirectory()
+            containedRealPath(root.toString() + relativePath, root)?.let { return it }
         }
 
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
-        // so we cannot rely on it.
-        //
-        // Instead, for each possible path, check if the file exists.
-        // We'll start with secondary storage as this could be our (physically) removable SD card.
-        fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
-        if (fileExists(fullPath)) {
-            return fullPath
+        // so we cannot rely on it. Instead, for each possible path, verify the file exists AND
+        // that its canonical path stays within the storage root (reject `..` traversal).
+        System.getenv("SECONDARY_STORAGE")?.let { secondary ->
+            containedRealPath("$secondary$relativePath", File(secondary))?.let { return it }
         }
-        fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
-        return if (fileExists(fullPath)) fullPath else fullPath
+        System.getenv("EXTERNAL_STORAGE")?.let { external ->
+            containedRealPath("$external$relativePath", File(external))?.let { return it }
+        }
+        return null
     }
 
     private fun getDriveFilePath(context: Context, uri: Uri): String {
@@ -224,7 +264,8 @@ object FileDocumentUtil {
                 cursor.moveToFirst()
                 // val size = cursor.getLong(sizeIndex).toString()
                 val name = cursor.getString(nameIndex)
-                val file = File(context.cacheDir, name)
+                // Sanitize the untrusted DISPLAY_NAME so it cannot escape cacheDir (remediation C1).
+                val file = resolveWithinBase(context.cacheDir, name)
 
                 context.contentResolver.openInputStream(uri).use { inputStream ->
                     FileOutputStream(file).use { outputStream ->
@@ -274,14 +315,15 @@ object FileDocumentUtil {
             cursor.moveToFirst()
             // val size = cursor.getLong(sizeIndex).toString()
             val name = cursor.getString(nameIndex)
+            // Sanitize the untrusted DISPLAY_NAME so it cannot escape filesDir (remediation C1).
             val output: File = if (newDirName != "") {
-                val dir = File(context.filesDir.toString() + "/" + newDirName)
+                val dir = File(context.filesDir, newDirName)
                 if (!dir.exists()) {
                     dir.mkdir()
                 }
-                File(context.filesDir.toString() + "/" + newDirName + "/" + name)
+                resolveWithinBase(dir, name)
             } else {
-                File(context.filesDir.toString() + "/" + name)
+                resolveWithinBase(context.filesDir, name)
             }
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 FileOutputStream(output).use { outputStream ->

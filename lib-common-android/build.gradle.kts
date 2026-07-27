@@ -22,6 +22,8 @@ dependencies {
 
     api(projects.libCommonKotlin)
     implementation(projects.floatview)
+
+    testImplementation(libs.bundles.test)
 }
 
 /** When use it: sourceJar.get() */

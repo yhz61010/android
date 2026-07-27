@@ -293,7 +293,7 @@ class FingerPaintView @JvmOverloads constructor(
         brushBitmap?.eraseColor(Color.TRANSPARENT)
         brushCanvas?.drawColor(Color.TRANSPARENT)
         canvas.save()
-        runCatching {
+        try {
             for (index in paths.indices) {
                 val path = paths[index]
                 if (index >= countDrawn) {
@@ -307,8 +307,13 @@ class FingerPaintView @JvmOverloads constructor(
                 brushCanvas?.drawPath(paths[index].first, paths[index].second)
             }
             brushBitmap?.let { canvas.drawBitmap(it, 0f, 0f, defaultBitmapPaint) }
-        }.onFailure { /* You can ignore this error. */ }
-        canvas.restore()
+        } catch (e: Exception) {
+            // Do not swallow silently; log so render failures are diagnosable. Errors (e.g. OOM)
+            // are intentionally NOT caught here (remediation H8).
+            android.util.Log.e("FingerPaintView", "onDraw failed", e)
+        } finally {
+            canvas.restore()
+        }
     }
 
     /**

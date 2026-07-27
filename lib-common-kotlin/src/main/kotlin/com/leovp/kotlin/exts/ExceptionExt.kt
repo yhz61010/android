@@ -2,6 +2,7 @@
 
 package com.leovp.kotlin.exts
 
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 // fun fail(message: String): Nothing {
@@ -39,9 +40,12 @@ inline fun multiCatch(
 ) {
     try {
         runBlock()
-    } catch (e: Throwable) {
+    } catch (e: Exception) {
+        // Cancellation must always propagate; never swallow it (remediation H16).
+        if (e is CancellationException) throw e
         if (exceptions.any { it.isInstance(e) }) {
-            catchBlock?.invoke(e)
+            // No catchBlock means the caller opted out of handling: re-throw, don't swallow.
+            catchBlock?.invoke(e) ?: throw e
         } else {
             // Re-throw if not in the specified exceptions
             uncaughtBlock?.invoke(e) ?: throw e

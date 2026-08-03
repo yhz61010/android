@@ -317,7 +317,10 @@ private fun showToast(
                 }
             }
         }
-    }.onFailure { it.printStackTrace() }
+    }.onFailure {
+        // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
+        android.util.Log.e("ToastExt", "show toast failed", it)
+    }
 }
 
 /**

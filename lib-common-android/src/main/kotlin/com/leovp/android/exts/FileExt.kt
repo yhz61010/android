@@ -14,17 +14,30 @@ import java.util.*
  * Date: 20-5-13 下午2:04
  */
 
+/**
+ * Copy this [InputStream] to the file at [outFileFullPath].
+ *
+ * @param force overwrite the target when it already exists; when `false` an existing file is left
+ * untouched.
+ * @param autoCloseInputStream close this stream when done. The stream is now closed on every exit
+ * path — success, skip (target exists and `force` is false), and error — so it can no longer leak
+ * when the copy is skipped (remediation L-A3).
+ * @throws java.io.IOException on an underlying read/write failure.
+ */
 fun InputStream.toFile(
     outFileFullPath: String,
     bufferSize: Int = 256 shl 10,
     force: Boolean = true,
     autoCloseInputStream: Boolean = true
 ) {
-    val outfile = File(outFileFullPath)
-    if (force || !outfile.exists()) {
-        outfile.outputStream().use { os ->
-            this.copyTo(os, bufferSize)
+    try {
+        val outFile = File(outFileFullPath)
+        if (force || !outFile.exists()) {
+            outFile.outputStream().use { os ->
+                this.copyTo(os, bufferSize)
+            }
         }
+    } finally {
         if (autoCloseInputStream) this.close()
     }
 }

@@ -65,7 +65,7 @@ class TouchHelper(private val touchListener: TouchListener) {
                 (activePressure * 100).toInt(),
                 interval
             )
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processTouchUp(event: MotionEvent) {
@@ -86,23 +86,27 @@ class TouchHelper(private val touchListener: TouchListener) {
                 -1
             )
             //            }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processCancelTouch(event: MotionEvent) {
         runCatching {
-            for (i in 0 until MAX_TOUCH_POINTS) {
+            // Iterate by pointer index and take coordinates with the SAME index. The pointer id
+            // (from getPointerId) is only a stable identifier for the payload, never an index into
+            // getX/getY — mixing them read the wrong pointer (or threw) on multi-touch (remediation
+            // H2). pointerCount is already capped at MAX_TOUCH_POINTS in onTouchEvent.
+            for (i in 0 until event.pointerCount) {
                 val activePointerId: Int = event.getPointerId(i)
                 touchListener.onEvent(
                     MotionEvent.ACTION_UP,
                     activePointerId,
-                    event.getX(activePointerId).roundToInt(),
-                    event.getY(activePointerId).roundToInt(),
+                    event.getX(i).roundToInt(),
+                    event.getY(i).roundToInt(),
                     -1,
                     -1
                 )
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processTouchDown(event: MotionEvent, activePointerId: Int, activePressure: Float) {
@@ -111,15 +115,19 @@ class TouchHelper(private val touchListener: TouchListener) {
         // $activePointerId ${event.x.roundToInt()} ${event.y.roundToInt()}")
         //        }
         runCatching {
+            // Resolve the pointer index for this id; getX/getY are index-based, not id-based
+            // (remediation H2). A stale/absent id yields -1, in which case there is nothing to report.
+            val pointerIndex = event.findPointerIndex(activePointerId)
+            if (pointerIndex < 0) return@runCatching
             touchListener.onEvent(
                 MotionEvent.ACTION_DOWN,
                 activePointerId,
-                event.getX(activePointerId).roundToInt(),
-                event.getY(activePointerId).roundToInt(),
+                event.getX(pointerIndex).roundToInt(),
+                event.getY(pointerIndex).roundToInt(),
                 (activePressure * 100).toInt(),
                 -1
             )
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     interface TouchListener {

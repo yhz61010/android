@@ -55,4 +55,18 @@ class FileDocumentUtilTest {
         // Previously this accessed pathData[1] directly and threw ArrayIndexOutOfBoundsException.
         FileDocumentUtil.getPathFromExtSD(arrayOf("primary")).shouldBeNull()
     }
+
+    @Test
+    fun `stripRawDownloadPrefix strips document-raw and raw prefixes`() {
+        FileDocumentUtil.stripRawDownloadPrefix("/document/raw:/storage/emulated/0/x.pdf") shouldBeEqualTo
+            "/storage/emulated/0/x.pdf"
+        FileDocumentUtil.stripRawDownloadPrefix("raw:/a/b") shouldBeEqualTo "/a/b"
+        FileDocumentUtil.stripRawDownloadPrefix("/plain/path") shouldBeEqualTo "/plain/path"
+    }
+
+    @Test
+    fun `stripRawDownloadPrefix returns null for a null path`() {
+        // Opaque Uris expose a null path; the helper must not throw (remediation H3).
+        FileDocumentUtil.stripRawDownloadPrefix(null).shouldBeNull()
+    }
 }

@@ -148,10 +148,9 @@ object FileDocumentUtil {
                         )
                         getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
-                        // In Android 8 and Android P the id is not a number
-                        uri.path!!
-                            .replaceFirst("^/document/raw:".toRegex(), "")
-                            .replaceFirst("^raw:".toRegex(), "")
+                        // In Android 8 and Android P the id is not a number. Opaque Uris have a
+                        // null path, so guard against NPE instead of `uri.path!!` (remediation H3).
+                        stripRawDownloadPrefix(uri.path)
                     }
                 }
             }
@@ -180,6 +179,16 @@ object FileDocumentUtil {
             context.resources.getResourceTypeName(resId) + "/" +
             context.resources.getResourceEntryName(resId)
         ).toUri()
+
+    /**
+     * Strips the `/document/raw:` and `raw:` prefixes a DownloadsProvider may return, tolerating a
+     * null [path] (opaque Uris) by returning null rather than throwing (remediation H3).
+     */
+    @VisibleForTesting
+    internal fun stripRawDownloadPrefix(path: String?): String? =
+        path
+            ?.replaceFirst("^/document/raw:".toRegex(), "")
+            ?.replaceFirst("^raw:".toRegex(), "")
 
     /**
      * Sanitizes an externally-supplied file name (e.g. a content Uri DISPLAY_NAME) down to a bare
@@ -250,7 +259,7 @@ object FileDocumentUtil {
         return null
     }
 
-    private fun getDriveFilePath(context: Context, uri: Uri): String {
+    private fun getDriveFilePath(context: Context, uri: Uri): String? {
         context.contentResolver
             .query(uri, null, null, null, null)?.use { cursor ->
 
@@ -259,19 +268,20 @@ object FileDocumentUtil {
                  * move to the first row in the Cursor, get the data,
                  * and display cursor.
                  */
-                // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                // Guard the cursor/column/stream against a missing column, an empty result set, or
+                // a provider that returns no data, instead of crashing (remediation H4).
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                cursor.moveToFirst()
-                // val size = cursor.getLong(sizeIndex).toString()
-                val name = cursor.getString(nameIndex)
+                if (nameIndex < 0 || !cursor.moveToFirst()) return null
+                val name = cursor.getString(nameIndex) ?: return null
                 // Sanitize the untrusted DISPLAY_NAME so it cannot escape cacheDir (remediation C1).
                 val file = resolveWithinBase(context.cacheDir, name)
 
-                context.contentResolver.openInputStream(uri).use { inputStream ->
+                val input = context.contentResolver.openInputStream(uri) ?: return null
+                input.use { inputStream ->
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
                         val maxBufferSize = 1 * 1024 * 1024
-                        val bytesAvailable = inputStream!!.available()
+                        val bytesAvailable = inputStream.available()
 
                         // int bufferSize = 1024;
                         val bufferSize = min(bytesAvailable, maxBufferSize)
@@ -283,7 +293,7 @@ object FileDocumentUtil {
                 }
                 return file.path
             }
-        return ""
+        return null
     }
 
     /***
@@ -295,7 +305,7 @@ object FileDocumentUtil {
         context: Context,
         uri: Uri,
         @Suppress("SameParameterValue") newDirName: String,
-    ): String {
+    ): String? {
         context.contentResolver.query(
             uri,
             arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
@@ -310,11 +320,13 @@ object FileDocumentUtil {
              *     * and display it.
              *
              */
+            // Guard the cursor/column/stream against a missing column, an empty result set, or a
+            // provider that returns no data, instead of crashing (remediation H4).
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            cursor.moveToFirst()
+            if (nameIndex < 0 || !cursor.moveToFirst()) return null
             // val size = cursor.getLong(sizeIndex).toString()
-            val name = cursor.getString(nameIndex)
+            val name = cursor.getString(nameIndex) ?: return null
             // Sanitize the untrusted DISPLAY_NAME so it cannot escape filesDir (remediation C1).
             val output: File = if (newDirName != "") {
                 val dir = File(context.filesDir, newDirName)
@@ -325,7 +337,8 @@ object FileDocumentUtil {
             } else {
                 resolveWithinBase(context.filesDir, name)
             }
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            val input = context.contentResolver.openInputStream(uri) ?: return null
+            input.use { inputStream ->
                 FileOutputStream(output).use { outputStream ->
                     var read: Int
                     val bufferSize = 1024
@@ -338,10 +351,10 @@ object FileDocumentUtil {
 
             return output.path
         }
-        return ""
+        return null
     }
 
-    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String =
+    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String? =
         copyFileToInternalStorage(context, uri, "whatsapp")
 
     /**

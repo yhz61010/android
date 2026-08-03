@@ -5,6 +5,7 @@ package com.leovp.network.interceptors
 import com.leovp.log.base.LogOutType
 import com.leovp.log.base.w
 import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -153,7 +154,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     !"Content-Length".equals(name, ignoreCase = true)
                 ) {
                     logger.log(
-                        msg = "$name: ${headers.value(i)}",
+                        msg = "$name: ${redactHeaderValue(name, headers.value(i))}",
                         logType = LogOutType.FRAMEWORK_HTTP_HEADER
                     )
                 }
@@ -213,7 +214,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             var hasInlineFile = false
             for (i in 0 until headers.size) {
                 logger.log(
-                    msg = "${headers.name(i)}: ${headers.value(i)}",
+                    msg = "${headers.name(i)}: ${redactHeaderValue(headers.name(i), headers.value(i))}",
                     logType = LogOutType.FRAMEWORK_HTTP_HEADER
                 )
                 if ("Content-Disposition".contentEquals(headers.name(i)) &&
@@ -262,6 +263,17 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
 
         private val DEFAULT_CHARSET = Charsets.UTF_8
         private const val TAG = "HTTP"
+
+        /**
+         * Header names (lower-case) whose values are masked in logs so credentials/session tokens
+         * are never leaked (remediation M-N1). Mutable so callers can add project-specific headers.
+         */
+        @Volatile
+        var redactedHeaderNames: Set<String> =
+            setOf("authorization", "cookie", "set-cookie", "proxy-authorization")
+
+        private fun redactHeaderValue(name: String, value: String): String =
+            if (name.lowercase(Locale.US) in redactedHeaderNames) "██ (redacted)" else value
 
         /**
          * Returns true if the body in question probably contains human readable text. Uses a small

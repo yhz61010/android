@@ -31,6 +31,13 @@ import kotlinx.coroutines.flow.Flow
  * Author: Michael Leo
  * Date: 2025/8/22 13:29
  */
+/**
+ * Collects [events] and reacts to each [UiEvent].
+ *
+ * @param events MUST be a stable reference (e.g. a `remember`ed or ViewModel-owned Flow). It is a
+ * key of the collecting [LaunchedEffect]; passing a freshly-created Flow on every recomposition
+ * restarts collection and can drop in-flight events (remediation M-C4).
+ */
 @Suppress("FunctionNaming")
 @Composable
 fun GenericEventHandler(
@@ -38,7 +45,6 @@ fun GenericEventHandler(
     navController: AppNavigation? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     loadingDialogContent: @Composable (() -> Unit)? = null,
-//    hideLoadingContent: @Composable (() -> Unit)? = null,
     dialogContent: @Composable (
         (dialogState: MutableState<UiEvent.ShowDialog?>) -> Unit
     )? = null,
@@ -54,7 +60,9 @@ fun GenericEventHandler(
         val window = (view.context as? Activity)?.window
         navigationBarVisibility(window = window, view = view, isShow = false)
         onDispose {
-            navigationBarVisibility(window = window, view = view, isShow = false)
+            // Restore the navigation bar when leaving the composition; re-hiding it here left the bar
+            // hidden for whatever screen came next (remediation H10).
+            navigationBarVisibility(window = window, view = view, isShow = true)
         }
     }
 
@@ -154,9 +162,6 @@ fun GenericEventHandler(
     if (showLoadingDialog) {
         loadingDialogContent?.invoke()
     }
-    // else {
-    //     hideLoadingContent?.invoke()
-    // }
 
     // Custom Dialog
     dialogState.value?.let {

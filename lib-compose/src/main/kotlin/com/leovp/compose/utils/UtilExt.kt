@@ -31,5 +31,14 @@ fun Long.toCounterBadgeText(limitation: Int = 99): String = when {
 fun Int.toCounterBadgeText(limitation: Int = 99): String =
     this.toLong().toCounterBadgeText(limitation)
 
-val monthDateFormat =
-    SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }
+private val monthDateFormatThreadLocal: ThreadLocal<SimpleDateFormat> =
+    ThreadLocal.withInitial {
+        SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }
+    }
+
+/**
+ * A `MM-dd` formatter. Backed by a [ThreadLocal] because [SimpleDateFormat] is not thread-safe and
+ * this used to be one shared instance that could corrupt output under concurrent use (M-C2).
+ */
+val monthDateFormat: SimpleDateFormat
+    get() = monthDateFormatThreadLocal.get()

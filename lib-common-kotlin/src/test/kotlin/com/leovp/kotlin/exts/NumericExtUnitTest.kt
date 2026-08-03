@@ -86,4 +86,29 @@ class NumericExtUnitTest {
 
         assertEquals("13:17", getRatio(13, 17))
     }
+
+    @Test
+    fun `formatDecimalSeparator groups positives`() {
+        assertEquals("0", 0.formatDecimalSeparator())
+        assertEquals("999", 999.formatDecimalSeparator())
+        assertEquals("1,000", 1000.formatDecimalSeparator())
+        assertEquals("1,234,567", 1234567.formatDecimalSeparator())
+        assertEquals("1,234,567,890", 1234567890L.formatDecimalSeparator())
+    }
+
+    @Test
+    fun `formatDecimalSeparator handles negatives without misplacing the sign`() {
+        // Regression for remediation H14: the sign used to be chunked into its own group,
+        // producing "-,100" / "-,123,456" when the digit count was a multiple of three.
+        assertEquals("-100", (-100).formatDecimalSeparator())
+        assertEquals("-1,234", (-1234).formatDecimalSeparator())
+        assertEquals("-123,456", (-123456).formatDecimalSeparator())
+    }
+
+    @Test
+    fun `formatDecimalSeparator handles MIN_VALUE without abs overflow`() {
+        // abs(Long.MIN_VALUE) overflows and stays negative; the string-strip path must still work.
+        assertEquals("-9,223,372,036,854,775,808", Long.MIN_VALUE.formatDecimalSeparator())
+        assertEquals("-2,147,483,648", Int.MIN_VALUE.formatDecimalSeparator())
+    }
 }

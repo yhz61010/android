@@ -58,11 +58,20 @@ fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = fal
         val secondVal = if (swapResult) a / gcd else b / gcd
         "$firstVal$delimiters$secondVal"
     }.getOrElse {
-        // In case getGDC (a recursively looping method) repeats too many times
-        // Log.e(TAG, "Irrational ratio: $a to $b")
-        // throw ArithmeticException("Irrational ratio: $a to $b")
+        // gcd() throws ArithmeticException when dividing by zero (e.g. both a and b are 0);
+        // an undefined ratio yields null rather than propagating the exception (remediation L-K2).
         null
     }
+
+/**
+ * Groups a string of digits (no sign) into comma-separated thousands. Kept private so both the
+ * [Int] and [Long] formatters share one implementation (remediation H14 / L-K3).
+ */
+private fun String.groupThousands(): String =
+    reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
 
 /**
  * Formats an [Int] with comma-separated thousands.
@@ -75,27 +84,30 @@ fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = fal
  * (-1234).formatDecimalSeparator()  // "-1,234"
  * ```
  */
-fun Int.formatDecimalSeparator(): String = toString()
-    .reversed()
-    .chunked(3)
-    .joinToString(",")
-    .reversed()
+fun Int.formatDecimalSeparator(): String = toLong().formatDecimalSeparator()
 
 /**
  * Formats a [Long] with comma-separated thousands.
+ *
+ * The sign is handled separately (never `abs()`, which overflows for [Long.MIN_VALUE] and stays
+ * negative); grouping the sign together with the digits produced wrong output such as `"-,100"`
+ * when the digit count was a multiple of three (remediation H14).
  *
  * Example:
  * ```
  * 1234567890L.formatDecimalSeparator()  // "1,234,567,890"
  * 999L.formatDecimalSeparator()         // "999"
  * 10000L.formatDecimalSeparator()       // "10,000"
+ * (-123456L).formatDecimalSeparator()   // "-123,456"
+ * Long.MIN_VALUE.formatDecimalSeparator() // "-9,223,372,036,854,775,808"
  * ```
  */
-fun Long.formatDecimalSeparator(): String = toString()
-    .reversed()
-    .chunked(3)
-    .joinToString(",")
-    .reversed()
+fun Long.formatDecimalSeparator(): String {
+    val raw = toString()
+    val negative = raw.startsWith("-")
+    val digits = (if (negative) raw.substring(1) else raw).groupThousands()
+    return if (negative) "-$digits" else digits
+}
 
 /**
  * Returns `true` if this [BigDecimal] is numerically equal to zero.

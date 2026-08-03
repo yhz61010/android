@@ -150,7 +150,9 @@ fun Long.humanReadableByteCount(si: Boolean = false, precision: Int = 2): String
     if (this < base) return "${this}B"
     val exp = (ln(this.toDouble()) / ln(base.toDouble())).toInt()
     val pre = (if (si) "kMGTPEZY" else "KMGTPEZY")[exp - 1].toString()
-    return "%.${precision}f%s%s".format(
+    return String.format(
+        Locale.ENGLISH,
+        "%.${precision}f%s%s",
         this / base.toDouble().pow(exp.toDouble()),
         pre,
         if (si) "B" else "iB"

@@ -78,10 +78,12 @@ fun Modifier.debounceClickable(debounceTime: Long = 1000L, onClick: () -> Unit):
 }
 
 fun Modifier.dispatchTouchEvent(
-    // interactionSource: MutableInteractionSource? = null,
     onTouch: () -> Unit = {},
 ): Modifier =
-    pointerInput(Unit) {
+    // Key the pointerInput on onTouch so a recomposition with a new callback restarts the gesture
+    // loop and invokes the latest onTouch; keying on Unit captured the stale first one (remediation
+    // H12).
+    pointerInput(onTouch) {
         awaitPointerEventScope {
             while (true) {
                 val event = awaitPointerEvent()
@@ -100,28 +102,3 @@ fun Modifier.dispatchTouchEvent(
             }
         }
     }
-
-// val source = interactionSource ?: remember { MutableInteractionSource() }
-
-// clickable(
-//     interactionSource = source,
-//     indication = null,
-//     onClick = onClick
-// )
-
-// pointerInput(Unit) {
-//     detectTapGestures(
-//         onPress = { _ ->
-//             // When pressed, it will be executed.
-//             // You can get position from `offset` parameter.
-//
-//             // Wait for release or cancel
-//             val released = tryAwaitRelease()
-//             if (released) {
-//                 onClick()
-//             } else {
-//                 // Gesture cancelled.
-//             }
-//         }
-//     )
-// }

@@ -35,8 +35,6 @@ import kotlinx.coroutines.yield
  * Date: 2023/9/19 14:32
  */
 
-// private const val TAG = "HAP"
-
 @Suppress("FunctionNaming")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -51,12 +49,10 @@ fun HorizontalAutoPager(
     pageCount: Int,
     pagerContent: @Composable (index: Int) -> Unit,
 ) {
-    // d(TAG) { "=> Enter HorizontalAutoPager <=" }
     // TODO Bug for Compose when set it to Int.MAX_VALUE.
     val loopingCount = 1024 // Int.MAX_VALUE
-    // // We start the pager in the middle of the raw number of pages
+    // Start the pager in the middle of the looping range.
     val startIndex = loopingCount / 2
-    // val startIndex = 0 // if (pageCount % 2 != 0) ((pageCount + 1) / 2 - 1) else 0
     val pagerState = rememberPagerState(
         initialPage = startIndex,
         initialPageOffsetFraction = 0f,
@@ -64,13 +60,6 @@ fun HorizontalAutoPager(
     )
 
     fun pageMapper(index: Int): Int = (index - startIndex).floorMod(pageCount)
-
-    // d {
-    //     "HorizontalAutoPager -> startIndex=$startIndex  " +
-    //             "pageCount=$pageCount  " +
-    //             "currentPage=${pagerState.currentPage}  " +
-    //             "pageMapper(currentPage)=${pageMapper(pagerState.currentPage)}"
-    // }
 
     Box(modifier = modifier) {
         HorizontalPager(
@@ -93,25 +82,10 @@ fun HorizontalAutoPager(
                     pageMapper(pagerState.currentPage + offset)
                 }
             }
-            // d { "indicatorContent -> currentPageIndex=$currentPageIndex  pageCount=$pageCount" }
             Column(modifier = Modifier.align(indicatorAlignment)) {
                 indicator(currentPageIndex, pageCount)
             }
         }
-
-        // //// This way is not the best way because it will always re-launch LaunchedEffect
-        // //// when pagerState.settledPage is changed.
-        // // LaunchedEffect(key1 = pagerState.settledPage) {
-        // //     yield()
-        // //     delay(3000L)
-        // //     pagerState.animateScrollToPage(
-        // //         page = pagerState.currentPage + 1,
-        // //         animationSpec = tween(
-        // //             durationMillis = 500,
-        // //             easing = FastOutSlowInEasing,
-        // //         ),
-        // //     )
-        // // }
 
         var underDragging by remember { mutableStateOf(false) }
 
@@ -140,10 +114,6 @@ fun HorizontalAutoPager(
                         if (underDragging.not()) {
                             val toPage = nextPage.takeIf { nextPage < pagerState.pageCount }
                                 ?: (currentPos + startIndex + 1)
-                            // d {
-                            //     "current=$current  currentPos=$currentPos  " +
-                            //             "nextPage=$nextPage  toPage=$toPage"
-                            // }
                             if (toPage > current) {
                                 pagerState.animateScrollToPage(
                                     page = toPage,

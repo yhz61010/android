@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -39,14 +40,19 @@ import kotlinx.coroutines.launch
 fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit): () -> Unit {
     var isClickable by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
+    // The returned lambda is remembered once with no keys, so capture the latest onClick/debounceTime
+    // via rememberUpdatedState; otherwise a recomposition with a new onClick kept firing the stale
+    // first-composition lambda (remediation H11).
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentDebounceTime by rememberUpdatedState(debounceTime)
 
     return remember {
         {
             if (isClickable) {
                 isClickable = false
-                onClick()
+                currentOnClick()
                 scope.launch {
-                    delay(debounceTime)
+                    delay(currentDebounceTime)
                     isClickable = true
                 }
             }

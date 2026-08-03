@@ -1,6 +1,5 @@
 package com.leovp.drawonscreen
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
@@ -129,6 +128,10 @@ class FingerPaintView @JvmOverloads constructor(
                         R.styleable.FingerPaintImageView_touchTolerance,
                         DEFAULT_TOUCH_TOLERANCE
                     )
+                }.onFailure {
+                    // Do not silently skip bad styled attributes; surface via android.util.Log
+                    // without adding a project log dependency (remediation M-D1).
+                    android.util.Log.e("FingerPaintView", "read styled attributes failed", it)
                 }.also { recycle() }
             }
         }
@@ -149,6 +152,12 @@ class FingerPaintView @JvmOverloads constructor(
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        // Bitmap.createBitmap throws for a non-positive size; skip until the view has real bounds
+        // (remediation M-D3).
+        if (w <= 0 || h <= 0) return
+        // Recycle the previous buffer before allocating a new one to avoid a native-memory leak on
+        // repeated size changes (remediation M-D2).
+        brushBitmap?.recycle()
         brushBitmap = Bitmap.createBitmap(
             w,
             h,
@@ -198,9 +207,8 @@ class FingerPaintView @JvmOverloads constructor(
         }
     }
 
-    private fun getCurrentPath() = paths.lastOrNull()?.first
+    private fun getCurrentPath() = synchronized(this) { paths.lastOrNull()?.first }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (inEditMode) {
             when (event.action) {
@@ -219,10 +227,25 @@ class FingerPaintView @JvmOverloads constructor(
                     countDrawn++
                     invalidate()
                     touchEventCallback?.onTouchUp(event.x, event.y, pathPaint)
+                    // Route the lift as an accessibility click so TalkBack and any registered
+                    // OnClickListener are notified, instead of suppressing the lint (remediation L-D2).
+                    performClick()
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    // Finalize the in-progress stroke on gesture cancellation so no partial path is
+                    // left dangling; no onTouchUp callback is fired for a cancel (remediation M-D6).
+                    handleTouchEnd()
+                    countDrawn++
+                    invalidate()
                 }
             }
         }
         return inEditMode
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     private fun handleTouchStart(event: MotionEvent) {
@@ -241,7 +264,11 @@ class FingerPaintView @JvmOverloads constructor(
 
         // make sure drawings are kept within the image bounds
         if (imageBounds.contains(event.x, event.y)) {
-            paths.add(Path().also { it.moveTo(event.x, event.y) } to Paint(pathPaint))
+            // Structural mutation shares the monitor used by onDraw's snapshot and the other
+            // mutators (remediation H9).
+            synchronized(this) {
+                paths.add(Path().also { it.moveTo(event.x, event.y) } to Paint(pathPaint))
+            }
             currentX = event.x
             currentY = event.y
         }
@@ -292,10 +319,14 @@ class FingerPaintView @JvmOverloads constructor(
         super.onDraw(canvas)
         brushBitmap?.eraseColor(Color.TRANSPARENT)
         brushCanvas?.drawColor(Color.TRANSPARENT)
-        canvas.save()
         try {
-            for (index in paths.indices) {
-                val path = paths[index]
+            // Render over an immutable snapshot taken under the same monitor the structural mutators
+            // (undo/clear/drawUserPath/handleTouchStart) hold, so a concurrent change cannot skew the
+            // indices or raise ConcurrentModificationException mid-draw. The heavy drawing then runs
+            // outside the lock (remediation H9).
+            val snapshot = synchronized(this) { paths.toList() }
+            for (index in snapshot.indices) {
+                val path = snapshot[index]
                 if (index >= countDrawn) {
                     path.second.maskFilter =
                         when (currentBrush) {
@@ -304,15 +335,13 @@ class FingerPaintView @JvmOverloads constructor(
                             BrushType.NORMAL -> null
                         }
                 }
-                brushCanvas?.drawPath(paths[index].first, paths[index].second)
+                brushCanvas?.drawPath(path.first, path.second)
             }
             brushBitmap?.let { canvas.drawBitmap(it, 0f, 0f, defaultBitmapPaint) }
         } catch (e: Exception) {
             // Do not swallow silently; log so render failures are diagnosable. Errors (e.g. OOM)
             // are intentionally NOT caught here (remediation H8).
             android.util.Log.e("FingerPaintView", "onDraw failed", e)
-        } finally {
-            canvas.restore()
         }
     }
 
@@ -344,10 +373,15 @@ class FingerPaintView @JvmOverloads constructor(
     /**
      * Removes the last full path from the view.
      */
+    @Synchronized
     fun undo() {
         touchEventCallback?.onUndo()
-        paths.takeIf { it.isNotEmpty() }?.removeAt(paths.lastIndex)
-        countDrawn--
+        // Only decrement the counter when a path was actually removed, and never let it go negative;
+        // an unconditional `countDrawn--` on an empty list underflowed the counter (remediation H7).
+        if (paths.isNotEmpty()) {
+            paths.removeAt(paths.lastIndex)
+            countDrawn = (countDrawn - 1).coerceAtLeast(0)
+        }
         invalidate()
     }
 
@@ -377,11 +411,12 @@ class FingerPaintView @JvmOverloads constructor(
     }
 
     @Synchronized
-    fun drawUserPath(userPath: MutableList<Pair<Path, Paint>>) {
+    fun drawUserPath(userPath: List<Pair<Path, Paint>>) {
         clear()
         paths.addAll(0, userPath)
         invalidate()
     }
 
-    fun getPaths() = paths.toMutableList()
+    @Synchronized
+    fun getPaths(): List<Pair<Path, Paint>> = paths.toList()
 }

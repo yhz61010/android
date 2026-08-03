@@ -102,6 +102,8 @@ object SslUtils {
      *     .inputStream()
      * ```
      */
+    // @Volatile so a value set on one thread is visible to the TLS handshake on another (M-N3).
+    @Volatile
     var certificateInputStream: InputStream? = null
 
     /**
@@ -110,17 +112,14 @@ object SslUtils {
      * SslUtils.hostnames = arrayOf("postman-echo.com")
      * ```
      */
+    @Volatile
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->
-        requireNotNull(
-            hostnames
-        ) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
-        hostnames!!.contains(hostname)
-        // else {
-        //     val hv = HttpsURLConnection.getDefaultHostnameVerifier()
-        //     hv.verify(this.hostname, session)
-        // }
+        val names = requireNotNull(hostnames) {
+            "Host names must not be empty. Did you forget to set SslUtils.hostnames?"
+        }
+        names.contains(hostname)
     }
 
     fun createSocketFactory(

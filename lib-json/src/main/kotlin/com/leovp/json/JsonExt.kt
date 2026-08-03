@@ -4,6 +4,7 @@ import com.google.gson.ExclusionStrategy
 import com.google.gson.FieldAttributes
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import java.lang.reflect.Type
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -43,8 +44,8 @@ annotation class ExcludeDeserialize
  * The usage of annotations `Exclude`, `ExcludeSerialize` and `ExcludeDeserialize`,
  * please check `JsonUnitTest.kt` file.
  */
-val gson: Gson
-    get() = GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
+val gson: Gson by lazy {
+    GsonBuilder().addSerializationExclusionStrategy(object : ExclusionStrategy {
         override fun shouldSkipField(f: FieldAttributes) =
             (f.annotations.find { it is Exclude } as? Exclude)?.serialize == true ||
                 f.annotations.find { it is ExcludeSerialize } != null
@@ -57,6 +58,7 @@ val gson: Gson
 
         override fun shouldSkipClass(clazz: Class<*>?) = false
     }).create()
+}
 
 fun Any?.toJsonString(onError: (Throwable) -> Unit = {}): String = try {
     gson.toJson(this)
@@ -79,7 +81,9 @@ fun Any?.toJsonString(onError: (Throwable) -> Unit = {}): String = try {
  * or if `json` is empty.
  */
 inline fun <reified T> String?.toObject(noinline onError: (Throwable) -> Unit = {}): T? = try {
-    gson.fromJson(this, T::class.java)
+    // Use a reified TypeToken so generic type arguments (e.g. List<CmdBean>) survive erasure;
+    // T::class.java dropped them and Gson produced LinkedTreeMap elements (remediation H18).
+    gson.fromJson(this, object : TypeToken<T>() {}.type)
 } catch (e: Exception) {
     if (e is CancellationException) throw e
     onError(e)

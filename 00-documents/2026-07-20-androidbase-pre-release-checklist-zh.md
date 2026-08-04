@@ -70,7 +70,7 @@
 
 - **`BluetoothUtil.setPairingConfirmation(...)`**：返回类型由 `Unit` 改为 `Boolean`（失败返回 `false`）。
 - **`WifiUtil.connectWifi(...)`**：`enc` 默认值由 `WifiEncType.WEP` 改为 `WifiEncType.WPA`。
-- **`YuvUtil`**：6 个仓库内 0 引用的公共函数标 `@Deprecated`（`convertYUV420888ToNV21`、`cropYUV420`、`frameMirror`、`generateFromImage`、`i420ToRGBABitmap`、`rgbToI420`），计划下个主版本移除。
+- **`YuvUtil`**：6 个仓库内 0 引用的公共函数（`convertYUV420888ToNV21`、`cropYUV420`、`frameMirror`、`generateFromImage`、`i420ToRGBABitmap`、`rgbToI420`）**保留为公共 API，不再标记 `@Deprecated`**（撤销先前弃用决定）。
 
 ---
 
@@ -139,7 +139,7 @@
 | M1 GCM→legacy 回落完整性 gap | 已提供严格 `decrypt` | `decryptLegacy` 保留兼容回落（已测试的取舍） |
 | H265Util `extractNalu` 抽取 | 保留 | 纯装饰性 DRY，不改行为/API，编辑摩擦大 |
 | Clipboard `removeCallbacks` | 保留 | 需重写 Android Q 有意的 1s 延迟读取，风险高 |
-| YuvUtil 物理删除 + 拆文件 | 改为 `@Deprecated` | 删公共 API 属破坏性；`object` 拆文件对 Kotlin 不自然 |
+| YuvUtil 物理删除 + 拆文件 | 保留为公共 API（不弃用） | 删公共 API 属破坏性；`object` 拆文件对 Kotlin 不自然；这些函数保留待用 |
 | LOW-5 RSA 日志含 Throwable | 确认可接受 | log 模块经门控、Logcat 按应用隔离，JCE 异常不含明文 |
 
 ---

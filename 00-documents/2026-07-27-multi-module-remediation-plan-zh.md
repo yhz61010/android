@@ -362,6 +362,19 @@
   - Phase 3+4+5：按模块归并为 7 个提交 —— `fix(lib-common-android)` / `fix(lib-common-kotlin)` / `fix(lib-json)` / `fix(lib-compose)` / `fix(lib-network)` / `docs(lib-compress)` / `fix(draw-on-screen)`。
 - **待办**：①本机 `staticCheck`（test+detekt+ktlint）统一验证；②发版前将破坏性变更（C3 TLS、H16、H18 泛型语义、H19、M-D5 `MutableList→List`）写入 CHANGELOG / 迁移指南；③择机处理 3 项延后。
 
+### 评审后续修正（2026-08-04）
+
+在 Codex 代码评审后又落了一轮修正（提交见 `fix/multi-module-remediation` 分支）：
+
+- **Codex 评审后续**（`fbe651727`）—— 修了两个原 59 项 findings 未覆盖的真 bug：
+  - `FileDocumentUtil.copyFileToInternalStorage`：缓冲区曾按 `min(InputStream.available(), 1MB)` 取值，content provider 合法返回 `0` 时得到 `ByteArray(0)` → `read()` 恒返回 0 → **死循环挂死**；改为固定 8KB 缓冲。
+  - `FingerPaintView` `countDrawn` 重构（超出原 H7）：自增绑定到笔画真正终结（`handleTouchEnd`）、全程 `coerceIn(0, paths.size)`，修复"DOWN 落在图像外/`getDrawable()==null` 时不加 path 但 UP 仍自增"导致的**计数漂移 + 污染已提交笔画**。
+  - `ShellUtilDrainTest`：`assertTimeoutPreemptively<Pair<String,String>>` 显式类型参（编译修复）。
+  - `HorizontalAutoPager`：空 catch 改为 `com.leovp.log.base.e(...)`（lib-compose 本就 `api(projects.log)`，与模块约定一致）。
+- **AESUtil API 改名**（`714c2f2fb` + `c8102c445`）：`decryptStrict(...)` → `decrypt(...)`（严格 AES-GCM 成为默认名）、旧 `decrypt(…useSHA512)` → `decryptLegacy(...)`（宽松、自动识别新旧格式）；并移除 `decryptLegacy` 上会把旧 CBC 密文调用方误迁到严格 `decrypt()` 的 `@Deprecated/ReplaceWith` 陷阱。androidbase 三份 cipher 文档已同步。
+- **YuvUtil 反弃用**（`714c2f2fb` + `ebe269ca8`）：撤销先前 P3 的 `@Deprecated`，6 个函数保留为公共 API；androidbase changelog/checklist 已同步（方案 B）。
+- **范围说明**：以上 AESUtil / YuvUtil 改动使本分支**扩到 androidbase**（原计划仅含 7 个 lib 模块，属评审后追加）。开 PR 时需说明"多模块整改 + androidbase 二次改动"两个主题，或考虑拆分。
+
 ---
 
 *本实现文档与设计文档（审查报告）逐项对应；ID 保持一致，便于交叉追踪。所有 `file:line` 为仓库相对路径。*

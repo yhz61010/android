@@ -18,6 +18,7 @@ android {
 dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     compileOnly(libs.gson)
+    implementation(projects.log)
 
     testImplementation(libs.bundles.test)
     // Gson is compileOnly above; tests exercising JSON parsing need it on the test classpath.

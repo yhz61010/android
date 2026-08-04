@@ -243,7 +243,7 @@ object NetworkUtil {
     )
     fun getNetworkGeneration(ctx: Context): String? {
         return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
-            return when {
+            when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
                     getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
                 }

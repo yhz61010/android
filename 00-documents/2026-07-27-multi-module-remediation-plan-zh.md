@@ -55,7 +55,8 @@
 审查报告中多处"经 `log` 模块记录"的建议，**仅适用于已依赖 log 的模块**：
 
 - **lib-network** 有 `compileOnly(projects.log)`；lib-compose 有 `api(projects.log)` — 可用 log（测试时注意 `compileOnly` 需在 test 提升）。
-- **lib-common-kotlin / lib-json / lib-compress** **无 log 依赖**，且 lib-common-kotlin 是基础工具模块 —— **不要为记日志而新增 log 依赖**。这些模块的错误处理改为：**上抛** / **可注入 handler 参数** / **返回类型化结果**，核心是"不静默吞掉、不吞 `CancellationException`"，而非强制记日志。
+- **lib-common-kotlin / lib-compress** **无 log 依赖**，且 lib-common-kotlin 是基础工具模块 —— **不要为记日志而新增 log 依赖**。这些模块的错误处理改为：**上抛** / **可注入 handler 参数** / **返回类型化结果**，核心是"不静默吞掉、不吞 `CancellationException`"，而非强制记日志。
+- **lib-json** 经实现决策作为例外：`Any?.toJsonString()` 与 `String?.toObject()` 系列只负责 JSON 转换，失败时由函数内部经项目 `log` 记录异常并返回默认值（`""` / `null`），不向调用方暴露 `onError` 参数。
 - **lib-common-android**（M-A1 涉及）：直接依赖中无项目 `log`（`api(projects.libCommonKotlin)` + `implementation(projects.floatview)`）。动手前先确认 log 是否经传递依赖可达；**不可达则同样改为上抛/handler，不为此新增 log 依赖**（注：现有代码 `ShellUtil.kt:122` 用的是 `android.util.Log`，非项目 log 模块）。
 - **draw-on-screen**（H8、M-D1 涉及）：同样**未依赖项目 `log` 模块**。H8/M-D1 的"记录日志"改为：优先用 `android.util.Log` / 可注入 handler / 上抛，**不为日志新增项目 log 依赖**；若确要接入项目 log，须作为独立的构建配置变更评估。
 
@@ -245,8 +246,8 @@
 ### lib-json（`JsonExt.kt`）
 
 **H17. 吞 Throwable（无日志）** — `60,74-79,94-99`｜破坏性：否（跨模块反模式）
-- 改法：lib-json **无 log 依赖**（见 §0.3.2），**不引入 log**。注意 `runCatching` **固定捕获 `Throwable`、无法收窄** —— 要不吞 `Error` 必须改用显式 `try { ... } catch (e: Exception) { if (e is CancellationException) throw e; null/"" }`（`Exception` 不含 `Error`；`CancellationException` 先 rethrow）。如需可观测失败，提供**可选的 `onError: (Throwable) -> Unit` 参数**（默认空实现）由调用方注入，而非硬编码 log。
-- 测试：畸形 JSON → 返回 null；`CancellationException` 透传不被吞；注入 `onError` → 被调用。
+- 改法：按 `lib-json` 的工具函数设计，`Any?.toJsonString()` 与 `String?.toObject()` 系列只做 JSON 转换；失败时函数内部通过 `LogContext.log.e(...)` 记录异常，并返回默认值（`toJsonString()` 返回 `""`，`toObject()` 返回 `null`），不增加 `onError` 参数。注意 `runCatching` **固定捕获 `Throwable`、无法收窄** —— 要不吞 `Error` 必须改用显式 `try { ... } catch (e: Exception) { if (e is CancellationException) throw e; log; null/"" }`（`Exception` 不含 `Error`；`CancellationException` 先 rethrow，且不记录为 JSON 错误日志）。
+- 测试：畸形 JSON → 返回 null；泛型反序列化回归见 H18；`CancellationException` 透传不被吞可通过代码审查或后续可注入失败点测试覆盖。
 
 **H18. toObject<T>() 泛型擦除** — `JsonExt.kt:74-79`｜破坏性：行为变更
 - 改法：reified 重载内 `val type = object : TypeToken<T>() {}.type` 委托 `toObject(type)`。

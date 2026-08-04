@@ -4,6 +4,7 @@ package com.leovp.android.exts
 
 import android.content.Context
 import android.content.res.Resources
+import android.util.Log
 import android.util.TypedValue
 import androidx.annotation.RawRes
 import java.io.File
@@ -58,7 +59,7 @@ fun Context.saveAssetToFile(
 }.getOrElse {
     // Surface the I/O failure instead of swallowing it, mirroring how saveRawResourceToFile lets
     // its failure propagate; no project log dependency here (remediation M-A1 / M-A2).
-    android.util.Log.e("ResourcesExt", "saveAssetToFile failed", it)
+    Log.e("ResourcesExt", "saveAssetToFile failed", it)
     false
 }
 

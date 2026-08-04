@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.leovp.compose.utils.floorMod
 import com.leovp.compose.utils.previewInitLog
 import com.leovp.log.base.e
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
@@ -35,6 +37,8 @@ import kotlinx.coroutines.yield
  * Author: Michael Leo
  * Date: 2023/9/19 14:32
  */
+
+ private const val TAG = "HAP"
 
 @Suppress("FunctionNaming")
 @OptIn(ExperimentalFoundationApi::class)
@@ -50,6 +54,7 @@ fun HorizontalAutoPager(
     pageCount: Int,
     pagerContent: @Composable (index: Int) -> Unit,
 ) {
+    // d(TAG) { "=> Enter HorizontalAutoPager <=" }
     // TODO Bug for Compose when set it to Int.MAX_VALUE.
     val loopingCount = 1024 // Int.MAX_VALUE
     // Start the pager in the middle of the looping range.
@@ -61,6 +66,13 @@ fun HorizontalAutoPager(
     )
 
     fun pageMapper(index: Int): Int = (index - startIndex).floorMod(pageCount)
+
+    // d {
+    //     "HorizontalAutoPager -> startIndex=$startIndex  " +
+    //             "pageCount=$pageCount  " +
+    //             "currentPage=${pagerState.currentPage}  " +
+    //             "pageMapper(currentPage)=${pageMapper(pagerState.currentPage)}"
+    // }
 
     Box(modifier = modifier) {
         HorizontalPager(
@@ -83,10 +95,25 @@ fun HorizontalAutoPager(
                     pageMapper(pagerState.currentPage + offset)
                 }
             }
+            // d { "indicatorContent -> currentPageIndex=$currentPageIndex  pageCount=$pageCount" }
             Column(modifier = Modifier.align(indicatorAlignment)) {
                 indicator(currentPageIndex, pageCount)
             }
         }
+
+        // //// This way is not the best way because it will always re-launch LaunchedEffect
+        // //// when pagerState.settledPage is changed.
+        // // LaunchedEffect(key1 = pagerState.settledPage) {
+        // //     yield()
+        // //     delay(3000L)
+        // //     pagerState.animateScrollToPage(
+        // //         page = pagerState.currentPage + 1,
+        // //         animationSpec = tween(
+        // //             durationMillis = 500,
+        // //             easing = FastOutSlowInEasing,
+        // //         ),
+        // //     )
+        // // }
 
         var underDragging by remember { mutableStateOf(false) }
 
@@ -108,13 +135,17 @@ fun HorizontalAutoPager(
                 try {
                     while (true) {
                         yield()
-                        delay(delay)
+                        delay(delay.milliseconds)
                         val current = pagerState.currentPage
                         val currentPos = pageMapper(current)
                         val nextPage = current + 1
                         if (underDragging.not()) {
                             val toPage = nextPage.takeIf { nextPage < pagerState.pageCount }
                                 ?: (currentPos + startIndex + 1)
+                            // d {
+                            //     "current=$current  currentPos=$currentPos  " +
+                            //             "nextPage=$nextPage  toPage=$toPage"
+                            // }
                             if (toPage > current) {
                                 pagerState.animateScrollToPage(
                                     page = toPage,
@@ -128,11 +159,11 @@ fun HorizontalAutoPager(
                             }
                         }
                     }
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     // Cancellation must propagate so the effect actually stops (remediation H13).
-                    throw e
+                    e(TAG, e) { "Delay error.." }
                 } catch (e: Exception) {
-                    e("HorizontalAutoPager", e) { "Auto-scroll failed." }
+                    e(TAG, e) { "Auto-scroll failed." }
                 }
             } // end of LaunchedEffect
         }

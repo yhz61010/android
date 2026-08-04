@@ -1,6 +1,7 @@
 package com.leovp.android.utils
 
 import android.os.SystemClock
+import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import kotlin.math.roundToInt
@@ -43,29 +44,25 @@ class TouchHelper(private val touchListener: TouchListener) {
     }
 
     private fun processTouchMove(event: MotionEvent) {
-        var activePointerId: Int
-        var activePressure: Float
-        var interval: Long
-        var previousTime: Long
-        var currentTime: Long
-
         runCatching {
-            activePointerId = event.getPointerId(event.actionIndex)
-            activePressure = event.getPressure(event.actionIndex)
-            previousTime = touchMoveTimeInterval.get(activePointerId)
-            currentTime = SystemClock.elapsedRealtime()
-            interval = if (previousTime == 0L) 0L else currentTime - previousTime
-            touchMoveTimeInterval.put(activePointerId, currentTime)
+            val currentTime = SystemClock.elapsedRealtime()
+            for (pointerIndex in 0 until event.pointerCount) {
+                val activePointerId = event.getPointerId(pointerIndex)
+                val activePressure = event.getPressure(pointerIndex)
+                val previousTime = touchMoveTimeInterval.get(activePointerId, 0L)
+                val interval = if (previousTime == 0L) 0L else currentTime - previousTime
+                touchMoveTimeInterval.put(activePointerId, currentTime)
 
-            touchListener.onEvent(
-                MotionEvent.ACTION_MOVE,
-                activePointerId,
-                event.getX(event.actionIndex).toInt(),
-                event.getY(event.actionIndex).toInt(),
-                (activePressure * 100).toInt(),
-                interval
-            )
-        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
+                touchListener.onEvent(
+                    MotionEvent.ACTION_MOVE,
+                    activePointerId,
+                    event.getX(pointerIndex).toInt(),
+                    event.getY(pointerIndex).toInt(),
+                    (activePressure * 100).toInt(),
+                    interval
+                )
+            }
+        }.onFailure { Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processTouchUp(event: MotionEvent) {
@@ -85,8 +82,9 @@ class TouchHelper(private val touchListener: TouchListener) {
                 -1,
                 -1
             )
+            touchMoveTimeInterval.remove(activePointerId)
             //            }
-        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
+        }.onFailure { Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processCancelTouch(event: MotionEvent) {
@@ -105,8 +103,9 @@ class TouchHelper(private val touchListener: TouchListener) {
                     -1,
                     -1
                 )
+                touchMoveTimeInterval.remove(activePointerId)
             }
-        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
+        }.onFailure { Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     private fun processTouchDown(event: MotionEvent, activePointerId: Int, activePressure: Float) {
@@ -127,7 +126,7 @@ class TouchHelper(private val touchListener: TouchListener) {
                 (activePressure * 100).toInt(),
                 -1
             )
-        }.onFailure { android.util.Log.e("TouchHelper", "touch handler failed", it) }
+        }.onFailure { Log.e("TouchHelper", "touch handler failed", it) }
     }
 
     interface TouchListener {

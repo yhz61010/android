@@ -74,7 +74,7 @@ object FileDocumentUtil {
                 if (contentUri == null) return null
                 val selection = "_id=?" // DocumentProvider
                 val selectionArgs: Array<String> = arrayOf(split[1])
-                return getDataColumn(context, contentUri, selection, selectionArgs)
+                getDataColumn(context, contentUri, selection, selectionArgs)
             }
 
             isGoogleDriveUri(uri) -> {
@@ -112,23 +112,21 @@ object FileDocumentUtil {
 
     private fun getDownloadsDocumentRealPath(context: Context, uri: Uri): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            var cursor: Cursor? = null
-            try {
-                cursor = context.contentResolver.query(
-                    uri,
-                    arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null
-                )
-                if (cursor != null && cursor.moveToFirst()) {
+            context.contentResolver.query(
+                uri,
+                arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
                     val fileName = cursor.getString(0)
-                    val path =
-                        Environment.getExternalStorageDirectory()
-                            .toString() + "/Download/" + fileName
+                    val path = Environment.getExternalStorageDirectory()
+                        .toString() + "/Download/" + fileName
                     if (!TextUtils.isEmpty(path)) {
                         return path
                     }
                 }
-            } finally {
-                cursor?.close()
             }
             val id: String = DocumentsContract.getDocumentId(uri)
             if (!TextUtils.isEmpty(id)) {
@@ -142,7 +140,7 @@ object FileDocumentUtil {
                 for (contentUriPrefix in contentUriPrefixesToTry) {
                     return try {
                         val contentUri = ContentUris.withAppendedId(
-                            Uri.parse(contentUriPrefix),
+                            contentUriPrefix.toUri(),
                             java.lang.Long.valueOf(id)
                         )
                         getDataColumn(context, contentUri, null, null)
@@ -160,7 +158,7 @@ object FileDocumentUtil {
             }
             try {
                 val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"),
+                    "content://downloads/public_downloads".toUri(),
                     java.lang.Long.valueOf(id)
                 )
                 return getDataColumn(context, contentUri, null, null)
@@ -172,7 +170,7 @@ object FileDocumentUtil {
         return null
     }
 
-    fun resourceToUri(context: Context, resId: Int): Uri? = (
+    fun resourceToUri(context: Context, resId: Int): Uri = (
         ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
             context.resources.getResourcePackageName(resId) + "/" +
             context.resources.getResourceTypeName(resId) + "/" +
@@ -391,7 +389,7 @@ object FileDocumentUtil {
         context: Context,
         uri: Uri,
         selection: String?,
-        selectionArgs: Array<String>?
+        selectionArgs: Array<String>?,
     ): String? {
         // MediaStore.Images.Media.DATA
         // MediaStore.Images.Media._ID

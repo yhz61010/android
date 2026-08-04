@@ -9,6 +9,7 @@ import android.content.pm.ConfigurationInfo
 import android.os.Build
 import android.os.StatFs
 import android.os.SystemClock
+import android.util.Log
 import android.view.Display
 import androidx.annotation.Keep
 import com.leovp.android.exts.activityManager
@@ -261,7 +262,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
         """.trimIndent()
     }.getOrElse {
         // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
-        android.util.Log.e("DeviceUtil", "getDeviceInfo failed", it)
+        Log.e("DeviceUtil", "getDeviceInfo failed", it)
         ""
     }
 }

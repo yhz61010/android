@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.compose.utils
 
 import java.text.SimpleDateFormat
@@ -32,8 +34,9 @@ fun Int.toCounterBadgeText(limitation: Int = 99): String =
     this.toLong().toCounterBadgeText(limitation)
 
 private val monthDateFormatThreadLocal: ThreadLocal<SimpleDateFormat> =
-    ThreadLocal.withInitial {
-        SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }
+    object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue(): SimpleDateFormat =
+            SimpleDateFormat("MM-dd", Locale.CHINA).apply { timeZone = TimeZone.getDefault() }
     }
 
 /**
@@ -41,4 +44,4 @@ private val monthDateFormatThreadLocal: ThreadLocal<SimpleDateFormat> =
  * this used to be one shared instance that could corrupt output under concurrent use (M-C2).
  */
 val monthDateFormat: SimpleDateFormat
-    get() = monthDateFormatThreadLocal.get()
+    get() = checkNotNull(monthDateFormatThreadLocal.get())

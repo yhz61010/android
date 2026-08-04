@@ -104,8 +104,9 @@ Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_
 
 ## 日志约定
 
-- **有 `log` 依赖**的模块（androidbase、lib-compose、lib-network、lib-mvvm、camerax、screencapture、nfc、opengl、http、audio、basenetty、aidl-client、android-restricted、demo）→ 用 `com.leovp.log.base.{d,e}` / `LogContext`。
-- **无 `log` 依赖**的纯工具模块（lib-common-kotlin、lib-common-android、lib-json、lib-compress、draw-on-screen、lib-bytes、lib-reflection）→ **勿新增 `log` 依赖**；改用 `android.util.Log`、rethrow，或调用方注入的 `onError` 回调。
+- **有 `log` 依赖**的模块（androidbase、lib-compose、lib-json、lib-network、lib-mvvm、camerax、screencapture、nfc、opengl、http、audio、basenetty、aidl-client、android-restricted、demo）→ 用 `com.leovp.log.base.{d,e}` / `LogContext`。
+- **无 `log` 依赖**的纯工具模块（lib-common-kotlin、lib-common-android、lib-compress、draw-on-screen、lib-bytes、lib-reflection）→ **勿新增 `log` 依赖**；改用 `android.util.Log`、rethrow，或调用方注入的错误处理回调。
+- **`lib-json` 例外**：`Any?.toJsonString()` 与 `String?.toObject()` 系列只做 JSON 转换，失败时在函数内部通过 `LogContext` 记录并返回默认值（`""` / `null`），**不暴露 `onError` 参数**；`CancellationException` 仍需向上抛出。
 
 ## 外部文档路径
 

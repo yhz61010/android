@@ -38,7 +38,7 @@ import kotlinx.coroutines.yield
  * Date: 2023/9/19 14:32
  */
 
- private const val TAG = "HAP"
+private const val TAG = "HAP"
 
 @Suppress("FunctionNaming")
 @OptIn(ExperimentalFoundationApi::class)
@@ -161,7 +161,7 @@ fun HorizontalAutoPager(
                     }
                 } catch (e: CancellationException) {
                     // Cancellation must propagate so the effect actually stops (remediation H13).
-                    e(TAG, e) { "Delay error.." }
+                    throw e
                 } catch (e: Exception) {
                     e(TAG, e) { "Auto-scroll failed." }
                 }

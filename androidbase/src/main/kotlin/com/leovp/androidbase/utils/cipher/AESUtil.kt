@@ -44,9 +44,6 @@ object AESUtil {
     /** New format version: AES-GCM, PBKDF2-HMAC-SHA1, high iteration count (API 21-25 fallback). */
     private const val VERSION_GCM_SHA1: Byte = 0x02
 
-    private const val DECRYPT_DEPRECATED_MESSAGE =
-        "Use decrypt() for AES-GCM data. Keep decryptLegacy() only for legacy CBC ciphertext."
-
     // ---- Legacy (insecure) format, kept only for decrypting old data ----
     private const val CIPHER_AES_LEGACY = "AES/CBC/PKCS7Padding"
     private const val LEGACY_PRE_SALT_LENGTH = 4
@@ -74,10 +71,6 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherText, secKey)")
-    )
     fun decryptLegacy(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
         decryptLenient(
             cipherText.hexToByteArray(),
@@ -118,10 +111,6 @@ object AESUtil {
      * ciphertext; the format is detected automatically from the leading version byte.
      * @param secKey You must use the same SecretKey or else the decryption will fail.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherText, secKey)")
-    )
     fun decryptLegacy(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
         decryptLenient(cipherText.hexToByteArray(), secKey.encoded, useSHA512).decodeToString()
 
@@ -169,10 +158,6 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherText, secKey)")
-    )
     fun decryptLegacy(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
         decryptLenient(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
@@ -222,10 +207,6 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
-    )
     fun decryptLegacy(
         cipherBytes: ByteArray,
         secKey: String,
@@ -285,10 +266,6 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
-    )
     fun decryptLegacy(
         cipherBytes: ByteArray,
         secKey: SecretKey,
@@ -384,10 +361,6 @@ object AESUtil {
      * That is intentional, but avoid calling this in a tight loop over attacker-supplied blobs;
      * for known new-format data that must fail on tampering, prefer [decrypt].
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
-    )
     fun decryptLegacy(
         cipherBytes: ByteArray,
         secKey: ByteArray,

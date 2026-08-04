@@ -40,10 +40,10 @@
   - `version=0x01`：GCM + PBKDF2-HMAC-SHA256 / 600k（API 26+）
   - `version=0x02`：GCM + PBKDF2-HMAC-SHA1 / 1.4M（API 21–25）
   - API 21–25 解密 `version=0x01` 时使用标准 PBKDF2-HMAC-SHA256 fallback，保证跨设备读取 SHA256 新格式密文。
-- **向后兼容**：已弃用的 `decryptLegacy(...)` 兼容入口读版本字节，旧密文走 legacy 路径（4 字节盐、零 IV、1000 迭代）仍可解；`encrypt(...)` 一律输出新格式。
+- **向后兼容**：`decryptLegacy(...)` 兼容入口读版本字节，旧密文走 legacy 路径（4 字节盐、零 IV、1000 迭代）仍可解；`encrypt(...)` 一律输出新格式。
 - **⚠️ 单向兼容**：**新版本加密的数据无法被旧版本库解密**。跨版本共享密文的场景需协调升级。
 - **严格解密入口**：`decrypt(...)` 只接受新 GCM 格式、认证失败即抛，永不回落 legacy（需要 AEAD 保证时用它），并覆盖 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合。
-- **解密 API 迁移**：原兼容回落 `decrypt(...)` 已改名为 `decryptLegacy(...)`，所有公开 `decryptLegacy(...)` 重载均已标记 `@Deprecated`，并提供 `ReplaceWith("decrypt(...)")`；只在读取旧 CBC 存量密文时继续保留旧入口。
+- **解密 API 迁移**：原兼容回落 `decrypt(...)` 已改名为 `decryptLegacy(...)`（宽松、自动识别新旧格式，**未标记 `@Deprecated`**，为正常兼容 API）；严格 AES-GCM 入口为 `decrypt(...)`。读取旧 CBC 存量密文用 `decryptLegacy(...)`，需要认证保证用 `decrypt(...)`。
 - **`generateKey`**：移除基于 `SystemClock` 播种的 `generateKeyBySHA512/SHA1`，改为 `generateKey(bits=256)`（`KeyGenerator` + 系统熵）。移除了 `@RequiresApi(O)`。
 - **`useSHA512` 参数**：已从所有 `encrypt(...)` 重载移除；现只保留在 `decryptLegacy(...)` 重载中，并且**仅影响 legacy 解密路径**。新 GCM 格式的 KDF 由版本字节决定。
 

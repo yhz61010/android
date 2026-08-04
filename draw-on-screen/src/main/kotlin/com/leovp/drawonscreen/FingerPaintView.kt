@@ -9,12 +9,14 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 import kotlin.math.abs
 
 /**
@@ -29,7 +31,7 @@ class FingerPaintView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    defStyleRes: Int = 0
+    defStyleRes: Int = 0,
 ) : ImageView(context, attrs, defStyleAttr) {
 
     companion object {
@@ -128,10 +130,10 @@ class FingerPaintView @JvmOverloads constructor(
                         R.styleable.FingerPaintImageView_touchTolerance,
                         DEFAULT_TOUCH_TOLERANCE
                     )
-                }.onFailure {
+                }.onFailure { err ->
                     // Do not silently skip bad styled attributes; surface via android.util.Log
                     // without adding a project log dependency (remediation M-D1).
-                    android.util.Log.e("FingerPaintView", "read styled attributes failed", it)
+                    Log.e("FingerPaintView", "read styled attributes failed", err)
                 }.also { recycle() }
             }
         }
@@ -158,11 +160,7 @@ class FingerPaintView @JvmOverloads constructor(
         // Recycle the previous buffer before allocating a new one to avoid a native-memory leak on
         // repeated size changes (remediation M-D2).
         brushBitmap?.recycle()
-        brushBitmap = Bitmap.createBitmap(
-            w,
-            h,
-            Bitmap.Config.ARGB_8888
-        ).also { brushCanvas = Canvas(it) }
+        brushBitmap = createBitmap(w, h).also { brushCanvas = Canvas(it) }
     }
 
     /**
@@ -178,11 +176,7 @@ class FingerPaintView @JvmOverloads constructor(
 
             runCatching {
                 // draw original bitmap
-                val result = Bitmap.createBitmap(
-                    it.intrinsicWidth,
-                    it.intrinsicHeight,
-                    Bitmap.Config.ARGB_8888
-                )
+                val result = createBitmap(it.intrinsicWidth, it.intrinsicHeight)
                 val canvas = Canvas(result)
                 it.draw(canvas)
 
@@ -190,19 +184,19 @@ class FingerPaintView @JvmOverloads constructor(
                 val transformedPaint = Paint()
                 // Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
                 // [NewApi]
-                //                paths.forEach { (path, paint) ->
-                //                    path.transform(inverse, transformedPath)
-                //                    transformedPaint.set(paint)
-                //                    transformedPaint.strokeWidth *= scale
-                //                    canvas.drawPath(transformedPath, transformedPaint)
-                //                }
+                // paths.forEach { (path, paint) ->
+                //     path.transform(inverse, transformedPath)
+                //     transformedPaint.set(paint)
+                //     transformedPaint.strokeWidth *= scale
+                //     canvas.drawPath(transformedPath, transformedPaint)
+                // }
                 for ((path, paint) in paths) {
                     path.transform(inverse, transformedPath)
                     transformedPaint.set(paint)
                     transformedPaint.strokeWidth *= scale
                     canvas.drawPath(transformedPath, transformedPaint)
                 }
-                BitmapDrawable(resources, result)
+                result.toDrawable(resources)
             }.getOrNull()
         }
     }
@@ -219,11 +213,13 @@ class FingerPaintView @JvmOverloads constructor(
                     invalidate()
                     touchEventCallback?.onTouchDown(event.x, event.y, pathPaint)
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     handleTouchMove(event)
                     invalidate()
                     touchEventCallback?.onTouchMove(event.x, event.y, pathPaint)
                 }
+
                 MotionEvent.ACTION_UP -> {
                     handleTouchEnd()
                     invalidate()
@@ -232,6 +228,7 @@ class FingerPaintView @JvmOverloads constructor(
                     // OnClickListener are notified, instead of suppressing the lint (remediation L-D2).
                     performClick()
                 }
+
                 MotionEvent.ACTION_CANCEL -> {
                     // Finalize the in-progress stroke on gesture cancellation so no partial path is
                     // left dangling; no onTouchUp callback is fired for a cancel (remediation M-D6).
@@ -348,7 +345,7 @@ class FingerPaintView @JvmOverloads constructor(
         } catch (e: Exception) {
             // Do not swallow silently; log so render failures are diagnosable. Errors (e.g. OOM)
             // are intentionally NOT caught here (remediation H8).
-            android.util.Log.e("FingerPaintView", "onDraw failed", e)
+            Log.e("FingerPaintView", "onDraw failed", e)
         }
     }
 
@@ -399,11 +396,7 @@ class FingerPaintView @JvmOverloads constructor(
     fun isModified(): Boolean {
         // Although the paths field is non-nullable, when initializing the view for the first time,
         // this value will be nullable in a very short time then change to non-nullable.
-        return if (paths != null) {
-            paths.isNotEmpty()
-        } else {
-            false
-        }
+        return paths.isNotEmpty()
     }
 
     /**

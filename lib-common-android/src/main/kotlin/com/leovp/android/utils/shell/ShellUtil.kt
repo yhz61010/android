@@ -27,7 +27,7 @@ object ShellUtil {
     private const val CMD_PS = "ps"
     private const val CMD_MOUNT = "/system/bin/mount"
     private const val CMD_EXIT = "exit"
-    private val LINE_SEP = System.getProperty("line.separator")!!
+    private val LINE_SEP = System.lineSeparator()
 
     private val PACKAGE_NAME_REGEX =
         Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
@@ -262,7 +262,7 @@ object ShellUtil {
                     data=ordered
                 )
                  */
-                val params = line!!.split(" ".toRegex()).toTypedArray()
+                val params = line.split(" ".toRegex()).toTypedArray()
                 // cmd:
                 // mount -o rw,remount /system
                 // or

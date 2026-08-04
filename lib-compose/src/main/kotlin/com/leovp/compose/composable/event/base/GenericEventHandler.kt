@@ -45,6 +45,7 @@ fun GenericEventHandler(
     navController: AppNavigation? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     loadingDialogContent: @Composable (() -> Unit)? = null,
+    // hideLoadingContent: @Composable (() -> Unit)? = null,
     dialogContent: @Composable (
         (dialogState: MutableState<UiEvent.ShowDialog?>) -> Unit
     )? = null,
@@ -162,6 +163,9 @@ fun GenericEventHandler(
     if (showLoadingDialog) {
         loadingDialogContent?.invoke()
     }
+    // else {
+    //     hideLoadingContent?.invoke()
+    // }
 
     // Custom Dialog
     dialogState.value?.let {

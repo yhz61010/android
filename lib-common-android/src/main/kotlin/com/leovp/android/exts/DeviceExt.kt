@@ -18,6 +18,7 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Size
 import android.view.Display
 import android.view.Surface
@@ -399,7 +400,7 @@ fun getImei(ctx: Context, slotId: Int): String? = runCatching {
     val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
     method.invoke(manager, slotId) as String
 }.onFailure {
-    android.util.Log.d("DeviceExt", "getImei($slotId) reflection failed: ${it.message}")
+    Log.d("DeviceExt", "getImei($slotId) reflection failed: ${it.message}")
 }.getOrNull()
 
 @SuppressLint("DiscouragedApi")

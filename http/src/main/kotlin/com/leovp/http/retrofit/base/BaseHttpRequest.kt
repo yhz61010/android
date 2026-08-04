@@ -28,7 +28,7 @@ open class BaseHttpRequest {
             .addInterceptor(logInterceptor)
 
         // When a certificate is configured, pin trust to it and verify against the configured
-        // hostnames. Otherwise fall back to OkHttp's secure platform defaults (proper hostname
+        // hostnames. Otherwise, fall back to OkHttp's secure platform defaults (proper hostname
         // verification + system trust store) — never install a trust-all hostname verifier by
         // default (remediation C3).
         val certStream = SslUtils.certificateInputStream
@@ -96,7 +96,7 @@ open class BaseHttpRequest {
          * than
          * the read timeout, it'll count the request as failed. The counter resets after every
          * incoming byte.
-         * Thus, if your response has 120 bytes and it takes five seconds between each byte,
+         * Thus, if your response has 120 bytes, and it takes five seconds between each byte,
          * the read timeout will not be triggered and the response will take ten minutes to be
          * completed.
          *

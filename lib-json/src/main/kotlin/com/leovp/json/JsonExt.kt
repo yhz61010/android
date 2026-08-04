@@ -5,6 +5,7 @@ import com.google.gson.FieldAttributes
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.leovp.log.LogContext
 import java.lang.reflect.Type
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -12,6 +13,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * Author: Michael Leo
  * Date: 20-5-13 下午3:35
  */
+const val TAG = "JsonExt"
+
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -27,7 +30,7 @@ annotation class Exclude(
      * If `false`, the field marked with this annotation is deserialized from the JSON.
      * Defaults to `true`.
      */
-    val deserialize: Boolean = true
+    val deserialize: Boolean = true,
 )
 
 @MustBeDocumented
@@ -60,11 +63,11 @@ val gson: Gson by lazy {
     }).create()
 }
 
-fun Any?.toJsonString(onError: (Throwable) -> Unit = {}): String = try {
+fun Any?.toJsonString(): String = try {
     gson.toJson(this)
-} catch (e: Exception) {
-    if (e is CancellationException) throw e
-    onError(e)
+} catch (err: Exception) {
+    if (err is CancellationException) throw err
+    LogContext.log.e(TAG, "toJsonString() error.", err)
     ""
 }
 
@@ -80,13 +83,13 @@ fun Any?.toJsonString(onError: (Throwable) -> Unit = {}): String = try {
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-inline fun <reified T> String?.toObject(noinline onError: (Throwable) -> Unit = {}): T? = try {
+inline fun <reified T> String?.toObject(): T? = try {
     // Use a reified TypeToken so generic type arguments (e.g. List<CmdBean>) survive erasure;
     // T::class.java dropped them and Gson produced LinkedTreeMap elements (remediation H18).
     gson.fromJson(this, object : TypeToken<T>() {}.type)
-} catch (e: Exception) {
-    if (e is CancellationException) throw e
-    onError(e)
+} catch (err: Exception) {
+    if (err is CancellationException) throw err
+    LogContext.log.e(TAG, "toObject() error.", err)
     null
 }
 
@@ -103,10 +106,10 @@ inline fun <reified T> String?.toObject(noinline onError: (Throwable) -> Unit = 
  * @return an object of type T from the string. Returns `null` if `json` is `null`
  * or if `json` is empty.
  */
-fun <T> String?.toObject(type: Type, onError: (Throwable) -> Unit = {}): T? = try {
+fun <T> String?.toObject(type: Type): T? = try {
     gson.fromJson(this, type)
-} catch (e: Exception) {
-    if (e is CancellationException) throw e
-    onError(e)
+} catch (err: Exception) {
+    if (err is CancellationException) throw err
+    LogContext.log.e(TAG, "toObject($type) error.", err)
     null
 }

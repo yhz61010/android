@@ -35,6 +35,10 @@
   `gson.fromJson(this, T::class.java)`，泛型参数被擦除：`toObject<List<Foo>>()` 实际得到的元素是
   `LinkedTreeMap` 而非 `Foo`，后续对元素的强转 / 访问在运行时才炸。现改用
   `object : TypeToken<T>() {}.type`，元素类型正确保留。
+- **JSON 转换失败现在由工具函数内部记录日志。** `Any?.toJsonString()` 与 `String?.toObject()` 系列仍只负责
+  JSON 转换：失败时打印异常日志并返回默认值（`""` / `null`），不向调用方暴露 `onError` 参数。
+  `CancellationException` 仍会透传，不记录为 JSON 转换错误；`Error` 不再被捕获。
+- **依赖变化：** `lib-json` 为内部错误日志接入项目 `log` 模块。
 - **影响：** 依赖旧（错误）行为的代码极少见；但若某处**刻意**接收 `LinkedTreeMap` 结构，需改为面向
   真实类型。绝大多数调用点是从"运行时崩溃"变为"正确工作"。
 
@@ -73,8 +77,9 @@
 - **协程取消透传：** `runCatching` / `catch` 不再吞掉 `CancellationException` —— 结构化并发下取消能正确传播
   （`HorizontalAutoPager` 自动轮播、各 `LaunchedEffect` 等）。
 - **不再吞 `Error`：** 多处由捕获 `Throwable` 收窄为 `Exception`，`OutOfMemoryError` 等严重错误不再被静默掩盖。
-- **失败可观测：** `FingerPaintView.onDraw` 渲染失败、`TouchHelper`/`ForegroundComponent`/`DeviceUtil` 等处的
-  异常现在经 `android.util.Log` 记录（这些模块无项目 `log` 依赖，遵循日志策略 §0.3.2）而非 `printStackTrace()` 后丢弃。
+- **失败可观测：** JSON 转换失败现在经 `LogContext` 记录并返回默认值；`FingerPaintView.onDraw`
+  渲染失败、`TouchHelper`/`ForegroundComponent`/`DeviceUtil` 等处的异常现在经 `android.util.Log` 记录
+  （这些模块无项目 `log` 依赖，遵循日志策略 §0.3.2）而非 `printStackTrace()` 后丢弃。
 - **HTTP 日志脱敏（M-N1）：** `HttpLoggingInterceptor` 现默认对 `Authorization` / `Cookie` / `Set-Cookie` /
   `Proxy-Authorization` 头做脱敏（`██ (redacted)`）。若你的日志分析依赖这些头的明文，需通过
   `HttpLoggingInterceptor.redactedHeaderNames` 调整集合。
@@ -111,6 +116,9 @@
 **旧：** `json.toObject<List<Foo>>()` 元素实为 `LinkedTreeMap`。
 
 **新：** 元素为 `Foo`。
+
+**错误处理：** `toJsonString()` / `toObject()` 的签名保持无错误回调参数；转换失败时函数内部记录日志，
+并继续返回 `""` / `null`。`CancellationException` 不是 JSON 转换失败，会继续向上抛出。
 
 **如何迁移：** 通常无需动作（原来多半是 bug）。若某处刻意消费 `LinkedTreeMap`，改为声明真实类型。
 

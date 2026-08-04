@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -319,7 +320,7 @@ private fun showToast(
         }
     }.onFailure {
         // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
-        android.util.Log.e("ToastExt", "show toast failed", it)
+        Log.e("ToastExt", "show toast failed", it)
     }
 }
 

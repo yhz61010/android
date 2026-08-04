@@ -462,7 +462,8 @@ class ScreenShareMasterActivity :
 
                                 ScreenShareClientActivity.TouchType.UNDO -> {
                                     fingerPaintView?.undo()
-                                    userPath = fingerPaintView?.getPaths()!!
+                                    userPath = fingerPaintView?.getPaths()?.toMutableList()
+                                        ?: mutableListOf()
                                     return@withContext
                                 }
 

@@ -19,12 +19,11 @@
   - `version=0x01`：GCM + PBKDF2-HMAC-SHA256 / 600k（API 26+）
   - `version=0x02`：GCM + PBKDF2-HMAC-SHA1 / 1.4M（API 21–25）
   - API 21–25 解密 `version=0x01` 时使用标准 PBKDF2-HMAC-SHA256 fallback，保证 SHA256 密文跨设备可读。
-- **单向兼容。** 已弃用的 `decrypt(...)` 兼容入口会读版本字节，旧密文仍可经 legacy 路径解开
+- **单向兼容。** 已弃用的 `decryptLegacy(...)` 兼容入口会读版本字节，旧密文仍可经 legacy 路径解开
   （4 字节盐、零 IV、1000 迭代）。但**本版本加密的数据无法被旧版本库解密**。跨版本共享密文的场景需协调升级。
-- **解密 API 迁移。** 所有公开 `decrypt(...)` 重载均已标记 `@Deprecated`，并提供
-  `ReplaceWith("decryptStrict(...)")`。已确认输入为新 AES-GCM 格式时，应优先使用 `decryptStrict(...)`；
-  只有读取旧 CBC 存量密文时才继续保留 `decrypt(...)`。
-- **`useSHA512` 参数** 已从所有 `encrypt(...)` 重载移除。它只保留在 `decrypt(...)` 重载中，并且**仅影响 legacy 解密路径**；新 GCM 格式的 KDF 由版本字节决定。
+- **解密 API 迁移。** 严格 AES-GCM 解密入口为 `decrypt(...)`；原兼容回落入口改名为
+  `decryptLegacy(...)`，标记 `@Deprecated`，并提供 `ReplaceWith("decrypt(...)")`。只有读取旧 CBC 存量密文时才继续保留 `decryptLegacy(...)`。
+- **`useSHA512` 参数** 已从所有 `encrypt(...)` 重载移除。它只保留在 `decryptLegacy(...)` 重载中，并且**仅影响 legacy 解密路径**；新 GCM 格式的 KDF 由版本字节决定。
 - 移除基于 `SystemClock` 播种的 `generateKeyBySHA512/SHA1`，改为 `generateKey(bits = 256)`
   （`KeyGenerator` + 系统熵）。移除 `@RequiresApi(O)`。
 
@@ -56,10 +55,10 @@
 
 ### 新增
 
-- `AESUtil.decryptStrict(...)`：**仅**接受新 GCM 格式，认证失败即抛，永不回落 legacy。
+- `AESUtil.decrypt(...)`：**仅**接受新 GCM 格式，认证失败即抛，永不回落 legacy。
   需要 AEAD 保证时使用。新增重载覆盖 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合：
-  `decryptStrict(String, String)`、`decryptStrict(String, ByteArray)`、`decryptStrict(String, SecretKey)`、
-  `decryptStrict(ByteArray, String)`、`decryptStrict(ByteArray, ByteArray)`、`decryptStrict(ByteArray, SecretKey)`。
+  `decrypt(String, String)`、`decrypt(String, ByteArray)`、`decrypt(String, SecretKey)`、
+  `decrypt(ByteArray, String)`、`decrypt(ByteArray, ByteArray)`、`decrypt(ByteArray, SecretKey)`。
 - `PBKDF2Util`：`generateKeyWithSHA256(...)` 系列重载，以及常量
   `ITERATIONS_SHA256 = 600_000`、`ITERATIONS_SHA512`、`ITERATIONS_SHA1`、
   `ITERATIONS_LEGACY = 1000`（仅供 legacy 解密显式传入）。
@@ -93,7 +92,7 @@
 ### 安全
 
 - AES-GCM AAD 绑定 `version‖salt`；RSA OAEP 强制 MGF1 SHA-256；PBKDF2 迭代硬化；
-  `decryptStrict` 提供无回落的 AEAD。
+  `decrypt` 提供无回落的 AEAD。
 - `PBKDF2Util` 口令改用 NIO 缓冲编码为 UTF-8，绕开不可擦除的 `String` 中间态，可清零临时密钥材料。
 
 ---
@@ -117,8 +116,8 @@ if (ok) { /* 可信 */ }
 
 - 本版本加密的数据**无法**被升级前的客户端读取。若跨 app/库版本共享密文，须同时升级生产方与消费方，
   或对存量数据重新加密。
-- 读旧数据仍可通过已弃用的 `decrypt(...)` 自动兼容（版本字节 → legacy 路径）。当必须拒绝一切非认证 GCM 格式时，使用 `decryptStrict(...)`。
-- `encrypt(...)` 不再接受 `useSHA512` 参数；若有命名参数或三参调用，迁移为两参调用。`decrypt(...)`
+- 读旧数据仍可通过已弃用的 `decryptLegacy(...)` 自动兼容（版本字节 → legacy 路径）。当必须拒绝一切非认证 GCM 格式时，使用 `decrypt(...)`。
+- `encrypt(...)` 不再接受 `useSHA512` 参数；若有命名参数或三参调用，迁移为两参调用。`decryptLegacy(...)`
   可继续传 `useSHA512`，但它只用于读取旧 CBC 数据。
 
 ### 3. RSA 密文不向后兼容

@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.leovp.compose.utils.floorMod
 import com.leovp.compose.utils.previewInitLog
+import com.leovp.log.base.e
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
@@ -131,7 +132,7 @@ fun HorizontalAutoPager(
                     // Cancellation must propagate so the effect actually stops (remediation H13).
                     throw e
                 } catch (e: Exception) {
-                    // Swallow only transient scroll errors, never cancellation.
+                    e("HorizontalAutoPager", e) { "Auto-scroll failed." }
                 }
             } // end of LaunchedEffect
         }

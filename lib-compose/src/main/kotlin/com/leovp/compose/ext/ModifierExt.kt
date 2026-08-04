@@ -77,9 +77,7 @@ fun Modifier.debounceClickable(debounceTime: Long = 1000L, onClick: () -> Unit):
     }
 }
 
-fun Modifier.dispatchTouchEvent(
-    onTouch: () -> Unit = {},
-): Modifier =
+fun Modifier.dispatchTouchEvent(onTouch: () -> Unit = {}): Modifier =
     // Key the pointerInput on onTouch so a recomposition with a new callback restarts the gesture
     // loop and invokes the latest onTouch; keying on Unit captured the stale first one (remediation
     // H12).

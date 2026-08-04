@@ -60,8 +60,8 @@ fun GenericEventHandler(
         val window = (view.context as? Activity)?.window
         navigationBarVisibility(window = window, view = view, isShow = false)
         onDispose {
-            // Restore the navigation bar when leaving the composition; re-hiding it here left the bar
-            // hidden for whatever screen came next (remediation H10).
+            // Restore the navigation bar when leaving the composition; re-hiding it here left the
+            // bar hidden for whatever screen came next (remediation H10).
             navigationBarVisibility(window = window, view = view, isShow = true)
         }
     }

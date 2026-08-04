@@ -27,7 +27,7 @@ class AESUtilTest {
         val plain = "I have a dream. 我有一个梦想。🚀"
 
         val encrypted = AESUtil.encrypt(plain, secKey)
-        val decrypted = AESUtil.decryptStrict(encrypted, secKey)
+        val decrypted = AESUtil.decrypt(encrypted, secKey)
 
         assertEquals(plain, decrypted)
     }
@@ -36,7 +36,7 @@ class AESUtilTest {
         val data = ByteArray(64) { it.toByte() }
 
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
-        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
+        val decrypted = AESUtil.decrypt(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))
     }
@@ -62,36 +62,37 @@ class AESUtilTest {
 
         // GCM authentication must reject the change: decryption either throws or, via the
         // legacy fallback, yields non-original bytes. In no case may it reproduce the plaintext.
-        val result = runCatching { AESUtil.decrypt(tampered, secKey.toByteArray()) }.getOrNull()
+        val result = runCatching { AESUtil.decryptLegacy(tampered, secKey.toByteArray()) }
+            .getOrNull()
         assertFalse(result != null && result.contentEquals(data))
     }
 
-    @Test fun `decryptStrict round-trips new-format data`() {
+    @Test fun `decrypt round-trips new-format data`() {
         val data = "strict payload 严格".toByteArray()
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
 
-        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
+        val decrypted = AESUtil.decrypt(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))
     }
 
-    @Test fun `decryptStrict overloads round-trip new-format data`() {
+    @Test fun `decrypt overloads round-trip new-format data`() {
         val plain = "strict overload payload"
         val keyBytes = secKey.toByteArray()
         val secretKey = AESUtil.generateKey()
 
-        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, secKey), secKey))
-        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, keyBytes), keyBytes))
-        assertEquals(plain, AESUtil.decryptStrict(AESUtil.encrypt(plain, secretKey), secretKey))
+        assertEquals(plain, AESUtil.decrypt(AESUtil.encrypt(plain, secKey), secKey))
+        assertEquals(plain, AESUtil.decrypt(AESUtil.encrypt(plain, keyBytes), keyBytes))
+        assertEquals(plain, AESUtil.decrypt(AESUtil.encrypt(plain, secretKey), secretKey))
 
         val data = plain.toByteArray()
-        assertTrue(data.contentEquals(AESUtil.decryptStrict(AESUtil.encrypt(data, secKey), secKey)))
+        assertTrue(data.contentEquals(AESUtil.decrypt(AESUtil.encrypt(data, secKey), secKey)))
         assertTrue(
-            data.contentEquals(AESUtil.decryptStrict(AESUtil.encrypt(data, secretKey), secretKey))
+            data.contentEquals(AESUtil.decrypt(AESUtil.encrypt(data, secretKey), secretKey))
         )
     }
 
-    @Test fun `decryptStrict reads SHA256 version data when SDK is below O`() {
+    @Test fun `decrypt reads SHA256 version data when SDK is below O`() {
         val data = "sha256 version payload".toByteArray()
         val salt = ByteArray(16) { it.toByte() }
         val iv = ByteArray(12) { (it + 16).toByte() }
@@ -110,18 +111,18 @@ class AESUtilTest {
 
         // JVM unit tests have Build.VERSION.SDK_INT == 0, matching the API 21-25 branch.
         // Version 0x01 must still select SHA256, not silently fall back to SHA1.
-        val decrypted = AESUtil.decryptStrict(encrypted, secKey.toByteArray())
+        val decrypted = AESUtil.decrypt(encrypted, secKey.toByteArray())
 
         assertTrue(data.contentEquals(decrypted))
     }
 
-    @Test fun `decryptStrict throws on a tampered ciphertext instead of falling back`() {
+    @Test fun `decrypt throws on a tampered ciphertext instead of falling back`() {
         val data = "sensitive payload".toByteArray()
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
         val tampered = encrypted.copyOf().also { it[it.size - 1] = (it[it.size - 1] + 1).toByte() }
 
-        // Unlike decrypt(), strict decryption must never silently fall back to the legacy path.
-        val result = runCatching { AESUtil.decryptStrict(tampered, secKey.toByteArray()) }
+        // Unlike decryptLegacy(), strict decryption must never silently fall back to the legacy path.
+        val result = runCatching { AESUtil.decrypt(tampered, secKey.toByteArray()) }
         assertTrue(result.isFailure)
     }
 

@@ -21,7 +21,6 @@ import androidx.core.net.toUri
 import com.leovp.android.exts.fileExists
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -280,12 +279,9 @@ object FileDocumentUtil {
                 input.use { inputStream ->
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
-                        val maxBufferSize = 1 * 1024 * 1024
-                        val bytesAvailable = inputStream.available()
-
-                        // int bufferSize = 1024;
-                        val bufferSize = min(bytesAvailable, maxBufferSize)
-                        val buffers = ByteArray(bufferSize)
+                        // Do not size the buffer from InputStream.available(): content providers may
+                        // legally return 0, and a zero-length buffer makes read() return 0 forever.
+                        val buffers = ByteArray(8 * 1024)
                         while (inputStream.read(buffers).also { read = it } != -1) {
                             outputStream.write(buffers, 0, read)
                         }

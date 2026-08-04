@@ -33,10 +33,13 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 ## 代码风格、日志与命名规范
 遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下，其中需要受限或敏感权限的工具应优先放在 `android-restricted`，避免重新把敏感权限依赖混入 `androidbase`。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块，且 detekt 使用零容忍策略；删除或重构代码后，要同步清理失效的 import、私有成员和死代码，避免未用符号导致检查失败。
 
+仓库 `minSdk` 为 21。新增或替换 Android / Java API 时先确认 API level；需要高于 21 的 API 必须通过 `Build.VERSION.SDK_INT` 分支、AndroidX 兼容 API 或等价低版本写法处理。例如不要直接使用 `ThreadLocal.withInitial` 或 `ConcurrentHashMap.newKeySet()` 这类高版本入口。
+
 日志处理按模块依赖决定，不要为了记日志随意新增依赖：
 
-- 已依赖 `log` 的模块，例如 `androidbase`、`lib-compose`、`lib-network`、`lib-mvvm`、`camerax`、`screencapture`、`nfc`、`opengl`、`http`、`audio`、`basenetty`、`aidl-client`、`android-restricted`、`demo`，优先使用 `com.leovp.log.base.d/e` 或 `LogContext`。
-- 未依赖 `log` 的基础工具模块，例如 `lib-common-kotlin`、`lib-common-android`、`lib-json`、`lib-compress`、`draw-on-screen`、`lib-bytes`、`lib-reflection`，不要为了日志新增 `log` 依赖；优先使用 `android.util.Log`、上抛异常，或通过调用方注入的 `onError` 回调暴露错误。
+- 已依赖 `log` 的模块，例如 `androidbase`、`lib-compose`、`lib-json`、`lib-network`、`lib-mvvm`、`camerax`、`screencapture`、`nfc`、`opengl`、`http`、`audio`、`basenetty`、`aidl-client`、`android-restricted`、`demo`，优先使用 `com.leovp.log.base.d/e` 或 `LogContext`。
+- 未依赖 `log` 的基础工具模块，例如 `lib-common-kotlin`、`lib-common-android`、`lib-compress`、`draw-on-screen`、`lib-bytes`、`lib-reflection`，不要为了日志新增 `log` 依赖；优先使用 `android.util.Log`、上抛异常，或通过调用方注入的错误处理回调暴露错误。
+- `lib-json` 是当前例外：`Any?.toJsonString()` 与 `String?.toObject()` 系列只做 JSON 转换，失败时在函数内部通过 `LogContext` 记录异常并返回默认值（`""` / `null`），不向调用方暴露 `onError` 参数；`CancellationException` 应继续向上抛出。
 
 ## 测试指南
 所有 Gradle `Test` 任务都通过 `useJUnitPlatform()` 启用 JUnit 5。Android 单元测试启用了 `isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`。`demo` 应用的仪器测试使用 `AndroidJUnitRunner`，并通过 `de.mannodermaus.junit5.AndroidJUnit5Builder` 接入 JUnit 5。JVM 测试放在 `src/test/kotlin` 或 `src/test/java`；设备测试放在 `src/androidTest`。优先将测试放在受影响模块附近，例如 `androidbase/src/test/.../RSAUtilTest.kt`。

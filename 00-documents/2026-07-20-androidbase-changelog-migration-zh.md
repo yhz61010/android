@@ -49,9 +49,9 @@
 
 - **`BluetoothUtil.setPairingConfirmation(...)`**：返回类型 `Unit` → `Boolean`（失败返回 `false`）。
 - **`WifiUtil.connectWifi(...)`**：`enc` 默认值由 `WifiEncType.WEP` 改为 `WifiEncType.WPA`。
-- **`YuvUtil`**：6 个未用公共函数标 `@Deprecated`
+- **`YuvUtil`**：6 个仓库内 0 引用的公共函数
   （`convertYUV420888ToNV21`、`cropYUV420`、`frameMirror`、`generateFromImage`、
-  `i420ToRGBABitmap`、`rgbToI420`），计划下个主版本移除。
+  `i420ToRGBABitmap`、`rgbToI420`）**保留为公共 API，不再标记 `@Deprecated`**（撤销先前的弃用决定）。
 
 ### 新增
 
@@ -135,7 +135,7 @@ val key = PBKDF2Util.generateKeyWithSHA1(passphrase, salt, PBKDF2Util.ITERATIONS
 
 - `BluetoothUtil.setPairingConfirmation(...)` 现返回 `Boolean` —— 需判断结果。
 - `WifiUtil.connectWifi(...)` 默认 WPA —— WEP 网络需显式传 `enc`。
-- 下个主版本前迁移掉已 `@Deprecated` 的 `YuvUtil` 函数。
+- `YuvUtil` 的 6 个低频公共函数保留可用、不再弃用，无需迁移。
 
 ---
 

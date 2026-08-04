@@ -226,8 +226,11 @@ object AESUtil {
         message = DECRYPT_DEPRECATED_MESSAGE,
         replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
     )
-    fun decryptLegacy(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey.toByteArray(), useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: String,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey.toByteArray(), useSHA512)
 
     // ==============================================================
 
@@ -286,8 +289,11 @@ object AESUtil {
         message = DECRYPT_DEPRECATED_MESSAGE,
         replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
     )
-    fun decryptLegacy(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey.encoded, useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: SecretKey,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey.encoded, useSHA512)
 
     // ==============================================================
     /**
@@ -382,8 +388,11 @@ object AESUtil {
         message = DECRYPT_DEPRECATED_MESSAGE,
         replaceWith = ReplaceWith("decrypt(cipherBytes, secKey)")
     )
-    fun decryptLegacy(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey, useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: ByteArray,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey, useSHA512)
 
     private fun decryptLenient(
         cipherBytes: ByteArray,

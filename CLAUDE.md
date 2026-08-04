@@ -89,6 +89,8 @@ MVVM + Clean Architecture（表现层 → 领域层 → 数据层）。`lib-mvvm
 
 Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是严格模式 — `ignoreFailures = false`，detekt 最大问题数 = 0。在本地运行 `./gradlew staticCheck` 执行完整的验证套件。
 
+零容忍（`maxIssues=0`）意味着：删除/重构代码后，务必一并清理**随之失效的 import 与私有成员**（未用即 detekt 失败）。
+
 ## 签名
 
 Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_PATH`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`）中的 keystore 属性用于 CI/CD。V1–V4 签名均已启用。
@@ -99,6 +101,11 @@ Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_
 
 ## 语言约定
 - Git commit message 和代码注释统一使用**英文**。
+
+## 日志约定
+
+- **有 `log` 依赖**的模块（androidbase、lib-compose、lib-network、lib-mvvm、camerax、screencapture、nfc、opengl、http、audio、basenetty、aidl-client、android-restricted、demo）→ 用 `com.leovp.log.base.{d,e}` / `LogContext`。
+- **无 `log` 依赖**的纯工具模块（lib-common-kotlin、lib-common-android、lib-json、lib-compress、draw-on-screen、lib-bytes、lib-reflection）→ **勿新增 `log` 依赖**；改用 `android.util.Log`、rethrow，或调用方注入的 `onError` 回调。
 
 ## 外部文档路径
 

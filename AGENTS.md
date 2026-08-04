@@ -30,8 +30,13 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 
 构建前请将 `gradle.properties.template` 复制为 `gradle.properties`。按照 `README.md` 和 `00-documents/git-lfs-guide.md` 中的说明安装 Git LFS。
 
-## 代码风格与命名规范
-遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下，其中需要受限或敏感权限的工具应优先放在 `android-restricted`，避免重新把敏感权限依赖混入 `androidbase`。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块。
+## 代码风格、日志与命名规范
+遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下，其中需要受限或敏感权限的工具应优先放在 `android-restricted`，避免重新把敏感权限依赖混入 `androidbase`。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块，且 detekt 使用零容忍策略；删除或重构代码后，要同步清理失效的 import、私有成员和死代码，避免未用符号导致检查失败。
+
+日志处理按模块依赖决定，不要为了记日志随意新增依赖：
+
+- 已依赖 `log` 的模块，例如 `androidbase`、`lib-compose`、`lib-network`、`lib-mvvm`、`camerax`、`screencapture`、`nfc`、`opengl`、`http`、`audio`、`basenetty`、`aidl-client`、`android-restricted`、`demo`，优先使用 `com.leovp.log.base.d/e` 或 `LogContext`。
+- 未依赖 `log` 的基础工具模块，例如 `lib-common-kotlin`、`lib-common-android`、`lib-json`、`lib-compress`、`draw-on-screen`、`lib-bytes`、`lib-reflection`，不要为了日志新增 `log` 依赖；优先使用 `android.util.Log`、上抛异常，或通过调用方注入的 `onError` 回调暴露错误。
 
 ## 测试指南
 所有 Gradle `Test` 任务都通过 `useJUnitPlatform()` 启用 JUnit 5。Android 单元测试启用了 `isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`。`demo` 应用的仪器测试使用 `AndroidJUnitRunner`，并通过 `de.mannodermaus.junit5.AndroidJUnit5Builder` 接入 JUnit 5。JVM 测试放在 `src/test/kotlin` 或 `src/test/java`；设备测试放在 `src/androidTest`。优先将测试放在受影响模块附近，例如 `androidbase/src/test/.../RSAUtilTest.kt`。
@@ -43,6 +48,8 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 所有 Android library 子项目默认通过根构建逻辑配置 `consumerProguardFiles("consumer-rules.pro")`。新增库模块时必须在模块根目录提供 `consumer-rules.pro`，即使当前没有保留规则也应保留空文件，否则 release consumer ProGuard 合并和 JitPack 发布会失败。
 
 仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
+
+项目 AI 生成文档统一放在 `00-documents/`。Superpowers 生成的 specs、plans 和 implementation notes 放在 `00-documents/superpowers/`，并按本仓库约定只维护中文内容。
 
 ## 面向代理的说明
 在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。

@@ -51,7 +51,7 @@
 ## LOW
 
 - **`AESUtil.kt`** — 每次 `encrypt()`/`decrypt()`/`decryptLegacy()` 都从头跑满强度 PBKDF2（600k/1.4M 轮），不缓存每口令派生密钥。非漏洞，但 CPU/电量成本值得记录；若 API 暴露给攻击者可控调用量（循环解密大量外部小 blob）存在本地 DoS 隐患。
-- **`AESUtil.kt`** — `useSHA512` 参数曾在 encryption 重载中被忽略，仅影响 legacy decrypt 路径。现已从所有 `encrypt(...)` 重载移除，只保留在已弃用的 `decryptLegacy(...)` 重载中用于 legacy 解密；所有公开 `decryptLegacy(...)` 重载均提供 `ReplaceWith("decrypt(...)")`，且严格 `decrypt(...)` 已补齐 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合。
+- **`AESUtil.kt`** — `useSHA512` 参数曾在 encryption 重载中被忽略，仅影响 legacy decrypt 路径。现已从所有 `encrypt(...)` 重载移除，只保留在 `decryptLegacy(...)` 重载中用于 legacy 解密（`decryptLegacy(...)` 为正常兼容 API，未标记 `@Deprecated`）；严格 `decrypt(...)` 已补齐 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合。
 - **`RSAUtil.kt:55`** — `MAX_DECRYPT_LEN` 声明但全文件未使用（死代码）。
 - **`RSAUtil.kt:7`** — `import ...RSAUtil.getKeyPair` 是本文件内对自身的冗余 self-import；无害，应清理（ktlint 未用导入类问题）。
 - **`RSAUtil.kt:114, 137, 170`** — 错误日志包含原始 `Throwable`。此处 JCE 异常（BadPadding/OAEP/Signature）通常不含明文或密钥字节，风险低；建议确认 `log` 模块在 release 构建不把堆栈转发到低信任 sink。
@@ -78,11 +78,11 @@
 | 编号 | 严重度 | 摘要 | 状态 |
 |------|--------|------|------|
 | H1 | HIGH | PBKDF2Util SHA512/SHA1 公共重载默认迭代太低 | ✅ 已修：默认改 OWASP 常量，新增 `ITERATIONS_LEGACY`，legacyDecrypt 显式传 1000，加回归测试 |
-| M1 | MEDIUM | GCM 失败回落 legacy 的完整性 gap | ✅ 已处理：`decrypt()` 系列重载改为严格 GCM（永不回落、认证失败即抛）；公开 `decryptLegacy()` 标记 `@Deprecated` 并保留兼容回落。M2 后 version/salt 篡改已被 AAD 拒绝 |
+| M1 | MEDIUM | GCM 失败回落 legacy 的完整性 gap | ✅ 已处理：`decrypt()` 系列重载改为严格 GCM（永不回落、认证失败即抛）；`decryptLegacy()` 作为正常兼容 API 保留宽松回落（未 `@Deprecated`）。M2 后 version/salt 篡改已被 AAD 拒绝 |
 | M2 | MEDIUM | version/salt 未作 AAD | ✅ 已修：encrypt/decrypt 两侧 `updateAAD(version‖salt)`（新格式未发版，无兼容影响） |
 | M3 | MEDIUM | OAEP MGF1 默认 SHA-1 与主哈希 SHA-256 不一致 | ✅ 已修：显式 `OAEPParameterSpec(SHA-256/MGF1-SHA256)`（OAEP-SHA256 未发版，无兼容影响） |
 | LOW-1 | LOW | 每次调用重跑满强度 PBKDF2 | ✅ 已处理：`decrypt()` KDoc 记录成本与本地 DoS 提示（不缓存——盐每消息随机，缓存无益且留存密钥更不安全） |
-| LOW-2 | LOW | `useSHA512` 参数易误读 | ✅ 已处理：`encrypt(...)` 重载移除此参数；公开 `decryptLegacy()` 标记 `@Deprecated` + `ReplaceWith("decrypt(...)")`，KDoc 明确其仅影响 legacy 路径 |
+| LOW-2 | LOW | `useSHA512` 参数易误读 | ✅ 已处理：`encrypt(...)` 重载移除此参数；`useSHA512` 仅保留在 `decryptLegacy()` 中，KDoc 明确其仅影响 legacy 路径 |
 | LOW-3 | LOW | `RSAUtil.MAX_DECRYPT_LEN` 死代码 | ✅ 已删 |
 | LOW-4 | LOW | `RSAUtil` self-import | ✅ 已删 |
 | LOW-5 | LOW | RSA 错误日志含 Throwable | ✅ 已确认可接受：`log` 模块经 `enableLog`/level 门控、输出走按应用隔离的 Logcat，JCE 异常不含明文/密钥，风险低，无需改代码 |

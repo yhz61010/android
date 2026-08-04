@@ -22,7 +22,7 @@ class ShellUtilDrainTest {
         val outText = (1..lineCount).joinToString("\n") { "out-$it" }
         val errText = (1..lineCount).joinToString("\n") { "err-$it" }
 
-        val (out, err) = assertTimeoutPreemptively(Duration.ofSeconds(10)) {
+        val (out, err) = assertTimeoutPreemptively<Pair<String, String>>(Duration.ofSeconds(10)) {
             ShellUtil.drainStreams(
                 ByteArrayInputStream(outText.toByteArray()),
                 ByteArrayInputStream(errText.toByteArray())

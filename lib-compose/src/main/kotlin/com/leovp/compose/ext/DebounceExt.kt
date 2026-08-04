@@ -40,9 +40,8 @@ import kotlinx.coroutines.launch
 fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit): () -> Unit {
     var isClickable by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
-    // The returned lambda is remembered once with no keys, so capture the latest onClick/debounceTime
-    // via rememberUpdatedState; otherwise a recomposition with a new onClick kept firing the stale
-    // first-composition lambda (remediation H11).
+    // The returned lambda is remembered once with no keys, so capture the latest onClick and
+    // debounceTime via rememberUpdatedState; otherwise recomposition kept firing stale callbacks.
     val currentOnClick by rememberUpdatedState(onClick)
     val currentDebounceTime by rememberUpdatedState(debounceTime)
 

@@ -207,7 +207,9 @@ class FingerPaintView @JvmOverloads constructor(
         }
     }
 
-    private fun getCurrentPath() = synchronized(this) { paths.lastOrNull()?.first }
+    private fun getCurrentPath() = synchronized(this) {
+        paths.takeIf { it.size > countDrawn }?.lastOrNull()?.first
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (inEditMode) {
@@ -224,7 +226,6 @@ class FingerPaintView @JvmOverloads constructor(
                 }
                 MotionEvent.ACTION_UP -> {
                     handleTouchEnd()
-                    countDrawn++
                     invalidate()
                     touchEventCallback?.onTouchUp(event.x, event.y, pathPaint)
                     // Route the lift as an accessibility click so TalkBack and any registered
@@ -235,7 +236,6 @@ class FingerPaintView @JvmOverloads constructor(
                     // Finalize the in-progress stroke on gesture cancellation so no partial path is
                     // left dangling; no onTouchUp callback is fired for a cancel (remediation M-D6).
                     handleTouchEnd()
-                    countDrawn++
                     invalidate()
                 }
             }
@@ -267,6 +267,7 @@ class FingerPaintView @JvmOverloads constructor(
             // Structural mutation shares the monitor used by onDraw's snapshot and the other
             // mutators (remediation H9).
             synchronized(this) {
+                countDrawn = countDrawn.coerceIn(0, paths.size)
                 paths.add(Path().also { it.moveTo(event.x, event.y) } to Paint(pathPaint))
             }
             currentX = event.x
@@ -305,7 +306,13 @@ class FingerPaintView @JvmOverloads constructor(
         }
     }
 
-    private fun handleTouchEnd() = getCurrentPath()?.lineTo(currentX, currentY)
+    private fun handleTouchEnd() {
+        synchronized(this) {
+            val currentPath = paths.takeIf { it.size > countDrawn }?.lastOrNull()?.first ?: return
+            currentPath.lineTo(currentX, currentY)
+            countDrawn = (countDrawn + 1).coerceAtMost(paths.size)
+        }
+    }
 
     interface TouchEventCallback {
         fun onTouchDown(x: Float, y: Float, paint: Paint)
@@ -380,7 +387,7 @@ class FingerPaintView @JvmOverloads constructor(
         // an unconditional `countDrawn--` on an empty list underflowed the counter (remediation H7).
         if (paths.isNotEmpty()) {
             paths.removeAt(paths.lastIndex)
-            countDrawn = (countDrawn - 1).coerceAtLeast(0)
+            countDrawn = countDrawn.coerceAtMost(paths.size).coerceAtLeast(0)
         }
         invalidate()
     }
@@ -414,6 +421,7 @@ class FingerPaintView @JvmOverloads constructor(
     fun drawUserPath(userPath: List<Pair<Path, Paint>>) {
         clear()
         paths.addAll(0, userPath)
+        countDrawn = paths.size
         invalidate()
     }
 

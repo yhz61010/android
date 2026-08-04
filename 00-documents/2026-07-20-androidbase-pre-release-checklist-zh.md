@@ -40,12 +40,12 @@
   - `version=0x01`：GCM + PBKDF2-HMAC-SHA256 / 600k（API 26+）
   - `version=0x02`：GCM + PBKDF2-HMAC-SHA1 / 1.4M（API 21–25）
   - API 21–25 解密 `version=0x01` 时使用标准 PBKDF2-HMAC-SHA256 fallback，保证跨设备读取 SHA256 新格式密文。
-- **向后兼容**：已弃用的 `decrypt(...)` 兼容入口读版本字节，旧密文走 legacy 路径（4 字节盐、零 IV、1000 迭代）仍可解；`encrypt(...)` 一律输出新格式。
+- **向后兼容**：已弃用的 `decryptLegacy(...)` 兼容入口读版本字节，旧密文走 legacy 路径（4 字节盐、零 IV、1000 迭代）仍可解；`encrypt(...)` 一律输出新格式。
 - **⚠️ 单向兼容**：**新版本加密的数据无法被旧版本库解密**。跨版本共享密文的场景需协调升级。
-- **新增** `decryptStrict(...)`：只接受新 GCM 格式、认证失败即抛，永不回落 legacy（需要 AEAD 保证时用它），并覆盖 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合。
-- **解密 API 迁移**：所有公开 `decrypt(...)` 重载均已标记 `@Deprecated`，并提供 `ReplaceWith("decryptStrict(...)")`；只在读取旧 CBC 存量密文时继续保留旧入口。
+- **严格解密入口**：`decrypt(...)` 只接受新 GCM 格式、认证失败即抛，永不回落 legacy（需要 AEAD 保证时用它），并覆盖 `String`/`ByteArray` 密文与 `String`/`ByteArray`/`SecretKey` 密钥组合。
+- **解密 API 迁移**：原兼容回落 `decrypt(...)` 已改名为 `decryptLegacy(...)`，所有公开 `decryptLegacy(...)` 重载均已标记 `@Deprecated`，并提供 `ReplaceWith("decrypt(...)")`；只在读取旧 CBC 存量密文时继续保留旧入口。
 - **`generateKey`**：移除基于 `SystemClock` 播种的 `generateKeyBySHA512/SHA1`，改为 `generateKey(bits=256)`（`KeyGenerator` + 系统熵）。移除了 `@RequiresApi(O)`。
-- **`useSHA512` 参数**：已从所有 `encrypt(...)` 重载移除；现只保留在 `decrypt(...)` 重载中，并且**仅影响 legacy 解密路径**。新 GCM 格式的 KDF 由版本字节决定。
+- **`useSHA512` 参数**：已从所有 `encrypt(...)` 重载移除；现只保留在 `decryptLegacy(...)` 重载中，并且**仅影响 legacy 解密路径**。新 GCM 格式的 KDF 由版本字节决定。
 
 ### 2.2 `RSAUtil` — 填充、签名语义
 
@@ -95,7 +95,7 @@
 | DeviceSound | 复用单一 `MediaActionSound` 实例 + `release()`（消除 native 泄漏） |
 | CameraUtil.performCrop | 补 `FLAG_GRANT_WRITE_URI_PERMISSION` + 捕获通用异常；**保留 file:// 输出**（未换 FileProvider，需真机验证，见 §4） |
 | H264/H265/RSA | 异常日志保留堆栈（`log.e(TAG, msg, e)`）；RSA runCatching 增加失败日志 |
-| cipher | GCM AAD（M2）、RSA OAEP MGF1 显式 SHA-256（M3）、PBKDF2 迭代硬化（H1）、`decryptStrict`（M1） |
+| cipher | GCM AAD（M2）、RSA OAEP MGF1 显式 SHA-256（M3）、PBKDF2 迭代硬化（H1）、严格 `decrypt`（M1） |
 | AESUtil.deriveKey | 去掉 `SDK_INT≥O` 守卫，按版本字节忠实还原 KDF：`version=0x01`(SHA256) 密文在 API 21–25 上也用 SHA256 派生（此前误用 SHA1 → GCM 认证必失败），跨设备可读（`c7e17f9db`） |
 | CrashHandler | previous handler 由可变 object 字段改为**每次 init 的局部 `val`**，消除重复初始化时 wrapper 递归自调用（`StackOverflowError`）（`c7e17f9db`） |
 | RSAUtil.encryptStringByFragment | 空字符串输入走单块 `encrypt`，修复空输入 encrypt/decrypt 不对称（原返回空串无法解回）（`c7e17f9db`） |
@@ -136,7 +136,7 @@
 
 | 项 | 决定 | 理由 |
 |----|------|------|
-| M1 GCM→legacy 回落完整性 gap | 已提供 `decryptStrict` | 默认 `decrypt` 保留兼容回落（已测试的取舍） |
+| M1 GCM→legacy 回落完整性 gap | 已提供严格 `decrypt` | `decryptLegacy` 保留兼容回落（已测试的取舍） |
 | H265Util `extractNalu` 抽取 | 保留 | 纯装饰性 DRY，不改行为/API，编辑摩擦大 |
 | Clipboard `removeCallbacks` | 保留 | 需重写 Android Q 有意的 1s 延迟读取，风险高 |
 | YuvUtil 物理删除 + 拆文件 | 改为 `@Deprecated` | 删公共 API 属破坏性；`object` 拆文件对 Kotlin 不自然 |

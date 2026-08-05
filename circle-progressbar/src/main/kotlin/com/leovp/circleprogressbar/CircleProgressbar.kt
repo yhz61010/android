@@ -190,6 +190,49 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         if (currState == State.Type.STATE_INDETERMINATE) setIndeterminate()
     }
 
+    // Resume the infinite animator only while attached and still indeterminate; cancel it on
+    // detach so it does not run (and invalidate) forever off-screen (remediation CPB-1).
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (currState == State.Type.STATE_INDETERMINATE &&
+            ::internalIndeterminateAnimator.isInitialized &&
+            !internalIndeterminateAnimator.isStarted
+        ) {
+            internalIndeterminateAnimator.start()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        // Use cancel() rather than end() to avoid one extra update/invalidate on the way out.
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
+        super.onDetachedFromWindow()
+    }
+
+    // Honor wrap_content instead of collapsing to 0x0 (remediation CPB-2).
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val desired = computeDesiredSize()
+        setMeasuredDimension(
+            resolveDesiredSize(desired, widthMeasureSpec),
+            resolveDesiredSize(desired, heightMeasureSpec)
+        )
+    }
+
+    private fun computeDesiredSize(): Int {
+        val icon = maxOf(
+            idleItem.width, finishItem.width, errorItem.width, cancelItem.width,
+            idleItem.height, finishItem.height, errorItem.height, cancelItem.height
+        )
+        val ring = ((internalProgressMargin + internalProgressPaint.strokeWidth) * 2).toInt()
+        val padding = maxOf(paddingLeft + paddingRight, paddingTop + paddingBottom)
+        return icon + ring + padding
+    }
+
+    private fun resolveDesiredSize(desired: Int, spec: Int): Int = when (MeasureSpec.getMode(spec)) {
+        MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec)
+        MeasureSpec.AT_MOST -> min(desired, MeasureSpec.getSize(spec))
+        else -> desired
+    }
+
     var maxProgress: Int
         get() = internalMaxProgress
         set(maxProgress) {
@@ -265,6 +308,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
     fun setIdle() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         currState = State.Type.STATE_IDLE
         callStateChangedListener(currState)
         invalidate()
@@ -288,6 +332,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     fun setFinish() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         internalCurrProgress = 0
         currState = State.Type.STATE_FINISHED
         callStateChangedListener(currState)
@@ -295,6 +340,7 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     fun setError() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         internalCurrProgress = 0
         currState = State.Type.STATE_ERROR
         callStateChangedListener(currState)

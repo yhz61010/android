@@ -24,6 +24,9 @@
   修复大响应/大请求下的 OOM 风险;业务读取报文体不受影响。
 - **CIP-3 `GZipUtil.decompress` 加解压上限**:新增可选参数 `maxOutputBytes`(默认 64 MiB),
   超限返回 `null`,缓解 GZIP bomb。`@JvmOverloads` 保留原有入口,既有调用无需改动。
+- **AR-7 `DeviceProp.getSystemPropertyByShell` 命令注入加固**:shell `getprop` 前对属性名做正则
+  白名单校验(`^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`),非法名记日志并返回 `""`,防止参数直拼命令注入。
+  合法属性名(`ro.*`/`ril.*`/`gsm.*`)全部匹配,行为不变。
 
 ### 修复 (Fixed)
 
@@ -50,6 +53,16 @@
 - **AUD-8 `process()` 异常不再伪装正常 EOS(T8)**:catch 顺序 `CancellationException`(rethrow)→
   `MediaCodec.CodecException`(先于 `IllegalStateException`)→ `IllegalStateException` → 泛型
   `Exception`,均 `return false` 终止;错误经独立 `notifyCodecFailure()` 上报,不再 `return true` 忙循环。
+- **ABN-1 `KeepAliveReceiver.onReceive` 不再用 `GlobalScope`**:改用 `goAsync()` + 局部
+  `CoroutineScope(SupervisorJob())`,`finish()` 置于 `finally`(约 10s 窗口),rethrow
+  `CancellationException`;移除 `@OptIn(DelicateCoroutinesApi)`。修复广播提前结束/异步任务泄漏。
+- **AR-1 `DisplayCutoutManager` 不再进程级单例**:去掉 `SingletonHolder`,`getInstance(activity)`
+  改为每次返回独立实例,不再固定持有首个 Activity 导致泄漏(本类无可变共享状态)。公开 API 不变。
+- **CPB-1 `CircleProgressbar` 无限动画随生命周期取消**:`onDetachedFromWindow` 取消动画,
+  `onAttachedToWindow` 在仍为 indeterminate 时恢复,`setIdle/setFinish/setError` 首行取消动画,
+  修复 detach 后动画仍无限 invalidate 的泄漏/耗电。
+- **CPB-2 `CircleProgressbar` 支持 `wrap_content`**:新增 `onMeasure`,按图标 + 进度环 + padding
+  计算期望尺寸,修复 `wrap_content` 退化为 0×0 不可见。
 
 ### 新增 (Added)
 

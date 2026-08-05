@@ -3,6 +3,7 @@ package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 import android.os.SystemClock
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.androidbase.exts.kotlin.truncate
+import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.bytes.toHexString
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
@@ -310,9 +311,18 @@ class DecodeH265RawFileByFFMpeg {
                                         glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
                                     }
                                     st3 = SystemClock.elapsedRealtimeNanos()
+                                    val naluType = when {
+                                        H265Util.isVps(frame) -> "VPS"
+                                        H265Util.isSps(frame) -> "SPS"
+                                        H265Util.isPps(frame) -> "PPS"
+                                        H265Util.isIdrFrame(frame) -> "IDR"
+                                        H265Util.isPFrame(frame) -> "P"
+                                        H265Util.isSei(frame) -> "SEI"
+                                        else -> H265Util.getNaluType(frame).toString()
+                                    }
                                     LogContext.log.w(
                                         TAG,
-                                        "frame[${frame.size}][decode " +
+                                        "frame[$naluType][${frame.size}][decode " +
                                             "cost=${st2 / 1000_000 - st1}ms]" +
                                             "[render cost=${(st3 - st2) / 1000}us] " +
                                             "${decodeFrame?.width}x${decodeFrame?.height}"

@@ -13,6 +13,7 @@ import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.ResultResponseException
 import com.leovp.network.http.exception.ResultServerException
 import com.leovp.network.http.net.converters.SerializationConverter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +57,8 @@ suspend inline fun <reified R> result(
     runCatching {
         Result.Success(withContext(dispatcher) { block() })
     }.getOrElse { err ->
+        // Cancellation must propagate so the caller's coroutine actually cancels (remediation H6).
+        if (err is CancellationException) throw err
 
         // err can be one of the following exception:
         // - ApiResponseException (400~499)

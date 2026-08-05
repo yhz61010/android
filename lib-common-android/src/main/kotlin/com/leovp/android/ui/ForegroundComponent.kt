@@ -89,7 +89,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         paused = false
         val wasBackground = !isForeground
         isForeground = true
-        checkRunnable?.let { handler.removeCallbacks(checkRunnable!!) }
+        checkRunnable?.let { handler.removeCallbacks(it) }
 
         if (wasBackground) {
             //            LogContext.log.i(TAG, "Went FG")
@@ -137,9 +137,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                         try {
                             lis.onBecameBackground()
                         } catch (e: Exception) {
-                            // LogContext.log.e(TAG, "onBecameBackground threw exception!
-                            // msg=${e.message}")
-                            e.printStackTrace()
+                            // Do not swallow silently; surface via android.util.Log without adding a
+                            // project log dependency (remediation M-A1).
+                            Log.e(TAG, "onBecameBackground() exception", e)
                         }
                     }
                 }

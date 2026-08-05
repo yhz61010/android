@@ -41,6 +41,9 @@ dependencies {
     api(projects.libMvvm)
     api(projects.androidbase)
     compileOnly(projects.libNetwork)
+
+    // JVM unit tests for extracted pure logic (e.g. debounce/auto-pager coroutine behavior).
+    testImplementation(libs.bundles.test)
 }
 
 /** When use it: sourceJar.get() */

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create GitHub Release"
+  short_description: "Recommend a version and draft release notes."
+  default_prompt: "Use $create-github-release to prepare a GitHub Release for this repository."

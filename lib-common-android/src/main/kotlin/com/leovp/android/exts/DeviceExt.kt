@@ -18,6 +18,7 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Size
 import android.view.Display
 import android.view.Surface
@@ -393,9 +394,13 @@ fun getImei(ctx: Context): String? {
 }
 
 fun getImei(ctx: Context, slotId: Int): String? = runCatching {
+    // Reflective access to the hidden TelephonyManager#getImei(int): it may be blocked by the
+    // hidden-API blocklist or throw SecurityException without READ_PHONE_STATE (remediation M-A3).
     val manager = ctx.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     val method = manager.javaClass.getMethod("getImei", Int::class.javaPrimitiveType)
     method.invoke(manager, slotId) as String
+}.onFailure {
+    Log.d("DeviceExt", "getImei($slotId) reflection failed: ${it.message}")
 }.getOrNull()
 
 @SuppressLint("DiscouragedApi")
@@ -682,7 +687,9 @@ val Context.screenSurfaceRotation: Int
                 // So we need to get screen rotation from `DisplayManager`.
                 displayManager.getDisplay(Display.DEFAULT_DISPLAY).rotation
             } else {
-                display!!.rotation
+                // display can be null when the context is not yet associated with one; fall back to
+                // the default display's rotation rather than crashing on `display!!` (M-A4).
+                display?.rotation ?: displayManager.getDisplay(Display.DEFAULT_DISPLAY).rotation
             }
         } else {
             @Suppress("DEPRECATION")

@@ -154,6 +154,15 @@ object NetworkUtil {
         }
     }
 
+    private const val MAX_PING_PACKAGES = 10
+
+    // Hostname / IPv4 / IPv6 characters only; must not start with '-' (blocks ping flag injection)
+    // and contains no whitespace or shell metacharacters.
+    private val PING_TARGET_REGEX = Regex("^[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?$")
+
+    /** Validates a ping target to prevent argument/flag injection into the ping command (H5). */
+    internal fun isValidPingTarget(target: String): Boolean = PING_TARGET_REGEX.matches(target)
+
     /**
      * Returns the latency to a given server in milliseconds by issuing a ping command.
      * System will issue NUMBER_OF_PACKTETS ICMP Echo Request packet each having size of 56 bytes
@@ -168,13 +177,19 @@ object NetworkUtil {
         if (isOffline(ctx)) {
             return (-2).toDouble()
         }
+        // Reject targets that could inject extra ping arguments/flags, and clamp the packet count
+        // to a small positive range (remediation H5).
+        if (!isValidPingTarget(ipAddress)) {
+            return (-1).toDouble()
+        }
+        val packageCount = numberOfPackages.coerceIn(1, MAX_PING_PACKAGES)
         var inputLine: String? = null
         runCatching {
             val pingCommand =
                 String.format(
                     Locale.getDefault(),
                     "/system/bin/ping -c %d %s",
-                    numberOfPackages,
+                    packageCount,
                     ipAddress
                 )
             // Execute the command on the environment interface
@@ -228,7 +243,7 @@ object NetworkUtil {
     )
     fun getNetworkGeneration(ctx: Context): String? {
         return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
-            return when {
+            when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
                     getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
                 }

@@ -25,6 +25,8 @@ dependencies {
     api(libs.square.retrofit2.gson)
     api(libs.square.retrofit2.converter.scalars)
     api(libs.square.retrofit2.adapter.rxjava2)
+
+    testImplementation(libs.bundles.test)
 }
 
 /** When use it: sourceJar.get() */

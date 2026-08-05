@@ -27,6 +27,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.leovp.compose.utils.floorMod
 import com.leovp.compose.utils.previewInitLog
+import com.leovp.log.base.e
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
@@ -35,7 +38,7 @@ import kotlinx.coroutines.yield
  * Date: 2023/9/19 14:32
  */
 
-// private const val TAG = "HAP"
+private const val TAG = "HAP"
 
 @Suppress("FunctionNaming")
 @OptIn(ExperimentalFoundationApi::class)
@@ -54,9 +57,8 @@ fun HorizontalAutoPager(
     // d(TAG) { "=> Enter HorizontalAutoPager <=" }
     // TODO Bug for Compose when set it to Int.MAX_VALUE.
     val loopingCount = 1024 // Int.MAX_VALUE
-    // // We start the pager in the middle of the raw number of pages
+    // Start the pager in the middle of the looping range.
     val startIndex = loopingCount / 2
-    // val startIndex = 0 // if (pageCount % 2 != 0) ((pageCount + 1) / 2 - 1) else 0
     val pagerState = rememberPagerState(
         initialPage = startIndex,
         initialPageOffsetFraction = 0f,
@@ -130,10 +132,10 @@ fun HorizontalAutoPager(
 
         if (underDragging.not() && auto) {
             LaunchedEffect(underDragging) {
-                runCatching {
+                try {
                     while (true) {
                         yield()
-                        delay(delay)
+                        delay(delay.milliseconds)
                         val current = pagerState.currentPage
                         val currentPos = pageMapper(current)
                         val nextPage = current + 1
@@ -157,7 +159,12 @@ fun HorizontalAutoPager(
                             }
                         }
                     }
-                } // catch CancellationException
+                } catch (e: CancellationException) {
+                    // Cancellation must propagate so the effect actually stops (remediation H13).
+                    throw e
+                } catch (e: Exception) {
+                    e(TAG, e) { "Auto-scroll failed." }
+                }
             } // end of LaunchedEffect
         }
     }

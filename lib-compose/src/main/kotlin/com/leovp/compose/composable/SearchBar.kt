@@ -59,14 +59,17 @@ fun SearchBar(
             .heightIn(46.dp)
             .noRippleClickable(onClick = onClick)
     ) {
-        var rowModifier = Modifier.fillMaxWidth()
         // .wrapContentSize()
-        backgroundColor?.let {
-            rowModifier = rowModifier.background(color = it, shape = CircleShape)
-        }
-        backgroundBrush?.let {
-            rowModifier = rowModifier.background(brush = it, shape = CircleShape)
-        }
+        val rowModifier = Modifier
+            .fillMaxWidth()
+            .then(
+                backgroundColor?.let { Modifier.background(color = it, shape = CircleShape) }
+                    ?: Modifier
+            )
+            .then(
+                backgroundBrush?.let { Modifier.background(brush = it, shape = CircleShape) }
+                    ?: Modifier
+            )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = rowModifier

@@ -37,7 +37,7 @@ import javax.net.ssl.X509TrustManager
  * val useHttps: Boolean = url.toLowerCase().startsWith("https")
  * if (useHttps) {
  *     val https = conn as HttpsURLConnection
- *     https.hostnameVerifier = SslUtils.doNotVerifier
+ *     // Do NOT disable hostname verification in production; rely on the platform default.
  * }
  * conn.connect()
  * ```
@@ -46,9 +46,9 @@ import javax.net.ssl.X509TrustManager
  *
  * ```kotlin
  * val builder = OkHttpClient.Builder()
- * builder.sslSocketFactory(SslUtils.createSocketFactory("SSL"),
- * SslUtils.systemDefaultTrustManager())
- * builder.hostnameVerifier(SslUtils.doNotVerifier)
+ * // For a self-signed cert, set SslUtils.certificateInputStream + SslUtils.hostnames and use
+ * // SslUtils.customVerifier. Otherwise rely on OkHttp's secure defaults — do not disable
+ * // hostname verification.
  * val client = builder.build()
  * ```
  */
@@ -64,6 +64,11 @@ object SslUtils {
     // TLSv1.3
     const val PROTOCOL = "TLSv1.2"
 
+    /**
+     * A hostname verifier that accepts ANY hostname, which DISABLES TLS hostname verification.
+     * This is INSECURE and provided for testing only — never wire it into a production
+     * OkHttp/HttpsURLConnection client, as it enables MITM (remediation C3).
+     */
     val doNotVerifier = HostnameVerifier { _, _ ->
         true
     }
@@ -97,6 +102,8 @@ object SslUtils {
      *     .inputStream()
      * ```
      */
+    // @Volatile so a value set on one thread is visible to the TLS handshake on another (M-N3).
+    @Volatile
     var certificateInputStream: InputStream? = null
 
     /**
@@ -105,17 +112,14 @@ object SslUtils {
      * SslUtils.hostnames = arrayOf("postman-echo.com")
      * ```
      */
+    @Volatile
     var hostnames: Array<String>? = null
 
     val customVerifier = HostnameVerifier { hostname, _ ->
-        requireNotNull(
-            hostnames
-        ) { "Host names must not be empty. Did you forget to set SslUtils.hostnames?" }
-        hostnames!!.contains(hostname)
-        // else {
-        //     val hv = HttpsURLConnection.getDefaultHostnameVerifier()
-        //     hv.verify(this.hostname, session)
-        // }
+        val names = requireNotNull(hostnames) {
+            "Host names must not be empty. Did you forget to set SslUtils.hostnames?"
+        }
+        names.contains(hostname)
     }
 
     fun createSocketFactory(

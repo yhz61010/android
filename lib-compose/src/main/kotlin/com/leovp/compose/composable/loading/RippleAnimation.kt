@@ -33,12 +33,12 @@ fun RippleAnimation(
     size: Dp = 60.dp,
     animationDelay: Int = 30,
 ) {
-    val circles = listOf(
-        remember { Animatable(initialValue = 0f) },
-        remember { Animatable(initialValue = 0f) }
-
-        // remember { Animatable(initialValue = 0f) }
-    )
+    val circles = remember {
+        listOf(
+            Animatable(initialValue = 0f),
+            Animatable(initialValue = 0f)
+        )
+    }
 
     circles.forEachIndexed { index, animatable ->
         LaunchedEffect(Unit) {

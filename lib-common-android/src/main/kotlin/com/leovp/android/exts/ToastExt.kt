@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -317,7 +318,10 @@ private fun showToast(
                 }
             }
         }
-    }.onFailure { it.printStackTrace() }
+    }.onFailure {
+        // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
+        Log.e("ToastExt", "show toast failed", it)
+    }
 }
 
 /**

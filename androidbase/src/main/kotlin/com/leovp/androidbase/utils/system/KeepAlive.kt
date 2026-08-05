@@ -12,11 +12,11 @@ import android.os.SystemClock
 import androidx.annotation.RawRes
 import androidx.core.content.ContextCompat
 import com.leovp.log.LogContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -106,11 +106,21 @@ class KeepAlive(
     }
 
     internal class KeepAliveReceiver : BroadcastReceiver() {
-        @OptIn(DelicateCoroutinesApi::class)
         override fun onReceive(context: Context, intent: Intent) {
             LogContext.log.d(TAG, "KeepAliveReceiver")
-            GlobalScope.launch {
-                KeepAliveBus.sendAliveEvent()
+            // Keep the broadcast alive across the async emit instead of leaking a GlobalScope job
+            // (remediation ABN-1). goAsync() grants a ~10s window; finish() must run in finally.
+            val pendingResult = goAsync()
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                try {
+                    KeepAliveBus.sendAliveEvent()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "sendAliveEvent failed: ${e.message}", e)
+                } finally {
+                    pendingResult.finish()
+                }
             }
         }
     }

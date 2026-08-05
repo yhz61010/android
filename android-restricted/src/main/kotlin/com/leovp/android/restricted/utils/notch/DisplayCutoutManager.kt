@@ -13,7 +13,6 @@ import com.leovp.android.restricted.utils.notch.impl.AndroidPDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.HuaweiDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.OppoDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.XiaoMiDisplayCutout
-import com.leovp.kotlin.utils.SingletonHolder
 
 /**
  * Example1: Allow to render on display cutout area.
@@ -32,7 +31,12 @@ import com.leovp.kotlin.utils.SingletonHolder
  * Date: 20-11-26 下午7:39
  */
 class DisplayCutoutManager private constructor(private val activity: Activity) {
-    companion object : SingletonHolder<DisplayCutoutManager, Activity>(::DisplayCutoutManager)
+    companion object {
+        // Per-Activity instance instead of a process-wide singleton that would pin the first
+        // Activity and leak it (remediation AR-1). This class holds no mutable shared state.
+        @JvmStatic
+        fun getInstance(activity: Activity): DisplayCutoutManager = DisplayCutoutManager(activity)
+    }
 
     private val displayCutout: DisplayCutout? by lazy { getConcreteDisplayCutout() }
 

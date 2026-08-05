@@ -14,6 +14,15 @@
 
 Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src/main/cpp`，也可能是模块根目录下的 `CMakeLists.txt`，取决于具体模块。
 
+## 模块依赖与职责边界
+本仓库是横向 Android 工具库集合，不是单一业务应用，也不采用统一的 Clean Architecture 分层。理解和新增代码时，优先遵循现有的依赖方向：纯 Kotlin 基础库（如 `lib-common-kotlin`、`lib-bytes`、`lib-compress`）→ Android 基础与横切能力（如 `lib-common-android`、`log`、`lib-image`、`lib-network`）→ `androidbase` 综合工具层 → Camera、音频、录屏、OpenGL 等功能模块 → `demo`/`demo-dex` 集成演示应用。下层模块不应反向依赖上层功能模块或 Demo，也不要为了复用少量代码制造循环依赖。
+
+`androidbase` 是常用 Android 能力的综合入口，但不是所有工具代码的默认归宿。与 Android 无关的通用逻辑优先放入对应的纯 Kotlin `lib-*` 模块；Android 通用扩展优先放入 `lib-common-android`；图片、网络、JSON 等逻辑放入各自的专用模块；需要敏感权限的能力放入 `android-restricted`。新增跨模块依赖前先检查是否能保持这一职责边界。
+
+Gradle 依赖默认优先使用 `implementation`。只有当依赖类型确实出现在模块公开 API 中，或明确希望调用方获得该传递依赖时才使用 `api`。本仓库现有多个模块通过 `api` 暴露基础库，因此修改公开类、函数、默认参数、返回类型或依赖可见性时，要评估下游模块的源码兼容和 API/ABI 兼容，不能只验证当前模块可以编译。
+
+`demo` 和 `demo-dex` 不只是示例代码，也是公开 API 和跨模块集成验证入口。修改库的公开用法时，应同步更新对应 Demo 调用点；至少编译受影响库及其直接下游，涉及多模块公开契约时再运行 `:demo:assembleDevDebug`。
+
 ## 构建、测试与开发命令
 使用 JDK 17 和仓库内置的 Gradle Wrapper。当前 Wrapper 为 Gradle `9.4.0`，版本目录配置为 AGP `9.0.1`、Kotlin `2.3.10`、库发布版本 `5.15.8`、`compileSdk`/`targetSdk` 36、`minSdk` 21、NDK `29.0.14206865`、CMake `3.22.1`。
 
@@ -44,6 +53,8 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 ## 测试指南
 所有 Gradle `Test` 任务都通过 `useJUnitPlatform()` 启用 JUnit 5。Android 单元测试启用了 `isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`。`demo` 应用的仪器测试使用 `AndroidJUnitRunner`，并通过 `de.mannodermaus.junit5.AndroidJUnit5Builder` 接入 JUnit 5。JVM 测试放在 `src/test/kotlin` 或 `src/test/java`；设备测试放在 `src/androidTest`。优先将测试放在受影响模块附近，例如 `androidbase/src/test/.../RSAUtilTest.kt`。
 
+测试范围按风险扩展：内部纯函数修改优先运行模块单元测试；公开 API 修改还要编译直接下游和对应 Demo；Camera、Camera2、音频、MediaCodec、MediaProjection、OpenGL、NFC、蓝牙以及 JNI/Native 相关修改必须补真机验证。真机验证至少覆盖一台 API 21～26 设备和一台较新 Android 设备，并检查旋转、前后台切换、重复进入退出、资源释放和长时间运行。涉及图像、音视频或 Codec 的改动还应记录分辨率、帧率、编码器名称、内存和丢帧情况，不能只以“不崩溃”作为通过标准。
+
 ## Commit 与 Pull Request 指南
 最近的提交历史同时包含普通祈使句标题和带 Conventional Commit 风格前缀的标题，例如 `docs(readme): ...`。优先使用简短的祈使句提交标题；当作用域能提升可读性时，可加作用域前缀，例如 `fix(lib-network): handle empty response`。Pull Request 应尽量聚焦，说明受影响模块，列出验证命令；涉及 UI 或 demo 应用变更时附上截图。对于签名、native 库或 Gradle 配置变更，需要明确标注。
 
@@ -51,6 +62,8 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 所有 Android library 子项目默认通过根构建逻辑配置 `consumerProguardFiles("consumer-rules.pro")`。新增库模块时必须在模块根目录提供 `consumer-rules.pro`，即使当前没有保留规则也应保留空文件，否则 release consumer ProGuard 合并和 JitPack 发布会失败。
 
 仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
+
+修改 JNI 或 Native 模块时，同时核对 Kotlin/Java native 方法签名、C/C++ 导出符号、CMake 输入和支持 ABI。当前 Demo 主要打包 `armeabi-v7a` 与 `arm64-v8a`；相关变更至少验证这两个 ABI 的构建和真实加载，避免只验证 JVM 编译或单一架构。
 
 项目 AI 生成文档统一放在 `00-documents/`。Superpowers 生成的 specs、plans 和 implementation notes 放在 `00-documents/superpowers/`，并按本仓库约定只维护中文内容。
 

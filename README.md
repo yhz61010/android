@@ -1,12 +1,15 @@
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 [![Leo Version](https://jitpack.io/v/com.leovp/android.svg)](https://jitpack.io/#com.leovp/android)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.3.10-blue)](https://kotlinlang.org)
 [![AGP](https://img.shields.io/badge/AGP-9.0.1-orange)](https://developer.android.com/studio/releases/gradle-plugin)
 [![Gradle](https://img.shields.io/badge/Gradle-9.4.0-green)](https://gradle.org)
-[![FFmpeg](https://img.shields.io/badge/FFmpeg-8.1.1-important)](https://www.ffmpeg.org/releases/ffmpeg-8.1.1.tar.xz)
+[![Native FFmpeg](https://img.shields.io/badge/Native_FFmpeg-8.1.1-important)](https://www.ffmpeg.org/releases/ffmpeg-8.1.1.tar.xz)
+[![JavaCPP FFmpeg](https://img.shields.io/badge/JavaCPP_FFmpeg-8.0.1--1.5.13-important)](https://repo1.maven.org/maven2/org/bytedeco/ffmpeg/8.0.1-1.5.13/)
 
 [![Android Studio](https://img.shields.io/badge/Android_Studio-Panda_4_|_2025.3.4_Patch_1-blue)](https://developer.android.com/studio)
-[![Build Java Version](https://img.shields.io/badge/JDK-17.0.6-orange)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-[![Compatibility Java Version](https://img.shields.io/badge/Compatibility_Java_-17-green)](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
+[![Build Java Version](https://img.shields.io/badge/JDK-17-orange)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+[![Java/JVM Target](https://img.shields.io/badge/Java%2FJVM_Target-17-green)](https://docs.oracle.com/en/java/javase/17/)
 [![NDK](https://img.shields.io/badge/NDK-29.0.14206865-important)](https://developer.android.com/ndk/downloads)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/yhz61010/android/badge)](https://www.codefactor.io/repository/github/yhz61010/android)
@@ -60,6 +63,152 @@ This project uses **Git LFS** to manage large binary files (`.so`, `.a`, `.mp3`,
 
 For more details, see `00-documents/git-lfs-guide.md`.
 
+# Project Overview
+
+`LeoAndroidBaseUtil` is a multi-module Android utility library published through JitPack. It is
+not a single application or a single domain SDK. The repository contains reusable Kotlin and
+Android foundations, higher-level platform components, media and native-code integrations, and
+two demo applications that exercise the libraries together.
+
+The active Gradle modules are defined by `settings.gradle.kts`. A directory at the repository root
+is not necessarily an active module; for example, historical or experimental directories that are
+not included from `settings.gradle.kts` are not part of the current build.
+
+## Architecture at a Glance
+
+The repository is best understood as a horizontal library toolbox rather than a project with one
+shared Clean Architecture or application-level data flow. The intended dependency direction is:
+
+```text
+Pure Kotlin foundations
+        ↓
+Android foundations and cross-cutting libraries
+        ↓
+androidbase and specialized feature libraries
+        ↓
+demo / demo-dex integration applications
+```
+
+Lower-level libraries should remain reusable and should not depend back on feature modules or demo
+applications. `androidbase` is the main collection of commonly used Android capabilities, but it is
+not the default destination for every utility: pure Kotlin, image, JSON, network, reflection, and
+permission-sensitive code belong in their corresponding focused modules.
+
+This diagram describes the intended responsibility boundaries, not a mechanically enforced copy of
+the current Gradle graph. Historical cross-layer dependencies still exist. In particular, the
+custom Toast implementation in `lib-common-android` directly uses `floatview`; removing that Gradle
+dependency requires refactoring `ToastExt.kt` or changing the Android 11+ custom Toast behavior.
+
+## Module Map
+
+| Area | Modules | Responsibility |
+|---|---|---|
+| Demo applications | `demo`, `demo-dex` | Interactive examples and cross-module integration verification |
+| Common foundations | `lib-common-kotlin`, `lib-common-android`, `lib-bytes`, `lib-json`, `lib-compress`, `lib-image`, `lib-exif`, `lib-reflection` | Reusable language, Android, byte, serialization, image, EXIF, and reflection utilities |
+| Core and cross-cutting libraries | `log`, `pref`, `lib-network`, `http`, `lib-mvvm`, `lib-compose`, `androidbase`, `android-restricted` | Logging, preferences, networking, architecture helpers, Compose support, general Android utilities, and restricted APIs |
+| Camera, audio, and media | `audio`, `camerax`, `camera2live`, `screencapture`, `yuv`, `jpeg`, `ffmpeg-javacpp`, `adpcm-ima-qt-codec`, `h264-hevc-decoder`, `adpcm-ima-qt-codec-h264-hevc-decoder` | Capture, playback, recording, pixel conversion, codecs, FFmpeg, and JNI integrations |
+| Devices, graphics, and other features | `draw-on-screen`, `floatview`, `opengl`, `nfc`, `basenetty`, `aidl-client`, `dex`, `circle-progressbar` | UI overlays, OpenGL, NFC, sockets, AIDL, dynamic code loading, and reusable widgets |
+
+## Key Modules
+
+### `androidbase`
+
+The main Android utility module provides base Activity/Fragment/Application/Service classes,
+coroutine and lifecycle helpers, Android and Kotlin extensions, cryptographic utilities, device and
+network helpers, and media utilities for H.264, H.265, YUV, WAV, and MediaCodec. It exposes several
+lower-level modules through Gradle `api` dependencies, so changes to its public API can affect many
+consumers transitively.
+
+Permission-sensitive or restricted platform operations should be implemented in
+`android-restricted` instead of adding those permissions back to `androidbase`.
+
+### `camerax`
+
+This module provides an end-to-end CameraX experience rather than only thin CameraX extensions. It
+contains permission handling, preview, focus and exposure controls, image capture, video recording,
+gallery and media viewers, image analysis, orientation handling, preferences, and sound feedback.
+
+The main flow starts in `CameraXActivity` and `CameraFragment`; shared capture and media operations
+are implemented by `BaseCameraXFragment`.
+
+### `camera2live`
+
+This is the lower-level Camera2 recording implementation. Its primary data flow is:
+
+```text
+BaseCamera2Fragment
+  → Camera2ComponentHelper
+  → Camera2 / ImageReader
+  → YUV processing strategy
+  → CameraAvcEncoder / MediaCodec
+  → encoded H.264 callback
+```
+
+Because this path depends on camera drivers, YUV layouts, hardware codecs, and Android lifecycle
+behavior, changes require physical-device testing in addition to unit and instrumentation tests.
+
+### `audio` and native codec modules
+
+`audio` contains recording, playback, AAC, Opus, PCM, and synchronous/asynchronous MediaCodec
+abstractions. The codec, YUV, JPEG, and FFmpeg modules combine Kotlin/Java APIs with JNI, C/C++, or
+prebuilt native libraries. Native changes must keep the Kotlin/Java native declarations, exported
+symbols, CMake inputs, packaged ABIs, and Git LFS objects consistent.
+
+### `demo` and `demo-dex`
+
+The demo projects are both examples and integration checks. `demo` covers Android utilities,
+cryptography, networking, CameraX, Camera2, audio, screen capture, OpenGL, NFC, Bluetooth, Wi-Fi,
+and other feature modules. `demo-dex` focuses on dynamic Dex loading.
+
+When a public library API changes, update its tests and corresponding demo call sites, then compile
+the affected downstream modules. For cross-module changes, `:demo:assembleDevDebug` is the primary
+integration build.
+
+## Build and Verification
+
+The shared build configuration is located in `build.gradle.kts`; enabled modules are listed in
+`settings.gradle.kts`; dependency and tool versions are centralized in
+`gradle/libs.versions.toml`. The project uses JDK 17 and the checked-in Gradle Wrapper.
+
+Common commands:
+
+```bash
+# Build all configured modules
+./gradlew assemble
+
+# Build the main demo integration variant
+./gradlew :demo:assembleDevDebug
+
+# Run unit tests for one module
+./gradlew :androidbase:testDebugUnitTest --rerun-tasks
+
+# Run repository-wide formatting and static analysis
+./gradlew ktlintCheck detekt
+
+# Verify local Maven/JitPack publication artifacts
+./gradlew publishToMavenLocal
+```
+
+All Gradle `Test` tasks use JUnit 5. JVM tests are stored in `src/test`; device tests are stored in
+`src/androidTest`. Camera, audio, MediaCodec, MediaProjection, OpenGL, NFC, Bluetooth, and JNI/native
+changes must also be tested on physical devices. At minimum, include an API 21–26 device and a
+recent Android device when the affected API or hardware behavior differs across versions.
+
+The project must continue to support API 21. Before introducing an Android or Java API, verify its
+API level and provide an SDK check, AndroidX compatibility API, or equivalent low-version
+implementation when required.
+
+## Where to Start Reading
+
+- `settings.gradle.kts`: the source of truth for active modules.
+- `build.gradle.kts`: shared Android, Kotlin, test, lint, and publication configuration.
+- `gradle/libs.versions.toml`: SDK, toolchain, library, and publication versions.
+- `androidbase/src/main/kotlin/com/leovp/androidbase`: the main Android utility APIs.
+- `demo/src/main/kotlin/com/leovp/demo/MainActivity.kt`: the main demo entry point.
+- `demo/src/main/kotlin/com/leovp/demo/basiccomponents/BasicFragment.kt`: the basic feature catalog.
+- `camerax/src/main/kotlin/com/leovp/camerax/fragments/CameraFragment.kt`: the CameraX workflow.
+- `camera2live/src/main/kotlin/com/leovp/camera2live/Camera2ComponentHelper.kt`: the Camera2 capture and recording coordinator.
+
 # Troubleshooting
 
 ### JitPack dependency download failure
@@ -77,14 +226,23 @@ rm -rf ~/.gradle/caches/modules-2/metadata-2.*/descriptors/com.github.liangjingk
 ./gradlew :demo:assembleDevDebug
 ```
 
-# How to import?
+# How to use the libraries?
 
-1. You MUST rename or copy the `gradle.properties.template` file to `gradle.properties` and MODIFY it.
-2. Configure the following environment variables on the CI/CD platform:
-- KEYSTORE_PATH
-- KEYSTORE_PASSWORD
-- KEY_ALIAS
-- KEY_PASSWORD
+Consumers of the published artifacts do not need to clone this repository or copy its
+`gradle.properties.template`. Add JitPack to the repositories in your `settings.gradle.kts`:
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+}
+```
+
+Signing credentials are not required when consuming the libraries. They are module-specific build
+inputs used only when building or signing applications from this repository.
 
 ## For Kotlin (build.gradle.kts)
 
@@ -116,6 +274,12 @@ dependencies {
     ...
 }
 ```
+
+## Building this repository
+
+When working from a source checkout, copy `gradle.properties.template` to `gradle.properties` and
+adjust the local Gradle settings as needed. Application signing is configured per application
+module; refer to `00-documents/KEYSTORE_SECURITY_GUIDE.md` before configuring CI/CD credentials.
 
 # Upload to bintray(Maven and jcenter)
 
@@ -152,8 +316,12 @@ Here comes a question: how to save this library logs in your project if you need
 In order to solve this problem, I implement a log system by using `LogContext`.
 You just need to initiate `LogContext` with your custom log wrapper and output your log by using `LogContext`
 I have already implemented the `LLog` which is a wrapper of Android default log as default implementation for `LogContext`.
-Of course, you can implement your log wrapper by implement `ILog`.
-**DO NOT** forget to initialize it first in `Application`.
+To provide a custom logger, extend `AbsLog`, which implements `ILog`, and pass that implementation to
+`LogContext.setLogImpl()`. Implementing `ILog` alone is not sufficient because `setLogImpl()`
+currently accepts an `AbsLog` instance.
+
+Initialize `LogContext` as early as possible, preferably in `Application`. Before initialization,
+`LogContext` uses a disabled `LLog` fallback, so log calls do not crash but their output is discarded.
 
 Please check the `LogActivity` for details.
 

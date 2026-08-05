@@ -189,8 +189,9 @@ object ZipUtil {
      *   escape the destination (e.g. `../evil.txt`, absolute paths, or symlinked parents) are
      *   rejected with [IllegalArgumentException] (Zip Slip protection).
      * - Per-entry and total decompressed sizes are capped by [limits] to mitigate ZIP bombs.
-     * - Each entry is written to a temporary file first and atomically renamed into place, so a
-     *   failure (traversal, oversize, or I/O error) never leaves a partially written target file.
+     * - Each entry is written to a temporary file first. Existing targets are moved to a backup
+     *   before replacement and restored if the final rename fails, avoiding partial output and
+     *   preserving the previous file on replacement failure.
      *
      * @param zipFilePath Path to the ZIP file.
      * @param destDir Destination directory where files will be extracted.
@@ -228,7 +229,7 @@ object ZipUtil {
                         buffer = buffer,
                         totalWrittenSoFar = totalWritten,
                         limits = limits,
-                        entryName = entry.name,
+                        entryName = entry.name
                     )
                 }
                 zipIn.closeEntry()
@@ -250,7 +251,10 @@ object ZipUtil {
         limits: UnzipLimits,
         entryName: String,
     ): Long {
-        val parent = requireNotNull(entryFile.parentFile) { "Missing parent directory for entry: $entryName" }
+        val parent =
+            requireNotNull(entryFile.parentFile) {
+                "Missing parent directory for entry: $entryName"
+            }
         require(parent.isDirectory || parent.mkdirs()) { "Cannot create directory: $parent" }
         require(isInsideDest(parent.canonicalPath, destPath, destRoot)) {
             "Blocked Zip Slip path traversal for entry: $entryName"
@@ -275,10 +279,25 @@ object ZipUtil {
                     bos.write(buffer, 0, length)
                 }
             }
-            if (entryFile.exists()) {
-                require(entryFile.delete()) { "Cannot replace existing entry: $entryName" }
+            val backupFile = if (entryFile.exists()) {
+                File.createTempFile(".unzip-backup-", ".tmp", parent).also { backup ->
+                    require(backup.delete()) { "Cannot prepare backup for entry: $entryName" }
+                    require(entryFile.renameTo(backup)) {
+                        "Cannot back up existing entry before replacement: $entryName"
+                    }
+                }
+            } else {
+                null
             }
-            require(tempFile.renameTo(entryFile)) { "Cannot move extracted entry into place: $entryName" }
+            if (!tempFile.renameTo(entryFile)) {
+                val restored = backupFile?.renameTo(entryFile) ?: true
+                check(restored) {
+                    "Cannot restore existing entry after replacement failed: $entryName; " +
+                        "backup=${backupFile?.absolutePath}"
+                }
+                error("Cannot move extracted entry into place: $entryName")
+            }
+            backupFile?.delete()
         } finally {
             tempFile.delete() // Remove the temp file if it is still present (e.g. on failure).
         }

@@ -11,7 +11,6 @@ import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -36,10 +35,6 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     private var audioLatencyThresholdInMs = AUDIO_INIT_LATENCY_IN_MS
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
-
-    /** Independent scope for teardown so cancelling [ioScope] cannot kill the release flow. */
-    private val teardownScope =
-        CoroutineScope(Dispatchers.IO + CoroutineName("opus-stream-teardown"))
 
     /** Private monitor serializing init/decode/flush/stop. Never lock on `this`. */
     private val lock = Any()
@@ -194,20 +189,9 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
      */
     suspend fun stopPlayingAndJoin() {
         LogContext.log.w(TAG, "Stop playing audio")
-        val decoderToRelease = synchronized(lock) {
-            generation++
-            val old = audioDecoder
-            audioDecoder = null
-            csd0 = null
-            csd1 = null
-            csd2 = null
-            frameCount = 0
-            dropFrameTimes.set(0)
-            old
-        }
+        val decoderToRelease = detachDecoderForStop()
         ioScope.cancel()
-        runCatching { audioTrackPlayer.release() }
-            .onFailure { LogContext.log.e(TAG, "audioTrack release error. msg=${it.message}") }
+        releaseAudioTrack()
 
         LogContext.log.w(TAG, "Releasing AudioDecoder...")
         decoderToRelease?.let { dec ->
@@ -223,8 +207,8 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     }
 
     /**
-     * Legacy non-suspend entry point. Bridges to [stopPlayingAndJoin] on an independent scope so it
-     * never blocks the caller thread.
+     * Legacy non-suspend entry point. It preserves synchronous resource release, but cannot wait
+     * for the decoder worker to finish; use [stopPlayingAndJoin] when completion matters.
      */
     @Deprecated(
         "Non-suspend stop cannot guarantee the decoder has been released. " +
@@ -232,7 +216,30 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         ReplaceWith("stopPlayingAndJoin()")
     )
     fun stopPlaying() {
-        teardownScope.launch { stopPlayingAndJoin() }
+        LogContext.log.w(TAG, "Stop playing audio")
+        val decoderToRelease = detachDecoderForStop()
+        ioScope.cancel()
+        releaseAudioTrack()
+        runCatching { decoderToRelease?.release() }
+            .onFailure { LogContext.log.e(TAG, "audioDecoder release error", it) }
+        LogContext.log.w(TAG, "stopPlaying() done")
+    }
+
+    private fun detachDecoderForStop(): OpusDecoder? = synchronized(lock) {
+        generation++
+        val old = audioDecoder
+        audioDecoder = null
+        csd0 = null
+        csd1 = null
+        csd2 = null
+        frameCount = 0
+        dropFrameTimes.set(0)
+        old
+    }
+
+    private fun releaseAudioTrack() {
+        runCatching { audioTrackPlayer.release() }
+            .onFailure { LogContext.log.e(TAG, "audioTrack release error. msg=${it.message}", it) }
     }
 
     @Suppress("unused")

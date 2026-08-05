@@ -258,7 +258,10 @@ class ZipUtilTest {
                 ZipUtil.UnzipLimits(maxEntryBytes = 1024, maxTotalBytes = 1024)
             )
         }
-        assertFalse(File(sizeDest, "big.bin").exists(), "Oversize entry must not leave a partial file")
+        assertFalse(
+            File(sizeDest, "big.bin").exists(),
+            "Oversize entry must not leave a partial file"
+        )
 
         bigZip.delete()
         sizeDest.deleteRecursively()

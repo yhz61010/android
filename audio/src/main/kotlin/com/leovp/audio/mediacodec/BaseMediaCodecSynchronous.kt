@@ -78,9 +78,10 @@ abstract class BaseMediaCodecSynchronous(
                             MediaCodec.BUFFER_FLAG_END_OF_STREAM
                         )
                     }
-                    // A non-positive size means no input was available this round (e.g. poll
-                    // timeout). Do not queue an empty non-EOS buffer.
-                    size > 0 -> codec.queueInputBuffer(inputIndex, 0, size, pts, 0)
+                    // Every dequeued input buffer must be returned to MediaCodec. Queueing an
+                    // empty buffer avoids permanently exhausting the codec's input slots when a
+                    // non-blocking producer has no data available this round.
+                    else -> codec.queueInputBuffer(inputIndex, 0, size.coerceAtLeast(0), pts, 0)
                 }
             }
 

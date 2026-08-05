@@ -75,6 +75,7 @@ abstract class BaseCamera2Fragment : Fragment() {
     @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        isCameraReleased.set(false)
         if (!enableRecordFeature) {
             binding.ivShotRecord.visibility = View.GONE
             binding.ivRecordStop.visibility = View.GONE
@@ -136,7 +137,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             switchCameraBtn.isEnabled = false
             binding.ivShotRecord.isEnabled = false
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
                 getCapturingImage(camera2Helper.takePhoto())
                 DeviceSound.playShutterClick()
@@ -161,7 +162,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             binding.ivShot.isEnabled = false
 
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
                 camera2Helper.extraInitializeCameraForRecording()
                 camera2Helper.setImageReaderForRecording()
@@ -181,7 +182,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 camera2Helper.stopRecording()
                 onStopRecordButtonClick()
                 // Re-enable click listener after recording is taken

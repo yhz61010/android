@@ -30,7 +30,6 @@ class DeviceUtil private constructor(private val ctx: Context) {
             .getMethod("getBatteryCapacity")
             .invoke(powerProfile) as Double
     }.getOrDefault(0.0)
-
 }
 
 @SuppressLint("HardwareIds", "MissingPermission")

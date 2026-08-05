@@ -227,11 +227,12 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         return icon + ring + padding
     }
 
-    private fun resolveDesiredSize(desired: Int, spec: Int): Int = when (MeasureSpec.getMode(spec)) {
-        MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec)
-        MeasureSpec.AT_MOST -> min(desired, MeasureSpec.getSize(spec))
-        else -> desired
-    }
+    private fun resolveDesiredSize(desired: Int, spec: Int): Int =
+        when (MeasureSpec.getMode(spec)) {
+            MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec)
+            MeasureSpec.AT_MOST -> min(desired, MeasureSpec.getSize(spec))
+            else -> desired
+        }
 
     var maxProgress: Int
         get() = internalMaxProgress
@@ -315,10 +316,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     fun setIndeterminate() {
-        internalIndeterminateAnimator.end()
+        internalIndeterminateAnimator.cancel()
         internalCrrIndeterminateBarPos = BASE_START_ANGLE
         currState = State.Type.STATE_INDETERMINATE
-        internalIndeterminateAnimator.start()
+        if (isAttachedToWindow) internalIndeterminateAnimator.start()
         callStateChangedListener(currState)
         invalidate()
     }

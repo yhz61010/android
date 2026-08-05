@@ -69,6 +69,8 @@
 | CIP-3 | androidbase | MEDIUM | GZipUtil.decompress 无输出上限（GZIP bomb） | `cipher/GZipUtil.kt:22-27` |
 | AR-7 | android-restricted | MEDIUM | getSystemPropertyByShell 参数直拼命令（注入） | `utils/DeviceProp.kt:46-49` |
 
+### P2 — 功能正确性 / 并发 / 输入校验 / 性能
+
 > **关于 P 层与严重级的关系**：P 层按“风险 × 修复紧迫度”排序，并非严格等同严重级——故存在 HIGH 项落在 P2、MEDIUM 项提到 P1 的情况。具体地：`CIP-3`（GZIP bomb）与 `AR-7`（命令注入）虽为 MEDIUM，但同属**安全类**（DoS / 注入），一旦触发影响面大且常与 P0 安全项一并评审修复，故提前到 P1；而 P2 中的 HIGH 项（如 `CAM2-4/5`、`AR-2/3/4/5`）多为需特定机型/时序触发、可局部隔离，故次高处理。安全项优先。
 | ID | 模块 | 级别 | 摘要 | 位置 |
 |---|---|---|---|---|

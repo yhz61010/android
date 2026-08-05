@@ -58,7 +58,8 @@
   串行关闭,不再固定睡眠阻塞 UI 线程,消除前后台快速切换时的 ANR 风险。
 - **CAM2-8 相机挂起操作可取消**:`createCaptureSession` 改为 `suspendCancellableCoroutine`,取消后
   配置完成的 session 会关闭;`openCamera` 同步捕获权限/CameraAccess 异常,并在取消后关闭迟到的
-  `onOpened` 设备,防止快速切换或离页时泄漏并覆盖当前设备状态。
+  `onOpened` 设备。打开设备状态改由 `AtomicReference` 管理,登记及按设备身份清理均使用 CAS,
+  防止 Camera HandlerThread 的迟到回调覆盖或清除主线程上的新设备状态。
 - **CX-2 `captureForBytes` 始终关闭 `ImageProxy`**:`onCaptureSuccess` 用 `image.use{}` 保证关闭;
   UI 操作改走 `viewLifecycleOwner.lifecycleScope`,错误路径不再用 `requireActivity()`(Fragment 可能已
   detach),按视图生命周期守卫后再回调 `onImageSaved`,修复 ImageProxy 泄漏与 detach 后崩溃。

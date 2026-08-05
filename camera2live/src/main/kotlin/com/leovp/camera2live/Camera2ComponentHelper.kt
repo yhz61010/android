@@ -113,7 +113,7 @@ class Camera2ComponentHelper(
     private val switchMutex = Mutex()
 
     /** The currently opened camera together with a close signal bound to that exact device. */
-    private var openedCamera: OpenedCamera? = null
+    private val openedCamera = AtomicReference<OpenedCamera?>()
 
     /** The in-flight camera switch, cancelled when a new switch is requested. */
     private var switchJob: Job? = null
@@ -637,7 +637,7 @@ class Camera2ComponentHelper(
         val pendingDevice = AtomicReference<CameraDevice?>()
         cont.invokeOnCancellation {
             pendingDevice.getAndSet(null)?.let { device ->
-                if (openedCamera?.device === device) openedCamera = null
+                clearOpenedCamera(device)
                 device.close()
             }
         }
@@ -648,19 +648,31 @@ class Camera2ComponentHelper(
                     return
                 }
                 pendingDevice.set(device)
-                openedCamera = OpenedCamera(device, closeSignal)
+                val newCamera = OpenedCamera(device, closeSignal)
+                if (!openedCamera.compareAndSet(null, newCamera)) {
+                    pendingDevice.compareAndSet(device, null)
+                    device.close()
+                    if (cont.isActive) {
+                        cont.resumeWithException(
+                            IllegalStateException(
+                                "Another camera became active while opening $cameraId"
+                            )
+                        )
+                    }
+                    return
+                }
                 if (cont.isActive) {
                     cont.resume(device)
                 } else {
                     pendingDevice.getAndSet(null)?.close()
-                    openedCamera = null
+                    clearOpenedCamera(device)
                 }
             }
 
             override fun onDisconnected(device: CameraDevice) {
                 LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
                 pendingDevice.compareAndSet(device, null)
-                if (openedCamera?.device === device) openedCamera = null
+                clearOpenedCamera(device)
                 device.close()
                 if (cont.isActive) {
                     cont.resumeWithException(
@@ -672,7 +684,7 @@ class Camera2ComponentHelper(
             override fun onClosed(camera: CameraDevice) {
                 LogContext.log.w(TAG, "Camera $cameraId has been closed")
                 pendingDevice.compareAndSet(camera, null)
-                if (openedCamera?.device === camera) openedCamera = null
+                clearOpenedCamera(camera)
                 closeSignal.complete(Unit)
                 super.onClosed(camera)
             }
@@ -687,7 +699,7 @@ class Camera2ComponentHelper(
                     else -> "Unknown"
                 }
                 pendingDevice.compareAndSet(device, null)
-                if (openedCamera?.device === device) openedCamera = null
+                clearOpenedCamera(device)
                 device.close()
                 val exc = IllegalAccessException(
                     "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
@@ -1204,7 +1216,7 @@ class Camera2ComponentHelper(
         switchJob = cameraScope.launch {
             try {
                 switchMutex.withLock {
-                    val oldCamera = checkNotNull(openedCamera) {
+                    val oldCamera = checkNotNull(openedCamera.get()) {
                         "No opened camera to switch from."
                     }
                     closeCamera()
@@ -1234,6 +1246,15 @@ class Camera2ComponentHelper(
     private fun reportCameraError(message: String, error: Throwable) {
         LogContext.log.e(TAG, message, error)
         cameraErrorListener?.onError(error)
+    }
+
+    /** Clears only the matching device so a late callback cannot erase a newer camera state. */
+    private fun clearOpenedCamera(device: CameraDevice) {
+        while (true) {
+            val current = openedCamera.get() ?: return
+            if (current.device !== device) return
+            if (openedCamera.compareAndSet(current, null)) return
+        }
     }
 
     interface LensSwitchListener {
@@ -1311,8 +1332,11 @@ class Camera2ComponentHelper(
         try {
             // There is no need to call session.close() method. Please check its comment
             //            if (::session.isInitialized) session.close()
-            if (::camera.isInitialized) camera.close()
-            openedCamera = null
+            if (::camera.isInitialized) {
+                val device = camera
+                device.close()
+                clearOpenedCamera(device)
+            }
             if (::imageReader.isInitialized) imageReader.close()
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()

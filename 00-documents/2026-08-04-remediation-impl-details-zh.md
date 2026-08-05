@@ -225,7 +225,7 @@ private fun stopRepeating() {
 ### CAM2-8 [HIGH/P1] takePhoto/createCaptureSession 用不可取消 suspendCoroutine
 - 位置：`:632-658`（createCaptureSession）、`:870`（takePhoto）
 - 目标：改 `suspendCancellableCoroutine`，所有 resume 加 `if (cont.isActive)`，`invokeOnCancellation` 清理；takePhoto 见 CAM2-1。回归：中，回归“建会话/拍照进行中退出 Fragment”。
-- 说明：本条仅要求把 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）从不可取消挂起改为可取消实现。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，无需替换挂起原语，但仍必须同步捕获 `SecurityException`/`CameraAccessException`，并在取消后关闭迟到的 `onOpened` 设备，防止设备泄漏或旧回调覆盖新状态。
+- 说明：本条仅要求把 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）从不可取消挂起改为可取消实现。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，无需替换挂起原语，但仍必须同步捕获 `SecurityException`/`CameraAccessException`，并在取消后关闭迟到的 `onOpened` 设备。由于 `CameraDevice.StateCallback` 在 `cameraHandler` 线程执行，而取消和切换通常在主线程执行，`openedCamera` 必须使用 `AtomicReference`；登记和按设备身份清理均使用 CAS，避免旧回调覆盖或清除新设备状态。
 
 ### CAM2-9 [MEDIUM/P2] CameraAvcEncoder.setCallback 应在 configure 前 + 专用 Handler
 - 位置：`codec/CameraAvcEncoder.kt:193-199`

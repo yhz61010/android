@@ -38,7 +38,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.createImageFile
 import com.leovp.android.exts.screenAvailableResolution
-import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -55,18 +54,24 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Author: Michael Leo
@@ -92,6 +97,21 @@ class Camera2ComponentHelper(
 
     private lateinit var cameraId: String
     private var lensSwitchListener: LensSwitchListener? = null
+
+    /** Reports asynchronous camera errors (e.g. switch close timeout) to the owner. */
+    var cameraErrorListener: CameraErrorListener? = null
+
+    /**
+     * Serializes [switchCamera] so the old device's [CameraDevice.StateCallback.onClosed] is
+     * awaited before the new device is opened (remediation CAM2-3).
+     */
+    private val switchMutex = Mutex()
+
+    /** The currently opened camera together with a close signal bound to that exact device. */
+    private var openedCamera: OpenedCamera? = null
+
+    /** The in-flight camera switch, cancelled when a new switch is requested. */
+    private var switchJob: Job? = null
 
     private val singleExecutor = Executors.newSingleThreadExecutor()
 
@@ -557,31 +577,41 @@ class Camera2ComponentHelper(
     @RequiresPermission(android.Manifest.permission.CAMERA)
     fun initializeCamera(previewWidth: Int, previewHeight: Int) =
         context.lifecycleScope.launch(Dispatchers.Main) {
-            LogContext.log.i(
-                TAG,
-                "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
-            )
-            this@Camera2ComponentHelper.previewWidth = previewWidth
-            this@Camera2ComponentHelper.previewHeight = previewHeight
-            initializeParameters()
-
-            // Open the selected camera
-            camera = openCamera(cameraManager, cameraId, cameraHandler)
-
-            if (enableTakePhotoFeature) {
-                val st = SystemClock.elapsedRealtime()
-                setImageReaderForPhoto(previewWidth, previewHeight)
-                LogContext.log.d(
-                    TAG,
-                    "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
-                )
-                setPreviewRepeatingRequest()
-                LogContext.log.d(
-                    TAG,
-                    "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
-                )
-            }
+            initializeCameraAndAwait(previewWidth, previewHeight)
         }
+
+    /**
+     * Opens and fully configures the camera, returning only once the device, image reader and
+     * preview repeating request are all ready. Reuses the existing initialize logic so callers
+     * (e.g. [switchCamera]) can await a completed setup (remediation CAM2-3).
+     */
+    @RequiresPermission(android.Manifest.permission.CAMERA)
+    private suspend fun initializeCameraAndAwait(previewWidth: Int, previewHeight: Int) {
+        LogContext.log.i(
+            TAG,
+            "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
+        )
+        this@Camera2ComponentHelper.previewWidth = previewWidth
+        this@Camera2ComponentHelper.previewHeight = previewHeight
+        initializeParameters()
+
+        // Open the selected camera
+        camera = openCamera(cameraManager, cameraId, cameraHandler)
+
+        if (enableTakePhotoFeature) {
+            val st = SystemClock.elapsedRealtime()
+            setImageReaderForPhoto(previewWidth, previewHeight)
+            LogContext.log.d(
+                TAG,
+                "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
+            )
+            setPreviewRepeatingRequest()
+            LogContext.log.d(
+                TAG,
+                "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
+            )
+        }
+    }
 
     /** Opens the camera and returns the opened device as the result of the suspending coroutine. */
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -590,19 +620,29 @@ class Camera2ComponentHelper(
         cameraId: String,
         handler: Handler? = null
     ): CameraDevice = suspendCancellableCoroutine { cont ->
+        // Close signal owned by this exact device; completed in onClosed (remediation CAM2-3).
+        val closeSignal = CompletableDeferred<Unit>()
         manager.openCamera(
             cameraId,
             object : CameraDevice.StateCallback() {
-                override fun onOpened(device: CameraDevice) = cont.resume(device)
+                override fun onOpened(device: CameraDevice) {
+                    openedCamera = OpenedCamera(device, closeSignal)
+                    if (cont.isActive) cont.resume(device)
+                }
 
                 override fun onDisconnected(device: CameraDevice) {
                     LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
-                    // TODO In some cases, call this method will cause crash
-                    //                context.requireActivity().finish()
+                    device.close()
+                    if (cont.isActive) {
+                        cont.resumeWithException(
+                            IllegalStateException("Camera $cameraId disconnected during open")
+                        )
+                    }
                 }
 
                 override fun onClosed(camera: CameraDevice) {
                     LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                    closeSignal.complete(Unit)
                     super.onClosed(camera)
                 }
 
@@ -636,14 +676,22 @@ class Camera2ComponentHelper(
         device: CameraDevice,
         targets: List<Surface>,
         handler: Handler? = null,
-    ): CameraCaptureSession = suspendCoroutine { cont ->
+    ): CameraCaptureSession = suspendCancellableCoroutine { cont ->
         val stateCallback = object : CameraCaptureSession.StateCallback() {
-            override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
+            override fun onConfigured(session: CameraCaptureSession) {
+                // If the coroutine was already cancelled, close the session to avoid a leak.
+                if (cont.isActive) cont.resume(session) else session.close()
+            }
+
             override fun onConfigureFailed(session: CameraCaptureSession) {
                 val exc = RuntimeException("Camera ${device.id} session configuration failed")
                 LogContext.log.e(TAG, exc.message, exc)
-                cont.resumeWithException(exc)
+                if (cont.isActive) cont.resumeWithException(exc)
             }
+        }
+
+        cont.invokeOnCancellation {
+            LogContext.log.w(TAG, "createCaptureSession cancelled for camera ${device.id}")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -661,14 +709,14 @@ class Camera2ComponentHelper(
     }
 
     private fun stopRepeating() {
-        if (::session.isInitialized) {
-            LogContext.log.w(TAG, "stopRepeating()")
+        if (!::session.isInitialized) return
+        LogContext.log.w(TAG, "stopRepeating()")
+        // Serialize teardown through the Camera API instead of a fixed main-thread sleep so we
+        // no longer block the UI thread (remediation CAM2-7).
+        runCatching {
             session.stopRepeating()
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                session.abortCaptures()
-            }
-            sleep(100)
-        }
+            session.abortCaptures()
+        }.onFailure { LogContext.log.w(TAG, "stopRepeating failed", it) }
     }
 
     fun stopRecording() {
@@ -1090,6 +1138,15 @@ class Camera2ComponentHelper(
         switchCamera(CameraMetadata.LENS_FACING_FRONT)
     }
 
+    /**
+     * Switches to the camera with the given [lensFacing].
+     *
+     * Remediation CAM2-3: this is now asynchronous. The old device is closed and its
+     * [CameraDevice.StateCallback.onClosed] is awaited (serialized through [switchMutex]) before
+     * the new device is opened. Consecutive requests cancel the previous not-yet-started switch.
+     * On close timeout the switch is aborted and [cameraErrorListener] is notified;
+     * [lensSwitchListener] fires only after a successful switch.
+     */
     @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchCamera(lensFacing: Int) {
         if (!::camera.isInitialized) {
@@ -1097,10 +1154,27 @@ class Camera2ComponentHelper(
         }
         LogContext.log.w(TAG, "switchCamera to $lensFacing")
 
-        closeCamera()
-        this.lensFacing = lensFacing
-        initializeCamera(previewWidth, previewHeight)
-        lensSwitchListener?.onSwitch(lensFacing)
+        switchJob?.cancel()
+        switchJob = context.lifecycleScope.launch(Dispatchers.Main.immediate) {
+            switchMutex.withLock {
+                val oldCamera = checkNotNull(openedCamera) { "No opened camera to switch from." }
+                // closeCamera() closes the device (triggering onClosed), image reader and encoder.
+                closeCamera()
+                val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+                    oldCamera.closed.await()
+                    true
+                } ?: false
+                if (!closedInTime) {
+                    cameraErrorListener?.onError(
+                        TimeoutException("Camera close timed out during switch")
+                    )
+                    return@withLock
+                }
+                this@Camera2ComponentHelper.lensFacing = lensFacing
+                initializeCameraAndAwait(previewWidth, previewHeight)
+                lensSwitchListener?.onSwitch(lensFacing) // Notify only after a successful switch.
+            }
+        }
     }
 
     interface LensSwitchListener {
@@ -1109,6 +1183,17 @@ class Camera2ComponentHelper(
 
     fun setLensSwitchListener(listener: LensSwitchListener) {
         lensSwitchListener = listener
+    }
+
+    /** The currently opened device with a close signal bound to that exact device (CAM2-3). */
+    private data class OpenedCamera(
+        val device: CameraDevice,
+        val closed: CompletableDeferred<Unit>,
+    )
+
+    /** Reports asynchronous camera errors raised outside a suspending call. */
+    interface CameraErrorListener {
+        fun onError(t: Throwable)
     }
     // ===========================================================
 
@@ -1196,6 +1281,9 @@ class Camera2ComponentHelper(
             cameraThread.quitSafely()
             imageReaderHandler.removeCallbacksAndMessages(null)
             imageReaderThread.quitSafely()
+            // Release the session-configuration executor so the thread does not leak when the
+            // view is destroyed (remediation CAM2-6). shutdown() is idempotent.
+            if (!singleExecutor.isShutdown) singleExecutor.shutdown()
         } catch (e: Exception) {
             LogContext.log.e(TAG, "stopCameraThread() error.")
         }
@@ -1219,6 +1307,9 @@ class Camera2ComponentHelper(
 
         /** Maximum time allowed to wait for the result of an image capture */
         private const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
+
+        /** Maximum time to wait for the old camera device to close during a lens switch. */
+        private const val CAMERA_CLOSE_TIMEOUT_MILLIS: Long = 3000
 
         // ===== Camera Recording - Start ============================================
         val ORIENTATIONS = mapOf(

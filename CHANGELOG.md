@@ -22,3 +22,17 @@
 - **HTTP-3 日志体积双向有界**:请求与响应体日志各自最多缓冲/输出 256 KiB,不再将整个响应
   (`source.request(Long.MAX_VALUE)`)或请求体读入内存;duplex/one-shot/未知长度/超限的请求体一律省略。
   修复大响应/大请求下的 OOM 风险;业务读取报文体不受影响。
+- **CIP-3 `GZipUtil.decompress` 加解压上限**:新增可选参数 `maxOutputBytes`(默认 64 MiB),
+  超限返回 `null`,缓解 GZIP bomb。`@JvmOverloads` 保留原有入口,既有调用无需改动。
+
+### 修复 (Fixed)
+
+- **LB-1 `ByteBuffer.copy()` / `copyAll()` 保留字节序**:复制时对目标 buffer 调用 `order(order())`,
+  修复小端 buffer 复制后字节序被重置为大端导致的静默数据损坏。
+- **HTTP-2 `HttpRequest` 并发安全**:不再共享并复用同一个可变 `Retrofit.Builder`;改为保存不可变
+  header 快照,每次 `getRetrofit(baseUrl)` 新建 builder,避免并发不同 `baseUrl` 时构建出错误 Host。
+
+### 新增 (Added)
+
+- **HTTP-4 `BaseProgressObserver.cancel()` / `isDisposed`**:暴露取消入口,调用方可在页面销毁时
+  终止订阅,避免向已销毁界面回调。

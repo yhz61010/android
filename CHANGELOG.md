@@ -28,8 +28,25 @@
   白名单校验(`^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`),非法名记日志并返回 `""`,防止参数直拼命令注入。
   合法属性名(`ro.*`/`ril.*`/`gsm.*`)全部匹配,行为不变。
 
+### 变更 (Changed)
+
+- **CAM2-3 `Camera2ComponentHelper.switchCamera` 由同步改为异步**:切换现在会先关闭旧设备并等待其
+  `onClosed`(经 `Mutex` 串行化、关闭信号绑定到具体 `CameraDevice`),关闭超时(默认 3s)则中止本次切换
+  并通过新增的 `cameraErrorListener` 上报,不再直接打开新设备;`lensSwitchListener` 仅在切换成功后回调。
+  方法签名不变(仍返回 `Unit`),但完成时机变为延迟;连续点击会取消尚未开始的上一次切换。
+  `switchToFrontCamera()`/`switchToBackCamera()` 同步语义随之变化。
+
 ### 修复 (Fixed)
 
+- **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
+  `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
+- **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;
+  `BaseCamera2Fragment.onDestroyView()` 释放 helper(closeCamera+stopCameraThread),修复视图重建后
+  HandlerThread/executor 泄漏。onDestroyView/onDestroy 共用幂等状态,释放仅执行一次。
+- **CAM2-7 移除 `onStop` 主线程 `sleep(100)`**:`stopRepeating()` 改用 `stopRepeating()+abortCaptures()`
+  串行关闭,不再固定睡眠阻塞 UI 线程,消除前后台快速切换时的 ANR 风险。
+- **CAM2-8 `createCaptureSession` 可取消**:`suspendCoroutine` → `suspendCancellableCoroutine`,所有
+  resume 加 `isActive` 守卫,取消后配置完成的 session 会被 `close()` 防泄漏,并加 `invokeOnCancellation`。
 - **LB-1 `ByteBuffer.copy()` / `copyAll()` 保留字节序**:复制时对目标 buffer 调用 `order(order())`,
   修复小端 buffer 复制后字节序被重置为大端导致的静默数据损坏。
 - **HTTP-2 `HttpRequest` 并发安全**:不再共享并复用同一个可变 `Retrofit.Builder`;改为保存不可变

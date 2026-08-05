@@ -4,7 +4,16 @@
 
 > 通用说明：无 `src/test` 的模块（camera2live、camerax、circle-progressbar、android-restricted、audio）需先新建测试源集；框架/硬件强耦合逻辑建议抽纯函数后单测。含 `log` 依赖的模块用 `LogContext`，`lib-bytes` 用 `require`/`android.util.Log`（不得引入 log）。跨模块统一模式见计划文档 §3（T1–T8）。
 
-> **目标代码为示意，非可直接粘贴**：为聚焦资源所有权与取消/释放模型，部分目标代码引用了当前源码中尚不存在的辅助函数（如 `buildCombinedCaptureResult`、`initializeCameraAndAwait`、`getRetrofitBuilder`、`releaseCodecOnce`、`finishRecorderRelease`、`decodeRotateAndBuild`、`notifyCodecFailure`）。落地时需自行补齐这些 helper，并保留现有的 EXIF/旋转/时间戳等既有计算逻辑。
+> **目标代码为实现骨架，不能脱离条目约束直接粘贴**：其中 `getRetrofitBuilder` 是当前源码已有函数；`buildCombinedCaptureResult`、`initializeCameraAndAwait`、`releaseCodecOnce`、`finishRecorderRelease`、`decodeRotateAndBuild`、`notifyCodecFailure` 是文档为拆分复杂流程而提出的新 helper。它们不是留给实现者自由发挥的占位符：返回类型、线程、资源所有权、异常和幂等语义必须分别遵循 CAM2-1/3、AUD-1/3/8、CX-2 的条目要求，并保留现有 EXIF、旋转和时间戳计算。若落地时不抽 helper，也必须在原函数中实现完全相同的约束。
+
+| Helper | 最小契约 |
+|---|---|
+| `buildCombinedCaptureResult(Image, TotalCaptureResult): CombinedCaptureResult` | 在调用方的 `Image.use` 结束前复制完整字节，保留现有 EXIF/镜像/尺寸计算；不持有或关闭外部 Image |
+| `initializeCameraAndAwait(width, height)` | suspend；仅在 camera、session 和 repeating request 都就绪后返回，失败/取消时抛出原始异常并清理本次部分状态 |
+| `releaseCodecOnce()` | 幂等；只负责 stop/release codec 和更新释放状态，不启动 fire-and-forget 任务 |
+| `finishRecorderRelease(stopSucceeded)` | 幂等；释放 AudioRecord/encoder，并且只调用一次 `callback.onStop(finalResult)` |
+| `decodeRotateAndBuild(bytes): CaptureImage.ImageBytes` | 在 `Dispatchers.Default` 执行，保留现有镜像/旋转/回收逻辑；失败向上传播，不访问 View |
+| `notifyCodecFailure(CodecException)` | 向 owner 报告异常和 recoverable/transient 信息；不在原 codec 上直接忙重试 |
 
 ---
 
@@ -216,7 +225,7 @@ private fun stopRepeating() {
 ### CAM2-8 [HIGH/P1] takePhoto/createCaptureSession 用不可取消 suspendCoroutine
 - 位置：`:632-658`（createCaptureSession）、`:870`（takePhoto）
 - 目标：改 `suspendCancellableCoroutine`，所有 resume 加 `if (cont.isActive)`，`invokeOnCancellation` 清理；takePhoto 见 CAM2-1。回归：中，回归“建会话/拍照进行中退出 Fragment”。
-- 说明：本条仅针对 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，无需改动，勿误改。
+- 说明：本条仅要求把 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）从不可取消挂起改为可取消实现。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，CAM2-8 无需替换它的挂起原语；但仍必须按 CAM2-2/CAM2-4 修复断连关闭、同步异常和取消清理，不能理解成 openCamera 整体无需修改。
 
 ### CAM2-9 [MEDIUM/P2] CameraAvcEncoder.setCallback 应在 configure 前 + 专用 Handler
 - 位置：`codec/CameraAvcEncoder.kt:193-199`
@@ -485,10 +494,8 @@ Fragment 重载同理。回归：低-中（由抛异常变记录并静默返回�
 protected var codecJob: Job? = null
 suspend fun releaseAndJoin() {
     val job = codecJob
-    if (job === currentCoroutineContext()[Job]) {
-        job.cancel()
-        teardownScope.launch { job.join(); releaseCodecOnce() }
-        return
+    require(job !== currentCoroutineContext()[Job]) {
+        "releaseAndJoin() must be called by an external owner, not the codec worker"
     }
     job?.cancelAndJoin()
     codecJob = null
@@ -497,8 +504,7 @@ suspend fun releaseAndJoin() {
 }
 // Synchronous.start(): codecJob = ioScope.launch { do { ensureActive() } while (process()); onEndOfStream() }
 ```
-- 兼容/边界：现有非 suspend `release()` 是公开接口，不能直接删除或改成“异步返回”。落地前必须选择并记录兼容策略：保留并弃用旧入口、迁移到 `releaseAndJoin()`，或为旧入口提供有界后台释放回调。仓库内 UI 调用点必须迁移，禁止无界阻塞主线程。回归：中高。
-- **语义变化提醒**：从 codec 自身 job 调用 `releaseAndJoin()` 时（`job === currentCoroutineContext()[Job]` 分支），释放被交给 `teardownScope` 后台执行并**立即返回**，即该路径下函数返回时 codec 尚未真正释放（fire-and-forget，释放时机非确定）。这是规避 self-join 死锁的必要设计，但调用方不能假设"返回即已释放"；若某调用点依赖释放完成的时序，需改从外部 job 调用或另加完成信号。`releaseCodecOnce()` 须用原子状态保证只执行一次。
+- 兼容/边界：`releaseAndJoin()` 必须维持“返回时后台任务已退出且 codec 已释放”的确定语义，因此禁止 codec worker 自身调用；worker 遇到错误时只上报终止原因并退出，由外部 owner 调用释放。若业务确实需要从 worker 发起请求，应另设名称明确的 `requestRelease(): Job/Deferred<Unit>`，调用方通过返回对象观察完成，不能让 `releaseAndJoin()` fire-and-forget。现有非 suspend `release()` 是公开接口，不能直接删除或改成异步返回；落地前需提供弃用和迁移入口。`releaseCodecOnce()` 使用原子状态保证只执行一次。回归：中高。
 
 ### AUD-2 [HIGH/P1] AacDecoder.onInputData 阻塞 take() 取消唤不醒（T4）
 - 位置：`aac/AacDecoder.kt:83-86`。目标：

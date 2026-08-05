@@ -14,8 +14,10 @@ import kotlinx.coroutines.withContext
  * Author: Michael Leo
  * Date: 2022/4/25 10:03
  */
-class SoundManager private constructor(val ctx: Context) {
-    private lateinit var soundPool: SoundPool
+class SoundManager private constructor(context: Context) {
+    // Hold the application context to avoid leaking a Fragment/Activity Context in a singleton.
+    private val appCtx = context.applicationContext
+    private var soundPool: SoundPool? = null
     private var soundIdCountdown1: Int = 0
     private var soundIdCountdown2: Int = 0
     private var soundIdCountdownFinal: Int = 0
@@ -23,22 +25,24 @@ class SoundManager private constructor(val ctx: Context) {
     private var soundIdCamStart: Int = 0
     private var soundIdCamStop: Int = 0
 
-    private val audioManager by lazy { ctx.audioManager }
+    private val audioManager by lazy { appCtx.audioManager }
 
     suspend fun loadSounds() = withContext(Dispatchers.IO) {
+        // Release any previously created pool before rebuilding (supports reuse after release()).
+        soundPool?.release()
         soundPool = SoundPool.Builder()
-            .setMaxStreams(6)
+            .setMaxStreams(MAX_STREAMS)
             .setAudioAttributes(
                 AudioAttributes.Builder().setLegacyStreamType(AudioManager.STREAM_MUSIC).build()
             )
             .build()
             .apply {
-                soundIdCountdown1 = load(ctx, R.raw.camera_timer, 1)
-                soundIdCountdown2 = load(ctx, R.raw.camera_timer, 1)
-                soundIdCountdownFinal = load(ctx, R.raw.camera_timer_2sec, 1)
-                soundIdShutter = load(ctx, R.raw.camera_shutter, 1)
-                soundIdCamStart = load(ctx, R.raw.cam_start, 1)
-                soundIdCamStop = load(ctx, R.raw.cam_stop, 1)
+                soundIdCountdown1 = load(appCtx, R.raw.camera_timer, 1)
+                soundIdCountdown2 = load(appCtx, R.raw.camera_timer, 1)
+                soundIdCountdownFinal = load(appCtx, R.raw.camera_timer_2sec, 1)
+                soundIdShutter = load(appCtx, R.raw.camera_shutter, 1)
+                soundIdCamStart = load(appCtx, R.raw.cam_start, 1)
+                soundIdCamStop = load(appCtx, R.raw.cam_stop, 1)
             }
     }
 
@@ -51,13 +55,7 @@ class SoundManager private constructor(val ctx: Context) {
             playSound(soundIdCountdownFinal, getSoundVolume())
         } else if (leftTime > 2) {
             playSound(
-                if (leftTime % 2 ==
-                    0
-                ) {
-                    soundIdCountdown1
-                } else {
-                    soundIdCountdown2
-                },
+                if (leftTime % 2 == 0) soundIdCountdown1 else soundIdCountdown2,
                 getSoundVolume()
             )
         }
@@ -68,19 +66,22 @@ class SoundManager private constructor(val ctx: Context) {
 
     fun release() {
         runCatching {
-            soundPool.autoPause()
-            soundPool.release()
+            soundPool?.autoPause()
+            soundPool?.release()
         }
+        soundPool = null
     }
 
-    private fun playSound(soundId: Int, volume: Float) =
-        soundPool.play(soundId, volume, volume, 1, 0, 1f)
+    // No-op until the pool is loaded, so play-before-load is safe (never crashes).
+    private fun playSound(soundId: Int, volume: Float) {
+        soundPool?.play(soundId, volume, volume, 1, 0, 1f)
+    }
 
     private fun getSoundVolume(): Float =
         audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
-            audioManager.getStreamMaxVolume(
-                AudioManager.STREAM_MUSIC
-            )
+            audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-    companion object : SingletonHolder<SoundManager, Context>(::SoundManager)
+    companion object : SingletonHolder<SoundManager, Context>(::SoundManager) {
+        private const val MAX_STREAMS = 6
+    }
 }

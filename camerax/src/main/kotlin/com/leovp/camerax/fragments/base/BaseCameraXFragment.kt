@@ -47,6 +47,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
@@ -108,8 +109,22 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     abstract fun getTagName(): String
     val logTag: String by lazy { getTagName() }
 
-    /** Generic ViewBinding of the subclasses */
-    lateinit var binding: B
+    private var _binding: B? = null
+
+    /**
+     * Non-null ViewBinding accessor bound to the View lifecycle.
+     * Valid only between [onCreateView] and [onDestroyView]; new internal code must read this.
+     */
+    val viewBinding: B
+        get() = checkNotNull(_binding) { "binding accessed outside of view lifecycle" }
+
+    /**
+     * Generic ViewBinding of the subclasses.
+     *
+     * Kept for source compatibility with existing subclasses/consumers; backed by [_binding].
+     * Prefer [viewBinding] in new code. Now read-only (the previous `lateinit var` setter is gone).
+     */
+    val binding: B get() = viewBinding
 
     abstract fun getViewBinding(
         inflater: LayoutInflater,
@@ -149,7 +164,9 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
      */
     // protected val displayManager by lazy {
     // requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
-    protected val soundManager by lazy { SoundManager.getInstance(requireContext()) }
+    protected val soundManager by lazy {
+        SoundManager.getInstance(requireContext().applicationContext)
+    }
     protected var touchListener: CameraXTouchListener? = null
 
     /** Returns true if the device has an available back camera. False otherwise */
@@ -182,8 +199,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     ): View {
         LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
-        binding = getViewBinding(inflater, container, savedInstanceState)
-        return binding.root
+        _binding = getViewBinding(inflater, container, savedInstanceState)
+        return viewBinding.root
     }
 
     override fun onResume() {
@@ -198,6 +215,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
 
     override fun onDestroyView() {
         LogContext.log.w(logTag, "=====> onDestroyView() <=====")
+        // Release the ViewBinding to avoid leaking the destroyed View hierarchy.
+        _binding = null
         super.onDestroyView()
     }
 
@@ -230,57 +249,36 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
 
                     try {
-                        showShutterAnimation(viewFinder)
-                        soundManager.playShutterSound()
-
                         // For takePicture, the ImageProxy only contains one plane AKA Y plane.
+                        // Always close the ImageProxy via use{}, even when a failure occurs.
                         val st0 = System.currentTimeMillis()
-                        val imageBuffer = image.planes[0].buffer // val width = image.width
-                        //  val height = image.height
-                        val oriImageBytes = imageBuffer.toByteArray()
+                        val oriImageBytes = image.use { proxy ->
+                            proxy.planes[0].buffer.toByteArray()
+                        }
                         LogContext.log.i(
                             logTag,
                             "Get bytes from ImageProxy=${System.currentTimeMillis() - st0}ms"
                         )
 
-                        // DO NOT forget for close Image object
-                        image.close()
-
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
-                            val st1 = System.currentTimeMillis()
-                            val oriBmp = BitmapFactory.decodeByteArray(
-                                oriImageBytes,
-                                0,
-                                oriImageBytes.size
-                            )
-                            val st2 = System.currentTimeMillis()
-                            LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-                            val processedBmp =
-                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
-                            val st3 = System.currentTimeMillis()
-                            LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
-                            val finalWidth = processedBmp.width
-                            val finalHeight = processedBmp.height
-                            val imageBytes: ByteArray = processedBmp.toBytes()
-                            LogContext.log.i(
-                                logTag,
-                                "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms"
-                            )
-
-                            oriBmp.recycledSafety()
-                            processedBmp.recycledSafety()
-
-                            withContext(Dispatchers.Main) {
-                                onImageSaved(
-                                    CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight),
-                                    null
-                                )
+                        // onCaptureSuccess() runs on cameraExecutor (background). Do not touch View
+                        // here; marshal UI work to the View lifecycle scope instead.
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            showShutterAnimation(viewFinder)
+                            soundManager.playShutterSound()
+                            val saved = withContext(Dispatchers.Default) {
+                                decodeRotateAndBuild(oriImageBytes)
                             }
+                            onImageSaved(saved, null)
                         }
                     } catch (e: Exception) {
                         LogContext.log.e(logTag, "Process onCaptureSuccess() error", e)
-                        requireActivity().runOnUiThread { onImageSaved(null, e) }
+                        // Fragment may be detached here; never use requireActivity().
+                        activity?.runOnUiThread {
+                            val owner = viewLifecycleOwnerLiveData.value
+                            val started = owner?.lifecycle?.currentState
+                                ?.isAtLeast(Lifecycle.State.INITIALIZED) == true
+                            if (started) onImageSaved(null, e)
+                        }
                     }
                 }
 
@@ -290,7 +288,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         "ImageCapturedCallback - Photo capture failed: ${exc.message}",
                         exc
                     )
-                    requireActivity().runOnUiThread { onImageSaved(null, exc) }
+                    // Runs on cameraExecutor; may fire after detach, so avoid requireActivity().
+                    activity?.runOnUiThread {
+                        val owner = viewLifecycleOwnerLiveData.value
+                        val started = owner?.lifecycle?.currentState
+                            ?.isAtLeast(Lifecycle.State.INITIALIZED) == true
+                        if (started) onImageSaved(null, exc)
+                    }
                 }
             }
         )
@@ -386,6 +390,33 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 }
             }
         )
+    }
+
+    /**
+     * Decode, mirror/rotate and encode the captured Y-plane bytes into [CaptureImage.ImageBytes].
+     *
+     * Intended to run off the main thread (the caller wraps it in `Dispatchers.Default`). It does
+     * not access any View; failures propagate to the caller. Preserves the original mirror/rotate
+     * and bitmap-recycling logic.
+     */
+    private fun decodeRotateAndBuild(oriImageBytes: ByteArray): CaptureImage.ImageBytes {
+        val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
+        val st1 = System.currentTimeMillis()
+        val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+        val st2 = System.currentTimeMillis()
+        LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
+        val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+        val st3 = System.currentTimeMillis()
+        LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
+        val finalWidth = processedBmp.width
+        val finalHeight = processedBmp.height
+        val imageBytes: ByteArray = processedBmp.toBytes()
+        LogContext.log.i(logTag, "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
+
+        oriBmp.recycledSafety()
+        processedBmp.recycledSafety()
+
+        return CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight)
     }
 
     private fun adjustBitmapRotation(

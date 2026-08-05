@@ -30,6 +30,14 @@
 
 ### 变更 (Changed)
 
+- **CX-4 `BaseCameraXFragment.binding` 由 `lateinit var` 改为只读 `val`**:改用可空 backing
+  `_binding` + `onDestroyView` 置空,修复视图重建后 binding 泄漏与释放后误用。新增只读访问器
+  `viewBinding`(视图生命周期内有效);公开 `binding` 保留为只读 `val`(委托 `viewBinding`),
+  **源码兼容**(既有子类读取不变),但**移除了自动生成的 setter**(二进制不兼容;仓库内无外部 setter);
+  `onDestroyView` 之后读取会抛 `IllegalStateException`。`VideoFragment` 迁移到 `viewBinding` 暂缓。
+- **CX-1 `SoundManager` 不再持有传入 `Context`**:构造参数改为私有存 `applicationContext`,移除公开
+  `val ctx`(仓库内无外部引用,`getInstance` 签名不变);`soundPool` 改可空、支持 `release()` 后重建,
+  未加载时 `play*` 变 no-op(不再崩溃)。
 - **CAM2-3 `Camera2ComponentHelper.switchCamera` 由同步改为异步**:切换现在会先关闭旧设备并等待其
   `onClosed`(经 `Mutex` 串行化、关闭信号绑定到具体 `CameraDevice`),关闭超时(默认 3s)则中止本次切换
   并通过新增的 `cameraErrorListener` 上报,不再直接打开新设备;`lensSwitchListener` 仅在切换成功后回调。
@@ -47,6 +55,12 @@
   串行关闭,不再固定睡眠阻塞 UI 线程,消除前后台快速切换时的 ANR 风险。
 - **CAM2-8 `createCaptureSession` 可取消**:`suspendCoroutine` → `suspendCancellableCoroutine`,所有
   resume 加 `isActive` 守卫,取消后配置完成的 session 会被 `close()` 防泄漏,并加 `invokeOnCancellation`。
+- **CX-2 `captureForBytes` 始终关闭 `ImageProxy`**:`onCaptureSuccess` 用 `image.use{}` 保证关闭;
+  UI 操作改走 `viewLifecycleOwner.lifecycleScope`,错误路径不再用 `requireActivity()`(Fragment 可能已
+  detach),按视图生命周期守卫后再回调 `onImageSaved`,修复 ImageProxy 泄漏与 detach 后崩溃。
+- **CX-3 触碰 View/binding 的协程改用 `viewLifecycleOwner.lifecycleScope`**:相机回调(可能离页后触发)
+  保留 `lifecycleScope` 但在 `withContext(Main)` 内 `if (!isAdded || view == null) return`,修复
+  「进入相机→立即返回」时向已销毁视图回调导致的崩溃。
 - **LB-1 `ByteBuffer.copy()` / `copyAll()` 保留字节序**:复制时对目标 buffer 调用 `order(order())`,
   修复小端 buffer 复制后字节序被重置为大端导致的静默数据损坏。
 - **HTTP-2 `HttpRequest` 并发安全**:不再共享并复用同一个可变 `Retrofit.Builder`;改为保存不可变

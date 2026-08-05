@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
+import android.hardware.camera2.CaptureFailure
 import android.hardware.camera2.CaptureRequest
 import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.TotalCaptureResult
@@ -53,17 +54,19 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
 import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 
 /**
  * Author: Michael Leo
@@ -867,20 +870,25 @@ class Camera2ComponentHelper(
      * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
      * from the single capture, and outputs a [CombinedCaptureResult] object.
      */
-    suspend fun takePhoto(): CombinedCaptureResult = suspendCoroutine { cont ->
+    suspend fun takePhoto(): CombinedCaptureResult = coroutineScope {
         val st = SystemClock.elapsedRealtime()
         if (!::imageReader.isInitialized) error("initializeCamera must be called first")
-        // Flush any images left in the image reader
+
+        // Flush (and close) any images left in the image reader.
         @Suppress("ControlFlowWithEmptyBody")
-        while (imageReader.acquireNextImage() != null) {
+        while (imageReader.acquireNextImage()?.also { it.close() } != null) {
         }
 
-        // Start a new image queue
-        val imageQueue = ArrayBlockingQueue<Image>(IMAGE_BUFFER_SIZE)
+        // Bounded channel: drops (and closes) the oldest image on overflow, and closes any image
+        // left undelivered when the channel is cancelled (remediation CAM2-1).
+        val imageChannel = Channel<Image>(
+            capacity = IMAGE_BUFFER_SIZE,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            onUndeliveredElement = { it.close() },
+        )
         imageReader.setOnImageAvailableListener({ reader ->
-            val image = reader.acquireNextImage()
-            LogContext.log.d(TAG, "Image available in queue: ${image.timestamp}")
-            imageQueue.add(image)
+            val image = reader.acquireNextImage() ?: return@setOnImageAvailableListener
+            if (imageChannel.trySend(image).isFailure) image.close()
         }, imageReaderHandler)
 
         val captureRequest = session.device.createCaptureRequest(
@@ -889,120 +897,106 @@ class Camera2ComponentHelper(
             addTarget(imageReader.surface)
             set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation())
         }
-        session.capture(
-            captureRequest.build(),
-            object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    timestamp: Long,
-                    frameNumber: Long,
-                ) {
-                    super.onCaptureStarted(session, request, timestamp, frameNumber)
-                    cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
-                        ?.post(animationTask)
-                }
 
-                override fun onCaptureCompleted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    result: TotalCaptureResult,
-                ) {
-                    super.onCaptureCompleted(session, request, result)
-                    val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                    LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
-
-                    // Set a timeout in case image captured is dropped from the pipeline
-                    val exc = TimeoutException("Image dequeuing took too long")
-                    val timeoutRunnable = Runnable { cont.resumeWithException(exc) }
-                    imageReaderHandler.postDelayed(timeoutRunnable, IMAGE_CAPTURE_TIMEOUT_MILLIS)
-
-                    // Loop in the coroutine's context until an image with matching timestamp comes
-                    // We need to launch the coroutine context again because the callback is done in
-                    //  the handler provided to the `capture` method, not in our coroutine context
-                    @Suppress("BlockingMethodInNonBlockingContext")
-                    context.lifecycleScope.launch(cont.context) {
-                        while (true) {
-                            // Dequeue images while timestamps don't match
-                            val image = imageQueue.take()
-                            // if (image.timestamp != resultTimestamp) continue
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                                image.format != ImageFormat.DEPTH_JPEG &&
-                                image.timestamp != resultTimestamp
+        try {
+            withTimeout(IMAGE_CAPTURE_TIMEOUT_MILLIS) {
+                val result = suspendCancellableCoroutine { cont ->
+                    session.capture(
+                        captureRequest.build(),
+                        object : CameraCaptureSession.CaptureCallback() {
+                            override fun onCaptureStarted(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                timestamp: Long,
+                                frameNumber: Long,
                             ) {
-                                continue
-                            }
-                            LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
-
-                            // Unset the image reader listener
-                            imageReaderHandler.removeCallbacks(timeoutRunnable)
-                            imageReader.setOnImageAvailableListener(null, null)
-
-                            // Clear the queue of images, if there are left
-                            while (imageQueue.size > 0) {
-                                imageQueue.take().close()
+                                super.onCaptureStarted(session, request, timestamp, frameNumber)
+                                cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
+                                    ?.post(animationTask)
                             }
 
-                            val buffer = image.planes[0].buffer
-                            val width = image.width
-                            val height = image.height
-                            val imageBytes = ByteArray(buffer.remaining()).apply {
-                                buffer.get(this)
-                            }
-                            // DO NOT forget for close Image object
-                            image.close()
-
-                            val deviceRotation = if (Build.VERSION.SDK_INT >=
-                                Build.VERSION_CODES.R
+                            override fun onCaptureCompleted(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                result: TotalCaptureResult,
                             ) {
-                                context.display?.rotation ?: -1
-                            } else {
-                                @Suppress("DEPRECATION")
-                                context.windowManager.defaultDisplay.rotation
+                                super.onCaptureCompleted(session, request, result)
+                                if (cont.isActive) cont.resume(result)
                             }
-                            val cameraSensorOrientation =
-                                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-                            // Compute EXIF orientation metadata
-                            // TODO Maybe you want to use rotation in someday
-                            val rotation = 0
-                            // val rotation = (context as
-                            // BaseCamera2Fragment).relativeOrientation.value ?: 0
-                            val mirrored =
-                                characteristics.get(CameraCharacteristics.LENS_FACING) ==
-                                    CameraCharacteristics.LENS_FACING_FRONT
-                            val exifOrientation =
-                                computeExifOrientation(cameraSensorOrientation, mirrored)
-                            LogContext.log.d(
-                                TAG,
-                                "rotation=$rotation deviceRotation=$deviceRotation " +
-                                    "cameraSensorOrientation=$cameraSensorOrientation " +
-                                    "mirrored=$mirrored"
-                            )
-                            LogContext.log.d(
-                                TAG,
-                                "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}"
-                            )
 
-                            // Build the result and resume progress
-                            cont.resume(
-                                CombinedCaptureResult(
-                                    imageBytes,
-                                    width,
-                                    height,
-                                    result,
-                                    exifOrientation,
-                                    mirrored,
-                                    imageReader.imageFormat
-                                )
-                            )
-
-                            // There is no need to break out of the loop, this coroutine will
-                            // suspend
-                        }
-                    }
+                            override fun onCaptureFailed(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                failure: CaptureFailure,
+                            ) {
+                                super.onCaptureFailed(session, request, failure)
+                                if (cont.isActive) {
+                                    cont.resumeWithException(
+                                        IllegalStateException(
+                                            "Still capture failed: reason=${failure.reason}"
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        cameraHandler
+                    )
                 }
-            },
-            cameraHandler
+                val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
+                val combined = dequeueMatchingImage(imageChannel, resultTimestamp, result)
+                LogContext.log.d(
+                    TAG,
+                    "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+                combined
+            }
+        } finally {
+            imageReader.setOnImageAvailableListener(null, null)
+            imageChannel.cancel() // onUndeliveredElement closes every buffered image.
+        }
+    }
+
+    /**
+     * Dequeues images from [imageChannel] until one whose timestamp matches [resultTimestamp] is
+     * found, closing every non-matching image. Each image is wrapped in [use] so it is always
+     * closed even if building the result throws (remediation CAM2-1).
+     */
+    private suspend fun dequeueMatchingImage(
+        imageChannel: Channel<Image>,
+        resultTimestamp: Long?,
+        result: TotalCaptureResult,
+    ): CombinedCaptureResult {
+        while (true) {
+            val combined = imageChannel.receive().use { image ->
+                val mismatched = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                    image.format != ImageFormat.DEPTH_JPEG &&
+                    image.timestamp != resultTimestamp
+                if (mismatched) null else buildCombinedCaptureResult(image, result)
+            }
+            if (combined != null) return combined
+        }
+    }
+
+    /** Copies the image bytes and computes EXIF metadata for a single captured [image]. */
+    private fun buildCombinedCaptureResult(
+        image: Image,
+        result: TotalCaptureResult,
+    ): CombinedCaptureResult {
+        val buffer = image.planes[0].buffer
+        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+        val cameraSensorOrientation =
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) ==
+            CameraCharacteristics.LENS_FACING_FRONT
+        val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
+        return CombinedCaptureResult(
+            imageBytes,
+            image.width,
+            image.height,
+            result,
+            exifOrientation,
+            mirrored,
+            imageReader.imageFormat
         )
     }
 

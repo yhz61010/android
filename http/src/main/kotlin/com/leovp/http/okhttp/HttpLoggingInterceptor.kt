@@ -148,7 +148,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     !"Content-Length".equals(name, ignoreCase = true)
                 ) {
                     logger.log(
-                        "$name: ${headers.value(i)}",
+                        "$name: ${redactHeader(name, headers.value(i))}",
                         outputType = LogOutType.HTTP_HEADER
                     )
                 }
@@ -162,19 +162,27 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     "--> END ${request.method} (Found boundary " +
                         "${requestBody.contentLength()}-byte body omitted)"
                 )
+            } else if (requestBody.isDuplex() || requestBody.isOneShot()) {
+                logger.log("--> END ${request.method} (duplex/one-shot body omitted)")
+            } else if (requestBody.contentLength() < 0 ||
+                requestBody.contentLength() > MAX_LOGGABLE_BODY_BYTES
+            ) {
+                logger.log(
+                    "--> END ${request.method} " +
+                        "(${requestBody.contentLength()}-byte body omitted, exceeds log limit)"
+                )
             } else {
                 val buffer = Buffer()
                 requestBody.writeTo(buffer)
-                var charset = DEFAULT_CHARSET
-                requestBody.contentType()?.also {
-                    charset = it.charset(DEFAULT_CHARSET)!!
-                }
+                val charset = requestBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
                 logger.log("")
                 if (isPlaintext(buffer)) {
-                    val content = buffer.readString(charset)
-                    logger.log(content)
+                    val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+                    logger.log(buffer.clone().readString(logged, charset))
+                    val suffix =
+                        if (buffer.size > logged) " (truncated to $logged bytes for logging)" else ""
                     logger.log(
-                        "--> END ${request.method} (${requestBody.contentLength()}-byte body)"
+                        "--> END ${request.method} (${requestBody.contentLength()}-byte body$suffix)"
                     )
                 } else {
                     logger.log(
@@ -216,7 +224,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             var hasInlineFile = false
             for (i in 0 until headers.size) {
                 logger.log(
-                    "${headers.name(i)}: ${headers.value(i)}",
+                    "${headers.name(i)}: ${redactHeader(headers.name(i), headers.value(i))}",
                     outputType = LogOutType.HTTP_HEADER
                 )
                 if ("Content-Disposition".contentEquals(headers.name(i)) &&
@@ -233,22 +241,22 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 logger.log("<-- END HTTP (inline file omitted)")
             } else {
                 val source = responseBody.source()
-                source.request(Long.MAX_VALUE)
-                // Buffer the entire body.
+                // Buffer at most the log limit (+1 to detect truncation) instead of the whole body.
+                source.request(MAX_LOGGABLE_BODY_BYTES + 1)
                 val buffer = source.buffer
-                var charset = DEFAULT_CHARSET
-                val contentType = responseBody.contentType()
-                if (contentType != null) {
-                    charset = contentType.charset(DEFAULT_CHARSET)!!
-                }
+                val charset = responseBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
                 if (!isPlaintext(buffer)) {
                     logger.log(" \n<-- END HTTP (binary ${buffer.size}-byte body omitted)")
                     return response
                 }
                 if (contentLength != 0L) {
-                    logger.log(" \n${buffer.clone().readString(charset)}")
+                    val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+                    logger.log(" \n${buffer.clone().readString(logged, charset)}")
+                    if (buffer.size > logged) {
+                        logger.log("<-- (body truncated to $logged bytes for logging)")
+                    }
                 }
-                logger.log("<-- END HTTP (${buffer.size}-byte body)")
+                logger.log("<-- END HTTP (${buffer.size}-byte buffered for logging)")
             }
         }
         logger.log(
@@ -265,6 +273,21 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
     companion object {
         private val DEFAULT_CHARSET = Charsets.UTF_8
         private const val TAG = "HTTP"
+
+        /** Maximum number of body bytes buffered/emitted per direction when logging (256 KiB). */
+        private const val MAX_LOGGABLE_BODY_BYTES = 256L * 1024
+
+        /** Header names whose values are redacted in logs to avoid leaking credentials. */
+        private val SENSITIVE_HEADERS = setOf(
+            "authorization",
+            "proxy-authorization",
+            "cookie",
+            "set-cookie",
+        )
+
+        /** Redacts the value of a sensitive header (matched case-insensitively by [name]). */
+        private fun redactHeader(name: String, value: String): String =
+            if (name.lowercase() in SENSITIVE_HEADERS) "██" else value
 
         /**
          * Returns true if the body in question probably contains human readable text. Uses a small

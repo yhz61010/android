@@ -22,6 +22,18 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         mDisposable = d
     }
 
+    /**
+     * Disposes the underlying subscription so callers can stop the request (e.g. in `onDestroy`)
+     * and avoid delivering callbacks to a destroyed screen (remediation HTTP-4).
+     */
+    fun cancel() {
+        mDisposable?.takeIf { !it.isDisposed }?.dispose()
+        mDisposable = null
+    }
+
+    /** Whether the underlying subscription has been disposed (or was never subscribed). */
+    val isDisposed: Boolean get() = mDisposable?.isDisposed ?: true
+
     override fun onNext(t: T & Any) {
         LogContext.log.d(javaClass.simpleName, "onNext()")
         mListener.onNext(t)

@@ -13,16 +13,20 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
  */
 @Suppress("unused", "WeakerAccess")
 object HttpRequest : BaseHttpRequest() {
-    private var builder: Retrofit.Builder = getRetrofitBuilder()
+    // Store only an immutable header snapshot; build a fresh Retrofit per call so concurrent
+    // getRetrofit(baseUrl) calls never share/mutate one builder or cross baseUrls (remediation HTTP-2).
+    @Volatile
+    private var headerMap: Map<String, String> = emptyMap()
 
     /**
      * If you want to re-init header, you must call this method every time.
      */
     fun initWithHeader(headerMap: Map<String, String>) {
-        builder = getRetrofitBuilder(headerMap)
+        this.headerMap = headerMap.toMap()
     }
 
-    fun getRetrofit(baseUrl: String): Retrofit = builder.baseUrl(baseUrl).build()
+    fun getRetrofit(baseUrl: String): Retrofit =
+        getRetrofitBuilder(headerMap).baseUrl(baseUrl).build()
 
     @Suppress("unused")
     fun getRetrofit(baseUrl: HttpUrl): Retrofit = getRetrofit(baseUrl.toString())

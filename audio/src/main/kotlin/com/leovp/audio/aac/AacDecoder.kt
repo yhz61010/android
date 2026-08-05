@@ -12,6 +12,7 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * If I use asynchronous MediaCodec, in my phone(HuaWei Honor V20) and Samsung Galaxy S9+,
@@ -34,6 +35,7 @@ class AacDecoder(
 ) {
     companion object {
         private const val TAG = "AacDe"
+        private const val POLL_TIMEOUT_MS = 50L
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
@@ -80,10 +82,13 @@ class AacDecoder(
         super.start()
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int = queue.take().let {
-        inBuf.put(it)
-        it.size
-    }
+    // Poll with a timeout instead of blocking take() so coroutine cancellation is honored quickly.
+    // Returns 0 when no data is available within the timeout; process() then skips queueing.
+    override fun onInputData(inBuf: ByteBuffer): Int =
+        queue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.let {
+            inBuf.put(it)
+            it.size
+        } ?: 0
 
     override fun onOutputData(
         outBuf: ByteBuffer,

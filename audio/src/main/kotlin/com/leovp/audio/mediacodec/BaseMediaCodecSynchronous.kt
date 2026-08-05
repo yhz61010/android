@@ -6,6 +6,8 @@ import android.media.AudioFormat
 import android.media.MediaCodec
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
@@ -24,13 +26,31 @@ abstract class BaseMediaCodecSynchronous(
         private const val TAG = "MediaCodecSync"
     }
 
+    /**
+     * Marks that the worker loop terminated because of a codec/error condition rather than a
+     * normal end-of-stream, so we do not report a fake EOS after an error.
+     */
+    private val codecFailed = AtomicBoolean(false)
+
+    /**
+     * Reports a codec failure to the owner. Override to rebuild the codec or surface the error via
+     * an independent error callback. Default implementation just logs. Do NOT busy-retry on the
+     * same (already broken) codec instance here.
+     */
+    open fun notifyCodecFailure(e: Throwable) {
+        LogContext.log.e(TAG, "Codec failure reported", e)
+    }
+
     override fun start() {
+        codecFailed.set(false)
         super.start()
-        ioScope.launch {
+        codecJob = ioScope.launch {
             do {
                 ensureActive()
             } while (process())
-            onEndOfStream()
+            // Only signal normal EOS. Error termination goes through notifyCodecFailure() and
+            // must not masquerade as a clean end-of-stream.
+            if (!codecFailed.get()) onEndOfStream()
         }
     }
 
@@ -47,17 +67,20 @@ abstract class BaseMediaCodecSynchronous(
                 val size = onInputData(inputBuf)
                 // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
                 val pts = computePresentationTimeUs()
-                if (pts < 0) {
-                    isFinish = true
-                    codec.queueInputBuffer(
-                        inputIndex,
-                        0,
-                        0,
-                        0,
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                    )
-                } else {
-                    codec.queueInputBuffer(inputIndex, 0, size, pts, 0)
+                when {
+                    pts < 0 -> {
+                        isFinish = true
+                        codec.queueInputBuffer(
+                            inputIndex,
+                            0,
+                            0,
+                            0,
+                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                        )
+                    }
+                    // A non-positive size means no input was available this round (e.g. poll
+                    // timeout). Do not queue an empty non-EOS buffer.
+                    size > 0 -> codec.queueInputBuffer(inputIndex, 0, size, pts, 0)
                 }
             }
 
@@ -92,8 +115,22 @@ abstract class BaseMediaCodecSynchronous(
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
             }
             LogContext.log.d(TAG, "Decode cost: ${System.currentTimeMillis() - st}ms")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: MediaCodec.CodecException) {
+            // Must be caught BEFORE IllegalStateException because CodecException subclasses it.
+            LogContext.log.e(TAG, "CodecException", e)
+            codecFailed.set(true)
+            notifyCodecFailure(e)
+            return false
+        } catch (e: IllegalStateException) {
+            LogContext.log.e(TAG, "Codec illegal state, stopping", e)
+            codecFailed.set(true)
+            return false
         } catch (e: Exception) {
-            LogContext.log.e(TAG, "You can ignore this message safely. decodeAndPlay error")
+            LogContext.log.e(TAG, "Unexpected decode error, stopping", e)
+            codecFailed.set(true)
+            return false
         }
         return !isFinish
     }

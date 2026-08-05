@@ -10,6 +10,8 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +36,16 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     private var audioLatencyThresholdInMs = AUDIO_INIT_LATENCY_IN_MS
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
+
+    /** Independent scope for teardown so cancelling [ioScope] cannot kill the release flow. */
+    private val teardownScope =
+        CoroutineScope(Dispatchers.IO + CoroutineName("aac-stream-teardown"))
+
+    /** Private monitor serializing init/decode/flush/stop. Never lock on `this`. */
+    private val lock = Any()
+
+    /** Bumped on every release; used to discard tasks that arrive after teardown. */
+    private var generation = 0
 
     //    private var outputFormat: MediaFormat? = null
     private var frameCount = 0
@@ -69,33 +81,63 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
-        // We should use a better way to check CSD0
-        if (audioData.size < 10) {
-            runCatching {
-                synchronized(this) {
-                    frameCount = 0
-                    csd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
-                    LogContext.log.w(TAG, "Audio csd0=HEX[${csd0?.toHexString()}]")
-                    initAudioDecoder(csd0!!)
-                    audioTrackPlayer.play()
-                    playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
-                    ioScope.launch {
-                        delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
+        // dropFrameCallback is invoked OUTSIDE the monitor to avoid callback re-entry deadlocks.
+        val shouldResync = synchronized(lock) {
+            // We should use a better way to check CSD0
+            if (audioData.size < 10) {
+                initDecoderLocked(audioData)
+                return
+            }
+            val decoder = audioDecoder
+            if (csd0 == null || decoder == null) {
+                LogContext.log.e(TAG, "csd0 is null. Can not play!")
+                return
+            }
+            decodeOrDropLocked(audioData, decoder)
+        }
+        if (shouldResync) dropFrameCallback.invoke()
+    }
+
+    /**
+     * Initialize the decoder under the lock. Only commit [csd0] AFTER decoder init and
+     * audioTrack.play() succeed (AUD-5); on failure roll everything back so the invariant
+     * "csd0 != null ⇔ decoder ready" holds.
+     */
+    private fun initDecoderLocked(audioData: ByteArray) {
+        frameCount = 0
+        val newCsd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
+        LogContext.log.w(TAG, "Audio csd0=HEX[${newCsd0.toHexString()}]")
+        val capturedGeneration = generation
+        runCatching {
+            initAudioDecoder(newCsd0)
+            audioTrackPlayer.play()
+        }.onSuccess {
+            csd0 = newCsd0
+            playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
+            ioScope.launch {
+                delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
+                synchronized(lock) {
+                    if (capturedGeneration == generation) {
                         audioLatencyThresholdInMs = AUDIO_ALLOW_LATENCY_LIMIT_IN_MS
                         LogContext.log.w(
                             TAG,
                             "Change latency limit to $AUDIO_ALLOW_LATENCY_LIMIT_IN_MS"
                         )
                     }
-                    LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
                 }
-            }.onFailure { LogContext.log.e(TAG, "startPlayingStream error. msg=${it.message}") }
-            return
+            }
+            LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
+        }.onFailure {
+            runCatching { audioDecoder?.release() }
+            audioDecoder = null
+            csd0 = null
+            LogContext.log.e(TAG, "init failed, rolled back. msg=${it.message}", it)
         }
-        if (csd0 == null) {
-            LogContext.log.e(TAG, "csd0 is null. Can not play!")
-            return
-        }
+    }
+
+    /** Decode or drop the current frame under the lock. Returns true if a resync is required. */
+    private fun decodeOrDropLocked(audioData: ByteArray, decoder: AacDecoder): Boolean {
+        var shouldResync = false
         val latencyInMs =
             (
                 SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs
@@ -106,58 +148,78 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
                 "cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
                 "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
         )
-        val auDecQueueSize = audioDecoder?.queueSize ?: 0
-        if (auDecQueueSize >= AUDIO_DATA_QUEUE_CAPACITY ||
+        if (decoder.queueSize >= AUDIO_DATA_QUEUE_CAPACITY ||
             abs(latencyInMs) > audioLatencyThresholdInMs
         ) {
             dropFrameTimes.incrementAndGet()
             LogContext.log.w(
                 TAG,
-                "Drop[${dropFrameTimes.get()}]|full[${audioDecoder?.queueSize ?: 0}] " +
+                "Drop[${dropFrameTimes.get()}]|full[${decoder.queueSize}] " +
                     "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
-            runCatching { audioDecoder?.flush() }.getOrNull()
+            runCatching { decoder.flush() }.getOrNull()
             runCatching { audioTrackPlayer.pause() }.getOrNull()
             runCatching { audioTrackPlayer.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
                 // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need
                 // to do sync again.
                 dropFrameTimes.set(0)
-                dropFrameCallback.invoke()
+                shouldResync = true
             }
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
         } else {
-            audioDecoder!!.decode(audioData)
+            decoder.decode(audioData)
         }
         if (frameCount++ % 50 == 0) {
             LogContext.log.i(TAG, "AU[${audioData.size}][$latencyInMs]")
         }
+        return shouldResync
     }
 
-    fun stopPlaying() {
+    /**
+     * Deterministic teardown. Detaches decoder/CSD and advances the generation under the lock,
+     * then awaits the old decoder OUTSIDE the lock to avoid suspension or callback re-entry.
+     */
+    suspend fun stopPlayingAndJoin() {
         LogContext.log.w(TAG, "Stop playing audio")
-        runCatching {
-            ioScope.cancel()
-            frameCount = 0
-            dropFrameTimes.set(0)
-            audioTrackPlayer.release()
-        }.onFailure {
-            LogContext.log.e(TAG, "audioTrack stop or release error. msg=${it.message}")
-        }
-
-        LogContext.log.w(TAG, "Releasing AudioDecoder...")
-        runCatching {
-            audioDecoder?.release()
-        }.onFailure {
-            it.printStackTrace()
-            LogContext.log.e(TAG, "audioDecoder() release1 error. msg=${it.message}")
-        }.also {
+        val decoderToRelease = synchronized(lock) {
+            generation++
+            val old = audioDecoder
             audioDecoder = null
             csd0 = null
+            frameCount = 0
+            dropFrameTimes.set(0)
+            old
         }
+        ioScope.cancel()
+        runCatching { audioTrackPlayer.release() }
+            .onFailure { LogContext.log.e(TAG, "audioTrack release error. msg=${it.message}") }
 
+        LogContext.log.w(TAG, "Releasing AudioDecoder...")
+        decoderToRelease?.let { dec ->
+            try {
+                dec.releaseAndJoin()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                LogContext.log.e(TAG, "audioDecoder release error. msg=${e.message}", e)
+            }
+        }
         LogContext.log.w(TAG, "stopPlaying() done")
+    }
+
+    /**
+     * Legacy non-suspend entry point. Bridges to [stopPlayingAndJoin] on an independent scope so it
+     * never blocks the caller thread.
+     */
+    @Deprecated(
+        "Non-suspend stop cannot guarantee the decoder has been released. " +
+            "Use stopPlayingAndJoin() for deterministic shutdown.",
+        ReplaceWith("stopPlayingAndJoin()")
+    )
+    fun stopPlaying() {
+        teardownScope.launch { stopPlayingAndJoin() }
     }
 
     @Suppress("unused")

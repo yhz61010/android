@@ -15,12 +15,12 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.leovp.android.exts.fileExists
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.min
 
 /**
  * Author: Michael Leo
@@ -58,7 +58,7 @@ object FileDocumentUtil {
             isExternalStorageDocument(uri) -> {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray() //                val type = split[0]
-                getPathFromExtSD(split).takeIf { it.isNotBlank() }
+                getPathFromExtSD(split)?.takeIf { it.isNotBlank() }
             } // DownloadsProvider
             isDownloadsDocument(uri) -> getDownloadsDocumentRealPath(context, uri) // MediaProvider
             isMediaDocument(uri) -> {
@@ -74,7 +74,7 @@ object FileDocumentUtil {
                 if (contentUri == null) return null
                 val selection = "_id=?" // DocumentProvider
                 val selectionArgs: Array<String> = arrayOf(split[1])
-                return getDataColumn(context, contentUri, selection, selectionArgs)
+                getDataColumn(context, contentUri, selection, selectionArgs)
             }
 
             isGoogleDriveUri(uri) -> {
@@ -112,23 +112,21 @@ object FileDocumentUtil {
 
     private fun getDownloadsDocumentRealPath(context: Context, uri: Uri): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            var cursor: Cursor? = null
-            try {
-                cursor = context.contentResolver.query(
-                    uri,
-                    arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null
-                )
-                if (cursor != null && cursor.moveToFirst()) {
+            context.contentResolver.query(
+                uri,
+                arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
                     val fileName = cursor.getString(0)
-                    val path =
-                        Environment.getExternalStorageDirectory()
-                            .toString() + "/Download/" + fileName
+                    val path = Environment.getExternalStorageDirectory()
+                        .toString() + "/Download/" + fileName
                     if (!TextUtils.isEmpty(path)) {
                         return path
                     }
                 }
-            } finally {
-                cursor?.close()
             }
             val id: String = DocumentsContract.getDocumentId(uri)
             if (!TextUtils.isEmpty(id)) {
@@ -142,15 +140,14 @@ object FileDocumentUtil {
                 for (contentUriPrefix in contentUriPrefixesToTry) {
                     return try {
                         val contentUri = ContentUris.withAppendedId(
-                            Uri.parse(contentUriPrefix),
+                            contentUriPrefix.toUri(),
                             java.lang.Long.valueOf(id)
                         )
                         getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
-                        // In Android 8 and Android P the id is not a number
-                        uri.path!!
-                            .replaceFirst("^/document/raw:".toRegex(), "")
-                            .replaceFirst("^raw:".toRegex(), "")
+                        // In Android 8 and Android P the id is not a number. Opaque Uris have a
+                        // null path, so guard against NPE instead of `uri.path!!` (remediation H3).
+                        stripRawDownloadPrefix(uri.path)
                     }
                 }
             }
@@ -161,7 +158,7 @@ object FileDocumentUtil {
             }
             try {
                 val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"),
+                    "content://downloads/public_downloads".toUri(),
                     java.lang.Long.valueOf(id)
                 )
                 return getDataColumn(context, contentUri, null, null)
@@ -173,17 +170,69 @@ object FileDocumentUtil {
         return null
     }
 
-    fun resourceToUri(context: Context, resId: Int): Uri? = (
+    fun resourceToUri(context: Context, resId: Int): Uri = (
         ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
             context.resources.getResourcePackageName(resId) + "/" +
             context.resources.getResourceTypeName(resId) + "/" +
             context.resources.getResourceEntryName(resId)
         ).toUri()
 
-    private fun getPathFromExtSD(pathData: Array<String>): String {
+    /**
+     * Strips the `/document/raw:` and `raw:` prefixes a DownloadsProvider may return, tolerating a
+     * null [path] (opaque Uris) by returning null rather than throwing (remediation H3).
+     */
+    @VisibleForTesting
+    internal fun stripRawDownloadPrefix(path: String?): String? =
+        path
+            ?.replaceFirst("^/document/raw:".toRegex(), "")
+            ?.replaceFirst("^raw:".toRegex(), "")
+
+    /**
+     * Sanitizes an externally-supplied file name (e.g. a content Uri DISPLAY_NAME) down to a bare
+     * file name, stripping any path segments so it cannot be used to escape a target directory.
+     * See remediation C1: content DISPLAY_NAME must never be trusted for path construction.
+     */
+    @VisibleForTesting
+    internal fun sanitizedFileName(rawName: String): String {
+        val name = File(rawName).name
+        require(name.isNotBlank() && name != "." && name != "..") { "Invalid file name" }
+        require(!name.contains('/') && !name.contains('\\')) { "Illegal path separator in name" }
+        return name
+    }
+
+    /**
+     * Resolves [childName] under [base], rejecting any result that escapes [base] after
+     * canonicalization. Guards against path-traversal writes (remediation C1).
+     */
+    @VisibleForTesting
+    internal fun resolveWithinBase(base: File, childName: String): File {
+        val target = File(base, sanitizedFileName(childName)).canonicalFile
+        val baseCanonical = base.canonicalFile.canonicalPath
+        require(target.canonicalPath.startsWith(baseCanonical + File.separator)) {
+            "Path escapes base directory"
+        }
+        return target
+    }
+
+    /**
+     * Returns [candidate] only when it exists AND stays within [base] after canonicalization,
+     * otherwise null. Prevents a `..` in a docId relative path from escaping the storage root.
+     */
+    private fun containedRealPath(candidate: String, base: File): String? {
+        val canonical = File(candidate).canonicalFile
+        val baseCanonical = base.canonicalFile.canonicalPath
+        val contained = canonical.canonicalPath == baseCanonical ||
+            canonical.canonicalPath.startsWith(baseCanonical + File.separator)
+        if (!contained) return null
+        return if (fileExists(canonical.path)) canonical.path else null
+    }
+
+    @VisibleForTesting
+    internal fun getPathFromExtSD(pathData: Array<String>): String? {
+        // Malformed docId (no relative-path segment) must not crash with index-out-of-bounds.
+        if (pathData.size < 2) return null
         val type = pathData[0]
         val relativePath = "/" + pathData[1]
-        var fullPath: String
 
         // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
         // something like "71F8-2C0A", some kind of unique id per storage
@@ -191,26 +240,23 @@ object FileDocumentUtil {
         //
         // so no "primary" type, but let the check here for other devices
         if ("primary".equals(type, ignoreCase = true)) {
-            fullPath = Environment.getExternalStorageDirectory().toString() + relativePath
-            if (fileExists(fullPath)) {
-                return fullPath
-            }
+            val root = Environment.getExternalStorageDirectory()
+            containedRealPath(root.toString() + relativePath, root)?.let { return it }
         }
 
         // Environment.isExternalStorageRemovable() is `true` for external and internal storage
-        // so we cannot rely on it.
-        //
-        // Instead, for each possible path, check if the file exists.
-        // We'll start with secondary storage as this could be our (physically) removable SD card.
-        fullPath = "${System.getenv("SECONDARY_STORAGE")}$relativePath"
-        if (fileExists(fullPath)) {
-            return fullPath
+        // so we cannot rely on it. Instead, for each possible path, verify the file exists AND
+        // that its canonical path stays within the storage root (reject `..` traversal).
+        System.getenv("SECONDARY_STORAGE")?.let { secondary ->
+            containedRealPath("$secondary$relativePath", File(secondary))?.let { return it }
         }
-        fullPath = "${System.getenv("EXTERNAL_STORAGE")}$relativePath"
-        return if (fileExists(fullPath)) fullPath else fullPath
+        System.getenv("EXTERNAL_STORAGE")?.let { external ->
+            containedRealPath("$external$relativePath", File(external))?.let { return it }
+        }
+        return null
     }
 
-    private fun getDriveFilePath(context: Context, uri: Uri): String {
+    private fun getDriveFilePath(context: Context, uri: Uri): String? {
         context.contentResolver
             .query(uri, null, null, null, null)?.use { cursor ->
 
@@ -219,22 +265,21 @@ object FileDocumentUtil {
                  * move to the first row in the Cursor, get the data,
                  * and display cursor.
                  */
-                // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                // Guard the cursor/column/stream against a missing column, an empty result set, or
+                // a provider that returns no data, instead of crashing (remediation H4).
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                cursor.moveToFirst()
-                // val size = cursor.getLong(sizeIndex).toString()
-                val name = cursor.getString(nameIndex)
-                val file = File(context.cacheDir, name)
+                if (nameIndex < 0 || !cursor.moveToFirst()) return null
+                val name = cursor.getString(nameIndex) ?: return null
+                // Sanitize the untrusted DISPLAY_NAME so it cannot escape cacheDir (remediation C1).
+                val file = resolveWithinBase(context.cacheDir, name)
 
-                context.contentResolver.openInputStream(uri).use { inputStream ->
+                val input = context.contentResolver.openInputStream(uri) ?: return null
+                input.use { inputStream ->
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
-                        val maxBufferSize = 1 * 1024 * 1024
-                        val bytesAvailable = inputStream!!.available()
-
-                        // int bufferSize = 1024;
-                        val bufferSize = min(bytesAvailable, maxBufferSize)
-                        val buffers = ByteArray(bufferSize)
+                        // Do not size the buffer from InputStream.available(): content providers may
+                        // legally return 0, and a zero-length buffer makes read() return 0 forever.
+                        val buffers = ByteArray(8 * 1024)
                         while (inputStream.read(buffers).also { read = it } != -1) {
                             outputStream.write(buffers, 0, read)
                         }
@@ -242,7 +287,7 @@ object FileDocumentUtil {
                 }
                 return file.path
             }
-        return ""
+        return null
     }
 
     /***
@@ -254,7 +299,7 @@ object FileDocumentUtil {
         context: Context,
         uri: Uri,
         @Suppress("SameParameterValue") newDirName: String,
-    ): String {
+    ): String? {
         context.contentResolver.query(
             uri,
             arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
@@ -269,21 +314,25 @@ object FileDocumentUtil {
              *     * and display it.
              *
              */
+            // Guard the cursor/column/stream against a missing column, an empty result set, or a
+            // provider that returns no data, instead of crashing (remediation H4).
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             // val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            cursor.moveToFirst()
+            if (nameIndex < 0 || !cursor.moveToFirst()) return null
             // val size = cursor.getLong(sizeIndex).toString()
-            val name = cursor.getString(nameIndex)
+            val name = cursor.getString(nameIndex) ?: return null
+            // Sanitize the untrusted DISPLAY_NAME so it cannot escape filesDir (remediation C1).
             val output: File = if (newDirName != "") {
-                val dir = File(context.filesDir.toString() + "/" + newDirName)
+                val dir = File(context.filesDir, newDirName)
                 if (!dir.exists()) {
                     dir.mkdir()
                 }
-                File(context.filesDir.toString() + "/" + newDirName + "/" + name)
+                resolveWithinBase(dir, name)
             } else {
-                File(context.filesDir.toString() + "/" + name)
+                resolveWithinBase(context.filesDir, name)
             }
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            val input = context.contentResolver.openInputStream(uri) ?: return null
+            input.use { inputStream ->
                 FileOutputStream(output).use { outputStream ->
                     var read: Int
                     val bufferSize = 1024
@@ -296,10 +345,10 @@ object FileDocumentUtil {
 
             return output.path
         }
-        return ""
+        return null
     }
 
-    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String =
+    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String? =
         copyFileToInternalStorage(context, uri, "whatsapp")
 
     /**
@@ -340,7 +389,7 @@ object FileDocumentUtil {
         context: Context,
         uri: Uri,
         selection: String?,
-        selectionArgs: Array<String>?
+        selectionArgs: Array<String>?,
     ): String? {
         // MediaStore.Images.Media.DATA
         // MediaStore.Images.Media._ID

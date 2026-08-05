@@ -4,8 +4,10 @@ package com.leovp.android.utils.shell
 
 import android.util.Log
 import androidx.annotation.Keep
+import androidx.annotation.VisibleForTesting
 import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.io.StringReader
 import java.nio.charset.StandardCharsets
@@ -25,7 +27,21 @@ object ShellUtil {
     private const val CMD_PS = "ps"
     private const val CMD_MOUNT = "/system/bin/mount"
     private const val CMD_EXIT = "exit"
-    private val LINE_SEP = System.getProperty("line.separator")!!
+    private val LINE_SEP = System.lineSeparator()
+
+    private val PACKAGE_NAME_REGEX =
+        Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+    /**
+     * Validates an Android package name before it is interpolated into a shell command, closing the
+     * command-injection vector in [forceStop] / [uninstallApk] (remediation C2). Rejects anything
+     * containing shell metacharacters or otherwise not matching the package-name grammar.
+     */
+    @VisibleForTesting
+    internal fun requireValidPackage(pkgName: String): String {
+        require(PACKAGE_NAME_REGEX.matches(pkgName)) { "Illegal package name: $pkgName" }
+        return pkgName
+    }
 
     /**
      * Check root permission.
@@ -38,6 +54,12 @@ object ShellUtil {
         isNeedResultMsg = false
     ).result == 0
 
+    /**
+     * Executes a raw shell command. The command string is interpreted by a real shell (`sh`/`su`),
+     * so shell metacharacters are live. The caller MUST guarantee the command is trusted / already
+     * validated — never interpolate unsanitized external input (see [requireValidPackage]). This is
+     * a low-level primitive by design.
+     */
     fun execCmd(
         command: String,
         isRoot: Boolean = false,
@@ -70,29 +92,50 @@ object ShellUtil {
             osw.flush()
         }
 
-        val successMsg: StringBuilder = StringBuilder()
-        val errorMsg: StringBuilder = StringBuilder()
+        // Drain stdout and stderr concurrently BEFORE reaping the exit code. A child that fills its
+        // output pipe blocks on write; calling waitFor() first (or reading the two streams
+        // sequentially) would let neither side progress and the call would deadlock (remediation H1).
+        val (successMsg, errorMsg) = drainStreams(process.inputStream, process.errorStream)
         result = process.waitFor()
-        if (isNeedResultMsg) {
-            process.inputStream.bufferedReader().use { br ->
-                br.useLines { seq -> successMsg.append(seq.toList().joinToString(LINE_SEP)) }
-            }
-
-            process.errorStream.bufferedReader(StandardCharsets.UTF_8).use { br ->
-                br.useLines { seq -> errorMsg.append(seq.toList().joinToString(LINE_SEP)) }
-            }
-        }
         // process.destroy()
 
         return CommandResult(
             result,
-            successMsg.toString(),
-            errorMsg.toString()
+            if (isNeedResultMsg) successMsg else "",
+            if (isNeedResultMsg) errorMsg else ""
         )
     }
 
+    /**
+     * Reads [stdout] and [stderr] to EOF on two separate threads so a child process that fills one
+     * pipe cannot block the other reader (or [Process.waitFor]). Returns the fully-drained
+     * `(stdout, stderr)` pair once both streams are exhausted (remediation H1).
+     */
+    @VisibleForTesting
+    internal fun drainStreams(stdout: InputStream, stderr: InputStream): Pair<String, String> {
+        val outSink = StringBuilder()
+        val errSink = StringBuilder()
+        val outThread = readStreamAsync(stdout, outSink)
+        val errThread = readStreamAsync(stderr, errSink)
+        // join() establishes happens-before, so reading the sinks here is safe.
+        outThread.join()
+        errThread.join()
+        return outSink.toString() to errSink.toString()
+    }
+
+    private fun readStreamAsync(stream: InputStream, sink: StringBuilder): Thread =
+        Thread {
+            try {
+                stream.bufferedReader(StandardCharsets.UTF_8).use { br ->
+                    br.useLines { seq -> sink.append(seq.toList().joinToString(LINE_SEP)) }
+                }
+            } catch (e: IOException) {
+                Log.e(TAG, "readStream failed: ${e.message}")
+            }
+        }.apply { start() }
+
     fun forceStop(pkgName: String) {
-        execCmd("am force-stop $pkgName", true)
+        execCmd("am force-stop ${requireValidPackage(pkgName)}", true)
     }
 
     // ========================================================================
@@ -176,7 +219,7 @@ object ShellUtil {
 
     // unverified
     fun uninstallApk(pkgName: String) {
-        execCmd("pm uninstall $pkgName", true)
+        execCmd("pm uninstall ${requireValidPackage(pkgName)}", true)
     }
 
     // unverified
@@ -219,7 +262,7 @@ object ShellUtil {
                     data=ordered
                 )
                  */
-                val params = line!!.split(" ".toRegex()).toTypedArray()
+                val params = line.split(" ".toRegex()).toTypedArray()
                 // cmd:
                 // mount -o rw,remount /system
                 // or

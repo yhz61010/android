@@ -44,9 +44,6 @@ object AESUtil {
     /** New format version: AES-GCM, PBKDF2-HMAC-SHA1, high iteration count (API 21-25 fallback). */
     private const val VERSION_GCM_SHA1: Byte = 0x02
 
-    private const val DECRYPT_DEPRECATED_MESSAGE =
-        "Use decryptStrict() for AES-GCM data. Keep decrypt() only for legacy CBC ciphertext."
-
     // ---- Legacy (insecure) format, kept only for decrypting old data ----
     private const val CIPHER_AES_LEGACY = "AES/CBC/PKCS7Padding"
     private const val LEGACY_PRE_SALT_LENGTH = 4
@@ -74,11 +71,7 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
-    )
-    fun decrypt(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
+    fun decryptLegacy(cipherText: String, secKey: String, useSHA512: Boolean = true): String =
         decryptLenient(
             cipherText.hexToByteArray(),
             secKey.toByteArray(),
@@ -118,11 +111,7 @@ object AESUtil {
      * ciphertext; the format is detected automatically from the leading version byte.
      * @param secKey You must use the same SecretKey or else the decryption will fail.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
-    )
-    fun decrypt(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
+    fun decryptLegacy(cipherText: String, secKey: SecretKey, useSHA512: Boolean = true): String =
         decryptLenient(cipherText.hexToByteArray(), secKey.encoded, useSHA512).decodeToString()
 
     // ==============================================================
@@ -136,7 +125,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
-     * val decryptedString: String = AESUtil.decryptStrict(encryptedString, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
      * ```
      *
      * You can encrypt and decrypt any binary data.
@@ -158,7 +147,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedString: String = AESUtil.encrypt(plainText, secKey.toByteArray())
-     * val decryptedString: String = AESUtil.decryptStrict(encryptedString, secKey.toByteArray())
+     * val decryptedString: String = AESUtil.decrypt(encryptedString, secKey.toByteArray())
      * ```
      *
      * You can encrypt and decrypt any binary data.
@@ -169,11 +158,7 @@ object AESUtil {
      * @param cipherText may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherText, secKey)")
-    )
-    fun decrypt(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
+    fun decryptLegacy(cipherText: String, secKey: ByteArray, useSHA512: Boolean = true): String =
         decryptLenient(cipherText.hexToByteArray(), secKey, useSHA512).decodeToString()
 
     // ==============================================================
@@ -187,7 +172,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -210,7 +195,7 @@ object AESUtil {
      * val secKey = "I'm a key."
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -222,12 +207,11 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
-    )
-    fun decrypt(cipherBytes: ByteArray, secKey: String, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey.toByteArray(), useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: String,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey.toByteArray(), useSHA512)
 
     // ==============================================================
 
@@ -242,7 +226,7 @@ object AESUtil {
      * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -270,7 +254,7 @@ object AESUtil {
      * // val secKey: SecretKey = PBKDF2Util.generateKeyWithSHA512("password")
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(), secKey)
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey)
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey)
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -282,12 +266,11 @@ object AESUtil {
      * @param cipherBytes may be either the new AES-GCM format or a legacy
      * ciphertext; the format is detected automatically from the leading version byte.
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
-    )
-    fun decrypt(cipherBytes: ByteArray, secKey: SecretKey, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey.encoded, useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: SecretKey,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey.encoded, useSHA512)
 
     // ==============================================================
     /**
@@ -300,7 +283,7 @@ object AESUtil {
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
      * secKey.toByteArray())
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -359,7 +342,7 @@ object AESUtil {
      *
      * val encryptedBytes: ByteArray = AESUtil.encrypt(plainText.toByteArray(),
      * secKey.toByteArray())
-     * val decryptedBytes: ByteArray = AESUtil.decryptStrict(encryptedBytes, secKey.toByteArray())
+     * val decryptedBytes: ByteArray = AESUtil.decrypt(encryptedBytes, secKey.toByteArray())
      * val decryptedAsString: String = decryptedBytes.decodeToString()
      * ```
      *
@@ -376,14 +359,13 @@ object AESUtil {
      *
      * Note: each call runs a full-strength PBKDF2 derivation (hundreds of thousands of rounds).
      * That is intentional, but avoid calling this in a tight loop over attacker-supplied blobs;
-     * for known new-format data that must fail on tampering, prefer [decryptStrict].
+     * for known new-format data that must fail on tampering, prefer [decrypt].
      */
-    @Deprecated(
-        message = DECRYPT_DEPRECATED_MESSAGE,
-        replaceWith = ReplaceWith("decryptStrict(cipherBytes, secKey)")
-    )
-    fun decrypt(cipherBytes: ByteArray, secKey: ByteArray, useSHA512: Boolean = true): ByteArray =
-        decryptLenient(cipherBytes, secKey, useSHA512)
+    fun decryptLegacy(
+        cipherBytes: ByteArray,
+        secKey: ByteArray,
+        useSHA512: Boolean = true,
+    ): ByteArray = decryptLenient(cipherBytes, secKey, useSHA512)
 
     private fun decryptLenient(
         cipherBytes: ByteArray,
@@ -406,39 +388,39 @@ object AESUtil {
      * Throws [IllegalArgumentException] if the input is not the AES-GCM format, or a
      * [javax.crypto.AEADBadTagException] if authentication fails.
      *
-     * Prefer this over [decrypt] whenever the data is known to be in the new format, and you want
-     * tamper detection rather than the lenient legacy fallback.
+     * Prefer this over [decryptLegacy] whenever the data is known to be in the new format, and
+     * you want tamper detection rather than the lenient legacy fallback.
      */
-    fun decryptStrict(cipherText: String, secKey: String): String =
-        decryptStrict(cipherText.hexToByteArray(), secKey.toByteArray()).decodeToString()
+    fun decrypt(cipherText: String, secKey: String): String =
+        decrypt(cipherText.hexToByteArray(), secKey.toByteArray()).decodeToString()
 
     /**
      * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
      * to the legacy path, so a successful return always means the data was authenticated (AEAD).
      */
-    fun decryptStrict(cipherText: String, secKey: SecretKey): String =
-        decryptStrict(cipherText.hexToByteArray(), secKey.encoded).decodeToString()
+    fun decrypt(cipherText: String, secKey: SecretKey): String =
+        decrypt(cipherText.hexToByteArray(), secKey.encoded).decodeToString()
 
     /**
      * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
      * to the legacy path, so a successful return always means the data was authenticated (AEAD).
      */
-    fun decryptStrict(cipherText: String, secKey: ByteArray): String =
-        decryptStrict(cipherText.hexToByteArray(), secKey).decodeToString()
+    fun decrypt(cipherText: String, secKey: ByteArray): String =
+        decrypt(cipherText.hexToByteArray(), secKey).decodeToString()
 
     /**
      * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
      * to the legacy path, so a successful return always means the data was authenticated (AEAD).
      */
-    fun decryptStrict(cipherBytes: ByteArray, secKey: String): ByteArray =
-        decryptStrict(cipherBytes, secKey.toByteArray())
+    fun decrypt(cipherBytes: ByteArray, secKey: String): ByteArray =
+        decrypt(cipherBytes, secKey.toByteArray())
 
     /**
      * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
      * to the legacy path, so a successful return always means the data was authenticated (AEAD).
      */
-    fun decryptStrict(cipherBytes: ByteArray, secKey: SecretKey): ByteArray =
-        decryptStrict(cipherBytes, secKey.encoded)
+    fun decrypt(cipherBytes: ByteArray, secKey: SecretKey): ByteArray =
+        decrypt(cipherBytes, secKey.encoded)
 
     /**
      * Strict AES-GCM decryption. Requires the new versioned AES-GCM format and NEVER falls back
@@ -446,10 +428,10 @@ object AESUtil {
      * Throws [IllegalArgumentException] if the input is not the AES-GCM format, or a
      * [javax.crypto.AEADBadTagException] if authentication fails.
      *
-     * Prefer this over [decrypt] whenever the data is known to be in the new format, and you want
-     * tamper detection rather than the lenient legacy fallback.
+     * Prefer this over [decryptLegacy] whenever the data is known to be in the new format, and
+     * you want tamper detection rather than the lenient legacy fallback.
      */
-    fun decryptStrict(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
+    fun decrypt(cipherBytes: ByteArray, secKey: ByteArray): ByteArray {
         val version: Byte? = cipherBytes.firstOrNull()
         require(version == VERSION_GCM_SHA256 || version == VERSION_GCM_SHA1) {
             "Not the AES-GCM format: unexpected leading version byte."

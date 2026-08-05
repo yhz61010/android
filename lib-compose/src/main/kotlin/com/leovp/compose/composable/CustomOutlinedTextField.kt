@@ -48,13 +48,8 @@ fun CustomOutlinedTextField(
     errorBorderStroke: BorderStroke = BorderStroke(width = 1.dp, color = Color.Red),
     errorBgColor: Color = Color.LightGray,
 ) {
-    var borderStroke = border
-    var errorBgModifier: Modifier = Modifier
-
-    if (isError) {
-        borderStroke = errorBorderStroke
-        errorBgModifier = Modifier.background(errorBgColor)
-    }
+    val borderStroke = if (isError) errorBorderStroke else border
+    val errorBgModifier: Modifier = if (isError) Modifier.background(errorBgColor) else Modifier
     Column {
         // ========== Main input area ==========
         Box(

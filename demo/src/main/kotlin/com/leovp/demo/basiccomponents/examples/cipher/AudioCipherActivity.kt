@@ -67,7 +67,7 @@ class AudioCipherActivity :
         val mp3File = File(getExternalFilesDir(null), ENCRYPTED_MP3_FILE_NAME)
         runCatching {
             val encryptedAudio = FileInputStream(mp3File).use { it.readBytes() }
-            playMP3(AESUtil.decryptStrict(encryptedAudio, secretKey))
+            playMP3(AESUtil.decrypt(encryptedAudio, secretKey))
         }.onFailure { it.printStackTrace() }
         toast("Play decrypted music!")
     }

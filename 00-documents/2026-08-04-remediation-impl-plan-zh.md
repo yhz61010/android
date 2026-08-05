@@ -37,7 +37,7 @@
 | CIP-1 | androidbase | CRITICAL | ZipUtil.unzip Zip Slip 路径穿越 + 无解压上限 | `cipher/ZipUtil.kt:172-198` |
 | CAM2-1 | camera2live | CRITICAL | takePhoto Image 泄漏 + continuation 恢复后不退出循环 | `Camera2ComponentHelper.kt:870-1007` |
 | HTTP-1 | http | HIGH | 默认硬编码 BODY 日志、敏感 Header 无脱敏、宿主无法单独关闭 | `BaseHttpRequest.kt:43-83`、`HttpLoggingInterceptor.kt:143-227` |
-| HTTP-3 | http | HIGH | `source.request(Long.MAX_VALUE)` 整体读入内存，大响应 OOM | `HttpLoggingInterceptor.kt:235-238` |
+| HTTP-3 | http | HIGH | `source.request(Long.MAX_VALUE)` + 请求侧 `writeTo(buffer)` 整体读入内存，大响应/大请求 OOM | `HttpLoggingInterceptor.kt:167,235-251` |
 
 ### P1 — 资源 / 竞态 / 生命周期 / 泄漏
 | ID | 模块 | 级别 | 摘要 | 位置 |
@@ -69,7 +69,7 @@
 | CIP-3 | androidbase | MEDIUM | GZipUtil.decompress 无输出上限（GZIP bomb） | `cipher/GZipUtil.kt:22-27` |
 | AR-7 | android-restricted | MEDIUM | getSystemPropertyByShell 参数直拼命令（注入） | `utils/DeviceProp.kt:46-49` |
 
-### P2 — 功能正确性 / 并发 / 输入校验 / 性能
+> **关于 P 层与严重级的关系**：P 层按“风险 × 修复紧迫度”排序，并非严格等同严重级——故存在 HIGH 项落在 P2、MEDIUM 项提到 P1 的情况。具体地：`CIP-3`（GZIP bomb）与 `AR-7`（命令注入）虽为 MEDIUM，但同属**安全类**（DoS / 注入），一旦触发影响面大且常与 P0 安全项一并评审修复，故提前到 P1；而 P2 中的 HIGH 项（如 `CAM2-4/5`、`AR-2/3/4/5`）多为需特定机型/时序触发、可局部隔离，故次高处理。安全项优先。
 | ID | 模块 | 级别 | 摘要 | 位置 |
 |---|---|---|---|---|
 | CAM2-4 | camera2live | HIGH | openCamera/switchCamera 未捕获 Security/CameraAccessException | `Camera2ComponentHelper.kt:554-626,1099` |

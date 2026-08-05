@@ -182,7 +182,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             displayId = incPreviewGridBinding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
-            lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 // Set up the camera and its use cases
                 setUpCamera()
                 //                deviceOrientationListener = object : OrientationListener {
@@ -532,18 +532,18 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         )
 
         // Remove previous UI if any
-        _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
-        _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
+        _cameraUiContainerTopBinding?.root?.let { viewBinding.root.removeView(it) }
+        _cameraUiContainerBottomBinding?.root?.let { viewBinding.root.removeView(it) }
 
         _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
             requireContext().layoutInflater,
-            binding.root,
+            viewBinding.root,
             true
         )
         _cameraUiContainerBottomBinding =
             CameraUiContainerBottomBinding.inflate(
                 requireContext().layoutInflater,
-                binding.root,
+                viewBinding.root,
                 true
             )
 
@@ -577,7 +577,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
             // In the background, load latest photo taken (if any) for gallery thumbnail
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 outputPictureDirectory.listFiles { file ->
                     EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
                 }?.maxOrNull()?.let {
@@ -606,7 +606,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // Listener for button used to capture photo
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
-            lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 LogContext.log.w(logTag, "Click capture photo button.")
                 enableUI(false)
                 cameraUiContainerBottomBinding.cameraCaptureButton.isEnabled = true
@@ -621,7 +621,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             outputPictureDirectory,
                             startCaptureTimestamp
                         ) { savedImage, exc ->
-                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
+                            // Capture callback may fire after leaving the page: keep the Fragment
+                            // scope but guard the View mutation against a destroyed View.
+                            lifecycleScope.launch {
+                                withContext(Dispatchers.Main) {
+                                    if (!isAdded || view == null) return@withContext
+                                    enableUI(true)
+                                }
+                            }
                             if (exc != null) {
                                 captureImageListener?.onSavedImageUri(null, exc)
                                 return@captureForOutputFile
@@ -679,7 +686,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             startCaptureTimestamp
                         ) { savedImage, exc ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
-                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
+                            // Capture callback may fire after leaving the page: keep the Fragment
+                            // scope but guard the View mutation against a destroyed View.
+                            lifecycleScope.launch {
+                                withContext(Dispatchers.Main) {
+                                    if (!isAdded || view == null) return@withContext
+                                    enableUI(true)
+                                }
+                            }
                             captureImageListener?.onSavedImageBytes(savedImage, exc)
                         }
                     }

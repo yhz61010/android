@@ -10,4 +10,7 @@ interface AudioEncoderWrapper {
      */
     fun encode(input: ByteArray)
     fun release()
+
+    /** Waits until any asynchronous encoder worker has stopped and its resources are released. */
+    suspend fun releaseAndJoin() = release()
 }

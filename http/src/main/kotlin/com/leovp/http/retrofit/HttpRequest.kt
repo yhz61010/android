@@ -14,7 +14,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 @Suppress("unused", "WeakerAccess")
 object HttpRequest : BaseHttpRequest() {
     // Store only an immutable header snapshot; build a fresh Retrofit per call so concurrent
-    // getRetrofit(baseUrl) calls never share/mutate one builder or cross baseUrls (remediation HTTP-2).
+    // getRetrofit(baseUrl) calls never share one builder or cross baseUrls (remediation HTTP-2).
     @Volatile
     private var headerMap: Map<String, String> = emptyMap()
 

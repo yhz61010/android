@@ -29,7 +29,8 @@ fun Context.startActivity(
             intent
         } else {
             extras(intent)
-        }, options
+        },
+        options
     )
 }
 
@@ -48,6 +49,7 @@ fun Fragment.startActivity(
             intent
         } else {
             extras(intent)
-        }, options
+        },
+        options
     )
 }

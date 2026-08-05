@@ -10,7 +10,9 @@ object GZipUtil {
 
     private const val BUFFER_SIZE = 8192
 
-    /** Default cap on decompressed output (64 MiB) used by [decompress] to guard against GZIP bombs. */
+    /**
+     * Default cap on decompressed output (64 MiB) used by [decompress] to guard against GZIP bombs.
+     */
     private const val DEFAULT_MAX_DECOMPRESSED_BYTES = 64L * 1024 * 1024
 
     /**

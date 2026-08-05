@@ -7,9 +7,13 @@ import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.internal.http.promisesBody
 import okio.Buffer
+import okio.ForwardingSink
+import okio.buffer
 
 /**
  * Author: Michael Leo
@@ -153,44 +157,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     )
                 }
             }
-            if (!logBody || !hasRequestBody) {
-                logger.log("--> END ${request.method}")
-            } else if (bodyEncoded(request.headers)) {
-                logger.log("--> END ${request.method} (encoded body omitted)")
-            } else if (hasBoundary) {
-                logger.log(
-                    "--> END ${request.method} (Found boundary " +
-                        "${requestBody.contentLength()}-byte body omitted)"
-                )
-            } else if (requestBody.isDuplex() || requestBody.isOneShot()) {
-                logger.log("--> END ${request.method} (duplex/one-shot body omitted)")
-            } else if (requestBody.contentLength() < 0 ||
-                requestBody.contentLength() > MAX_LOGGABLE_BODY_BYTES
-            ) {
-                logger.log(
-                    "--> END ${request.method} " +
-                        "(${requestBody.contentLength()}-byte body omitted, exceeds log limit)"
-                )
-            } else {
-                val buffer = Buffer()
-                requestBody.writeTo(buffer)
-                val charset = requestBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
-                logger.log("")
-                if (isPlaintext(buffer)) {
-                    val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
-                    logger.log(buffer.clone().readString(logged, charset))
-                    val suffix =
-                        if (buffer.size > logged) " (truncated to $logged bytes for logging)" else ""
-                    logger.log(
-                        "--> END ${request.method} (${requestBody.contentLength()}-byte body$suffix)"
-                    )
-                } else {
-                    logger.log(
-                        "--> END ${request.method} (binary ${requestBody.contentLength()}-byte " +
-                            "body omitted)"
-                    )
-                }
-            }
+            logRequestEnd(request, requestBody, logBody, hasBoundary)
             logger.log(
                 "─".repeat(98)
             )
@@ -244,7 +211,8 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 // Buffer at most the log limit (+1 to detect truncation) instead of the whole body.
                 source.request(MAX_LOGGABLE_BODY_BYTES + 1)
                 val buffer = source.buffer
-                val charset = responseBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
+                val charset =
+                    responseBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
                 if (!isPlaintext(buffer)) {
                     logger.log(" \n<-- END HTTP (binary ${buffer.size}-byte body omitted)")
                     return response
@@ -265,6 +233,57 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         return response
     }
 
+    private fun logRequestEnd(
+        request: Request,
+        requestBody: RequestBody?,
+        logBody: Boolean,
+        hasBoundary: Boolean,
+    ) {
+        if (!logBody || requestBody == null) {
+            logger.log("--> END ${request.method}")
+        } else if (bodyEncoded(request.headers)) {
+            logger.log("--> END ${request.method} (encoded body omitted)")
+        } else if (hasBoundary) {
+            logger.log(
+                "--> END ${request.method} (Found boundary " +
+                    "${requestBody.contentLength()}-byte body omitted)"
+            )
+        } else if (requestBody.isDuplex() || requestBody.isOneShot()) {
+            logger.log("--> END ${request.method} (duplex/one-shot body omitted)")
+        } else if (requestBody.contentLength() !in 0..MAX_LOGGABLE_BODY_BYTES) {
+            logger.log(
+                "--> END ${request.method} " +
+                    "(${requestBody.contentLength()}-byte body omitted, exceeds log limit)"
+            )
+        } else {
+            logCapturedRequestBody(request, requestBody)
+        }
+    }
+
+    private fun logCapturedRequestBody(request: Request, requestBody: RequestBody) {
+        val capturedBody = captureRequestBodyForLogging(requestBody)
+        val buffer = capturedBody.buffer
+        val charset = requestBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
+        logger.log("")
+        if (isPlaintext(buffer)) {
+            val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+            logger.log(buffer.clone().readString(logged, charset))
+            val suffix = if (capturedBody.truncated) {
+                " (truncated to $logged bytes for logging)"
+            } else {
+                ""
+            }
+            logger.log(
+                "--> END ${request.method} (${requestBody.contentLength()}-byte body$suffix)"
+            )
+        } else {
+            logger.log(
+                "--> END ${request.method} (binary ${requestBody.contentLength()}-byte " +
+                    "body omitted)"
+            )
+        }
+    }
+
     private fun bodyEncoded(headers: Headers): Boolean {
         val contentEncoding = headers["Content-Encoding"]
         return contentEncoding != null && !contentEncoding.equals("identity", ignoreCase = true)
@@ -277,12 +296,44 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         /** Maximum number of body bytes buffered/emitted per direction when logging (256 KiB). */
         private const val MAX_LOGGABLE_BODY_BYTES = 256L * 1024
 
+        internal data class CapturedRequestBody(val buffer: Buffer, val truncated: Boolean,)
+
+        /**
+         * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one sentinel byte. The sink throws a
+         * private control-flow exception as soon as a body exceeds the cap, so a dishonest
+         * contentLength() cannot make the logging path allocate the complete body.
+         */
+        internal fun captureRequestBodyForLogging(requestBody: RequestBody): CapturedRequestBody {
+            val output = Buffer()
+            val limitedSink = object : ForwardingSink(output) {
+                override fun write(source: Buffer, byteCount: Long) {
+                    val remaining = MAX_LOGGABLE_BODY_BYTES + 1 - output.size
+                    if (remaining <= 0) throw RequestBodyLimitExceededException()
+                    val bytesToWrite = minOf(byteCount, remaining)
+                    super.write(source, bytesToWrite)
+                    if (bytesToWrite < byteCount || output.size > MAX_LOGGABLE_BODY_BYTES) {
+                        throw RequestBodyLimitExceededException()
+                    }
+                }
+            }.buffer()
+            var truncated = false
+            try {
+                requestBody.writeTo(limitedSink)
+                limitedSink.flush()
+            } catch (_: RequestBodyLimitExceededException) {
+                truncated = true
+            }
+            return CapturedRequestBody(output, truncated)
+        }
+
+        private class RequestBodyLimitExceededException : IOException()
+
         /** Header names whose values are redacted in logs to avoid leaking credentials. */
         private val SENSITIVE_HEADERS = setOf(
             "authorization",
             "proxy-authorization",
             "cookie",
-            "set-cookie",
+            "set-cookie"
         )
 
         /** Redacts the value of a sensitive header (matched case-insensitively by [name]). */

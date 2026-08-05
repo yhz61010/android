@@ -121,10 +121,14 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     /**
      * Generic ViewBinding of the subclasses.
      *
-     * Kept for source compatibility with existing subclasses/consumers; backed by [_binding].
-     * Prefer [viewBinding] in new code. Now read-only (the previous `lateinit var` setter is gone).
+     * Kept for source and binary compatibility with existing subclasses/consumers; backed by
+     * [_binding]. Prefer [viewBinding] in new code.
      */
-    val binding: B get() = viewBinding
+    var binding: B
+        get() = viewBinding
+        set(value) {
+            _binding = value
+        }
 
     abstract fun getViewBinding(
         inflater: LayoutInflater,
@@ -199,7 +203,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     ): View {
         LogContext.log.w(logTag, "=====> onCreateView <=====")
         lifecycleScope.launch { soundManager.loadSounds() }
-        _binding = getViewBinding(inflater, container, savedInstanceState)
+        binding = getViewBinding(inflater, container, savedInstanceState)
         return viewBinding.root
     }
 

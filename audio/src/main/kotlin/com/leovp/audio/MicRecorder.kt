@@ -17,15 +17,17 @@ import com.leovp.bytes.toByteArrayLE
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * **Need following permission:**
@@ -50,10 +52,6 @@ class MicRecorder(
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    /** Independent scope for teardown so cancelling [ioScope] cannot kill the release flow. */
-    private val teardownScope =
-        CoroutineScope(Dispatchers.IO + CoroutineName("mic-recorder-teardown"))
-
     val audioRecord: AudioRecord
     private var bufferSizeInBytes = 0
 
@@ -69,6 +67,11 @@ class MicRecorder(
 
     /** Guards [callback].onStop so it is delivered exactly once. */
     private val onStopNotified = AtomicBoolean(false)
+
+    /**
+     * Lets repeated suspend stop calls wait for an error-triggered teardown already in progress.
+     */
+    private val releaseCompleted = CompletableDeferred<Unit>()
 
     init {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(
@@ -130,7 +133,9 @@ class MicRecorder(
 
                         else -> {
                             LogContext.log.e(TAG, "AudioRecord.read error=$recordSize")
-                            finishRecorderRelease(stopSucceeded = false)
+                            stopped.set(true)
+                            stopAudioRecord()
+                            finishRecorderReleaseAndJoin(stopSucceeded = false)
                             break
                         }
                     }
@@ -139,7 +144,9 @@ class MicRecorder(
                 throw e
             } catch (e: Exception) {
                 LogContext.log.e(TAG, "Recording loop failed", e)
-                finishRecorderRelease(stopSucceeded = false)
+                stopped.set(true)
+                stopAudioRecord()
+                finishRecorderReleaseAndJoin(stopSucceeded = false)
             }
         }
     }
@@ -167,34 +174,29 @@ class MicRecorder(
 
     /**
      * Deterministic teardown: stop the AudioRecord first (so the native read returns), then join
-     * the record job and release resources. Guards against self-join when called from the record
-     * job itself.
+     * the record job and release resources. This API must be called by an external owner.
      */
     suspend fun stopRecordAndJoin() {
-        if (!stopped.compareAndSet(false, true)) return
+        if (!stopped.compareAndSet(false, true)) {
+            releaseCompleted.await()
+            return
+        }
         LogContext.log.i(TAG, "Stop recording audio")
-        var ok = true
-        // Stop first so the blocking native read() returns and the loop can exit.
-        runCatching {
-            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) audioRecord.stop()
-        }.onFailure { ok = false; LogContext.log.e(TAG, "stop error", it) }
+        val ok = stopAudioRecord()
 
         val job = recordJob
-        if (job === currentCoroutineContext()[Job]) {
-            // Called from within the record job; never join on ourselves.
-            job.cancel()
-            teardownScope.launch { job.join(); finishRecorderRelease(ok) }
-            return
+        require(job !== currentCoroutineContext()[Job]) {
+            "stopRecordAndJoin() must be called by an external owner"
         }
         job?.cancelAndJoin()
         recordJob = null
         ioScope.cancel()
-        finishRecorderRelease(ok)
+        finishRecorderReleaseAndJoin(ok)
     }
 
     /**
-     * Legacy non-suspend entry point. Bridges to [stopRecordAndJoin] on an independent scope so it
-     * never blocks (or runBlocking-s) the caller thread (e.g. the UI thread).
+     * Legacy non-suspend entry point. It keeps the historical synchronous release semantics but
+     * cannot wait for the worker to finish; use [stopRecordAndJoin] when completion matters.
      */
     @Deprecated(
         "Non-suspend stop cannot guarantee the record job has exited. " +
@@ -202,24 +204,91 @@ class MicRecorder(
         ReplaceWith("stopRecordAndJoin()")
     )
     fun stopRecord() {
-        teardownScope.launch { stopRecordAndJoin() }
+        if (!stopped.compareAndSet(false, true)) return
+        val ok = stopAudioRecord()
+        recordJob?.cancel()
+        recordJob = null
+        ioScope.cancel()
+        finishRecorderRelease(ok)
     }
 
     /**
      * Idempotent resource release: releases AudioRecord and encoder, and delivers onStop exactly
      * once. Safe to call from either the record job's error path or the teardown flow.
      */
+    private fun stopAudioRecord(): Boolean {
+        var ok = true
+        runCatching {
+            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
+                audioRecord.stop()
+            }
+        }.onFailure {
+            ok = false
+            LogContext.log.e(TAG, "stop error", it)
+        }
+        return ok
+    }
+
     private fun finishRecorderRelease(stopSucceeded: Boolean) {
         if (!released.compareAndSet(false, true)) return
         var ok = stopSucceeded
-        runCatching {
-            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                audioRecord.release()
-                LogContext.log.w(TAG, "Recording released.")
+        try {
+            runCatching {
+                if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
+                    audioRecord.release()
+                    LogContext.log.w(TAG, "Recording released.")
+                }
+            }.onFailure {
+                ok = false
+                LogContext.log.e(TAG, "release error", it)
             }
-        }.onFailure { ok = false; LogContext.log.e(TAG, "release error", it) }
-        encodeWrapper?.release()
-        notifyStopOnce(ok)
+            runCatching { encodeWrapper?.release() }.onFailure {
+                ok = false
+                LogContext.log.e(TAG, "encoder release error", it)
+            }
+        } finally {
+            try {
+                notifyStopOnce(ok)
+            } finally {
+                releaseCompleted.complete(Unit)
+            }
+        }
+    }
+
+    private suspend fun finishRecorderReleaseAndJoin(stopSucceeded: Boolean) {
+        if (!released.compareAndSet(false, true)) {
+            releaseCompleted.await()
+            return
+        }
+        withContext(NonCancellable) {
+            var ok = stopSucceeded
+            try {
+                runCatching {
+                    if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
+                        audioRecord.release()
+                        LogContext.log.w(TAG, "Recording released.")
+                    }
+                }.onFailure {
+                    ok = false
+                    LogContext.log.e(TAG, "release error", it)
+                }
+                try {
+                    encodeWrapper?.releaseAndJoin()
+                } catch (e: CancellationException) {
+                    ok = false
+                    throw e
+                } catch (e: Exception) {
+                    ok = false
+                    LogContext.log.e(TAG, "encoder release error", e)
+                }
+            } finally {
+                try {
+                    notifyStopOnce(ok)
+                } finally {
+                    releaseCompleted.complete(Unit)
+                }
+            }
+        }
     }
 
     private fun notifyStopOnce(result: Boolean) {

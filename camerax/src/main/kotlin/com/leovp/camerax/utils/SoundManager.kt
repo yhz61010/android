@@ -15,8 +15,8 @@ import kotlinx.coroutines.withContext
  * Date: 2022/4/25 10:03
  */
 class SoundManager private constructor(context: Context) {
-    // Hold the application context to avoid leaking a Fragment/Activity Context in a singleton.
-    private val appCtx = context.applicationContext
+    /** Application context retained under the historical public property for API compatibility. */
+    val ctx: Context = context.applicationContext
     private var soundPool: SoundPool? = null
     private var soundIdCountdown1: Int = 0
     private var soundIdCountdown2: Int = 0
@@ -25,7 +25,7 @@ class SoundManager private constructor(context: Context) {
     private var soundIdCamStart: Int = 0
     private var soundIdCamStop: Int = 0
 
-    private val audioManager by lazy { appCtx.audioManager }
+    private val audioManager by lazy { ctx.audioManager }
 
     suspend fun loadSounds() = withContext(Dispatchers.IO) {
         // Release any previously created pool before rebuilding (supports reuse after release()).
@@ -37,12 +37,12 @@ class SoundManager private constructor(context: Context) {
             )
             .build()
             .apply {
-                soundIdCountdown1 = load(appCtx, R.raw.camera_timer, 1)
-                soundIdCountdown2 = load(appCtx, R.raw.camera_timer, 1)
-                soundIdCountdownFinal = load(appCtx, R.raw.camera_timer_2sec, 1)
-                soundIdShutter = load(appCtx, R.raw.camera_shutter, 1)
-                soundIdCamStart = load(appCtx, R.raw.cam_start, 1)
-                soundIdCamStop = load(appCtx, R.raw.cam_stop, 1)
+                soundIdCountdown1 = load(ctx, R.raw.camera_timer, 1)
+                soundIdCountdown2 = load(ctx, R.raw.camera_timer, 1)
+                soundIdCountdownFinal = load(ctx, R.raw.camera_timer_2sec, 1)
+                soundIdShutter = load(ctx, R.raw.camera_shutter, 1)
+                soundIdCamStart = load(ctx, R.raw.cam_start, 1)
+                soundIdCamStop = load(ctx, R.raw.cam_stop, 1)
             }
     }
 

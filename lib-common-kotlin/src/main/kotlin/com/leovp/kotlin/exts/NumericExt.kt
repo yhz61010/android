@@ -67,11 +67,10 @@ fun getRatio(a: Int, b: Int, delimiters: String = ":", swapResult: Boolean = fal
  * Groups a string of digits (no sign) into comma-separated thousands. Kept private so both the
  * [Int] and [Long] formatters share one implementation (remediation H14 / L-K3).
  */
-private fun String.groupThousands(): String =
-    reversed()
-        .chunked(3)
-        .joinToString(",")
-        .reversed()
+private fun String.groupThousands(): String = reversed()
+    .chunked(3)
+    .joinToString(",")
+    .reversed()
 
 /**
  * Formats an [Int] with comma-separated thousands.

@@ -38,4 +38,8 @@ class OpusEncoderWrapper(
     override fun release() {
         runCatching { encoder.release() }.onFailure { it.printStackTrace() }
     }
+
+    override suspend fun releaseAndJoin() {
+        encoder.releaseAndJoin()
+    }
 }

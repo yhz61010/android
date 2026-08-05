@@ -13,7 +13,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -34,13 +33,6 @@ abstract class BaseMediaCodec(
     internal lateinit var codec: MediaCodec
 
     protected val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
-
-    /**
-     * Independent scope used only to bridge the legacy non-suspend [release] to the suspend
-     * [releaseAndJoin]. It must NOT be tied to [ioScope] (which gets cancelled on teardown).
-     */
-    private val teardownScope =
-        CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec-teardown"))
 
     /**
      * The codec worker coroutine. Assigned by the synchronous worker launch (see
@@ -89,8 +81,8 @@ abstract class BaseMediaCodec(
      * Does NOT cancel scopes or start any fire-and-forget work.
      */
     protected fun releaseCodecOnce() {
-        if (!codecReleased.compareAndSet(false, true)) return
         require(::codec.isInitialized) { "Did you call start() before?" }
+        if (!codecReleased.compareAndSet(false, true)) return
         runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
 
         // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
@@ -108,9 +100,12 @@ abstract class BaseMediaCodec(
     )
     open fun release() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        // Bridge the legacy non-suspend API to the deterministic suspend lifecycle without
-        // blocking the caller (e.g. UI thread) and without joining from the codec worker.
-        teardownScope.launch { releaseAndJoin() }
+        // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
+        // when it must also wait for the worker to finish.
+        codecJob?.cancel()
+        codecJob = null
+        ioScope.cancel()
+        releaseCodecOnce()
     }
 
     open fun flush() {

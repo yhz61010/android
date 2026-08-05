@@ -9,7 +9,7 @@
 
 - **CIP-1 `ZipUtil.unzip` 加固**:解压时对每个条目做规范化路径校验,拒绝 Zip Slip 路径穿越
   (`../`、绝对路径、软链父目录),并对单条目与归档总解压体积设上限(默认 200 MiB / 1 GiB)以缓解
-  ZIP bomb。写入改为「临时文件 + 原子 rename」,失败不再遗留半文件。
+  ZIP bomb。写入改为「临时文件 + 同目录备份 + rename」,替换失败会恢复原文件,且不遗留半文件。
   - **行为变更**:遇到路径穿越或超限的归档,现在抛出 `IllegalArgumentException`(此前会静默写出)。
   - **兼容**:新增可选参数 `limits: ZipUtil.UnzipLimits`,通过 `@JvmOverloads` 保留原两参数入口,
     既有 Kotlin/Java 调用无需改动。
@@ -19,8 +19,10 @@
     显式设置 `logLevel = BODY/HEADERS` 才会输出。
   - Header 日志按名脱敏(`Authorization`、`Cookie`、`Set-Cookie`、`Proxy-Authorization` 的值以 `██` 代替);
     请求头注入日志只记 Header 名,不再记录其值。
-- **HTTP-3 日志体积双向有界**:请求与响应体日志各自最多缓冲/输出 256 KiB,不再将整个响应
-  (`source.request(Long.MAX_VALUE)`)或请求体读入内存;duplex/one-shot/未知长度/超限的请求体一律省略。
+- **HTTP-3 日志体积双向有界**:请求与响应体日志各自最多缓冲/输出 256 KiB。请求日志使用
+  有界 sink,即使自定义 `RequestBody.contentLength()` 虚报较小值也只保留 256 KiB + 1 个探测字节;
+  不再将整个响应(`source.request(Long.MAX_VALUE)`)或请求体读入内存。duplex/one-shot/未知长度/
+  超限的请求体一律省略。
   修复大响应/大请求下的 OOM 风险;业务读取报文体不受影响。
 - **CIP-3 `GZipUtil.decompress` 加解压上限**:新增可选参数 `maxOutputBytes`(默认 64 MiB),
   超限返回 `null`,缓解 GZIP bomb。`@JvmOverloads` 保留原有入口,既有调用无需改动。
@@ -30,13 +32,13 @@
 
 ### 变更 (Changed)
 
-- **CX-4 `BaseCameraXFragment.binding` 由 `lateinit var` 改为只读 `val`**:改用可空 backing
-  `_binding` + `onDestroyView` 置空,修复视图重建后 binding 泄漏与释放后误用。新增只读访问器
-  `viewBinding`(视图生命周期内有效);公开 `binding` 保留为只读 `val`(委托 `viewBinding`),
-  **源码兼容**(既有子类读取不变),但**移除了自动生成的 setter**(二进制不兼容;仓库内无外部 setter);
-  `onDestroyView` 之后读取会抛 `IllegalStateException`。`VideoFragment` 迁移到 `viewBinding` 暂缓。
+- **CX-4 `BaseCameraXFragment.binding` 绑定 View 生命周期**:改用可空 backing `_binding` 并在
+  `onDestroyView` 置空,修复视图重建后 binding 泄漏与释放后误用。新增只读访问器 `viewBinding`;
+  公开 `binding` 继续保留 getter/setter,避免破坏既有子类的源码和 JVM 调用入口。
+  `onDestroyView` 之后读取会抛 `IllegalStateException`。
 - **CX-1 `SoundManager` 不再持有传入 `Context`**:构造参数改为私有存 `applicationContext`,移除公开
-  `val ctx`(仓库内无外部引用,`getInstance` 签名不变);`soundPool` 改可空、支持 `release()` 后重建,
+  Activity 引用;历史公开 `val ctx/getCtx()` 继续保留,但返回 application context,避免 API/ABI 破坏。
+  `soundPool` 改可空、支持 `release()` 后重建,
   未加载时 `play*` 变 no-op(不再崩溃)。
 - **CAM2-3 `Camera2ComponentHelper.switchCamera` 由同步改为异步**:切换现在会先关闭旧设备并等待其
   `onClosed`(经 `Mutex` 串行化、关闭信号绑定到具体 `CameraDevice`),关闭超时(默认 3s)则中止本次切换
@@ -49,12 +51,14 @@
 - **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
   `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
 - **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;
-  `BaseCamera2Fragment.onDestroyView()` 释放 helper(closeCamera+stopCameraThread),修复视图重建后
-  HandlerThread/executor 泄漏。onDestroyView/onDestroy 共用幂等状态,释放仅执行一次。
+  helper 使用可在 `release()` 中取消的自有 scope,不再把 Camera 操作挂到 Activity lifecycle;
+  `BaseCamera2Fragment.onDestroyView()` 释放 helper,且每次 `onViewCreated` 重置幂等状态,支持同一
+  Fragment 实例的多次 View 重建。
 - **CAM2-7 移除 `onStop` 主线程 `sleep(100)`**:`stopRepeating()` 改用 `stopRepeating()+abortCaptures()`
   串行关闭,不再固定睡眠阻塞 UI 线程,消除前后台快速切换时的 ANR 风险。
-- **CAM2-8 `createCaptureSession` 可取消**:`suspendCoroutine` → `suspendCancellableCoroutine`,所有
-  resume 加 `isActive` 守卫,取消后配置完成的 session 会被 `close()` 防泄漏,并加 `invokeOnCancellation`。
+- **CAM2-8 相机挂起操作可取消**:`createCaptureSession` 改为 `suspendCancellableCoroutine`,取消后
+  配置完成的 session 会关闭;`openCamera` 同步捕获权限/CameraAccess 异常,并在取消后关闭迟到的
+  `onOpened` 设备,防止快速切换或离页时泄漏并覆盖当前设备状态。
 - **CX-2 `captureForBytes` 始终关闭 `ImageProxy`**:`onCaptureSuccess` 用 `image.use{}` 保证关闭;
   UI 操作改走 `viewLifecycleOwner.lifecycleScope`,错误路径不再用 `requireActivity()`(Fragment 可能已
   detach),按视图生命周期守卫后再回调 `onImageSaved`,修复 ImageProxy 泄漏与 detach 后崩溃。
@@ -67,12 +71,14 @@
   header 快照,每次 `getRetrofit(baseUrl)` 新建 builder,避免并发不同 `baseUrl` 时构建出错误 Host。
 - **AUD-1 `BaseMediaCodec` 确定性释放(T4)**:新增 `suspend fun releaseAndJoin()`,先
   `cancelAndJoin` codec worker 再取消 `ioScope` 并幂等释放 codec(`releaseCodecOnce()` 原子只执行一次);
-  含自 join 守卫(禁止 codec worker 自身调用)。修复旧 `release()` 先释放 codec 后取消 scope 导致的
-  释放期崩溃/竞态。
+  含自 join 守卫。旧 `release()` 保留同步释放语义和 JVM 签名,但先取消 worker/scope 再释放 codec;
+  需要“返回即 worker 已退出”的调用方迁移到 suspend 入口。
 - **AUD-2 `AacDecoder.onInputData` 可取消(T4)**:阻塞 `queue.take()` 改为
-  `queue.poll(50ms)`,返回 0 时 `process()` 跳过 `queueInputBuffer`,协程取消可及时唤醒退出。
+  `queue.poll(50ms)`,协程取消可及时唤醒退出;无数据时仍提交空 input buffer,确保每个从 MediaCodec
+  dequeue 的输入槽都被归还,避免输入槽耗尽后永久停解。
 - **AUD-3 `MicRecorder` 确定性停止(T4)**:新增 `suspend fun stopRecordAndJoin()`,先 `stop()` 让
-  native `read()` 返回,再 join 录音任务并释放;含自 join 守卫与 `onStop` 幂等(只回调一次)。
+  native `read()` 返回,再 join 录音任务并通过 encoder wrapper 的 `releaseAndJoin()` 等待编码器释放;
+  `onStop` 幂等且只在资源释放完成后回调。旧 `stopRecord()` 保留同步释放兼容语义。
 - **AUD-4 Stream Player 并发串行化**:`AacStreamPlayer`/`OpusStreamPlayer` 用私有锁 + generation
   串行化 init/decode/flush/stop,`dropFrameCallback` 移出锁;修复 `audioDecoder`/`csd` 无锁 TOCTOU。
 - **AUD-5 解码器初始化失败回滚**:init/`play()` 成功才提交 `csd0`(OPUS 一并 csd1/csd2);失败回滚并释放,
@@ -87,11 +93,12 @@
 - **ABN-1 `KeepAliveReceiver.onReceive` 不再用 `GlobalScope`**:改用 `goAsync()` + 局部
   `CoroutineScope(SupervisorJob())`,`finish()` 置于 `finally`(约 10s 窗口),rethrow
   `CancellationException`;移除 `@OptIn(DelicateCoroutinesApi)`。修复广播提前结束/异步任务泄漏。
-- **AR-1 `DisplayCutoutManager` 不再进程级单例**:去掉 `SingletonHolder`,`getInstance(activity)`
-  改为每次返回独立实例,不再固定持有首个 Activity 导致泄漏(本类无可变共享状态)。公开 API 不变。
+- **AR-1 `DisplayCutoutManager` 不再进程级单例**:保留 `SingletonHolder` 继承和既有 JVM bridge,
+  但覆写 `getInstance(activity)` 为每次返回独立实例,不再固定持有首个 Activity 导致泄漏
+  (本类无可变共享状态)。公开 API/ABI 不变。
 - **CPB-1 `CircleProgressbar` 无限动画随生命周期取消**:`onDetachedFromWindow` 取消动画,
   `onAttachedToWindow` 在仍为 indeterminate 时恢复,`setIdle/setFinish/setError` 首行取消动画,
-  修复 detach 后动画仍无限 invalidate 的泄漏/耗电。
+  `setIndeterminate` 仅在 View 已 attach 时启动,修复构造后未 attach 或 detach 后切状态仍持续运行的耗电。
 - **CPB-2 `CircleProgressbar` 支持 `wrap_content`**:新增 `onMeasure`,按图标 + 进度环 + padding
   计算期望尺寸,修复 `wrap_content` 退化为 0×0 不可见。
 

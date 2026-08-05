@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.ImageFormat
 import android.graphics.drawable.AnimationDrawable
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -35,7 +36,6 @@ import androidx.annotation.Keep
 import androidx.annotation.RequiresPermission
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.createImageFile
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.androidbase.utils.media.CodecUtil
@@ -55,19 +55,24 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
 import kotlin.math.min
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
@@ -77,7 +82,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Author: Michael Leo
  * Date: 20-6-24 下午5:05
  */
-@Suppress("unused")
+@Suppress("unused", "TooManyFunctions")
 class Camera2ComponentHelper(
     private val context: FragmentActivity,
     private var lensFacing: Int,
@@ -112,6 +117,9 @@ class Camera2ComponentHelper(
 
     /** The in-flight camera switch, cancelled when a new switch is requested. */
     private var switchJob: Job? = null
+
+    /** Owns camera work and is cancelled when this helper is released with its View. */
+    private val cameraScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val singleExecutor = Executors.newSingleThreadExecutor()
 
@@ -575,10 +583,15 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    fun initializeCamera(previewWidth: Int, previewHeight: Int) =
-        context.lifecycleScope.launch(Dispatchers.Main) {
+    fun initializeCamera(previewWidth: Int, previewHeight: Int) = cameraScope.launch {
+        try {
             initializeCameraAndAwait(previewWidth, previewHeight)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            reportCameraError("initializeCamera failed", e)
         }
+    }
 
     /**
      * Opens and fully configures the camera, returning only once the device, image reader and
@@ -620,52 +633,76 @@ class Camera2ComponentHelper(
         cameraId: String,
         handler: Handler? = null
     ): CameraDevice = suspendCancellableCoroutine { cont ->
-        // Close signal owned by this exact device; completed in onClosed (remediation CAM2-3).
         val closeSignal = CompletableDeferred<Unit>()
-        manager.openCamera(
-            cameraId,
-            object : CameraDevice.StateCallback() {
-                override fun onOpened(device: CameraDevice) {
-                    openedCamera = OpenedCamera(device, closeSignal)
-                    if (cont.isActive) cont.resume(device)
-                }
-
-                override fun onDisconnected(device: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+        val pendingDevice = AtomicReference<CameraDevice?>()
+        cont.invokeOnCancellation {
+            pendingDevice.getAndSet(null)?.let { device ->
+                if (openedCamera?.device === device) openedCamera = null
+                device.close()
+            }
+        }
+        val callback = object : CameraDevice.StateCallback() {
+            override fun onOpened(device: CameraDevice) {
+                if (!cont.isActive) {
                     device.close()
-                    if (cont.isActive) {
-                        cont.resumeWithException(
-                            IllegalStateException("Camera $cameraId disconnected during open")
-                        )
-                    }
+                    return
                 }
+                pendingDevice.set(device)
+                openedCamera = OpenedCamera(device, closeSignal)
+                if (cont.isActive) {
+                    cont.resume(device)
+                } else {
+                    pendingDevice.getAndSet(null)?.close()
+                    openedCamera = null
+                }
+            }
 
-                override fun onClosed(camera: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been closed")
-                    closeSignal.complete(Unit)
-                    super.onClosed(camera)
+            override fun onDisconnected(device: CameraDevice) {
+                LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+                pendingDevice.compareAndSet(device, null)
+                if (openedCamera?.device === device) openedCamera = null
+                device.close()
+                if (cont.isActive) {
+                    cont.resumeWithException(
+                        IllegalStateException("Camera $cameraId disconnected during open")
+                    )
                 }
+            }
 
-                override fun onError(device: CameraDevice, error: Int) {
-                    val msg = when (error) {
-                        ERROR_CAMERA_DEVICE -> "Fatal (device)"
-                        ERROR_CAMERA_DISABLED -> "Device policy"
-                        ERROR_CAMERA_IN_USE -> "Camera in use"
-                        ERROR_CAMERA_SERVICE -> "Fatal (service)"
-                        ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                        else -> "Unknown"
-                    }
-                    device.close()
-                    val exc =
-                        IllegalAccessException(
-                            "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
-                        )
-                    LogContext.log.e(TAG, exc.message, exc)
-                    if (cont.isActive) cont.resumeWithException(exc)
+            override fun onClosed(camera: CameraDevice) {
+                LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                pendingDevice.compareAndSet(camera, null)
+                if (openedCamera?.device === camera) openedCamera = null
+                closeSignal.complete(Unit)
+                super.onClosed(camera)
+            }
+
+            override fun onError(device: CameraDevice, error: Int) {
+                val msg = when (error) {
+                    ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                    ERROR_CAMERA_DISABLED -> "Device policy"
+                    ERROR_CAMERA_IN_USE -> "Camera in use"
+                    ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                    ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                    else -> "Unknown"
                 }
-            },
-            handler
-        )
+                pendingDevice.compareAndSet(device, null)
+                if (openedCamera?.device === device) openedCamera = null
+                device.close()
+                val exc = IllegalAccessException(
+                    "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
+                )
+                LogContext.log.e(TAG, exc.message, exc)
+                if (cont.isActive) cont.resumeWithException(exc)
+            }
+        }
+        try {
+            manager.openCamera(cameraId, callback, handler)
+        } catch (e: SecurityException) {
+            if (cont.isActive) cont.resumeWithException(e)
+        } catch (e: CameraAccessException) {
+            if (cont.isActive) cont.resumeWithException(e)
+        }
     }
 
     /**
@@ -859,38 +896,47 @@ class Camera2ComponentHelper(
         cameraView?.let {
             targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
         }
-        context.lifecycleScope.launch(Dispatchers.Main) {
-            session = createCaptureSession(camera, targets, cameraHandler)
-            LogContext.log.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
-            session.setRepeatingRequest(
-                // Capture request holds references to target surfaces
-                session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                    cameraView?.let {
-                        // Add the preview and recording surface targets
-                        addTarget(
-                            it.findViewById<CameraSurfaceView>(
-                                R.id.cameraSurfaceView
-                            ).holder.surface
+        cameraScope.launch {
+            try {
+                session = createCaptureSession(camera, targets, cameraHandler)
+                LogContext.log.v(
+                    TAG,
+                    "setRepeatingRequestForRecord session.device=${session.device}"
+                )
+                session.setRepeatingRequest(
+                    // Capture request holds references to target surfaces
+                    session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                        cameraView?.let {
+                            // Add the preview and recording surface targets
+                            addTarget(
+                                it.findViewById<CameraSurfaceView>(
+                                    R.id.cameraSurfaceView
+                                ).holder.surface
+                            )
+                        }
+                        addTarget(imageReader.surface)
+                        LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
+                        // Sets user requested FPS for all targets
+                        set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+                        // Autofocus
+                        set(
+                            CaptureRequest.CONTROL_AF_MODE,
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
                         )
-                    }
-                    addTarget(imageReader.surface)
-                    LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
-                    // Sets user requested FPS for all targets
-                    set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-                    // Autofocus
-                    set(
-                        CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
-                    )
-                    // AWB
-                    // set(CaptureRequest.CONTROL_AWB_MODE,
-                    // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-                    // set(CaptureRequest.CONTROL_AWB_MODE,
-                    // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-                }.build(),
-                null,
-                cameraHandler
-            )
+                        // AWB
+                        // set(CaptureRequest.CONTROL_AWB_MODE,
+                        // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                        // set(CaptureRequest.CONTROL_AWB_MODE,
+                        // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                    }.build(),
+                    null,
+                    cameraHandler
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reportCameraError("Unable to start recording session", e)
+            }
         }
     }
 
@@ -932,7 +978,7 @@ class Camera2ComponentHelper(
         val imageChannel = Channel<Image>(
             capacity = IMAGE_BUFFER_SIZE,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
-            onUndeliveredElement = { it.close() },
+            onUndeliveredElement = { it.close() }
         )
         imageReader.setOnImageAvailableListener({ reader ->
             val image = reader.acquireNextImage() ?: return@setOnImageAvailableListener
@@ -1155,26 +1201,39 @@ class Camera2ComponentHelper(
         LogContext.log.w(TAG, "switchCamera to $lensFacing")
 
         switchJob?.cancel()
-        switchJob = context.lifecycleScope.launch(Dispatchers.Main.immediate) {
-            switchMutex.withLock {
-                val oldCamera = checkNotNull(openedCamera) { "No opened camera to switch from." }
-                // closeCamera() closes the device (triggering onClosed), image reader and encoder.
-                closeCamera()
-                val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
-                    oldCamera.closed.await()
-                    true
-                } ?: false
-                if (!closedInTime) {
-                    cameraErrorListener?.onError(
-                        TimeoutException("Camera close timed out during switch")
-                    )
-                    return@withLock
+        switchJob = cameraScope.launch {
+            try {
+                switchMutex.withLock {
+                    val oldCamera = checkNotNull(openedCamera) {
+                        "No opened camera to switch from."
+                    }
+                    closeCamera()
+                    val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+                        oldCamera.closed.await()
+                        true
+                    } ?: false
+                    if (!closedInTime) {
+                        reportCameraError(
+                            "switchCamera failed",
+                            TimeoutException("Camera close timed out during switch")
+                        )
+                        return@withLock
+                    }
+                    this@Camera2ComponentHelper.lensFacing = lensFacing
+                    initializeCameraAndAwait(previewWidth, previewHeight)
+                    lensSwitchListener?.onSwitch(lensFacing)
                 }
-                this@Camera2ComponentHelper.lensFacing = lensFacing
-                initializeCameraAndAwait(previewWidth, previewHeight)
-                lensSwitchListener?.onSwitch(lensFacing) // Notify only after a successful switch.
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reportCameraError("switchCamera failed", e)
             }
         }
+    }
+
+    private fun reportCameraError(message: String, error: Throwable) {
+        LogContext.log.e(TAG, message, error)
+        cameraErrorListener?.onError(error)
     }
 
     interface LensSwitchListener {
@@ -1202,45 +1261,42 @@ class Camera2ComponentHelper(
      *
      * Helper function used to save a [CombinedCaptureResult] into a [File]
      */
-    suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
-        when (result.format) {
-            // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
-            ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                context.lifecycleScope.launch(Dispatchers.IO) {
-                    // TODO The buffer that is just the JPEG data not the original camera image.
-                    // So I can not mirror image in the general way like this below:
-                    // if (result.mirrored) mirrorImage(bytes, result.image.width,
-                    // result.image.height)
-                    try {
-                        val output = context.createImageFile("jpg")
-                        FileOutputStream(output).use { it.write(result.imageBytes) }
-                        cont.resume(output)
-                    } catch (exc: IOException) {
-                        LogContext.log.e(TAG, "Unable to write JPEG image to file", exc)
-                        cont.resumeWithException(exc)
-                    }
+    suspend fun saveResult(result: CombinedCaptureResult): File = when (result.format) {
+        // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
+        ImageFormat.JPEG, ImageFormat.DEPTH_JPEG ->
+            withContext(Dispatchers.IO) {
+                // TODO The buffer that is just the JPEG data not the original camera image.
+                // So I can not mirror image in the general way like this below:
+                // if (result.mirrored) mirrorImage(bytes, result.image.width,
+                // result.image.height)
+                try {
+                    val output = context.createImageFile("jpg")
+                    FileOutputStream(output).use { it.write(result.imageBytes) }
+                    output
+                } catch (exc: IOException) {
+                    LogContext.log.e(TAG, "Unable to write JPEG image to file", exc)
+                    throw exc
                 }
             }
 
-            // When the format is RAW we use the DngCreator utility library
-            //            ImageFormat.RAW_SENSOR -> {
-            //                val dngCreator = DngCreator(characteristics, result.metadata)
-            //                try {
-            //                    val output = createFile(context.requireContext(), "dng")
-            // FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
-            //                    cont.resume(output)
-            //                } catch (exc: IOException) {
-            //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
-            //                    cont.resumeWithException(exc)
-            //                }
-            //            }
+        // When the format is RAW we use the DngCreator utility library
+        //            ImageFormat.RAW_SENSOR -> {
+        //                val dngCreator = DngCreator(characteristics, result.metadata)
+        //                try {
+        //                    val output = createFile(context.requireContext(), "dng")
+        // FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+        //                    cont.resume(output)
+        //                } catch (exc: IOException) {
+        //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
+        //                    cont.resumeWithException(exc)
+        //                }
+        //            }
 
-            // No other formats are supported by this sample
-            else -> {
-                val exc = RuntimeException("Unknown image format: ${result.format}")
-                LogContext.log.e(TAG, exc.message, exc)
-                cont.resumeWithException(exc)
-            }
+        // No other formats are supported by this sample
+        else -> {
+            val exc = RuntimeException("Unknown image format: ${result.format}")
+            LogContext.log.e(TAG, exc.message, exc)
+            throw exc
         }
     }
 
@@ -1256,6 +1312,7 @@ class Camera2ComponentHelper(
             // There is no need to call session.close() method. Please check its comment
             //            if (::session.isInitialized) session.close()
             if (::camera.isInitialized) camera.close()
+            openedCamera = null
             if (::imageReader.isInitialized) imageReader.close()
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()
@@ -1292,6 +1349,9 @@ class Camera2ComponentHelper(
 
     /** Handy method to release all the camera resources. */
     fun release() {
+        switchJob?.cancel()
+        switchJob = null
+        cameraScope.cancel()
         closeCamera()
         stopCameraThread()
     }

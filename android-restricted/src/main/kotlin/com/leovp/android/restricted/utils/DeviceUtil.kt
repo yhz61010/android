@@ -13,7 +13,9 @@ import com.leovp.kotlin.utils.SingletonHolder
  */
 
 @Suppress("WeakerAccess", "unused", "UNUSED_PARAMETER")
-class DeviceUtil private constructor(private val ctx: Context) {
+class DeviceUtil private constructor(context: Context) {
+    private val ctx = context.applicationContext ?: context
+
     companion object : SingletonHolder<DeviceUtil, Context>(::DeviceUtil) {
         private const val TAG = "DeviceUtil"
     }

@@ -29,6 +29,10 @@
 - **AR-7 `DeviceProp.getSystemPropertyByShell` 命令注入加固**:shell `getprop` 前对属性名做正则
   白名单校验(`^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`),非法名记日志并返回 `""`,防止参数直拼命令注入。
   合法属性名(`ro.*`/`ril.*`/`gsm.*`)全部匹配,行为不变。
+- **CIP-2 AES/PBKDF2 密钥副本清理**:`AESUtil` 不再通过不可清除的临时 hex `String` 派生密钥,
+  改用与原大写 hex 编码完全一致的 `CharArray`,并在加解密或旧格式派生结束后清零;PBKDF2 provider
+  路径在 `finally` 调用 `PBEKeySpec.clearPassword()`,派生出的临时字节副本也在构造 AES key 后清零。
+  密文格式和既有固定向量不变。
 
 ### 变更 (Changed)
 
@@ -45,6 +49,15 @@
   并通过新增的 `cameraErrorListener` 上报,不再直接打开新设备;`lensSwitchListener` 仅在切换成功后回调。
   方法签名不变(仍返回 `Unit`),但完成时机变为延迟;连续点击会取消尚未开始的上一次切换。
   `switchToFrontCamera()`/`switchToBackCamera()` 同步语义随之变化。
+- **AUD-9 PCM16 输入改为完整帧契约**:`ByteArray.toShortArray()`、`toShortArrayLE()` 以及
+  `AudioTrackPlayer.write()` 现在拒绝奇数字节长度并抛出 `IllegalArgumentException`,不再静默丢弃末尾
+  字节。`AudioTrack.write()` 的负错误码保持原值返回,不再错误地乘以 2。
+- **AUD-10 音频最小缓冲参数校验**:`AudioTrackPlayer` 和 `MicRecorder` 要求缓冲倍率为正数,并在
+  `getMinBufferSize()` 返回错误码或计算溢出时立即抛出 `IllegalArgumentException`,不再用无效大小构造
+  音频对象。
+- **CPB-3/5 进度范围收敛**:`CircleProgressbar.maxProgress` 最小为 1,`currentProgress` 被限制在
+  `0..maxProgress`;XML 初始化和状态恢复同样执行约束。动画时长会同步到已有 animator,状态恢复缺值
+  回退到 idle,并新增状态描述供无障碍服务读取。
 
 ### 修复 (Fixed)
 
@@ -102,6 +115,26 @@
   `setIndeterminate` 仅在 View 已 attach 时启动,修复构造后未 attach 或 detach 后切状态仍持续运行的耗电。
 - **CPB-2 `CircleProgressbar` 支持 `wrap_content`**:新增 `onMeasure`,按图标 + 进度环 + padding
   计算期望尺寸,修复 `wrap_content` 退化为 0×0 不可见。
+- **CAM2-4/5 相机错误与方向回退**:`openCamera`/`switchCamera` 捕获并上报权限及 CameraAccess 错误;
+  JPEG 方向在 display 或 sensor orientation 缺失时使用安全默认值,不再因 `-1`/null 崩溃。
+- **CAM2-9/10 编码回调与背压**:`CameraAvcEncoder` 在 configure 前注册 callback,API 23+ 使用专用
+  HandlerThread 并在释放时退出;输入队列最多保留 5 帧,拥塞时丢弃最旧帧。公开 queue getter 类型不变。
+- **ABN-2/3/4 androidbase 健壮性**:`LeoTextureView` 的 MediaCodec callback 在 configure 前注册并在
+  API 23+ 使用可释放的专用线程;Watermark 对空文本、非正字号和零间距安全返回/钳位;`WifiUtil` 仅
+  持有 application context。
+- **AR-2/3/4/5/6/8 android-restricted 修复**:vivo 刘海设备使用正确实现并按 density 计算 dp;
+  `ApplicationManager` 延迟获取 Application,反射失败保留 cause 并给出初始化提示;读取 build.prop
+  自动关闭流;`DeviceUtil` 仅持有 application context。
+- **AUD-11/12 录音与 AAC 输出校验**:`MicRecorder` 在录音前检查初始化及实际 recording state,权限或
+  状态失败时只释放和回调一次;`AacEncoder` 在 csd0 缺失或不足 2 字节时丢弃输出,不再生成全零 ADTS。
+- **CX-6/7 CameraX 空值与扩展缓存**:媒体预览和 URI 实际路径缺失时记录并安全返回;
+  `ExtensionsManager` future 按 `ProcessCameraProvider` 缓存复用,失败后允许重试,视图销毁后不再回调 UI。
+- **CPB-4 Drawable tint 移出绘制热路径**:图标在赋值或 tint 变化时 `mutate()` 并更新颜色,不再每帧
+  `setTint()`。
+- **HTTP-5 HTTP 诊断兼容性**:`BaseProgressObserver.onError` 记录完整 throwable;响应体判断改用公开
+  API 复刻 HEAD、204、304、Content-Length 和 chunked 语义,不再依赖 OkHttp internal API。
+- **LB-4 ByteBuffer 扩展测试**:覆盖 remaining 读取、copy/copyAll 内容与源状态恢复、大小端继承和空
+  buffer。
 
 ### 新增 (Added)
 

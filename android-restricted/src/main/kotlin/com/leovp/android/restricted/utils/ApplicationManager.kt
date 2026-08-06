@@ -3,15 +3,20 @@ package com.leovp.android.restricted.utils
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo
  * Date: 2022/10/17 09:27
  */
 object ApplicationManager {
+    private const val TAG = "ApplicationManager"
+
+    @Volatile
     private var app: Application? = null
 
-    val application: Application = app ?: getApplicationByReflect()
+    val application: Application
+        get() = app ?: synchronized(this) { app ?: getApplicationByReflect().also { app = it } }
 
     /**
      * This method is NOT mandatory.
@@ -24,17 +29,28 @@ object ApplicationManager {
      */
     fun init(context: Context? = null) {
         if (app == null) {
-            app = (context?.applicationContext as? Application) ?: getApplicationByReflect()
+            synchronized(this) {
+                if (app == null) {
+                    app = (context?.applicationContext as? Application) ?: getApplicationByReflect()
+                }
+            }
         }
     }
 
-    private fun getApplicationByReflect(): Application {
-        @SuppressLint("PrivateApi")
+    @SuppressLint("PrivateApi")
+    private fun getApplicationByReflect(): Application = runCatching {
         val activityThread = Class.forName("android.app.ActivityThread")
-        val at = activityThread.getMethod("currentActivityThread").invoke(null)
-        val app =
-            activityThread.getMethod("getApplication").invoke(at) ?: error("u should init first")
-        init(app as Application)
-        return app
+        val currentThread = activityThread.getMethod("currentActivityThread").invoke(null)
+        val application =
+            activityThread.getMethod("getApplication").invoke(currentThread) as? Application
+        requireNotNull(application) {
+            "ActivityThread.getApplication() returned null"
+        }
+    }.getOrElse {
+        LogContext.log.e(TAG, "Application reflection failed; call init(context) first", it)
+        throw IllegalStateException(
+            "ApplicationManager is not initialized. Call init(context) first.",
+            it
+        )
     }
 }

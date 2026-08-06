@@ -301,15 +301,18 @@ object AESUtil {
         val version: Byte = if (useSha256) VERSION_GCM_SHA256 else VERSION_GCM_SHA1
         val salt: ByteArray = PBKDF2Util.generateSalt(SALT_LEN)
         val iv: ByteArray = generateIv(GCM_IV_LENGTH)
-        val passphrase: String = secKey.toHexString(true, "")
-        val rawKey: SecretKey = deriveKey(passphrase, salt, useSha256)
-
-        val cipherBytes: ByteArray = Cipher.getInstance(CIPHER_GCM).run {
-            init(Cipher.ENCRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
-            // Authenticate the non-secret framing (version + salt) so it cannot be tampered
-            // with independently of the ciphertext.
-            updateAAD(byteArrayOf(version) + salt)
-            doFinal(plainData)
+        val passphrase = secKey.toHexChars()
+        val cipherBytes: ByteArray = try {
+            val rawKey: SecretKey = deriveKey(passphrase, salt, useSha256)
+            Cipher.getInstance(CIPHER_GCM).run {
+                init(Cipher.ENCRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+                // Authenticate the non-secret framing (version + salt) so it cannot be tampered
+                // with independently of the ciphertext.
+                updateAAD(byteArrayOf(version) + salt)
+                doFinal(plainData)
+            }
+        } finally {
+            passphrase.fill('\u0000')
         }
         return byteArrayOf(version) + salt + iv + cipherBytes
     }
@@ -320,13 +323,18 @@ object AESUtil {
      * API 21-25 so version-1 data stays cross-device readable); otherwise PBKDF2-HMAC-SHA1. The
      * caller derives [useSha256] from the format version byte; this function does not read it.
      */
-    private fun deriveKey(passphrase: String, salt: ByteArray, useSha256: Boolean): SecretKey {
+    private fun deriveKey(passphrase: CharArray, salt: ByteArray, useSha256: Boolean): SecretKey {
         val derived: SecretKey = if (useSha256) {
             PBKDF2Util.generateKeyWithSHA256(passphrase, salt, PBKDF2Util.ITERATIONS_SHA256)
         } else {
             PBKDF2Util.generateKeyWithSHA1(passphrase, salt, PBKDF2Util.ITERATIONS_SHA1)
         }
-        return SecretKeySpec(derived.encoded, ALGORITHM_AES)
+        val encoded = derived.encoded
+        return try {
+            SecretKeySpec(encoded, ALGORITHM_AES)
+        } finally {
+            encoded.fill(0)
+        }
     }
 
     /**
@@ -447,12 +455,17 @@ object AESUtil {
         val salt: ByteArray = cipherBytes.copyOfRange(1, saltEnd)
         val iv: ByteArray = cipherBytes.copyOfRange(saltEnd, ivEnd)
         val ct: ByteArray = cipherBytes.copyOfRange(ivEnd, cipherBytes.size)
-        val rawKey: SecretKey = deriveKey(secKey.toHexString(true, ""), salt, useSha256)
-        return Cipher.getInstance(CIPHER_GCM).run {
-            init(Cipher.DECRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
-            // Must match the AAD bound at encryption time: version byte + salt.
-            updateAAD(byteArrayOf(cipherBytes[0]) + salt)
-            doFinal(ct)
+        val passphrase = secKey.toHexChars()
+        return try {
+            val rawKey: SecretKey = deriveKey(passphrase, salt, useSha256)
+            Cipher.getInstance(CIPHER_GCM).run {
+                init(Cipher.DECRYPT_MODE, rawKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+                // Must match the AAD bound at encryption time: version byte + salt.
+                updateAAD(byteArrayOf(cipherBytes[0]) + salt)
+                doFinal(ct)
+            }
+        } finally {
+            passphrase.fill('\u0000')
         }
     }
 
@@ -470,18 +483,23 @@ object AESUtil {
             cipherBytes.copyOfRange(LEGACY_PRE_SALT_LENGTH, cipherBytes.size)
         // Reproduce the original legacy derivation: 1000 iterations. Must pass this explicitly
         // now that the SHA512/SHA1 overloads default to the higher OWASP iteration counts.
-        val rawKey: SecretKey = if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PBKDF2Util.generateKeyWithSHA512(
-                secKey.toHexString(true, ""),
-                salt,
-                PBKDF2Util.ITERATIONS_LEGACY
-            )
-        } else {
-            PBKDF2Util.generateKeyWithSHA1(
-                secKey.toHexString(true, ""),
-                salt,
-                PBKDF2Util.ITERATIONS_LEGACY
-            )
+        val passphrase = secKey.toHexChars()
+        val rawKey: SecretKey = try {
+            if (useSHA512 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                PBKDF2Util.generateKeyWithSHA512(
+                    passphrase,
+                    salt,
+                    PBKDF2Util.ITERATIONS_LEGACY
+                )
+            } else {
+                PBKDF2Util.generateKeyWithSHA1(
+                    passphrase,
+                    salt,
+                    PBKDF2Util.ITERATIONS_LEGACY
+                )
+            }
+        } finally {
+            passphrase.fill('\u0000')
         }
         return Cipher.getInstance(CIPHER_AES_LEGACY).run {
             init(Cipher.DECRYPT_MODE, rawKey, IvParameterSpec(ByteArray(blockSize)))
@@ -507,4 +525,14 @@ object AESUtil {
         SecureRandom().nextBytes(iv)
         return iv
     }
+
+    private fun ByteArray.toHexChars(): CharArray = CharArray(size * 2).also { output ->
+        forEachIndexed { index, byte ->
+            val value = byte.toInt() and 0xFF
+            output[index * 2] = HEX_CHARS[value ushr 4]
+            output[index * 2 + 1] = HEX_CHARS[value and 0x0F]
+        }
+    }
+
+    private const val HEX_CHARS = "0123456789ABCDEF"
 }

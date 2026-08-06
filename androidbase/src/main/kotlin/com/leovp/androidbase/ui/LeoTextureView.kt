@@ -6,6 +6,9 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.media.MediaCodec
 import android.media.MediaFormat
+import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.AttributeSet
 import android.util.Size
 import android.view.MotionEvent
@@ -33,6 +36,7 @@ class LeoTextureView @JvmOverloads constructor(
     SurfaceTextureListener {
     companion object {
         private const val TAG = "LTV"
+        private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
     }
 
     var isH265 = false
@@ -55,6 +59,7 @@ class LeoTextureView @JvmOverloads constructor(
     var graphicViewDestroyListener: GraphicViewDestroyListener? = null
 
     private var videoDecoder: MediaCodec? = null
+    private var decoderCallbackThread: HandlerThread? = null
     var outputFormat: MediaFormat? = null
         private set
 
@@ -140,7 +145,7 @@ class LeoTextureView @JvmOverloads constructor(
             screenInfo.width,
             screenInfo.height
         )
-        videoDecoder = if (isH265) {
+        val decoder = if (isH265) {
             val csd0 = vps!! + sps + pps
             format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
             // avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
@@ -164,11 +169,21 @@ class LeoTextureView @JvmOverloads constructor(
             MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         }
 
-        videoDecoder?.let {
-            it.configure(format, this.surface, null, 0)
-            outputFormat = it.outputFormat // option B
-            it.setCallback(mediaCodecCallback)
-            it.start()
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val callbackThread = HandlerThread("$TAG-decoder-callback").apply { start() }
+                decoderCallbackThread = callbackThread
+                decoder.setCallback(mediaCodecCallback, Handler(callbackThread.looper))
+            } else {
+                decoder.setCallback(mediaCodecCallback)
+            }
+            decoder.configure(format, this.surface, null, 0)
+            decoder.start()
+            videoDecoder = decoder
+        } catch (e: Exception) {
+            runCatching { decoder.release() }
+            stopDecoderCallbackThread()
+            throw e
         }
     }
 
@@ -191,6 +206,16 @@ class LeoTextureView @JvmOverloads constructor(
                 graphicViewDestroyListener?.onDecoderRelease()
             }
         }
+        stopDecoderCallbackThread()
+    }
+
+    private fun stopDecoderCallbackThread() {
+        val callbackThread = decoderCallbackThread
+        callbackThread?.quitSafely()
+        if (callbackThread != null && Thread.currentThread() !== callbackThread) {
+            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+        }
+        decoderCallbackThread = null
     }
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
@@ -263,10 +288,10 @@ class LeoTextureView @JvmOverloads constructor(
                 val width = format.getInteger("width")
                 val height = format.getInteger("height")
                 LogContext.log.w(TAG, "onOutputFormatChanged() $width x $height")
-                videoOutputFormatChangeEvent?.onChanged(width, height)
+                post { videoOutputFormatChangeEvent?.onChanged(width, height) }
             }.onFailure {
                 LogContext.log.e(TAG, "Get video dimension error.", it)
-                context.toast("Get video dimension error.", debug = true, error = true)
+                post { context.toast("Get video dimension error.", debug = true, error = true) }
             }
         }
 

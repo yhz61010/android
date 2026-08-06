@@ -1,11 +1,33 @@
 # 八模块整改实现计划（2026-08-04）
 
+## 0. 实施进度（2026-08-06）
+
+`fix/eight-module-remediation` 已完成本计划全部 26 项 P2：
+
+- camera2live：`CAM2-4`、`CAM2-5`、`CAM2-9`、`CAM2-10`
+- android-restricted：`AR-2`、`AR-3`、`AR-4`、`AR-5`、`AR-6`、`AR-8`
+- androidbase：`ABN-2`、`ABN-3`、`ABN-4`、`CIP-2`
+- audio：`AUD-9`、`AUD-10`、`AUD-11`、`AUD-12`
+- camerax：`CX-6`、`CX-7`
+- circle-progressbar：`CPB-3`、`CPB-4`、`CPB-5`
+- http：`HTTP-5`
+- lib-bytes：`LB-2`、`LB-4`
+
+实现保持既有公开方法和属性的 JVM 签名；`CameraAvcEncoder.queue` 仍公开为
+`ConcurrentLinkedQueue<ByteArray>`，但内部改为最多保留 5 帧并在拥塞时丢弃最旧帧。需要调用方关注的
+行为变化已记录到根目录 `CHANGELOG.md`。P3 与两个决策项 `CX-5`、`LB-3` 不属于本次 P2 范围。
+
+已执行受影响模块的强制重跑编译与单元测试；上述八个模块各自的 `ktlintCheck` 与 `detekt` 也已通过，
+P2 验证完成。仓库级 `ktlintCheck detekt` 仍会被本次未修改模块中的既有规则问题阻断，涉及
+`draw-on-screen`、`lib-common-android`、`lib-compress`、`lib-json`、`lib-network`，不属于本次 P2 改动。
+
 本文件是《[八模块代码审查复核报告](./2026-08-04-eight-module-code-review-zh.md)》（Codex 复核版）的**实现级整改方案**：给出每条确认问题的 `文件:行`、根因、现状→目标代码、minSdk 21 兼容边界、测试用例与回归风险。
 
 - **详细条目**见配套文档：[整改实现细节](./2026-08-04-remediation-impl-details-zh.md)。
 - **基线**：分支 `master`，commit `d24931c9828f54803becf78f2aa9cb5b6d5bf733`。
 - **范围**：8 个模块共 **72 条已确认整改项 + 2 条待决策项**（CX-5、LB-3），涉及 `android-restricted / audio / androidbase / camera2live / camerax / circle-progressbar / http / lib-bytes`。
-- **约束**：不改任何生产代码（本次仅产出方案文档）；编译与 `staticCheck` 由作者本机执行；`lib-bytes` 等无 `log` 依赖模块**不得新增 log 依赖**；`lib-json` 已按最新约定例外（不在本次 8 模块内）。
+- **原始方案约束**：本文编写时不改生产代码；当前实现阶段已在整改分支落地。`lib-bytes` 等无 `log`
+  依赖模块**不得新增 log 依赖**；`lib-json` 已按最新约定例外（不在本次 8 模块内）。
 
 ---
 

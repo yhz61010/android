@@ -46,8 +46,7 @@ object DeviceProp {
     private fun getSystemPropertyByStream(key: String): String {
         return runCatching {
             val prop = Properties()
-            val fis = FileInputStream(File(Environment.getRootDirectory(), "build.prop"))
-            prop.load(fis)
+            FileInputStream(File(Environment.getRootDirectory(), "build.prop")).use(prop::load)
             return prop.getProperty(key, "")
         }.getOrDefault("")
     }

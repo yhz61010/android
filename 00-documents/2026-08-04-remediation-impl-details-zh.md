@@ -1,5 +1,13 @@
 # 八模块整改实现细节（2026-08-04）
 
+> **实施状态（2026-08-06）**：`fix/eight-module-remediation` 已完成 P2 的 26 项实现，ID 为
+> `CAM2-4/5/9/10`、`AR-2/3/4/5/6/8`、`ABN-2/3/4`、`CIP-2`、
+> `AUD-9/10/11/12`、`CX-6/7`、`CPB-3/4/5`、`HTTP-5`、`LB-2/4`。
+> 下文的“现状代码”和行号仍描述审查基线 `master@d24931c9`，不能当作当前分支未修复清单；
+> “目标代码”继续保留为设计依据。实际实现与兼容决策以当前源码及根目录 `CHANGELOG.md` 为准。
+> 八个受影响模块的强制重跑编译/单元测试、`ktlintCheck` 和 `detekt` 已通过；仓库级静态检查仅被
+> 本次未修改模块中的既有问题阻断。
+
 本文件是《[整改实现计划](./2026-08-04-remediation-impl-plan-zh.md)》的配套细节：每条给出 `文件:行`、根因、现状→目标代码、兼容/边界、测试、回归风险。基线 `master@d24931c9`。ID 与计划文档一致，其中 72 条为已确认整改项，CX-5 与 LB-3 为实施前必须确认的决策项。
 
 > 通用说明：无 `src/test` 的模块（camera2live、camerax、circle-progressbar、android-restricted、audio）需先新建测试源集；框架/硬件强耦合逻辑建议抽纯函数后单测。含 `log` 依赖的模块用 `LogContext`，`lib-bytes` 用 `require`/`android.util.Log`（不得引入 log）。跨模块统一模式见计划文档 §3（T1–T8）。

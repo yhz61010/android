@@ -130,6 +130,7 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
         var wordSpacerMultiple = 1.3f
 
         override fun draw(canvas: Canvas) {
+            if (text.isEmpty() || textSize <= 0f) return
             val width = bounds.right
             val height = bounds.bottom
             val diagonal = sqrt(width * width + height * height.toDouble()).toInt()
@@ -145,13 +146,17 @@ class WatermarkCreator internal constructor(private val layout: FrameLayout) {
             var loopFrom: Int
             var loopTo: Int
             var loopStep: Int
+            val lineStep = (textHeight * lineSpacerMultiple.coerceAtLeast(0.1f))
+                .toInt()
+                .coerceAtLeast(1)
             for ((
                 index,
                 positionY
-            ) in (0..diagonal step (textHeight * lineSpacerMultiple).toInt()).withIndex()) {
-                loopFrom = (-textWidth * wordSpacerMultiple + index % 2 * textWidth * 0.5f).toInt()
-                loopTo = (width + textWidth * wordSpacerMultiple).toInt()
-                loopStep = (textWidth * wordSpacerMultiple).toInt()
+            ) in (0..diagonal step lineStep).withIndex()) {
+                val safeWordSpacer = wordSpacerMultiple.coerceAtLeast(0.1f)
+                loopFrom = (-textWidth * safeWordSpacer + index % 2 * textWidth * 0.5f).toInt()
+                loopTo = (width + textWidth * safeWordSpacer).toInt()
+                loopStep = (textWidth * safeWordSpacer).toInt().coerceAtLeast(1)
                 for (positionX in loopFrom..loopTo step loopStep) {
                     if (BuildConfig.DEBUG) LogContext.log.v(ITAG, "watermark loop time: ${++count}")
                     canvas.drawText(text, positionX.toFloat(), positionY.toFloat(), paint)

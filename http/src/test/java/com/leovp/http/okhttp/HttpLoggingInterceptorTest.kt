@@ -1,7 +1,10 @@
 package com.leovp.http.okhttp
 
 import okhttp3.MediaType
+import okhttp3.Protocol
+import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import okio.BufferedSink
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -9,6 +12,21 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class HttpLoggingInterceptorTest {
+    @Test
+    fun `response body semantics cover head and bodyless status codes`() {
+        assertFalse(response(method = "HEAD", code = 200).hasReadableBody())
+        assertFalse(response(code = 204).hasReadableBody())
+        assertFalse(response(code = 304).hasReadableBody())
+        assertTrue(response(code = 200).hasReadableBody())
+        assertTrue(
+            response(code = 204, headers = mapOf("Content-Length" to "1")).hasReadableBody()
+        )
+        assertTrue(
+            response(code = 304, headers = mapOf("Transfer-Encoding" to "chunked"))
+                .hasReadableBody()
+        )
+    }
+
     @Test
     fun `request body capture stays bounded when content length lies`() {
         val body = object : RequestBody() {
@@ -43,4 +61,21 @@ class HttpLoggingInterceptorTest {
         assertFalse(captured.truncated)
         assertEquals(expected, captured.buffer.readUtf8())
     }
+
+    private fun response(
+        method: String = "GET",
+        code: Int,
+        headers: Map<String, String> = emptyMap(),
+    ): Response = Response.Builder()
+        .request(
+            Request.Builder()
+                .url("https://example.com/")
+                .method(method, null)
+                .build()
+        )
+        .protocol(Protocol.HTTP_1_1)
+        .code(code)
+        .message("Test")
+        .apply { headers.forEach { (name, value) -> header(name, value) } }
+        .build()
 }

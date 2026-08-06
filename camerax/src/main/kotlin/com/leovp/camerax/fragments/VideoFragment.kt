@@ -482,10 +482,14 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
 
         binding.btnGallery.setOnClickListener {
             // Display the captured video
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 if (videoOutUri != null) {
                     videoOutUri?.let {
-                        val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)!!
+                        val fileRealPath = FileDocumentUtil.getFileRealPath(requireContext(), it)
+                        if (fileRealPath == null) {
+                            LogContext.log.e(logTag, "Unable to resolve video path for uri=$it")
+                            return@let
+                        }
                         val filePath = fileRealPath.substringBeforeLast('/')
                         LogContext.log.i(
                             logTag,

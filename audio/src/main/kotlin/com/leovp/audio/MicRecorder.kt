@@ -74,11 +74,18 @@ class MicRecorder(
     private val releaseCompleted = CompletableDeferred<Unit>()
 
     init {
-        bufferSizeInBytes = AudioRecord.getMinBufferSize(
+        require(recordMinBufferRatio > 0) { "recordMinBufferRatio must be positive" }
+        val platformMinBufferSize = AudioRecord.getMinBufferSize(
             encoderInfo.sampleRate,
             encoderInfo.channelConfig,
             encoderInfo.audioFormat
-        ) * recordMinBufferRatio
+        )
+        require(platformMinBufferSize > 0) {
+            "Invalid AudioRecord parameters: $encoderInfo (code=$platformMinBufferSize)"
+        }
+        val computedBufferSize = platformMinBufferSize.toLong() * recordMinBufferRatio
+        require(computedBufferSize <= Int.MAX_VALUE) { "AudioRecord buffer size overflow" }
+        bufferSizeInBytes = computedBufferSize.toInt()
         LogContext.log.w(
             TAG,
             "recordAudio=$encoderInfo recordMinBufferRatio=$recordMinBufferRatio " +
@@ -113,7 +120,25 @@ class MicRecorder(
 
     fun startRecord() {
         LogContext.log.w(TAG, "Do startRecord()")
-        audioRecord.startRecording()
+        if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
+            failRecordStart("AudioRecord is not initialized")
+            return
+        }
+        try {
+            audioRecord.startRecording()
+        } catch (e: SecurityException) {
+            LogContext.log.e(TAG, "RECORD_AUDIO permission denied", e)
+            failRecordStart("AudioRecord start failed")
+            return
+        } catch (e: IllegalStateException) {
+            LogContext.log.e(TAG, "AudioRecord start failed", e)
+            failRecordStart("AudioRecord start failed")
+            return
+        }
+        if (audioRecord.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+            failRecordStart("AudioRecord did not enter the recording state")
+            return
+        }
         recordJob = ioScope.launch {
             try {
                 // Keep a fixed reusable capacity; never shrink/reassign this buffer (AUD-6).
@@ -149,6 +174,14 @@ class MicRecorder(
                 finishRecorderReleaseAndJoin(stopSucceeded = false)
             }
         }
+    }
+
+    private fun failRecordStart(message: String) {
+        LogContext.log.e(TAG, message)
+        stopped.set(true)
+        ioScope.cancel()
+        stopAudioRecord()
+        finishRecorderRelease(stopSucceeded = false)
     }
 
     private fun initAdvancedFeatures() {
@@ -234,10 +267,8 @@ class MicRecorder(
         var ok = stopSucceeded
         try {
             runCatching {
-                if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                    audioRecord.release()
-                    LogContext.log.w(TAG, "Recording released.")
-                }
+                audioRecord.release()
+                LogContext.log.w(TAG, "Recording released.")
             }.onFailure {
                 ok = false
                 LogContext.log.e(TAG, "release error", it)
@@ -264,10 +295,8 @@ class MicRecorder(
             var ok = stopSucceeded
             try {
                 runCatching {
-                    if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                        audioRecord.release()
-                        LogContext.log.w(TAG, "Recording released.")
-                    }
+                    audioRecord.release()
+                    LogContext.log.w(TAG, "Recording released.")
                 }.onFailure {
                     ok = false
                     LogContext.log.e(TAG, "release error", it)

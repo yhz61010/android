@@ -2,9 +2,18 @@ package com.leovp.bytes
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class BytesConversionUnitTest {
+
+    @Test
+    fun oddByteArraysCannotBeConvertedToPcm16() {
+        assertThrows(IllegalArgumentException::class.java) { byteArrayOf(1).toShortArray() }
+        assertThrows(IllegalArgumentException::class.java) { byteArrayOf(1).toShortArrayLE() }
+        assertArrayEquals(shortArrayOf(), byteArrayOf().toShortArray())
+        assertArrayEquals(shortArrayOf(), byteArrayOf().toShortArrayLE())
+    }
 
     @Test
     fun hexConverter() {

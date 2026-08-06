@@ -22,7 +22,9 @@ import com.leovp.kotlin.utils.SingletonHolder
  * Author: Michael Leo
  * Date: 21-3-6 下午6:24
  */
-class WifiUtil private constructor(private val ctx: Context) {
+class WifiUtil private constructor(context: Context) {
+    private val ctx = context.applicationContext ?: context
+
     companion object : SingletonHolder<WifiUtil, Context>(::WifiUtil)
 
     /**

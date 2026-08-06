@@ -71,6 +71,10 @@ class AacEncoder(
             csd0 = outBytes
             LogContext.log.w(TAG, "csd0[${csd0?.size}]=HEX[${csd0?.toHexString()}]")
         }
+        if ((csd0?.size ?: 0) < 2) {
+            LogContext.log.e(TAG, "Missing or invalid csd0; dropping AAC output")
+            return
+        }
         val aacDataLength = info.size
         // The length of ADTS header is 7.
         val aacDataSizeWithAdtsLength = aacDataLength + 7

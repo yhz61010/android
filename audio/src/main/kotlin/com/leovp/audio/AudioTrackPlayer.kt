@@ -41,11 +41,18 @@ class AudioTrackPlayer(
     private val audioTrack: AudioTrack
 
     init {
-        val minBufferSize = getMinBufferSize(
+        require(minPlayBufferSizeRatio > 0) { "minPlayBufferSizeRatio must be positive" }
+        val platformMinBufferSize = getMinBufferSize(
             audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelConfig,
             audioDecoderInfo.audioFormat
-        ) * minPlayBufferSizeRatio
+        )
+        require(platformMinBufferSize > 0) {
+            "Invalid AudioTrack parameters: $audioDecoderInfo (code=$platformMinBufferSize)"
+        }
+        val computedBufferSize = platformMinBufferSize.toLong() * minPlayBufferSizeRatio
+        require(computedBufferSize <= Int.MAX_VALUE) { "AudioTrack buffer size overflow" }
+        val minBufferSize = computedBufferSize.toInt()
         LogContext.log.w(
             TAG,
             "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio " +
@@ -104,6 +111,7 @@ class AudioTrackPlayer(
         if (pcmBytes.isEmpty()) {
             return 0
         }
+        require(pcmBytes.size % 2 == 0) { "PCM16 byte count must be even" }
         if (STATE_UNINITIALIZED == audioTrack.state) {
             return 0
         }
@@ -113,6 +121,10 @@ class AudioTrackPlayer(
             // Play decoded audio data in PCM
             val playData = pcmBytes.toShortArrayLE()
             wroteSize = audioTrack.write(playData, 0, playData.size)
+            if (wroteSize < 0) {
+                LogContext.log.e(TAG, "AudioTrack.write error=$wroteSize")
+                return wroteSize
+            }
             if (BuildConfig.DEBUG) {
                 LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")
             }

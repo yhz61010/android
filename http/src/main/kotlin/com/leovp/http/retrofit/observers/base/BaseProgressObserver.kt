@@ -40,7 +40,7 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
     }
 
     override fun onError(e: Throwable) {
-        LogContext.log.e(javaClass.simpleName, "onError: ${e.message}")
+        LogContext.log.e(javaClass.simpleName, "onError: ${e.message}", e)
         // ----------------------
         // Connection timeout
         // java.net.SocketTimeoutException: connect timed out

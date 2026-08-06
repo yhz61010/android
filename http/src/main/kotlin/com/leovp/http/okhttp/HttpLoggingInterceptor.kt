@@ -10,7 +10,6 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
-import okhttp3.internal.http.promisesBody
 import okio.Buffer
 import okio.ForwardingSink
 import okio.buffer
@@ -200,7 +199,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     hasInlineFile = true
                 }
             }
-            if (!logBody || !response.promisesBody()) {
+            if (!logBody || !response.hasReadableBody()) {
                 logger.log("<-- END HTTP")
             } else if (bodyEncoded(response.headers)) {
                 logger.log("<-- END HTTP (encoded body omitted)")
@@ -367,4 +366,12 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             }
         }
     }
+}
+
+internal fun Response.hasReadableBody(): Boolean {
+    if (request.method == "HEAD") return false
+    if ((code < 100 || code >= 200) && code != 204 && code != 304) return true
+
+    val contentLength = header("Content-Length")?.toLongOrNull() ?: -1L
+    return contentLength != -1L || header("Transfer-Encoding").equals("chunked", ignoreCase = true)
 }

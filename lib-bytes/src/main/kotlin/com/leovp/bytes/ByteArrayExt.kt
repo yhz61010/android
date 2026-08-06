@@ -168,17 +168,23 @@ fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence =
 /**
  * The length of byte array must be an even number.
  */
-fun ByteArray.toShortArray() = ShortArray(this.size ushr 1) {
-    // You can replace `+` with 'or'
-    ((this[it shl 1].toInt() shl 8) + (this[(it shl 1) + 1].toInt() and 0xFF)).toShort()
+fun ByteArray.toShortArray(): ShortArray {
+    require(size % 2 == 0) { "ByteArray size must be even for PCM16 conversion; was $size" }
+    return ShortArray(size ushr 1) {
+        // You can replace `+` with 'or'
+        ((this[it shl 1].toInt() shl 8) + (this[(it shl 1) + 1].toInt() and 0xFF)).toShort()
+    }
 }
 
 /**
  * The length of byte array must be an even number.
  */
-fun ByteArray.toShortArrayLE() = ShortArray(this.size ushr 1) {
-    // You can replace `+` with 'or'
-    ((this[it shl 1].toInt() and 0xFF) + (this[(it shl 1) + 1].toInt() shl 8)).toShort()
+fun ByteArray.toShortArrayLE(): ShortArray {
+    require(size % 2 == 0) { "ByteArray size must be even for PCM16 conversion; was $size" }
+    return ShortArray(size ushr 1) {
+        // You can replace `+` with 'or'
+        ((this[it shl 1].toInt() and 0xFF) + (this[(it shl 1) + 1].toInt() shl 8)).toShort()
+    }
 }
 
 fun ShortArray.toByteArrayLE() = ByteArray(this.size shl 1) {

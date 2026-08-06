@@ -5,6 +5,8 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.bytes.toHexString
 import com.leovp.camera2live.listeners.CallbackListener
@@ -23,11 +25,12 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
     private val bitrateMode: Int = DEFAULT_BITRATE_MODE,
 ) {
-    val queue = ConcurrentLinkedQueue<ByteArray>()
+    val queue: ConcurrentLinkedQueue<ByteArray> = BoundedFrameQueue(MAX_PENDING_FRAMES)
     private var dataUpdateCallback: CallbackListener? = null
     lateinit var h264Encoder: MediaCodec
         private set
     private var outputFormat: MediaFormat? = null
+    private var codecCallbackThread: HandlerThread? = null
 
     init {
         initEncoder()
@@ -191,11 +194,22 @@ class CameraAvcEncoder @JvmOverloads constructor(
         }
 
         //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        h264Encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC).also {
-            it.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            outputFormat = it.outputFormat // option B
-            it.setCallback(mediaCodecCallback)
-            it.start()
+        val encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val callbackThread = HandlerThread("$TAG-callback").apply { start() }
+                codecCallbackThread = callbackThread
+                encoder.setCallback(mediaCodecCallback, Handler(callbackThread.looper))
+            } else {
+                encoder.setCallback(mediaCodecCallback)
+            }
+            encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            encoder.start()
+            h264Encoder = encoder
+        } catch (e: Exception) {
+            runCatching { encoder.release() }
+            stopCodecCallbackThread()
+            throw e
         }
     }
 
@@ -222,13 +236,44 @@ class CameraAvcEncoder @JvmOverloads constructor(
      * Release sources.
      */
     fun release() {
-        stop()
-        h264Encoder.release()
+        try {
+            stop()
+            h264Encoder.release()
+        } finally {
+            queue.clear()
+            stopCodecCallbackThread()
+        }
+    }
+
+    private fun stopCodecCallbackThread() {
+        val callbackThread = codecCallbackThread
+        callbackThread?.quitSafely()
+        if (callbackThread != null && Thread.currentThread() !== callbackThread) {
+            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+        }
+        codecCallbackThread = null
     }
 
     companion object {
         private const val TAG = "CameraEncoder"
+        private const val MAX_PENDING_FRAMES = 5
+        private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
         const val DEFAULT_KEY_I_FRAME_INTERVAL = 5
         const val DEFAULT_BITRATE_MODE = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+    }
+}
+
+private class BoundedFrameQueue(private val capacity: Int) : ConcurrentLinkedQueue<ByteArray>() {
+    @Synchronized
+    override fun offer(element: ByteArray): Boolean {
+        while (size >= capacity) poll()
+        return super.offer(element)
+    }
+
+    @Synchronized
+    override fun addAll(elements: Collection<ByteArray>): Boolean {
+        var changed = false
+        elements.forEach { changed = offer(it) || changed }
+        return changed
     }
 }

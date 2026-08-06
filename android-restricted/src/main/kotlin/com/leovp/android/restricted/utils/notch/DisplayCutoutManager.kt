@@ -12,6 +12,7 @@ import com.leovp.android.exts.isXiaoMi
 import com.leovp.android.restricted.utils.notch.impl.AndroidPDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.HuaweiDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.OppoDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.VivoDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.XiaoMiDisplayCutout
 import com.leovp.kotlin.utils.SingletonHolder
 
@@ -79,7 +80,7 @@ class DisplayCutoutManager private constructor(private val activity: Activity) {
             when {
                 activity.isHuaWei -> displayCutout = HuaweiDisplayCutout()
                 activity.isOppo -> displayCutout = OppoDisplayCutout()
-                activity.isVivo -> displayCutout = HuaweiDisplayCutout()
+                activity.isVivo -> displayCutout = VivoDisplayCutout()
                 activity.isXiaoMi -> displayCutout = XiaoMiDisplayCutout()
             }
         }

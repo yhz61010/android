@@ -306,7 +306,7 @@ class Camera2ComponentHelper(
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.rotation ?: -1
+            context.display?.rotation ?: Surface.ROTATION_0
         } else {
             @Suppress("DEPRECATION")
             context.windowManager.defaultDisplay.rotation
@@ -964,9 +964,9 @@ class Camera2ComponentHelper(
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation =
-            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
         val jpegOrientation =
-            (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
+            ((ORIENTATIONS[deviceRotation] ?: 90) + cameraSensorOrientation + 270) % 360
         LogContext.log.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }

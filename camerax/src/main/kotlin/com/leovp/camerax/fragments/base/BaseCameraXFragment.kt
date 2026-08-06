@@ -148,6 +148,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected var preview: Preview? = null
     protected var camera: Camera? = null
     protected var cameraProvider: ProcessCameraProvider? = null
+    private var extensionsManagerProvider: ProcessCameraProvider? = null
+    private var extensionsManagerFuture: ListenableFuture<ExtensionsManager>? = null
 
     private var isScaling = false
 
@@ -537,7 +539,12 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     protected suspend fun configCamera() {
-        cameraProvider = ProcessCameraProvider.getInstance(requireContext()).await()
+        val provider = ProcessCameraProvider.getInstance(requireContext()).await()
+        if (cameraProvider !== provider) {
+            extensionsManagerProvider = null
+            extensionsManagerFuture = null
+        }
+        cameraProvider = provider
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -698,19 +705,34 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         callback: (isHdrAvailable: Boolean) -> Unit
     ) {
         // Create a Vendor Extension for HDR
-        val extensionsManagerFuture = ExtensionsManager.getInstanceAsync(
-            requireContext(),
-            cameraProvider ?: return
-        )
-        extensionsManagerFuture.addListener({
-            val extensionsManager = extensionsManagerFuture.get() ?: return@addListener
+        val provider = cameraProvider ?: return
+        val appContext = requireContext().applicationContext
+        val future = if (extensionsManagerProvider === provider) {
+            extensionsManagerFuture
+        } else {
+            null
+        } ?: ExtensionsManager.getInstanceAsync(appContext, provider).also {
+            extensionsManagerProvider = provider
+            extensionsManagerFuture = it
+        }
+        future.addListener({
+            if (view == null) return@addListener
+            val extensionsManager = runCatching { future.get() }.getOrElse {
+                if (extensionsManagerFuture === future) {
+                    extensionsManagerProvider = null
+                    extensionsManagerFuture = null
+                }
+                LogContext.log.e(logTag, "Unable to initialize camera extensions", it)
+                callback(false)
+                return@addListener
+            }
             val isAvailable = extensionsManager.isExtensionAvailable(
                 lensFacing,
                 ExtensionMode.HDR
             )
 
             // Check for any extension availability
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "AUTO: ${
                     extensionsManager.isExtensionAvailable(
@@ -718,7 +740,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
                 }"
             )
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "HDR: ${
                     extensionsManager.isExtensionAvailable(
@@ -726,7 +748,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
                 }"
             )
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "FACE RETOUCH: ${
                     extensionsManager.isExtensionAvailable(
@@ -735,7 +757,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
                 }"
             )
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "BOKEH: ${
                     extensionsManager.isExtensionAvailable(
@@ -743,7 +765,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
                 }"
             )
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "NIGHT: ${
                     extensionsManager.isExtensionAvailable(
@@ -751,7 +773,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     )
                 }"
             )
-            LogContext.log.i(
+            LogContext.log.d(
                 logTag,
                 "NONE: ${
                     extensionsManager.isExtensionAvailable(
@@ -769,7 +791,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     lensFacing, ExtensionMode.HDR
                 )
             }
-        }, ContextCompat.getMainExecutor(requireContext()))
+        }, ContextCompat.getMainExecutor(appContext))
     }
 
     protected fun setGalleryThumbnail(uri: Uri, galleryButton: ImageButton) {

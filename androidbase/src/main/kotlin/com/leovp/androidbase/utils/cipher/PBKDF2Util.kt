@@ -434,7 +434,11 @@ object PBKDF2Util {
         val providerDerivation: () -> SecretKey = {
             val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
             val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-            secretKeyFactory.generateSecret(keySpec)
+            try {
+                secretKeyFactory.generateSecret(keySpec)
+            } finally {
+                keySpec.clearPassword()
+            }
         }
         return if (algorithm == ALGORITHM_SHA256) {
             sha256KeyWithFallback(

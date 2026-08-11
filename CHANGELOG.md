@@ -68,9 +68,10 @@
   改调 `Camera2ComponentHelper.release()`,取消 helper 自有 `cameraScope` 并关闭设备,修复
   `onStop` 重新初始化后协程与 Activity 泄漏。同时在 `release()` 补充公开生命周期契约(宿主须在
   `onDestroy`/`onDestroyView` 调用)。
-- **R-3 `Camera2ComponentHelper.switchCamera` 取消中途切换后可恢复**:`openedCamera` 为 `null`
-  (上次切换在关闭后、重开前被取消)时不再抛 `IllegalStateException`,改为直接打开请求的镜头,
-  修复快速连续切换导致的永久黑屏。
+- **R-3 `Camera2ComponentHelper.switchCamera` 连续切换保持关闭/打开流程完整**:新请求不再取消
+  已进入关闭/打开流程的任务;切换请求通过 `Mutex` 串行处理,并在打开设备前读取最新目标镜头,
+  确保旧设备 `onClosed` 完成后才打开新设备。`BaseCamera2Fragment` 同时按 ToggleButton 的
+  `isChecked` 明确请求前置/后置镜头,避免连续点击丢失最后一次选择。
 - **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
   `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
 - **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;

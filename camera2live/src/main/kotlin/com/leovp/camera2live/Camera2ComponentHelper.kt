@@ -64,7 +64,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
@@ -115,8 +114,9 @@ class Camera2ComponentHelper(
     /** The currently opened camera together with a close signal bound to that exact device. */
     private val openedCamera = AtomicReference<OpenedCamera?>()
 
-    /** The in-flight camera switch, cancelled when a new switch is requested. */
-    private var switchJob: Job? = null
+    /** Guards the latest requested lens so no-argument toggles preserve the caller's intent. */
+    private val requestedLensLock = Any()
+    private var requestedLensFacing = lensFacing
 
     /** Owns camera work and is cancelled when this helper is released with its View. */
     private val cameraScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -1171,11 +1171,15 @@ class Camera2ComponentHelper(
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
         }
-        if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
-            switchToFrontCamera()
-        } else {
-            switchToBackCamera()
+        synchronized(requestedLensLock) {
+            val target = if (requestedLensFacing == CameraMetadata.LENS_FACING_BACK) {
+                CameraMetadata.LENS_FACING_FRONT
+            } else {
+                CameraMetadata.LENS_FACING_BACK
+            }
+            requestedLensFacing = target
         }
+        enqueueCameraSwitch()
     }
 
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -1199,10 +1203,11 @@ class Camera2ComponentHelper(
     /**
      * Switches to the camera with the given [lensFacing].
      *
-     * Remediation CAM2-3: this is now asynchronous. The old device is closed and its
-     * [CameraDevice.StateCallback.onClosed] is awaited (serialized through [switchMutex]) before
-     * the new device is opened. Consecutive requests cancel the previous not-yet-started switch.
-     * On close timeout the switch is aborted and [cameraErrorListener] is notified;
+     * Remediation CAM2-3: this is asynchronous. Requests are serialized through [switchMutex]
+     * without cancelling an in-progress close/open transition. Each queued request reads the
+     * latest requested lens before opening, so rapid requests are conflated to the latest target.
+     * The old device's [CameraDevice.StateCallback.onClosed] is awaited before the new device is
+     * opened. On close timeout the switch is aborted and [cameraErrorListener] is notified;
      * [lensSwitchListener] fires only after a successful switch.
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -1211,15 +1216,21 @@ class Camera2ComponentHelper(
             throw IllegalAccessError("You must initialize camera first.")
         }
         LogContext.log.w(TAG, "switchCamera to $lensFacing")
+        synchronized(requestedLensLock) {
+            requestedLensFacing = lensFacing
+        }
+        enqueueCameraSwitch()
+    }
 
-        switchJob?.cancel()
-        switchJob = cameraScope.launch {
+    private fun enqueueCameraSwitch() {
+        cameraScope.launch {
             try {
                 switchMutex.withLock {
-                    // May be null if a previous switch was cancelled after closing the old device
-                    // but before reopening. In that case there is nothing to close — just open the
-                    // requested lens directly instead of aborting with an error (remediation R-3).
+                    val targetBeforeClose = latestRequestedLensFacing()
                     val oldCamera = openedCamera.get()
+                    if (oldCamera != null && lensFacing == targetBeforeClose) {
+                        return@withLock
+                    }
                     if (oldCamera != null) {
                         closeCamera()
                         val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
@@ -1234,9 +1245,10 @@ class Camera2ComponentHelper(
                             return@withLock
                         }
                     }
-                    this@Camera2ComponentHelper.lensFacing = lensFacing
+                    val targetLensFacing = latestRequestedLensFacing()
+                    this@Camera2ComponentHelper.lensFacing = targetLensFacing
                     initializeCameraAndAwait(previewWidth, previewHeight)
-                    lensSwitchListener?.onSwitch(lensFacing)
+                    lensSwitchListener?.onSwitch(targetLensFacing)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -1244,6 +1256,10 @@ class Camera2ComponentHelper(
                 reportCameraError("switchCamera failed", e)
             }
         }
+    }
+
+    private fun latestRequestedLensFacing(): Int = synchronized(requestedLensLock) {
+        requestedLensFacing
     }
 
     private fun reportCameraError(message: String, error: Throwable) {
@@ -1375,16 +1391,15 @@ class Camera2ComponentHelper(
     }
 
     /**
-     * Releases all camera resources: cancels the in-flight switch and the helper's own
+     * Releases all camera resources: cancels queued/in-flight switches and the helper's own
      * [cameraScope], closes the camera device, and stops the background threads.
      *
      * Lifecycle contract: the host MUST call this from its own teardown (Activity `onDestroy` /
      * Fragment `onDestroyView`). The helper no longer piggybacks on an Activity `lifecycleScope`,
-     * so failing to call [release] leaks the [cameraScope] and any captured context (remediation R-2).
+     * so failing to call [release] leaks the [cameraScope] and any captured context
+     * (remediation R-2).
      */
     fun release() {
-        switchJob?.cancel()
-        switchJob = null
         cameraScope.cancel()
         closeCamera()
         stopCameraThread()

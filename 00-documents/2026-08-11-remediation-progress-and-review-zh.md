@@ -1,12 +1,13 @@
 # 八模块整改 —— 进度与代码审查记录（2026-08-11）
 
 > 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-11 的落地进度，以及针对
-> Codex 两轮审查修复所做的正式 code-review 结论（存活 10 项 = 9 项代码问题 + 1 项维护性建议 / 驳回 2 项）。
+> Codex 两轮审查修复所做的正式 code-review 结论（首次复审确认 9 项代码问题 +
+> 1 项维护性建议、驳回 2 项；当前状态见 §1 与 §3）。
 > 关联文档：`2026-08-04-remediation-impl-plan-zh.md`（P0→P3 路线图）、
 > `2026-08-04-remediation-impl-details-zh.md`（各条目目标代码）、
 > `2026-08-04-eight-module-code-review-zh.md`（原始 72 项审查）。
 
-分支：`fix/eight-module-remediation`（已推送 `origin`）。
+分支：`fix/eight-module-remediation`。
 
 ---
 
@@ -18,10 +19,10 @@
 | **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
 | **P2** | 26 | ✅ 已完成（Codex `7da7c444c`，待我方独立复审） | 功能正确性/并发/输入校验/性能 |
 | **P3** | ~16 | ❌ 未开始 | 清理/规范/测试补齐 |
-| **本轮审查问题** | 9 缺陷 + 1 重构 | ❌ 待修复 | 见 §3（R-9 为维护性重构；前 3 条为 P1 返工，未被 P2 修复） |
+| **本轮剩余问题** | 6 缺陷 + 1 重构 | ❌ 待修复 | 见 §3（R-1 / R-2 / R-3 已修复；R-9 为维护性重构） |
 
 累计：72 项中完成 **56 项**（P0+P1+P2）；剩余 P3 约 16 项 + 本轮审查
-**9 项代码问题 + 1 项维护性建议（R-9）** 待处理。
+**6 项代码问题 + 1 项维护性建议（R-9）** 待处理。
 
 > 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`），按改动文件覆盖核实对应全部 26 项
 > 计划位置；**尚未**做我方独立逐项复审。本文 §3 的 R-1~R-10 是对 Codex 前两轮修复
@@ -52,10 +53,11 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ### ⚠️ 未验证事项
 
-- `./gradlew staticCheck` **已通过**（Codex 运行 `--continue --rerun-tasks`，1421 任务全部执行并成功；
-  此后仅改 Markdown，结论对当前代码仍适用）。注意：staticCheck 只覆盖编译/detekt/ktlint/单测，
-  **不**代表 R-1~R-8 的运行时竞态/泄漏已修复。
-- audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回）。
+- `./gradlew staticCheck` **已通过**（Codex 于 2026-08-11 运行 `--continue --rerun-tasks`，
+  1421 任务全部执行并成功）。注意：staticCheck 只覆盖编译/detekt/ktlint/单测，
+  **不**替代 R-3 真机验证，也不代表 R-4~R-8 / R-10 的运行时竞态或泄漏已修复。
+- audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回；
+  Camera2 还需连续快速切换前后镜头并检查黑屏、UI 状态和 `ERROR_CAMERA_IN_USE`）。
 - 版本号（`leo-version`）未 bump。
 
 ---
@@ -73,7 +75,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ---
 
-## 3. 存活问题（9 项代码问题 + 1 项维护性建议 R-9，按严重度）
+## 3. 审查问题状态（剩余 6 项代码问题 + 1 项维护性建议 R-9，按严重度）
 
 ### 3.1 ✅ P1 返工 —— **R-1 / R-2 / R-3 已于 2026-08-11 修复**（见 CHANGELOG「修复」段）
 
@@ -98,14 +100,20 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - **建议（采纳 Codex）**：**必须**修改 demo 调用 `release()`（补文档无法修复已存在的泄漏），
   **并**补充 helper 公开生命周期契约（宿主须显式 `release()`）——两者是「与」不是「或」。
 
-#### R-3 ✅ `Camera2ComponentHelper.kt:1219` 双击切换镜头永久黑屏
+#### R-3 ✅ `Camera2ComponentHelper.kt:1225` 双击切换镜头永久黑屏
 - **现象**：连续两次 `switchCamera`，第二次 `switchJob?.cancel()` 取消的首次切换**已 `closeCamera()`
   但尚未重开**，第二次 `checkNotNull(openedCamera.get())` 抛
   `IllegalStateException("No opened camera to switch from.")`。
 - **触发**：job1 在 `switchMutex.withLock` 内同步执行 `closeCamera()`（`openedCamera` 置 null）后
   挂起于 `closed.await()`，被 job2 的 `cancel()` 取消、释放锁；job2 `checkNotNull` 抛异常 →
   `reportCameraError`（demo 未设 listener）→ 无相机打开、无重试路径 → 预览永久黑屏。
-- **建议**：`openedCamera` 为 null 时不抛异常，改为直接走「打开新设备」路径，或在 catch 中重试。
+- **初始建议（后续复审已否定）**：`openedCamera` 为 null 时直接打开新设备。该方案忽略了
+  `closeCamera()` 会在 `CameraDevice.StateCallback.onClosed` 前清空 `openedCamera`；此时 null
+  仅表示没有登记的已打开设备，不表示旧设备已物理关闭，直接打开仍可能触发
+  `ERROR_CAMERA_IN_USE`。
+- **最终修复**：不再用新请求取消正在执行的关闭/打开任务；所有切换请求经 `Mutex` 串行处理，
+  打开新设备前重新读取最新目标镜头，并继续等待旧设备的 `onClosed`。Fragment 侧根据
+  ToggleButton 的 `isChecked` 显式请求前置或后置镜头，避免从尚未提交的 `lensFacing` 推导目标。
 
 ### 3.2 🟡 audio / camera 竞态（PLAUSIBLE，建议随 P2 处理）
 
@@ -219,4 +227,4 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
 4. ✅ `./gradlew staticCheck` 已通过（Codex 运行，1421 任务全过；见 §1）。
 5. 推进 **P3（~16 项）**。
-6. 真机回归 + 版本号 bump。
+6. 真机回归（包括 Camera2 连续快速切换）+ 版本号 bump。

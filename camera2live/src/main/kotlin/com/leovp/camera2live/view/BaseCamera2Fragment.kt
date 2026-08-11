@@ -103,13 +103,17 @@ abstract class BaseCamera2Fragment : Fragment() {
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
         }
         switchCameraBtn = binding.switchFacing
-        switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, _: Boolean ->
+        switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, isChecked: Boolean ->
             btnView?.isEnabled = false
             binding.ivShot.isEnabled = false
             binding.ivShotRecord.isEnabled = false
 //            val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
 //            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
-            camera2Helper.switchCamera()
+            if (isChecked) {
+                camera2Helper.switchToFrontCamera()
+            } else {
+                camera2Helper.switchToBackCamera()
+            }
             btnView?.post {
                 btnView.isEnabled = true
                 binding.ivShot.isEnabled = true

@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.log.LogContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -22,6 +23,8 @@ import java.util.zip.ZipOutputStream
  */
 
 object ZipUtil {
+
+    private const val TAG = "ZipUtil"
 
     private const val BUFFER_SIZE = 8192
 
@@ -279,6 +282,12 @@ object ZipUtil {
                     bos.write(buffer, 0, length)
                 }
             }
+            // A file entry must not silently overwrite an existing directory: renaming a (possibly
+            // non-empty) directory to the backup would then fail to delete and leave stray backup
+            // litter in the output tree. Reject loudly instead (remediation R-6).
+            require(!entryFile.isDirectory) {
+                "Cannot replace existing directory with file entry: $entryName"
+            }
             val backupFile = if (entryFile.exists()) {
                 File.createTempFile(".unzip-backup-", ".tmp", parent).also { backup ->
                     require(backup.delete()) { "Cannot prepare backup for entry: $entryName" }
@@ -297,7 +306,13 @@ object ZipUtil {
                 }
                 error("Cannot move extracted entry into place: $entryName")
             }
-            backupFile?.delete()
+            // The backup is a plain file at this point; if deletion somehow fails, do not leave it
+            // silently — log it rather than swallowing the result (remediation R-6).
+            backupFile?.let { backup ->
+                if (backup.exists() && !backup.delete()) {
+                    LogContext.log.w(TAG, "Failed to delete unzip backup file: ${backup.absolutePath}")
+                }
+            }
         } finally {
             tempFile.delete() // Remove the temp file if it is still present (e.g. on failure).
         }

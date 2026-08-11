@@ -86,6 +86,13 @@
 - **R-8 `MicRecorder.stopRecordAndJoin` 守卫前置**:自调用守卫 `require(job !== 当前 Job)` 移到
   `stopped` CAS 与 `audioRecord.stop()` **之前**,自调用 fail-fast 不再半停止录音器。**注意**:仅拦截
   直接自调用;`runBlocking` 嵌套的间接自调用仍无法在此安全处理。
+- **R-6 `ZipUtil.unzip` 不再残留备份**:当条目路径被已有**目录**占用时,前置 `require(!isDirectory)`
+  响亮拒绝(不再把非空目录改名为备份后 `delete()` 静默失败残留 `.unzip-backup-*.tmp`);成功路径的
+  备份删除失败也改为记日志而非忽略返回值。
+- **R-10 `HttpLoggingInterceptor` 请求体日志截断改用非抛出 sink**:`captureRequestBodyForLogging`
+  以「写满上限即丢弃剩余并置 `truncated`」的丢弃式 `ForwardingSink` 取代私有 `IOException` 控制流,
+  使 `writeTo()` 内部吞 `IOException` 的 body 无法隐藏截断标记,且不再为每次截断付出堆栈构造开销;
+  截断输出与 256 KiB+1 上限行为不变。
 - **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
   `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
 - **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;

@@ -16,15 +16,21 @@
 |------|------|------|------|
 | **P0** | 4 | ✅ 已完成 | CIP-1、CAM2-1、HTTP-1、HTTP-3 |
 | **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
-| **P2** | ~26 | ❌ 未开始 | 功能正确性/并发/输入校验/性能 |
+| **P2** | 26 | ✅ 已完成（Codex `7da7c444c`，待我方独立复审） | 功能正确性/并发/输入校验/性能 |
 | **P3** | ~16 | ❌ 未开始 | 清理/规范/测试补齐 |
-| **本轮审查问题** | 10 | ❌ 待修复 | 见 §3（前 3 条为 P1 返工） |
+| **本轮审查问题** | 10 | ❌ 待修复 | 见 §3（前 3 条为 P1 返工，均**未**被 P2 提交修复） |
 
-累计：72 项中完成 30 项（P0+P1）。
+累计：72 项中完成 **56 项**（P0+P1+P2）；剩余 P3 约 16 项 + 本轮审查 10 项待修。
+
+> 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`），按改动文件覆盖核实对应全部 26 项
+> 计划位置；**尚未**做我方独立逐项复审。本文 §3 的 R-1~R-10 是对 Codex 前两轮修复
+> （`b67c47606..14d47c758`）的审查结论，P2 提交并未修复其中任何一条。
 
 ### 提交历史（本分支，自 master 起）
 
 ```
+1fcd4b104 docs: add remediation progress and post-Codex review record  # 本文
+7da7c444c Fix P2 issues across reviewed modules                 # Codex P2（26 项）
 14d47c758 fix(camera2live): synchronize opened camera state      # Codex 第 2 轮
 ba713af3c fix: address eight-module review findings              # Codex 第 1 轮
 b67c47606 fix(camerax): remediate CX-1/2/3/4 (P1)
@@ -53,9 +59,11 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ## 2. 代码审查方法
 
-对 `b67c47606..HEAD`（即 Codex 两个提交的合并 diff）执行 high-effort 审查：
+对 **`b67c47606..14d47c758`**（即 Codex 前两轮修复 `ba713af3c` + `14d47c758` 的合并 diff；
+审查执行时 `HEAD` 恰为 `14d47c758`，故当时命令写作 `b67c47606..HEAD`）执行 high-effort 审查：
 8 个 finder 角度（3 正确性 + 3 清理 + 1 altitude + 1 conventions），
 每个候选经 1 票对抗式 verify。12 候选 → 驳回 2、存活 10。
+本审查范围**不含**其后的 P2 提交 `7da7c444c` 与本文档提交。
 
 - ✅ = CONFIRMED（从代码可构造）
 - 🟡 = PLAUSIBLE（现实条件下可达，但非确定性）
@@ -70,8 +78,9 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - **现象**：`while (outputIndex > -1)` 内 `if (buffer == null) continue` 用**同一个** outputIndex
   无限重试（`outputIndex` 在循环体末尾才重新赋值），`ensureActive()` 只在外层 do/while。
 - **触发**：旧版 `release()` 在 worker 持有已 dequeue 的 outputIndex 时并发 `flush()`，
-  按官方文档 `getOutputBuffer(失效index)` 返回 `null`（而非抛异常）→ 内层 while 永久自旋（100% CPU）→
-  后续 `releaseAndJoin()`/`stopRecordAndJoin()` 的 `cancelAndJoin` 永久阻塞 → ANR。
+  按官方文档 `getOutputBuffer(失效index)` 返回 `null`（而非抛异常）→ 内层 while 永久自旋（100% CPU）。
+- **影响（口径修正，采纳 Codex）**：确定后果是 **worker 自旋 + CPU 占用**，且并发释放
+  （`cancelAndJoin`）时**可能**被阻塞；原文「后续调用必然 ANR」表述偏绝对，实际是「可能阻塞」。
 - **建议**：`null` 时 `break`（或重新 `dequeueOutputBuffer` 并在内层加 `ensureActive()`）。
 
 #### R-2 ✅ `Camera2ComponentHelper.kt:122` cameraScope 泄漏（Activity 型消费者）
@@ -101,16 +110,18 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   与仍在 `dequeueInput/OutputBuffer` 的 worker 并发操作非线程安全的 `MediaCodec`。
 - **触发**：`stopRecord()`/`stopPlaying()`/`AudioPlayer.release()` 走此路径。多数抛
   `IllegalStateException` 被吞（`codecFailed` 置位），但赶上 mid-flush 抛 `CodecException` →
-  正常停止却触发 `notifyCodecFailure()`，重建型 override 会在关停期间复活 codec。**间歇性、设备相关**。
-- **建议**：同步路径也应先 `join`（受限于非 suspend，可用短时 `runBlocking` 于后台 dispatcher，
-  或明确废弃同步 release、迁移调用方到 `releaseAndJoin()`）。
+  正常停止却触发 `notifyCodecFailure()`。**间歇性、设备相关**。
+- **口径修正（采纳 Codex）**：核心竞态成立；但仓库内**并不存在**原文所说的「重建型
+  `notifyCodecFailure` override」，「关停期间复活 codec」仅为潜在风险而非现存路径。
+- **建议（采纳 Codex）**：**不**在同步 API 内引入 `runBlocking`；保留 `@Deprecated` 同步入口，
+  将仓库内调用逐步迁移到 `releaseAndJoin()`。
 
 #### R-5 ✅ `BaseMediaCodecSynchronous.kt:84` 空输入无条件 queueInputBuffer(size=0)
 - **现象**：`onInputData` 返回 ≤0 时无条件 `queueInputBuffer(inputIndex, 0, 0, pts, 0)`。
 - **触发**：`AacDecoder` 空闲时每次 `poll(50ms)` 超时都提交 0 字节非 EOS buffer +
   **相同 pts**（`computePresentationTimeUs` 依赖不前进的 `frameCount`）+ 每次一条 `Decode cost` 日志
-  → ~20 次/秒 codec 空提交；对重复/非单调 pts 敏感的厂商解码器可能抛 `CodecException` →
-  `notifyCodecFailure` 杀会话。（"busy-loop 秒杀"半条不成立：同步基类现有子类均为阻塞/超时 poll。）
+  → ~20 次/秒 codec 空提交（确定存在）。**厂商解码器因重复/非单调 pts 抛 `CodecException` 杀会话
+  属推测**（未在真机复现），非确定后果。（"busy-loop 秒杀"半条不成立：同步基类现有子类均为阻塞/超时 poll。）
 - **附带**：`AacDecoder.kt:86` 注释 "process() then skips queueing" 已过时。
 - **建议**：跨迭代**持有**已 dequeue 的 inputIndex，仅在有真实数据或 EOS 时才归还（既修原
   "输入槽耗尽" 又消除空闲 churn）；顺带更正注释。
@@ -129,7 +140,8 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - **触发**：从录音 job 上下文（如 `runBlocking` 包装）调用：守卫抛
   `IllegalArgumentException`（由录音循环 catch 兜底 → `onStop(false)`，用户主动停止却收到失败）；
   或 `runBlocking` 下守卫通过但 `cancelAndJoin` 自死锁。
-- **建议**：把 `require` **移到 CAS/stop 之前**（廉价加固）。
+- **建议**：把 `require` **移到 CAS/stop 之前**（廉价加固）。**注意（采纳 Codex）**：移动守卫只能
+  修「直接自调用」，**无法**解决「`runBlocking` 嵌套调用」下守卫通过后 `cancelAndJoin` 自死锁的情形。
 
 ### 3.3 清理 / 低优（可延后）
 
@@ -147,6 +159,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   贴了两份（:136 / :147）。
 - **成本**：未来拆解顺序修复须同步落在 4-6 个副本，漏一处即造成 legacy 与 suspend 路径语义分叉。
 - **建议**：抽共享 release core（以 encoder-release 为 lambda 参数）+ 播放器公共 `stopCommon()`。
+- **定性（采纳 Codex）**：这是**维护性重构建议**，不应计入「确定性缺陷」；优先级低于 R-1~R-8。
 
 #### R-10 🟡 [低] `HttpLoggingInterceptor.kt:306` 哨兵异常被吞时缺截断标记
 - **现象**：限长用私有 `IOException` 子类**穿过第三方 `writeTo` 抛出**；若 `writeTo` 吞掉该异常
@@ -169,10 +182,33 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ---
 
-## 5. 下一步
+## 5. Codex 交叉复审结论（2026-08-11）
 
-1. **修 R-1 / R-2 / R-3**（确认级 P1 返工，均在已改文件内，趁热成本低）。
-2. 视情修 R-4 / R-5 / R-7 / R-8（audio/camera 竞态）与 R-6 / R-9 / R-10（清理/低优）。
-3. 本地 `./gradlew staticCheck` 全绿。
-4. 推进 **P2（~26 项）**、**P3（~16 项）**。
-5. 真机回归 + 版本号 bump。
+Codex 复审了本文档与 R-1~R-10，结论汇总：
+
+| 项 | Codex 结论 | 处理 |
+|----|-----------|------|
+| R-1 | 成立；「必然 ANR」偏绝对 | 已改口径为「自旋+CPU，可能阻塞」 |
+| R-2 | 成立 | 保留 |
+| R-3 | 成立 | 保留 |
+| R-4 | 核心竞态成立；无「重建型 override」；勿用 `runBlocking` | 已改口径 + 建议 |
+| R-5 | 空 buffer 确定；厂商崩溃属推测 | 已标注推测 |
+| R-6 | 成立 | 保留 |
+| R-7 | 成立 | 保留 |
+| R-8 | 成立但仅修直接自调用，解决不了嵌套 `runBlocking` | 已加注意 |
+| R-9 | 维护性重构，不算确定性缺陷 | 已降级定性 |
+| R-10 | 成立但极低概率 | 保留（低优） |
+
+另 Codex 指出本文档两处需修正，均已采纳：进度过时（P2 已完成，应为 56/72）、
+审查范围应精确写作 `b67c47606..14d47c758`。
+
+**双方无分歧**：确认级正确性问题为 **R-1 / R-2 / R-3**（P1 返工，未被 P2 提交修复）。
+
+## 6. 下一步
+
+1. **修 R-1 / R-2 / R-3**（双方一致的确认级 P1 返工，均在已改文件内，趁热成本低）。
+2. 视情修 R-4 / R-5 / R-7 / R-8（audio/camera 竞态）与 R-6 / R-10（低优）、R-9（维护性重构）。
+3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
+4. 本地 `./gradlew staticCheck` 全绿。
+5. 推进 **P3（~16 项）**。
+6. 真机回归 + 版本号 bump。

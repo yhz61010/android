@@ -93,7 +93,14 @@ abstract class BaseMediaCodecSynchronous(
             // LogContext.log.d(TAG, "outputIndex=$outputIndex")
             while (outputIndex > -1) {
                 buffer = codec.getOutputBuffer(outputIndex)
-                if (buffer == null) continue
+                // A null buffer means the index is no longer valid (e.g. invalidated by a
+                // concurrent flush/release). Stop draining this round instead of spinning on the
+                // same index forever; the worker loop re-checks cancellation via ensureActive()
+                // on the next outer iteration (remediation R-1).
+                if (buffer == null) {
+                    LogContext.log.w(TAG, "getOutputBuffer($outputIndex) null; stop draining")
+                    break
+                }
                 when {
                     (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
                         onOutputData(buffer, bufferInfo, isConfig = true, isKeyFrame = false)

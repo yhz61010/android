@@ -42,6 +42,17 @@ abstract class BaseMediaCodec(
 
     private val codecReleased = AtomicBoolean(false)
 
+    /**
+     * Set as soon as an intentional teardown ([release] / [releaseAndJoin]) begins. The worker may
+     * still be mid-`process()` on the codec when we cancel it without joining (legacy [release]);
+     * an exception it then throws is expected shutdown noise, not a real failure. Subclasses check
+     * this to avoid reporting a spurious codec failure during teardown (remediation R-4).
+     */
+    private val releasing = AtomicBoolean(false)
+
+    /** Whether an intentional teardown is in progress; see [releasing]. */
+    protected val isReleasing: Boolean get() = releasing.get()
+
     abstract fun setFormatOptions(format: MediaFormat)
 
     open fun setMediaCodecOptions(codec: MediaCodec) = Unit
@@ -70,6 +81,7 @@ abstract class BaseMediaCodec(
         require(job !== currentCoroutineContext()[Job]) {
             "releaseAndJoin() must be called by an external owner, not the codec worker"
         }
+        releasing.set(true)
         job?.cancelAndJoin()
         codecJob = null
         ioScope.cancel()
@@ -102,6 +114,7 @@ abstract class BaseMediaCodec(
         require(::codec.isInitialized) { "Did you call start() before?" }
         // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
         // when it must also wait for the worker to finish.
+        releasing.set(true)
         codecJob?.cancel()
         codecJob = null
         ioScope.cancel()

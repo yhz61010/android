@@ -611,18 +611,29 @@ class Camera2ComponentHelper(
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
 
-        if (enableTakePhotoFeature) {
-            val st = SystemClock.elapsedRealtime()
-            setImageReaderForPhoto(previewWidth, previewHeight)
-            LogContext.log.d(
-                TAG,
-                "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
-            )
-            setPreviewRepeatingRequest()
-            LogContext.log.d(
-                TAG,
-                "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
-            )
+        // If a post-open setup step fails, close the just-opened device and clear its registration
+        // so a later initializeCamera()/switchCamera() is not blocked by a stale openedCamera CAS
+        // entry (remediation R-7). closeCamera() also clears openedCamera for this device.
+        try {
+            if (enableTakePhotoFeature) {
+                val st = SystemClock.elapsedRealtime()
+                setImageReaderForPhoto(previewWidth, previewHeight)
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase1 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+                setPreviewRepeatingRequest()
+                LogContext.log.d(
+                    TAG,
+                    "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+            }
+        } catch (e: CancellationException) {
+            closeCamera()
+            throw e
+        } catch (e: Exception) {
+            closeCamera()
+            throw e
         }
     }
 

@@ -48,9 +48,9 @@ abstract class BaseMediaCodecSynchronous(
             do {
                 ensureActive()
             } while (process())
-            // Only signal normal EOS. Error termination goes through notifyCodecFailure() and
-            // must not masquerade as a clean end-of-stream.
-            if (!codecFailed.get()) onEndOfStream()
+            // Only signal normal EOS. Error termination goes through notifyCodecFailure(), and an
+            // intentional teardown (isReleasing) must not masquerade as a clean end-of-stream.
+            if (!codecFailed.get() && !isReleasing) onEndOfStream()
         }
     }
 
@@ -88,6 +88,10 @@ abstract class BaseMediaCodecSynchronous(
             val bufferInfo = MediaCodec.BufferInfo()
             var buffer: ByteBuffer?
             val st = System.currentTimeMillis()
+            // Track whether any output was actually drained this round, so an idle stream (a
+            // non-blocking producer with no data) does not spam a "Decode cost" log per iteration
+            // (remediation R-5).
+            var drainedOutput = false
             // Start decoding and get output index
             var outputIndex: Int = codec.dequeueOutputBuffer(bufferInfo, 0)
             // LogContext.log.d(TAG, "outputIndex=$outputIndex")
@@ -119,27 +123,43 @@ abstract class BaseMediaCodecSynchronous(
                 // Must clear decoded data before next loop. Otherwise, you will get the same data
                 // while looping.
                 codec.releaseOutputBuffer(outputIndex, false)
+                drainedOutput = true
                 // Get data again.
                 outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
             }
-            LogContext.log.d(TAG, "Decode cost: ${System.currentTimeMillis() - st}ms")
+            if (drainedOutput) {
+                LogContext.log.d(TAG, "Decode cost: ${System.currentTimeMillis() - st}ms")
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: MediaCodec.CodecException) {
             // Must be caught BEFORE IllegalStateException because CodecException subclasses it.
+            if (isReleasing) return stopWorkerDuringRelease("CodecException")
             LogContext.log.e(TAG, "CodecException", e)
             codecFailed.set(true)
             notifyCodecFailure(e)
             return false
         } catch (e: IllegalStateException) {
+            if (isReleasing) return stopWorkerDuringRelease("Codec illegal state")
             LogContext.log.e(TAG, "Codec illegal state, stopping", e)
             codecFailed.set(true)
             return false
         } catch (e: Exception) {
+            if (isReleasing) return stopWorkerDuringRelease("Decode error")
             LogContext.log.e(TAG, "Unexpected decode error, stopping", e)
             codecFailed.set(true)
             return false
         }
         return !isFinish
+    }
+
+    /**
+     * The worker touched the codec while it was being torn down (see [isReleasing]). This is
+     * expected shutdown noise, not a real failure: stop the loop quietly without reporting a codec
+     * failure or firing a fake end-of-stream (remediation R-4).
+     */
+    private fun stopWorkerDuringRelease(what: String): Boolean {
+        LogContext.log.w(TAG, "$what during intentional release; stopping worker")
+        return false
     }
 }

@@ -210,6 +210,14 @@ class MicRecorder(
      * the record job and release resources. This API must be called by an external owner.
      */
     suspend fun stopRecordAndJoin() {
+        // Guard BEFORE any side effect: a self-call (from the record job's own context) must fail
+        // fast without half-stopping the recorder or consuming the one-shot `stopped` flag
+        // (remediation R-8). NOTE: this rejects only a *direct* self-call; a call wrapped in
+        // runBlocking on the record thread has a different Job and still cannot be made safe here.
+        val job = recordJob
+        require(job !== currentCoroutineContext()[Job]) {
+            "stopRecordAndJoin() must be called by an external owner"
+        }
         if (!stopped.compareAndSet(false, true)) {
             releaseCompleted.await()
             return
@@ -217,10 +225,6 @@ class MicRecorder(
         LogContext.log.i(TAG, "Stop recording audio")
         val ok = stopAudioRecord()
 
-        val job = recordJob
-        require(job !== currentCoroutineContext()[Job]) {
-            "stopRecordAndJoin() must be called by an external owner"
-        }
         job?.cancelAndJoin()
         recordJob = null
         ioScope.cancel()

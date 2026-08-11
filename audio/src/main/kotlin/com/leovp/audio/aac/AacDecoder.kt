@@ -83,7 +83,8 @@ class AacDecoder(
     }
 
     // Poll with a timeout instead of blocking take() so coroutine cancellation is honored quickly.
-    // Returns 0 when no data is available within the timeout; process() then skips queueing.
+    // Returns 0 when no data is available within the timeout; process() then returns the dequeued
+    // input slot with a 0-byte (non-EOS) buffer so the codec's input slots are not exhausted.
     override fun onInputData(inBuf: ByteBuffer): Int =
         queue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.let {
             inBuf.put(it)

@@ -295,37 +295,40 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         /** Maximum number of body bytes buffered/emitted per direction when logging (256 KiB). */
         private const val MAX_LOGGABLE_BODY_BYTES = 256L * 1024
 
-        internal data class CapturedRequestBody(val buffer: Buffer, val truncated: Boolean,)
+        internal data class CapturedRequestBody(val buffer: Buffer, val truncated: Boolean)
 
         /**
-         * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one sentinel byte. The sink throws a
-         * private control-flow exception as soon as a body exceeds the cap, so a dishonest
-         * contentLength() cannot make the logging path allocate the complete body.
+         * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one probe byte. Uses a non-throwing
+         * discarding sink (keep up to the cap, silently drop the rest, record whether anything was
+         * dropped) instead of a control-flow exception, so a dishonest contentLength() cannot make
+         * the logging path allocate the whole body, a RequestBody whose writeTo() catches
+         * IOException cannot swallow the truncation signal, and no stack trace is paid per capture
+         * (remediation R-10 / HTTP-3).
          */
         internal fun captureRequestBodyForLogging(requestBody: RequestBody): CapturedRequestBody {
             val output = Buffer()
+            val cap = MAX_LOGGABLE_BODY_BYTES + 1
+            var truncated = false
             val limitedSink = object : ForwardingSink(output) {
                 override fun write(source: Buffer, byteCount: Long) {
-                    val remaining = MAX_LOGGABLE_BODY_BYTES + 1 - output.size
-                    if (remaining <= 0) throw RequestBodyLimitExceededException()
-                    val bytesToWrite = minOf(byteCount, remaining)
-                    super.write(source, bytesToWrite)
-                    if (bytesToWrite < byteCount || output.size > MAX_LOGGABLE_BODY_BYTES) {
-                        throw RequestBodyLimitExceededException()
+                    val remaining = cap - output.size
+                    when {
+                        remaining <= 0 -> {
+                            source.skip(byteCount)
+                            truncated = true
+                        }
+                        byteCount > remaining -> {
+                            super.write(source, remaining)
+                            source.skip(byteCount - remaining)
+                            truncated = true
+                        }
+                        else -> super.write(source, byteCount)
                     }
                 }
             }.buffer()
-            var truncated = false
-            try {
-                requestBody.writeTo(limitedSink)
-                limitedSink.flush()
-            } catch (_: RequestBodyLimitExceededException) {
-                truncated = true
-            }
+            limitedSink.use { requestBody.writeTo(it) }
             return CapturedRequestBody(output, truncated)
         }
-
-        private class RequestBodyLimitExceededException : IOException()
 
         /** Header names whose values are redacted in logs to avoid leaking credentials. */
         private val SENSITIVE_HEADERS = setOf(

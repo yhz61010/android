@@ -61,6 +61,16 @@
 
 ### 修复 (Fixed)
 
+- **R-1 `BaseMediaCodecSynchronous.process()` 输出 buffer 为空不再死循环**:`getOutputBuffer()`
+  返回 `null`(index 被并发 flush/release 失效)时改为 `break` 退出本轮 drain,不再用同一 index
+  无限自旋;外层 worker 循环下一轮经 `ensureActive()` 正常响应取消。修复潜在 CPU 自旋与释放期阻塞。
+- **R-2 `Camera2WithoutPreviewActivity.onDestroy` 调用 `release()`**:不再只 `stopCameraThread()`;
+  改调 `Camera2ComponentHelper.release()`,取消 helper 自有 `cameraScope` 并关闭设备,修复
+  `onStop` 重新初始化后协程与 Activity 泄漏。同时在 `release()` 补充公开生命周期契约(宿主须在
+  `onDestroy`/`onDestroyView` 调用)。
+- **R-3 `Camera2ComponentHelper.switchCamera` 取消中途切换后可恢复**:`openedCamera` 为 `null`
+  (上次切换在关闭后、重开前被取消)时不再抛 `IllegalStateException`,改为直接打开请求的镜头,
+  修复快速连续切换导致的永久黑屏。
 - **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
   `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
 - **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;

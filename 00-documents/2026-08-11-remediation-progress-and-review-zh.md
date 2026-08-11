@@ -75,7 +75,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ## 3. 存活问题（9 项代码问题 + 1 项维护性建议 R-9，按严重度）
 
-### 3.1 ✅ P1 返工 —— 建议进 P2 前先修
+### 3.1 ✅ P1 返工 —— **R-1 / R-2 / R-3 已于 2026-08-11 修复**（见 CHANGELOG「修复」段）
 
 #### R-1 ✅ `BaseMediaCodecSynchronous.kt:96` 输出循环死循环 → ANR
 - **现象**：`while (outputIndex > -1)` 内 `if (buffer == null) continue` 用**同一个** outputIndex
@@ -214,7 +214,7 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 
 ## 6. 下一步
 
-1. **修 R-1 / R-2 / R-3**（双方一致的确认级 P1 返工，均在已改文件内，趁热成本低）。
+1. ✅ **R-1 / R-2 / R-3 已修复**（2026-08-11，见 CHANGELOG）。
 2. 视情修 R-4 / R-5 / R-7 / R-8（audio/camera 竞态）与 R-6 / R-10（低优）、R-9（维护性重构）。
 3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
 4. ✅ `./gradlew staticCheck` 已通过（Codex 运行，1421 任务全过；见 §1）。

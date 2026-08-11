@@ -1216,20 +1216,23 @@ class Camera2ComponentHelper(
         switchJob = cameraScope.launch {
             try {
                 switchMutex.withLock {
-                    val oldCamera = checkNotNull(openedCamera.get()) {
-                        "No opened camera to switch from."
-                    }
-                    closeCamera()
-                    val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
-                        oldCamera.closed.await()
-                        true
-                    } ?: false
-                    if (!closedInTime) {
-                        reportCameraError(
-                            "switchCamera failed",
-                            TimeoutException("Camera close timed out during switch")
-                        )
-                        return@withLock
+                    // May be null if a previous switch was cancelled after closing the old device
+                    // but before reopening. In that case there is nothing to close — just open the
+                    // requested lens directly instead of aborting with an error (remediation R-3).
+                    val oldCamera = openedCamera.get()
+                    if (oldCamera != null) {
+                        closeCamera()
+                        val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+                            oldCamera.closed.await()
+                            true
+                        } ?: false
+                        if (!closedInTime) {
+                            reportCameraError(
+                                "switchCamera failed",
+                                TimeoutException("Camera close timed out during switch")
+                            )
+                            return@withLock
+                        }
                     }
                     this@Camera2ComponentHelper.lensFacing = lensFacing
                     initializeCameraAndAwait(previewWidth, previewHeight)
@@ -1371,7 +1374,14 @@ class Camera2ComponentHelper(
         LogContext.log.i(TAG, "=====> stopCameraThread() being called <=====")
     }
 
-    /** Handy method to release all the camera resources. */
+    /**
+     * Releases all camera resources: cancels the in-flight switch and the helper's own
+     * [cameraScope], closes the camera device, and stops the background threads.
+     *
+     * Lifecycle contract: the host MUST call this from its own teardown (Activity `onDestroy` /
+     * Fragment `onDestroyView`). The helper no longer piggybacks on an Activity `lifecycleScope`,
+     * so failing to call [release] leaks the [cameraScope] and any captured context (remediation R-2).
+     */
     fun release() {
         switchJob?.cancel()
         switchJob = null

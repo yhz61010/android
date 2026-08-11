@@ -1,0 +1,178 @@
+# 八模块整改 —— 进度与代码审查记录（2026-08-11）
+
+> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-11 的落地进度，以及针对
+> Codex 两轮审查修复所做的正式 code-review 结论（存活 10 项 / 驳回 2 项）。
+> 关联文档：`2026-08-04-remediation-impl-plan-zh.md`（P0→P3 路线图）、
+> `2026-08-04-remediation-impl-details-zh.md`（各条目目标代码）、
+> `2026-08-04-eight-module-code-review-zh.md`（原始 72 项审查）。
+
+分支：`fix/eight-module-remediation`（已推送 `origin`）。
+
+---
+
+## 1. 进度总览
+
+| 阶段 | 项数 | 状态 | 说明 |
+|------|------|------|------|
+| **P0** | 4 | ✅ 已完成 | CIP-1、CAM2-1、HTTP-1、HTTP-3 |
+| **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
+| **P2** | ~26 | ❌ 未开始 | 功能正确性/并发/输入校验/性能 |
+| **P3** | ~16 | ❌ 未开始 | 清理/规范/测试补齐 |
+| **本轮审查问题** | 10 | ❌ 待修复 | 见 §3（前 3 条为 P1 返工） |
+
+累计：72 项中完成 30 项（P0+P1）。
+
+### 提交历史（本分支，自 master 起）
+
+```
+14d47c758 fix(camera2live): synchronize opened camera state      # Codex 第 2 轮
+ba713af3c fix: address eight-module review findings              # Codex 第 1 轮
+b67c47606 fix(camerax): remediate CX-1/2/3/4 (P1)
+c31f1b65d fix(camera2live): remediate CAM2-2/3/6/7/8 (P1)
+d4a71714f fix(lifecycle/security): remediate ABN-1, AR-1, AR-7, CPB-1, CPB-2 (P1)
+376e05cb3 fix(audio): remediate lifecycle/race/cancellation issues AUD-1~8 (P1)
+44156330a fix: remediate P1 batch 1 (LB-1, CIP-3, HTTP-2, HTTP-4)
+ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP-1, HTTP-3)
+```
+
+### 已知对外 API 变更（已记入 CHANGELOG）
+
+- `Camera2ComponentHelper.switchCamera` 同步 → 异步（签名不变，完成时机延迟）
+- `BaseCameraXFragment.binding` 恢复为 `var`（Codex 回补二进制兼容），新增只读 `viewBinding`
+- `SoundManager` 移除公开 Activity 引用，`ctx` 保留但返回 applicationContext
+- 新增 `Camera2ComponentHelper.CameraErrorListener`、audio 各 `*AndJoin()` suspend 变体
+- `SingletonHolder.getInstance` 改 `open`（供 `DisplayCutoutManager` override，二进制兼容需要）
+
+### ⚠️ 未验证事项
+
+- 全部改动**尚未本地 `./gradlew staticCheck`**（detekt/ktlint/单测）。
+- audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回）。
+- 版本号（`leo-version`）未 bump。
+
+---
+
+## 2. 代码审查方法
+
+对 `b67c47606..HEAD`（即 Codex 两个提交的合并 diff）执行 high-effort 审查：
+8 个 finder 角度（3 正确性 + 3 清理 + 1 altitude + 1 conventions），
+每个候选经 1 票对抗式 verify。12 候选 → 驳回 2、存活 10。
+
+- ✅ = CONFIRMED（从代码可构造）
+- 🟡 = PLAUSIBLE（现实条件下可达，但非确定性）
+
+---
+
+## 3. 存活问题（10 项，按严重度）
+
+### 3.1 ✅ P1 返工 —— 建议进 P2 前先修
+
+#### R-1 ✅ `BaseMediaCodecSynchronous.kt:96` 输出循环死循环 → ANR
+- **现象**：`while (outputIndex > -1)` 内 `if (buffer == null) continue` 用**同一个** outputIndex
+  无限重试（`outputIndex` 在循环体末尾才重新赋值），`ensureActive()` 只在外层 do/while。
+- **触发**：旧版 `release()` 在 worker 持有已 dequeue 的 outputIndex 时并发 `flush()`，
+  按官方文档 `getOutputBuffer(失效index)` 返回 `null`（而非抛异常）→ 内层 while 永久自旋（100% CPU）→
+  后续 `releaseAndJoin()`/`stopRecordAndJoin()` 的 `cancelAndJoin` 永久阻塞 → ANR。
+- **建议**：`null` 时 `break`（或重新 `dequeueOutputBuffer` 并在内层加 `ensureActive()`）。
+
+#### R-2 ✅ `Camera2ComponentHelper.kt:122` cameraScope 泄漏（Activity 型消费者）
+- **现象**：`cameraScope` 取代 `context.lifecycleScope` 后丢失「Activity 销毁自动取消」；
+  `cameraScope` 仅在 `release()` 中取消。
+- **触发**：demo `Camera2WithoutPreviewActivity` 的 `onDestroy` 只调 `stopCameraThread()`，
+  从不调 `release()`；更糟的是其 `onStop → stopRecord()` 会再调 `initializeCamera()`，
+  在 `cameraScope` 上启动的协程跨 destroy 存活并重新打开相机，钉住已销毁的 `FragmentActivity`
+  → 相机被占用 + Activity 泄漏。
+- **范围**：库内 `BaseCamera2Fragment` 已正确在 `onDestroyView` 调 `release()`；问题限于
+  **Activity 型 / 外部消费者**（从旧 lifecycleScope 行为升级者）。
+- **建议**：demo Activity 补 `release()`；或文档明确 helper 生命周期须由宿主显式 `release()`。
+
+#### R-3 ✅ `Camera2ComponentHelper.kt:1219` 双击切换镜头永久黑屏
+- **现象**：连续两次 `switchCamera`，第二次 `switchJob?.cancel()` 取消的首次切换**已 `closeCamera()`
+  但尚未重开**，第二次 `checkNotNull(openedCamera.get())` 抛
+  `IllegalStateException("No opened camera to switch from.")`。
+- **触发**：job1 在 `switchMutex.withLock` 内同步执行 `closeCamera()`（`openedCamera` 置 null）后
+  挂起于 `closed.await()`，被 job2 的 `cancel()` 取消、释放锁；job2 `checkNotNull` 抛异常 →
+  `reportCameraError`（demo 未设 listener）→ 无相机打开、无重试路径 → 预览永久黑屏。
+- **建议**：`openedCamera` 为 null 时不抛异常，改为直接走「打开新设备」路径，或在 catch 中重试。
+
+### 3.2 🟡 audio / camera 竞态（PLAUSIBLE，建议随 P2 处理）
+
+#### R-4 🟡 `BaseMediaCodec.kt:105` 同步 release() 与 worker 并发操作 codec
+- **现象**：旧版 `release()` `cancel()` 不 `join` 即在调用线程 `flush()/release()` codec，
+  与仍在 `dequeueInput/OutputBuffer` 的 worker 并发操作非线程安全的 `MediaCodec`。
+- **触发**：`stopRecord()`/`stopPlaying()`/`AudioPlayer.release()` 走此路径。多数抛
+  `IllegalStateException` 被吞（`codecFailed` 置位），但赶上 mid-flush 抛 `CodecException` →
+  正常停止却触发 `notifyCodecFailure()`，重建型 override 会在关停期间复活 codec。**间歇性、设备相关**。
+- **建议**：同步路径也应先 `join`（受限于非 suspend，可用短时 `runBlocking` 于后台 dispatcher，
+  或明确废弃同步 release、迁移调用方到 `releaseAndJoin()`）。
+
+#### R-5 ✅ `BaseMediaCodecSynchronous.kt:84` 空输入无条件 queueInputBuffer(size=0)
+- **现象**：`onInputData` 返回 ≤0 时无条件 `queueInputBuffer(inputIndex, 0, 0, pts, 0)`。
+- **触发**：`AacDecoder` 空闲时每次 `poll(50ms)` 超时都提交 0 字节非 EOS buffer +
+  **相同 pts**（`computePresentationTimeUs` 依赖不前进的 `frameCount`）+ 每次一条 `Decode cost` 日志
+  → ~20 次/秒 codec 空提交；对重复/非单调 pts 敏感的厂商解码器可能抛 `CodecException` →
+  `notifyCodecFailure` 杀会话。（"busy-loop 秒杀"半条不成立：同步基类现有子类均为阻塞/超时 poll。）
+- **附带**：`AacDecoder.kt:86` 注释 "process() then skips queueing" 已过时。
+- **建议**：跨迭代**持有**已 dequeue 的 inputIndex，仅在有真实数据或 EOS 时才归还（既修原
+  "输入槽耗尽" 又消除空闲 churn）；顺带更正注释。
+
+#### R-7 🟡 `Camera2ComponentHelper.kt:652` 部分初始化失败后重试 CAS 冲突黑屏
+- **现象**：`initializeCamera` 的 catch 只 `reportCameraError`，`open` 成功但后续步骤
+  （`setImageReaderForPhoto`/`setPreviewRepeatingRequest`）抛异常时**不清理 `openedCamera`**。
+- **触发**：重试 `initializeCamera` 打开同 cameraId 时，框架驱逐旧设备的回调与新 `onOpened` 的
+  顺序无保证；不利顺序下 `compareAndSet(null, ·)` 失败 → 新设备被关、异常报给空 listener → 黑屏。
+  （旧设备回调最终清槽后再重试可恢复，故非永久 → PLAUSIBLE。）
+- **建议**：初始化失败路径显式 `closeCamera()` / 清 `openedCamera`。
+
+#### R-8 🟡 `MicRecorder.kt:188` 自调用 require 守卫位于副作用之后
+- **现象**：`stopRecordAndJoin` 的 `require(job !== current)` 守卫在 `stopped` CAS 与
+  `audioRecord.stop()` **之后**，违约调用会在**半停止**后才抛异常。
+- **触发**：从录音 job 上下文（如 `runBlocking` 包装）调用：守卫抛
+  `IllegalArgumentException`（由录音循环 catch 兜底 → `onStop(false)`，用户主动停止却收到失败）；
+  或 `runBlocking` 下守卫通过但 `cancelAndJoin` 自死锁。
+- **建议**：把 `require` **移到 CAS/stop 之前**（廉价加固）。
+
+### 3.3 清理 / 低优（可延后）
+
+#### R-6 ✅ `ZipUtil.kt:300` 忽略 backupFile.delete() 返回值 → 备份残留
+- **现象**：成功路径 `backupFile?.delete()` 返回值被忽略；条目路径被**非空目录**占用时，
+  `renameTo(backup)` 对目录成功、`delete()` 对非空目录失败且被忽略 → 含旧（可能敏感）内容的
+  `.unzip-backup-*.tmp` 目录静默残留在解压目录（旧代码 `require(entryFile.delete())` 会响亮失败）。
+- **建议**：检查 `delete()` 返回值并记日志 / 递归删除；或入口拒绝「文件条目撞已有目录」。
+
+#### R-9 ✅ [清理] audio 拆解逻辑 4-6 处近似复制
+- **位置**：`MicRecorder.finishRecorderRelease`(232) vs `finishRecorderReleaseAndJoin`(258)
+  （~20 行仅差 encoder release 一步 + NonCancellable）；`AacStreamPlayer` 与 `OpusStreamPlayer`
+  的 `stopPlaying/detachDecoderForStop/releaseAudioTrack` 三件套（`releaseAudioTrack` 逐字节相同）；
+  录音循环失败序列 `stopped.set(true); stopAudioRecord(); finishRecorderReleaseAndJoin(false)`
+  贴了两份（:136 / :147）。
+- **成本**：未来拆解顺序修复须同步落在 4-6 个副本，漏一处即造成 legacy 与 suspend 路径语义分叉。
+- **建议**：抽共享 release core（以 encoder-release 为 lambda 参数）+ 播放器公共 `stopCommon()`。
+
+#### R-10 🟡 [低] `HttpLoggingInterceptor.kt:306` 哨兵异常被吞时缺截断标记
+- **现象**：限长用私有 `IOException` 子类**穿过第三方 `writeTo` 抛出**；若 `writeTo` 吞掉该异常
+  且 okio 缓冲恰好排空，`truncated` 保持 `false` → 日志打出 cap 字节但无 `(truncated…)` 后缀。
+- **范围**：纯外观、触发条件苛刻；"损坏有状态 body" 半条已被 `isOneShot/isDuplex` 前置过滤驳回。
+- **建议**：可选——改为**丢弃式计数 sink**，不用异常做控制流。
+
+---
+
+## 4. 驳回的候选（存档）
+
+- **openCamera 的 `cont.resume(device)` 竞态泄漏设备** —— **驳回**。kotlinx 1.10.2 的
+  prompt-cancellation 保证：cancellation 赢得 dispatch 竞争时，会对被丢弃的 resume 值调用
+  cancel handler（`CompletedContinuation.invokeHandlers`）；且成功路径**故意保留 `pendingDevice`**，
+  供 `invokeOnCancellation` 关闭设备并 `clearOpenedCamera`。设计正确。
+- **`SingletonHolder.getInstance` 改 `open` 是设计倒退** —— **驳回**。已发布 tag（5.15.8/5.16.0）
+  的二进制里 `DisplayCutoutManager` 就是**继承** `SingletonHolder` 的形状，外部二进制引用擦除后的
+  `getInstance(Object)Object` 虚方法；改成 plain factory 会删掉该桥方法 → 调用方 `NoSuchMethodError`。
+  Codex 的 `override` 才是二进制安全方案。（设计味道轻微存在，但结论上 Codex 正确。）
+
+---
+
+## 5. 下一步
+
+1. **修 R-1 / R-2 / R-3**（确认级 P1 返工，均在已改文件内，趁热成本低）。
+2. 视情修 R-4 / R-5 / R-7 / R-8（audio/camera 竞态）与 R-6 / R-9 / R-10（清理/低优）。
+3. 本地 `./gradlew staticCheck` 全绿。
+4. 推进 **P2（~26 项）**、**P3（~16 项）**。
+5. 真机回归 + 版本号 bump。

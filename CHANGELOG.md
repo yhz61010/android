@@ -36,6 +36,9 @@
 
 ### 变更 (Changed)
 
+- **R-9 audio teardown 维护性重构**:`MicRecorder` 统一录音循环失败清理、`AudioRecord` 释放与
+  完成通知步骤；`AacStreamPlayer`/`OpusStreamPlayer` 共用模块内部停止协调器，集中维护 decoder
+  摘除、scope 取消、`AudioTrack` 释放及 decoder 释放顺序。公开 API、同步/挂起语义及执行顺序不变。
 - **CX-4 `BaseCameraXFragment.binding` 绑定 View 生命周期**:改用可空 backing `_binding` 并在
   `onDestroyView` 置空,修复视图重建后 binding 泄漏与释放后误用。新增只读访问器 `viewBinding`;
   公开 `binding` 继续保留 getter/setter,避免破坏既有子类的源码和 JVM 调用入口。

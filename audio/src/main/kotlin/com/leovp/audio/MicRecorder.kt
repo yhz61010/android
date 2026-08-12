@@ -158,9 +158,7 @@ class MicRecorder(
 
                         else -> {
                             LogContext.log.e(TAG, "AudioRecord.read error=$recordSize")
-                            stopped.set(true)
-                            stopAudioRecord()
-                            finishRecorderReleaseAndJoin(stopSucceeded = false)
+                            handleRecordingFailure()
                             break
                         }
                     }
@@ -169,11 +167,15 @@ class MicRecorder(
                 throw e
             } catch (e: Exception) {
                 LogContext.log.e(TAG, "Recording loop failed", e)
-                stopped.set(true)
-                stopAudioRecord()
-                finishRecorderReleaseAndJoin(stopSucceeded = false)
+                handleRecordingFailure()
             }
         }
+    }
+
+    private suspend fun handleRecordingFailure() {
+        stopped.set(true)
+        stopAudioRecord()
+        finishRecorderReleaseAndJoin(stopSucceeded = false)
     }
 
     private fun failRecordStart(message: String) {
@@ -270,23 +272,13 @@ class MicRecorder(
         if (!released.compareAndSet(false, true)) return
         var ok = stopSucceeded
         try {
-            runCatching {
-                audioRecord.release()
-                LogContext.log.w(TAG, "Recording released.")
-            }.onFailure {
-                ok = false
-                LogContext.log.e(TAG, "release error", it)
-            }
+            ok = releaseAudioRecord(ok)
             runCatching { encodeWrapper?.release() }.onFailure {
                 ok = false
                 LogContext.log.e(TAG, "encoder release error", it)
             }
         } finally {
-            try {
-                notifyStopOnce(ok)
-            } finally {
-                releaseCompleted.complete(Unit)
-            }
+            completeRecorderRelease(ok)
         }
     }
 
@@ -298,13 +290,7 @@ class MicRecorder(
         withContext(NonCancellable) {
             var ok = stopSucceeded
             try {
-                runCatching {
-                    audioRecord.release()
-                    LogContext.log.w(TAG, "Recording released.")
-                }.onFailure {
-                    ok = false
-                    LogContext.log.e(TAG, "release error", it)
-                }
+                ok = releaseAudioRecord(ok)
                 try {
                     encodeWrapper?.releaseAndJoin()
                 } catch (e: CancellationException) {
@@ -315,12 +301,28 @@ class MicRecorder(
                     LogContext.log.e(TAG, "encoder release error", e)
                 }
             } finally {
-                try {
-                    notifyStopOnce(ok)
-                } finally {
-                    releaseCompleted.complete(Unit)
-                }
+                completeRecorderRelease(ok)
             }
+        }
+    }
+
+    private fun releaseAudioRecord(currentResult: Boolean): Boolean {
+        var ok = currentResult
+        runCatching {
+            audioRecord.release()
+            LogContext.log.w(TAG, "Recording released.")
+        }.onFailure {
+            ok = false
+            LogContext.log.e(TAG, "release error", it)
+        }
+        return ok
+    }
+
+    private fun completeRecorderRelease(result: Boolean) {
+        try {
+            notifyStopOnce(result)
+        } finally {
+            releaseCompleted.complete(Unit)
         }
     }
 

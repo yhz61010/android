@@ -266,4 +266,26 @@ class ZipUtilTest {
         bigZip.delete()
         sizeDest.deleteRecursively()
     }
+
+    @Test
+    @DisplayName("R-6: unzip rejects a file entry that collides with an existing directory")
+    fun unzipRejectsFileEntryOverExistingDirectoryTest() {
+        val collisionZip = File(baseDir, "collision.zip")
+        val collisionDest = File(baseDir, "collision-extract").apply { mkdirs() }
+        val existingDirectory = File(collisionDest, "entry").apply { mkdirs() }
+        val existingFile = File(existingDirectory, "keep.txt").apply { writeText("keep") }
+        buildRawZip(collisionZip, listOf("entry" to "replacement".toByteArray()))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            ZipUtil.unzip(collisionZip.absolutePath, collisionDest.absolutePath)
+        }
+        assertEquals("keep", existingFile.readText())
+        assertFalse(
+            collisionDest.listFiles().orEmpty().any { it.name.startsWith(".unzip-backup-") },
+            "Rejected collisions must not leave backup entries"
+        )
+
+        collisionZip.delete()
+        collisionDest.deleteRecursively()
+    }
 }

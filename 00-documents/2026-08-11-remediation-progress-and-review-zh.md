@@ -19,10 +19,10 @@
 | **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
 | **P2** | 26 | ✅ 已完成（Codex `7da7c444c`，待我方独立复审） | 功能正确性/并发/输入校验/性能 |
 | **P3** | ~16 | ❌ 未开始 | 清理/规范/测试补齐 |
-| **本轮剩余问题** | R-9 重构（+ R-5 深改暂缓） | ❌ 待处理 | 见 §3（R-1~R-4、R-6~R-8、R-10 已修复；R-5 部分修复、深改暂缓；R-9 为维护性重构） |
+| **本轮剩余问题** | R-5 深改 + R-9 重构 | ❌ 待处理 | 见 §3（R-1~R-4、R-6~R-8、R-10 已修复；R-5 部分修复、深改暂缓；R-9 为维护性重构） |
 
 累计：72 项中完成 **56 项**（P0+P1+P2）；本轮审查 **R-1/R-2/R-3、R-4/R-6/R-7/R-8/R-10 已修复**、
-R-5 部分修复(深改暂缓,决策 B);剩余仅 R-9（维护性重构）+ P3 约 16 项。
+R-5 部分修复（深改暂缓，决策 B）；剩余 R-5 深改、R-9 维护性重构和 P3 约 16 项。
 
 > 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`），按改动文件覆盖核实对应全部 26 项
 > 计划位置；**尚未**做我方独立逐项复审。本文 §3 的 R-1~R-10 是对 Codex 前两轮修复
@@ -53,9 +53,9 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ### ⚠️ 未验证事项
 
-- `./gradlew staticCheck` **已通过**（Codex 于 2026-08-11 运行 `--continue --rerun-tasks`，
+- `./gradlew staticCheck` **已通过**（Codex 于 2026-08-12 运行 `--continue --rerun-tasks`，
   1421 任务全部执行并成功）。注意：staticCheck 只覆盖编译/detekt/ktlint/单测，
-  **不**替代 R-3 真机验证，也不代表 R-4~R-8 / R-10 的运行时竞态或泄漏已修复。
+  **不**替代 R-3、R-4、R-7 的真机运行时验证；修复结论还依赖代码复审和对应回归测试。
 - audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回；
   Camera2 还需连续快速切换前后镜头并检查黑屏、UI 状态和 `ERROR_CAMERA_IN_USE`）。
 - 版本号（`leo-version`）未 bump。
@@ -75,7 +75,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ---
 
-## 3. 审查问题状态（剩余 6 项代码问题 + 1 项维护性建议 R-9，按严重度）
+## 3. 审查问题状态（剩余 R-5 深改 + R-9 维护性重构，按严重度）
 
 ### 3.1 ✅ P1 返工 —— **R-1 / R-2 / R-3 已于 2026-08-11 修复**（见 CHANGELOG「修复」段）
 
@@ -117,7 +117,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ### 3.2 🟡 audio / camera 竞态 —— **R-4 / R-7 / R-8 已于 2026-08-11 修复；R-5 部分修复**（见 CHANGELOG）
 
-#### R-4 🟡 `BaseMediaCodec.kt:105` 同步 release() 与 worker 并发操作 codec
+#### R-4 ✅ `BaseMediaCodec.kt:122` 同步 release() 与 worker 并发操作 codec
 - **现象**：旧版 `release()` `cancel()` 不 `join` 即在调用线程 `flush()/release()` codec，
   与仍在 `dequeueInput/OutputBuffer` 的 worker 并发操作非线程安全的 `MediaCodec`。
 - **触发**：`stopRecord()`/`stopPlaying()`/`AudioPlayer.release()` 走此路径。多数抛
@@ -127,8 +127,11 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   `notifyCodecFailure` override」，「关停期间复活 codec」仅为潜在风险而非现存路径。
 - **建议（采纳 Codex）**：**不**在同步 API 内引入 `runBlocking`；保留 `@Deprecated` 同步入口，
   将仓库内调用逐步迁移到 `releaseAndJoin()`。
+- **最终修复**：同步 worker 的完整 `process()` 迭代与 `stop()`/`flush()`/`release()` 共用一把
+  可重入锁。旧同步 `release()` 取消 worker 后会等待当前迭代退出再释放 codec，消除并发访问；
+  `releasing` 标志仅负责抑制主动关停的伪失败/EOS。新增并发测试验证释放等待行为。
 
-#### R-5 ✅ `BaseMediaCodecSynchronous.kt:84` 空输入无条件 queueInputBuffer(size=0)
+#### R-5 🟡 `BaseMediaCodecSynchronous.kt:84` 空输入无条件 queueInputBuffer(size=0)
 - **现象**：`onInputData` 返回 ≤0 时无条件 `queueInputBuffer(inputIndex, 0, 0, pts, 0)`。
 - **触发**：`AacDecoder` 空闲时每次 `poll(50ms)` 超时都提交 0 字节非 EOS buffer +
   **相同 pts**（`computePresentationTimeUs` 依赖不前进的 `frameCount`）+ 每次一条 `Decode cost` 日志
@@ -141,20 +144,22 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   的复杂度。更稳妥方向：**先等输入数据到达再 dequeue**，或明确设计 pending-index 状态机并补
   取消 / flush / EOS 测试。
 - **决策（2026-08-11，B）：结构性改动暂缓。** 该改动触及 live-audio 的 MediaCodec 同步解码循环
-  （`process()` 改 suspend + `hasInputData()` 门控 + `delay()` 节流），且 audio 模块当前**无任何测试
-  基础设施**；单测只能覆盖门控原语，无法在无真机时验证「循环重构不破坏真实解码播放」。空闲 churn 为
-  ~20 次/秒空提交、非致命，推迟成本低。待有真机回归条件时再落地（连同取消 / flush / EOS 测试）。
-  安全子集（空闲日志守卫 + 过时注释）已随 `cb355582f` 上线。
+  （`process()` 改 suspend + `hasInputData()` 门控 + `delay()` 节流）。audio 模块现已补充 R-4 的
+  codec 互斥单测，但仍无法在无真机时验证「循环重构不破坏真实解码播放」。空闲 churn 为约 20 次/秒
+  空提交、非致命，推迟成本低。待有真机回归条件时再落地（连同取消 / flush / EOS 测试）。安全子集
+  （空闲日志守卫 + 过时注释）已随 `cb355582f` 上线。
 
-#### R-7 🟡 `Camera2ComponentHelper.kt:652` 部分初始化失败后重试 CAS 冲突黑屏
+#### R-7 ✅ `Camera2ComponentHelper.kt:603` 部分初始化失败后重试 CAS 冲突黑屏
 - **现象**：`initializeCamera` 的 catch 只 `reportCameraError`，`open` 成功但后续步骤
   （`setImageReaderForPhoto`/`setPreviewRepeatingRequest`）抛异常时**不清理 `openedCamera`**。
 - **触发**：重试 `initializeCamera` 打开同 cameraId 时，框架驱逐旧设备的回调与新 `onOpened` 的
   顺序无保证；不利顺序下 `compareAndSet(null, ·)` 失败 → 新设备被关、异常报给空 listener → 黑屏。
   （旧设备回调最终清槽后再重试可恢复，故非永久 → PLAUSIBLE。）
 - **建议**：初始化失败路径显式 `closeCamera()` / 清 `openedCamera`。
+- **最终修复**：保存本次打开设备对应的关闭信号；后续 setup 失败时在 `NonCancellable` 清理区
+  调用 `closeCamera()` 并等待该设备 `onClosed`（最长 3 秒）后再上报原异常，避免立即重试窗口。
 
-#### R-8 🟡 `MicRecorder.kt:188` 自调用 require 守卫位于副作用之后
+#### R-8 ✅ `MicRecorder.kt:212` 自调用 require 守卫位于副作用之后
 - **现象**：`stopRecordAndJoin` 的 `require(job !== current)` 守卫在 `stopped` CAS 与
   `audioRecord.stop()` **之后**，违约调用会在**半停止**后才抛异常。
 - **触发**：从录音 job 上下文（如 `runBlocking` 包装）调用：守卫抛
@@ -171,7 +176,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   `.unzip-backup-*.tmp` 目录静默残留在解压目录（旧代码 `require(entryFile.delete())` 会响亮失败）。
 - **建议**：检查 `delete()` 返回值并记日志 / 递归删除；或入口拒绝「文件条目撞已有目录」。
 
-#### R-9 ✅ [清理] audio 拆解逻辑 4-6 处近似复制
+#### R-9 ⏳ [清理] audio 拆解逻辑 4-6 处近似复制
 - **位置**：`MicRecorder.finishRecorderRelease`(232) vs `finishRecorderReleaseAndJoin`(258)
   （~20 行仅差 encoder release 一步 + NonCancellable）；`AacStreamPlayer` 与 `OpusStreamPlayer`
   的 `stopPlaying/detachDecoderForStop/releaseAudioTrack` 三件套（`releaseAudioTrack` 逐字节相同）；
@@ -181,11 +186,15 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - **建议**：抽共享 release core（以 encoder-release 为 lambda 参数）+ 播放器公共 `stopCommon()`。
 - **定性（采纳 Codex）**：这是**维护性重构建议**，不应计入「确定性缺陷」；优先级低于 R-1~R-8。
 
-#### R-10 🟡 [低] `HttpLoggingInterceptor.kt:306` 哨兵异常被吞时缺截断标记
+#### R-10 ✅ [低] `HttpLoggingInterceptor.kt:306` 哨兵异常被吞时缺截断标记
 - **现象**：限长用私有 `IOException` 子类**穿过第三方 `writeTo` 抛出**；若 `writeTo` 吞掉该异常
   且 okio 缓冲恰好排空，`truncated` 保持 `false` → 日志打出 cap 字节但无 `(truncated…)` 后缀。
 - **范围**：纯外观、触发条件苛刻；"损坏有状态 body" 半条已被 `isOneShot/isDuplex` 前置过滤驳回。
-- **建议**：可选——改为**丢弃式计数 sink**，不用异常做控制流。
+- **初始建议（后续复审已调整）**：丢弃式计数 sink 虽可限制日志缓存，却仍会消费并生成完整请求体，
+  无法限制处理时间；最终改为带截断状态的无栈哨兵异常，在达到上限后提前终止写入。
+- **最终修复**：sink 在超过上限时先保存 `truncated = true`，再抛出复用的无堆栈哨兵以停止
+  body 继续生成；即使第三方 `writeTo()` 吞掉异常，截断状态仍保留。测试覆盖 256 KiB+1 精确边界、
+  吞异常和提前终止生产。
 
 ---
 
@@ -230,7 +239,7 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 1. ✅ **R-1 / R-2 / R-3 已修复**（2026-08-11，见 CHANGELOG）。
 2. ✅ **R-4 / R-7 / R-8 已修复,R-5 部分修复**（2026-08-11，见 CHANGELOG）。
    R-6 / R-10 已修复（`1f7b92455`）。R-5 结构性改动**暂缓**（决策 B，见 §3.2；待真机验证条件）。
-   剩余:R-9（维护性重构）。
+   剩余：R-5 深改（待真机条件）和 R-9（维护性重构）。
 3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
 4. ✅ `./gradlew staticCheck` 已通过（Codex 运行，1421 任务全过；见 §1）。
 5. 推进 **P3（~16 项）**。

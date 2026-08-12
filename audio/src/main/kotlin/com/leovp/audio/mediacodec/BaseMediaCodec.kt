@@ -6,6 +6,8 @@ import android.media.MediaFormat
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,9 @@ abstract class BaseMediaCodec(
 
     private val codecReleased = AtomicBoolean(false)
 
+    /** Serializes synchronous worker operations with stop/flush/release. */
+    private val codecOperationLock = ReentrantLock()
+
     /**
      * Set as soon as an intentional teardown ([release] / [releaseAndJoin]) begins. The worker may
      * still be mid-`process()` on the codec when we cancel it without joining (legacy [release]);
@@ -65,7 +70,9 @@ abstract class BaseMediaCodec(
 
     open fun stop() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        runCatching { codec.stop() }.onFailure { LogContext.log.e(TAG, "stop() error", it) }
+        withCodecOperationLock {
+            runCatching { codec.stop() }.onFailure { LogContext.log.e(TAG, "stop() error", it) }
+        }
     }
 
     /**
@@ -94,12 +101,14 @@ abstract class BaseMediaCodec(
      */
     protected fun releaseCodecOnce() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        if (!codecReleased.compareAndSet(false, true)) return
-        runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
+        withCodecOperationLock {
+            if (!codecReleased.compareAndSet(false, true)) return@withCodecOperationLock
+            runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
 
-        // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
-        // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
-        runCatching { codec.release() }.onFailure { LogContext.log.e(TAG, "release error", it) }
+            // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
+            // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
+            runCatching { codec.release() }.onFailure { LogContext.log.e(TAG, "release error", it) }
+        }
     }
 
     /**
@@ -123,8 +132,14 @@ abstract class BaseMediaCodec(
 
     open fun flush() {
         require(::codec.isInitialized) { "Did you call start() before?" }
-        runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
+        withCodecOperationLock {
+            runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
+        }
     }
+
+    /** Runs a synchronous codec operation under the same lock used by lifecycle teardown. */
+    protected fun <T> withCodecOperationLock(action: () -> T): T =
+        codecOperationLock.withLock(action)
 
     /**
      * Most of the time, you do NOT need to override this method.

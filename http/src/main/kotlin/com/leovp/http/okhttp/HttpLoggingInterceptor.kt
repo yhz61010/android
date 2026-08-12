@@ -298,11 +298,9 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         internal data class CapturedRequestBody(val buffer: Buffer, val truncated: Boolean)
 
         /**
-         * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one probe byte. Uses a non-throwing
-         * discarding sink (keep up to the cap, silently drop the rest, record whether anything was
-         * dropped) instead of a control-flow exception, so a dishonest contentLength() cannot make
-         * the logging path allocate the whole body, a RequestBody whose writeTo() catches
-         * IOException cannot swallow the truncation signal, and no stack trace is paid per capture
+         * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one probe byte. The sink records
+         * truncation before throwing a stackless sentinel, preserving early termination while
+         * ensuring a RequestBody that catches IOException cannot hide the truncation signal
          * (remediation R-10 / HTTP-3).
          */
         internal fun captureRequestBodyForLogging(requestBody: RequestBody): CapturedRequestBody {
@@ -316,18 +314,35 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                         remaining <= 0 -> {
                             source.skip(byteCount)
                             truncated = true
+                            throw RequestBodyLimitExceededException
                         }
                         byteCount > remaining -> {
                             super.write(source, remaining)
                             source.skip(byteCount - remaining)
                             truncated = true
+                            throw RequestBodyLimitExceededException
                         }
-                        else -> super.write(source, byteCount)
+                        else -> {
+                            super.write(source, byteCount)
+                            if (output.size > MAX_LOGGABLE_BODY_BYTES) {
+                                truncated = true
+                                throw RequestBodyLimitExceededException
+                            }
+                        }
                     }
                 }
             }.buffer()
-            limitedSink.use { requestBody.writeTo(it) }
+            try {
+                requestBody.writeTo(limitedSink)
+                limitedSink.flush()
+            } catch (_: RequestBodyLimitExceededException) {
+                // The sink already recorded truncation before aborting body generation.
+            }
             return CapturedRequestBody(output, truncated)
+        }
+
+        private object RequestBodyLimitExceededException : IOException() {
+            override fun fillInStackTrace(): Throwable = this
         }
 
         /** Header names whose values are redacted in logs to avoid leaking credentials. */

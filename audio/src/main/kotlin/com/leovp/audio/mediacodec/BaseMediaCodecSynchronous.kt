@@ -54,7 +54,14 @@ abstract class BaseMediaCodecSynchronous(
         }
     }
 
-    private fun process(): Boolean {
+    private fun process(): Boolean = withCodecOperationLock {
+        if (isReleasing) return@withCodecOperationLock false
+        processWithCodecLock()
+    }
+
+    /** Processes one input/output iteration while lifecycle teardown is excluded. */
+    @Suppress("ReturnCount")
+    private fun processWithCodecLock(): Boolean {
         var isFinish = false
         try {
             // See the dequeueInputBuffer method in document to confirm the timeoutUs parameter.

@@ -1,6 +1,6 @@
-# 八模块整改 —— 进度与代码审查记录（2026-08-11）
+# 八模块整改 —— 进度与代码审查记录（2026-08-11，更新至 2026-08-12）
 
-> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-11 的落地进度，以及针对
+> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-12 的落地进度，以及针对
 > Codex 两轮审查修复所做的正式 code-review 结论（首次复审确认 9 项代码问题 +
 > 1 项维护性建议、驳回 2 项；当前状态见 §1 与 §3）。
 > 关联文档：`2026-08-04-remediation-impl-plan-zh.md`（P0→P3 路线图）、
@@ -19,10 +19,10 @@
 | **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
 | **P2** | 26 | ✅ 已完成（Codex `7da7c444c`，待我方独立复审） | 功能正确性/并发/输入校验/性能 |
 | **P3** | ~16 | ❌ 未开始 | 清理/规范/测试补齐 |
-| **本轮剩余问题** | R-5 深改 + R-9 重构 | ❌ 待处理 | 见 §3（R-1~R-4、R-6~R-8、R-10 已修复；R-5 部分修复、深改暂缓；R-9 为维护性重构） |
+| **本轮剩余问题** | R-5 深改 | 🟡 暂缓 | 见 §3（R-1~R-4、R-6~R-10 已修复；R-5 部分修复、深改暂缓） |
 
 累计：72 项中完成 **56 项**（P0+P1+P2）；本轮审查 **R-1/R-2/R-3、R-4/R-6/R-7/R-8/R-10 已修复**、
-R-5 部分修复（深改暂缓，决策 B）；剩余 R-5 深改、R-9 维护性重构和 P3 约 16 项。
+R-5 部分修复（深改暂缓，决策 B），R-9 维护性重构已完成；剩余 R-5 深改和 P3 约 16 项。
 
 > 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`），按改动文件覆盖核实对应全部 26 项
 > 计划位置；**尚未**做我方独立逐项复审。本文 §3 的 R-1~R-10 是对 Codex 前两轮修复
@@ -75,7 +75,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 
 ---
 
-## 3. 审查问题状态（剩余 R-5 深改 + R-9 维护性重构，按严重度）
+## 3. 审查问题状态（仅剩 R-5 深改暂缓，按严重度）
 
 ### 3.1 ✅ P1 返工 —— **R-1 / R-2 / R-3 已于 2026-08-11 修复**（见 CHANGELOG「修复」段）
 
@@ -176,7 +176,7 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   `.unzip-backup-*.tmp` 目录静默残留在解压目录（旧代码 `require(entryFile.delete())` 会响亮失败）。
 - **建议**：检查 `delete()` 返回值并记日志 / 递归删除；或入口拒绝「文件条目撞已有目录」。
 
-#### R-9 ⏳ [清理] audio 拆解逻辑 4-6 处近似复制
+#### R-9 ✅ [清理] audio 拆解逻辑 4-6 处近似复制
 - **位置**：`MicRecorder.finishRecorderRelease`(232) vs `finishRecorderReleaseAndJoin`(258)
   （~20 行仅差 encoder release 一步 + NonCancellable）；`AacStreamPlayer` 与 `OpusStreamPlayer`
   的 `stopPlaying/detachDecoderForStop/releaseAudioTrack` 三件套（`releaseAudioTrack` 逐字节相同）；
@@ -185,6 +185,10 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - **成本**：未来拆解顺序修复须同步落在 4-6 个副本，漏一处即造成 legacy 与 suspend 路径语义分叉。
 - **建议**：抽共享 release core（以 encoder-release 为 lambda 参数）+ 播放器公共 `stopCommon()`。
 - **定性（采纳 Codex）**：这是**维护性重构建议**，不应计入「确定性缺陷」；优先级低于 R-1~R-8。
+- **最终处理**：`MicRecorder` 抽取统一的录音失败清理、`AudioRecord` 释放和完成通知步骤；新增模块
+  内部 `StreamPlayerStopper`，由 AAC/Opus 流播放器共用 decoder 摘除、scope 取消、`AudioTrack`
+  释放及同步/挂起 decoder 释放流程。公开入口、资源释放顺序与取消传播语义不变，并补充停止顺序和
+  `CancellationException` 传播回归测试。
 
 #### R-10 ✅ [低] `HttpLoggingInterceptor.kt:306` 哨兵异常被吞时缺截断标记
 - **现象**：限长用私有 `IOException` 子类**穿过第三方 `writeTo` 抛出**；若 `writeTo` 吞掉该异常
@@ -225,7 +229,7 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 | R-6 | 成立 | 保留 |
 | R-7 | 成立 | 保留 |
 | R-8 | 成立但仅修直接自调用，解决不了嵌套 `runBlocking` | 已加注意 |
-| R-9 | 维护性重构，不算确定性缺陷 | 已降级定性 |
+| R-9 | 维护性重构，不算确定性缺陷 | 已完成重构 |
 | R-10 | 成立但极低概率 | 保留（低优） |
 
 另 Codex 指出本文档两处需修正，均已采纳：进度过时（P2 已完成，应为 56/72）、
@@ -239,7 +243,7 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 1. ✅ **R-1 / R-2 / R-3 已修复**（2026-08-11，见 CHANGELOG）。
 2. ✅ **R-4 / R-7 / R-8 已修复,R-5 部分修复**（2026-08-11，见 CHANGELOG）。
    R-6 / R-10 已修复（`1f7b92455`）。R-5 结构性改动**暂缓**（决策 B，见 §3.2；待真机验证条件）。
-   剩余：R-5 深改（待真机条件）和 R-9（维护性重构）。
+   R-9 维护性重构已完成；仅剩 R-5 深改（待真机条件）。
 3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
 4. ✅ `./gradlew staticCheck` 已通过（Codex 运行，1421 任务全过；见 §1）。
 5. 推进 **P3（~16 项）**。

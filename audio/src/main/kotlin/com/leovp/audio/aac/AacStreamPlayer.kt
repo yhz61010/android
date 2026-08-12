@@ -4,17 +4,16 @@ import android.content.Context
 import android.media.AudioTrack
 import android.os.SystemClock
 import com.leovp.audio.AudioTrackPlayer
+import com.leovp.audio.base.StreamPlayerStopper
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,6 +50,9 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     private var audioDecoder: AacDecoder? = null
 
     private var csd0: ByteArray? = null
+
+    private val streamPlayerStopper =
+        StreamPlayerStopper(TAG, ioScope, audioTrackPlayer, ::detachDecoderForStop)
 
     private fun initAudioDecoder(csd0: ByteArray) {
         LogContext.log.i(TAG, "initAudioDecoder: $audioDecoderInfo")
@@ -177,22 +179,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
      * then awaits the old decoder OUTSIDE the lock to avoid suspension or callback re-entry.
      */
     suspend fun stopPlayingAndJoin() {
-        LogContext.log.w(TAG, "Stop playing audio")
-        val decoderToRelease = detachDecoderForStop()
-        ioScope.cancel()
-        releaseAudioTrack()
-
-        LogContext.log.w(TAG, "Releasing AudioDecoder...")
-        decoderToRelease?.let { dec ->
-            try {
-                dec.releaseAndJoin()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                LogContext.log.e(TAG, "audioDecoder release error. msg=${e.message}", e)
-            }
-        }
-        LogContext.log.w(TAG, "stopPlaying() done")
+        streamPlayerStopper.stopAndJoin { it.releaseAndJoin() }
     }
 
     /**
@@ -205,13 +192,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         ReplaceWith("stopPlayingAndJoin()")
     )
     fun stopPlaying() {
-        LogContext.log.w(TAG, "Stop playing audio")
-        val decoderToRelease = detachDecoderForStop()
-        ioScope.cancel()
-        releaseAudioTrack()
-        runCatching { decoderToRelease?.release() }
-            .onFailure { LogContext.log.e(TAG, "audioDecoder release error", it) }
-        LogContext.log.w(TAG, "stopPlaying() done")
+        streamPlayerStopper.stop { it.release() }
     }
 
     private fun detachDecoderForStop(): AacDecoder? = synchronized(lock) {
@@ -222,11 +203,6 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         frameCount = 0
         dropFrameTimes.set(0)
         old
-    }
-
-    private fun releaseAudioTrack() {
-        runCatching { audioTrackPlayer.release() }
-            .onFailure { LogContext.log.e(TAG, "audioTrack release error. msg=${it.message}", it) }
     }
 
     @Suppress("unused")

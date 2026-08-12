@@ -37,6 +37,9 @@ dependencies {
     api(projects.libBytes)
     api(projects.libCompress)
     api(projects.libCommonKotlin)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

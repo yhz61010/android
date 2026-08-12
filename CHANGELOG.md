@@ -47,7 +47,8 @@
 - **CAM2-3 `Camera2ComponentHelper.switchCamera` 由同步改为异步**:切换现在会先关闭旧设备并等待其
   `onClosed`(经 `Mutex` 串行化、关闭信号绑定到具体 `CameraDevice`),关闭超时(默认 3s)则中止本次切换
   并通过新增的 `cameraErrorListener` 上报,不再直接打开新设备;`lensSwitchListener` 仅在切换成功后回调。
-  方法签名不变(仍返回 `Unit`),但完成时机变为延迟;连续点击会取消尚未开始的上一次切换。
+  方法签名不变(仍返回 `Unit`),但完成时机变为延迟;连续请求不会取消已开始的切换,而是串行处理并在
+  打开设备前读取最新目标镜头。
   `switchToFrontCamera()`/`switchToBackCamera()` 同步语义随之变化。
 - **AUD-9 PCM16 输入改为完整帧契约**:`ByteArray.toShortArray()`、`toShortArrayLE()` 以及
   `AudioTrackPlayer.write()` 现在拒绝奇数字节长度并抛出 `IllegalArgumentException`,不再静默丢弃末尾
@@ -72,27 +73,27 @@
   已进入关闭/打开流程的任务;切换请求通过 `Mutex` 串行处理,并在打开设备前读取最新目标镜头,
   确保旧设备 `onClosed` 完成后才打开新设备。`BaseCamera2Fragment` 同时按 ToggleButton 的
   `isChecked` 明确请求前置/后置镜头,避免连续点击丢失最后一次选择。
-- **R-4 codec 关停期不再误报失败**:`BaseMediaCodec` 新增 `releasing` 标志(`release()`/
-  `releaseAndJoin()` 入口置位);同步 worker `process()` 在 `isReleasing` 期间捕获到 codec 异常时
-  静默停止,不再 `notifyCodecFailure()`,循环退出也不再触发假 `onEndOfStream()`。修复旧同步
-  `release()` cancel 不 join 与 worker 并发操作 codec 时的伪失败/复活风险。
+- **R-4 codec worker 与生命周期操作串行化**:`BaseMediaCodec` 使用共享可重入锁串行执行同步 worker
+  的完整 `process()` 迭代以及 `stop()`/`flush()`/`release()`;旧同步 `release()` 在取消 worker 后会
+  等待当前 codec 迭代退出再释放底层对象,不再与 `dequeue/queue/releaseOutputBuffer` 并发。`releasing`
+  标志继续避免主动关停被误报为 codec 失败或正常 EOS,并新增并发回归测试。
 - **R-5 空闲解码不再刷屏(部分修复)**:`process()` 仅在真正 drain 到输出时才打印 "Decode cost"
   日志,消除流静默时每秒约 20 条日志;更正 `AacDecoder.onInputData` 过时注释。**说明**:空输入仍
   提交 0 字节 buffer 归还输入槽——按 Codex 建议,消除该 churn 的结构性改动(先等数据再 dequeue /
   pending-index 状态机 + 取消/flush/EOS 测试)因风险较高**暂缓**,待补测试后再做。
 - **R-7 相机初始化失败清理**:`initializeCameraAndAwait` 在 `openCamera` 成功但后续 setup
-  (`setImageReaderForPhoto`/`setPreviewRepeatingRequest`)抛异常时先 `closeCamera()`(关设备并清
-  `openedCamera` 登记)再重抛,避免残留 CAS 登记阻塞后续 `initializeCamera()`/`switchCamera()`。
+  (`setImageReaderForPhoto`/`setPreviewRepeatingRequest`)抛异常时关闭对应设备,并在 `NonCancellable`
+  清理区等待其 `onClosed`(最长 3s)后再重抛,避免残留 CAS 登记或立即重试撞上仍在关闭的设备。
 - **R-8 `MicRecorder.stopRecordAndJoin` 守卫前置**:自调用守卫 `require(job !== 当前 Job)` 移到
   `stopped` CAS 与 `audioRecord.stop()` **之前**,自调用 fail-fast 不再半停止录音器。**注意**:仅拦截
   直接自调用;`runBlocking` 嵌套的间接自调用仍无法在此安全处理。
-- **R-6 `ZipUtil.unzip` 不再残留备份**:当条目路径被已有**目录**占用时,前置 `require(!isDirectory)`
+- **R-6 `ZipUtil.unzip` 不再静默残留备份**:当条目路径被已有**目录**占用时,前置 `require(!isDirectory)`
   响亮拒绝(不再把非空目录改名为备份后 `delete()` 静默失败残留 `.unzip-backup-*.tmp`);成功路径的
-  备份删除失败也改为记日志而非忽略返回值。
-- **R-10 `HttpLoggingInterceptor` 请求体日志截断改用非抛出 sink**:`captureRequestBodyForLogging`
-  以「写满上限即丢弃剩余并置 `truncated`」的丢弃式 `ForwardingSink` 取代私有 `IOException` 控制流,
-  使 `writeTo()` 内部吞 `IOException` 的 body 无法隐藏截断标记,且不再为每次截断付出堆栈构造开销;
-  截断输出与 256 KiB+1 上限行为不变。
+  备份删除失败也改为记日志而非忽略返回值;新增目录冲突回归测试。
+- **R-10 `HttpLoggingInterceptor` 请求体日志截断保持内存与处理量有界**:
+  `captureRequestBodyForLogging` 在写入 256 KiB+1 探测字节时先置 `truncated`,再抛出无堆栈哨兵以
+  提前终止 body 生成;即使 `writeTo()` 吞掉该异常,截断状态也不会丢失。补充精确边界、吞异常及
+  提前终止生产的回归测试。
 - **CAM2-2 相机打开阶段 `onDisconnected` 关闭设备并抛异常**:打开期间断连现在 `device.close()` 并以
   `IllegalStateException` resume(带 `isActive` 守卫防二次 resume),不再仅打日志(TODO)。
 - **CAM2-6 相机线程/执行器随视图释放**:`stopCameraThread()` 追加 `singleExecutor.shutdown()`;

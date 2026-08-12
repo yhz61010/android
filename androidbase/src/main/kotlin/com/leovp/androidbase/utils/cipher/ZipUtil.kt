@@ -262,6 +262,9 @@ object ZipUtil {
         require(isInsideDest(parent.canonicalPath, destPath, destRoot)) {
             "Blocked Zip Slip path traversal for entry: $entryName"
         }
+        require(!entryFile.isDirectory) {
+            "Cannot replace existing directory with file entry: $entryName"
+        }
 
         var totalWritten = totalWrittenSoFar
         val tempFile = File.createTempFile(".unzip-", ".tmp", parent)
@@ -282,12 +285,6 @@ object ZipUtil {
                     bos.write(buffer, 0, length)
                 }
             }
-            // A file entry must not silently overwrite an existing directory: renaming a (possibly
-            // non-empty) directory to the backup would then fail to delete and leave stray backup
-            // litter in the output tree. Reject loudly instead (remediation R-6).
-            require(!entryFile.isDirectory) {
-                "Cannot replace existing directory with file entry: $entryName"
-            }
             val backupFile = if (entryFile.exists()) {
                 File.createTempFile(".unzip-backup-", ".tmp", parent).also { backup ->
                     require(backup.delete()) { "Cannot prepare backup for entry: $entryName" }
@@ -306,11 +303,14 @@ object ZipUtil {
                 }
                 error("Cannot move extracted entry into place: $entryName")
             }
-            // The backup is a plain file at this point; if deletion somehow fails, do not leave it
-            // silently — log it rather than swallowing the result (remediation R-6).
+            // The backup is a plain file at this point; report deletion failure rather than
+            // silently leaving it behind (remediation R-6).
             backupFile?.let { backup ->
                 if (backup.exists() && !backup.delete()) {
-                    LogContext.log.w(TAG, "Failed to delete unzip backup file: ${backup.absolutePath}")
+                    LogContext.log.w(
+                        TAG,
+                        "Failed to delete unzip backup file: ${backup.absolutePath}"
+                    )
                 }
             }
         } finally {

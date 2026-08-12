@@ -64,6 +64,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
@@ -610,10 +611,10 @@ class Camera2ComponentHelper(
 
         // Open the selected camera
         camera = openCamera(cameraManager, cameraId, cameraHandler)
+        val openedForSetup = openedCamera.get()?.takeIf { it.device === camera }
 
-        // If a post-open setup step fails, close the just-opened device and clear its registration
-        // so a later initializeCamera()/switchCamera() is not blocked by a stale openedCamera CAS
-        // entry (remediation R-7). closeCamera() also clears openedCamera for this device.
+        // If post-open setup fails, close the exact device and await onClosed before reporting the
+        // error, so an immediate retry cannot race a device that is still physically closing.
         try {
             if (enableTakePhotoFeature) {
                 val st = SystemClock.elapsedRealtime()
@@ -629,11 +630,29 @@ class Camera2ComponentHelper(
                 )
             }
         } catch (e: CancellationException) {
-            closeCamera()
+            closeCameraAfterFailedInitialization(openedForSetup)
             throw e
         } catch (e: Exception) {
-            closeCamera()
+            closeCameraAfterFailedInitialization(openedForSetup)
             throw e
+        }
+    }
+
+    private suspend fun closeCameraAfterFailedInitialization(opened: OpenedCamera?) {
+        closeCamera()
+        if (opened == null) return
+        withContext(NonCancellable) {
+            val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+                opened.closed.await()
+                true
+            } ?: false
+            if (!closedInTime) {
+                LogContext.log.e(
+                    TAG,
+                    "Camera close timed out after initialization failed",
+                    TimeoutException("Camera close timed out after initialization failed")
+                )
+            }
         }
     }
 

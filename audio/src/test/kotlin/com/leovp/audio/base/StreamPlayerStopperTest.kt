@@ -69,4 +69,28 @@ class StreamPlayerStopperTest {
         assertFalse(scope.isActive)
         verify(exactly = 1) { audioTrackPlayer.release() }
     }
+
+    @Test
+    fun `suspending stop logs ordinary decoder failures without throwing`() = runTest {
+        val events = mutableListOf<String>()
+        val scope = CoroutineScope(Job())
+        val audioTrackPlayer = mockk<AudioTrackPlayer>()
+        every { audioTrackPlayer.release() } answers { events += "audio-track" }
+        val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
+            events += "detach-decoder"
+            Any()
+        }
+
+        subject.stopAndJoin {
+            events += "release-decoder"
+            error("decoder release failed")
+        }
+
+        assertEquals(
+            listOf("detach-decoder", "audio-track", "release-decoder"),
+            events
+        )
+        assertFalse(scope.isActive)
+        verify(exactly = 1) { audioTrackPlayer.release() }
+    }
 }

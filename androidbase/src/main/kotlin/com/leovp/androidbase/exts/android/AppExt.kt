@@ -35,7 +35,7 @@ fun Context.installApk(file: File) {
         // }
         startActivity(intent)
     } catch (e: Exception) {
-        LogContext.log.e(TAG, "installApk exception.")
+        LogContext.log.e(TAG, "installApk exception.", e)
     }
 }
 
@@ -46,7 +46,7 @@ fun ActivityManager.exitApp() {
         }
         exitProcess(0)
     } catch (e: Exception) {
-        LogContext.log.e(TAG, "exitApp exception.")
+        LogContext.log.e(TAG, "exitApp exception.", e)
     }
 }
 

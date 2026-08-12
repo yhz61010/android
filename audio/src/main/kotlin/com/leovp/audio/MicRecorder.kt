@@ -2,6 +2,8 @@
 
 package com.leovp.audio
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.annotation.SuppressLint
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -257,7 +259,7 @@ class MicRecorder(
      */
     private fun stopAudioRecord(): Boolean {
         var ok = true
-        runCatching {
+        runCatchingPreservingCancellation {
             if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
                 audioRecord.stop()
             }
@@ -273,7 +275,7 @@ class MicRecorder(
         var ok = stopSucceeded
         try {
             ok = releaseAudioRecord(ok)
-            runCatching { encodeWrapper?.release() }.onFailure {
+            runCatchingPreservingCancellation { encodeWrapper?.release() }.onFailure {
                 ok = false
                 LogContext.log.e(TAG, "encoder release error", it)
             }
@@ -308,7 +310,7 @@ class MicRecorder(
 
     private fun releaseAudioRecord(currentResult: Boolean): Boolean {
         var ok = currentResult
-        runCatching {
+        runCatchingPreservingCancellation {
             audioRecord.release()
             LogContext.log.w(TAG, "Recording released.")
         }.onFailure {

@@ -401,7 +401,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         internalOnStateChangedListeners.remove(listener)
 
     private fun callStateChangedListener(newState: State.Type) {
-        for (listener in internalOnStateChangedListeners) listener.onStateChanged(newState)
+        for (listener in internalOnStateChangedListeners.toList()) {
+            listener.onStateChanged(newState)
+        }
     }
 
     // https://stackoverflow.com/a/50343572
@@ -435,19 +437,19 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
         when (currState) {
             State.Type.STATE_IDLE -> {
-                for (listener in internalClickListeners) listener.onIdleButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onIdleButtonClick(v)
             }
 
             State.Type.STATE_INDETERMINATE, State.Type.STATE_DETERMINATE -> {
-                for (listener in internalClickListeners) listener.onCancelButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onCancelButtonClick(v)
             }
 
             State.Type.STATE_FINISHED -> {
-                for (listener in internalClickListeners) listener.onFinishButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onFinishButtonClick(v)
             }
 
             State.Type.STATE_ERROR -> {
-                for (listener in internalClickListeners) listener.onErrorButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onErrorButtonClick(v)
             }
 
             else -> Unit

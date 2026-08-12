@@ -51,55 +51,34 @@ abstract class BaseProgressObserver<T>(private val mListener: ObserverOnNextList
         // java.net.SocketTimeoutException: timeout
         // java.net.SocketTimeoutException: SSL handshake timed out
         // ----------------------
-        var statusCode = -1
-        when (e) {
-            is ConnectException -> {
-                // Can not connect to server
-                LogContext.log.e(
-                    javaClass.simpleName,
-                    "Can not connect to server. ConnectException"
-                )
-            }
-            is SocketTimeoutException -> {
-                // Timeout
-                LogContext.log.e(javaClass.simpleName, "Connect timeout.")
-            }
-            is UnknownHostException -> {
-                // java.net.UnknownHostException: Unable to resolve host "dummy.dummy": No address
-                // associated with hostname
-                LogContext.log.e(
-                    javaClass.simpleName,
-                    "Can not connect to server. UnknownHostException"
-                )
-            }
-            is MalformedJsonException -> {
-                // Malformed JSON
-                LogContext.log.e(javaClass.simpleName, "MalformedJsonException")
-            }
-            is HttpException -> {
-                statusCode = e.code()
-                LogContext.log.e(javaClass.simpleName, "Response status code: $statusCode")
-                //                when (statusCode) {
-                //                    in 400..499 -> {
-                // LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
-                //                    }
-                //                    in 500..599 -> {
-                // LogContext.log.e(javaClass.simpleName, "Response status code[$statusCode]")
-                //                    }
-                //                    else -> {
-                //                        LogContext.log.e(
-                //                            javaClass.simpleName,
-                // "Response status code[neither 4xx nor 5xx]: $statusCode"
-                //                        )
-                //                    }
-                //                }
-            }
-        }
-        mListener.onError(statusCode, e.message ?: "", e)
+        val classification = classifyObserverError(e)
+        classification.logMessage?.let { LogContext.log.e(javaClass.simpleName, it) }
+        mListener.onError(classification.statusCode, e.message ?: "", e)
     }
 
     override fun onComplete() {
         LogContext.log.d(javaClass.simpleName, "onComplete()")
         mListener.onComplete()
     }
+}
+
+internal data class ObserverErrorClassification(
+    val statusCode: Int = -1,
+    val logMessage: String? = null,
+)
+
+internal fun classifyObserverError(error: Throwable): ObserverErrorClassification = when (error) {
+    is ConnectException -> ObserverErrorClassification(
+        logMessage = "Can not connect to server. ConnectException"
+    )
+    is SocketTimeoutException -> ObserverErrorClassification(logMessage = "Connect timeout.")
+    is UnknownHostException -> ObserverErrorClassification(
+        logMessage = "Can not connect to server. UnknownHostException"
+    )
+    is MalformedJsonException -> ObserverErrorClassification(logMessage = "MalformedJsonException")
+    is HttpException -> ObserverErrorClassification(
+        statusCode = error.code(),
+        logMessage = "Response status code: ${error.code()}"
+    )
+    else -> ObserverErrorClassification()
 }

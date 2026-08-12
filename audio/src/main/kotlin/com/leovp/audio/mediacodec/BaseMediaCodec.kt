@@ -3,6 +3,7 @@ package com.leovp.audio.mediacodec
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
+import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,7 +72,8 @@ abstract class BaseMediaCodec(
     open fun stop() {
         require(::codec.isInitialized) { "Did you call start() before?" }
         withCodecOperationLock {
-            runCatching { codec.stop() }.onFailure { LogContext.log.e(TAG, "stop() error", it) }
+            runCatchingPreservingCancellation { codec.stop() }
+                .onFailure { LogContext.log.e(TAG, "stop() error", it) }
         }
     }
 
@@ -103,11 +105,12 @@ abstract class BaseMediaCodec(
         require(::codec.isInitialized) { "Did you call start() before?" }
         withCodecOperationLock {
             if (!codecReleased.compareAndSet(false, true)) return@withCodecOperationLock
-            runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
+            runCatchingPreservingCancellation { codec.flush() }
+                .onFailure { LogContext.log.e(TAG, "flush error", it) }
 
             // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
-            // runCatching { codec.setCallback(null) }.onFailure { it.printStackTrace() }
-            runCatching { codec.release() }.onFailure { LogContext.log.e(TAG, "release error", it) }
+            runCatchingPreservingCancellation { codec.release() }
+                .onFailure { LogContext.log.e(TAG, "release error", it) }
         }
     }
 
@@ -133,7 +136,8 @@ abstract class BaseMediaCodec(
     open fun flush() {
         require(::codec.isInitialized) { "Did you call start() before?" }
         withCodecOperationLock {
-            runCatching { codec.flush() }.onFailure { LogContext.log.e(TAG, "flush error", it) }
+            runCatchingPreservingCancellation { codec.flush() }
+                .onFailure { LogContext.log.e(TAG, "flush error", it) }
         }
     }
 

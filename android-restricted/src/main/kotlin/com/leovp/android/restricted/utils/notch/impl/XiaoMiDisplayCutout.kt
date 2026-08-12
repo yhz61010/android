@@ -7,8 +7,13 @@ import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.exts.getDimenInPixel
 import com.leovp.android.restricted.utils.DeviceProp
 import com.leovp.android.restricted.utils.notch.DisplayCutout
+import com.leovp.log.LogContext
 
 internal class XiaoMiDisplayCutout : DisplayCutout {
+    companion object {
+        private const val TAG = "XiaoMiDisplayCutout"
+    }
+
     override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
         DeviceProp.getSystemProperty("ro.miui.notch").toInt() == 1
     }.getOrDefault(false)
@@ -18,7 +23,7 @@ internal class XiaoMiDisplayCutout : DisplayCutout {
         runCatching {
             val method = Window::class.java.getMethod("addExtraFlags", Int::class.javaPrimitiveType)
             method.invoke(activity.window, flag)
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "Enable Xiaomi display cutout failed", it) }
     }
 
     override fun cutoutAreaRect(

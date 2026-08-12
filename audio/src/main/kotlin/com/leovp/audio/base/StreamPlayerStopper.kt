@@ -15,7 +15,7 @@ internal class StreamPlayerStopper<Decoder>(
 ) {
     fun stop(releaseDecoder: (Decoder) -> Unit) {
         val decoder = prepareStop()
-        runCatching { decoder?.let(releaseDecoder) }
+        runCatchingPreservingCancellation { decoder?.let(releaseDecoder) }
             .onFailure { LogContext.log.e(tag, "audioDecoder release error", it) }
         LogContext.log.w(tag, "stopPlaying() done")
     }
@@ -38,7 +38,7 @@ internal class StreamPlayerStopper<Decoder>(
         LogContext.log.w(tag, "Stop playing audio")
         val decoder = detachDecoder()
         ioScope.cancel()
-        runCatching { audioTrackPlayer.release() }
+        runCatchingPreservingCancellation { audioTrackPlayer.release() }
             .onFailure {
                 LogContext.log.e(tag, "audioTrack release error. msg=${it.message}", it)
             }

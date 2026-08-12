@@ -1,8 +1,8 @@
 # 八模块整改实现计划（2026-08-04）
 
-## 0. 实施进度（2026-08-06）
+## 0. 实施进度（更新至 2026-08-12）
 
-`fix/eight-module-remediation` 已完成本计划全部 26 项 P2：
+`fix/eight-module-remediation` 已完成 P0、P1、P2 和 P3 共 72 项确认整改。P2 的 26 项为：
 
 - camera2live：`CAM2-4`、`CAM2-5`、`CAM2-9`、`CAM2-10`
 - android-restricted：`AR-2`、`AR-3`、`AR-4`、`AR-5`、`AR-6`、`AR-8`
@@ -15,11 +15,15 @@
 
 实现保持既有公开方法和属性的 JVM 签名；`CameraAvcEncoder.queue` 仍公开为
 `ConcurrentLinkedQueue<ByteArray>`，但内部改为最多保留 5 帧并在拥塞时丢弃最旧帧。需要调用方关注的
-行为变化已记录到根目录 `CHANGELOG.md`。P3 与两个决策项 `CX-5`、`LB-3` 不属于本次 P2 范围。
+P3 的 16 项 `CIP-4`、`ABN-5/6/7`、`AR-9/10`、`AUD-13/14`、`CX-8/9a/9b/9c`、`CPB-6`、
+`HTTP-6/7`、`LB-5` 已于 2026-08-12 完成。行为变化已记录到根目录 `CHANGELOG.md`。
+两个决策项 `CX-5`、`LB-3` 不计入 72 项，仍维持原决策门槛，不在本轮 P3 中擅自修改。
 
-已执行受影响模块的强制重跑编译与单元测试；上述八个模块各自的 `ktlintCheck` 与 `detekt` 也已通过，
-P2 验证完成。仓库级 `ktlintCheck detekt` 仍会被本次未修改模块中的既有规则问题阻断，涉及
-`draw-on-screen`、`lib-common-android`、`lib-compress`、`lib-json`、`lib-network`，不属于本次 P2 改动。
+P2 已执行受影响模块的强制重跑编译、单元测试、`ktlintCheck` 与 `detekt`。P3 新增/补强了
+GZIP 短输入、audio 取消与普通异常、CameraX 一次性门控和亮度、CircleProgressbar 监听器快照、
+HTTP body/error 分类、lib-bytes 固定向量测试；最终验证结果见
+`2026-08-11-remediation-progress-and-review-zh.md`。P3 完成后的全仓 `staticCheck --continue --rerun-tasks`
+已通过，1421 个任务全部执行成功。
 
 本文件是《[八模块代码审查复核报告](./2026-08-04-eight-module-code-review-zh.md)》（Codex 复核版）的**实现级整改方案**：给出每条确认问题的 `文件:行`、根因、现状→目标代码、minSdk 21 兼容边界、测试用例与回归风险。
 
@@ -123,7 +127,7 @@ P2 验证完成。仓库级 `ktlintCheck detekt` 仍会被本次未修改模块�
 | CPB-5 | circle-progressbar | MEDIUM | 进度、动画、恢复和无障碍状态不完整 | `CircleProgressbar.kt`、`State.kt` |
 | LB-4 | lib-bytes | MEDIUM | ByteBufferExt 缺少直接测试 | `ByteBufferExt.kt` |
 
-### P3 — 清理 / 规范 / 测试补齐
+### P3 — 清理 / 规范 / 测试补齐（✅ 16 项已于 2026-08-12 完成）
 | ID | 模块 | 级别 | 摘要 |
 |---|---|---|---|
 | CIP-4 | androidbase | LOW | GZipUtil.isGzip <2 字节无长度检查 |

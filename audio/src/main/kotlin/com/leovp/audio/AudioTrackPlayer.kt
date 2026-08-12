@@ -2,6 +2,8 @@
 
 package com.leovp.audio
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
@@ -149,7 +151,8 @@ class AudioTrackPlayer(
             return
         }
         LogContext.log.w(TAG, "resume()")
-        runCatching { audioTrack.play() }.onFailure { it.printStackTrace() }
+        runCatchingPreservingCancellation { audioTrack.play() }
+            .onFailure { LogContext.log.e(TAG, "AudioTrack resume failed", it) }
     }
 
     /**
@@ -168,12 +171,12 @@ class AudioTrackPlayer(
             return
         }
         LogContext.log.w(TAG, "pause()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (audioTrack.state == STATE_INITIALIZED) {
                 audioTrack.pause()
                 audioTrack.flush()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack pause failed", it) }
     }
 
     /**
@@ -193,13 +196,13 @@ class AudioTrackPlayer(
         }
         pause()
         LogContext.log.w(TAG, "stop()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (
                 audioTrack.state == STATE_INITIALIZED
             ) {
                 audioTrack.stop()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack stop failed", it) }
     }
 
     fun release() {
@@ -208,10 +211,10 @@ class AudioTrackPlayer(
         }
         stop()
         LogContext.log.w(TAG, "release()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (audioTrack.state == STATE_INITIALIZED) {
                 audioTrack.release()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack release failed", it) }
     }
 }

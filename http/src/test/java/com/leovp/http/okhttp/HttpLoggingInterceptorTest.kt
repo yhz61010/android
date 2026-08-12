@@ -1,11 +1,16 @@
 package com.leovp.http.okhttp
 
+import com.leovp.log.base.LogOutType
+import io.mockk.every
+import io.mockk.mockk
 import java.io.IOException
 import okhttp3.MediaType
+import okhttp3.Headers.Companion.headersOf
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.BufferedSink
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -13,6 +18,51 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class HttpLoggingInterceptorTest {
+    @Test
+    fun `plaintext detection distinguishes text binary and truncated utf8`() {
+        assertTrue(HttpLoggingInterceptor.isPlaintext(okio.Buffer().writeUtf8("plain text")))
+        assertFalse(HttpLoggingInterceptor.isPlaintext(okio.Buffer().write(byteArrayOf(0x00))))
+        assertFalse(
+            HttpLoggingInterceptor.isPlaintext(okio.Buffer().write(byteArrayOf(0xC3.toByte())))
+        )
+    }
+
+    @Test
+    fun `body encoding treats identity as readable and other encodings as encoded`() {
+        assertFalse(HttpLoggingInterceptor.bodyEncoded(headersOf()))
+        assertFalse(HttpLoggingInterceptor.bodyEncoded(headersOf("Content-Encoding", "identity")))
+        assertTrue(HttpLoggingInterceptor.bodyEncoded(headersOf("Content-Encoding", "gzip")))
+    }
+
+    @Test
+    fun `binary response still emits the final separator`() {
+        val messages = mutableListOf<String?>()
+        val logger = object : HttpLoggingInterceptor.Logger {
+            override fun log(message: String?, outputType: LogOutType) {
+                messages += message
+            }
+        }
+        val request = Request.Builder().url("https://example.com/").build()
+        val chain = mockk<okhttp3.Interceptor.Chain>()
+        every { chain.request() } returns request
+        every { chain.connection() } returns null
+        every { chain.proceed(request) } returns Response.Builder()
+            .request(request)
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(byteArrayOf(0x00).toResponseBody())
+            .build()
+        val interceptor = HttpLoggingInterceptor(logger).apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        interceptor.intercept(chain)
+
+        assertTrue(messages.any { it?.contains("binary 1-byte body omitted") == true })
+        assertEquals("─".repeat(98), messages.last())
+    }
+
     @Test
     fun `response body semantics cover head and bodyless status codes`() {
         assertFalse(response(method = "HEAD", code = 200).hasReadableBody())

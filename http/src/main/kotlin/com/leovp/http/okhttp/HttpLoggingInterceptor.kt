@@ -214,16 +214,16 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     responseBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
                 if (!isPlaintext(buffer)) {
                     logger.log(" \n<-- END HTTP (binary ${buffer.size}-byte body omitted)")
-                    return response
-                }
-                if (contentLength != 0L) {
-                    val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
-                    logger.log(" \n${buffer.clone().readString(logged, charset)}")
-                    if (buffer.size > logged) {
-                        logger.log("<-- (body truncated to $logged bytes for logging)")
+                } else {
+                    if (contentLength != 0L) {
+                        val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+                        logger.log(" \n${buffer.clone().readString(logged, charset)}")
+                        if (buffer.size > logged) {
+                            logger.log("<-- (body truncated to $logged bytes for logging)")
+                        }
                     }
+                    logger.log("<-- END HTTP (${buffer.size}-byte buffered for logging)")
                 }
-                logger.log("<-- END HTTP (${buffer.size}-byte buffered for logging)")
             }
         }
         logger.log(
@@ -281,11 +281,6 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     "body omitted)"
             )
         }
-    }
-
-    private fun bodyEncoded(headers: Headers): Boolean {
-        val contentEncoding = headers["Content-Encoding"]
-        return contentEncoding != null && !contentEncoding.equals("identity", ignoreCase = true)
     }
 
     companion object {
@@ -356,6 +351,12 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         /** Redacts the value of a sensitive header (matched case-insensitively by [name]). */
         private fun redactHeader(name: String, value: String): String =
             if (name.lowercase() in SENSITIVE_HEADERS) "██" else value
+
+        internal fun bodyEncoded(headers: Headers): Boolean {
+            val contentEncoding = headers["Content-Encoding"]
+            return contentEncoding != null &&
+                !contentEncoding.equals("identity", ignoreCase = true)
+        }
 
         /**
          * Returns true if the body in question probably contains human readable text. Uses a small

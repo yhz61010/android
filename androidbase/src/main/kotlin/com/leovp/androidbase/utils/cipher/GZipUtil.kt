@@ -57,12 +57,9 @@ object GZipUtil {
      *
      * GZIP_MAGIC: 0x8b1f - in big endian
      */
-    fun isGzip(data: ByteArray): Boolean = (
-        (
-            data[0].toInt() and
-                0xFF
-            ) or
-            (data[1].toInt() shl 8)
-        ) and
-        0xFFFF == GZIPInputStream.GZIP_MAGIC
+    fun isGzip(data: ByteArray): Boolean {
+        if (data.size < 2) return false
+        val magic = (data[0].toInt() and 0xFF) or (data[1].toInt() shl 8)
+        return magic and 0xFFFF == GZIPInputStream.GZIP_MAGIC
+    }
 }

@@ -6,6 +6,7 @@ import android.text.TextUtils
 import com.leovp.android.exts.isPortrait
 import com.leovp.android.restricted.utils.DeviceProp
 import com.leovp.android.restricted.utils.notch.DisplayCutout
+import com.leovp.log.LogContext
 
 internal class OppoDisplayCutout : DisplayCutout {
     override fun supportDisplayCutout(activity: Activity): Boolean = runCatching {
@@ -46,10 +47,12 @@ internal class OppoDisplayCutout : DisplayCutout {
                 rectList.add(rect)
                 callback.onResult(rectList)
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "Read Oppo display cutout failed", it) }
     }
 
     companion object {
+        private const val TAG = "OppoDisplayCutout"
+
         /**
          * Get notch position
          *

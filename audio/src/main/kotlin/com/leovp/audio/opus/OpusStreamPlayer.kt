@@ -1,5 +1,7 @@
 package com.leovp.audio.opus
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioTrack
 import android.os.SystemClock
@@ -114,7 +116,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         val newCsd1 = audioData.copyOfRange(16 + 19 + 16, 16 + 19 + 16 + 8)
         val newCsd2 = audioData.copyOfRange(16 + 19 + 16 + 8 + 16, audioData.size)
         val capturedGeneration = generation
-        runCatching {
+        runCatchingPreservingCancellation {
             initAudioDecoder(newCsd0, newCsd1, newCsd2)
             audioTrackPlayer.play()
         }.onSuccess {
@@ -136,7 +138,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             }
             LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
         }.onFailure {
-            runCatching { audioDecoder?.release() }
+            runCatchingPreservingCancellation { audioDecoder?.release() }
             audioDecoder = null
             csd0 = null
             csd1 = null
@@ -166,9 +168,9 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
                     "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
-            runCatching { decoder.flush() }.getOrNull()
-            runCatching { audioTrackPlayer.pause() }.getOrNull()
-            runCatching { audioTrackPlayer.play() }.getOrNull()
+            runCatchingPreservingCancellation { decoder.flush() }.getOrNull()
+            runCatchingPreservingCancellation { audioTrackPlayer.pause() }.getOrNull()
+            runCatchingPreservingCancellation { audioTrackPlayer.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
                 // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need
                 // to do sync again.
@@ -221,7 +223,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     @Suppress("unused")
     fun getPlayState() = audioTrackPlayer.playState
 
-    private fun getAudioTimeUs(): Long = runCatching {
+    private fun getAudioTimeUs(): Long = runCatchingPreservingCancellation {
         val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)

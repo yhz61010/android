@@ -68,7 +68,7 @@ class KeepAlive(
                 isLooping = true
                 start()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "MediaPlayer start failed", it) }
 
         val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
         val alarmManager: AlarmManager = ContextCompat.getSystemService(
@@ -90,17 +90,26 @@ class KeepAlive(
         )
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent)
 
-        job = CoroutineScope(Dispatchers.Main).launch {
+        job = CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             KeepAliveBus.events.collect {
                 LogContext.log.d(TAG, "KeepAlive event received.")
-                callback()
+                try {
+                    callback()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "KeepAlive callback failed", e)
+                }
             }
         }
     }
 
     fun release() {
         LogContext.log.w(TAG, "Release keepAlive()")
-        runCatching { mediaPlayer?.run { release() } }.onFailure { it.printStackTrace() }
+        val player = mediaPlayer
+        mediaPlayer = null
+        runCatching { player?.release() }
+            .onFailure { LogContext.log.e(TAG, "MediaPlayer release failed", it) }
         job?.cancel()
         job = null
     }

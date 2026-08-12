@@ -60,6 +60,8 @@ class GZipUtilTest {
 
         val errorBytes: ByteArray = byteArrayOf(0x1, 0x2, 0x3, 0x4)
         assertEquals(false, GZipUtil.isGzip(errorBytes))
+        assertEquals(false, GZipUtil.isGzip(byteArrayOf()))
+        assertEquals(false, GZipUtil.isGzip(byteArrayOf(0x1F)))
         val errorString: String? = GZipUtil.decompress(errorBytes)
         assertEquals(null, errorString)
     }

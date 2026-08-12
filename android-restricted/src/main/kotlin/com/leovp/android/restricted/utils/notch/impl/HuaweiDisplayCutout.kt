@@ -5,6 +5,7 @@ import android.graphics.Rect
 import android.view.WindowManager
 import com.leovp.android.exts.calculateNotchRect
 import com.leovp.android.restricted.utils.notch.DisplayCutout
+import com.leovp.log.LogContext
 
 @Suppress("unused")
 internal class HuaweiDisplayCutout : DisplayCutout {
@@ -25,7 +26,7 @@ internal class HuaweiDisplayCutout : DisplayCutout {
             val method = layoutParamsExCls.getMethod("addHwFlags", Int::class.javaPrimitiveType)
             method.invoke(layoutParamsExObj, FLAG_NOTCH_SUPPORT)
             window.windowManager.updateViewLayout(window.decorView, window.decorView.layoutParams)
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "Enable Huawei display cutout failed", it) }
     }
 
     override fun cutoutAreaRect(
@@ -46,6 +47,8 @@ internal class HuaweiDisplayCutout : DisplayCutout {
     }
 
     companion object {
+        private const val TAG = "HuaweiDisplayCutout"
+
         /** Full screen flag */
         const val FLAG_NOTCH_SUPPORT = 0x00010000
 
@@ -66,7 +69,7 @@ internal class HuaweiDisplayCutout : DisplayCutout {
                     window.decorView,
                     window.decorView.layoutParams
                 )
-            }.onFailure { it.printStackTrace() }
+            }.onFailure { LogContext.log.e(TAG, "Disable Huawei display cutout failed", it) }
         }
     }
 }

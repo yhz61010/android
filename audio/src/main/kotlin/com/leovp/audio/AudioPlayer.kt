@@ -2,6 +2,8 @@
 
 package com.leovp.audio
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioTrack
@@ -170,7 +172,7 @@ class AudioPlayer(
     fun computePresentationTimeUs(frameIndex: Long) =
         frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 
-    fun getAudioTimeUs(): Long = runCatching {
+    fun getAudioTimeUs(): Long = runCatchingPreservingCancellation {
         val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)

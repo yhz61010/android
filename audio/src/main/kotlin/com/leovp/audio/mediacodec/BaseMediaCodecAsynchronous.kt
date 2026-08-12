@@ -2,9 +2,12 @@
 
 package com.leovp.audio.mediacodec
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
+import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 
 /**
@@ -28,7 +31,7 @@ abstract class BaseMediaCodecAsynchronous(
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
-            runCatching {
+            runCatchingPreservingCancellation {
                 val inputBuf = codec.getInputBuffer(index) ?: return
                 // Clear exist data.
                 inputBuf.clear()
@@ -41,7 +44,7 @@ abstract class BaseMediaCodecAsynchronous(
                 } else {
                     codec.queueInputBuffer(index, 0, size, pts, 0)
                 }
-            }.onFailure { it.printStackTrace() }
+            }.onFailure { LogContext.log.e(TAG, "Input buffer callback failed", it) }
         }
 
         override fun onOutputBufferAvailable(
@@ -49,7 +52,7 @@ abstract class BaseMediaCodecAsynchronous(
             index: Int,
             info: MediaCodec.BufferInfo
         ) {
-            runCatching {
+            runCatchingPreservingCancellation {
                 val outputBuffer: ByteBuffer? = codec.getOutputBuffer(index) // little endian
                 // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
                 // bufferFormat is equivalent to member variable outputFormat
@@ -77,7 +80,7 @@ abstract class BaseMediaCodecAsynchronous(
                     }
                     codec.releaseOutputBuffer(index, false)
                 }
-            }.onFailure { it.printStackTrace() }
+            }.onFailure { LogContext.log.e(TAG, "Output buffer callback failed", it) }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

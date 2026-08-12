@@ -11,7 +11,6 @@ class NoProgressObserver<T>(listener: ObserverOnNextListener<T>) :
     BaseProgressObserver<T>(listener) {
     // If you do not want to show any error information in the UI in No Progress Dialog mode,
     // do not call the super method and uncomment mListener.onError(e);
-    @Suppress("unchecked")
     override fun onError(e: Throwable) {
         super.onError(e)
         //        mListener.onError(e);

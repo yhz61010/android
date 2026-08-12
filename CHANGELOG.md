@@ -36,6 +36,18 @@
 
 ### 变更 (Changed)
 
+- **P3 低风险清理与规范化完成**:`KeepAlive` 使用 `SupervisorJob` 并隔离 callback 异常，释放后清空
+  `MediaPlayer`;`android-restricted` 和 `audio` 的目标路径不再调用 `printStackTrace()`，统一通过
+  `LogContext` 保留异常上下文。audio 模块的 `runCatching` 路径统一通过内部 helper 保证
+  `CancellationException` 继续向上抛出；`AacEncoder` 删除未使用且标有 FIXME 的 CSD 构造代码。
+- **CX-9c 权限页改为一次性导航**:`PermissionsFragment` 在 `onViewCreated` 发起权限流程，通过
+  `viewLifecycleOwner.lifecycle.withStarted` 等待可导航状态，并用一次性门控阻止同一 View 生命周期内
+  重复导航；等待会随 View 销毁自动取消并重置门控，导航失败时也允许后续重试。
+- **CPB-6 监听器分发采用快照语义**:`CircleProgressbar` 在状态和点击回调前复制监听器列表，允许
+  回调安全地增加或移除监听器，不再触发 `ConcurrentModificationException`;本轮新增的监听器从下一轮
+  分发开始生效。
+- **LB-5 字节读取表达式等价清理**:`readByte()` 直接返回原字节，`readInt()`/`readIntLE()` 对每个
+  无符号字节掩码和位移增加显式括号，并删除注释中的旧 hex 实现。返回值与既有契约不变。
 - **R-9 audio teardown 维护性重构**:`MicRecorder` 统一录音循环失败清理、`AudioRecord` 释放与
   完成通知步骤；`AacStreamPlayer`/`OpusStreamPlayer` 共用模块内部停止协调器，集中维护 decoder
   摘除、scope 取消、`AudioTrack` 释放及 decoder 释放顺序。公开 API、同步/挂起语义及执行顺序不变。
@@ -65,6 +77,14 @@
 
 ### 修复 (Fixed)
 
+- **P3 健壮性边界补齐**:`GZipUtil.isGzip()` 对 0/1 字节输入返回 `false`;相机特征缺值采用明确异常或
+  安全默认值，native bitmap 处理返回空时回退 Android 镜像/旋转；亮度计算改用无装箱累加并始终关闭 `ImageProxy`;
+  `CircleProgressbar` 回调期间可安全修改监听器列表。
+- **P3 日志与错误处理补齐**:`AppExt`、刘海屏适配、动态 Activity 启动、KeepAlive 和 audio 资源操作
+  记录完整 throwable;动态 Activity 类不存在时记日志并安全返回。挂起音频释放继续重抛
+  `CancellationException`，普通释放异常保持记录后兼容返回。
+- **HTTP-6/7 测试与日志收尾**:补充明文/二进制判断、Content-Encoding、observer 错误分类和二进制
+  响应日志测试；二进制响应不再提前返回，仍会输出统一末尾分隔线，并移除无效 suppress。
 - **R-1 `BaseMediaCodecSynchronous.process()` 输出 buffer 为空不再死循环**:`getOutputBuffer()`
   返回 `null`(index 被并发 flush/release 失效)时改为 `break` 退出本轮 drain,不再用同一 index
   无限自旋;外层 worker 循环下一轮经 `ensureActive()` 正常响应取消。修复潜在 CPU 自旋与释放期阻塞。

@@ -1,15 +1,18 @@
 package com.leovp.camerax.fragments
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.withStarted
 import androidx.navigation.findNavController
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.leovp.camerax.R
+import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /**
@@ -19,12 +22,16 @@ import kotlinx.coroutines.launch
 class PermissionsFragment : Fragment() {
 
     companion object {
+        private const val TAG = "PermissionsFragment"
+
         //        val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
         val PERMISSIONS_REQUIRED = PermissionLists.getCameraPermission()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private val navigationGate = OneShotGate()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         if (XXPermissions.isGrantedPermission(requireContext(), PERMISSIONS_REQUIRED)) {
             navigateToCamera()
         } else {
@@ -55,13 +62,41 @@ class PermissionsFragment : Fragment() {
         }
     }
 
+    override fun onDestroyView() {
+        navigationGate.reset()
+        super.onDestroyView()
+    }
+
     private fun navigateToCamera() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                requireActivity().findNavController(R.id.fragment_container_camerax).navigate(
-                    PermissionsFragmentDirections.actionPermissionsToCamera()
-                )
+        if (!navigationGate.tryAcquire()) return
+        val owner = viewLifecycleOwnerLiveData.value ?: run {
+            navigationGate.reset()
+            return
+        }
+        owner.lifecycleScope.launch {
+            try {
+                owner.lifecycle.withStarted {
+                    requireActivity().findNavController(R.id.fragment_container_camerax).navigate(
+                        PermissionsFragmentDirections.actionPermissionsToCamera()
+                    )
+                }
+            } catch (e: CancellationException) {
+                navigationGate.reset()
+                throw e
+            } catch (e: Exception) {
+                navigationGate.reset()
+                LogContext.log.e(TAG, "Navigate to camera failed", e)
             }
         }
+    }
+}
+
+internal class OneShotGate {
+    private val acquired = AtomicBoolean(false)
+
+    fun tryAcquire(): Boolean = acquired.compareAndSet(false, true)
+
+    fun reset() {
+        acquired.set(false)
     }
 }

@@ -1,10 +1,13 @@
 package com.leovp.audio.base.encoderWrapper
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import com.leovp.audio.aac.AacEncoder
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.base.iters.OutputCallback
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -14,6 +17,9 @@ class AacEncoderWrapper(
     encoderInfo: AudioEncoderInfo,
     private val outputCallback: OutputCallback,
 ) : AudioEncoderWrapper {
+    companion object {
+        private const val TAG = "AacEncoderWrapper"
+    }
 
     private var encoder = AacEncoder(
         sampleRate = encoderInfo.sampleRate,
@@ -36,7 +42,8 @@ class AacEncoderWrapper(
     }
 
     override fun release() {
-        runCatching { encoder.release() }.onFailure { it.printStackTrace() }
+        runCatchingPreservingCancellation { encoder.release() }
+            .onFailure { LogContext.log.e(TAG, "AAC encoder release failed", it) }
     }
 
     override suspend fun releaseAndJoin() {

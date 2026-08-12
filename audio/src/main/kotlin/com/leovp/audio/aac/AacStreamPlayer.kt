@@ -1,5 +1,7 @@
 package com.leovp.audio.aac
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioTrack
 import android.os.SystemClock
@@ -105,7 +107,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         val newCsd0 = byteArrayOf(audioData[audioData.size - 2], audioData[audioData.size - 1])
         LogContext.log.w(TAG, "Audio csd0=HEX[${newCsd0.toHexString()}]")
         val capturedGeneration = generation
-        runCatching {
+        runCatchingPreservingCancellation {
             initAudioDecoder(newCsd0)
             audioTrackPlayer.play()
         }.onSuccess {
@@ -125,7 +127,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
             }
             LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
         }.onFailure {
-            runCatching { audioDecoder?.release() }
+            runCatchingPreservingCancellation { audioDecoder?.release() }
             audioDecoder = null
             csd0 = null
             LogContext.log.e(TAG, "init failed, rolled back. msg=${it.message}", it)
@@ -155,9 +157,9 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
                     "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
-            runCatching { decoder.flush() }.getOrNull()
-            runCatching { audioTrackPlayer.pause() }.getOrNull()
-            runCatching { audioTrackPlayer.play() }.getOrNull()
+            runCatchingPreservingCancellation { decoder.flush() }.getOrNull()
+            runCatchingPreservingCancellation { audioTrackPlayer.pause() }.getOrNull()
+            runCatchingPreservingCancellation { audioTrackPlayer.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
                 // If drop frame times exceeds RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES-1 times, we need
                 // to do sync again.
@@ -208,7 +210,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     @Suppress("unused")
     fun getPlayState() = audioTrackPlayer.playState
 
-    private fun getAudioTimeUs(): Long = runCatching {
+    private fun getAudioTimeUs(): Long = runCatchingPreservingCancellation {
         val numFramesPlayed: Int = audioTrackPlayer.playbackHeadPosition
         numFramesPlayed * 1_000_000L / audioDecoderInfo.sampleRate
     }.getOrDefault(0L)

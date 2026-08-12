@@ -31,8 +31,9 @@
   合法属性名(`ro.*`/`ril.*`/`gsm.*`)全部匹配,行为不变。
 - **CIP-2 AES/PBKDF2 密钥副本清理**:`AESUtil` 不再通过不可清除的临时 hex `String` 派生密钥,
   改用与原大写 hex 编码完全一致的 `CharArray`,并在加解密或旧格式派生结束后清零;PBKDF2 provider
-  路径在 `finally` 调用 `PBEKeySpec.clearPassword()`,派生出的临时字节副本也在构造 AES key 后清零。
-  密文格式和既有固定向量不变。
+  路径在 `finally` 调用 `PBEKeySpec.clearPassword()`;API 21–25 的 HMAC-SHA256 回退路径会在
+  `finally` 清零密码字节、每轮 PRF 中间值和派生输出缓冲,构造 `SecretKeySpec` 后也立即清零临时
+  key 副本。密文格式和既有固定向量不变。
 
 ### 变更 (Changed)
 
@@ -77,6 +78,9 @@
 
 ### 修复 (Fixed)
 
+- **CAM2-10 编码队列丢帧可观测**:`CameraAvcEncoder` 的有界队列丢弃最旧帧时会通知编码器;
+  首个丢帧立即记录 warning,持续背压时每累计 30 个丢帧再记录一次,避免静默丢帧和日志洪泛。
+  队列容量、非阻塞写入和保留最新帧的策略不变。
 - **P3 健壮性边界补齐**:`GZipUtil.isGzip()` 对 0/1 字节输入返回 `false`;相机特征缺值采用明确异常或
   安全默认值，native bitmap 处理返回空时回退 Android 镜像/旋转；亮度计算改用无装箱累加并始终关闭 `ImageProxy`;
   `CircleProgressbar` 回调期间可安全修改监听器列表。

@@ -12,6 +12,7 @@ import com.leovp.bytes.toHexString
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.log.LogContext
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Author: Michael Leo
@@ -25,7 +26,9 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
     private val bitrateMode: Int = DEFAULT_BITRATE_MODE,
 ) {
-    val queue: ConcurrentLinkedQueue<ByteArray> = BoundedFrameQueue(MAX_PENDING_FRAMES)
+    private val droppedFrameCount = AtomicLong(0)
+    val queue: ConcurrentLinkedQueue<ByteArray> =
+        BoundedFrameQueue(MAX_PENDING_FRAMES, ::onEncoderFrameDropped)
     private var dataUpdateCallback: CallbackListener? = null
     lateinit var h264Encoder: MediaCodec
         private set
@@ -217,6 +220,13 @@ class CameraAvcEncoder @JvmOverloads constructor(
         queue.offer(data)
     }
 
+    private fun onEncoderFrameDropped() {
+        val count = droppedFrameCount.incrementAndGet()
+        if (count == 1L || count % DROPPED_FRAME_LOG_INTERVAL == 0L) {
+            LogContext.log.w(TAG, "Encoder queue full, dropping frame (total dropped: $count)")
+        }
+    }
+
     fun setDataUpdateCallback(callback: CallbackListener?) {
         dataUpdateCallback = callback
     }
@@ -257,20 +267,34 @@ class CameraAvcEncoder @JvmOverloads constructor(
     companion object {
         private const val TAG = "CameraEncoder"
         private const val MAX_PENDING_FRAMES = 5
+        private const val DROPPED_FRAME_LOG_INTERVAL = 30L
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
         const val DEFAULT_KEY_I_FRAME_INTERVAL = 5
         const val DEFAULT_BITRATE_MODE = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
     }
 }
 
-private class BoundedFrameQueue(private val capacity: Int) : ConcurrentLinkedQueue<ByteArray>() {
-    @Synchronized
-    override fun offer(element: ByteArray): Boolean {
-        while (size >= capacity) poll()
-        return super.offer(element)
+internal class BoundedFrameQueue(
+    private val capacity: Int,
+    private val onElementDropped: () -> Unit = {}
+) : ConcurrentLinkedQueue<ByteArray>() {
+    init {
+        require(capacity > 0) { "capacity must be positive" }
     }
 
-    @Synchronized
+    override fun offer(element: ByteArray): Boolean {
+        var droppedCount = 0
+        val offered = synchronized(this) {
+            while (size >= capacity) {
+                if (super.poll() == null) break
+                droppedCount++
+            }
+            super.offer(element)
+        }
+        repeat(droppedCount) { onElementDropped() }
+        return offered
+    }
+
     override fun addAll(elements: Collection<ByteArray>): Boolean {
         var changed = false
         elements.forEach { changed = offer(it) || changed }

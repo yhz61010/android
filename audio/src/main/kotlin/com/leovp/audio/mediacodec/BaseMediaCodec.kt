@@ -137,7 +137,12 @@ abstract class BaseMediaCodec(
         }
     }
 
-    /** Runs a synchronous codec operation under the same lock used by lifecycle teardown. */
+    /**
+     * Runs a synchronous codec operation under the same lock used by lifecycle teardown.
+     *
+     * Synchronous processing invokes subclass input/output callbacks while holding this lock, so
+     * lifecycle operations wait for the current callback to return. Keep those callbacks bounded.
+     */
     protected fun <T> withCodecOperationLock(action: () -> T): T =
         codecOperationLock.withLock(action)
 

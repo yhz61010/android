@@ -17,7 +17,7 @@
 |------|------|------|------|
 | **P0** | 4 | ✅ 已完成 | CIP-1、CAM2-1、HTTP-1、HTTP-3 |
 | **P1** | 26 | ✅ 已完成 | 资源/竞态/生命周期/泄漏 |
-| **P2** | 26 | ✅ 已完成（Codex `7da7c444c`，待我方独立复审） | 功能正确性/并发/输入校验/性能 |
+| **P2** | 26 | ✅ 已完成（Codex `7da7c444c`；已独立复审，见 §7：23 项确认、2 项不完整待补） | 功能正确性/并发/输入校验/性能 |
 | **P3** | 16 | ✅ 已完成 | 清理/规范/测试补齐（2026-08-12） |
 | **本轮剩余问题** | R-5 深改 | 🟡 暂缓 | 见 §3（R-1~R-4、R-6~R-10 已修复；R-5 部分修复、深改暂缓） |
 
@@ -25,9 +25,10 @@
 **R-1/R-2/R-3、R-4/R-6/R-7/R-8/R-10 已修复**，R-5 部分修复（深改暂缓，决策 B），
 R-9 维护性重构已完成；仅剩不计入 72 项的 R-5 深改以及 `CX-5`/`LB-3` 决策项。
 
-> 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`），按改动文件覆盖核实对应全部 26 项
-> 计划位置；**尚未**做我方独立逐项复审。本文 §3 的 R-1~R-10 是对 Codex 前两轮修复
-> （`b67c47606..14d47c758`）的审查结论，P2 提交并未修复其中任何一条。
+> 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`）。已于 2026-08-12 完成我方独立逐项
+> 复审（5 组并行审查，含实跑 detekt），结论见 §7：**26 项中 23 项确认修复到位、行为保持、detekt
+> 干净；2 项不完整（CIP-2、CAM2-10，均非破坏性，待补）**。本文 §3 的 R-1~R-10 是对 Codex 前两轮
+> 修复（`b67c47606..14d47c758`）的审查结论，P2 提交并未修复其中任何一条。
 
 ### 提交历史（本分支，自 master 起）
 
@@ -249,8 +250,56 @@ Codex 复审了本文档与 R-1~R-10，结论汇总：
 2. ✅ **R-4 / R-7 / R-8 已修复,R-5 部分修复**（2026-08-11，见 CHANGELOG）。
    R-6 / R-10 已修复（`1f7b92455`）。R-5 结构性改动**暂缓**（决策 B，见 §3.2；待真机验证条件）。
    R-9 维护性重构已完成；仅剩 R-5 深改（待真机条件）。
-3. **我方独立复审 P2 提交 `7da7c444c`**（Codex 已完成，尚未经本侧审查）。
+3. ✅ **我方独立复审 P2 提交 `7da7c444c` 已完成**（2026-08-12，见 §7）。23 项确认；
+   2 项不完整（CIP-2 pbkdf2 回退残留密钥未清零、CAM2-10 丢帧无日志）已交 Codex 补。
 4. ✅ P3 完成后 `./gradlew staticCheck --continue --rerun-tasks` 已通过（1421 任务全过；见 §1）。
 5. ✅ **P3 16 项已完成**（2026-08-12）；重点回归测试覆盖 AUD-14 的 audio 全模块
    `runCatching` 取消重抛 helper、CX-9c 门控、CPB-6 快照和 LB-5 大小端固定向量。
 6. 真机回归（包括 Camera2 连续快速切换）+ 版本号 bump。
+
+---
+
+## 7. P2 独立复审结论（2026-08-12）
+
+对 Codex 的 P2 提交 `7da7c444c`（26 项，34 文件，+617/-125）做独立逐项复审：按模块/关注点
+拆成 5 组并行审查（安全/加密用 security-reviewer，其余用 kotlin-reviewer），其中 4 组各自
+实跑了对应模块的 `detekt`（android-restricted、camera2live+camerax、androidbase+lib-bytes+
+circle-progressbar 均 exit 0，无未用 import/私有成员）。
+
+### 7.1 结论总览
+
+| 组 | 项 | 结论 |
+|----|----|------|
+| audio | AUD-9 / AUD-10 / AUD-11 / AUD-12 | ✅ 全部 CONFIRMED |
+| android-restricted | AR-2 / AR-3 / AR-4 / AR-5 / AR-6 / AR-8 | ✅ 全部 CONFIRMED |
+| androidbase / lib-bytes / circle-progressbar | ABN-2 / ABN-3 / ABN-4 / LB-2 / CPB-3 / CPB-4 / CPB-5 | ✅ 全部 CONFIRMED |
+| camera | CAM2-4 / CAM2-5 / CAM2-9 / CX-6 / CX-7 | ✅ CONFIRMED |
+| camera | **CAM2-10** | ⚠️ 不完整（见 7.2） |
+| security | HTTP-5 | ✅ CONFIRMED（charset `!!` 实际在 P0 `ea55a2bf4` 已修） |
+| security | **CIP-2** | ⚠️ 不完整（见 7.2） |
+
+**23 项确认到位、行为保持、detekt 干净；2 项不完整（均非破坏性，LOW–MEDIUM，已交 Codex 补）。**
+
+### 7.2 两处不完整（待 Codex 补）
+
+**① CIP-2 — `PBKDF2Util.pbkdf2HmacSha256Fallback` 残留密钥未清零**
+- 位置：`androidbase/.../cipher/PBKDF2Util.kt:505–520`。`passwordBytes` 已清零，但持有派生 AES
+  密钥的 `output` / `t` / `u` 三个 `ByteArray` 从未 `fill(0)` 就 `return output.copyOf(dkLen)`。
+- 影响：仅 **API 21–25** 回退路径命中；派生后堆转储可捞出完整密钥，与 CIP-2 目标不完整。
+  这些是 app 自有数组（非 JCE clone 限制），能且应清零。
+- 建议：loop 内清 `t`/`u`，return 前 `val r = output.copyOf(dkLen); output.fill(0); return r`。
+
+**② CAM2-10 — 有界队列丢帧静默**
+- 位置：`camera2live/.../codec/CameraAvcEncoder.kt:268–269`（`BoundedFrameQueue.offer` 的
+  `while (size >= capacity) poll()`）。有界化正确（`MAX_PENDING_FRAMES=5`，无 OOM、无死锁），
+  但**丢帧无任何日志**，与实现细节文档 CAM2-10 要求的
+  `LogContext.log.w(TAG, "Encoder queue full, dropping frame")` 不符。
+- 影响：长录制时背压/丢帧在生产日志中不可见。纯可观测性缺口，非正确性缺陷。
+- 建议：丢帧时加一条 `log.w`（可限流）。
+
+### 7.3 旁注（非缺陷，不必处理）
+- ABN-2 / CAM2-9：旧的同步 `outputFormat = it.outputFormat`（configure 后）被移除，改由异步
+  `onOutputFormatChanged` 填充——设计有意，该字段只写不读。
+- CAM2-5：`getJpegOrientation` 的 `deviceRotation` 默认值 `-1` 与姊妹函数的 `Surface.ROTATION_0`
+  不一致，但查表已 null-safe（`ORIENTATIONS[...] ?: 90`），无功能影响。
+- `DeviceProp.getSystemPropertyByShell`：`runCatching` 内的非局部 return（既有、功能等价）。

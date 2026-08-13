@@ -258,6 +258,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
+        if (!isAdded || view == null) {
+            LogContext.log.w(logTag, "bindCameraUseCases() skipped: view is not available")
+            return
+        }
         showAvailableRatio(
             incRatioBinding,
             selectedRatio,
@@ -406,7 +410,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
             camera = camProvider.bindToLifecycle(
-                this,
+                viewLifecycleOwner,
                 hdrCameraSelector ?: lensFacing,
                 preview,
                 imageCapture,

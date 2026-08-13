@@ -115,6 +115,7 @@ fun Byte.toHexString(
     addPadding: Boolean =
         false
 ) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
+
 /**
  * Converts each byte to its 7-bit ASCII character and joins them with [delimiter].
  *
@@ -126,14 +127,15 @@ fun Byte.toHexString(
  * @return the joined ASCII string ("" for an empty array).
  * @throws IllegalArgumentException if any byte is outside 0..127.
  */
-fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String =
-    mapIndexed { index, byte ->
-        val code = byte.toInt() and 0xFF
-        require(code <= 0x7F) {
-            "toAsciiString: byte at index $index is 0x%02X, outside ASCII range 0x00..0x7F".format(code)
-        }
-        code.toChar()
-    }.joinToString(delimiter)
+fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String = mapIndexed { index, byte ->
+    val code = byte.toInt() and 0xFF
+    require(code <= 0x7F) {
+        val value = "0x%02X".format(code)
+        "toAsciiString: byte at index $index is $value, " +
+            "outside ASCII range 0x00..0x7F"
+    }
+    code.toChar()
+}.joinToString(delimiter)
 
 fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
     if (this.isEmpty()) return ""

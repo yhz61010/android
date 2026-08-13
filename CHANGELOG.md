@@ -139,6 +139,10 @@
 - **CX-3 触碰 View/binding 的协程改用 `viewLifecycleOwner.lifecycleScope`**:相机回调(可能离页后触发)
   保留 `lifecycleScope` 但在 `withContext(Main)` 内 `if (!isAdded || view == null) return`,修复
   「进入相机→立即返回」时向已销毁视图回调导致的崩溃。
+- **CX-5 `CameraFragment` 相机绑定改用 `viewLifecycleOwner`**:`bindCameraUseCases()` 原将 use-case
+  绑定到 Fragment(`this`),View 销毁但 Fragment 保留时相机仍绑定、持有旧预览 Surface;改为绑定
+  `viewLifecycleOwner`(与 `VideoFragment` 对齐)并在函数入口加 `if (!isAdded || view == null) return`
+  守卫,修复相机切换动画中途离页时向已销毁视图绑定的崩溃,及跨 View 重建的 Surface 泄漏/相机占用。
 - **LB-1 `ByteBuffer.copy()` / `copyAll()` 保留字节序**:复制时对目标 buffer 调用 `order(order())`,
   修复小端 buffer 复制后字节序被重置为大端导致的静默数据损坏。
 - **HTTP-2 `HttpRequest` 并发安全**:不再共享并复用同一个可变 `Retrofit.Builder`;改为保存不可变

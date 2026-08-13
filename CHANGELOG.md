@@ -146,6 +146,10 @@
   访问已清空 binding 的崩溃,以及跨 View 重建的 Surface 泄漏/相机占用。
 - **LB-1 `ByteBuffer.copy()` / `copyAll()` 保留字节序**:复制时对目标 buffer 调用 `order(order())`,
   修复小端 buffer 复制后字节序被重置为大端导致的静默数据损坏。
+- **LB-3 `ByteArray.toAsciiString()` 明确严格 ASCII 契约**:原实现 `it.toInt().toChar()` 对 ≥`0x80`
+  的字节符号扩展成 U+FF80..U+FFFF 乱码;改为逐字节 `and 0xFF` 后要求 `0..127`,非 ASCII 字节
+  fail-fast 抛 `IllegalArgumentException`(含索引与十六进制值),并补 KDoc 与单元测试。对 0..127 输入
+  行为不变。**行为变更**:含高字节的输入由静默乱码变为抛异常。
 - **HTTP-2 `HttpRequest` 并发安全**:不再共享并复用同一个可变 `Retrofit.Builder`;改为保存不可变
   header 快照,每次 `getRetrofit(baseUrl)` 新建 builder,避免并发不同 `baseUrl` 时构建出错误 Host。
 - **AUD-1 `BaseMediaCodec` 确定性释放(T4)**:新增 `suspend fun releaseAndJoin()`,先

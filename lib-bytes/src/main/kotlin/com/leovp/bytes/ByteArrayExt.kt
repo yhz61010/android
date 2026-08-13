@@ -115,8 +115,25 @@ fun Byte.toHexString(
     addPadding: Boolean =
         false
 ) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
-fun ByteArray.toAsciiString(delimiter: CharSequence = ",") =
-    map { it.toInt().toChar() }.joinToString(delimiter)
+/**
+ * Converts each byte to its 7-bit ASCII character and joins them with [delimiter].
+ *
+ * Strict ASCII only: every byte MUST be in 0..127 (0x00..0x7F, control chars and DEL included).
+ * A byte >= 0x80 is not a valid ASCII code point and fails fast with [IllegalArgumentException]
+ * instead of being silently mangled by sign extension. For arbitrary bytes use [toHexString].
+ *
+ * @param delimiter separator inserted between characters (default ",").
+ * @return the joined ASCII string ("" for an empty array).
+ * @throws IllegalArgumentException if any byte is outside 0..127.
+ */
+fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String =
+    mapIndexed { index, byte ->
+        val code = byte.toInt() and 0xFF
+        require(code <= 0x7F) {
+            "toAsciiString: byte at index $index is 0x%02X, outside ASCII range 0x00..0x7F".format(code)
+        }
+        code.toChar()
+    }.joinToString(delimiter)
 
 fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
     if (this.isEmpty()) return ""

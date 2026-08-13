@@ -1,6 +1,6 @@
-# 八模块整改 —— 进度与代码审查记录（2026-08-11，更新至 2026-08-12）
+# 八模块整改 —— 进度与代码审查记录（2026-08-11，更新至 2026-08-13）
 
-> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-12 的落地进度，以及针对
+> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-13 的落地进度，以及针对
 > Codex 两轮审查修复所做的正式 code-review 结论（首次复审确认 9 项代码问题 +
 > 1 项维护性建议、驳回 2 项；当前状态见 §1 与 §3）。
 > 关联文档：`2026-08-04-remediation-impl-plan-zh.md`（P0→P3 路线图）、
@@ -23,8 +23,9 @@
 
 累计：72 项确认整改已完成 **72 项**（P0+P1+P2+P3）；本轮审查
 **R-1/R-2/R-3、R-4/R-6/R-7/R-8/R-10 已修复**，R-5 部分修复（深改暂缓，决策 B），
-R-9 维护性重构已完成；仅剩不计入 72 项的 R-5 深改以及 `LB-3` 决策项（`CX-5` 已于 2026-08-13
-修复，见 CHANGELOG 与 `superpowers/specs/2026-08-13-cx5-camera-lifecycle-design.md`）。
+R-9 维护性重构已完成；仅剩不计入 72 项的 R-5 深改以及 `LB-3` 决策项（`CX-5` 代码已于
+2026-08-13 修复，真机回归仍待执行，见 CHANGELOG 与
+`superpowers/specs/2026-08-13-cx5-camera-lifecycle-design.md`）。
 
 > 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`）。已于 2026-08-12 完成我方独立逐项
 > 复审（5 组并行审查，含实跑 detekt），结论见 §7：**26 项中 24 项确认修复到位、行为保持、detekt
@@ -63,6 +64,10 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
   **不**替代 R-3、R-4、R-7 的真机运行时验证；修复结论还依赖代码复审和对应回归测试。
 - audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回；
   Camera2 还需连续快速切换前后镜头并检查黑屏、UI 状态和 `ERROR_CAMERA_IN_USE`）。
+- CX-5 已通过 `:camerax:compileDebugKotlin`、`:camerax:detekt`、`:camerax:ktlintCheck` 和全仓
+  `assembleDebug` 强制重跑；真机仍需验证旋转/前后台恢复、返回栈 View 重建、相机切换动画中途离页及
+  比例切换重绑。尤其应确认动画中途离页后延迟 UI 恢复随 View 生命周期取消，logcat 无 binding
+  空指针异常。当前状态为“代码与构建验证完成，真机回归待执行”。
 - P3 `CX-9c` 仍需真机验证两条路径：首次进入时已授权，以及权限弹窗授权后返回；每条路径都应只导航
   一次，前后台切换或 STARTED 状态恢复不应再次导航，授权回调后立即离页不应崩溃。
 - 版本号（`leo-version`）未 bump。

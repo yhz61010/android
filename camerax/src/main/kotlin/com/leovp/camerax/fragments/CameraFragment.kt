@@ -8,8 +8,6 @@ import android.hardware.camera2.CameraCharacteristics
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Size
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -714,14 +712,16 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             switchBtn.setOnClickListener {
                 //                it.isEnabled = false
                 enableUI(false)
+                val currentViewLifecycleOwner = viewLifecycleOwner
                 switchBtn.animate()
                     .rotationBy(-180f)
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
-                            Handler(Looper.getMainLooper()).postDelayed({
+                            currentViewLifecycleOwner.lifecycleScope.launch {
+                                delay(500)
                                 // it.isEnabled = true
                                 enableUI(true)
-                            }, 500)
+                            }
                         }
                     })
                 switchCameraSelector()

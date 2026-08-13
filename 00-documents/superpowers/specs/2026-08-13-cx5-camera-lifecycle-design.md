@@ -31,11 +31,12 @@ camera 仍绑着，可能出现监听挂到陈旧 camera / 重复绑定。
    照抄旧 CameraX 官方样例导致的误用。
 2. **Q-A（是否先补观察性日志）**：**直接改**。`VideoFragment` 已用 `viewLifecycleOwner` 且工作正常，
    等于已有活的参照，无需先加临时生命周期日志。
-3. **Q-C（动画回调竞态）**：**加入口守卫**。
+3. **Q-C（离页竞态）**：`bindCameraUseCases()` 加入口守卫；相机切换动画结束后的延迟 UI 恢复
+   改由当前 `viewLifecycleOwner.lifecycleScope` 执行，在 View 销毁时自动取消。
 
 ## 3. 变更方案
 
-仅改 `CameraFragment.kt`，两处：
+仅改 `CameraFragment.kt`，三类内部行为：
 
 ### 3.1 绑定宿主 `this` → `viewLifecycleOwner`
 
@@ -43,15 +44,15 @@ camera 仍绑着，可能出现监听挂到陈旧 camera / 重复绑定。
 `this` 改为 `viewLifecycleOwner`。相机随 View 生命周期绑定/解绑，与 `VideoFragment` 对齐；
 View 重建时整体重绑，第 1 节的 UI 监听作用域矛盾自然消失。
 
-### 3.2 入口守卫（覆盖动画回调竞态）
+### 3.2 `bindCameraUseCases()` 入口守卫
 
 `bindCameraUseCases()` 有三个调用点：
-- `:256` `onViewCreated` 内（view 必存在）
-- `:726` 相机切换动画 `onAnimationEnd` 回调（**可能在 `onDestroyView` 之后触发**）
-- `:865` `closeRatioAndSelect` 用户操作（view 存在）
+- `setUpCamera()` 完成初始化后调用；该协程属于 `viewLifecycleOwner.lifecycleScope`；
+- 相机切换按钮点击后，在点击回调中同步调用；
+- `closeRatioAndSelect()` 的 `circularClose` `doOnStart` 动作中同步调用。
 
-`:726` 是异步回调：用户在切换动画播放中途离开页面时，回调可能在 View 销毁后触发。此时函数内部访问
-`viewLifecycleOwner` 会抛 `IllegalStateException`。在**函数入口**统一加守卫（一处覆盖全部三个调用点）：
+当前调用点都受 View 生命周期或同步 UI 事件约束。入口仍统一增加防御性前置条件，避免未来新增的异步调用
+或陈旧 View 回调在 View 销毁后访问 binding / `viewLifecycleOwner`：
 
 ```kotlin
 private fun bindCameraUseCases() {
@@ -65,6 +66,16 @@ private fun bindCameraUseCases() {
 
 守卫用 `view == null` 判定（`onDestroyView` 后 `getView()` 返回 null，而 `viewLifecycleOwner`
 在此状态下访问即抛异常）；`isAdded` 为额外保险。
+
+### 3.3 相机切换动画的延迟 UI 恢复
+
+相机切换按钮的 `onAnimationEnd` 不会调用 `bindCameraUseCases()`；它只会在 500ms 后执行
+`enableUI(true)`。原实现通过主线程 `Handler` 投递，任务可能晚于 `onDestroyView` 执行并访问已清空的
+`cameraUiContainer*Binding`。
+
+点击时捕获当前 `viewLifecycleOwner`，在其 `lifecycleScope` 中执行 `delay(500)` 与 `enableUI(true)`。
+若用户在动画期间离页，该 scope 在 View 销毁时取消，延迟 UI 操作不会执行。对应的 `Handler` / `Looper`
+import 一并删除。
 
 ## 4. 不做的事（YAGNI / 范围外）
 
@@ -81,11 +92,13 @@ private fun bindCameraUseCases() {
 - **真机回归**（与 R-5 共用同一次设备回归，不单独阻塞代码改动）：
   1. 旋转、切后台再返回 → 相机正常重绑、无泄漏、无黑屏；
   2. 加入返回栈后返回 → View 重建后相机与手势/曝光控制正常；
-  3. 相机切换动画播放中途按返回键退出页面 → 守卫命中、不崩、无异常日志；
+  3. 相机切换动画播放中途按返回键退出页面 → 延迟 UI 恢复随 View 生命周期取消，不崩、无 binding
+     空指针异常；
   4. `closeRatioAndSelect` 切换比例 → 正常重绑。
 
 ## 6. 影响面
 
 - **对外 API**：无签名变更（内部行为调整）。相机在 `onDestroyView` 解绑属行为收敛（更安全），
   记入 CHANGELOG「修复」段。
-- **detekt/ktlint**：新增守卫不引入未用 import；`view`/`isAdded` 为 Fragment 既有成员。
+- **detekt/ktlint**：新增守卫不引入未用 import；`view`/`isAdded` 为 Fragment 既有成员；删除不再使用的
+  `Handler` / `Looper` import。

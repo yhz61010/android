@@ -88,14 +88,15 @@ fun ByteArray.toAsciiString(delimiter: CharSequence = ",") =
  * @return the joined ASCII string ("" for an empty array).
  * @throws IllegalArgumentException if any byte is outside 0..127.
  */
-fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String =
-    mapIndexed { index, byte ->
-        val code = byte.toInt() and 0xFF
-        require(code <= 0x7F) {
-            "toAsciiString: byte at index $index is 0x%02X, outside ASCII range 0x00..0x7F".format(code)
-        }
-        code.toChar()
-    }.joinToString(delimiter)
+fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String = mapIndexed { index, byte ->
+    val code = byte.toInt() and 0xFF
+    require(code <= 0x7F) {
+        val value = "0x%02X".format(code)
+        "toAsciiString: byte at index $index is $value, " +
+            "outside ASCII range 0x00..0x7F"
+    }
+    code.toChar()
+}.joinToString(delimiter)
 ```
 
 - [ ] **Step 4: 运行测试，确认通过**

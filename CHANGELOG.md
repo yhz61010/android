@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+### 性能 (Performance)
+
+- **camerax 编码器能力查询不再泄漏 + 按 mime 缓存(H1)**:`CodecExt` 的
+  `getSupported{ColorFormat,ProfileLevels}For{Encoder,Decoder}` 原 `createEncoderByType()` 后只读
+  能力、从不 `release()`(靠 GC finalizer 回收原生编码器);改为 `try/finally` 立即释放,编码器能力
+  再按 mime 全局缓存,`outputCameraParameters()` 每次相机 bind 不再在主线程创建 4 个 MediaCodec。
+- **camerax 每次相机 bind 复用相机静态数据(M4)**:`BaseCameraXFragment` 新增按 `cameraId` 记忆化的
+  `CameraCharacteristics` 与 supported-size 访问器;`showAvailableRatio`/`getMaxPreviewSize`/
+  `outputCameraParameters`/`CameraFragment.bindCameraUseCases` 复用之,消除同一次 bind 内重复的
+  CameraService binder 查询与 supported-size 重算。行为不变。
+
 ### 安全 (Security)
 
 - **CIP-1 `ZipUtil.unzip` 加固**:解压时对每个条目做规范化路径校验,拒绝 Zip Slip 路径穿越

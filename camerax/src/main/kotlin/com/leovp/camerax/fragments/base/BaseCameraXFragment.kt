@@ -54,6 +54,7 @@ import androidx.viewbinding.ViewBinding
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.google.common.util.concurrent.ListenableFuture
+import com.leovp.android.exts.SmartSize
 import com.leovp.android.exts.dp2px
 import com.leovp.android.exts.isSamsung
 import com.leovp.android.exts.screenRealResolution
@@ -160,6 +161,24 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     protected val cameraManager: CameraManager by lazy {
         requireContext().getSystemService(Context.CAMERA_SERVICE) as CameraManager
     }
+
+    // Per-cameraId caches for data that never changes at runtime for a given camera. Avoids
+    // repeated CameraService binder lookups and supported-size re-derivation on every camera bind
+    // (initial setup, ratio change, lens switch). Keyed by cameraId ("0"/"1"), so switching lens
+    // simply uses a different entry.
+    private val characteristicsCache = HashMap<String, CameraCharacteristics>()
+    private val supportedSizeCache = HashMap<String, Array<SmartSize>>()
+
+    protected fun getCameraCharacteristicsCached(cameraId: String): CameraCharacteristics =
+        characteristicsCache.getOrPut(cameraId) {
+            cameraManager.getCameraCharacteristics(cameraId)
+        }
+
+    protected fun getCameraSupportedSizeCached(cameraId: String): Array<SmartSize> =
+        supportedSizeCache.getOrPut(cameraId) {
+            getCameraCharacteristicsCached(cameraId).getCameraSupportedSize()
+        }
+
     protected var displayId: Int = -1
 
     /**
@@ -812,10 +831,8 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         val metrics = requireContext().screenRealResolution
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        val characteristics: CameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraId)
 
-        characteristics.getCameraSupportedSize().forEach {
+        getCameraSupportedSizeCached(cameraId).forEach {
             when (com.leovp.android.exts.getRatio(it)) {
                 "16:9" -> {
                     incRatioBinding.btnRatio16v9.visibility = View.VISIBLE
@@ -889,7 +906,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         return if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
             val characteristics: CameraCharacteristics =
-                cameraManager.getCameraCharacteristics(cameraId)
+                getCameraCharacteristicsCached(cameraId)
             getSpecificPreviewOutputSize(
                 requireContext(),
                 screenMetrics.width,
@@ -948,7 +965,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         if (cameraProvider?.hasCamera(camSelector) == true) {
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
             val characteristics: CameraCharacteristics =
-                cameraManager.getCameraCharacteristics(cameraId)
+                getCameraCharacteristicsCached(cameraId)
             val configMap = characteristics.getConfigMap()
 
             // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)

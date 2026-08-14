@@ -279,24 +279,24 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraId)
+            getCameraCharacteristicsCached(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
         val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val supportedSize: SmartSize? = when (selectedRatio) {
-            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull {
+            CameraRatio.R16v9 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "16:9"
             }
-            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull {
+            CameraRatio.R1v1 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "1:1"
             }
-            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull {
+            CameraRatio.R4v3 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "4:3"
             }
-            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
+            CameraRatio.RFull -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 (it.long * 1.0 / it.short).round(1) ==
                     (metrics.height * 1.0 / metrics.width).round(1)
             }

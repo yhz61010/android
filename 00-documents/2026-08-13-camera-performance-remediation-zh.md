@@ -46,7 +46,7 @@
 3. **子项目 3（camera2live + 共享 YuvUtil）** = H3、H4、M5、M6、M7。最高风险，含每帧 YUV 正确性。
    进一步再拆：
    - **3a（低风险机械）** = M7。
-   - **3b（YUV 正确性，必须真机）** = H3、H4、M5。
+   - **3b（YUV 正确性，必须真机）** = 探查后收敛为**仅 H3**（H4、M5 决定不做，见 §4 / §6）。
    - **M6** 单独决策 → 跳过（见下）。
 
 ---
@@ -94,9 +94,11 @@
   `dataUpdateCallback.onCallback(...)`，池化复用只有消费方**同步读取/拷贝**才安全；消费方若异步保留数组会
   被后续帧覆写损坏。这是改变对外**字节数组所有权契约**的破坏性变更，且编码帧仅几 KB、收益有限，
   **不值得**。保持每帧分配。
-- **M5（`rowData` 复用）—— 并入子项目 3b**。**理由**：`rowData` 相对不可避免的 `data`（≈460KB/帧）是小头；
-  `YuvUtil` 是 `object` 单例，复用刮擦缓冲需处理相机回调线程的线程安全；且它就在 **H4 要重写的同一循环**里，
-  放 3a 先改、3b 再重写纯属 churn。故随 H4 一起在 3b 处理（含线程安全方案 + 真机）。
+- **M5（`rowData` 复用）—— 探查后决定不做**。原计划并入 3b；探查确认 `androidbase/YuvUtil` 是**无状态
+  `object`**、线程安全正来自"每帧新分配局部 `rowData`"，复用须 `ThreadLocal`/传入 scratch。而 `rowData`
+  （~1–2KB）相对不可避免的 `data`（≈460KB/帧）是小头 → 不值得为共享 util 引入可变状态。详见 3b spec §2。
+- **H4（色度 strided 提取）—— 探查后决定不做**。native 侧无吃 `Image`/planes 的入口，从 Image 提取平面仍须
+  Kotlin；真 native 化要新增 JNI 入口（大改，另立项），纯 Kotlin 微优化收益有限且仍改字节。详见 3b spec §2。
 
 ---
 
@@ -107,20 +109,33 @@
 | 1 | camerax H1 / M4 | ✅ 已推送 | `78e4553a6`、`0deaafbf0`(ktlint) |
 | 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已推送 | `ab4d0cdbc` |
 | 3a | camera2live M7 | ✅ 已实现，待提交 | — |
-| 3b | H3 / H4 / M5（YUV 正确性） | ⏳ 待启动（architectural + **必须真机**） | — |
+| 3b | **仅 H3**（前置 YUV native 化；H4/M5 不做） | 📄 spec 已定，代码待真机 | `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md` |
 | M6 | 编码帧池化 | ⛔ 跳过 | — |
 
 ---
 
-## 6. 子项目 3b 待办（启动时用完整 spec）
+## 6. 子项目 3b —— 已出 spec，代码待真机
 
-- **H3**：前置摄像头从 `androidbase` 纯 Kotlin 旋转/镜像改走 native `com.leovp.yuv.YuvUtil`（与后置对齐）。
-  需确认 native 库提供前置所需的镜像 + 旋转（270 / 90）组合，并逐机型核对镜像/旋转**方向**。
-- **H4**：`getYuvDataFromImage` 色度平面 strided 逐字节循环改批量/native 提取。改变送编码的像素数据，
-  **镜像/旋转/色度交织极易出错**。
-- **M5**：随 H4 一起处理 `rowData` 复用（线程安全方案：ThreadLocal 或调用方传入 scratch，避免单例可变状态）。
-- **验证**：必须真机回归（前后置、连续快速切换、各机型），核对无花屏/颜色错乱/镜像反向；像 R-5/CX-5 一样
-  **代码可先备好但 gated，真机通过后才合并**。
+经 Explore 深度探查（native `com.leovp.yuv.YuvUtil` API、前置 native 范式、纯 Kotlin 函数方向语义、
+`getYuvDataFromImage` 与线程模型）后，3b **收敛为只做 H3**；H4、M5 探查后决定不做。设计详见
+`superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md`。
+
+- **H3（做，device-gated）**：`EncoderStrategyYuv420Sp` 前置分支从 `androidbase` 纯 Kotlin 旋转/镜像改走
+  native `com.leovp.yuv.YuvUtil`（对齐后置与 `EncoderStrategyYuv420P` 前置范式），显式输出 NV12，旧 Kotlin
+  分支注释保留以便回滚。
+  - **头号风险**：镜像轴不一致 —— Sp 现用**水平镜像**（`mirrorNv21`），而 P 前置 native 用 `verticallyFlip`
+    （**垂直**翻转）。spec 给出候选 B（`mirrorI420 + rotateI420(270)`，忠实移植水平镜像，主选）与候选 A
+    （`convertToI420(verticallyFlip=true, 270)`，回退），**由真机方向核对择一**。
+- **H4（不做）**：色度 strided 提取无干净 native 路径（native `android420ToI420` 只吃 `ByteArray`、不吃
+  `Image`/planes；从 Image 提取平面仍须 Kotlin）。真 native 化要新增吃 planes 的 JNI 入口（大改，另立项）；
+  纯 Kotlin 微优化收益有限且仍改字节，风险/收益比差。
+- **M5（不做）**：`androidbase/YuvUtil` 是**无状态 `object`**，线程安全正来自"每帧新分配局部 `rowData`"。
+  复用须 `ThreadLocal`/传入 scratch；而 `rowData`（~1–2KB）相对 `data`（≈460KB/帧）是小头，不值得为共享
+  util 引入可变状态。
+
+**验证（合并前置条件）**：必须真机回归 —— 前置方向/镜像/颜色与改前一致、后置不受影响、前后置连续快速切换无
+花屏/`ERROR_CAMERA_IN_USE`、覆盖 sensorOrientation 90 与 270 机型；像 R-5/CX-5 一样**代码可先备好但 gated，
+真机通过后才合并**。
 
 ### ⚠️ 未验证事项
 

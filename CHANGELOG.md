@@ -20,6 +20,9 @@
   消除默认情况下每帧的图像分析开销。分析器内部同时优化以便 opt-in 时高效:`averageLuma` 直接遍历
   `ByteBuffer` 并按 stride 采样(消除每帧整帧 `ByteArray` 分配与全像素求和),FPS 统计改用原始
   `LongArray` 环形缓冲(消除每帧 `Long` 装箱)。
+- **camera2live 相机方向不再每帧查询(M7)**:`Camera2ComponentHelper` 缓存 `SENSOR_ORIENTATION`
+  (相机静态,仅切镜头时随 `characteristics` 重赋值变化),录制的 image-available 回调不再每帧读取
+  `CameraCharacteristics`。行为不变。
 
 ### 安全 (Security)
 

@@ -37,7 +37,8 @@ import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.simulateClick
 import com.leovp.camerax.R
-import com.leovp.camerax.analyzer.LuminosityAnalyzer
+// Re-enable together with the disabled analyzer block in ImageAnalysis setup below.
+// import com.leovp.camerax.analyzer.LuminosityAnalyzer
 import com.leovp.camerax.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax.databinding.FragmentCameraBinding
@@ -373,18 +374,19 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             .setTargetRotation(deviceRotation)
             // In our analysis, we care about the latest image
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-            // The analyzer can then be assigned to the instance
-            .also {
-                it.setAnalyzer(
-                    cameraExecutor,
-                    LuminosityAnalyzer { luma ->
-                        // Values returned from our analyzer are passed to the attached listener
-                        // We log image analysis results here - you should do something useful
-                        // instead!
-                        LogContext.log.v(logTag, "Average luminosity: $luma")
-                    }
-                )
-            }
+            // The analyzer can then be assigned to the instance.
+            // Disabled by default (performance): the luminosity metric was only logged at verbose
+            // level, so the per-frame analysis produced no observable effect. Uncomment this block
+            // (and the LuminosityAnalyzer import above) to re-enable per-frame analysis.
+            // .also {
+            //     it.setAnalyzer(
+            //         cameraExecutor,
+            //         LuminosityAnalyzer { luma ->
+            //             // Values returned from our analyzer are passed to the attached listener
+            //             LogContext.log.v(logTag, "Average luminosity: $luma")
+            //         }
+            //     )
+            // }
 
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {

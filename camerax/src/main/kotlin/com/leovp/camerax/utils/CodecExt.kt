@@ -55,7 +55,9 @@ internal fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray 
 
 internal fun getSupportedColorFormatForEncoder(mime: String): IntArray =
     encoderColorFormatCache.getOrPut(mime) {
-        withCodecReleased(MediaCodec.createEncoderByType(mime)) { getSupportedColorFormat(it, mime) }
+        withCodecReleased(MediaCodec.createEncoderByType(mime)) {
+            getSupportedColorFormat(it, mime)
+        }
     }
 
 internal fun getSupportedColorFormatForDecoder(mime: String): IntArray =
@@ -74,7 +76,9 @@ internal fun getSupportedProfileLevelsForEncoder(
     mime: String
 ): Array<MediaCodecInfo.CodecProfileLevel> =
     encoderProfileLevelsCache.getOrPut(mime) {
-        withCodecReleased(MediaCodec.createEncoderByType(mime)) { getSupportedProfileLevels(it, mime) }
+        withCodecReleased(MediaCodec.createEncoderByType(mime)) {
+            getSupportedProfileLevels(it, mime)
+        }
     }
 
 internal fun getSupportedProfileLevelsForDecoder(

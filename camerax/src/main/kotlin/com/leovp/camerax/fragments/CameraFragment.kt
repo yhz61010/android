@@ -18,6 +18,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCase
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.lifecycle.MutableLiveData
@@ -37,8 +38,7 @@ import com.leovp.android.exts.screenRealResolution
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.simulateClick
 import com.leovp.camerax.R
-// Re-enable together with the disabled analyzer block in ImageAnalysis setup below.
-// import com.leovp.camerax.analyzer.LuminosityAnalyzer
+import com.leovp.camerax.analyzer.LuminosityAnalyzer
 import com.leovp.camerax.databinding.CameraUiContainerBottomBinding
 import com.leovp.camerax.databinding.CameraUiContainerTopBinding
 import com.leovp.camerax.databinding.FragmentCameraBinding
@@ -63,6 +63,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private const val ENABLE_LUMINOSITY_ANALYSIS = false
 
 /**
  * Main fragment for this app. Implements all camera operations including:
@@ -364,29 +366,25 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // during the lifecycle of this use case
                 .setTargetRotation(deviceRotation).build()
 
-        // ImageAnalysis
-        imageAnalyzer = ImageAnalysis.Builder()
-            // We request aspect ratio but no resolution
-            //            .setTargetAspectRatio(screenAspectRatio)
-            .setResolutionSelector(resolutionSelector)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(deviceRotation)
-            // In our analysis, we care about the latest image
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-            // The analyzer can then be assigned to the instance.
-            // Disabled by default (performance): the luminosity metric was only logged at verbose
-            // level, so the per-frame analysis produced no observable effect. Uncomment this block
-            // (and the LuminosityAnalyzer import above) to re-enable per-frame analysis.
-            // .also {
-            //     it.setAnalyzer(
-            //         cameraExecutor,
-            //         LuminosityAnalyzer { luma ->
-            //             // Values returned from our analyzer are passed to the attached listener
-            //             LogContext.log.v(logTag, "Average luminosity: $luma")
-            //         }
-            //     )
-            // }
+        // Do not bind ImageAnalysis while disabled: a bound use case still configures an analysis
+        // stream and handles frames even without an analyzer callback.
+        imageAnalyzer = if (ENABLE_LUMINOSITY_ANALYSIS) {
+            ImageAnalysis.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .setTargetRotation(deviceRotation)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+                .also {
+                    it.setAnalyzer(
+                        cameraExecutor,
+                        LuminosityAnalyzer { luma ->
+                            LogContext.log.v(logTag, "Average luminosity: $luma")
+                        },
+                    )
+                }
+        } else {
+            null
+        }
 
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {
@@ -409,12 +407,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
+            val useCases = mutableListOf<UseCase>(
+                checkNotNull(preview),
+                checkNotNull(imageCapture),
+            )
+            imageAnalyzer?.let { useCases.add(it) }
             camera = camProvider.bindToLifecycle(
                 viewLifecycleOwner,
                 hdrCameraSelector ?: lensFacing,
-                preview,
-                imageCapture,
-                imageAnalyzer
+                *useCases.toTypedArray(),
             ).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {

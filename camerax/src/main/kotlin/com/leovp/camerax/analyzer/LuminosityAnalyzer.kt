@@ -95,6 +95,7 @@ internal class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysi
  * byte.
  */
 internal fun averageLuma(buffer: ByteBuffer, stride: Int = 1): Double {
+    require(stride > 0) { "stride must be greater than 0." }
     val end = buffer.limit()
     var i = buffer.position()
     if (i >= end) return 0.0

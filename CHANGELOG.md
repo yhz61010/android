@@ -16,10 +16,11 @@
   `outputCameraParameters`/`CameraFragment.bindCameraUseCases` 复用之,消除同一次 bind 内重复的
   CameraService binder 查询与 supported-size 重算。行为不变。
 - **camerax 亮度分析器默认停用 + 内部优化(H2/M1/M2/M3)**:`CameraFragment` 的 `LuminosityAnalyzer`
-  每帧仅把亮度打一条 verbose 日志、无其它消费,已默认注释停用(保留为注释,消费方可取消注释启用),
-  消除默认情况下每帧的图像分析开销。分析器内部同时优化以便 opt-in 时高效:`averageLuma` 直接遍历
+  每帧仅把亮度打一条 verbose 日志、无其它消费。亮度分析开关默认关闭,关闭时不创建或绑定
+  `ImageAnalysis` use case,从而消除默认情况下的分析流和每帧处理开销;维护者可显式打开开关启用。
+  分析器内部同时优化以便 opt-in 时高效:`averageLuma` 直接遍历
   `ByteBuffer` 并按 stride 采样(消除每帧整帧 `ByteArray` 分配与全像素求和),FPS 统计改用原始
-  `LongArray` 环形缓冲(消除每帧 `Long` 装箱)。
+  `LongArray` 环形缓冲(消除每帧 `Long` 装箱);非正 stride 会被显式拒绝,避免无效步长导致循环异常。
 - **camera2live 相机方向不再每帧查询(M7)**:`Camera2ComponentHelper` 缓存 `SENSOR_ORIENTATION`
   (相机静态,仅切镜头时随 `characteristics` 重赋值变化),录制的 image-available 回调不再每帧读取
   `CameraCharacteristics`。行为不变。

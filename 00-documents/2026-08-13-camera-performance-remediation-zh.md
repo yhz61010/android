@@ -66,22 +66,24 @@
   `showAvailableRatio`/`getMaxPreviewSize`/`outputCameraParameters`/`CameraFragment.bindCameraUseCases`
   共用，消除同一次 bind 内的重复 binder 查询与尺寸重算。
 
-### 子项目 2 —— 已完成（commit `ab4d0cdbc`）
+### 子项目 2 —— 已完成（初版 commit `ab4d0cdbc`）
 
 - **方向决策：采纳 C（默认停用 + 内部优化）**。
   - 关键事实：`LuminosityAnalyzer` 为 `internal`、全仓唯一使用点是 `CameraFragment:380`，其每帧算出的 luma
     **只喂一条 verbose 日志**，无 UI / 无逻辑消费。
   - 备选 A（就地优化、继续每帧跑）治标不治本；B（默认停用）拿到主要收益但 H2/M1/M2 变"没人跑的代码"。
-  - **C = A+B**：默认零每帧开销，opt-in 时也高效，且把 H2/M1/M2 一并了结。
+  - **C = A+B**：默认不创建或绑定 `ImageAnalysis`，因此没有分析流的每帧开销；opt-in 时也高效，且把
+    H2/M1/M2 一并了结。
 - **M3（每帧日志）**：原计划在子项目 1 处理，后**移交子项目 2**。**理由**：camerax 未启用 BuildConfig、log 无
   延迟消息重载，单独守卫要 reach 进 log 内部；且它与分析器强耦合，应随分析器去留一起决定（C 下自然消失）。
-- **停用方式**：按维护者要求，`CameraFragment` 里 `setAnalyzer(LuminosityAnalyzer{…})` 块与其 import
-  **注释保留、不删除**，消费方取消注释即可启用。
+- **停用方式**：`CameraFragment` 的 `ENABLE_LUMINOSITY_ANALYSIS` 默认是 `false`；关闭时 `imageAnalyzer`
+  为 `null`，绑定列表不包含 `ImageAnalysis`。维护者把开关设为 `true` 后才创建、配置并绑定分析器。
 - **H2+M2 合并**：`averageLuma` 改为**直接遍历 `ByteBuffer`**（不再每帧 `toByteArray()`）并按
-  `LUMA_SAMPLE_STRIDE` 采样。签名默认 `stride=1` 保持精确（单测覆盖）。
+  `LUMA_SAMPLE_STRIDE` 采样。签名默认 `stride=1` 保持精确，并拒绝非正 stride（单测覆盖正常采样、零值和
+  负值）。
 - **M1**：FPS 用原始 `LongArray` 环形缓冲替代 `ArrayDeque<Long>`，消除装箱。
 
-### 子项目 3a —— 已完成（待提交）
+### 子项目 3a —— 已完成（commit `b1ff02064`）
 
 - **M7（缓存 sensor orientation）**：`Camera2ComponentHelper` 加字段，在 `initializeParameters()` 里
   `characteristics` 赋值处同步缓存一次；每帧 image-available 回调改用字段。`SENSOR_ORIENTATION` 相机静态、
@@ -107,8 +109,8 @@
 | 子项目 | 内容 | 状态 | 提交 |
 |--------|------|------|------|
 | 1 | camerax H1 / M4 | ✅ 已推送 | `78e4553a6`、`0deaafbf0`(ktlint) |
-| 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已推送 | `ab4d0cdbc` |
-| 3a | camera2live M7 | ✅ 已实现，待提交 | — |
+| 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已实现 | `ab4d0cdbc`（初版） |
+| 3a | camera2live M7 | ✅ 已推送 | `b1ff02064` |
 | 3b | **仅 H3**（前置 YUV native 化；H4/M5 不做） | 📄 spec 已定，代码待真机 | `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md` |
 | M6 | 编码帧池化 | ⛔ 跳过 | — |
 
@@ -121,11 +123,10 @@
 `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md`。
 
 - **H3（做，device-gated）**：`EncoderStrategyYuv420Sp` 前置分支从 `androidbase` 纯 Kotlin 旋转/镜像改走
-  native `com.leovp.yuv.YuvUtil`（对齐后置与 `EncoderStrategyYuv420P` 前置范式），显式输出 NV12，旧 Kotlin
-  分支注释保留以便回滚。
-  - **头号风险**：镜像轴不一致 —— Sp 现用**水平镜像**（`mirrorNv21`），而 P 前置 native 用 `verticallyFlip`
-    （**垂直**翻转）。spec 给出候选 B（`mirrorI420 + rotateI420(270)`，忠实移植水平镜像，主选）与候选 A
-    （`convertToI420(verticallyFlip=true, 270)`，回退），**由真机方向核对择一**。
+  native `com.leovp.yuv.YuvUtil`，显式输出 NV12；旧实现由 Git 历史保留，不复制为失效注释。
+  - **头号风险**：90° 与 270° 旧分支的镜像轴和处理顺序不同，而且旧代码用 NV21 函数处理 I420 色度。
+    spec 因此保留 `cameraSensorOrientation` 分支：90° 候选使用 `mirrorI420 + rotateI420(270)`，270° 候选使用
+    `convertToI420(verticallyFlip=true, 270)`。两个方向必须分别真机验证，不能由其中一个方向的结果决定全局实现。
 - **H4（不做）**：色度 strided 提取无干净 native 路径（native `android420ToI420` 只吃 `ByteArray`、不吃
   `Image`/planes；从 Image 提取平面仍须 Kotlin）。真 native 化要新增吃 planes 的 JNI 入口（大改，另立项）；
   纯 Kotlin 微优化收益有限且仍改字节，风险/收益比差。

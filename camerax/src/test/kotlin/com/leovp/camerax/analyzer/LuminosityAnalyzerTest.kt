@@ -3,6 +3,7 @@ package com.leovp.camerax.analyzer
 import java.nio.ByteBuffer
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class LuminosityAnalyzerTest {
     @Test
@@ -22,5 +23,13 @@ class LuminosityAnalyzerTest {
             15.0,
             averageLuma(ByteBuffer.wrap(byteArrayOf(10, 250.toByte(), 20, 240.toByte())), 2)
         )
+    }
+
+    @Test
+    fun `average luma rejects non-positive stride`() {
+        val buffer = ByteBuffer.wrap(byteArrayOf(10, 20))
+
+        assertFailsWith<IllegalArgumentException> { averageLuma(buffer, 0) }
+        assertFailsWith<IllegalArgumentException> { averageLuma(buffer, -1) }
     }
 }

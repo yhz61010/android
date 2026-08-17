@@ -135,9 +135,8 @@ class Camera2ComponentHelper(
      */
     lateinit var characteristics: CameraCharacteristics
 
-    // Cached sensor orientation for the current camera. SENSOR_ORIENTATION is static per camera and
-    // only changes when [characteristics] is reassigned (camera open / switch), so caching it avoids
-    // a per-frame CameraCharacteristics lookup on the image-available hot path.
+    // SENSOR_ORIENTATION is static for a camera and changes only when characteristics is reassigned
+    // during camera opening or switching. Cache it outside the image-available hot path.
     private var cameraSensorOrientation: Int = -1
 
     // ///// Recording - Start ///////////////////////////////////////////////////////////
@@ -422,7 +421,8 @@ class Camera2ComponentHelper(
         cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
         LogContext.log.w(TAG, "cameraId=$cameraId")
         characteristics = cameraManager.getCameraCharacteristics(cameraId)
-        cameraSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
+        cameraSensorOrientation =
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)

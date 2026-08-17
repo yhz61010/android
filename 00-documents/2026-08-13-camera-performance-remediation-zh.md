@@ -140,8 +140,9 @@
 
 ### ⚠️ 未验证事项
 
-- 子项目 1/2/3a 均**行为保持型**改动，理论不需真机；但建议随 3b 的真机回归**顺带冒烟**
-  （相机预览/录制/切镜头/切比例正常）。
+- 子项目 1/3a 是**行为保持型**改动。子项目 2 则是已确认的默认行为调整：停用亮度分析日志，并从默认绑定组合中
+  移除 `ImageAnalysis`；这可能改变 CameraX 的 use-case 组合与分辨率协商。因此仍建议随 3b 的真机回归
+  **顺带冒烟**（相机预览/拍照/录制/切镜头/切比例正常）。
 - 本仓库环境不做本地编译；detekt/ktlint/单测由维护者本地执行。
 
 ---
@@ -153,10 +154,11 @@
 对 SP2/3a 及 3b spec 的复审提交，逐文件人工复核后**通过**，其中两处为实质性纠正：
 
 - **SP2 停用方式（代码更优）**：原实现里 `imageAnalyzer` 仍被**创建并绑定**，仅注释掉 `setAnalyzer`。
-  但**已绑定的 `ImageAnalysis` use case 即使无 analyzer 回调，CameraX 仍配置分析流并逐帧取帧**，未真正
-  省掉每帧开销。改为编译期开关 `ENABLE_LUMINOSITY_ANALYSIS = false`：关闭时 `imageAnalyzer = null`、
-  `bindToLifecycle` 动态构建 use-case 列表（`preview + imageCapture`，`imageAnalyzer?.let{add}`），
-  **根本不绑定分析流** → 真正零每帧开销，并少占一路硬件 stream。空安全已核（唯一活跃引用为 `?.let`）。
+  CameraX 1.4.1 只有在设置 analyzer 后才激活数据发送，因此不能断言该旧实现仍在逐帧取帧；但绑定
+  `ImageAnalysis` 仍会创建和协商分析管线及输出 surface，并参与 use-case 组合与分辨率选择。改为编译期开关
+  `ENABLE_LUMINOSITY_ANALYSIS = false`：关闭时 `imageAnalyzer = null`，`bindToLifecycle` 动态构建 use-case
+  列表（`preview + imageCapture`，`imageAnalyzer?.let { add(it) }`），默认不再绑定分析 use case，从而完整移除
+  分析路径的资源占用；开关启用时仍保留优化后的亮度分析能力。
 - **`averageLuma` 加 `require(stride > 0)`** + 单测（覆盖 0/-1）：防止非正步长导致的循环异常。
 - **3b spec 纠正两个设计缺陷**：
   1. 原方案拟**合并 90°/270° 分支**为单一"镜像+旋转270"——有风险：两分支镜像轴/顺序本不同
@@ -166,8 +168,8 @@
      画面为基线。
 - **3a/M7、CHANGELOG、进度表**：注释重措辞、ktlint 换行、过期信息订正（3a→`b1ff02064`），无行为变化。
 
-### ⏳ 待维护者拍板（3b 真机实现时）
+### 3b 旧实现保留策略（已明确）
 
-3b spec 现将"旧前置 Kotlin 分支保留方式"定为**依 Git 历史（源码不留失效注释）**，与 SP2 采用的"注释/
-开关完整保留、不删除"偏好不一致。**3b 尚为 spec、代码待真机**，此项到真机实现阶段再定：注释保留（贴合
-一贯偏好，但 detekt 零容忍需处理随之失效的 import）vs 依 Git 历史删除（源码更干净，Codex 建议）。
+SP2 的亮度分析代码在开关启用时仍是有效的 opt-in 路径，不属于失效代码；3b 完成 native 替换后，旧前置
+Kotlin 分支则不再参与任何执行路径，两者性质不同。3b 按 spec 现有方案处理：旧实现通过 Git 历史保留，不在
+源码中留下整块失效注释，并同步清理不再使用的 import，以满足 detekt 零容忍要求。

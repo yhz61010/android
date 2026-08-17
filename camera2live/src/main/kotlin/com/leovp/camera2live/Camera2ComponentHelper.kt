@@ -2,6 +2,8 @@ package com.leovp.camera2live
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.ImageFormat
 import android.graphics.drawable.AnimationDrawable
@@ -45,9 +47,12 @@ import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
+import com.leovp.camera2live.utils.getRotatedFrameDimensions
 import com.leovp.camera2live.utils.getPreviewOutputSize
+import com.leovp.camera2live.utils.resolveRecordingRotation
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.exif.computeExifOrientation
+import com.leovp.exif.decodeExifOrientation
 import com.leovp.log.LogContext
 import java.io.BufferedOutputStream
 import java.io.File
@@ -220,6 +225,7 @@ class Camera2ComponentHelper(
         frameRate: Int,
         iFrameInterval: Int,
         bitrateMode: Int,
+        recordingRotationDegrees: Int,
     ) {
         cameraEncoder =
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
@@ -234,10 +240,16 @@ class Camera2ComponentHelper(
             CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
-            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
+            DataProcessFactory.getConcreteObject(
+                DataProcessFactory.ENCODER_TYPE_YUV420P,
+                recordingRotationDegrees
+            )
         } else {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
-            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
+            DataProcessFactory.getConcreteObject(
+                DataProcessFactory.ENCODER_TYPE_YUV420SP,
+                recordingRotationDegrees
+            )
         }
         // dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder,
         // MediaFormat.MIMETYPE_VIDEO_AVC)
@@ -491,7 +503,34 @@ class Camera2ComponentHelper(
     private lateinit var session: CameraCaptureSession
 
     fun extraInitializeCameraForRecording(bitrate: Int = -1) {
+        extraInitializeCameraForRecording(bitrate, null)
+    }
+
+    /**
+     * Initializes recording with a rotation locked for the whole AVC stream. A null rotation falls
+     * back to the historical portrait rotation for the active lens.
+     */
+    fun extraInitializeCameraForRecording(
+        bitrate: Int,
+        recordingRotationDegrees: Int?,
+    ) {
         initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
+        val resolvedRecordingRotationDegrees = resolveRecordingRotation(
+            recordingRotationDegrees,
+            lensFacing == CameraMetadata.LENS_FACING_FRONT
+        )
+        val encoderDimensions = getRotatedFrameDimensions(
+            selectedSizeFromCamera.width,
+            selectedSizeFromCamera.height,
+            resolvedRecordingRotationDegrees
+        )
+        previewSize = Size(encoderDimensions.width, encoderDimensions.height)
+        LogContext.log.i(
+            TAG,
+            "Recording rotation=$resolvedRecordingRotationDegrees " +
+                "input=${selectedSizeFromCamera.width}x" +
+                "${selectedSizeFromCamera.height} output=${previewSize!!.width}x${previewSize!!.height}"
+        )
         val autoBitrate = bitrate <= 0
 
         /** [previewSize] is initialized in [initializeRecordingParameters] */
@@ -507,7 +546,8 @@ class Camera2ComponentHelper(
             usedBitrate,
             builder.videoFps,
             builder.iFrameInterval,
-            builder.bitrateMode
+            builder.bitrateMode,
+            resolvedRecordingRotationDegrees
         )
     }
 
@@ -881,7 +921,7 @@ class Camera2ComponentHelper(
                             TAG,
                             "planes[$i] rowStride=${plane.rowStride} " +
                                 "pixelStride=${plane.pixelStride} " +
-                                "bufferSize=${plane.buffer.remaining()}"
+                                "bufferSize=${plane.buffer?.remaining()}"
                         )
                     }
                 }
@@ -990,7 +1030,12 @@ class Camera2ComponentHelper(
         cameraView?.postDelayed(recordTimerRunnable, 1000)
     }
 
-    private fun getJpegOrientation(): Int {
+    private fun getJpegOrientation(orientationOverride: Int? = null): Int {
+        if (orientationOverride != null && orientationOverride in VALID_OUTPUT_ORIENTATIONS) {
+            LogContext.log.d(TAG, "jpegOrientation=$orientationOverride (physical orientation)")
+            return orientationOverride
+        }
+
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             context.display?.rotation ?: -1
         } else {
@@ -1010,7 +1055,14 @@ class Camera2ComponentHelper(
      * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
      * from the single capture, and outputs a [CombinedCaptureResult] object.
      */
-    suspend fun takePhoto(): CombinedCaptureResult = coroutineScope {
+    suspend fun takePhoto(): CombinedCaptureResult = takePhoto(null)
+
+    /**
+     * Captures a photo using [jpegOrientation] when the host tracks physical device orientation.
+     * This is needed when the Activity orientation is locked and display rotation cannot reflect
+     * how the device is actually held. Invalid or unavailable values fall back to display rotation.
+     */
+    suspend fun takePhoto(jpegOrientation: Int?): CombinedCaptureResult = coroutineScope {
         val st = SystemClock.elapsedRealtime()
         if (!::imageReader.isInitialized) error("initializeCamera must be called first")
 
@@ -1035,7 +1087,7 @@ class Camera2ComponentHelper(
             CameraDevice.TEMPLATE_STILL_CAPTURE
         ).apply {
             addTarget(imageReader.surface)
-            set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation())
+            set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation(jpegOrientation))
         }
 
         try {
@@ -1124,11 +1176,12 @@ class Camera2ComponentHelper(
     ): CombinedCaptureResult {
         val buffer = image.planes[0].buffer
         val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
-        val cameraSensorOrientation =
-            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        val outputOrientation = result.request.get(CaptureRequest.JPEG_ORIENTATION)
+            ?: characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
+            ?: 0
         val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) ==
             CameraCharacteristics.LENS_FACING_FRONT
-        val exifOrientation = computeExifOrientation(cameraSensorOrientation, mirrored)
+        val exifOrientation = computeExifOrientation(outputOrientation, mirrored)
         return CombinedCaptureResult(
             imageBytes,
             image.width,
@@ -1336,13 +1389,14 @@ class Camera2ComponentHelper(
      * Helper function used to save a [CombinedCaptureResult] into a [File]
      */
     suspend fun saveResult(result: CombinedCaptureResult): File = when (result.format) {
-        // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
-        ImageFormat.JPEG, ImageFormat.DEPTH_JPEG ->
+        ImageFormat.JPEG ->
             withContext(Dispatchers.IO) {
-                // TODO The buffer that is just the JPEG data not the original camera image.
-                // So I can not mirror image in the general way like this below:
-                // if (result.mirrored) mirrorImage(bytes, result.image.width,
-                // result.image.height)
+                saveTransformedJpeg(result)
+            }
+
+        // Re-encoding a DEPTH_JPEG would discard its depth metadata.
+        ImageFormat.DEPTH_JPEG ->
+            withContext(Dispatchers.IO) {
                 try {
                     val output = context.createImageFile("jpg")
                     FileOutputStream(output).use { it.write(result.imageBytes) }
@@ -1371,6 +1425,43 @@ class Camera2ComponentHelper(
             val exc = RuntimeException("Unknown image format: ${result.format}")
             LogContext.log.e(TAG, exc.message, exc)
             throw exc
+        }
+    }
+
+    /** Applies the same pixel-level rotation/mirroring semantics used by the CameraX module. */
+    private fun saveTransformedJpeg(result: CombinedCaptureResult): File {
+        val output = context.createImageFile("jpg")
+        var sourceBitmap: Bitmap? = null
+        var transformedBitmap: Bitmap? = null
+        try {
+            val decodedBitmap = requireNotNull(
+                BitmapFactory.decodeByteArray(result.imageBytes, 0, result.imageBytes.size)
+            ) { "Unable to decode captured JPEG" }
+            sourceBitmap = decodedBitmap
+            val matrix = decodeExifOrientation(result.orientation)
+            val outputBitmap = Bitmap.createBitmap(
+                decodedBitmap,
+                0,
+                0,
+                decodedBitmap.width,
+                decodedBitmap.height,
+                matrix,
+                true
+            )
+            transformedBitmap = outputBitmap
+            FileOutputStream(output).use { stream ->
+                if (!outputBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
+                    throw IOException("Unable to encode transformed JPEG")
+                }
+            }
+            return output
+        } catch (exc: Exception) {
+            output.delete()
+            LogContext.log.e(TAG, "Unable to transform and write JPEG image", exc)
+            throw exc
+        } finally {
+            if (transformedBitmap !== sourceBitmap) transformedBitmap?.recycle()
+            sourceBitmap?.recycle()
         }
     }
 
@@ -1461,6 +1552,8 @@ class Camera2ComponentHelper(
             Surface.ROTATION_180 to 270,
             Surface.ROTATION_270 to 180
         )
+
+        private val VALID_OUTPUT_ORIENTATIONS = setOf(0, 90, 180, 270)
 
         const val TEMPLATE_TYPE_RECORD = 1
         const val TEMPLATE_TYPE_PHOTO = 2

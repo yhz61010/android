@@ -1,7 +1,6 @@
 package com.leovp.demo.basiccomponents.examples.camera2
 
 import android.content.Intent
-import android.hardware.camera2.CameraMetadata
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.os.Bundle
@@ -180,19 +179,6 @@ class Camera2LiveFragment : BaseCamera2Fragment() {
                 LogContext.log.d(TAG, "Get encoded video data length=${h264Data.size}")
             }
         })
-        camera2Helper.setLensSwitchListener(object : Camera2ComponentHelper.LensSwitchListener {
-            override fun onSwitch(lensFacing: Int) {
-                LogContext.log.w(TAG, "lensFacing=$lensFacing")
-                if (CameraMetadata.LENS_FACING_FRONT == lensFacing) {
-                    switchFlashBtn.isChecked = false
-                    switchFlashBtn.visibility = View.GONE
-                } else {
-                    switchFlashBtn.visibility = View.VISIBLE
-                }
-                previousLensFacing = lensFacing
-            }
-        })
-
         camera2Helper.initDebugOutput()
     }
 

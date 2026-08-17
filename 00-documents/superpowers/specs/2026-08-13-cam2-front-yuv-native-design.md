@@ -1,6 +1,7 @@
 # 3b 设计 —— camera2live 前置摄像头 YUV 旋转/镜像 native 化（H3，2026-08-13）
 
-> 性能整改子项目 3b。**代码待真机**:本 spec 先定设计,实现与合并须在真机回归通过后进行。
+> 性能与正确性整改子项目 3b。真机已确认旧前置路径存在横屏方向和颜色缺陷；代码按本设计整改后已于
+> 2026-08-17 通过真机回归。
 > 关联:`00-documents/2026-08-13-camera-performance-remediation-zh.md`(总决策记录，含 H3/H4/M5 取舍）。
 > 分支:`fix/eight-module-remediation`。
 
@@ -21,9 +22,10 @@
 
 前置分支每帧在 CPU 上跑纯 Kotlin 逐像素循环，比后置的 native 路径慢数倍（15–30 fps × 全帧）。
 
-## 2. 决策（已与维护者确认）
+## 2. 决策（已与维护者确认并经真机反馈修订）
 
-- **H3:做**。前置分支改走 `com.leovp.yuv.YuvUtil` native，与后置/`EncoderStrategyYuv420P` 前置范式对齐。
+- **H3 与同路径正确性修复:做**。前置分支改走 `com.leovp.yuv.YuvUtil` native；同时修复已确认的横屏方向和
+  I420/NV21 格式错用导致的偏色，YUV420P/SP 使用同一旋转与最终水平镜像语义。
 - **H4:不做**。`getYuvDataFromImage` 的色度 strided 提取无干净 native 路径:native 侧 `android420ToI420`
   只吃 `ByteArray`、不吃 `Image`/planes；从 `Image` 提取平面仍须 Kotlin。真 native 化需新增吃 Image planes
   的 JNI 入口（大改，另立项）。纯 Kotlin 微优化收益有限且仍改字节，风险/收益比差 → 不做。
@@ -31,81 +33,70 @@
   复用刮擦缓冲须 `ThreadLocal`/传入 scratch，否则并发帧数据竞争。`rowData`（~rowStride，1–2KB）相对不可避免的
   `data`（≈460KB/帧）是小头 → 不值得为共享 util 引入可变状态。
 
-## 3. 现成范式与关键风险
+## 3. 关键风险与最终语义
 
-**范式**:`EncoderStrategyYuv420P` 前置分支已用一次 native 调用完成"翻转 + 旋转":
-`convertToI420(yuvData, I420, w, h, verticallyFlip = true, ROTATE_270)`（内部先翻转再旋转）。
+- **方向来源**：不能继续用固定 270°或只看 `cameraSensorOrientation`。录像开始时的 `relativeOrientation` 已综合
+  传感器方向、设备物理方向和镜头符号，是当前码流唯一方向来源。
+- **镜像顺序**：先把 I420 旋转为最终观看方向，再在旋转后的宽高上水平镜像。这样四个角度的“最终画面左右
+  镜像”语义一致，不需要复制旧实现互相矛盾的水平/垂直翻转分支。
+- **格式一致性**：YUV420P 必须输出 I420；YUV420SP 必须显式输出 NV12。任何 I420 数据都不得进入 NV21 专用
+  函数。
+- **尺寸一致性**：编码器 SPS、旋转后的 I420 和 NV12 转换必须使用同一输出宽高，否则会花屏或颜色错位。
 
-**⚠️ 镜像轴和处理顺序不一致(本改动的头号风险)**:
-- Sp 现前置用 `mirrorNv21` = **水平镜像**(左右翻转)。
-- P 前置 native 用 `verticallyFlip = true` = **垂直翻转**(上下)。
-- Sp 的 90° 和 270° 分支也不是同一处理顺序。若统一照抄任意一种 native 组合，某类传感器方向可能上下
-  颠倒或镜像反向。**必须保留方向分支并分别真机核对。**
+## 4. 变更方案
 
-**格式一致性**:后置输出 NV12（`i420ToNv12`）。前置现分支返回 Kotlin 函数结果、**未显式 `i420ToNv12`**，
-且这些函数按 NV 交织处理色度、其确切输出格式含糊。native 化后前置应**显式产出 NV12**，与后置一致。
+真机反馈推翻了“只做性能替换且保持旧观感”的前提：旧前置路径本身横屏方向错误且偏色。因此实现扩展到
+`Camera2ComponentHelper`、YUV420P/SP 两种策略和共享录像变换，但仍不修改 `IDataProcessStrategy` 公开签名。
 
-## 4. 变更方案（仅 `EncoderStrategyYuv420Sp.kt`）
+### 4.1 录像开始时锁定相机相对方向
 
-把前置 `else` 分支（`:47-58`）替换为 native 调用，但继续按 `cameraSensorOrientation` 分流。旧实现由 Git
-历史保留，不在源码中留下整块失效注释。
+`BaseCamera2Fragment` 在点击录像时读取一次 `relativeOrientation.value`，创建编码器时传入 helper。该值已根据
+当前镜头的 `SENSOR_ORIENTATION` 和前后置符号计算，可能为 0°/90°/180°/270°，无需在每帧路径再次按
+`cameraSensorOrientation` 分流。录像期间不更新角度，避免同一裸 H.264 流中途交换 SPS 宽高。
 
-### 90° 方向候选（水平镜像后旋转）
+### 4.2 编码尺寸与像素变换统一
 
-```kotlin
-cameraSensorOrientation == 90 -> {
-    val mirrored = com.leovp.yuv.YuvUtil.mirrorI420(i420Bytes, width, height)
-    val rotated =
-        com.leovp.yuv.YuvUtil.rotateI420(mirrored, width, height, com.leovp.yuv.YuvUtil.ROTATE_270)
-    com.leovp.yuv.YuvUtil.i420ToNv12(rotated, height, width)
-}
-```
+- 0°/180°：编码宽高保持相机输入 `width×height`。
+- 90°/270°：编码宽高交换为 `height×width`。
+- 前后置先对合法 I420 执行对应 native 旋转。
+- 前置再在旋转后的宽高上调用 `mirrorI420()`，使最终输出保持水平镜像；该顺序对四个角度使用同一语义。
+- YUV420P 直接把变换后的 I420 送入对应编码器。
+- YUV420SP 对变换后的 I420 显式调用 `i420ToNv12()`；转换宽高必须使用旋转后的尺寸。
 
-- `mirrorI420` = 水平镜像，与 90° 旧分支的亮度平面处理方向一致；由于旧代码用 NV21 函数处理 I420 色度，
-  不能宣称逐字节等价，仍以真机画面为准。
-- 末尾 `i420ToNv12(rotated, height, width)` 使前置与后置一致输出 NV12（维度因 270° 旋转互换）。
+该方案保证 U/V 平面始终按 I420 解释，删除 `mirrorNv21()`、`rotateYUV420Degree270()` 和
+`rotateYUVDegree270AndMirror()` 对 I420 输入的错误调用。旧实现通过 Git 历史保留，不复制为失效注释；这些
+androidbase 公共函数本身不删除。
 
-### 270° 方向候选（垂直翻转后旋转）
+### 4.3 API/ABI 边界
 
-270° 旧分支的变换顺序不同，先使用与 `EncoderStrategyYuv420P` 相同的 native 组合进行独立验证:
-
-```kotlin
-else -> {
-    val i420 = com.leovp.yuv.YuvUtil.convertToI420(
-        i420Bytes, com.leovp.yuv.YuvUtil.I420, width, height, true, com.leovp.yuv.YuvUtil.ROTATE_270
-    )!!
-    com.leovp.yuv.YuvUtil.i420ToNv12(i420, height, width)
-}
-```
-
-**决策规则**:两个方向分别实现、分别验证，不因其中一个方向通过就删除分支。若某一方向的候选实现与旧版
-前置画面不一致，只调整或回滚该方向；在 90° 与 270° 机型都验证通过之前，不合并 native 实现。
-
-### 保留与清理
-
-- 旧前置 Kotlin 实现通过 Git 历史保留，不复制为失效注释。
-- 后置分支不动。
-- `androidbase/YuvUtil` 的 `mirrorNv21`/`rotateYUV420Degree270`/`rotateYUVDegree270AndMirror` 不删除
-  （属其它模块、`@file:Suppress("unused")`），仅停止从 camera2live 调用。
-- `getYuvDataFromImage` 仍用于提取 I420（H4/M5 不动）。
+- 保留 `extraInitializeCameraForRecording(bitrate)`，新增带可空录像角度的重载。
+- 保留 `IDataProcessStrategy.doProcess(image, lensFacing, cameraSensorOrientation)` 签名。
+- 旋转角通过策略构造参数注入；现有策略无参构造和 `DataProcessFactory.getConcreteObject(type)` 保留镜头相关旧
+  默认值（后置 90°、前置 270°）。
+- H4/M5 决策不变：`getYuvDataFromImage` 仍负责从 `Image` planes 提取 I420，不引入共享 scratch。
 
 ## 5. 测试与验证
 
-- **JVM 单元测试**:不能直接加载 Android native 库，也不能构造真实 `Image`，不作为本项的主要验证手段。
-- **Android 仪器测试**:建议把提取 I420 之后的变换拆成 internal helper，用合成 I420 数据分别覆盖 90°/270°，
-  校验输出长度、NV12 排布和 Y 平面方向；这不能替代真机，但可防止后续误合并两个方向分支。
-- **真机回归（合并前置条件，必须全过）**:
-  1. **前置**预览/录制:画面方向、左右镜像、上下方向、颜色均与改动前**一致**（无镜像反向、无上下颠倒、无花屏/偏色）；
-  2. 后置预览/录制:不受影响、正常；
+- **JVM 单元测试**：覆盖四个角度对应的编码尺寸和非法输入；JVM 不能加载 Android native 库或构造真实
+  `Image`，不能验证实际 I420/NV12 像素。
+- **Android 仪器测试（后续可补）**：用合成 I420 覆盖四个角度，校验输出长度、NV12 排布、Y 平面方向和最终
+  水平镜像；不能替代真机。
+- **当前设备真机回归已通过；完整发布回归矩阵如下**:
+  1. **前置**竖屏及两个横屏方向：SPS 宽高、画面方向、左右镜像和颜色正确，无上下颠倒、花屏、偏色或拉伸；
+  2. 后置竖屏及两个横屏方向：保持已验证通过的方向和颜色；
   3. 前后置**连续快速切换**:无花屏、无 `ERROR_CAMERA_IN_USE`、方向正确；
   4. 覆盖 `sensorOrientation` 90 与 270 的机型各至少一台（如 Nexus 6/6P 属 90）;
   5. 录制文件回放:前置片段方向/镜像/颜色正确。
 - **性能对照**:前置录制时对比改前/改后的每帧耗时或 CPU（可用现有 `measureTimeMillis`/profiler）。
 
+**2026-08-17 验证结果**：维护者确认本轮 Camera2Live 真机测试通过。后置横屏方向及颜色未回归；前置横屏
+方向、水平镜像和颜色均正确，且未出现花屏。本设计的真机合并门禁已解除；不同 `sensorOrientation` 机型及
+YUV420P/YUV420SP 设备的扩大覆盖继续作为发布回归项。
+
 ## 6. 影响面
 
 - **对外 API**:无签名变更。
-- **行为**:目标是**保持前置观感不变**并显式输出合法 NV12；由于旧路径用 NV21 函数处理 I420 色度，不承诺
-  字节级等价。若真机发现旧路径本就有方向/颜色瑕疵，另行记录，不在本次性能整改中擅自修正。
-- **风险**:每帧 YUV 正确性 —— 由第 5 节真机回归把关；未过不合并。
-- **detekt/ktlint**:native 调用用全限定名（与后置一致），不新增 import；删除旧调用后清理失效 import。
+- **行为**：有意修复前置旧路径的竖屏输出和偏色，并显式输出合法 I420/NV12；不承诺与错误旧路径字节等价。
+- **风险**:每帧 YUV 正确性已通过当前设备真机回归；不同传感器方向与 YUV 输出格式的跨设备组合仍需在发布
+  回归中持续覆盖。
+- **detekt/ktlint**：删除旧调用后清理失效 import，并保持共享变换函数只接收合法旋转角和正尺寸。

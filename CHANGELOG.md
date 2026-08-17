@@ -98,6 +98,9 @@
 
 ### 修复 (Fixed)
 
+- **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
+  设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将
+  `VideoView` 放入黑色容器并居中，横屏录像回放时上下显示黑边，不再居上显示。
 - **CAM2-10 编码队列丢帧可观测**:`CameraAvcEncoder` 的有界队列丢弃最旧帧时会通知编码器;
   首个丢帧立即记录 warning,持续背压时每累计 30 个丢帧再记录一次,避免静默丢帧和日志洪泛。
   队列容量、非阻塞写入和保留最新帧的策略不变。

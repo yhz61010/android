@@ -14,6 +14,8 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.view.LayoutInflater
+import android.view.OrientationEventListener
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
@@ -23,6 +25,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.DynamicRange
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCase
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
@@ -122,6 +125,17 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     // Selector showing is flash enabled or not
     private var torchEnabled = false
 
+    private var targetRotation = Surface.ROTATION_0
+
+    private val orientationEventListener by lazy(LazyThreadSafetyMode.NONE) {
+        object : OrientationEventListener(requireContext().applicationContext) {
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) return
+                updateTargetRotation(UseCase.snapToSurfaceRotation(orientation))
+            }
+        }
+    }
+
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(requireContext()) }
 
     /**
@@ -140,6 +154,11 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         duration = 400
         repeatCount = Animation.INFINITE
         repeatMode = Animation.REVERSE
+    }
+
+    override fun onStart() {
+        super.onStart()
+        orientationEventListener.enable()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -199,7 +218,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         // showAvailableRatio(incRatioBinding, selectedRatio, incPreviewGridBinding.viewFinder/*,
         // binding.btnRatio*/)
 
-        val rotation = incPreviewGridBinding.viewFinder.display.rotation
+        val displayRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         //        // Get screen metrics used to set up camera for full screen resolution
         //        val metrics = requireContext().screenRealResolution
@@ -245,10 +264,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
             val orientation = this@VideoFragment.resources.configuration.orientation
             val ratioString =
                 selectedQuality.getAspectRatioString(
-                    (
-                        orientation ==
-                            Configuration.ORIENTATION_PORTRAIT
-                        )
+                    orientation == Configuration.ORIENTATION_PORTRAIT
                 )
             when (ratioString) {
                 "V,9:16" -> updateRatioUI(CameraRatio.R16v9, incPreviewGridBinding.viewFinder)
@@ -271,7 +287,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         val preview = Preview.Builder()
             .setResolutionSelector(previewResolutionSelector)
             // Set initial target rotation
-            .setTargetRotation(rotation)
+            .setTargetRotation(displayRotation)
             .build().apply {
                 // Attach the viewfinder's surface provider to preview use case
                 surfaceProvider = incPreviewGridBinding.viewFinder.surfaceProvider
@@ -282,6 +298,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         //   - be used create recording(s) (the recording performs recording)
         val recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
         videoCapture = VideoCapture.withOutput(recorder)
+        videoCapture.targetRotation = targetRotation
 
         val camProvider = cameraProvider
         checkNotNull(camProvider) {
@@ -601,6 +618,7 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
     }
 
     override fun onStop() {
+        orientationEventListener.disable()
         if (currentRecording != null && recordingState !is VideoRecordEvent.Finalize) {
             // Stop recording
             currentRecording?.stop()
@@ -608,6 +626,12 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         }
         camera?.cameraControl?.enableTorch(false)
         super.onStop()
+    }
+
+    private fun updateTargetRotation(rotation: Int) {
+        if (targetRotation == rotation) return
+        targetRotation = rotation
+        if (::videoCapture.isInitialized) videoCapture.targetRotation = rotation
     }
 
     /**

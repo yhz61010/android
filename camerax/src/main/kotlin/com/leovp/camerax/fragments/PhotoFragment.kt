@@ -1,9 +1,12 @@
 package com.leovp.camerax.fragments
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.MediaController
 import android.widget.VideoView
 import androidx.fragment.app.Fragment
@@ -20,6 +23,7 @@ class PhotoFragment internal constructor() : Fragment() {
     private var isVideo = true
     private var mediaFile: File? = null
     private var mc: MediaController? = null
+    private var videoView: VideoView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,7 +35,21 @@ class PhotoFragment internal constructor() : Fragment() {
             isVideo = it.endsWith(VIDEO_EXTENSION, true)
             File(it)
         }
-        return if (isVideo) VideoView(context) else SubsamplingScaleImageView(context)
+        return if (isVideo) {
+            FrameLayout(requireContext()).apply {
+                setBackgroundColor(Color.BLACK)
+                addView(
+                    VideoView(context).also { videoView = it },
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        Gravity.CENTER,
+                    ),
+                )
+            }
+        } else {
+            SubsamplingScaleImageView(context)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -43,7 +61,7 @@ class PhotoFragment internal constructor() : Fragment() {
                 return
             }
             mc = MediaController(requireContext())
-            (view as VideoView).apply {
+            videoView?.apply {
                 setVideoPath(videoFile.absolutePath)
                 setMediaController(mc)
                 requestFocus()
@@ -57,8 +75,15 @@ class PhotoFragment internal constructor() : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        (view as? VideoView)?.start()
+        videoView?.start()
         mc?.show(0)
+    }
+
+    override fun onDestroyView() {
+        videoView?.stopPlayback()
+        videoView = null
+        mc = null
+        super.onDestroyView()
     }
 
     companion object {

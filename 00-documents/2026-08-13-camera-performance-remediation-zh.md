@@ -109,8 +109,8 @@
 | 子项目 | 内容 | 状态 | 提交 |
 |--------|------|------|------|
 | 1 | camerax H1 / M4 | ✅ 已推送 | `78e4553a6`、`0deaafbf0`(ktlint) |
-| 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已实现 | `ab4d0cdbc`（初版） |
-| 3a | camera2live M7 | ✅ 已推送 | `b1ff02064` |
+| 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已推送 | `ab4d0cdbc`（初版）、`5a23d6c93`（定稿：开关停用、不绑定分析流） |
+| 3a | camera2live M7 | ✅ 已推送 | `b1ff02064`、`5a23d6c93`(注释/格式) |
 | 3b | **仅 H3**（前置 YUV native 化；H4/M5 不做） | 📄 spec 已定，代码待真机 | `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md` |
 | M6 | 编码帧池化 | ⛔ 跳过 | — |
 
@@ -143,3 +143,31 @@
 - 子项目 1/2/3a 均**行为保持型**改动，理论不需真机；但建议随 3b 的真机回归**顺带冒烟**
   （相机预览/录制/切镜头/切比例正常）。
 - 本仓库环境不做本地编译；detekt/ktlint/单测由维护者本地执行。
+
+---
+
+## 7. 审查记录
+
+### `5a23d6c93` —— Codex 复审整改（已复核通过）
+
+对 SP2/3a 及 3b spec 的复审提交，逐文件人工复核后**通过**，其中两处为实质性纠正：
+
+- **SP2 停用方式（代码更优）**：原实现里 `imageAnalyzer` 仍被**创建并绑定**，仅注释掉 `setAnalyzer`。
+  但**已绑定的 `ImageAnalysis` use case 即使无 analyzer 回调，CameraX 仍配置分析流并逐帧取帧**，未真正
+  省掉每帧开销。改为编译期开关 `ENABLE_LUMINOSITY_ANALYSIS = false`：关闭时 `imageAnalyzer = null`、
+  `bindToLifecycle` 动态构建 use-case 列表（`preview + imageCapture`，`imageAnalyzer?.let{add}`），
+  **根本不绑定分析流** → 真正零每帧开销，并少占一路硬件 stream。空安全已核（唯一活跃引用为 `?.let`）。
+- **`averageLuma` 加 `require(stride > 0)`** + 单测（覆盖 0/-1）：防止非正步长导致的循环异常。
+- **3b spec 纠正两个设计缺陷**：
+  1. 原方案拟**合并 90°/270° 分支**为单一"镜像+旋转270"——有风险：两分支镜像轴/顺序本不同
+     （90°=`mirrorNv21`+`rotateYUV420Degree270`；270°=`rotateYUVDegree270AndMirror` 一步），合并可能翻转
+     某类传感器方向。改为**保留 `cameraSensorOrientation` 分支、两方向各自真机验证**。
+  2. 原文声称"逐字节等价"——旧函数是 **NV21 色度函数处理 I420 数据**，不能宣称字节级等价，只能以真机
+     画面为基线。
+- **3a/M7、CHANGELOG、进度表**：注释重措辞、ktlint 换行、过期信息订正（3a→`b1ff02064`），无行为变化。
+
+### ⏳ 待维护者拍板（3b 真机实现时）
+
+3b spec 现将"旧前置 Kotlin 分支保留方式"定为**依 Git 历史（源码不留失效注释）**，与 SP2 采用的"注释/
+开关完整保留、不删除"偏好不一致。**3b 尚为 spec、代码待真机**，此项到真机实现阶段再定：注释保留（贴合
+一贯偏好，但 detekt 零容忍需处理随之失效的 import）vs 依 Git 历史删除（源码更干净，Codex 建议）。

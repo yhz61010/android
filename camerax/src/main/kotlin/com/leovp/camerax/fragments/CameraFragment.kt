@@ -366,8 +366,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // during the lifecycle of this use case
                 .setTargetRotation(deviceRotation).build()
 
-        // Do not bind ImageAnalysis while disabled: a bound use case still configures an analysis
-        // stream and handles frames even without an analyzer callback.
+        // Do not bind ImageAnalysis while disabled: binding still creates and negotiates an
+        // analysis pipeline and output surface, even though data delivery requires an analyzer.
         imageAnalyzer = if (ENABLE_LUMINOSITY_ANALYSIS) {
             ImageAnalysis.Builder()
                 .setResolutionSelector(resolutionSelector)

@@ -95,6 +95,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -371,46 +372,47 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                         logTag,
                         "Capture image file cost=${System.currentTimeMillis() - startTimestamp}ms"
                     )
-                    try {
-                        showShutterAnimation(viewFinder)
-                        soundManager.playShutterSound()
-                        val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
+                    showShutterAnimation(viewFinder)
+                    soundManager.playShutterSound()
+                    val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
 
-                        /**
-                         * Note that, for image rotation, you can set image rotation with:
-                         * Please check `CameraFragment.kt` file.
-                         * ```
-                         * imageAnalyzer.targetRotation = surfaceOrientation
-                         * imageCapture.targetRotation = surfaceOrientation
-                         * ```
-                         * this will set exif information in generated file NOT.
-                         * So that the image looks like
-                         *
-                         * Or else, rotate the original bitmap file as below:
-                         * (Attention: rotate the generated file directly will take more time.)
-                         */
-                        lifecycleScope.launch(Dispatchers.IO) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        var originalBitmap: Bitmap? = null
+                        var processedBitmap: Bitmap? = null
+                        try {
                             val st1 = System.currentTimeMillis()
-                            val oriBmp: Bitmap = BitmapFactory.decodeFile(savedUri.path)
+                            val decodedBitmap = requireNotNull(
+                                BitmapFactory.decodeFile(photoFile.absolutePath)
+                            ) {
+                                "Unable to decode captured image: $savedUri"
+                            }
+                            originalBitmap = decodedBitmap
                             val st2 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Decode bitmap file cost=${st2 - st1}ms")
 
-                            val rotatedBmp =
-                                adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+                            val rotatedBitmap = adjustBitmapRotation(
+                                decodedBitmap,
+                                mirror,
+                                cameraRotationInDegree,
+                            )
+                            processedBitmap = rotatedBitmap
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
 
-                            rotatedBmp.run {
-                                writeToFile(photoFile)
-                                recycledSafety()
-                            }
+                            rotatedBitmap.writeToFile(photoFile)
                             val st4 = System.currentTimeMillis()
                             LogContext.log.d(logTag, "Write bitmap file cost=${st4 - st3}ms")
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            LogContext.log.e(logTag, "Process onImageSaved() error", e)
+                            onImageSaved(null, e)
+                            return@launch
+                        } finally {
+                            originalBitmap.recycledSafety()
+                            processedBitmap.recycledSafety()
                         }
                         onImageSaved(CaptureImage.ImageUri(savedUri), null)
-                    } catch (e: Exception) {
-                        LogContext.log.e(logTag, "Process onImageSaved() error", e)
-                        onImageSaved(null, e)
                     }
                 }
             }

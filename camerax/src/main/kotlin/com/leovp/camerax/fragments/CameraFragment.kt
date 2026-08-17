@@ -18,14 +18,13 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
-import androidx.camera.core.UseCase
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import com.hjq.permissions.XXPermissions
 import com.leovp.android.exts.DEGREE_TO_SURFACE_ROTATION
 import com.leovp.android.exts.SURFACE_ROTATION_TO_DEGREE
@@ -52,13 +51,13 @@ import com.leovp.camerax.listeners.CameraXTouchListener
 import com.leovp.camerax.listeners.CaptureImageListener
 import com.leovp.camerax.utils.OrientationLiveData
 import com.leovp.camerax.utils.cameraSensorOrientation
-import com.leovp.camerax.utils.getCameraSupportedSize
 import com.leovp.camerax.utils.toggleButton
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
 import java.util.Locale
 import kotlin.properties.Delegates
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -92,7 +91,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Host's navigation controller */
     private val navController: NavController by lazy {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+        requireActivity().findNavController(R.id.fragment_container_camerax)
     }
 
     private var imageCapture: ImageCapture? = null
@@ -164,7 +163,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         return super.onCreateView(inflater, container, savedInstanceState)
@@ -291,14 +290,17 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 getRatio(it) ==
                     "16:9"
             }
+
             CameraRatio.R1v1 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "1:1"
             }
+
             CameraRatio.R4v3 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "4:3"
             }
+
             CameraRatio.RFull -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 (it.long * 1.0 / it.short).round(1) ==
                     (metrics.height * 1.0 / metrics.width).round(1)
@@ -407,7 +409,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
-            val useCases = mutableListOf<UseCase>(
+            val useCases = mutableListOf(
                 checkNotNull(preview),
                 checkNotNull(imageCapture),
             )
@@ -721,7 +723,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
                             currentViewLifecycleOwner.lifecycleScope.launch {
-                                delay(500)
+                                delay(500.milliseconds)
                                 // it.isEnabled = true
                                 enableUI(true)
                             }
@@ -768,13 +770,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             CameraTimer.S3 -> for (i in CameraTimer.S3.delay downTo 1) {
                 soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
-                delay(1000)
+                delay(1000.milliseconds)
             }
 
             CameraTimer.S10 -> for (i in CameraTimer.S10.delay downTo 1) {
                 soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
-                delay(1000)
+                delay(1000.milliseconds)
             }
 
             else -> Unit
@@ -818,7 +820,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         runCatching {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled =
                 hasBackCamera() &&
-                hasFrontCamera()
+                    hasFrontCamera()
         }.onFailure {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = false
         }

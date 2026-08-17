@@ -131,6 +131,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchFlashBtn.visibility = View.VISIBLE
                 }
                 previousLensFacing = lensFacing
+                updateOrientationLiveData()
             }
         })
 
@@ -143,7 +144,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             // Perform I/O heavy operations in a different scope
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
-                getCapturingImage(camera2Helper.takePhoto())
+                getCapturingImage(camera2Helper.takePhoto(relativeOrientation.value))
                 DeviceSound.playShutterClick()
                 // Re-enable click listener after photo is taken
                 it.post {
@@ -164,11 +165,15 @@ abstract class BaseCamera2Fragment : Fragment() {
             it.isEnabled = false
             switchCameraBtn.isEnabled = false
             binding.ivShot.isEnabled = false
+            val recordingRotationDegrees = relativeOrientation.value
 
             // Perform I/O heavy operations in a different scope
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
-                camera2Helper.extraInitializeCameraForRecording()
+                camera2Helper.extraInitializeCameraForRecording(
+                    bitrate = -1,
+                    recordingRotationDegrees = recordingRotationDegrees
+                )
                 camera2Helper.setImageReaderForRecording()
                 camera2Helper.setPreviewRepeatingRequest()
                 camera2Helper.startRecording()
@@ -204,12 +209,7 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
 
         // Used to rotate the output media to match device orientation
-        relativeOrientation =
-            OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
-                observe(viewLifecycleOwner) { orientation ->
-                    LogContext.log.d(TAG, "Orientation changed: $orientation")
-                }
-            }
+        updateOrientationLiveData()
     }
 
     override fun onStop() {
@@ -242,6 +242,18 @@ abstract class BaseCamera2Fragment : Fragment() {
         if (isCameraReleased.compareAndSet(false, true)) {
             if (::camera2Helper.isInitialized) camera2Helper.release()
         }
+    }
+
+    private fun updateOrientationLiveData() {
+        if (::relativeOrientation.isInitialized) {
+            relativeOrientation.removeObservers(viewLifecycleOwner)
+        }
+        relativeOrientation =
+            OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
+                observe(viewLifecycleOwner) { orientation ->
+                    LogContext.log.d(TAG, "Orientation changed: $orientation")
+                }
+            }
     }
 
     companion object {

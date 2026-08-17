@@ -32,13 +32,7 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
-            val rotation = when {
-                orientation <= 45 -> Surface.ROTATION_0
-                orientation <= 135 -> Surface.ROTATION_90
-                orientation <= 225 -> Surface.ROTATION_180
-                orientation <= 315 -> Surface.ROTATION_270
-                else -> return
-            }
+            val rotation = orientationToSurfaceRotation(orientation) ?: return
             val relative = computeRelativeRotation(characteristics, rotation)
             if (relative != value) postValue(relative)
         }
@@ -55,6 +49,14 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
     }
 
     companion object {
+
+        internal fun orientationToSurfaceRotation(orientation: Int): Int? = when {
+            orientation == OrientationEventListener.ORIENTATION_UNKNOWN -> null
+            orientation <= 45 || orientation > 315 -> Surface.ROTATION_0
+            orientation <= 135 -> Surface.ROTATION_90
+            orientation <= 225 -> Surface.ROTATION_180
+            else -> Surface.ROTATION_270
+        }
 
         /**
          * Computes rotation required to transform from the camera sensor orientation to the

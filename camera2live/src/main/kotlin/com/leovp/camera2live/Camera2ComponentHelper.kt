@@ -1455,6 +1455,9 @@ class Camera2ComponentHelper(
                 }
             }
             return output
+        } catch (exc: CancellationException) {
+            output.delete()
+            throw exc
         } catch (exc: Exception) {
             output.delete()
             LogContext.log.e(TAG, "Unable to transform and write JPEG image", exc)

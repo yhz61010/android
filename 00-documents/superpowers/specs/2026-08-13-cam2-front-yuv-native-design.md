@@ -89,16 +89,27 @@ androidbase 公共函数本身不删除。
   5. 录制文件回放:前置片段方向/镜像/颜色正确。
 - **性能对照**:前置录制时对比改前/改后的每帧耗时或 CPU（可用现有 `measureTimeMillis`/profiler）。
 
-**2026-08-17 验证结果**：维护者在 **`sensorOrientation` = 270 类机型**上真机测试通过——后置横屏方向及颜色
-未回归；前置竖屏/横屏的方向、水平镜像和颜色均正确，无花屏、偏色、上下颠倒或拉伸。据此解除该类设备的真机
-合并门禁。
+> **术语**：`SENSOR_ORIENTATION` 属于**具体 camera（cameraId / lensFacing）**而非整机——常见手机前置约
+> 270°、后置约 90°，API 32+ 折叠设备的逻辑相机方向还可能随设备状态变化。因此下文以"**前置 camera
+> `SENSOR_ORIENTATION`=X**"限定覆盖范围，而非"X 类机型"。
 
-**⚠️ 尚未验证:`sensorOrientation` = 90 机型（Nexus 6/6P 类）**。维护者手头无此类真机，无法实测。新实现
-**不再按 `cameraSensorOrientation` 每帧分流**，而是依赖录像起始的 `relativeOrientation`
+**2026-08-17 验证结果**：维护者在其手头设备（**前置 camera `SENSOR_ORIENTATION`=270** 的常见组合）上真机
+测试通过——后置横屏方向及颜色未回归；前置竖屏/横屏的方向、水平镜像和颜色均正确，无花屏、偏色、上下颠倒或
+拉伸。据此解除该组合的真机合并门禁。
+
+**⚠️ 尚未验证:前置 camera `SENSOR_ORIENTATION`=90（如 Nexus 6/6P）**。维护者手头无此类真机，无法实测。
+新实现**不再按 `cameraSensorOrientation` 每帧分流**，而是依赖录像起始的 `relativeOrientation`
 （`computeRelativeRotation(characteristics, rotation)` 已综合 sensor 方向与前后置符号）——因此 90° 情形
-**理论上被统一路径正确覆盖**，但**缺真机实证**。上表第 4 项（90 与 270 各一台）仅完成 270 侧;90 侧
-保留为**发布前回归项**,待有 Nexus/90° 机型时补测,若届时发现方向/镜像异常再针对性调整。
-YUV420P/YUV420SP 设备的扩大覆盖同样继续作为发布回归项。
+**理论上被统一路径正确覆盖**，但**既缺真机实证、也缺该公式的 JVM 单测**（当前 `OrientationLiveDataTest`
+只覆盖 `orientationToSurfaceRotation` 的物理角度分桶，见下）。上表第 4 项（`SENSOR_ORIENTATION` 90 与 270
+各一台）仅完成 270 侧;90 侧保留为**发布前回归项**，待有 Nexus/90° 机型时补测，若届时发现方向/镜像异常再针对
+性调整。YUV420P/YUV420SP 设备的扩大覆盖同样继续作为发布回归项。
+
+**建议补齐（Finding 3）**：把 `computeRelativeRotation` 的纯公式部分抽为可测函数
+（入参 `sensorOrientationDegrees` / `lensFacingFront` / `surfaceRotation`，与 `CameraCharacteristics` 解耦），
+补 2（sensor 90/270）× 2（前/后置）× 4（设备旋转）= 16 组合的 JVM 单测。它**不能替代**真机 YUV 验证，但可为
+"90° 由统一路径理论覆盖"的结论提供公式级实证，且无需 Nexus 硬件。**回归记录字段**：设备型号 + `cameraId` +
+`lensFacing` + `SENSOR_ORIENTATION` + `deviceState` + YUV420P/SP。
 
 ## 6. 影响面
 

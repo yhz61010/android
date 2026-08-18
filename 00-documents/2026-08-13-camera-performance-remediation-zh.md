@@ -111,19 +111,19 @@
 | 1 | camerax H1 / M4 | ✅ 已推送 | `78e4553a6`、`0deaafbf0`(ktlint) |
 | 2 | LuminosityAnalyzer H2/M1/M2/M3（方向 C） | ✅ 已推送 | `ab4d0cdbc`（初版）、`5a23d6c93`（定稿：开关停用、不绑定分析流） |
 | 3a | camera2live M7 | ✅ 已推送 | `b1ff02064`、`5a23d6c93`(注释/格式) |
-| 3b | **H3 + 前置方向/颜色正确性**（H4/M5 不做） | ✅ 代码整改及真机验证完成，待提交 | `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md` |
+| 3b | **H3 + 前置方向/颜色正确性**（H4/M5 不做） | ✅ 已推送；当前设备组合已真机验证，前置 `SENSOR_ORIENTATION`=90 组合待发布回归 | `117e26213`、`8afc8a845`(取消处理)；spec 见 `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md` |
 | M6 | 编码帧池化 | ⛔ 跳过 | — |
 
 ---
 
-## 6. 子项目 3b —— 前置方向/颜色正确性整改，已真机验证
+## 6. 子项目 3b —— 前置方向/颜色正确性整改（当前设备组合已验证，前置 `SENSOR_ORIENTATION`=90 组合待回归）
 
 经 Explore 深度探查与后续真机验证（native `com.leovp.yuv.YuvUtil` API、前置 native 范式、纯 Kotlin函数
 方向语义、`getYuvDataFromImage` 与线程模型）后，3b 收敛为 H3 及同一路径的方向/颜色正确性修复；H4、M5
 探查后决定不做。设计详见
 `superpowers/specs/2026-08-13-cam2-front-yuv-native-design.md`。
 
-- **H3 + 正确性修复（已通过真机门禁）**：真机已确认前置旧路径存在两个实际缺陷：横屏仍编码成竖屏，且
+- **H3 + 正确性修复（当前设备组合已通过真机门禁）**：真机已确认前置旧路径存在两个实际缺陷：横屏仍编码成竖屏，且
   YUV420SP 设备颜色错误。方向问题来自固定 270°变换和旧编码尺寸；偏色来自把 I420 数据交给 NV21 色度函数。
   新实现统一使用 native I420 旋转，并在旋转后的尺寸上做 I420 水平镜像；YUV420SP 显式输出 NV12，YUV420P
   保持 I420。`OrientationLiveData` 已包含镜头传感器方向差异，因此变换按录像开始时锁定的相对角执行，不再按
@@ -135,14 +135,20 @@
   复用须 `ThreadLocal`/传入 scratch；而 `rowData`（~1–2KB）相对 `data`（≈460KB/帧）是小头，不值得为共享
   util 引入可变状态。
 
-**验证结果（2026-08-17，`sensorOrientation` = 270 类机型已通过）**：维护者在其手头的 270° 类机型上确认本轮
-Camera2Live 照片、预览和录像真机测试均通过。照片方向与水平镜像正确；后置横屏录像方向和颜色保持正确；
-前置横屏已按横屏输出，水平镜像和颜色正确，且未出现花屏。据此解除该类设备的真机门禁。
+**验证结果（2026-08-17，当前设备组合已通过）**：`SENSOR_ORIENTATION` 属于**具体 camera（cameraId /
+lensFacing）**而非整机——常见手机前置约 270°、后置约 90°，API 32+ 折叠设备的逻辑相机方向还可能随设备状态
+变化。维护者在其手头设备（**前置 camera `SENSOR_ORIENTATION`=270** 的常见组合）上确认本轮 Camera2Live
+照片、预览和录像真机测试均通过：照片方向与水平镜像正确；后置横屏录像方向和颜色保持正确；前置横屏已按横屏
+输出，水平镜像和颜色正确，无花屏。据此解除该组合的真机门禁。
 
-**⚠️ `sensorOrientation` = 90 机型（Nexus 6/6P 类）尚未验证**：维护者无此类真机,无法实测。新实现不再按
-`cameraSensorOrientation` 每帧分流,90° 情形理论上由 `relativeOrientation`（已综合 sensor 方向与前后置符号）
-统一覆盖,但**缺真机实证**,保留为发布前回归项(待有 Nexus/90° 机型补测)。YUV420P/YUV420SP 设备的扩大
-覆盖同样保留在发布回归矩阵中。详见 3b spec §5。
+**⚠️ 前置 camera `SENSOR_ORIENTATION`=90 组合（如 Nexus 6/6P）尚未验证**：维护者无此类真机，无法实测。新
+实现不再按 `cameraSensorOrientation` 每帧分流，90° 情形理论上由 `relativeOrientation`（`computeRelativeRotation()`
+已综合 sensor 方向与前后置符号）统一覆盖，但**既缺真机实证、也缺该公式的 JVM 单测**（当前 `OrientationLiveDataTest`
+只覆盖物理角度→`Surface.ROTATION_*` 分桶），保留为发布前回归项。YUV420P/YUV420SP 设备的扩大覆盖同样保留在
+回归矩阵中。
+
+**回归记录字段（建议）**：设备型号 + `cameraId` + `lensFacing` + `SENSOR_ORIENTATION` + `deviceState` +
+YUV420P/SP，逐组合记录方向/镜像/颜色结果。详见 3b spec §5。
 
 ### ⚠️ 剩余验证事项
 

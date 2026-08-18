@@ -143,9 +143,10 @@ lensFacing）**而非整机——常见手机前置约 270°、后置约 90°，
 
 **⚠️ 前置 camera `SENSOR_ORIENTATION`=90 组合（如 Nexus 6/6P）尚未验证**：维护者无此类真机，无法实测。新
 实现不再按 `cameraSensorOrientation` 每帧分流，90° 情形理论上由 `relativeOrientation`（`computeRelativeRotation()`
-已综合 sensor 方向与前后置符号）统一覆盖，但**既缺真机实证、也缺该公式的 JVM 单测**（当前 `OrientationLiveDataTest`
-只覆盖物理角度→`Surface.ROTATION_*` 分桶），保留为发布前回归项。YUV420P/YUV420SP 设备的扩大覆盖同样保留在
-回归矩阵中。
+已综合 sensor 方向与前后置符号）统一覆盖，但**仍缺真机实证**——`computeRelativeRotation` 的纯公式已抽为 `internal` 可测函数并补
+2×2×4=16 组合 JVM 单测（`OrientationLiveDataTest`，佐证公式在 sensor 90/270 × 前后置 × 四方向下正确），
+但公式测试**不替代**真机 YUV 验证，故 90° 组合仍保留为发布前回归项。YUV420P/YUV420SP 设备的扩大覆盖同样
+保留在回归矩阵中。
 
 **回归记录字段（建议）**：设备型号 + `cameraId` + `lensFacing` + `SENSOR_ORIENTATION` + `deviceState` +
 YUV420P/SP，逐组合记录方向/镜像/颜色结果。详见 3b spec §5。

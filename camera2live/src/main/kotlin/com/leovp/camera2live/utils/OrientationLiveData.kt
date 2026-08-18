@@ -26,6 +26,10 @@ import androidx.lifecycle.LiveData
  * Calculates closest 90-degree orientation to compensate for the device
  * rotation relative to sensor orientation, i.e., allows user to see camera
  * frames with the expected orientation.
+ *
+ * The current sensor orientation is queried for every physical-orientation event. Fold-state-only
+ * changes from API 32+ logical cameras are not observed independently; callers that support those
+ * devices must recreate or otherwise refresh this source when the device state changes.
  */
 class OrientationLiveData(context: Context, characteristics: CameraCharacteristics) :
     LiveData<Int>() {

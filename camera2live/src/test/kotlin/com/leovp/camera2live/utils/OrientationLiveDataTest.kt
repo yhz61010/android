@@ -39,4 +39,50 @@ class OrientationLiveDataTest {
             )
         }
     }
+
+    @Test
+    fun `relative rotation covers sensor orientation lens facing and device rotation`() {
+        data class Case(
+            val sensorOrientationDegrees: Int,
+            val lensFacingFront: Boolean,
+            val surfaceRotation: Int,
+            val expected: Int,
+        )
+
+        val cases = listOf(
+            // sensor 90, front (sign = +1): (90 - deviceDeg + 360) % 360
+            Case(90, true, Surface.ROTATION_0, 90),
+            Case(90, true, Surface.ROTATION_90, 0),
+            Case(90, true, Surface.ROTATION_180, 270),
+            Case(90, true, Surface.ROTATION_270, 180),
+            // sensor 90, back (sign = -1): (90 + deviceDeg + 360) % 360
+            Case(90, false, Surface.ROTATION_0, 90),
+            Case(90, false, Surface.ROTATION_90, 180),
+            Case(90, false, Surface.ROTATION_180, 270),
+            Case(90, false, Surface.ROTATION_270, 0),
+            // sensor 270, front (sign = +1): (270 - deviceDeg + 360) % 360
+            Case(270, true, Surface.ROTATION_0, 270),
+            Case(270, true, Surface.ROTATION_90, 180),
+            Case(270, true, Surface.ROTATION_180, 90),
+            Case(270, true, Surface.ROTATION_270, 0),
+            // sensor 270, back (sign = -1): (270 + deviceDeg + 360) % 360
+            Case(270, false, Surface.ROTATION_0, 270),
+            Case(270, false, Surface.ROTATION_90, 0),
+            Case(270, false, Surface.ROTATION_180, 90),
+            Case(270, false, Surface.ROTATION_270, 180),
+        )
+
+        cases.forEach { case ->
+            assertEquals(
+                case.expected,
+                OrientationLiveData.computeRelativeRotation(
+                    case.sensorOrientationDegrees,
+                    case.lensFacingFront,
+                    case.surfaceRotation
+                ),
+                "sensor=${case.sensorOrientationDegrees} " +
+                    "front=${case.lensFacingFront} rotation=${case.surfaceRotation}"
+            )
+        }
+    }
 }

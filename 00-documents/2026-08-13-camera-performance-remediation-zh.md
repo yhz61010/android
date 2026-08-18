@@ -33,7 +33,7 @@
 | M4 | `BaseCameraXFragment.kt:806-843` / `CameraFragment.kt:280-303` | 同一次 bind 内重复取 `CameraCharacteristics` + 两次重算 supported-size | 每次 bind |
 | M5 | `androidbase/.../media/YuvUtil.kt:118` | 每帧新分配 `rowData` 刮擦缓冲（rowStride 会话内不变） | 每帧 |
 | M6 | `camera2live/codec/CameraAvcEncoder.kt:157-158` | 每编码帧 `ByteArray(info.size)` 新分配 | 每编码帧 |
-| M7 | `camera2live/Camera2ComponentHelper.kt:926-927` | 每帧重查 `SENSOR_ORIENTATION`（相机静态） | 每帧 |
+| M7 | `camera2live/Camera2ComponentHelper.kt:926-927` | 每帧重查 `SENSOR_ORIENTATION`（旧实现） | 每帧 |
 
 ---
 
@@ -83,12 +83,12 @@
   负值）。
 - **M1**：FPS 用原始 `LongArray` 环形缓冲替代 `ArrayDeque<Long>`，消除装箱。
 
-### 子项目 3a —— 已完成（commit `b1ff02064`）
+### 子项目 3a —— 已完成，后由 3b 取代（commit `b1ff02064`）
 
-- **M7（缓存 sensor orientation）**：`Camera2ComponentHelper` 加字段，在 `initializeParameters()` 里
-  `characteristics` 赋值处同步缓存一次；每帧 image-available 回调改用字段。`SENSOR_ORIENTATION` 相机静态、
-  仅切镜头随 `characteristics` 重赋值变化 → 缓存点与 characteristics 绑定，始终一致；沿用 `?: -1` 默认值。
-  行为不变，非每帧的其它三处读取（:316/:997/:1124）不动。
+- **M7（缓存 sensor orientation）**：3a 曾在 `initializeParameters()` 里缓存一次，消除 image-available
+  回调的每帧查询。3b 改为录像开始时锁定 `relativeOrientation` 后，内置 YUV420P/SP 策略已不再读取该值，因此
+  缓存字段已删除；`IDataProcessStrategy` 参数仅为公共 API 兼容暂留，helper 传入未使用的 `-1` sentinel，计划在
+  下一次破坏性版本删除。该旧参数不作为 API 32+ 折叠设备逻辑相机的方向来源。
 
 ### 单独决策
 
@@ -150,6 +150,11 @@ lensFacing）**而非整机——常见手机前置约 270°、后置约 90°，
 
 **回归记录字段（建议）**：设备型号 + `cameraId` + `lensFacing` + `SENSOR_ORIENTATION` + `deviceState` +
 YUV420P/SP，逐组合记录方向/镜像/颜色结果。详见 3b spec §5。
+
+**动态逻辑相机支持边界**：当前 `OrientationLiveData` 会在每次物理方向事件中重新读取
+`CameraCharacteristics.SENSOR_ORIENTATION`，但不会独立监听“仅折叠状态变化、物理方向不变”的事件。因此 API
+32+ 折叠设备的动态逻辑相机不在本轮已验证/承诺范围内。若后续纳入支持，应由应用层接入折叠状态来源（例如
+AndroidX Window），在状态变化时重建或刷新方向源；不能恢复为长期缓存 `SENSOR_ORIENTATION`。
 
 ### ⚠️ 剩余验证事项
 
@@ -268,8 +273,8 @@ YUV420P/SP，逐组合记录方向/镜像/颜色结果。详见 3b spec §5。
 
 - Camera2Live 前后摄像头的竖屏、90°和 270°照片方向及水平镜像正确，比例无变形。
 - 后置横屏裸 H.264 的方向、宽高和颜色正确；前置横屏录像方向、水平镜像和颜色正确，未出现花屏或拉伸。
-- 镜头切换、预览、拍照和录像回归均通过。不同 `sensorOrientation` 机型与 YUV420P/YUV420SP 设备的扩大覆盖
-  继续保留在发布回归矩阵中。
+- 镜头切换、预览、拍照和录像回归均通过。不同 `cameraId` / `lensFacing` /
+  `SENSOR_ORIENTATION` / `deviceState` 组合与 YUV420P/YUV420SP 设备的扩大覆盖继续保留在发布回归矩阵中。
 
 ### 2026-08-17 Camera2Live 横屏照片方向修复（已真机验证）
 
@@ -409,7 +414,8 @@ YUV420P/SP，逐组合记录方向/镜像/颜色结果。详见 3b spec §5。
      本身方向和颜色错误后，该临时候选已由“录像相对角旋转 + 最终水平镜像”方案取代，详见第 6 节与更新后 spec。
   2. 原文声称"逐字节等价"——旧函数是 **NV21 色度函数处理 I420 数据**，不能宣称字节级等价，只能以真机
      画面为基线。
-- **3a/M7、CHANGELOG、进度表**：注释重措辞、ktlint 换行、过期信息订正（3a→`b1ff02064`），无行为变化。
+- **3a/M7、CHANGELOG、进度表**：注释重措辞、ktlint 换行、过期信息订正（3a→`b1ff02064`），并注明
+  3b 已取代内置策略对缓存值的依赖；缓存字段已删除，公共接口参数留待下一次破坏性版本删除。
 
 ### 3b 旧实现保留策略（已明确）
 

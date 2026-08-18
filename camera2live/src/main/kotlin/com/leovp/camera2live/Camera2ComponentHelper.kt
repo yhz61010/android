@@ -65,6 +65,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -139,10 +140,6 @@ class Camera2ComponentHelper(
      * It is initialized in [initializeParameters]
      */
     lateinit var characteristics: CameraCharacteristics
-
-    // SENSOR_ORIENTATION is static for a camera and changes only when characteristics is reassigned
-    // during camera opening or switching. Cache it outside the image-available hot path.
-    private var cameraSensorOrientation: Int = -1
 
     // ///// Recording - Start ///////////////////////////////////////////////////////////
     private var recordDuration: Int = 0
@@ -433,8 +430,6 @@ class Camera2ComponentHelper(
         cameraId = if (CameraMetadata.LENS_FACING_BACK == lensFacing) "0" else "1"
         LogContext.log.w(TAG, "cameraId=$cameraId")
         characteristics = cameraManager.getCameraCharacteristics(cameraId)
-        cameraSensorOrientation =
-            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
 
         val configMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
         val isFlashSupported = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
@@ -688,7 +683,7 @@ class Camera2ComponentHelper(
         closeCamera()
         if (opened == null) return
         withContext(NonCancellable) {
-            val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+            val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
                 opened.closed.await()
                 true
             } ?: false
@@ -970,7 +965,11 @@ class Camera2ComponentHelper(
             //            cameraHandler.post {
             runCatching {
                 val rotatedYuv420Data =
-                    dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
+                    dataProcessContext!!.doProcess(
+                        image,
+                        lensFacing,
+                        LEGACY_SENSOR_ORIENTATION_UNUSED
+                    )
                 cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
             }.onFailure { it.printStackTrace() }.also {
                 image.close()
@@ -1091,7 +1090,7 @@ class Camera2ComponentHelper(
         }
 
         try {
-            withTimeout(IMAGE_CAPTURE_TIMEOUT_MILLIS) {
+            withTimeout(IMAGE_CAPTURE_TIMEOUT_MILLIS.milliseconds) {
                 val result = suspendCancellableCoroutine { cont ->
                     session.capture(
                         captureRequest.build(),
@@ -1320,7 +1319,7 @@ class Camera2ComponentHelper(
                     }
                     if (oldCamera != null) {
                         closeCamera()
-                        val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS) {
+                        val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
                             oldCamera.closed.await()
                             true
                         } ?: false
@@ -1547,6 +1546,9 @@ class Camera2ComponentHelper(
 
         /** Maximum time to wait for the old camera device to close during a lens switch. */
         private const val CAMERA_CLOSE_TIMEOUT_MILLIS: Long = 3000
+
+        /** Sentinel for the legacy IDataProcessStrategy parameter retained for API compatibility. */
+        private const val LEGACY_SENSOR_ORIENTATION_UNUSED: Int = -1
 
         // ===== Camera Recording - Start ============================================
         val ORIENTATIONS = mapOf(

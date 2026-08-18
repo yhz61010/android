@@ -52,7 +52,8 @@
 
 `BaseCamera2Fragment` 在点击录像时读取一次 `relativeOrientation.value`，创建编码器时传入 helper。该值已根据
 当前镜头的 `SENSOR_ORIENTATION` 和前后置符号计算，可能为 0°/90°/180°/270°，无需在每帧路径再次按
-`cameraSensorOrientation` 分流。录像期间不更新角度，避免同一裸 H.264 流中途交换 SPS 宽高。
+`cameraSensorOrientation` 分流。缓存字段已经删除；旧参数仅为 `IDataProcessStrategy` 公共 API 兼容暂留，helper
+传入未使用的 `-1` sentinel，内置策略不再读取。录像期间不更新角度，避免同一裸 H.264 流中途交换 SPS 宽高。
 
 ### 4.2 编码尺寸与像素变换统一
 
@@ -85,7 +86,8 @@ androidbase 公共函数本身不删除。
   1. **前置**竖屏及两个横屏方向：SPS 宽高、画面方向、左右镜像和颜色正确，无上下颠倒、花屏、偏色或拉伸；
   2. 后置竖屏及两个横屏方向：保持已验证通过的方向和颜色；
   3. 前后置**连续快速切换**:无花屏、无 `ERROR_CAMERA_IN_USE`、方向正确；
-  4. 覆盖 `sensorOrientation` 90 与 270 的机型各至少一台（如 Nexus 6/6P 属 90）;
+  4. 至少覆盖前置 camera `SENSOR_ORIENTATION`=90 与 270 两组具体组合，并记录设备型号、`cameraId`、
+     `lensFacing` 和 `deviceState`（如 Nexus 6/6P 的前置 camera 属 90 组合）；
   5. 录制文件回放:前置片段方向/镜像/颜色正确。
 - **性能对照**:前置录制时对比改前/改后的每帧耗时或 CPU（可用现有 `measureTimeMillis`/profiler）。
 
@@ -101,9 +103,9 @@ androidbase 公共函数本身不删除。
 新实现**不再按 `cameraSensorOrientation` 每帧分流**，而是依赖录像起始的 `relativeOrientation`
 （`computeRelativeRotation(characteristics, rotation)` 已综合 sensor 方向与前后置符号）——因此 90° 情形
 **理论上被统一路径正确覆盖**，公式部分已补 JVM 单测（见下），但**仍缺真机实证**（公式测试不替代真机 YUV
-验证）。上表第 4 项（`SENSOR_ORIENTATION` 90 与 270
-各一台）仅完成 270 侧;90 侧保留为**发布前回归项**，待有 Nexus/90° 机型时补测，若届时发现方向/镜像异常再针对
-性调整。YUV420P/YUV420SP 设备的扩大覆盖同样继续作为发布回归项。
+验证）。上表第 4 项（前置 camera `SENSOR_ORIENTATION` 90 与 270
+各一组）仅完成 270 侧；90 侧保留为**发布前回归项**，待有 Nexus/90° camera 组合时补测，若届时发现方向/
+镜像异常再针对性调整。YUV420P/YUV420SP 设备的扩大覆盖同样继续作为发布回归项。
 
 **已补齐（Finding 3）**：`computeRelativeRotation` 的纯公式部分已抽为 `internal` 可测函数
 （入参 `sensorOrientationDegrees` / `lensFacingFront` / `surfaceRotation`，与 `CameraCharacteristics` 解耦；
@@ -111,6 +113,11 @@ androidbase 公共函数本身不删除。
 并在 `OrientationLiveDataTest` 补 2（sensor 90/270）× 2（前/后置）× 4（设备旋转）= 16 组合 JVM 单测。它
 **不替代**真机 YUV 验证，仅为"90° 由统一路径理论覆盖"提供公式级实证，且无需 Nexus 硬件。**回归记录字段**：
 设备型号 + `cameraId` + `lensFacing` + `SENSOR_ORIENTATION` + `deviceState` + YUV420P/SP。
+
+**动态逻辑相机支持边界**：当前 `OrientationLiveData` 只在物理方向事件中重新读取
+`SENSOR_ORIENTATION`，没有独立监听“仅折叠状态变化、物理方向不变”的事件。API 32+ 折叠设备的动态逻辑相机
+不在本轮已验证/承诺范围内；后续支持时应由应用层提供折叠状态事件，在状态变化时重建或刷新方向源，不得依赖长期
+缓存的 sensor orientation。
 
 ## 6. 影响面
 

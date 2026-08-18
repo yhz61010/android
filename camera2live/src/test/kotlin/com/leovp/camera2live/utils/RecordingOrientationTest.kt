@@ -48,4 +48,18 @@ class RecordingOrientationTest {
             getRotatedFrameDimensions(1920, -1, 0)
         }
     }
+
+    @Test
+    fun `unsupported fused transform output format is rejected before JNI`() {
+        assertFailsWith<IllegalArgumentException> {
+            transformI420Frame(
+                i420Data = ByteArray(6),
+                width = 2,
+                height = 2,
+                rotationDegrees = 0,
+                mirrorHorizontally = false,
+                outputFormat = -1
+            )
+        }
+    }
 }

@@ -43,8 +43,8 @@ class PhotoFragment internal constructor() : Fragment() {
                     FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        Gravity.CENTER,
-                    ),
+                        Gravity.CENTER
+                    )
                 )
             }
         } else {

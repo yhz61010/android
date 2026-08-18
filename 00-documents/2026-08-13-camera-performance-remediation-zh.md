@@ -367,14 +367,19 @@ AndroidX Window），在状态变化时重建或刷新方向源；不能恢复�
   最终编码方向依据。0°/180°输出 `width×height`，90°/270°输出 `height×width`。
 - 不修改公开的 `IDataProcessStrategy.doProcess()` 签名。录像旋转角通过策略构造参数传入，工厂保留旧入口并新增
   带角度的内部创建路径，降低 API/ABI 风险。
-- `EncoderStrategyYuv420P` 对后置 I420 使用锁定角度旋转；`EncoderStrategyYuv420Sp` 旋转后再按旋转后的宽高
-  转换为 NV12。0°直接复用原 I420，避免无意义的 native 旋转。
-- 前置在相同旋转结果上使用 native `mirrorI420()` 做最终画面水平镜像。YUV420P 返回合法 I420；YUV420SP
-  再显式 `i420ToNv12()`，彻底移除 I420 数据进入 NV21 函数的颜色错误路径。
+- `EncoderStrategyYuv420P` 与 `EncoderStrategyYuv420Sp` 通过融合的 `YuvUtil.transformI420()` 在一次 JNI 调用内
+  完成锁定角度旋转、前置水平镜像以及 I420/NV12 输出；不再产生多次 JNI 往返和中间 Java `ByteArray`。0°、
+  非镜像 I420 仍直接复用原数组。
+- YUV420P 返回合法 I420，YUV420SP 直接返回 NV12，彻底移除 I420 数据进入 NV21 函数的颜色错误路径。融合
+  JNI 通过 critical array access 避免显式 native 输入/输出副本，仅在 libyuv 必须多步变换时分配 native
+  scratch buffer。
 - 新增纯 Kotlin 单元测试覆盖 0°/180°保持宽高、90°/270°交换宽高、非法旋转角及非正尺寸拒绝；native YUV
   像素方向与颜色仍按下述真机矩阵验证。
 - `CameraSurfaceView` 预览布局保持不变；`outputYuvForDebug=true` 仍表示输出转换前的原始 I420，不用于判断最终
   H.264 方向。
+
+2026-08-18 的线程、MediaCodec、内存和 JPEG 策略整改详见
+[`2026-08-18-camera-performance-follow-up-zh.md`](2026-08-18-camera-performance-follow-up-zh.md)。
 
 #### 复测要求
 

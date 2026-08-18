@@ -53,6 +53,8 @@ import com.leovp.camera2live.utils.resolveRecordingRotation
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.exif.computeExifOrientation
 import com.leovp.exif.decodeExifOrientation
+import com.leovp.exif.JpegOutputStrategy
+import com.leovp.exif.setExifOrientation
 import com.leovp.log.LogContext
 import java.io.BufferedOutputStream
 import java.io.File
@@ -97,6 +99,9 @@ class Camera2ComponentHelper(
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
     var enableGallery = true
+
+    /** Keeps the existing physically normalized JPEG behavior unless explicitly overridden. */
+    var jpegOutputStrategy: JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED
 
     var previewWidth: Int = 0
         private set
@@ -505,10 +510,7 @@ class Camera2ComponentHelper(
      * Initializes recording with a rotation locked for the whole AVC stream. A null rotation falls
      * back to the historical portrait rotation for the active lens.
      */
-    fun extraInitializeCameraForRecording(
-        bitrate: Int,
-        recordingRotationDegrees: Int?,
-    ) {
+    fun extraInitializeCameraForRecording(bitrate: Int, recordingRotationDegrees: Int?) {
         initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
         val resolvedRecordingRotationDegrees = resolveRecordingRotation(
             recordingRotationDegrees,
@@ -524,7 +526,8 @@ class Camera2ComponentHelper(
             TAG,
             "Recording rotation=$resolvedRecordingRotationDegrees " +
                 "input=${selectedSizeFromCamera.width}x" +
-                "${selectedSizeFromCamera.height} output=${previewSize!!.width}x${previewSize!!.height}"
+                "${selectedSizeFromCamera.height} " +
+                "output=${previewSize!!.width}x${previewSize!!.height}"
         )
         val autoBitrate = bitrate <= 0
 
@@ -975,7 +978,7 @@ class Camera2ComponentHelper(
                 image.close()
             }
             //            }
-        }, cameraHandler)
+        }, imageReaderHandler)
 
         val targets = mutableListOf(imageReader.surface)
         cameraView?.let {
@@ -1319,10 +1322,11 @@ class Camera2ComponentHelper(
                     }
                     if (oldCamera != null) {
                         closeCamera()
-                        val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
-                            oldCamera.closed.await()
-                            true
-                        } ?: false
+                        val closedInTime =
+                            withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
+                                oldCamera.closed.await()
+                                true
+                            } ?: false
                         if (!closedInTime) {
                             reportCameraError(
                                 "switchCamera failed",
@@ -1390,7 +1394,10 @@ class Camera2ComponentHelper(
     suspend fun saveResult(result: CombinedCaptureResult): File = when (result.format) {
         ImageFormat.JPEG ->
             withContext(Dispatchers.IO) {
-                saveTransformedJpeg(result)
+                when (jpegOutputStrategy) {
+                    JpegOutputStrategy.PIXEL_NORMALIZED -> saveTransformedJpeg(result)
+                    JpegOutputStrategy.EXIF_ONLY -> saveExifOnlyJpeg(result)
+                }
             }
 
         // Re-encoding a DEPTH_JPEG would discard its depth metadata.
@@ -1448,6 +1455,10 @@ class Camera2ComponentHelper(
                 true
             )
             transformedBitmap = outputBitmap
+            if (outputBitmap !== decodedBitmap) {
+                decodedBitmap.recycle()
+                sourceBitmap = null
+            }
             FileOutputStream(output).use { stream ->
                 if (!outputBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
                     throw IOException("Unable to encode transformed JPEG")
@@ -1464,6 +1475,23 @@ class Camera2ComponentHelper(
         } finally {
             if (transformedBitmap !== sourceBitmap) transformedBitmap?.recycle()
             sourceBitmap?.recycle()
+        }
+    }
+
+    /** Writes the original compressed JPEG and records orientation without bitmap allocation. */
+    private fun saveExifOnlyJpeg(result: CombinedCaptureResult): File {
+        val output = context.createImageFile("jpg")
+        try {
+            FileOutputStream(output).use { it.write(result.imageBytes) }
+            output.setExifOrientation(result.orientation)
+            return output
+        } catch (exc: CancellationException) {
+            output.delete()
+            throw exc
+        } catch (exc: Exception) {
+            output.delete()
+            LogContext.log.e(TAG, "Unable to write JPEG with EXIF orientation", exc)
+            throw exc
         }
     }
 
@@ -1547,7 +1575,9 @@ class Camera2ComponentHelper(
         /** Maximum time to wait for the old camera device to close during a lens switch. */
         private const val CAMERA_CLOSE_TIMEOUT_MILLIS: Long = 3000
 
-        /** Sentinel for the legacy IDataProcessStrategy parameter retained for API compatibility. */
+        /**
+         * Sentinel for the legacy IDataProcessStrategy parameter retained for API compatibility.
+         */
         private const val LEGACY_SENSOR_ORIENTATION_UNUSED: Int = -1
 
         // ===== Camera Recording - Start ============================================

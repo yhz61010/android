@@ -14,6 +14,7 @@ import com.leovp.camerax.enums.CapturedImageStrategy
 import com.leovp.camerax.fragments.CameraFragment
 import com.leovp.camerax.listeners.CaptureImageListener
 import com.leovp.camerax.listeners.impl.SimpleCaptureImageListener
+import com.leovp.exif.JpegOutputStrategy
 
 /**
  * Add following `<activity>` in your `<AndroidManifest.xml>`.
@@ -42,6 +43,12 @@ open class CameraXActivity : AppCompatActivity() {
 
     open fun getOutputCapturedImageStrategy(): CapturedImageStrategy = CapturedImageStrategy.FILE
 
+    /** Keeps the existing physically normalized JPEG behavior unless explicitly overridden. */
+    open fun getJpegOutputStrategy(): JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED
+
+    /** Enables expensive codec and camera-capability diagnostics. Disabled by default. */
+    open fun isCameraDiagnosticsEnabled(): Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         requestFullScreenBeforeSetContentView()
         super.onCreate(savedInstanceState)
@@ -49,6 +56,8 @@ open class CameraXActivity : AppCompatActivity() {
         getCameraFragment()?.let { fragment ->
             fragment.captureImageListener = getCaptureListener()
             fragment.outputCapturedImageStrategy = getOutputCapturedImageStrategy()
+            fragment.jpegOutputStrategy = getJpegOutputStrategy()
+            fragment.enableCameraDiagnostics = isCameraDiagnosticsEnabled()
         }
 
         onBackPressedDispatcher.addCallback(this, true) {

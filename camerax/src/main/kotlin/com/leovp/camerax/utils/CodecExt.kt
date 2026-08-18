@@ -34,16 +34,16 @@ internal fun getAllSupportedCodecList(): Array<MediaCodecInfo> =
  * left to GC finalization). Capability arrays are plain Java-side copies, so they remain valid
  * after the codec is released.
  */
-private inline fun <T> withCodecReleased(codec: MediaCodec, block: (MediaCodec) -> T): T =
-    try {
-        block(codec)
-    } finally {
-        codec.release()
-    }
+private inline fun <T> withCodecReleased(codec: MediaCodec, block: (MediaCodec) -> T): T = try {
+    block(codec)
+} finally {
+    codec.release()
+}
 
 // Encoder capabilities are device-global and immutable at runtime. Cache them per mime so the
-// throwaway MediaCodec is created only once per type instead of on every camera bind. Access is
-// from the main thread only (camera parameter logging), so a plain HashMap is sufficient.
+// throwaway MediaCodec is created only once per type instead of on every camera bind. Diagnostics
+// run off the main thread, so both maps share a lock to serialize codec creation and publication.
+private val encoderCapabilitiesLock = Any()
 private val encoderColorFormatCache = HashMap<String, IntArray>()
 private val encoderProfileLevelsCache = HashMap<String, Array<MediaCodecInfo.CodecProfileLevel>>()
 
@@ -54,9 +54,11 @@ internal fun getSupportedColorFormat(codec: MediaCodec, mime: String): IntArray 
     getSupportedColorFormat(codec.codecInfo.getCapabilitiesForType(mime))
 
 internal fun getSupportedColorFormatForEncoder(mime: String): IntArray =
-    encoderColorFormatCache.getOrPut(mime) {
-        withCodecReleased(MediaCodec.createEncoderByType(mime)) {
-            getSupportedColorFormat(it, mime)
+    synchronized(encoderCapabilitiesLock) {
+        encoderColorFormatCache.getOrPut(mime) {
+            withCodecReleased(MediaCodec.createEncoderByType(mime)) {
+                getSupportedColorFormat(it, mime)
+            }
         }
     }
 
@@ -74,12 +76,13 @@ internal fun getSupportedProfileLevels(
 
 internal fun getSupportedProfileLevelsForEncoder(
     mime: String
-): Array<MediaCodecInfo.CodecProfileLevel> =
+): Array<MediaCodecInfo.CodecProfileLevel> = synchronized(encoderCapabilitiesLock) {
     encoderProfileLevelsCache.getOrPut(mime) {
         withCodecReleased(MediaCodec.createEncoderByType(mime)) {
             getSupportedProfileLevels(it, mime)
         }
     }
+}
 
 internal fun getSupportedProfileLevelsForDecoder(
     mime: String

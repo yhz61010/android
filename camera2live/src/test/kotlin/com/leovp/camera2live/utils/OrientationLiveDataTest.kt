@@ -28,7 +28,7 @@ class OrientationLiveDataTest {
             226 to Surface.ROTATION_270,
             315 to Surface.ROTATION_270,
             316 to Surface.ROTATION_0,
-            359 to Surface.ROTATION_0,
+            359 to Surface.ROTATION_0
         )
 
         expectedRotations.forEach { (orientation, expectedRotation) ->
@@ -69,7 +69,7 @@ class OrientationLiveDataTest {
             Case(270, false, Surface.ROTATION_0, 270),
             Case(270, false, Surface.ROTATION_90, 0),
             Case(270, false, Surface.ROTATION_180, 90),
-            Case(270, false, Surface.ROTATION_270, 180),
+            Case(270, false, Surface.ROTATION_270, 180)
         )
 
         cases.forEach { case ->

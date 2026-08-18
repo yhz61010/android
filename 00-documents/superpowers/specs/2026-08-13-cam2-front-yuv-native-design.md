@@ -59,10 +59,10 @@
 
 - 0°/180°：编码宽高保持相机输入 `width×height`。
 - 90°/270°：编码宽高交换为 `height×width`。
-- 前后置先对合法 I420 执行对应 native 旋转。
-- 前置再在旋转后的宽高上调用 `mirrorI420()`，使最终输出保持水平镜像；该顺序对四个角度使用同一语义。
-- YUV420P 直接把变换后的 I420 送入对应编码器。
-- YUV420SP 对变换后的 I420 显式调用 `i420ToNv12()`；转换宽高必须使用旋转后的尺寸。
+- 前后置通过融合的 `YuvUtil.transformI420()` 对合法 I420 执行旋转和可选水平镜像；语义仍是“旋转后对最终
+  画面水平镜像”，但不再产生多次 JNI 往返和中间 Java `ByteArray`。
+- YUV420P 由同一次 JNI 直接输出 I420；YUV420SP 由同一次 JNI 直接输出 NV12。native 只在 libyuv 必须多步
+  处理时分配 scratch buffer，并通过 critical array access 避免显式 native 输入/输出副本。
 
 该方案保证 U/V 平面始终按 I420 解释，删除 `mirrorNv21()`、`rotateYUV420Degree270()` 和
 `rotateYUVDegree270AndMirror()` 对 I420 输入的错误调用。旧实现通过 Git 历史保留，不复制为失效注释；这些
@@ -90,6 +90,10 @@ androidbase 公共函数本身不删除。
      `lensFacing` 和 `deviceState`（如 Nexus 6/6P 的前置 camera 属 90 组合）；
   5. 录制文件回放:前置片段方向/镜像/颜色正确。
 - **性能对照**:前置录制时对比改前/改后的每帧耗时或 CPU（可用现有 `measureTimeMillis`/profiler）。
+
+**2026-08-18 线程与分配整改**：录像 `ImageReader` listener 已切到专用 `imageReaderHandler`；融合 JNI 已替代
+`rotateI420` → `mirrorI420` → `i420ToNv12` 的多次调用链。当前已通过四 ABI native 构建和 JVM 公式测试，仍需
+真机复核不同 YUV420P/SP 编码器的方向、镜像、颜色和持续录制稳定性。
 
 > **术语**：`SENSOR_ORIENTATION` 属于**具体 camera（cameraId / lensFacing）**而非整机——常见手机前置约
 > 270°、后置约 90°，API 32+ 折叠设备的逻辑相机方向还可能随设备状态变化。因此下文以"**前置 camera

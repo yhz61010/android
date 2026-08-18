@@ -18,14 +18,12 @@ object DataProcessFactory {
         else -> null
     }
 
-    internal fun getConcreteObject(
-        type: Int,
-        recordingRotationDegrees: Int,
-    ): DataProcessContext? = when (type) {
-        ENCODER_TYPE_YUV420P ->
-            DataProcessContext(EncoderStrategyYuv420P(recordingRotationDegrees))
-        ENCODER_TYPE_YUV420SP ->
-            DataProcessContext(EncoderStrategyYuv420Sp(recordingRotationDegrees))
-        else -> null
-    }
+    internal fun getConcreteObject(type: Int, recordingRotationDegrees: Int): DataProcessContext? =
+        when (type) {
+            ENCODER_TYPE_YUV420P ->
+                DataProcessContext(EncoderStrategyYuv420P(recordingRotationDegrees))
+            ENCODER_TYPE_YUV420SP ->
+                DataProcessContext(EncoderStrategyYuv420Sp(recordingRotationDegrees))
+            else -> null
+        }
 }

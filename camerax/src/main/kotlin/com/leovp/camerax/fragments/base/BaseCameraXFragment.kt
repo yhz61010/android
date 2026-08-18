@@ -14,7 +14,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Range
 import android.util.Size
 import android.view.GestureDetector
 import android.view.LayoutInflater
@@ -80,6 +79,7 @@ import com.leovp.camerax.utils.isFlashSupported
 import com.leovp.camerax.utils.screenSurfaceRotation
 import com.leovp.camerax.utils.supportedFpsRanges
 import com.leovp.camerax.utils.toByteArray
+import com.leovp.exif.JpegOutputStrategy
 import com.leovp.image.BitmapProcessor
 import com.leovp.image.flipRotate
 import com.leovp.image.recycledSafety
@@ -106,6 +106,72 @@ import kotlinx.coroutines.withContext
  */
 
 // typealias OrientationListener = (Int) -> Unit
+
+private fun buildCameraParametersString(
+    cameraId: String,
+    characteristics: CameraCharacteristics,
+    deviceRotation: Int,
+): String {
+    val configMap = characteristics.getConfigMap()
+    val isFlashSupported = characteristics.isFlashSupported()
+    val hardwareLevel = characteristics.hardwareLevel()
+    val cameraSupportedFpsRanges = characteristics.supportedFpsRanges()
+    val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
+    val highSpeedVideoSizes = configMap.highSpeedVideoSizes
+    val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
+    val avcColorFormats = getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+        .sorted()
+        .joinToString(",")
+    val hevcColorFormats = getSupportedColorFormatForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC)
+        .sorted()
+        .joinToString(",")
+    val avcProfileLevels = getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_AVC)
+        .joinToString(",") { "${it.profile}/${it.level}" }
+    val hevcProfileLevels = getSupportedProfileLevelsForEncoder(MediaFormat.MIMETYPE_VIDEO_HEVC)
+        .joinToString(",") { "${it.profile}/${it.level}" }
+    val highSpeedSizes = highSpeedVideoSizes?.joinToString(",") {
+        "${it.width}x${it.height}(${getRatio(it.width, it.height)})"
+    }
+    val supportedSizes = allCameraSupportSize?.joinToString(",") {
+        val pixels = getCameraSizeTotalPixels(it)
+        val ratio = getRatio(it.width, it.height)
+        "${it.width}x${it.height}($pixels-$ratio)"
+    }
+
+    return """Camera Info:
+               cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
+         deviceRotation=$deviceRotation
+cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
+       isFlashSupported=$isFlashSupported
+          hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
+
+ Supported color format for  AVC=$avcColorFormats
+ Supported color format for HEVC=$hevcColorFormats
+
+Supported profile/level for  AVC=$avcProfileLevels
+Supported profile/level for HEVC=$hevcProfileLevels
+
+     highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
+         highSpeedVideoSizes=$highSpeedSizes
+
+        Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
+              Supported Size=$supportedSizes
+    """.trimIndent()
+}
+
+private fun loadCameraLensFacing(prefs: SharedPrefsManager): CameraSelector {
+    val cameraId = prefs.getString(BaseCameraXFragment.KEY_LENS_FACING, "0")
+    return if (cameraId == "0") {
+        CameraSelector.DEFAULT_BACK_CAMERA
+    } else {
+        CameraSelector.DEFAULT_FRONT_CAMERA
+    }
+}
+
+private fun saveCameraLensFacing(prefs: SharedPrefsManager, lensFacing: CameraSelector) {
+    val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
+    prefs.putString(BaseCameraXFragment.KEY_LENS_FACING, cameraId)
+}
 
 abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     abstract fun getTagName(): String
@@ -169,6 +235,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     // simply uses a different entry.
     private val characteristicsCache = HashMap<String, CameraCharacteristics>()
     private val supportedSizeCache = HashMap<String, Array<SmartSize>>()
+    private val cameraDiagnosticsCache = HashMap<String, String>()
 
     protected fun getCameraCharacteristicsCached(cameraId: String): CameraCharacteristics =
         characteristicsCache.getOrPut(cameraId) {
@@ -211,7 +278,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         LogContext.log.w(logTag, "=====> onViewCreated <=====")
         super.onViewCreated(view, savedInstanceState)
 
-        lensFacing = loadCameraLensFacing()
+        lensFacing = loadCameraLensFacing(prefs)
 
         // Determine the output directory
         outputPictureDirectory = getOutputPictureDirectory(requireContext())
@@ -337,6 +404,7 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
         imageCapture: ImageCapture,
         outputDirectory: File,
         startTimestamp: Long,
+        jpegOutputStrategy: JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED,
         onImageSaved: (savedImage: CaptureImage.ImageUri?, exc: Exception?) -> Unit,
     ) { // Create output file to hold the image
         val photoFile = createFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
@@ -376,6 +444,11 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                     soundManager.playShutterSound()
                     val savedUri: Uri = output.savedUri ?: Uri.fromFile(photoFile)
 
+                    if (jpegOutputStrategy == JpegOutputStrategy.EXIF_ONLY) {
+                        onImageSaved(CaptureImage.ImageUri(savedUri), null)
+                        return
+                    }
+
                     lifecycleScope.launch(Dispatchers.IO) {
                         var originalBitmap: Bitmap? = null
                         var processedBitmap: Bitmap? = null
@@ -393,9 +466,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                             val rotatedBitmap = adjustBitmapRotation(
                                 decodedBitmap,
                                 mirror,
-                                cameraRotationInDegree,
+                                cameraRotationInDegree
                             )
                             processedBitmap = rotatedBitmap
+                            if (rotatedBitmap !== decodedBitmap) {
+                                decodedBitmap.recycle()
+                                originalBitmap = null
+                            }
                             val st3 = System.currentTimeMillis()
                             LogContext.log.i(logTag, "Mirror and rotate cost=${st3 - st2}ms")
 
@@ -429,21 +506,27 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     private fun decodeRotateAndBuild(oriImageBytes: ByteArray): CaptureImage.ImageBytes {
         val mirror = CameraSelector.DEFAULT_FRONT_CAMERA == lensFacing
         val st1 = System.currentTimeMillis()
-        val oriBmp = BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+        val oriBmp = requireNotNull(
+            BitmapFactory.decodeByteArray(oriImageBytes, 0, oriImageBytes.size)
+        ) { "Unable to decode captured image bytes" }
         val st2 = System.currentTimeMillis()
         LogContext.log.i(logTag, "Decode bitmap bytes cost=${st2 - st1}ms")
-        val processedBmp = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
-        val st3 = System.currentTimeMillis()
-        LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
-        val finalWidth = processedBmp.width
-        val finalHeight = processedBmp.height
-        val imageBytes: ByteArray = processedBmp.toBytes()
-        LogContext.log.i(logTag, "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
-
-        oriBmp.recycledSafety()
-        processedBmp.recycledSafety()
-
-        return CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight)
+        var processedBmp: Bitmap? = null
+        try {
+            val outputBitmap = adjustBitmapRotation(oriBmp, mirror, cameraRotationInDegree)
+            processedBmp = outputBitmap
+            val st3 = System.currentTimeMillis()
+            LogContext.log.i(logTag, "Mirror and rotate bitmap cost=${st3 - st2}ms")
+            val finalWidth = outputBitmap.width
+            val finalHeight = outputBitmap.height
+            if (outputBitmap !== oriBmp) oriBmp.recycle()
+            val imageBytes: ByteArray = outputBitmap.toBytes()
+            LogContext.log.i(logTag, "Bitmap to bytes cost=${System.currentTimeMillis() - st3}ms")
+            return CaptureImage.ImageBytes(imageBytes, finalWidth, finalHeight)
+        } finally {
+            if (processedBmp !== oriBmp) processedBmp.recycledSafety()
+            oriBmp.recycledSafety()
+        }
     }
 
     private fun adjustBitmapRotation(
@@ -942,106 +1025,47 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
                 throw RuntimeException("This device does not have any camera")
             }
         }
-        saveCameraLensFacing()
-    }
-
-    private fun saveCameraLensFacing() {
-        val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
-        prefs.putString(KEY_LENS_FACING, cameraId)
-    }
-
-    private fun loadCameraLensFacing(): CameraSelector {
-        // Default value: Back camera
-        val cameraId = prefs.getString(KEY_LENS_FACING, "0")
-        return if ("0" == cameraId) {
-            CameraSelector.DEFAULT_BACK_CAMERA
-        } else {
-            CameraSelector.DEFAULT_FRONT_CAMERA
-        }
+        saveCameraLensFacing(prefs, lensFacing)
     }
 
     protected fun outputCameraParameters(
         camSelector: CameraSelector,
         // desiredVideoWidth: Int, desiredVideoWidth: Int, desiredVideoHeight: Int
-    ) = runCatching {
-        if (cameraProvider?.hasCamera(camSelector) == true) {
+    ) {
+        val provider = cameraProvider ?: return
+        val currentContext = context ?: return
+        val preparation = runCatching {
+            if (!provider.hasCamera(camSelector)) return@runCatching null
             val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == camSelector) "0" else "1"
-            val characteristics: CameraCharacteristics =
-                getCameraCharacteristicsCached(cameraId)
-            val configMap = characteristics.getConfigMap()
+            Triple(
+                cameraId,
+                getCameraCharacteristicsCached(cameraId),
+                currentContext.screenSurfaceRotation
+            )
+        }.onFailure { LogContext.log.e(logTag, "Prepare camera diagnostics error.", it) }
+            .getOrNull() ?: return
 
-            // LEVEL_3(3) > FULL(1) > LIMIT(0) > LEGACY(2)
-            val isFlashSupported = characteristics.isFlashSupported()
-            // Get camera supported fps. It will be used to create CaptureRequest
-            val hardwareLevel = characteristics.hardwareLevel()
-            val cameraSupportedFpsRanges: Array<Range<Int>> = characteristics.supportedFpsRanges()
-            val highSpeedVideoFpsRanges = configMap.highSpeedVideoFpsRanges
-            val highSpeedVideoSizes = configMap.highSpeedVideoSizes
-
-            val allCameraSupportSize = configMap.getOutputSizes(SurfaceHolder::class.java)
-
-            // Calculate ImageReader input preview size from supported size list by camera.
-            // Using configMap.getOutputSizes(SurfaceTexture.class) to get supported size list.
-            // Attention: The returned value is in camera orientation. NOT in device orientation.
-            //                    val previewSize: Size =
-            //                            getSpecificPreviewOutputSize(requireContext(),
-            //                                desiredVideoWidth,
-            //                                desiredVideoHeight,
-            //                                characteristics)
-
-            val cameraParametersString = """Camera Info:
-               cameraId=${if (cameraId == "0") "BACK" else "FRONT"}
-         deviceRotation=${requireContext().screenSurfaceRotation}
-cameraSensorOrientation=${characteristics.cameraSensorOrientation()}
-       isFlashSupported=$isFlashSupported
-          hardwareLevel=$hardwareLevel[${characteristics.hardwareLevelName()}]
-
- Supported color format for  AVC=${
-                getSupportedColorFormatForEncoder(
-                    MediaFormat.MIMETYPE_VIDEO_AVC
-                ).sorted().joinToString(",")
-            }
- Supported color format for HEVC=${
-                getSupportedColorFormatForEncoder(
-                    MediaFormat.MIMETYPE_VIDEO_HEVC
-                ).sorted().joinToString(",")
-            }
-
-Supported profile/level for  AVC=${
-                getSupportedProfileLevelsForEncoder(
-                    MediaFormat.MIMETYPE_VIDEO_AVC
-                ).joinToString(",") {
-                    "${it.profile}/${it.level}"
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            runCatching {
+                val (cameraId, characteristics, deviceRotation) = preparation
+                val cacheKey = "$cameraId:$deviceRotation"
+                val cached = synchronized(cameraDiagnosticsCache) {
+                    cameraDiagnosticsCache[cacheKey]
                 }
-            }
-Supported profile/level for HEVC=${
-                getSupportedProfileLevelsForEncoder(
-                    MediaFormat.MIMETYPE_VIDEO_AVC
-                ).joinToString(",") {
-                    "${it.profile}/${it.level}"
+                val cameraParametersString = cached ?: buildCameraParametersString(
+                    cameraId,
+                    characteristics,
+                    deviceRotation
+                ).also { diagnostics ->
+                    synchronized(cameraDiagnosticsCache) {
+                        cameraDiagnosticsCache[cacheKey] = diagnostics
+                    }
                 }
-            }
-
-     highSpeedVideoFpsRanges=${highSpeedVideoFpsRanges?.contentToString()}
-         highSpeedVideoSizes=${
-                highSpeedVideoSizes?.joinToString(",") {
-                    "${it.width}x${it.height}(${getRatio(it.width, it.height)})"
-                }
-            }
-
-        Supported FPS Ranges=${cameraSupportedFpsRanges.contentToString()}
-              Supported Size=${
-                allCameraSupportSize?.joinToString(",") {
-                    val pixels = getCameraSizeTotalPixels(it)
-                    val ratio = getRatio(it.width, it.height)
-                    "${it.width}x${it.height}($pixels-$ratio)"
-                }
-            }
-            """.trimIndent()
-            LogContext.log.i(logTag, cameraParametersString)
-            LogContext.log.i(logTag, "==================================================")
+                LogContext.log.i(logTag, cameraParametersString)
+                LogContext.log.i(logTag, "==================================================")
+            }.onFailure { LogContext.log.e(logTag, "outputCameraParameters error.", it) }
         }
-    }.onFailure { LogContext.log.e(logTag, "outputCameraParameters error.", it) }
+    }
 
     protected fun getMedia(): List<Media> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         getMediaQPlus()

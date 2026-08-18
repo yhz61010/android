@@ -12,9 +12,8 @@ import com.leovp.camera2live.utils.transformI420Frame
  * Author: Michael Leo
  * Date: 20-4-1 上午11:12
  */
-class EncoderStrategyYuv420P(
-    private val recordingRotationDegrees: Int? = null,
-) : IDataProcessStrategy {
+class EncoderStrategyYuv420P(private val recordingRotationDegrees: Int? = null) :
+    IDataProcessStrategy {
     init {
         recordingRotationDegrees?.let(::requireSupportedRecordingRotation)
     }

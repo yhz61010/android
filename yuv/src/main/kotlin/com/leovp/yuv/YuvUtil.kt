@@ -95,6 +95,21 @@ object YuvUtil {
     ): ByteArray
 
     /**
+     * Rotates and optionally mirrors I420 in one JNI call, then returns I420 or NV12 data.
+     *
+     * [width] and [height] must be positive even values. [outputFormat] must be [I420] or [NV12].
+     * Mirroring is applied horizontally to the rotated output.
+     */
+    external fun transformI420(
+        i420ByteArray: ByteArray,
+        width: Int,
+        height: Int,
+        degree: Int,
+        mirrorHorizontally: Boolean,
+        outputFormat: Int,
+    ): ByteArray
+
+    /**
      * @param width The original video width.
      * @param height The original video height.
      */

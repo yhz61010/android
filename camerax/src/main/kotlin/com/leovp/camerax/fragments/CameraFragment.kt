@@ -52,11 +52,11 @@ import com.leovp.camerax.listeners.CaptureImageListener
 import com.leovp.camerax.utils.OrientationLiveData
 import com.leovp.camerax.utils.cameraSensorOrientation
 import com.leovp.camerax.utils.toggleButton
+import com.leovp.exif.JpegOutputStrategy
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
 import java.util.Locale
 import kotlin.properties.Delegates
-import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -103,7 +103,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
 
     var outputCapturedImageStrategy: CapturedImageStrategy = CapturedImageStrategy.FILE
+    var jpegOutputStrategy: JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED
     var captureImageListener: CaptureImageListener? = null
+    var enableCameraDiagnostics: Boolean = false
 
     // Selector showing is grid enabled or not
     private var hasGrid = false
@@ -270,10 +272,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         )
         // Show grid after preview view adjusted.
         incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
-        val outputCameraParamCost = measureTimeMillis {
+        if (enableCameraDiagnostics) {
             outputCameraParameters(hdrCameraSelector ?: lensFacing)
         }
-        LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
 
         // Get screen metrics used to set up camera for full screen resolution
         val metrics = requireContext().screenRealResolution
@@ -381,7 +382,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                         cameraExecutor,
                         LuminosityAnalyzer { luma ->
                             LogContext.log.v(logTag, "Average luminosity: $luma")
-                        },
+                        }
                     )
                 }
         } else {
@@ -411,13 +412,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             // camera provides access to CameraControl & CameraInfo
             val useCases = mutableListOf(
                 checkNotNull(preview),
-                checkNotNull(imageCapture),
+                checkNotNull(imageCapture)
             )
             imageAnalyzer?.let { useCases.add(it) }
             camera = camProvider.bindToLifecycle(
                 viewLifecycleOwner,
                 hdrCameraSelector ?: lensFacing,
-                *useCases.toTypedArray(),
+                *useCases.toTypedArray()
             ).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {
@@ -626,7 +627,8 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory,
-                            startCaptureTimestamp
+                            startCaptureTimestamp,
+                            jpegOutputStrategy
                         ) { savedImage, exc ->
                             // Capture callback may fire after leaving the page: keep the Fragment
                             // scope but guard the View mutation against a destroyed View.
@@ -820,7 +822,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         runCatching {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled =
                 hasBackCamera() &&
-                    hasFrontCamera()
+                hasFrontCamera()
         }.onFailure {
             cameraUiContainerBottomBinding.cameraSwitchButton.isEnabled = false
         }

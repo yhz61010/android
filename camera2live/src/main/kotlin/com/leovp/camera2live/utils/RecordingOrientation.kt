@@ -7,10 +7,7 @@ internal const val DEFAULT_FRONT_RECORDING_ROTATION_DEGREES = 270
 
 internal data class FrameDimensions(val width: Int, val height: Int)
 
-internal data class TransformedI420Frame(
-    val data: ByteArray,
-    val dimensions: FrameDimensions,
-)
+internal data class TransformedYuvFrame(val data: ByteArray, val dimensions: FrameDimensions)
 
 internal fun requireSupportedRecordingRotation(rotationDegrees: Int) {
     require(
@@ -21,10 +18,7 @@ internal fun requireSupportedRecordingRotation(rotationDegrees: Int) {
     ) { "Unsupported recording rotation: $rotationDegrees" }
 }
 
-internal fun resolveRecordingRotation(
-    rotationDegrees: Int?,
-    frontFacing: Boolean,
-): Int {
+internal fun resolveRecordingRotation(rotationDegrees: Int?, frontFacing: Boolean): Int {
     val resolvedRotation = rotationDegrees ?: if (frontFacing) {
         DEFAULT_FRONT_RECORDING_ROTATION_DEGREES
     } else {
@@ -37,7 +31,7 @@ internal fun resolveRecordingRotation(
 internal fun getRotatedFrameDimensions(
     width: Int,
     height: Int,
-    rotationDegrees: Int,
+    rotationDegrees: Int
 ): FrameDimensions {
     require(width > 0 && height > 0) { "Frame dimensions must be positive: ${width}x$height" }
     requireSupportedRecordingRotation(rotationDegrees)
@@ -54,21 +48,27 @@ internal fun transformI420Frame(
     height: Int,
     rotationDegrees: Int,
     mirrorHorizontally: Boolean,
-): TransformedI420Frame {
+    outputFormat: Int = YuvUtil.I420,
+): TransformedYuvFrame {
     val outputDimensions = getRotatedFrameDimensions(width, height, rotationDegrees)
-    val rotatedData = if (rotationDegrees == YuvUtil.ROTATE_0) {
+    require(outputFormat == YuvUtil.I420 || outputFormat == YuvUtil.NV12) {
+        "Unsupported output format: $outputFormat"
+    }
+    val outputData = if (
+        rotationDegrees == YuvUtil.ROTATE_0 &&
+        !mirrorHorizontally &&
+        outputFormat == YuvUtil.I420
+    ) {
         i420Data
     } else {
-        YuvUtil.rotateI420(i420Data, width, height, rotationDegrees)
-    }
-    val outputData = if (mirrorHorizontally) {
-        YuvUtil.mirrorI420(
-            rotatedData,
-            outputDimensions.width,
-            outputDimensions.height
+        YuvUtil.transformI420(
+            i420Data,
+            width,
+            height,
+            rotationDegrees,
+            mirrorHorizontally,
+            outputFormat
         )
-    } else {
-        rotatedData
     }
-    return TransformedI420Frame(outputData, outputDimensions)
+    return TransformedYuvFrame(outputData, outputDimensions)
 }

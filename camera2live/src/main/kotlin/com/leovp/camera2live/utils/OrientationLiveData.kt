@@ -94,7 +94,8 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
          * frame is upright.
          *
          * @param sensorOrientationDegrees `SENSOR_ORIENTATION` of the active camera (0/90/180/270).
-         * @param lensFacingFront true for a front-facing camera (reverses the device rotation sign).
+         * @param lensFacingFront true for a front-facing camera (reverses the device rotation
+         * sign).
          * @param surfaceRotation the current device orientation as a `Surface.ROTATION_*` constant.
          * @return the relative rotation from the camera sensor to the current device orientation.
          */

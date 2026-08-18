@@ -11,9 +11,8 @@ import androidx.annotation.Keep
 sealed class CaptureImage {
 
     /**
-     * The image saved in [fileUri] has already set Exif Orientation in order to
-     * display it in correct orientation. Please note that **the original bitmap
-     * data are not rotated.**
+     * The image saved in [fileUri] is displayed with the requested orientation. Its pixels are
+     * either physically normalized or represented by EXIF according to the configured strategy.
      */
     @Keep
     data class ImageUri(val fileUri: Uri) : CaptureImage()

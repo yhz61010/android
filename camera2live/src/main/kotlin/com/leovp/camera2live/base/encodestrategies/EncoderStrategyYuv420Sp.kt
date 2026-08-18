@@ -13,9 +13,8 @@ import com.leovp.yuv.YuvUtil as NativeYuvUtil
  * Author: Michael Leo
  * Date: 20-4-1 上午11:12
  */
-class EncoderStrategyYuv420Sp(
-    private val recordingRotationDegrees: Int? = null,
-) : IDataProcessStrategy {
+class EncoderStrategyYuv420Sp(private val recordingRotationDegrees: Int? = null) :
+    IDataProcessStrategy {
     init {
         recordingRotationDegrees?.let(::requireSupportedRecordingRotation)
     }
@@ -45,12 +44,9 @@ class EncoderStrategyYuv420Sp(
             width,
             height,
             resolvedRotationDegrees,
-            frontFacing
+            frontFacing,
+            NativeYuvUtil.NV12
         )
-        return NativeYuvUtil.i420ToNv12(
-            transformedFrame.data,
-            transformedFrame.dimensions.width,
-            transformedFrame.dimensions.height
-        )
+        return transformedFrame.data
     }
 }

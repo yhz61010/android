@@ -11,6 +11,7 @@ import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.bytes.toHexString
 import com.leovp.camera2live.listeners.CallbackListener
 import com.leovp.log.LogContext
+import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 
@@ -34,6 +35,11 @@ class CameraAvcEncoder @JvmOverloads constructor(
         private set
     private var outputFormat: MediaFormat? = null
     private var codecCallbackThread: HandlerThread? = null
+    private var codecCallbackHandler: Handler? = null
+    private var dataCallbackThread: HandlerThread? = null
+    private var dataCallbackHandler: Handler? = null
+    private val inputBufferLock = Any()
+    private val availableInputBufferIds = ArrayDeque<Int>()
 
     init {
         initEncoder()
@@ -125,23 +131,10 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
         val mediaCodecCallback = object : MediaCodec.Callback() {
             override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
-                try {
-                    val inputBuffer = codec.getInputBuffer(inputBufferId)
-
-                    // fill inputBuffer with valid data
-                    inputBuffer?.clear()
-                    val data = queue.poll()?.also { inputBuffer?.put(it) }
-
-                    codec.queueInputBuffer(
-                        inputBufferId,
-                        0,
-                        data?.size ?: 0,
-                        computePresentationTimeUs(++mFrameCount),
-                        0
-                    )
-                } catch (e: Exception) {
-                    LogContext.log.v(TAG, "You can ignore this error safely.", e)
+                synchronized(inputBufferLock) {
+                    availableInputBufferIds.addLast(inputBufferId)
                 }
+                drainInputBuffers(codec)
             }
 
             override fun onOutputBufferAvailable(
@@ -149,39 +142,35 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 outputBufferId: Int,
                 info: MediaCodec.BufferInfo
             ) {
-                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                // bufferFormat is equivalent to member variable outputFormat
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    val encodedBytes = ByteArray(info.size)
-                    it.get(encodedBytes)
-
-                    when (info.flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                            csd = encodedBytes.copyOf()
-                            LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexString()}]")
-                        }
-
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(
-                            TAG,
-                            "Found Key Frame[" + info.size + "]"
-                        )
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
-                            // Do nothing
-                        }
-
-                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
-                            // Do nothing
-                        }
-
-                        else -> {
-                            // Do nothing
-                        }
+                val encodedBytes = try {
+                    codec.getOutputBuffer(outputBufferId)?.let { outputBuffer ->
+                        outputBuffer.position(info.offset)
+                        outputBuffer.limit(info.offset + info.size)
+                        ByteArray(info.size).also(outputBuffer::get)
                     }
-                    dataUpdateCallback?.onCallback(encodedBytes)
+                } finally {
+                    codec.releaseOutputBuffer(outputBufferId, false)
                 }
-                codec.releaseOutputBuffer(outputBufferId, false)
+                if (encodedBytes == null) return
+
+                when (info.flags) {
+                    MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                        csd = encodedBytes.copyOf()
+                        LogContext.log.w(TAG, "Found SPS/PPS frame: HEX[${csd?.toHexString()}]")
+                    }
+
+                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> LogContext.log.i(
+                        TAG,
+                        "Found Key Frame[" + info.size + "]"
+                    )
+                    MediaCodec.BUFFER_FLAG_END_OF_STREAM -> Unit
+                    MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> Unit
+                    else -> Unit
+                }
+                dataCallbackHandler?.post {
+                    runCatching { dataUpdateCallback?.onCallback(encodedBytes) }
+                        .onFailure { LogContext.log.e(TAG, "Encoded data callback failed.", it) }
+                }
             }
 
             override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
@@ -202,22 +191,61 @@ class CameraAvcEncoder @JvmOverloads constructor(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val callbackThread = HandlerThread("$TAG-callback").apply { start() }
                 codecCallbackThread = callbackThread
-                encoder.setCallback(mediaCodecCallback, Handler(callbackThread.looper))
+                val callbackHandler = Handler(callbackThread.looper)
+                codecCallbackHandler = callbackHandler
+                encoder.setCallback(mediaCodecCallback, callbackHandler)
             } else {
                 encoder.setCallback(mediaCodecCallback)
             }
+            val encodedDataThread = HandlerThread("$TAG-data-callback").apply { start() }
+            dataCallbackThread = encodedDataThread
+            dataCallbackHandler = Handler(encodedDataThread.looper)
             encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             encoder.start()
             h264Encoder = encoder
         } catch (e: Exception) {
             runCatching { encoder.release() }
             stopCodecCallbackThread()
+            stopDataCallbackThread()
             throw e
         }
     }
 
     fun offerDataIntoQueue(data: ByteArray) {
         queue.offer(data)
+        val encoder = if (::h264Encoder.isInitialized) h264Encoder else return
+        codecCallbackHandler?.post { drainInputBuffers(encoder) } ?: drainInputBuffers(encoder)
+    }
+
+    private fun drainInputBuffers(codec: MediaCodec) {
+        synchronized(inputBufferLock) {
+            while (availableInputBufferIds.isNotEmpty()) {
+                val data = queue.poll() ?: return
+                val inputBufferId = availableInputBufferIds.removeFirst()
+                try {
+                    val inputBuffer = requireNotNull(codec.getInputBuffer(inputBufferId)) {
+                        "MediaCodec returned a null input buffer for id=$inputBufferId"
+                    }
+                    inputBuffer.clear()
+                    require(data.size <= inputBuffer.remaining()) {
+                        "Frame size ${data.size} exceeds codec input capacity " +
+                            inputBuffer.remaining()
+                    }
+                    inputBuffer.put(data)
+                    val frameIndex = mFrameCount + 1
+                    codec.queueInputBuffer(
+                        inputBufferId,
+                        0,
+                        data.size,
+                        computePresentationTimeUs(frameIndex),
+                        0
+                    )
+                    mFrameCount = frameIndex
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "Unable to queue codec input buffer.", e)
+                }
+            }
+        }
     }
 
     private fun onEncoderFrameDropped() {
@@ -251,7 +279,9 @@ class CameraAvcEncoder @JvmOverloads constructor(
             h264Encoder.release()
         } finally {
             queue.clear()
+            synchronized(inputBufferLock) { availableInputBufferIds.clear() }
             stopCodecCallbackThread()
+            stopDataCallbackThread()
         }
     }
 
@@ -262,6 +292,17 @@ class CameraAvcEncoder @JvmOverloads constructor(
             runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
         }
         codecCallbackThread = null
+        codecCallbackHandler = null
+    }
+
+    private fun stopDataCallbackThread() {
+        val callbackThread = dataCallbackThread
+        callbackThread?.quitSafely()
+        if (callbackThread != null && Thread.currentThread() !== callbackThread) {
+            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+        }
+        dataCallbackThread = null
+        dataCallbackHandler = null
     }
 
     companion object {

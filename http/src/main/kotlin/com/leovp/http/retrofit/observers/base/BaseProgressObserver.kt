@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.leovp.http.retrofit.observers.base
 
 import com.google.gson.stream.MalformedJsonException

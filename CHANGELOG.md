@@ -60,7 +60,8 @@
 - **P3 低风险清理与规范化完成**:`KeepAlive` 使用 `SupervisorJob` 并隔离 callback 异常，释放后清空
   `MediaPlayer`;`android-restricted` 和 `audio` 的目标路径不再调用 `printStackTrace()`，统一通过
   `LogContext` 保留异常上下文。audio 模块的 `runCatching` 路径统一通过内部 helper 保证
-  `CancellationException` 继续向上抛出；`AacEncoder` 删除未使用且标有 FIXME 的 CSD 构造代码。
+  `CancellationException` 继续向上抛出；恢复后的 `AacEncoder` CSD 构造函数已修正 Kotlin 中缀位运算
+  的结合顺序，并补充 AAC-LC 16 kHz mono 等回归测试。
 - **CX-9c 权限页改为一次性导航**:`PermissionsFragment` 在 `onViewCreated` 发起权限流程，通过
   `viewLifecycleOwner.lifecycle.withStarted` 等待可导航状态，并用一次性门控阻止同一 View 生命周期内
   重复导航；等待会随 View 销毁自动取消并重置门控，导航失败时也允许后续重试。

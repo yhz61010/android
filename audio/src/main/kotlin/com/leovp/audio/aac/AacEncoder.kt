@@ -32,6 +32,44 @@ class AacEncoder(
 ) {
     companion object {
         private const val TAG = "AacEn"
+
+        /**
+         * Builds the two-byte MPEG-4 AudioSpecificConfig used as AAC `csd-0`.
+         *
+         * Keep every bit-shift operand explicitly grouped. Kotlin evaluates chained infix bit
+         * operations from left to right, so omitting the parentheses around `sampleRateIndex shr 1`
+         * corrupts the first byte. For example, AAC-LC/16 kHz/mono must be `0x14, 0x08`.
+         *
+         * @return The AudioSpecificConfig, or `null` when [sampleRate] has no standard
+         * frequency index.
+         */
+        fun getAudioEncodingCsd0(aacProfile: Int, sampleRate: Int, channelCount: Int): ByteArray? {
+            val sampleRateIndex = getSampleFrequencyIndex(sampleRate)
+            if (sampleRateIndex == -1) return null
+
+            val firstByte =
+                ((aacProfile shl 3) and 0xF8) or ((sampleRateIndex shr 1) and 0x07)
+            val secondByte =
+                ((sampleRateIndex shl 7) and 0x80) or ((channelCount shl 3) and 0x78)
+            return byteArrayOf(firstByte.toByte(), secondByte.toByte())
+        }
+
+        private fun getSampleFrequencyIndex(sampleRate: Int): Int = when (sampleRate) {
+            7350 -> 12
+            8000 -> 11
+            11025 -> 10
+            12000 -> 9
+            16000 -> 8
+            22050 -> 7
+            24000 -> 6
+            32000 -> 5
+            44100 -> 4
+            48000 -> 3
+            64000 -> 2
+            88200 -> 1
+            96000 -> 0
+            else -> -1
+        }
     }
 
     val queue = ArrayBlockingQueue<ByteArray>(64)
@@ -186,43 +224,6 @@ class AacEncoder(
             outAacDataWithAdts[5] = (((outAacDataLenWithAdts and 7) shl 5) + 0x1F).toByte()
             outAacDataWithAdts[6] = 0xFC.toByte()
         }
-    }
-
-    // https://cloud.tencent.com/developer/ask/61404
-    // FIXME
-    // Has a bug when the parameters are 2(AAC LC), 8(16 kHz), 1(mono).
-    @Suppress("SameParameterValue")
-    private fun getAudioEncodingCsd0(
-        aacProfile: Int,
-        sampleRate: Int,
-        channelCount: Int
-    ): ByteArray? {
-        val freqIdx = getSampleFrequencyIndex(sampleRate)
-        if (freqIdx == -1) return null
-        val csd = ByteBuffer.allocate(2)
-        csd.put(0, (aacProfile shl 3 or freqIdx shr 1).toByte())
-        csd.put(1, ((freqIdx and 0x01) shl 7 or channelCount shl 3).toByte())
-        val csd0 = ByteArray(2)
-        csd.get(csd0)
-        csd.clear()
-        return csd0
-    }
-
-    private fun getSampleFrequencyIndex(sampleRate: Int): Int = when (sampleRate) {
-        7350 -> 12
-        8000 -> 11
-        11025 -> 10
-        12000 -> 9
-        16000 -> 8
-        22050 -> 7
-        24000 -> 6
-        32000 -> 5
-        44100 -> 4
-        48000 -> 3
-        64000 -> 2
-        88200 -> 1
-        96000 -> 0
-        else -> -1
     }
 
     // presentationTimeUs = 1_000_000L * (totalPcmBytes / (bitPerSample / 8)) / sampleRate /

@@ -8,7 +8,8 @@
 
 1. Camera2Live 录像帧改由 `imageReaderHandler` 处理；Camera2 控制回调继续使用 `cameraHandler`。
 2. `CameraAvcEncoder` 保存可用 input buffer ID，等真实帧到达后才提交；不再提交空 buffer，PTS 只随真实提交帧
-   推进。
+   推进。ID 仅在 `queueInputBuffer()` 成功后从本地池移除；帧被拒绝时保留 ID 供下一帧复用，stop/release 后也会
+   拒绝迟到帧。
 3. 编码输出复制后立即释放 MediaCodec output buffer；独立的编码字节通过专用串行回调线程交给外部调用方。
 4. 新增 `YuvUtil.transformI420()`，在一次 JNI 调用内完成旋转、可选水平镜像以及 I420/NV12 输出。JNI 通过
    critical array access 避免显式 native 输入/输出副本，仅在 libyuv 必须多步处理时使用 native scratch buffer。
@@ -28,6 +29,7 @@ CameraX 宿主可覆写 `CameraXActivity.getJpegOutputStrategy()`；Camera2Live 
 - `:yuv:assembleDebug` 已对全部配置 ABI 构建通过。
 - `:camera2live:testDebugUnitTest`、`:camerax:testDebugUnitTest`、`:lib-image:testDebugUnitTest` 均通过
   `--rerun-tasks` 强制执行。
+- Camera2Live 输入调度测试覆盖“超大帧保留 input buffer ID，后续合法帧复用并消费同一槽位”。
 - 目标 Kotlin 模块已通过 `--rerun-tasks` 编译。
 
 当前没有连接设备。录像方向/颜色、不同厂商 MediaCodec 行为，以及目标相册对 `EXIF_ONLY` 的渲染仍需真机回归。

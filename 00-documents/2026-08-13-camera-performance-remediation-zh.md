@@ -427,3 +427,48 @@ AndroidX Window），在状态变化时重建或刷新方向源；不能恢复�
 SP2 的亮度分析代码在开关启用时仍是有效的 opt-in 路径，不属于失效代码；3b 完成 native 替换后，旧前置
 Kotlin 分支则不再参与任何执行路径，两者性质不同。3b 按 spec 现有方案处理：旧实现通过 Git 历史保留，不在
 源码中留下整块失效注释，并同步清理不再使用的 import，以满足 detekt 零容忍要求。
+
+### `32d3af9a2` —— 相机性能整改（7 项 finding，已复核通过）
+
+对 Camera2Live/CameraX 的 7 项性能 finding 整改提交，经 cpp-reviewer（native `transformI420`）与 kotlin-reviewer
+（全部 Kotlin 改动）并行专家审查后**通过**，无 CRITICAL/HIGH。逐条结论：
+
+1. 录像帧改用 `imageReaderHandler`（与 `cameraHandler` 确认为**不同** HandlerThread，非别名），`image.close()`
+   顺序不变。
+2. `CameraAvcEncoder` 空队列时先 `poll()?:return`，input buffer id 留在池，不再提交空帧、PTS 只随真实帧推进。
+3. 旋转+镜像+I420/NV12 合并为单次 `YuvUtil.transformI420()`；back-lens/P 走 identity 快路径**字节不变**；参数序
+   与 native 签名 `([BIIIZI)[B` 一致。
+4. `Bitmap.toBytes()` 单次分配 + `ByteBuffer.wrap()`；拍照路径提前回收中间 Bitmap，`recycledSafety()` 防重复回收，
+   异常路径无泄漏/无 double-free。
+5. 复制后立即 `releaseOutputBuffer`（finally 内），编码字节回调改由专用串行线程投递。
+6. CameraX 诊断默认关闭，codec 枚举移到 `Dispatchers.Default` 并按 `cameraId:rotation` 缓存（缓存加
+   `synchronized`）；顺带修好 HEVC 误查 AVC 的旧 bug。
+7. 新增 `JpegOutputStrategy` 枚举，两端默认 `PIXEL_NORMALIZED`（**不改现有设备验证行为**），`EXIF_ONLY` 只写方向
+   元数据，为 opt-in。
+
+- **native 侧**：融合 JNI 与旧三步链逐字节等价，内存安全（临界区正确嵌套/释放、RAII scratch、长度校验、64 位溢出
+  防护）。遗留 1 处 **LOW**（嵌套临界区加不变量注释），留待真机回归时一并观察。
+- **Kotlin 侧**：审查发现 1 处 **MEDIUM**——`drainInputBuffers` 异常路径（`getInputBuffer` 返回 null/抛异常，或
+  帧尺寸超过 `inputBuffer.remaining()`）会孤立已弹出的 input buffer id，systematic 命中会逐步耗尽输入池、静默卡死
+  编码器。该项已在 `af35be538` 修复（见下）。
+
+### `af35be538` —— input buffer 泄漏修复（MEDIUM，已复核通过）
+
+针对上条 MEDIUM 的修复提交，人工复核**通过**，含单测，并附带解决一处 LOW（`offerDataIntoQueue` 与已 release
+encoder 的竞态）：
+
+- **核心修复**：新抽出的 `PendingInputBuffers.drain()` 改为 **peek-then-remove**——`bufferIds.first()` 取而不弹，
+  `submit` 成功后才 `removeFirst()`；失败则 `onFailure` 后 `return`，buffer id 保留在池供下一帧复用。从根上消除
+  异常路径的 id 孤立。
+- **失败分级**：超大帧（`IllegalArgumentException`）只丢该帧、保留 id、不停编码器；真编码器故障
+  （`CodecException`/`IllegalStateException`）及 `onError` 触发 `stopAcceptingFrames()`（清队列+清池+永久停收）。
+- **生命周期硬化**：`acceptingFrames`/`stopped`/`released` 三个 `AtomicBoolean`；`offerDataIntoQueue`/
+  `onInputBufferAvailable` 锁内双检，`stop()`/`release()` 用 `compareAndSet` 幂等，teardown 后迟到帧被干净拒绝。
+- **并发**：`drain` 全程在 `inputBufferLock` 内，`onFailure` 的 `stopAcceptingFrames()` 走可重入 `synchronized`
+  无死锁；catch 后立即 `return`，`clear()` 不与迭代冲突。旧字段 `availableInputBufferIds` 已全仓无残留引用。
+- **单测**：新增 `PendingInputBuffersTest` 覆盖「超大帧保留 id 且后续合法帧复用消费」「正常提交消费 id」。
+- **文档**：英文后续文档 `2026-08-18-camera-performance-follow-up.md` 经维护者确认删除（该文档不需要英文版），
+  保留 ZH 版并同步更新 change #2 措辞与验证项。
+
+> 真机回归仍待项（无对应硬件/设备）：前置 `SENSOR_ORIENTATION`=90 组合、录像方向/颜色、不同厂商 MediaCodec 行为、
+> 目标相册对 `EXIF_ONLY` 的渲染。

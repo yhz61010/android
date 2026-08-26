@@ -294,7 +294,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
 
         /**
          * Captures at most [MAX_LOGGABLE_BODY_BYTES] plus one probe byte. The sink records
-         * truncation before throwing a stackless sentinel, preserving early termination while
+         * truncation before throwing a Stackless sentinel, preserving early termination while
          * ensuring a RequestBody that catches IOException cannot hide the truncation signal
          * (remediation R-10 / HTTP-3).
          */
@@ -309,19 +309,19 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                         remaining <= 0 -> {
                             source.skip(byteCount)
                             truncated = true
-                            throw RequestBodyLimitExceededException
+                            throw RequestBodyLimitExceededException()
                         }
                         byteCount > remaining -> {
                             super.write(source, remaining)
                             source.skip(byteCount - remaining)
                             truncated = true
-                            throw RequestBodyLimitExceededException
+                            throw RequestBodyLimitExceededException()
                         }
                         else -> {
                             super.write(source, byteCount)
                             if (output.size > MAX_LOGGABLE_BODY_BYTES) {
                                 truncated = true
-                                throw RequestBodyLimitExceededException
+                                throw RequestBodyLimitExceededException()
                             }
                         }
                     }
@@ -336,8 +336,13 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             return CapturedRequestBody(output, truncated)
         }
 
-        private object RequestBodyLimitExceededException : IOException() {
+        private class RequestBodyLimitExceededException : IOException() {
             override fun fillInStackTrace(): Throwable = this
+
+            private companion object {
+                @Suppress("unused") // Read reflectively by Java serialization.
+                private const val serialVersionUID = 1L
+            }
         }
 
         /** Header names whose values are redacted in logs to avoid leaking credentials. */
@@ -359,9 +364,9 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         }
 
         /**
-         * Returns true if the body in question probably contains human readable text. Uses a small
+         * Returns true if the body in question probably contains human-readable text. Uses a small
          * sample
-         * of code points to detect unicode control characters commonly used in binary file
+         * of code points to detect Unicode control characters commonly used in binary file
          * signatures.
          */
         fun isPlaintext(buffer: Buffer): Boolean {
@@ -389,7 +394,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
 
 internal fun Response.hasReadableBody(): Boolean {
     if (request.method == "HEAD") return false
-    if ((code < 100 || code >= 200) && code != 204 && code != 304) return true
+    if ((code !in 100..<200) && code != 204 && code != 304) return true
 
     val contentLength = header("Content-Length")?.toLongOrNull() ?: -1L
     return contentLength != -1L || header("Transfer-Encoding").equals("chunked", ignoreCase = true)

@@ -9,6 +9,16 @@ import com.leovp.camera2live.utils.resolveRecordingRotation
 import com.leovp.camera2live.utils.transformI420Frame
 
 /**
+ * Converts camera images to I420 frames for the AVC encoder.
+ *
+ * Each frame is physically rotated by [recordingRotationDegrees] before encoding. Front-facing
+ * frames are then mirrored horizontally. The rotation is expected to be captured when recording
+ * starts and kept unchanged for the entire stream so the encoded dimensions remain stable.
+ *
+ * @param recordingRotationDegrees Rotation from the camera sensor orientation to the locked
+ * recording orientation. Supported values are 0, 90, 180, and 270. A null value preserves the
+ * historical lens-specific portrait default.
+ *
  * Author: Michael Leo
  * Date: 20-4-1 上午11:12
  */

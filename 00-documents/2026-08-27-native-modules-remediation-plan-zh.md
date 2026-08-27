@@ -16,15 +16,16 @@
 
 现有源码、JNI 注册表、Gradle 发布配置、FFmpeg 构建脚本、预编译 `.so` 和本地 FFmpeg 头文件已经足以确认内存越界、资源泄漏、输入 padding、生命周期竞态、重复分配和 ABI 声明不一致等问题，也足以制定前四批安全修复。
 
-以下三项会影响已发布 API 或产物结构，不应由实现者自行选择。二次审查可以评价推荐方案，但进入对应批次前应由维护者确认：
+维护者已确认以下公开 API、运行库组合和输入处理决策。实现者应按“已确认方案”执行，不再自行切换到备选设计：
 
-| 决策 ID | 问题 | 推荐方案 | 备选方案 |
-|---|---|---|---|
-| D1 | `BitmapProcessor.bitmapByteBuffer` 当前是公开可写属性 | 保留 getter/setter 的 JVM 签名作为过渡，但内部完全不再使用外部可写值；setter 仅允许把当前 handle 原样写回，写入 null 等同 `close()`，其它非空值抛 `UnsupportedOperationException`；属性标记废弃，下一个主版本删除 | 立即改成私有属性；实现最干净，但属于二进制不兼容变更 |
-| D2 | 音频版和视频版 FFmpeg AAR 包含名称相同、内容不同的 `libavcodec.so`/`libavutil.so` | 使用 FFmpeg `--build-suffix` 为裁剪版运行库生成不同文件名和 SONAME，例如 `-leo-adpcm`、`-leo-video`；组合模块继续使用统一运行库 | 明确禁止两个独立模块同时依赖，只支持组合模块；改动较小，但约束无法只靠 AAR 内部的 `pickFirsts` 可靠执行 |
-| D3 | `ffmpeg-javacpp` 声明四 ABI，实际只依赖 `android-arm64` classifier | 若当前没有四 ABI 发布需求，先把模块明确收窄为 `arm64-v8a`，消除错误承诺 | 为 FFmpeg 和 JavaCPP 同时增加 `android-arm`、`android-x86`、`android-x86_64` classifier；功能完整但产物和下载体积会显著增加 |
-
-除 D1～D3 外，输入非法时统一抛 `IllegalArgumentException`、Native 库执行失败时抛 `IllegalStateException`、重复 `close/release` 保持幂等，均作为本方案的既定契约。
+| 决策 ID | 问题 | 已确认方案 |
+|---|---|---|
+| D1 | `BitmapProcessor.bitmapByteBuffer` 当前是公开可写属性 | 本轮直接删除该公开属性，改为私有 Native handle；接受源码和二进制不兼容，并在 CHANGELOG/发布说明中标为 breaking change |
+| D2 | 三个 FFmpeg AAR 的使用关系 | 三者严格三选一：只要音频使用 `adpcm-ima-qt-codec`，只要视频使用 `h264-hevc-decoder`，同时需要音视频使用组合模块；不实施 suffix/SONAME 隔离 |
+| D3 | `ffmpeg-javacpp` 声明四 ABI，实际只依赖 `android-arm64` classifier | 当前只支持 `arm64-v8a`，Gradle、AAR 内容和文档统一收窄到 arm64 |
+| D4 | `android420ToI420()` 无法表达完整 `YUV_420_888` plane 信息 | 增加完整 plane API，显式接收 Y/U/V buffer、row stride、pixel stride、宽高和变换参数；旧单数组 API保留但废弃 |
+| D5 | 非法输入和生命周期错误如何暴露 | 参数非法抛 `IllegalArgumentException`，Native 执行失败抛 `IllegalStateException`，重复 `close/release` 幂等，close 后继续操作抛 `IllegalStateException` |
+| D6 | JavaCPP mono 返回值和 ADPCM 非整帧输入 | mono 返回 `leftBytes to ByteArray(0)`；非完整 frame 输入抛参数异常，不静默丢尾部，也不默认维护 remainder buffer |
 
 ## 3. 问题与整改批次总览
 
@@ -97,13 +98,14 @@ static void ThrowIllegalStateException(JNIEnv *env, const char *message);
 5. I420/NV12/NV21 输入至少为 `width * height * 3 / 2`；YUY2 输入至少为 `width * height * 2`。
 6. crop 必须满足 `left >= 0`、`top >= 0`、目标宽高为正偶数、`left/top` 为偶数，并用减法检查边界：`dstWidth <= srcWidth - left`、`dstHeight <= srcHeight - top`，避免 `left + dstWidth` 自身溢出。
 7. `ScaleNV12()` 抛出异常后必须立即 `return nullptr`；不要在 pending exception 状态下继续调用 libyuv。
-8. `NewByteArray()`、`GetPrimitiveArrayCritical()` 返回空时立即退出并保留 JVM 已设置的 OOM。
+8. `NewByteArray()`、`GetByteArrayElements()` 返回空时立即退出并保留 JVM 已设置的 OOM。
 
-`android420ToI420()` 当前只接收一个扁平数组，却没有 row stride 和三个 plane offset，无法无歧义表达通用 `YUV_420_888`。推荐做法：
+`android420ToI420()` 当前只接收一个扁平数组，却没有 row stride 和三个 plane offset，无法无歧义表达通用 `YUV_420_888`。按 D4 实施：
 
 - 在 Kotlin 上将旧方法标记为废弃，说明不要用于任意 `Image.Plane` 数据。
 - 旧 JNI 方法只接受可严格验证的 planar I420 布局，即 `pixelStrideUV == 1`。
-- 如仍需支持 `pixelStrideUV == 2`，另增明确 API，参数至少包含 Y/U/V 三个数组、各自 row stride 和 pixel stride；不要猜测平面布局。
+- 新增完整 API，参数至少包含 Y/U/V 三个 buffer、各自 row stride 和 pixel stride；支持 direct/heap `ByteBuffer`，无法取得 direct address 时使用有界 fallback copy，不猜测平面布局。
+- 新 API支持 `pixelStride == 1/2` 的常见 planar/semiplanar `YUV_420_888`；若 U/V pixel stride 不相同，则走逐 plane 提取再变换路径，不能把不等 stride 强行传给只接受一个 UV pixel stride 的 libyuv API。
 
 ### 4.3 消除源和目标整帧 Native 副本
 
@@ -386,7 +388,7 @@ Demo 中的 `cancel()` + `Thread.sleep(100)` 不能作为生命周期同步。`D
 
 整改要求：
 
-1. 新增真正由内部使用的私有 handle；按 D1 决策保留或移除旧公开 `bitmapByteBuffer`。兼容 setter 的精确行为是：写入 null 调用 `close()`；写回与当前内部 handle 相同的对象时 no-op；其它非空对象一律抛 `UnsupportedOperationException`，绝不能进入 Native。
+1. 按 D1 直接删除公开 `bitmapByteBuffer`，新增只供类内部使用的私有 handle；公开 API 不再暴露任何可伪造的 DirectByteBuffer。该项是明确接受的源码和二进制不兼容变更，必须写入 CHANGELOG/发布说明。
 2. 所有操作、`setBitmap()` 和 `close/free()` 在同一个锁下执行；close 先取出并清空 Kotlin handle，再调用 Native free，保证重复 close 幂等。
 3. 当前 `internal fun finalize()` 编译为名称被修饰的方法，不是 JVM finalizer。过渡期改成真正的 `protected fun finalize()`，内部只调用幂等 `close()`；用 `javap` 验证字节码方法名确实为 `finalize()`。finalizer 只作为最后兜底，KDoc 和调用点仍要求 `use {}`。
 4. `SetBitmapData()`、`GetBitmapFromSavedBitmapData()` 按 `AndroidBitmapInfo.stride` 逐行复制，不得把整张图假定成 `width * 4` 紧密布局。
@@ -461,41 +463,29 @@ frame->nb_samples * channels * av_get_bytes_per_sample(ctx->sample_fmt)
 
 ## 9. 批次 F：FFmpeg AAR 冲突和 JavaCPP ABI
 
-### 9.1 同名 FFmpeg 运行库
+### 9.1 三个 FFmpeg AAR 的互斥关系
 
 当前独立音频版、独立视频版和组合版都发布 `libavcodec.so`/`libavutil.so`，但前两者启用的 codec 集不同。`pickFirsts` 只能选一个重复文件，不能证明被选中的库同时包含 ADPCM、H.264 和 HEVC。
 
-按 D2 推荐方案修改两个裁剪版构建脚本：
+按 D2 不修改 FFmpeg SONAME，不允许任意两个模块同时出现在同一消费项目中：
 
-- 音频脚本增加 `--build-suffix=-leo-adpcm`。
-- 视频脚本增加 `--build-suffix=-leo-video`。
-- CMake imported target 的文件名同步变化。
-- JNI wrapper 的 `DT_NEEDED` 必须分别指向带 suffix 的库。
-- Kotlin 只显式加载 JNI wrapper，自身依赖的 FFmpeg runtime 由 ELF `DT_NEEDED` 加载；删除随后对无 suffix `avcodec/avutil/swscale` 的重复 `System.loadLibrary()`。各 AAR 的 `src/main/libs/<abi>/` 文件名同步变化。
-- 组合模块继续使用一个同时启用三类 codec 的统一 `libavcodec.so`，不要把两个裁剪库同时塞入组合 AAR。
-- 组合模块与任一独立模块仍包含相同 Kotlin 类和 JNI wrapper 名称，必须保持互斥；suffix 方案只解决“独立音频模块 + 独立视频模块”同时使用的问题。
-- 删除不能解决跨 AAR 冲突的无关 `pickFirsts`；只保留确有相同内容且经过 hash 验证的 `libc++_shared.so` 策略。
+- 仅 ADPCM 音频功能：`adpcm-ima-qt-codec`。
+- 仅 H.264/HEVC 视频功能：`h264-hevc-decoder`。
+- 同时需要音频和视频：`adpcm-ima-qt-codec-h264-hevc-decoder`。
+- README、各模块说明和 CHANGELOG 都明确写出三选一关系。
+- 为三个 published component 增加同一个互斥 capability；Gradle 消费项目如果同时依赖任意两个，应在依赖解析阶段报告 capability conflict，而不是进入 Native 打包阶段。
+- 增加三个负向消费端集成测试，分别组合“音频+视频”“音频+组合”“视频+组合”，要求依赖解析或构建明确失败。
+- 增加三个正向集成测试，分别验证音频模块、视频模块和组合模块的最小功能。
+- Maven/POM 消费端可能不识别 Gradle Module Metadata capability，因此文档约束和 AAR 内容检查仍必须保留。
+- 审核并删除会掩盖同名、不同内容 FFmpeg runtime 的 `pickFirsts`；不能把成功任选一个 `.so` 当作兼容方案。
 
-验收时用 `readelf -d lib*.so` 检查 `SONAME` 和 `NEEDED`，并在同一个测试 App 中同时依赖独立音频版和独立视频版，实际完成一次 ADPCM encode/decode、H.264 decode、HEVC decode。
-
-如果选择 D2 备选方案，则必须：
-
-- 在 README/CHANGELOG 明确两个独立模块互斥，同时需要音视频只能依赖组合模块；
-- 增加一个消费端集成测试，故意同时依赖两个独立模块并要求构建失败；
-- 不得把“加 `pickFirst` 后能打包”当作正确修复。
+每个模块仍需用 `readelf -d lib*.so` 检查自身 `SONAME` 和 `NEEDED`，并验证裁剪版只包含目标 codec、组合版同时包含 ADPCM、H.264 和 HEVC。
 
 ### 9.2 JavaCPP ABI
 
-按 D3 推荐方案，把 `ffmpeg-javacpp` 的 ABI 明确收窄为 `arm64-v8a`，并在 README/CHANGELOG 标注。不应保留四 ABI filter 却只发布 arm64 runtime。
+按 D3，把 `ffmpeg-javacpp` 的 `abiFilters` 明确收窄为 `arm64-v8a`，只保留 FFmpeg 和 JavaCPP 的 `android-arm64` classifier，并在 README/CHANGELOG 标注当前不支持 armeabi-v7a、x86、x86_64。
 
-若选择四 ABI，则 FFmpeg 与 JavaCPP 两组依赖必须同时添加：
-
-- `android-arm`
-- `android-arm64`
-- `android-x86`
-- `android-x86_64`
-
-发布前解包 AAR，确认四个 `lib/<abi>/` 均同时包含 JavaCPP loader 和 FFmpeg 所需 `.so`；分别在 arm64 真机、armeabi-v7a 真机或设备、x86/x86_64 模拟器执行最小解码，不只检查 Gradle resolve。
+发布前解包 AAR，确认 `lib/arm64-v8a/` 同时包含 JavaCPP loader 和 FFmpeg 所需 `.so`，且不存在会让消费者误判为受支持的其它 ABI 目录；在 arm64 真机执行最小 ADPCM 解码和资源释放测试，不只检查 Gradle resolve。
 
 ## 10. FFmpeg 源码到发布二进制的闭环
 
@@ -523,8 +513,8 @@ frame->nb_samples * channels * av_get_bytes_per_sample(ctx->sample_fmt)
 5. `fix(native): serialize handle lifecycle`
 6. `fix(lib-image): harden bitmap processor handles`
 7. `perf(native): reduce frame buffer churn`
-8. `fix(ffmpeg): isolate packaged runtimes`（D2 确认后）
-9. `fix(ffmpeg-javacpp): align published ABI support`（D3 确认后）
+8. `fix(ffmpeg): enforce codec artifact exclusivity`
+9. `fix(ffmpeg-javacpp): limit published ABI to arm64`
 10. `test(native): add device regression coverage`
 11. `docs: document native runtime compatibility`
 
@@ -556,8 +546,8 @@ frame->nb_samples * channels * av_get_bytes_per_sample(ctx->sample_fmt)
 ### 12.2 设备和 ABI
 
 - arm64 真机：必测，覆盖所有 Native 功能、并发 close、长时间循环和内存曲线。
-- armeabi-v7a：至少一个真实 32 位进程或可确认加载 32 位库的设备。
-- x86、x86_64：模拟器加载和最小功能测试。
+- armeabi-v7a：验证三个预编译 FFmpeg wrapper AAR；`ffmpeg-javacpp` 按 D3 不测试、不声明支持。
+- x86、x86_64：验证三个预编译 FFmpeg wrapper AAR；`ffmpeg-javacpp` 按 D3 不测试、不声明支持。
 - 16KB 页设备：验证所有发布 `.so` 可加载，不能只看 wrapper 自身；FFmpeg runtime、JavaCPP runtime、`libc++_shared.so` 全部检查。
 
 ### 12.3 稳定性工具
@@ -577,7 +567,7 @@ frame->nb_samples * channels * av_get_bytes_per_sample(ctx->sample_fmt)
 4. JPEG、JavaCPP frame、FFmpeg packet 和 Bitmap handle 的失败路径无可复现线性泄漏。
 5. C++ 源码、Kotlin JNI 声明、注册表签名和提交的四 ABI `.so` 完全一致。
 6. FFmpeg 二进制通过 LFS、ELF、SONAME、codec 能力和 16KB 对齐检查。
-7. D1～D3 已由维护者明确选择，CHANGELOG/README 与实际行为一致。
+7. D1～D6 的已确认方案全部落地，CHANGELOG/README 与实际行为一致；D1 明确标注为 breaking change。
 8. 构建、静态检查、单元测试、设备测试和未覆盖项分别记录；不得用“assemble 成功”替代真机结论。
 
 ## 14. 给 Claude Code 的二次审查清单
@@ -595,7 +585,7 @@ frame->nb_samples * channels * av_get_bytes_per_sample(ctx->sample_fmt)
 9. H264 重复 init 是否会覆盖旧 handle？初始化中任一步失败是否回滚所有已分配资源？
 10. Bitmap stride、crop、scale、1 像素边界和公开 handle 兼容策略是否完整？
 11. 性能优化是否引入共享 scratch buffer 的跨实例/跨线程竞态？缓存容量是否有上限和 release？
-12. 三个 FFmpeg AAR 的 SONAME/`DT_NEEDED` 方案是否能在同一进程中同时工作，而非依赖不确定的 `pickFirst`？
+12. 三个 FFmpeg AAR 是否通过 capability 和消费端测试落实三选一关系，并移除了会用 `pickFirst` 掩盖错误组合的配置？
 13. `ffmpeg-javacpp` 的 ABI 声明、依赖 classifier、AAR 内容和真机/模拟器矩阵是否一致？
 14. 所有修改过的 `ffmpeg-sdk` 源码是否已经真实反映到三个发布模块的四 ABI `.so`，并通过 LFS 和 16KB 对齐校验？
 

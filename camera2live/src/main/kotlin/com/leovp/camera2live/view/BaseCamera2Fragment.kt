@@ -18,6 +18,7 @@ import com.leovp.camera2live.Camera2ComponentHelper
 import com.leovp.camera2live.databinding.FragmentCameraViewBinding
 import com.leovp.camera2live.utils.OrientationLiveData
 import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -36,6 +37,12 @@ abstract class BaseCamera2Fragment : Fragment() {
     protected var enableGallery = true
 
     var backPressListener: BackPressedListener? = null
+
+    /**
+     * Shared idempotent teardown guard for [onDestroyView] and [onDestroy] so the helper's
+     * HandlerThread/executor lifecycle is released exactly once (remediation CAM2-6 / CAM2-7).
+     */
+    private val isCameraReleased = AtomicBoolean(false)
 
     /** Where the camera preview is displayed */
     protected lateinit var cameraView: CameraSurfaceView
@@ -68,6 +75,7 @@ abstract class BaseCamera2Fragment : Fragment() {
     @RequiresPermission(android.Manifest.permission.CAMERA)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        isCameraReleased.set(false)
         if (!enableRecordFeature) {
             binding.ivShotRecord.visibility = View.GONE
             binding.ivRecordStop.visibility = View.GONE
@@ -95,13 +103,17 @@ abstract class BaseCamera2Fragment : Fragment() {
             if (isChecked) camera2Helper.turnOnFlash() else camera2Helper.turnOffFlash()
         }
         switchCameraBtn = binding.switchFacing
-        switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, _: Boolean ->
+        switchCameraBtn.setOnCheckedChangeListener { btnView: CompoundButton?, isChecked: Boolean ->
             btnView?.isEnabled = false
             binding.ivShot.isEnabled = false
             binding.ivShotRecord.isEnabled = false
 //            val rootView = view.findViewById<ViewGroup>(R.id.rootLayout)
 //            AnimationUtil.flipAnimatorX(rootView, rootView, 300)
-            camera2Helper.switchCamera()
+            if (isChecked) {
+                camera2Helper.switchToFrontCamera()
+            } else {
+                camera2Helper.switchToBackCamera()
+            }
             btnView?.post {
                 btnView.isEnabled = true
                 binding.ivShot.isEnabled = true
@@ -119,6 +131,7 @@ abstract class BaseCamera2Fragment : Fragment() {
                     switchFlashBtn.visibility = View.VISIBLE
                 }
                 previousLensFacing = lensFacing
+                updateOrientationLiveData()
             }
         })
 
@@ -129,9 +142,9 @@ abstract class BaseCamera2Fragment : Fragment() {
             switchCameraBtn.isEnabled = false
             binding.ivShotRecord.isEnabled = false
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 val st = SystemClock.elapsedRealtime()
-                getCapturingImage(camera2Helper.takePhoto())
+                getCapturingImage(camera2Helper.takePhoto(relativeOrientation.value))
                 DeviceSound.playShutterClick()
                 // Re-enable click listener after photo is taken
                 it.post {
@@ -152,11 +165,15 @@ abstract class BaseCamera2Fragment : Fragment() {
             it.isEnabled = false
             switchCameraBtn.isEnabled = false
             binding.ivShot.isEnabled = false
+            val recordingRotationDegrees = relativeOrientation.value
 
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 onRecordButtonClick()
-                camera2Helper.extraInitializeCameraForRecording()
+                camera2Helper.extraInitializeCameraForRecording(
+                    bitrate = -1,
+                    recordingRotationDegrees = recordingRotationDegrees
+                )
                 camera2Helper.setImageReaderForRecording()
                 camera2Helper.setPreviewRepeatingRequest()
                 camera2Helper.startRecording()
@@ -174,7 +191,7 @@ abstract class BaseCamera2Fragment : Fragment() {
             // Disable click listener to prevent multiple requests simultaneously in flight
             it.isEnabled = false
             // Perform I/O heavy operations in a different scope
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 camera2Helper.stopRecording()
                 onStopRecordButtonClick()
                 // Re-enable click listener after recording is taken
@@ -192,16 +209,14 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
 
         // Used to rotate the output media to match device orientation
-        relativeOrientation =
-            OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
-                observe(viewLifecycleOwner) { orientation ->
-                    LogContext.log.d(TAG, "Orientation changed: $orientation")
-                }
-            }
+        updateOrientationLiveData()
     }
 
     override fun onStop() {
         super.onStop()
+        // The camera is only closed here (reusable); thread/executor release happens in
+        // onDestroyView/onDestroy. No fixed sleep on the main thread (remediation CAM2-7).
+        if (!::camera2Helper.isInitialized || isCameraReleased.get()) return
         if (camera2Helper.isRecording) {
             camera2Helper.stopRecording()
             MediaActionSound().play(MediaActionSound.STOP_VIDEO_RECORDING)
@@ -210,14 +225,35 @@ abstract class BaseCamera2Fragment : Fragment() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        camera2Helper.stopCameraThread()
+    override fun onDestroyView() {
+        // Tie the helper's HandlerThread/executor lifecycle to the view (remediation CAM2-6).
+        releaseCameraOnce()
+        _binding = null
+        super.onDestroyView()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    override fun onDestroy() {
+        releaseCameraOnce()
+        super.onDestroy()
+    }
+
+    /** Releases all camera resources exactly once across onDestroyView/onDestroy. */
+    private fun releaseCameraOnce() {
+        if (isCameraReleased.compareAndSet(false, true)) {
+            if (::camera2Helper.isInitialized) camera2Helper.release()
+        }
+    }
+
+    private fun updateOrientationLiveData() {
+        if (::relativeOrientation.isInitialized) {
+            relativeOrientation.removeObservers(viewLifecycleOwner)
+        }
+        relativeOrientation =
+            OrientationLiveData(requireContext(), camera2Helper.characteristics).apply {
+                observe(viewLifecycleOwner) { orientation ->
+                    LogContext.log.d(TAG, "Orientation changed: $orientation")
+                }
+            }
     }
 
     companion object {

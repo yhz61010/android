@@ -11,11 +11,11 @@ import java.util.Locale
  */
 fun Double.round(precision: Int = 2, roundingMode: RoundingMode = RoundingMode.HALF_UP): Double {
     require(precision >= 0) { "precision must be >= 0 but was $precision" }
-    // Non-finite values have no fixed-point representation; DecimalFormat renders them as "∞"/"NaN",
-    // which toDouble() then fails to parse. Return them unchanged (remediation H15).
+    // Non-finite values have no fixed-point representation; DecimalFormat renders them as
+    // "∞"/"NaN", which toDouble() then fails to parse. Return them unchanged (remediation H15).
     if (isNaN() || isInfinite()) return this
-    // Pin the symbols to Locale.ENGLISH; under a locale whose decimal separator is ',' (e.g. Germany)
-    // the formatted string would otherwise be unparseable by toDouble() (remediation H15).
+    // Pin the symbols to Locale.ENGLISH; under a locale whose decimal separator is ','
+    // (e.g. Germany) the result would otherwise be unparseable by toDouble() (remediation H15).
     val df = DecimalFormat("#.${"#".repeat(precision)}", DecimalFormatSymbols(Locale.ENGLISH))
     df.roundingMode = roundingMode
     return df.format(this).toDouble()

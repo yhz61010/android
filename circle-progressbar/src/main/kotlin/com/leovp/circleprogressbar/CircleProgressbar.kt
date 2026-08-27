@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.ColorInt
+import androidx.core.view.ViewCompat
 import com.leovp.circleprogressbar.base.State
 import com.leovp.circleprogressbar.state.CancelState
 import com.leovp.circleprogressbar.state.ErrorState
@@ -145,8 +146,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
                     R.styleable.CircleProgressbar_progressMargin,
                     resources.dp2px(DEF_PROGRESS_MARGIN_IN_DP)
                 )
-            internalCurrProgress = attr.getInteger(R.styleable.CircleProgressbar_progress, 0)
             internalMaxProgress = attr.getInteger(R.styleable.CircleProgressbar_maxProgress, 100)
+                .coerceAtLeast(1)
+            internalCurrProgress = attr.getInteger(R.styleable.CircleProgressbar_progress, 0)
+                .coerceIn(0, internalMaxProgress)
             internalProgressAnimDuration =
                 attr.getInteger(R.styleable.CircleProgressbar_progressAnimDuration, 1000)
                     .toLong()
@@ -187,32 +190,87 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         attr?.recycle()
 
         initIndeterminateAnimator()
+        if (contentDescription.isNullOrBlank()) {
+            contentDescription = resources.getString(R.string.circle_progressbar_description)
+        }
+        updateAccessibilityState()
         if (currState == State.Type.STATE_INDETERMINATE) setIndeterminate()
     }
+
+    // Resume the infinite animator only while attached and still indeterminate; cancel it on
+    // detach so it does not run (and invalidate) forever off-screen (remediation CPB-1).
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (currState == State.Type.STATE_INDETERMINATE &&
+            ::internalIndeterminateAnimator.isInitialized &&
+            !internalIndeterminateAnimator.isStarted
+        ) {
+            internalIndeterminateAnimator.start()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        // Use cancel() rather than end() to avoid one extra update/invalidate on the way out.
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
+        super.onDetachedFromWindow()
+    }
+
+    // Honor wrap_content instead of collapsing to 0x0 (remediation CPB-2).
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val desired = computeDesiredSize()
+        setMeasuredDimension(
+            resolveDesiredSize(desired, widthMeasureSpec),
+            resolveDesiredSize(desired, heightMeasureSpec)
+        )
+    }
+
+    private fun computeDesiredSize(): Int {
+        val icon = maxOf(
+            idleItem.width, finishItem.width, errorItem.width, cancelItem.width,
+            idleItem.height, finishItem.height, errorItem.height, cancelItem.height
+        )
+        val ring = ((internalProgressMargin + internalProgressPaint.strokeWidth) * 2).toInt()
+        val padding = maxOf(paddingLeft + paddingRight, paddingTop + paddingBottom)
+        return icon + ring + padding
+    }
+
+    private fun resolveDesiredSize(desired: Int, spec: Int): Int =
+        when (MeasureSpec.getMode(spec)) {
+            MeasureSpec.EXACTLY -> MeasureSpec.getSize(spec)
+            MeasureSpec.AT_MOST -> min(desired, MeasureSpec.getSize(spec))
+            else -> desired
+        }
 
     var maxProgress: Int
         get() = internalMaxProgress
         set(maxProgress) {
-            internalMaxProgress = maxProgress
+            internalMaxProgress = maxProgress.coerceAtLeast(1)
+            internalCurrProgress = internalCurrProgress.coerceIn(0, internalMaxProgress)
+            updateAccessibilityState()
             invalidate()
         }
     var currentProgress: Int
         get() = internalCurrProgress
         set(progress) {
             if (currState != State.Type.STATE_DETERMINATE) return
-            internalCurrProgress = min(progress, internalMaxProgress)
+            internalCurrProgress = progress.coerceIn(0, internalMaxProgress)
+            updateAccessibilityState()
             invalidate()
         }
     var progressAnimDuration: Long
         get() = internalProgressAnimDuration
         set(progressAnimDuration) {
-            internalProgressAnimDuration = progressAnimDuration
+            internalProgressAnimDuration = progressAnimDuration.coerceAtLeast(0)
+            if (::internalIndeterminateAnimator.isInitialized) {
+                internalIndeterminateAnimator.duration = internalProgressAnimDuration
+            }
             invalidate()
         }
     var isCancelable: Boolean
         get() = internalCancelable
         set(cancelable) {
             internalCancelable = cancelable
+            updateAccessibilityState()
             invalidate()
         }
     var defaultBackgroundColor: Int
@@ -265,16 +323,19 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
 
     fun setIdle() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         currState = State.Type.STATE_IDLE
+        updateAccessibilityState()
         callStateChangedListener(currState)
         invalidate()
     }
 
     fun setIndeterminate() {
-        internalIndeterminateAnimator.end()
+        internalIndeterminateAnimator.cancel()
         internalCrrIndeterminateBarPos = BASE_START_ANGLE
         currState = State.Type.STATE_INDETERMINATE
-        internalIndeterminateAnimator.start()
+        updateAccessibilityState()
+        if (isAttachedToWindow) internalIndeterminateAnimator.start()
         callStateChangedListener(currState)
         invalidate()
     }
@@ -283,20 +344,25 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         internalIndeterminateAnimator.end()
         internalCurrProgress = 0
         currState = State.Type.STATE_DETERMINATE
+        updateAccessibilityState()
         callStateChangedListener(currState)
         invalidate()
     }
 
     fun setFinish() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         internalCurrProgress = 0
         currState = State.Type.STATE_FINISHED
+        updateAccessibilityState()
         callStateChangedListener(currState)
         invalidate()
     }
 
     fun setError() {
+        if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel()
         internalCurrProgress = 0
         currState = State.Type.STATE_ERROR
+        updateAccessibilityState()
         callStateChangedListener(currState)
         invalidate()
     }
@@ -335,7 +401,9 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         internalOnStateChangedListeners.remove(listener)
 
     private fun callStateChangedListener(newState: State.Type) {
-        for (listener in internalOnStateChangedListeners) listener.onStateChanged(newState)
+        for (listener in internalOnStateChangedListeners.toList()) {
+            listener.onStateChanged(newState)
+        }
     }
 
     // https://stackoverflow.com/a/50343572
@@ -369,19 +437,19 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
         when (currState) {
             State.Type.STATE_IDLE -> {
-                for (listener in internalClickListeners) listener.onIdleButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onIdleButtonClick(v)
             }
 
             State.Type.STATE_INDETERMINATE, State.Type.STATE_DETERMINATE -> {
-                for (listener in internalClickListeners) listener.onCancelButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onCancelButtonClick(v)
             }
 
             State.Type.STATE_FINISHED -> {
-                for (listener in internalClickListeners) listener.onFinishButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onFinishButtonClick(v)
             }
 
             State.Type.STATE_ERROR -> {
-                for (listener in internalClickListeners) listener.onErrorButtonClick(v)
+                for (listener in internalClickListeners.toList()) listener.onErrorButtonClick(v)
             }
 
             else -> Unit
@@ -415,7 +483,6 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
                 internalDefaultBgColor
             }
         )
-        state.getIcon().setTint(state.iconTint)
         drawDrawableInCenter(state.getIcon(), canvas, state.width, state.height)
     }
 
@@ -437,7 +504,6 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             setBgDrawable(canvas, internalDefaultBgDrawable, internalDefaultBgColor)
         }
         if (!showProgressText && internalCancelable) {
-            cancelItem.getIcon().setTint(cancelItem.iconTint)
             drawDrawableInCenter(cancelItem.getIcon(), canvas, cancelItem.width, cancelItem.height)
         }
         setProgressRectBounds()
@@ -503,9 +569,11 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
 
     override fun onRestoreInstanceState(state: Parcelable) {
         if (state is Bundle) {
-            internalMaxProgress = state.getInt(INSTANCE_MAX_PROGRESS)
+            internalMaxProgress = state.getInt(INSTANCE_MAX_PROGRESS).coerceAtLeast(1)
             internalCurrProgress = state.getInt(INSTANCE_CURRENT_PROGRESS)
-            currState = state.getSerializableOrNull(INSTANCE_CURRENT_STATE)!!
+                .coerceIn(0, internalMaxProgress)
+            currState = state.getSerializableOrNull(INSTANCE_CURRENT_STATE)
+                ?: State.Type.STATE_IDLE
             internalCancelable = state.getBoolean(INSTANCE_CANCELABLE)
             internalEnableClickListener = state.getBoolean(INSTANCE_ENABLE_CLICK)
             //            idleItem = state.getSerializable(INSTANCE_IDLE_ITEM) as IdleState
@@ -522,7 +590,10 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
             val instanceState: Parcelable? = state.getParcelableOrNull(INSTANCE_STATE)
 
             super.onRestoreInstanceState(instanceState)
-            if (currState == State.Type.STATE_INDETERMINATE) internalIndeterminateAnimator.start()
+            updateAccessibilityState()
+            if (currState == State.Type.STATE_INDETERMINATE && isAttachedToWindow) {
+                internalIndeterminateAnimator.start()
+            }
             return
         }
         super.onRestoreInstanceState(state)
@@ -553,8 +624,31 @@ class CircleProgressbar @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    private fun getDegrees(): Float =
-        internalCurrProgress.toFloat() / internalMaxProgress.toFloat() * 360
+    private fun getDegrees(): Float {
+        val safeMax = internalMaxProgress.coerceAtLeast(1)
+        return internalCurrProgress.toFloat() / safeMax.toFloat() * 360
+    }
+
+    private fun updateAccessibilityState() {
+        isClickable = internalEnableClickListener
+        isFocusable = internalEnableClickListener
+        val description = when (currState) {
+            State.Type.STATE_IDLE -> resources.getString(R.string.circle_progressbar_state_idle)
+            State.Type.STATE_INDETERMINATE ->
+                resources.getString(R.string.circle_progressbar_state_indeterminate)
+            State.Type.STATE_DETERMINATE -> resources.getString(
+                R.string.circle_progressbar_state_determinate,
+                internalCurrProgress,
+                internalMaxProgress
+            )
+            State.Type.STATE_FINISHED ->
+                resources.getString(R.string.circle_progressbar_state_finished)
+            State.Type.STATE_ERROR -> resources.getString(R.string.circle_progressbar_state_error)
+            State.Type.STATE_CANCEL ->
+                resources.getString(R.string.circle_progressbar_state_cancelled)
+        }
+        ViewCompat.setStateDescription(this, description)
+    }
 
     private fun drawDrawableInCenter(drawable: Drawable, canvas: Canvas, width: Int, height: Int) {
         val left = getWidth() / 2 - width / 2

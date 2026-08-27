@@ -8,8 +8,6 @@ import android.hardware.camera2.CameraCharacteristics
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Size
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -26,7 +24,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import com.hjq.permissions.XXPermissions
 import com.leovp.android.exts.DEGREE_TO_SURFACE_ROTATION
 import com.leovp.android.exts.SURFACE_ROTATION_TO_DEGREE
@@ -53,17 +51,19 @@ import com.leovp.camerax.listeners.CameraXTouchListener
 import com.leovp.camerax.listeners.CaptureImageListener
 import com.leovp.camerax.utils.OrientationLiveData
 import com.leovp.camerax.utils.cameraSensorOrientation
-import com.leovp.camerax.utils.getCameraSupportedSize
 import com.leovp.camerax.utils.toggleButton
+import com.leovp.exif.JpegOutputStrategy
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
 import java.util.Locale
 import kotlin.properties.Delegates
-import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private const val ENABLE_LUMINOSITY_ANALYSIS = false
 
 /**
  * Main fragment for this app. Implements all camera operations including:
@@ -91,7 +91,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Host's navigation controller */
     private val navController: NavController by lazy {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container_camerax)
+        requireActivity().findNavController(R.id.fragment_container_camerax)
     }
 
     private var imageCapture: ImageCapture? = null
@@ -103,7 +103,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     private val cameraUiContainerBottomBinding get() = _cameraUiContainerBottomBinding!!
 
     var outputCapturedImageStrategy: CapturedImageStrategy = CapturedImageStrategy.FILE
+    var jpegOutputStrategy: JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED
     var captureImageListener: CaptureImageListener? = null
+    var enableCameraDiagnostics: Boolean = false
 
     // Selector showing is grid enabled or not
     private var hasGrid = false
@@ -163,7 +165,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         functionKey.observe(viewLifecycleOwner, functionKeyObserver)
         return super.onCreateView(inflater, container, savedInstanceState)
@@ -182,7 +184,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             displayId = incPreviewGridBinding.viewFinder.display.displayId
             // Build UI controls
             updateCameraUi()
-            lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 // Set up the camera and its use cases
                 setUpCamera()
                 //                deviceOrientationListener = object : OrientationListener {
@@ -258,6 +260,10 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
     /** Declare and bind preview, capture and analysis use cases */
     private fun bindCameraUseCases() {
+        if (!isAdded || view == null) {
+            LogContext.log.w(logTag, "bindCameraUseCases() skipped: view is not available")
+            return
+        }
         showAvailableRatio(
             incRatioBinding,
             selectedRatio,
@@ -266,10 +272,9 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         )
         // Show grid after preview view adjusted.
         incPreviewGridBinding.groupGridLines.visibility = if (hasGrid) View.VISIBLE else View.GONE
-        val outputCameraParamCost = measureTimeMillis {
+        if (enableCameraDiagnostics) {
             outputCameraParameters(hdrCameraSelector ?: lensFacing)
         }
-        LogContext.log.i(logTag, "Output camera parameters cost ${outputCameraParamCost}ms")
 
         // Get screen metrics used to set up camera for full screen resolution
         val metrics = requireContext().screenRealResolution
@@ -277,24 +282,27 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         val cameraId = if (CameraSelector.DEFAULT_BACK_CAMERA == lensFacing) "0" else "1"
         val characteristics: CameraCharacteristics =
-            cameraManager.getCameraCharacteristics(cameraId)
+            getCameraCharacteristicsCached(cameraId)
         val cameraOrientation = characteristics.cameraSensorOrientation()
         val deviceRotation = incPreviewGridBinding.viewFinder.display.rotation
 
         val supportedSize: SmartSize? = when (selectedRatio) {
-            CameraRatio.R16v9 -> characteristics.getCameraSupportedSize().firstOrNull {
+            CameraRatio.R16v9 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "16:9"
             }
-            CameraRatio.R1v1 -> characteristics.getCameraSupportedSize().firstOrNull {
+
+            CameraRatio.R1v1 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "1:1"
             }
-            CameraRatio.R4v3 -> characteristics.getCameraSupportedSize().firstOrNull {
+
+            CameraRatio.R4v3 -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 getRatio(it) ==
                     "4:3"
             }
-            CameraRatio.RFull -> characteristics.getCameraSupportedSize().firstOrNull {
+
+            CameraRatio.RFull -> getCameraSupportedSizeCached(cameraId).firstOrNull {
                 (it.long * 1.0 / it.short).round(1) ==
                     (metrics.height * 1.0 / metrics.width).round(1)
             }
@@ -361,28 +369,25 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                 // during the lifecycle of this use case
                 .setTargetRotation(deviceRotation).build()
 
-        // ImageAnalysis
-        imageAnalyzer = ImageAnalysis.Builder()
-            // We request aspect ratio but no resolution
-            //            .setTargetAspectRatio(screenAspectRatio)
-            .setResolutionSelector(resolutionSelector)
-            // Set initial target rotation, we will have to call this again if rotation changes
-            // during the lifecycle of this use case
-            .setTargetRotation(deviceRotation)
-            // In our analysis, we care about the latest image
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-            // The analyzer can then be assigned to the instance
-            .also {
-                it.setAnalyzer(
-                    cameraExecutor,
-                    LuminosityAnalyzer { luma ->
-                        // Values returned from our analyzer are passed to the attached listener
-                        // We log image analysis results here - you should do something useful
-                        // instead!
-                        LogContext.log.v(logTag, "Average luminosity: $luma")
-                    }
-                )
-            }
+        // Do not bind ImageAnalysis while disabled: binding still creates and negotiates an
+        // analysis pipeline and output surface, even though data delivery requires an analyzer.
+        imageAnalyzer = if (ENABLE_LUMINOSITY_ANALYSIS) {
+            ImageAnalysis.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .setTargetRotation(deviceRotation)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+                .also {
+                    it.setAnalyzer(
+                        cameraExecutor,
+                        LuminosityAnalyzer { luma ->
+                            LogContext.log.v(logTag, "Average luminosity: $luma")
+                        }
+                    )
+                }
+        } else {
+            null
+        }
 
         checkForHdrExtensionAvailability(enableHdr) { isHdrAvailable ->
             if (isHdrAvailable) {
@@ -405,12 +410,15 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
             // A variable number of use-cases can be passed here -
             // camera provides access to CameraControl & CameraInfo
+            val useCases = mutableListOf(
+                checkNotNull(preview),
+                checkNotNull(imageCapture)
+            )
+            imageAnalyzer?.let { useCases.add(it) }
             camera = camProvider.bindToLifecycle(
-                this,
+                viewLifecycleOwner,
                 hdrCameraSelector ?: lensFacing,
-                preview,
-                imageCapture,
-                imageAnalyzer
+                *useCases.toTypedArray()
             ).apply {
                 // Init camera exposure control
                 cameraInfo.exposureState.run {
@@ -532,18 +540,18 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
         )
 
         // Remove previous UI if any
-        _cameraUiContainerTopBinding?.root?.let { binding.root.removeView(it) }
-        _cameraUiContainerBottomBinding?.root?.let { binding.root.removeView(it) }
+        _cameraUiContainerTopBinding?.root?.let { viewBinding.root.removeView(it) }
+        _cameraUiContainerBottomBinding?.root?.let { viewBinding.root.removeView(it) }
 
         _cameraUiContainerTopBinding = CameraUiContainerTopBinding.inflate(
             requireContext().layoutInflater,
-            binding.root,
+            viewBinding.root,
             true
         )
         _cameraUiContainerBottomBinding =
             CameraUiContainerBottomBinding.inflate(
                 requireContext().layoutInflater,
-                binding.root,
+                viewBinding.root,
                 true
             )
 
@@ -577,7 +585,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         if (CapturedImageStrategy.FILE == outputCapturedImageStrategy) {
             // In the background, load latest photo taken (if any) for gallery thumbnail
-            lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 outputPictureDirectory.listFiles { file ->
                     EXTENSION_WHITELIST.contains(file.extension.uppercase(Locale.ROOT))
                 }?.maxOrNull()?.let {
@@ -606,7 +614,7 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
 
         // Listener for button used to capture photo
         cameraUiContainerBottomBinding.cameraCaptureButton.setOnClickListener {
-            lifecycleScope.launch(Dispatchers.Main) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 LogContext.log.w(logTag, "Click capture photo button.")
                 enableUI(false)
                 cameraUiContainerBottomBinding.cameraCaptureButton.isEnabled = true
@@ -619,9 +627,17 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             incPreviewGridBinding.viewFinder,
                             imageCapture,
                             outputPictureDirectory,
-                            startCaptureTimestamp
+                            startCaptureTimestamp,
+                            jpegOutputStrategy
                         ) { savedImage, exc ->
-                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
+                            // Capture callback may fire after leaving the page: keep the Fragment
+                            // scope but guard the View mutation against a destroyed View.
+                            lifecycleScope.launch {
+                                withContext(Dispatchers.Main) {
+                                    if (!isAdded || view == null) return@withContext
+                                    enableUI(true)
+                                }
+                            }
                             if (exc != null) {
                                 captureImageListener?.onSavedImageUri(null, exc)
                                 return@captureForOutputFile
@@ -679,7 +695,14 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
                             startCaptureTimestamp
                         ) { savedImage, exc ->
                             // LogContext.log.w(logTag, "Saved image=savedImage")
-                            lifecycleScope.launch(Dispatchers.Main) { enableUI(true) }
+                            // Capture callback may fire after leaving the page: keep the Fragment
+                            // scope but guard the View mutation against a destroyed View.
+                            lifecycleScope.launch {
+                                withContext(Dispatchers.Main) {
+                                    if (!isAdded || view == null) return@withContext
+                                    enableUI(true)
+                                }
+                            }
                             captureImageListener?.onSavedImageBytes(savedImage, exc)
                         }
                     }
@@ -696,14 +719,16 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             switchBtn.setOnClickListener {
                 //                it.isEnabled = false
                 enableUI(false)
+                val currentViewLifecycleOwner = viewLifecycleOwner
                 switchBtn.animate()
                     .rotationBy(-180f)
                     .setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
-                            Handler(Looper.getMainLooper()).postDelayed({
+                            currentViewLifecycleOwner.lifecycleScope.launch {
+                                delay(500.milliseconds)
                                 // it.isEnabled = true
                                 enableUI(true)
-                            }, 500)
+                            }
                         }
                     })
                 switchCameraSelector()
@@ -747,13 +772,13 @@ class CameraFragment : BaseCameraXFragment<FragmentCameraBinding>() {
             CameraTimer.S3 -> for (i in CameraTimer.S3.delay downTo 1) {
                 soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
-                delay(1000)
+                delay(1000.milliseconds)
             }
 
             CameraTimer.S10 -> for (i in CameraTimer.S10.delay downTo 1) {
                 soundManager.playTimerSound(i)
                 cameraUiContainerTopBinding.tvCountDown.text = i.toString()
-                delay(1000)
+                delay(1000.milliseconds)
             }
 
             else -> Unit

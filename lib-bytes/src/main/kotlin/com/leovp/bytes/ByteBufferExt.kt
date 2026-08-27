@@ -44,6 +44,7 @@ fun ByteBuffer.copy(): ByteBuffer {
     flip() // flip() will set limit to position.
     val len = remaining()
     val dst = ByteBuffer.allocate(len)
+    dst.order(order()) // Preserve the source byte order (remediation LB-1).
     // Copy one by one is much faster than dst.put(this)
     for (i in 0 until len) dst.put(i, this.get(i))
     dst.limit(len)
@@ -78,6 +79,7 @@ fun ByteBuffer.copyAll(): ByteBuffer {
     rewind() // rewind() will NOT change limit.
     val len = remaining()
     val dst = ByteBuffer.allocate(len)
+    dst.order(order()) // Preserve the source byte order (remediation LB-1).
     // Copy one by one is much faster than dst.put(this)
     for (i in 0 until len) dst.put(i, this.get(i))
     dst.limit(len)

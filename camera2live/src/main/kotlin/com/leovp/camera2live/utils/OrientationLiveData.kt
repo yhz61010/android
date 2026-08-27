@@ -26,19 +26,17 @@ import androidx.lifecycle.LiveData
  * Calculates closest 90-degree orientation to compensate for the device
  * rotation relative to sensor orientation, i.e., allows user to see camera
  * frames with the expected orientation.
+ *
+ * The current sensor orientation is queried for every physical-orientation event. Fold-state-only
+ * changes from API 32+ logical cameras are not observed independently; callers that support those
+ * devices must recreate or otherwise refresh this source when the device state changes.
  */
 class OrientationLiveData(context: Context, characteristics: CameraCharacteristics) :
     LiveData<Int>() {
 
     private val listener = object : OrientationEventListener(context.applicationContext) {
         override fun onOrientationChanged(orientation: Int) {
-            val rotation = when {
-                orientation <= 45 -> Surface.ROTATION_0
-                orientation <= 135 -> Surface.ROTATION_90
-                orientation <= 225 -> Surface.ROTATION_180
-                orientation <= 315 -> Surface.ROTATION_270
-                else -> return
-            }
+            val rotation = orientationToSurfaceRotation(orientation) ?: return
             val relative = computeRelativeRotation(characteristics, rotation)
             if (relative != value) postValue(relative)
         }
@@ -56,9 +54,17 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
 
     companion object {
 
+        internal fun orientationToSurfaceRotation(orientation: Int): Int? = when {
+            orientation == OrientationEventListener.ORIENTATION_UNKNOWN -> null
+            orientation <= 45 || orientation > 315 -> Surface.ROTATION_0
+            orientation <= 135 -> Surface.ROTATION_90
+            orientation <= 225 -> Surface.ROTATION_180
+            else -> Surface.ROTATION_270
+        }
+
         /**
-         * Computes rotation required to transform from the camera sensor orientation to the
-         * device's current orientation in degrees.
+         * Reads the active camera's sensor orientation and lens facing, then delegates to the pure
+         * [computeRelativeRotation] overload.
          *
          * @param characteristics the [CameraCharacteristics] to query for the sensor orientation.
          * @param surfaceRotation the current device orientation as a Surface constant
@@ -70,8 +76,35 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
             surfaceRotation: Int
         ): Int {
             val sensorOrientationDegrees =
-                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            val lensFacingFront =
+                characteristics.get(CameraCharacteristics.LENS_FACING) ==
+                    CameraCharacteristics.LENS_FACING_FRONT
+            return computeRelativeRotation(
+                sensorOrientationDegrees,
+                lensFacingFront,
+                surfaceRotation
+            )
+        }
 
+        /**
+         * Pure rotation formula, extracted for unit testing and decoupled from
+         * [CameraCharacteristics]. Computes the rotation in degrees (0/90/180/270) required to
+         * transform from the camera sensor orientation to the device's current orientation so the
+         * frame is upright.
+         *
+         * @param sensorOrientationDegrees `SENSOR_ORIENTATION` of the active camera (0/90/180/270).
+         * @param lensFacingFront true for a front-facing camera (reverses the device rotation
+         * sign).
+         * @param surfaceRotation the current device orientation as a `Surface.ROTATION_*` constant.
+         * @return the relative rotation from the camera sensor to the current device orientation.
+         */
+        @JvmStatic
+        internal fun computeRelativeRotation(
+            sensorOrientationDegrees: Int,
+            lensFacingFront: Boolean,
+            surfaceRotation: Int,
+        ): Int {
             val deviceOrientationDegrees = when (surfaceRotation) {
                 Surface.ROTATION_0 -> 0
                 Surface.ROTATION_90 -> 90
@@ -80,18 +113,10 @@ class OrientationLiveData(context: Context, characteristics: CameraCharacteristi
                 else -> 0
             }
 
-            // Reverse device orientation for front-facing cameras
-            val sign =
-                if (characteristics.get(CameraCharacteristics.LENS_FACING) ==
-                    CameraCharacteristics.LENS_FACING_FRONT
-                ) {
-                    1
-                } else {
-                    -1
-                }
+            // Reverse device orientation for front-facing cameras.
+            val sign = if (lensFacingFront) 1 else -1
 
-            // Calculate desired JPEG orientation relative to camera orientation to make
-            // the image upright relative to the device orientation
+            // Rotation that makes the frame upright relative to the device orientation.
             return (sensorOrientationDegrees - (deviceOrientationDegrees * sign) + 360) % 360
         }
     }

@@ -41,6 +41,9 @@ android {
 
 dependencies {
     api(libs.androidx.annotation)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

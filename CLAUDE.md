@@ -101,6 +101,7 @@ Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_
 
 ## 语言约定
 - Git commit message 和代码注释统一使用**英文**。
+- 在 `00-documents/` 下生成的所有文档只需要中文，无需创建或维护英文版。
 
 ## 日志约定
 
@@ -110,7 +111,7 @@ Release 构建使用 `gradle.properties`（本地）或环境变量（`KEYSTORE_
 
 ## 外部文档路径
 
-本项目的 AI 生成文档统一管理在项目 `00-documents/` 目录下：
+本项目的 AI 生成文档统一管理在项目 `00-documents/` 目录下。该目录下的所有文档只维护中文内容，无需英文版：
 
 | 路径 | 用途 |
 |------|------|

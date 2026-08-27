@@ -1,5 +1,7 @@
 package com.leovp.audio.aac
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioTrack
@@ -89,7 +91,7 @@ class AacFilePlayer(
     fun playAac(aacFile: File, endCallback: () -> Unit) {
         cb = endCallback
         audioTrackPlayer.play()
-        runCatching {
+        runCatchingPreservingCancellation {
             mediaExtractor = MediaExtractor().apply { setDataSource(aacFile.absolutePath) }
             for (i in 0 until mediaExtractor!!.trackCount) {
                 val format = mediaExtractor?.getTrackFormat(i)
@@ -102,14 +104,15 @@ class AacFilePlayer(
             }
             if (mediaFormat == null || mime.isNullOrBlank()) return
             start()
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AAC playback start failed", it) }
     }
 
     override fun stop() {
         if (audioTrackPlayer.state == AudioTrack.STATE_UNINITIALIZED) {
             return
         }
-        runCatching { mediaExtractor?.release() }.onFailure { it.printStackTrace() }
+        runCatchingPreservingCancellation { mediaExtractor?.release() }
+            .onFailure { LogContext.log.e(TAG, "MediaExtractor release failed", it) }
         audioTrackPlayer.release()
         super.release()
     }

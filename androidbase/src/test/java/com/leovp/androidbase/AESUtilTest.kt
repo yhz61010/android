@@ -121,7 +121,7 @@ class AESUtilTest {
         val encrypted = AESUtil.encrypt(data, secKey.toByteArray())
         val tampered = encrypted.copyOf().also { it[it.size - 1] = (it[it.size - 1] + 1).toByte() }
 
-        // Unlike decryptLegacy(), strict decryption must never silently fall back to the legacy path.
+        // Strict decryption must never silently fall back to the legacy path.
         val result = runCatching { AESUtil.decrypt(tampered, secKey.toByteArray()) }
         assertTrue(result.isFailure)
     }

@@ -434,7 +434,11 @@ object PBKDF2Util {
         val providerDerivation: () -> SecretKey = {
             val secretKeyFactory = SecretKeyFactory.getInstance(algorithm)
             val keySpec = PBEKeySpec(plainPassphrase, salt, iterations, outputKeyLengthInBits)
-            secretKeyFactory.generateSecret(keySpec)
+            try {
+                secretKeyFactory.generateSecret(keySpec)
+            } finally {
+                keySpec.clearPassword()
+            }
         }
         return if (algorithm == ALGORITHM_SHA256) {
             sha256KeyWithFallback(
@@ -464,15 +468,20 @@ object PBKDF2Util {
         providerDerivation: () -> SecretKey
     ): SecretKey = runCatching { providerDerivation() }.getOrElse {
         if (it !is NoSuchAlgorithmException) throw it
-        SecretKeySpec(
-            pbkdf2HmacSha256Fallback(
-                plainPassphrase,
-                salt,
-                iterations,
-                outputKeyLengthInBits
-            ),
-            ALGORITHM_SHA256
+        val keyBytes = pbkdf2HmacSha256Fallback(
+            plainPassphrase,
+            salt,
+            iterations,
+            outputKeyLengthInBits
         )
+        try {
+            SecretKeySpec(
+                keyBytes,
+                ALGORITHM_SHA256
+            )
+        } finally {
+            keyBytes.fill(0)
+        }
     }
 
     /**
@@ -491,29 +500,42 @@ object PBKDF2Util {
         }
 
         val passwordBytes = charsToUtf8Bytes(plainPassphrase)
-        val mac = Mac.getInstance(HMAC_SHA256)
-        mac.init(SecretKeySpec(passwordBytes, HMAC_SHA256))
-        passwordBytes.fill(0)
+        try {
+            val mac = Mac.getInstance(HMAC_SHA256)
+            mac.init(SecretKeySpec(passwordBytes, HMAC_SHA256))
 
-        val hLen = mac.macLength
-        val dkLen = outputKeyLengthInBits / 8
-        val blocks = (dkLen + hLen - 1) / hLen
-        val output = ByteArray(blocks * hLen)
-
-        for (blockIndex in 1..blocks) {
-            val block = blockIndex.toBytes()
-            mac.update(salt)
-            var u = mac.doFinal(block)
-            val t = u.copyOf()
-            repeat(iterations - 1) {
-                u = mac.doFinal(u)
-                for (i in t.indices) {
-                    t[i] = (t[i].toInt() xor u[i].toInt()).toByte()
+            val hLen = mac.macLength
+            val dkLen = outputKeyLengthInBits / 8
+            val blocks = (dkLen + hLen - 1) / hLen
+            val output = ByteArray(blocks * hLen)
+            try {
+                for (blockIndex in 1..blocks) {
+                    val block = blockIndex.toBytes()
+                    mac.update(salt)
+                    var u = mac.doFinal(block)
+                    val t = u.copyOf()
+                    try {
+                        repeat(iterations - 1) {
+                            val previousU = u
+                            u = mac.doFinal(previousU)
+                            previousU.fill(0)
+                            for (i in t.indices) {
+                                t[i] = (t[i].toInt() xor u[i].toInt()).toByte()
+                            }
+                        }
+                        System.arraycopy(t, 0, output, (blockIndex - 1) * hLen, hLen)
+                    } finally {
+                        t.fill(0)
+                        u.fill(0)
+                    }
                 }
+                return output.copyOf(dkLen)
+            } finally {
+                output.fill(0)
             }
-            System.arraycopy(t, 0, output, (blockIndex - 1) * hLen, hLen)
+        } finally {
+            passwordBytes.fill(0)
         }
-        return output.copyOf(dkLen)
     }
 
     /**

@@ -14,8 +14,10 @@ import kotlinx.coroutines.withContext
  * Author: Michael Leo
  * Date: 2022/4/25 10:03
  */
-class SoundManager private constructor(val ctx: Context) {
-    private lateinit var soundPool: SoundPool
+class SoundManager private constructor(context: Context) {
+    /** Application context retained under the historical public property for API compatibility. */
+    val ctx: Context = context.applicationContext
+    private var soundPool: SoundPool? = null
     private var soundIdCountdown1: Int = 0
     private var soundIdCountdown2: Int = 0
     private var soundIdCountdownFinal: Int = 0
@@ -26,8 +28,10 @@ class SoundManager private constructor(val ctx: Context) {
     private val audioManager by lazy { ctx.audioManager }
 
     suspend fun loadSounds() = withContext(Dispatchers.IO) {
+        // Release any previously created pool before rebuilding (supports reuse after release()).
+        soundPool?.release()
         soundPool = SoundPool.Builder()
-            .setMaxStreams(6)
+            .setMaxStreams(MAX_STREAMS)
             .setAudioAttributes(
                 AudioAttributes.Builder().setLegacyStreamType(AudioManager.STREAM_MUSIC).build()
             )
@@ -51,13 +55,7 @@ class SoundManager private constructor(val ctx: Context) {
             playSound(soundIdCountdownFinal, getSoundVolume())
         } else if (leftTime > 2) {
             playSound(
-                if (leftTime % 2 ==
-                    0
-                ) {
-                    soundIdCountdown1
-                } else {
-                    soundIdCountdown2
-                },
+                if (leftTime % 2 == 0) soundIdCountdown1 else soundIdCountdown2,
                 getSoundVolume()
             )
         }
@@ -68,19 +66,22 @@ class SoundManager private constructor(val ctx: Context) {
 
     fun release() {
         runCatching {
-            soundPool.autoPause()
-            soundPool.release()
+            soundPool?.autoPause()
+            soundPool?.release()
         }
+        soundPool = null
     }
 
-    private fun playSound(soundId: Int, volume: Float) =
-        soundPool.play(soundId, volume, volume, 1, 0, 1f)
+    // No-op until the pool is loaded, so play-before-load is safe (never crashes).
+    private fun playSound(soundId: Int, volume: Float) {
+        soundPool?.play(soundId, volume, volume, 1, 0, 1f)
+    }
 
     private fun getSoundVolume(): Float =
         audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
-            audioManager.getStreamMaxVolume(
-                AudioManager.STREAM_MUSIC
-            )
+            audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-    companion object : SingletonHolder<SoundManager, Context>(::SoundManager)
+    companion object : SingletonHolder<SoundManager, Context>(::SoundManager) {
+        private const val MAX_STREAMS = 6
+    }
 }

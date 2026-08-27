@@ -42,7 +42,7 @@ class Camera2WithoutPreviewActivity :
 
         XXPermissions.with(this)
             .permission(PermissionLists.getCameraPermission())
-            .request { grantedList, deniedList ->
+            .request { _, deniedList ->
                 val allGranted = deniedList.isEmpty()
                 if (allGranted) {
                     toast("Grant camera permission")
@@ -110,7 +110,10 @@ class Camera2WithoutPreviewActivity :
     }
 
     override fun onDestroy() {
-        if (::camera2Helper.isInitialized) camera2Helper.stopCameraThread()
+        // Must call release() (not just stopCameraThread()) so the helper's own cameraScope is
+        // canceled and the camera device is closed; otherwise an in-flight initializeCamera()
+        // (e.g. re-launched from onStop) can outlive the Activity and leak it (remediation R-2).
+        if (::camera2Helper.isInitialized) camera2Helper.release()
         super.onDestroy()
     }
 

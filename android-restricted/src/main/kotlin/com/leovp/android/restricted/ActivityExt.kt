@@ -6,11 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo
  * Date: 2026/7/16 14:22
  */
+
+private const val TAG = "ActivityExt"
 
 /** Launch an Activity */
 fun Context.startActivity(
@@ -19,8 +22,12 @@ fun Context.startActivity(
     flags: Int? = null,
     options: Bundle? = null,
 ) {
+    val targetClass = runCatching { Class.forName(clsStr) }.getOrElse {
+        LogContext.log.e(TAG, "Activity class not found: $clsStr", it)
+        return
+    }
     val intent = Intent(
-        this, Class.forName(clsStr)
+        this, targetClass
     ).apply {
         flags?.let { addFlags(it) }
     }
@@ -29,7 +36,8 @@ fun Context.startActivity(
             intent
         } else {
             extras(intent)
-        }, options
+        },
+        options
     )
 }
 
@@ -40,14 +48,19 @@ fun Fragment.startActivity(
     flags: Int? = null,
     options: Bundle? = null,
 ) {
+    val targetClass = runCatching { Class.forName(clsStr) }.getOrElse {
+        LogContext.log.e(TAG, "Activity class not found: $clsStr", it)
+        return
+    }
     val intent = Intent(
-        requireContext(), Class.forName(clsStr)
+        requireContext(), targetClass
     ).apply { flags?.let { addFlags(it) } }
     startActivity(
         if (extras == null) {
             intent
         } else {
             extras(intent)
-        }, options
+        },
+        options
     )
 }

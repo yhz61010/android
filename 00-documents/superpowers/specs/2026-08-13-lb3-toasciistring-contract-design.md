@@ -1,0 +1,99 @@
+# LB-3 设计 —— `ByteArray.toAsciiString()` 严格 ASCII 契约（2026-08-13）
+
+> 关联：`00-documents/2026-08-04-eight-module-code-review-zh.md`（LB-3 决策项，第 247 行）、
+> `00-documents/2026-08-11-remediation-progress-and-review-zh.md`（整改进度）。
+> 分支：`fix/eight-module-remediation`。
+
+## 1. 背景与问题
+
+`lib-bytes/src/main/kotlin/com/leovp/bytes/ByteArrayExt.kt:118` 定义（无 KDoc）：
+
+```kotlin
+fun ByteArray.toAsciiString(delimiter: CharSequence = ",") =
+    map { it.toInt().toChar() }.joinToString(delimiter)
+```
+
+`Byte.toInt()` 对负字节**符号扩展**，逐字节映射结果：
+
+| 输入字节 | `toInt()` | `.toChar()` | 是否符合预期 |
+|---------|-----------|-------------|------|
+| `0x00`–`0x7F`（0–127） | 0..127 | U+0000..U+007F | ✅ 正是 ASCII |
+| `0x80`–`0xFF`（负字节） | -128..-1 | **U+FF80..U+FFFF** | ❌ 既非 ASCII 也非 Latin-1，是符号扩展垃圾 |
+
+即：对 7-bit ASCII 数据正确；对任何 ≥`0x80` 的字节输出乱码。这是 LB-3 所指“逐字节映射契约未定”的根因。
+
+**调用点**：全仓库无任何内部调用点、无测试——纯公开库 API（`ByteArrayExt.kt` 是通用扩展函数集合，
+无内部调用属正常）。消费方仅为外部（JitPack）。
+
+## 2. 决策（已与维护者确认）
+
+1. **契约 = 严格 7-bit ASCII**：有效字节范围 `0..127`（`0x00..0x7F`，含控制字符与 DEL）。
+2. **非法字节（≥`0x80`）= fail-fast**：抛 `IllegalArgumentException`（选项 A1），不替换占位符、不静默失真。
+   契合项目 coding-style「fail fast, clear error message」；`lib-bytes` 为**无 `log` 依赖**的纯模块，
+   规范即“rethrow / 抛异常”，不引日志。
+3. **签名不变**：`delimiter: CharSequence = ","` 保持原样（改默认值属破坏性变更，不在本次范围）。
+4. 补 KDoc；补 JVM 单元测试。
+
+## 3. 变更方案
+
+仅改 `ByteArrayExt.kt` 一处函数，并补 KDoc：
+
+```kotlin
+/**
+ * Converts each byte to its 7-bit ASCII character and joins them with [delimiter].
+ *
+ * Strict ASCII only: every byte MUST be in 0..127 (0x00..0x7F, control chars and DEL included).
+ * A byte >= 0x80 is not a valid ASCII code point and fails fast with [IllegalArgumentException]
+ * instead of being silently mangled by sign extension. For arbitrary bytes use [toHexString].
+ *
+ * @param delimiter separator inserted between characters (default ",").
+ * @return the joined ASCII string ("" for an empty array).
+ * @throws IllegalArgumentException if any byte is outside 0..127.
+ */
+fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String = mapIndexed { index, byte ->
+    val code = byte.toInt() and 0xFF
+    require(code <= 0x7F) {
+        val value = "0x%02X".format(code)
+        "toAsciiString: byte at index $index is $value, " +
+            "outside ASCII range 0x00..0x7F"
+    }
+    code.toChar()
+}.joinToString(delimiter)
+```
+
+要点：
+- `byte.toInt() and 0xFF` 消除符号扩展，得 0..255 的无符号值；`require(code <= 0x7F)` 拒绝高字节。
+- 错误消息含**索引 + 十六进制值**，满足“clear error message”。
+- 对 `0..127` 输入，行为与旧版**逐字节完全一致**；仅对 ≥`0x80` 从“静默乱码”改为“抛异常”。
+- `0x7F` / `0xFF` 等十六进制字面量在本文件既有代码中已大量使用（如 `readInt`），detekt 容忍，无新告警。
+
+## 4. 测试（`lib-bytes/src/test/kotlin/com/leovp/bytes/BytesConversionUnitTest.kt` 追加，JUnit5 Jupiter）
+
+测试断言通过 `0.toChar().toString()` / `0x7F.toChar().toString()` 构造期望值，源码中不写字面
+不可见字符。
+
+| 用例 | 断言（期望值） |
+|------|------|
+| 默认分隔符 | `byteArrayOf(72, 105).toAsciiString()` == `"H,i"` |
+| 空分隔符拼接 | `byteArrayOf(72, 105).toAsciiString("")` == `"Hi"` |
+| 下边界 0x00 | `byteArrayOf(0).toAsciiString()` == `0.toChar().toString()`（单个 NUL，非空格 0x20） |
+| 上边界 0x7F | `byteArrayOf(0x7F).toAsciiString()` == `0x7F.toChar().toString()`（单个 DEL；单元素无分隔符） |
+| 空数组 | `byteArrayOf().toAsciiString()` == `""` |
+| 非法 0x80 | `assertThrows<IllegalArgumentException> { byteArrayOf(0x80.toByte()).toAsciiString() }` |
+| 非法 0xFF（-1） | `assertThrows<IllegalArgumentException> { byteArrayOf(-1).toAsciiString() }` |
+
+沿用文件既有风格：`org.junit.jupiter.api.Test` + `Assertions.assertEquals` + `org.junit.jupiter.api.assertThrows`。
+
+## 5. 影响面
+
+- **对外 API**：签名不变；行为对 ≥`0x80` 字节由“乱码”变为“抛异常”，属**行为变更**，记入 CHANGELOG「修复」段。
+- **内部回归**：全仓无内部调用点 → 无内部回归。
+- **纯逻辑**：可 JVM 单测覆盖，无需真机。
+- **detekt/ktlint**：`require` + 字符串模板 + `String.format` 均为既有惯用法；不新增 import；不引 `log` 依赖。
+
+## 6. 不做的事（YAGNI / 范围外）
+
+- **不改签名**（`delimiter` 默认值不动）。
+- **不加占位符/宽松模式**（已选 A1 fail-fast）。
+- **不新增反向 `String -> ByteArray` ASCII 解码**（无需求）。
+- **不改本文件其它扩展函数**。

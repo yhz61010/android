@@ -2,14 +2,18 @@ package com.leovp.camera2live
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.ImageFormat
 import android.graphics.drawable.AnimationDrawable
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
+import android.hardware.camera2.CaptureFailure
 import android.hardware.camera2.CaptureRequest
 import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.TotalCaptureResult
@@ -34,10 +38,8 @@ import androidx.annotation.Keep
 import androidx.annotation.RequiresPermission
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.createImageFile
 import com.leovp.android.exts.screenAvailableResolution
-import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.androidbase.utils.media.CodecUtil
 import com.leovp.androidbase.utils.media.VideoUtil
 import com.leovp.androidbase.utils.media.YuvUtil
@@ -45,31 +47,50 @@ import com.leovp.camera2live.base.DataProcessContext
 import com.leovp.camera2live.base.DataProcessFactory
 import com.leovp.camera2live.codec.CameraAvcEncoder
 import com.leovp.camera2live.listeners.CallbackListener
+import com.leovp.camera2live.utils.getRotatedFrameDimensions
 import com.leovp.camera2live.utils.getPreviewOutputSize
+import com.leovp.camera2live.utils.resolveRecordingRotation
 import com.leovp.camera2live.view.CameraSurfaceView
 import com.leovp.exif.computeExifOrientation
+import com.leovp.exif.decodeExifOrientation
+import com.leovp.exif.JpegOutputStrategy
+import com.leovp.exif.setExifOrientation
 import com.leovp.log.LogContext
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Author: Michael Leo
  * Date: 20-6-24 下午5:05
  */
-@Suppress("unused")
+@Suppress("unused", "TooManyFunctions")
 class Camera2ComponentHelper(
     private val context: FragmentActivity,
     private var lensFacing: Int,
@@ -78,6 +99,9 @@ class Camera2ComponentHelper(
     var enableTakePhotoFeature = true
     var enableRecordFeature = true
     var enableGallery = true
+
+    /** Keeps the existing physically normalized JPEG behavior unless explicitly overridden. */
+    var jpegOutputStrategy: JpegOutputStrategy = JpegOutputStrategy.PIXEL_NORMALIZED
 
     var previewWidth: Int = 0
         private set
@@ -89,6 +113,25 @@ class Camera2ComponentHelper(
 
     private lateinit var cameraId: String
     private var lensSwitchListener: LensSwitchListener? = null
+
+    /** Reports asynchronous camera errors (e.g. switch close timeout) to the owner. */
+    var cameraErrorListener: CameraErrorListener? = null
+
+    /**
+     * Serializes [switchCamera] so the old device's [CameraDevice.StateCallback.onClosed] is
+     * awaited before the new device is opened (remediation CAM2-3).
+     */
+    private val switchMutex = Mutex()
+
+    /** The currently opened camera together with a close signal bound to that exact device. */
+    private val openedCamera = AtomicReference<OpenedCamera?>()
+
+    /** Guards the latest requested lens so no-argument toggles preserve the caller's intent. */
+    private val requestedLensLock = Any()
+    private var requestedLensFacing = lensFacing
+
+    /** Owns camera work and is cancelled when this helper is released with its View. */
+    private val cameraScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val singleExecutor = Executors.newSingleThreadExecutor()
 
@@ -184,6 +227,7 @@ class Camera2ComponentHelper(
         frameRate: Int,
         iFrameInterval: Int,
         bitrateMode: Int,
+        recordingRotationDegrees: Int,
     ) {
         cameraEncoder =
             CameraAvcEncoder(width, height, bitrate, frameRate, iFrameInterval, bitrateMode)
@@ -198,10 +242,16 @@ class Camera2ComponentHelper(
             CodecUtil.hasCodecByName(MediaFormat.MIMETYPE_VIDEO_AVC, "OMX.oppo.h264.encoder")
         ) {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420P")
-            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420P)
+            DataProcessFactory.getConcreteObject(
+                DataProcessFactory.ENCODER_TYPE_YUV420P,
+                recordingRotationDegrees
+            )
         } else {
             LogContext.log.w(TAG, "AVC Encode strategy: YUV420SP")
-            DataProcessFactory.getConcreteObject(DataProcessFactory.ENCODER_TYPE_YUV420SP)
+            DataProcessFactory.getConcreteObject(
+                DataProcessFactory.ENCODER_TYPE_YUV420SP,
+                recordingRotationDegrees
+            )
         }
         // dataProcessContext = if (CodecUtil.getSupportedColorFormat(cameraEncoder.h264Encoder,
         // MediaFormat.MIMETYPE_VIDEO_AVC)
@@ -275,7 +325,7 @@ class Camera2ComponentHelper(
         // Generally, if the device is in portrait(Surface.ROTATION_0),
         // the camera SENSOR_ORIENTATION(90) is just in landscape and vice versa.
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.rotation ?: -1
+            context.display?.rotation ?: Surface.ROTATION_0
         } else {
             @Suppress("DEPRECATION")
             context.windowManager.defaultDisplay.rotation
@@ -453,7 +503,32 @@ class Camera2ComponentHelper(
     private lateinit var session: CameraCaptureSession
 
     fun extraInitializeCameraForRecording(bitrate: Int = -1) {
+        extraInitializeCameraForRecording(bitrate, null)
+    }
+
+    /**
+     * Initializes recording with a rotation locked for the whole AVC stream. A null rotation falls
+     * back to the historical portrait rotation for the active lens.
+     */
+    fun extraInitializeCameraForRecording(bitrate: Int, recordingRotationDegrees: Int?) {
         initializeRecordingParameters(builder.desiredVideoWidth, builder.desiredVideoHeight)
+        val resolvedRecordingRotationDegrees = resolveRecordingRotation(
+            recordingRotationDegrees,
+            lensFacing == CameraMetadata.LENS_FACING_FRONT
+        )
+        val encoderDimensions = getRotatedFrameDimensions(
+            selectedSizeFromCamera.width,
+            selectedSizeFromCamera.height,
+            resolvedRecordingRotationDegrees
+        )
+        previewSize = Size(encoderDimensions.width, encoderDimensions.height)
+        LogContext.log.i(
+            TAG,
+            "Recording rotation=$resolvedRecordingRotationDegrees " +
+                "input=${selectedSizeFromCamera.width}x" +
+                "${selectedSizeFromCamera.height} " +
+                "output=${previewSize!!.width}x${previewSize!!.height}"
+        )
         val autoBitrate = bitrate <= 0
 
         /** [previewSize] is initialized in [initializeRecordingParameters] */
@@ -469,7 +544,8 @@ class Camera2ComponentHelper(
             usedBitrate,
             builder.videoFps,
             builder.iFrameInterval,
-            builder.bitrateMode
+            builder.bitrateMode,
+            resolvedRecordingRotationDegrees
         )
     }
 
@@ -552,19 +628,38 @@ class Camera2ComponentHelper(
      * - Sets up the still image capture listeners
      */
     @RequiresPermission(android.Manifest.permission.CAMERA)
-    fun initializeCamera(previewWidth: Int, previewHeight: Int) =
-        context.lifecycleScope.launch(Dispatchers.Main) {
-            LogContext.log.i(
-                TAG,
-                "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
-            )
-            this@Camera2ComponentHelper.previewWidth = previewWidth
-            this@Camera2ComponentHelper.previewHeight = previewHeight
-            initializeParameters()
+    fun initializeCamera(previewWidth: Int, previewHeight: Int) = cameraScope.launch {
+        try {
+            initializeCameraAndAwait(previewWidth, previewHeight)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            reportCameraError("initializeCamera failed", e)
+        }
+    }
 
-            // Open the selected camera
-            camera = openCamera(cameraManager, cameraId, cameraHandler)
+    /**
+     * Opens and fully configures the camera, returning only once the device, image reader and
+     * preview repeating request are all ready. Reuses the existing initialize logic so callers
+     * (e.g. [switchCamera]) can await a completed setup (remediation CAM2-3).
+     */
+    @RequiresPermission(android.Manifest.permission.CAMERA)
+    private suspend fun initializeCameraAndAwait(previewWidth: Int, previewHeight: Int) {
+        LogContext.log.i(
+            TAG,
+            "=====> initializeCamera($cameraId)(${previewWidth}x$previewHeight) <====="
+        )
+        this@Camera2ComponentHelper.previewWidth = previewWidth
+        this@Camera2ComponentHelper.previewHeight = previewHeight
+        initializeParameters()
 
+        // Open the selected camera
+        camera = openCamera(cameraManager, cameraId, cameraHandler)
+        val openedForSetup = openedCamera.get()?.takeIf { it.device === camera }
+
+        // If post-open setup fails, close the exact device and await onClosed before reporting the
+        // error, so an immediate retry cannot race a device that is still physically closing.
+        try {
             if (enableTakePhotoFeature) {
                 val st = SystemClock.elapsedRealtime()
                 setImageReaderForPhoto(previewWidth, previewHeight)
@@ -578,7 +673,32 @@ class Camera2ComponentHelper(
                     "=====> Phase2 cost: ${SystemClock.elapsedRealtime() - st}"
                 )
             }
+        } catch (e: CancellationException) {
+            closeCameraAfterFailedInitialization(openedForSetup)
+            throw e
+        } catch (e: Exception) {
+            closeCameraAfterFailedInitialization(openedForSetup)
+            throw e
         }
+    }
+
+    private suspend fun closeCameraAfterFailedInitialization(opened: OpenedCamera?) {
+        closeCamera()
+        if (opened == null) return
+        withContext(NonCancellable) {
+            val closedInTime = withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
+                opened.closed.await()
+                true
+            } ?: false
+            if (!closedInTime) {
+                LogContext.log.e(
+                    TAG,
+                    "Camera close timed out after initialization failed",
+                    TimeoutException("Camera close timed out after initialization failed")
+                )
+            }
+        }
+    }
 
     /** Opens the camera and returns the opened device as the result of the suspending coroutine. */
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -587,42 +707,88 @@ class Camera2ComponentHelper(
         cameraId: String,
         handler: Handler? = null
     ): CameraDevice = suspendCancellableCoroutine { cont ->
-        manager.openCamera(
-            cameraId,
-            object : CameraDevice.StateCallback() {
-                override fun onOpened(device: CameraDevice) = cont.resume(device)
-
-                override fun onDisconnected(device: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
-                    // TODO In some cases, call this method will cause crash
-                    //                context.requireActivity().finish()
-                }
-
-                override fun onClosed(camera: CameraDevice) {
-                    LogContext.log.w(TAG, "Camera $cameraId has been closed")
-                    super.onClosed(camera)
-                }
-
-                override fun onError(device: CameraDevice, error: Int) {
-                    val msg = when (error) {
-                        ERROR_CAMERA_DEVICE -> "Fatal (device)"
-                        ERROR_CAMERA_DISABLED -> "Device policy"
-                        ERROR_CAMERA_IN_USE -> "Camera in use"
-                        ERROR_CAMERA_SERVICE -> "Fatal (service)"
-                        ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
-                        else -> "Unknown"
-                    }
+        val closeSignal = CompletableDeferred<Unit>()
+        val pendingDevice = AtomicReference<CameraDevice?>()
+        cont.invokeOnCancellation {
+            pendingDevice.getAndSet(null)?.let { device ->
+                clearOpenedCamera(device)
+                device.close()
+            }
+        }
+        val callback = object : CameraDevice.StateCallback() {
+            override fun onOpened(device: CameraDevice) {
+                if (!cont.isActive) {
                     device.close()
-                    val exc =
-                        IllegalAccessException(
-                            "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
-                        )
-                    LogContext.log.e(TAG, exc.message, exc)
-                    if (cont.isActive) cont.resumeWithException(exc)
+                    return
                 }
-            },
-            handler
-        )
+                pendingDevice.set(device)
+                val newCamera = OpenedCamera(device, closeSignal)
+                if (!openedCamera.compareAndSet(null, newCamera)) {
+                    pendingDevice.compareAndSet(device, null)
+                    device.close()
+                    if (cont.isActive) {
+                        cont.resumeWithException(
+                            IllegalStateException(
+                                "Another camera became active while opening $cameraId"
+                            )
+                        )
+                    }
+                    return
+                }
+                if (cont.isActive) {
+                    cont.resume(device)
+                } else {
+                    pendingDevice.getAndSet(null)?.close()
+                    clearOpenedCamera(device)
+                }
+            }
+
+            override fun onDisconnected(device: CameraDevice) {
+                LogContext.log.w(TAG, "Camera $cameraId has been disconnected")
+                pendingDevice.compareAndSet(device, null)
+                clearOpenedCamera(device)
+                device.close()
+                if (cont.isActive) {
+                    cont.resumeWithException(
+                        IllegalStateException("Camera $cameraId disconnected during open")
+                    )
+                }
+            }
+
+            override fun onClosed(camera: CameraDevice) {
+                LogContext.log.w(TAG, "Camera $cameraId has been closed")
+                pendingDevice.compareAndSet(camera, null)
+                clearOpenedCamera(camera)
+                closeSignal.complete(Unit)
+                super.onClosed(camera)
+            }
+
+            override fun onError(device: CameraDevice, error: Int) {
+                val msg = when (error) {
+                    ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                    ERROR_CAMERA_DISABLED -> "Device policy"
+                    ERROR_CAMERA_IN_USE -> "Camera in use"
+                    ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                    ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                    else -> "Unknown"
+                }
+                pendingDevice.compareAndSet(device, null)
+                clearOpenedCamera(device)
+                device.close()
+                val exc = IllegalAccessException(
+                    "Active: ${cont.isActive} Camera $cameraId error: ($error) $msg."
+                )
+                LogContext.log.e(TAG, exc.message, exc)
+                if (cont.isActive) cont.resumeWithException(exc)
+            }
+        }
+        try {
+            manager.openCamera(cameraId, callback, handler)
+        } catch (e: SecurityException) {
+            if (cont.isActive) cont.resumeWithException(e)
+        } catch (e: CameraAccessException) {
+            if (cont.isActive) cont.resumeWithException(e)
+        }
     }
 
     /**
@@ -633,14 +799,22 @@ class Camera2ComponentHelper(
         device: CameraDevice,
         targets: List<Surface>,
         handler: Handler? = null,
-    ): CameraCaptureSession = suspendCoroutine { cont ->
+    ): CameraCaptureSession = suspendCancellableCoroutine { cont ->
         val stateCallback = object : CameraCaptureSession.StateCallback() {
-            override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
+            override fun onConfigured(session: CameraCaptureSession) {
+                // If the coroutine was already cancelled, close the session to avoid a leak.
+                if (cont.isActive) cont.resume(session) else session.close()
+            }
+
             override fun onConfigureFailed(session: CameraCaptureSession) {
                 val exc = RuntimeException("Camera ${device.id} session configuration failed")
                 LogContext.log.e(TAG, exc.message, exc)
-                cont.resumeWithException(exc)
+                if (cont.isActive) cont.resumeWithException(exc)
             }
+        }
+
+        cont.invokeOnCancellation {
+            LogContext.log.w(TAG, "createCaptureSession cancelled for camera ${device.id}")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -658,14 +832,14 @@ class Camera2ComponentHelper(
     }
 
     private fun stopRepeating() {
-        if (::session.isInitialized) {
-            LogContext.log.w(TAG, "stopRepeating()")
+        if (!::session.isInitialized) return
+        LogContext.log.w(TAG, "stopRepeating()")
+        // Serialize teardown through the Camera API instead of a fixed main-thread sleep so we
+        // no longer block the UI thread (remediation CAM2-7).
+        runCatching {
             session.stopRepeating()
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                session.abortCaptures()
-            }
-            sleep(100)
-        }
+            session.abortCaptures()
+        }.onFailure { LogContext.log.w(TAG, "stopRepeating failed", it) }
     }
 
     fun stopRecording() {
@@ -745,7 +919,7 @@ class Camera2ComponentHelper(
                             TAG,
                             "planes[$i] rowStride=${plane.rowStride} " +
                                 "pixelStride=${plane.pixelStride} " +
-                                "bufferSize=${plane.buffer.remaining()}"
+                                "bufferSize=${plane.buffer?.remaining()}"
                         )
                     }
                 }
@@ -793,53 +967,64 @@ class Camera2ComponentHelper(
             }
             //            cameraHandler.post {
             runCatching {
-                val cameraSensorOrientation =
-                    characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1
                 val rotatedYuv420Data =
-                    dataProcessContext!!.doProcess(image, lensFacing, cameraSensorOrientation)
+                    dataProcessContext!!.doProcess(
+                        image,
+                        lensFacing,
+                        LEGACY_SENSOR_ORIENTATION_UNUSED
+                    )
                 cameraEncoder.offerDataIntoQueue(rotatedYuv420Data)
             }.onFailure { it.printStackTrace() }.also {
                 image.close()
             }
             //            }
-        }, cameraHandler)
+        }, imageReaderHandler)
 
         val targets = mutableListOf(imageReader.surface)
         cameraView?.let {
             targets.add(it.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView).holder.surface)
         }
-        context.lifecycleScope.launch(Dispatchers.Main) {
-            session = createCaptureSession(camera, targets, cameraHandler)
-            LogContext.log.v(TAG, "setRepeatingRequestForRecord session.device=${session.device}")
-            session.setRepeatingRequest(
-                // Capture request holds references to target surfaces
-                session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                    cameraView?.let {
-                        // Add the preview and recording surface targets
-                        addTarget(
-                            it.findViewById<CameraSurfaceView>(
-                                R.id.cameraSurfaceView
-                            ).holder.surface
+        cameraScope.launch {
+            try {
+                session = createCaptureSession(camera, targets, cameraHandler)
+                LogContext.log.v(
+                    TAG,
+                    "setRepeatingRequestForRecord session.device=${session.device}"
+                )
+                session.setRepeatingRequest(
+                    // Capture request holds references to target surfaces
+                    session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                        cameraView?.let {
+                            // Add the preview and recording surface targets
+                            addTarget(
+                                it.findViewById<CameraSurfaceView>(
+                                    R.id.cameraSurfaceView
+                                ).holder.surface
+                            )
+                        }
+                        addTarget(imageReader.surface)
+                        LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
+                        // Sets user requested FPS for all targets
+                        set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
+                        // Autofocus
+                        set(
+                            CaptureRequest.CONTROL_AF_MODE,
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
                         )
-                    }
-                    addTarget(imageReader.surface)
-                    LogContext.log.w(TAG, "Camera FPS=${builder.cameraFps}")
-                    // Sets user requested FPS for all targets
-                    set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, builder.cameraFps)
-                    // Autofocus
-                    set(
-                        CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO
-                    )
-                    // AWB
-                    // set(CaptureRequest.CONTROL_AWB_MODE,
-                    // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
-                    // set(CaptureRequest.CONTROL_AWB_MODE,
-                    // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
-                }.build(),
-                null,
-                cameraHandler
-            )
+                        // AWB
+                        // set(CaptureRequest.CONTROL_AWB_MODE,
+                        // CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT)
+                        // set(CaptureRequest.CONTROL_AWB_MODE,
+                        // CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT)
+                    }.build(),
+                    null,
+                    cameraHandler
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reportCameraError("Unable to start recording session", e)
+            }
         }
     }
 
@@ -847,7 +1032,12 @@ class Camera2ComponentHelper(
         cameraView?.postDelayed(recordTimerRunnable, 1000)
     }
 
-    private fun getJpegOrientation(): Int {
+    private fun getJpegOrientation(orientationOverride: Int? = null): Int {
+        if (orientationOverride != null && orientationOverride in VALID_OUTPUT_ORIENTATIONS) {
+            LogContext.log.d(TAG, "jpegOrientation=$orientationOverride (physical orientation)")
+            return orientationOverride
+        }
+
         val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             context.display?.rotation ?: -1
         } else {
@@ -855,9 +1045,9 @@ class Camera2ComponentHelper(
             context.windowManager.defaultDisplay.rotation
         }
         val cameraSensorOrientation =
-            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+            characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
         val jpegOrientation =
-            (ORIENTATIONS.getValue(deviceRotation) + cameraSensorOrientation + 270) % 360
+            ((ORIENTATIONS[deviceRotation] ?: 90) + cameraSensorOrientation + 270) % 360
         LogContext.log.d(TAG, "deviceRotation=$deviceRotation jpegOrientation=$jpegOrientation")
         return jpegOrientation
     }
@@ -867,142 +1057,141 @@ class Camera2ComponentHelper(
      * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
      * from the single capture, and outputs a [CombinedCaptureResult] object.
      */
-    suspend fun takePhoto(): CombinedCaptureResult = suspendCoroutine { cont ->
+    suspend fun takePhoto(): CombinedCaptureResult = takePhoto(null)
+
+    /**
+     * Captures a photo using [jpegOrientation] when the host tracks physical device orientation.
+     * This is needed when the Activity orientation is locked and display rotation cannot reflect
+     * how the device is actually held. Invalid or unavailable values fall back to display rotation.
+     */
+    suspend fun takePhoto(jpegOrientation: Int?): CombinedCaptureResult = coroutineScope {
         val st = SystemClock.elapsedRealtime()
         if (!::imageReader.isInitialized) error("initializeCamera must be called first")
-        // Flush any images left in the image reader
+
+        // Flush (and close) any images left in the image reader.
         @Suppress("ControlFlowWithEmptyBody")
-        while (imageReader.acquireNextImage() != null) {
+        while (imageReader.acquireNextImage()?.also { it.close() } != null) {
         }
 
-        // Start a new image queue
-        val imageQueue = ArrayBlockingQueue<Image>(IMAGE_BUFFER_SIZE)
+        // Bounded channel: drops (and closes) the oldest image on overflow, and closes any image
+        // left undelivered when the channel is cancelled (remediation CAM2-1).
+        val imageChannel = Channel<Image>(
+            capacity = IMAGE_BUFFER_SIZE,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            onUndeliveredElement = { it.close() }
+        )
         imageReader.setOnImageAvailableListener({ reader ->
-            val image = reader.acquireNextImage()
-            LogContext.log.d(TAG, "Image available in queue: ${image.timestamp}")
-            imageQueue.add(image)
+            val image = reader.acquireNextImage() ?: return@setOnImageAvailableListener
+            if (imageChannel.trySend(image).isFailure) image.close()
         }, imageReaderHandler)
 
         val captureRequest = session.device.createCaptureRequest(
             CameraDevice.TEMPLATE_STILL_CAPTURE
         ).apply {
             addTarget(imageReader.surface)
-            set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation())
+            set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation(jpegOrientation))
         }
-        session.capture(
-            captureRequest.build(),
-            object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    timestamp: Long,
-                    frameNumber: Long,
-                ) {
-                    super.onCaptureStarted(session, request, timestamp, frameNumber)
-                    cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
-                        ?.post(animationTask)
-                }
 
-                override fun onCaptureCompleted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    result: TotalCaptureResult,
-                ) {
-                    super.onCaptureCompleted(session, request, result)
-                    val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                    LogContext.log.d(TAG, "Capture result received: $resultTimestamp")
-
-                    // Set a timeout in case image captured is dropped from the pipeline
-                    val exc = TimeoutException("Image dequeuing took too long")
-                    val timeoutRunnable = Runnable { cont.resumeWithException(exc) }
-                    imageReaderHandler.postDelayed(timeoutRunnable, IMAGE_CAPTURE_TIMEOUT_MILLIS)
-
-                    // Loop in the coroutine's context until an image with matching timestamp comes
-                    // We need to launch the coroutine context again because the callback is done in
-                    //  the handler provided to the `capture` method, not in our coroutine context
-                    @Suppress("BlockingMethodInNonBlockingContext")
-                    context.lifecycleScope.launch(cont.context) {
-                        while (true) {
-                            // Dequeue images while timestamps don't match
-                            val image = imageQueue.take()
-                            // if (image.timestamp != resultTimestamp) continue
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                                image.format != ImageFormat.DEPTH_JPEG &&
-                                image.timestamp != resultTimestamp
+        try {
+            withTimeout(IMAGE_CAPTURE_TIMEOUT_MILLIS.milliseconds) {
+                val result = suspendCancellableCoroutine { cont ->
+                    session.capture(
+                        captureRequest.build(),
+                        object : CameraCaptureSession.CaptureCallback() {
+                            override fun onCaptureStarted(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                timestamp: Long,
+                                frameNumber: Long,
                             ) {
-                                continue
-                            }
-                            LogContext.log.d(TAG, "Matching image dequeued: ${image.timestamp}")
-
-                            // Unset the image reader listener
-                            imageReaderHandler.removeCallbacks(timeoutRunnable)
-                            imageReader.setOnImageAvailableListener(null, null)
-
-                            // Clear the queue of images, if there are left
-                            while (imageQueue.size > 0) {
-                                imageQueue.take().close()
+                                super.onCaptureStarted(session, request, timestamp, frameNumber)
+                                cameraView?.findViewById<CameraSurfaceView>(R.id.cameraSurfaceView)
+                                    ?.post(animationTask)
                             }
 
-                            val buffer = image.planes[0].buffer
-                            val width = image.width
-                            val height = image.height
-                            val imageBytes = ByteArray(buffer.remaining()).apply {
-                                buffer.get(this)
-                            }
-                            // DO NOT forget for close Image object
-                            image.close()
-
-                            val deviceRotation = if (Build.VERSION.SDK_INT >=
-                                Build.VERSION_CODES.R
+                            override fun onCaptureCompleted(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                result: TotalCaptureResult,
                             ) {
-                                context.display?.rotation ?: -1
-                            } else {
-                                @Suppress("DEPRECATION")
-                                context.windowManager.defaultDisplay.rotation
+                                super.onCaptureCompleted(session, request, result)
+                                if (cont.isActive) cont.resume(result)
                             }
-                            val cameraSensorOrientation =
-                                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-                            // Compute EXIF orientation metadata
-                            // TODO Maybe you want to use rotation in someday
-                            val rotation = 0
-                            // val rotation = (context as
-                            // BaseCamera2Fragment).relativeOrientation.value ?: 0
-                            val mirrored =
-                                characteristics.get(CameraCharacteristics.LENS_FACING) ==
-                                    CameraCharacteristics.LENS_FACING_FRONT
-                            val exifOrientation =
-                                computeExifOrientation(cameraSensorOrientation, mirrored)
-                            LogContext.log.d(
-                                TAG,
-                                "rotation=$rotation deviceRotation=$deviceRotation " +
-                                    "cameraSensorOrientation=$cameraSensorOrientation " +
-                                    "mirrored=$mirrored"
-                            )
-                            LogContext.log.d(
-                                TAG,
-                                "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}"
-                            )
 
-                            // Build the result and resume progress
-                            cont.resume(
-                                CombinedCaptureResult(
-                                    imageBytes,
-                                    width,
-                                    height,
-                                    result,
-                                    exifOrientation,
-                                    mirrored,
-                                    imageReader.imageFormat
-                                )
-                            )
-
-                            // There is no need to break out of the loop, this coroutine will
-                            // suspend
-                        }
-                    }
+                            override fun onCaptureFailed(
+                                session: CameraCaptureSession,
+                                request: CaptureRequest,
+                                failure: CaptureFailure,
+                            ) {
+                                super.onCaptureFailed(session, request, failure)
+                                if (cont.isActive) {
+                                    cont.resumeWithException(
+                                        IllegalStateException(
+                                            "Still capture failed: reason=${failure.reason}"
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        cameraHandler
+                    )
                 }
-            },
-            cameraHandler
+                val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
+                val combined = dequeueMatchingImage(imageChannel, resultTimestamp, result)
+                LogContext.log.d(
+                    TAG,
+                    "=====> Take photo cost: ${SystemClock.elapsedRealtime() - st}"
+                )
+                combined
+            }
+        } finally {
+            imageReader.setOnImageAvailableListener(null, null)
+            imageChannel.cancel() // onUndeliveredElement closes every buffered image.
+        }
+    }
+
+    /**
+     * Dequeues images from [imageChannel] until one whose timestamp matches [resultTimestamp] is
+     * found, closing every non-matching image. Each image is wrapped in [use] so it is always
+     * closed even if building the result throws (remediation CAM2-1).
+     */
+    private suspend fun dequeueMatchingImage(
+        imageChannel: Channel<Image>,
+        resultTimestamp: Long?,
+        result: TotalCaptureResult,
+    ): CombinedCaptureResult {
+        while (true) {
+            val combined = imageChannel.receive().use { image ->
+                val mismatched = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                    image.format != ImageFormat.DEPTH_JPEG &&
+                    image.timestamp != resultTimestamp
+                if (mismatched) null else buildCombinedCaptureResult(image, result)
+            }
+            if (combined != null) return combined
+        }
+    }
+
+    /** Copies the image bytes and computes EXIF metadata for a single captured [image]. */
+    private fun buildCombinedCaptureResult(
+        image: Image,
+        result: TotalCaptureResult,
+    ): CombinedCaptureResult {
+        val buffer = image.planes[0].buffer
+        val imageBytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+        val outputOrientation = result.request.get(CaptureRequest.JPEG_ORIENTATION)
+            ?: characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
+            ?: 0
+        val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) ==
+            CameraCharacteristics.LENS_FACING_FRONT
+        val exifOrientation = computeExifOrientation(outputOrientation, mirrored)
+        return CombinedCaptureResult(
+            imageBytes,
+            image.width,
+            image.height,
+            result,
+            exifOrientation,
+            mirrored,
+            imageReader.imageFormat
         )
     }
 
@@ -1071,11 +1260,15 @@ class Camera2ComponentHelper(
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
         }
-        if (lensFacing == CameraMetadata.LENS_FACING_BACK) {
-            switchToFrontCamera()
-        } else {
-            switchToBackCamera()
+        synchronized(requestedLensLock) {
+            val target = if (requestedLensFacing == CameraMetadata.LENS_FACING_BACK) {
+                CameraMetadata.LENS_FACING_FRONT
+            } else {
+                CameraMetadata.LENS_FACING_BACK
+            }
+            requestedLensFacing = target
         }
+        enqueueCameraSwitch()
     }
 
     @RequiresPermission(android.Manifest.permission.CAMERA)
@@ -1096,17 +1289,81 @@ class Camera2ComponentHelper(
         switchCamera(CameraMetadata.LENS_FACING_FRONT)
     }
 
+    /**
+     * Switches to the camera with the given [lensFacing].
+     *
+     * Remediation CAM2-3: this is asynchronous. Requests are serialized through [switchMutex]
+     * without cancelling an in-progress close/open transition. Each queued request reads the
+     * latest requested lens before opening, so rapid requests are conflated to the latest target.
+     * The old device's [CameraDevice.StateCallback.onClosed] is awaited before the new device is
+     * opened. On close timeout the switch is aborted and [cameraErrorListener] is notified;
+     * [lensSwitchListener] fires only after a successful switch.
+     */
     @RequiresPermission(android.Manifest.permission.CAMERA)
     fun switchCamera(lensFacing: Int) {
         if (!::camera.isInitialized) {
             throw IllegalAccessError("You must initialize camera first.")
         }
         LogContext.log.w(TAG, "switchCamera to $lensFacing")
+        synchronized(requestedLensLock) {
+            requestedLensFacing = lensFacing
+        }
+        enqueueCameraSwitch()
+    }
 
-        closeCamera()
-        this.lensFacing = lensFacing
-        initializeCamera(previewWidth, previewHeight)
-        lensSwitchListener?.onSwitch(lensFacing)
+    private fun enqueueCameraSwitch() {
+        cameraScope.launch {
+            try {
+                switchMutex.withLock {
+                    val targetBeforeClose = latestRequestedLensFacing()
+                    val oldCamera = openedCamera.get()
+                    if (oldCamera != null && lensFacing == targetBeforeClose) {
+                        return@withLock
+                    }
+                    if (oldCamera != null) {
+                        closeCamera()
+                        val closedInTime =
+                            withTimeoutOrNull(CAMERA_CLOSE_TIMEOUT_MILLIS.milliseconds) {
+                                oldCamera.closed.await()
+                                true
+                            } ?: false
+                        if (!closedInTime) {
+                            reportCameraError(
+                                "switchCamera failed",
+                                TimeoutException("Camera close timed out during switch")
+                            )
+                            return@withLock
+                        }
+                    }
+                    val targetLensFacing = latestRequestedLensFacing()
+                    this@Camera2ComponentHelper.lensFacing = targetLensFacing
+                    initializeCameraAndAwait(previewWidth, previewHeight)
+                    lensSwitchListener?.onSwitch(targetLensFacing)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reportCameraError("switchCamera failed", e)
+            }
+        }
+    }
+
+    private fun latestRequestedLensFacing(): Int = synchronized(requestedLensLock) {
+        requestedLensFacing
+    }
+
+    private fun reportCameraError(message: String, error: Throwable) {
+        LogContext.log.e(TAG, message, error)
+        cameraErrorListener?.onError(error)
+    }
+
+    /** Clears only the matching device so a late callback cannot erase a newer camera state. */
+    private fun clearOpenedCamera(device: CameraDevice) {
+        while (true) {
+            val current = openedCamera.get() ?: return
+            if (current.device !== device) return
+            if (openedCamera.compareAndSet(current, null)) return
+        }
     }
 
     interface LensSwitchListener {
@@ -1116,6 +1373,17 @@ class Camera2ComponentHelper(
     fun setLensSwitchListener(listener: LensSwitchListener) {
         lensSwitchListener = listener
     }
+
+    /** The currently opened device with a close signal bound to that exact device (CAM2-3). */
+    private data class OpenedCamera(
+        val device: CameraDevice,
+        val closed: CompletableDeferred<Unit>,
+    )
+
+    /** Reports asynchronous camera errors raised outside a suspending call. */
+    interface CameraErrorListener {
+        fun onError(t: Throwable)
+    }
     // ===========================================================
 
     /**
@@ -1123,45 +1391,107 @@ class Camera2ComponentHelper(
      *
      * Helper function used to save a [CombinedCaptureResult] into a [File]
      */
-    suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
-        when (result.format) {
-            // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
-            ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                context.lifecycleScope.launch(Dispatchers.IO) {
-                    // TODO The buffer that is just the JPEG data not the original camera image.
-                    // So I can not mirror image in the general way like this below:
-                    // if (result.mirrored) mirrorImage(bytes, result.image.width,
-                    // result.image.height)
-                    try {
-                        val output = context.createImageFile("jpg")
-                        FileOutputStream(output).use { it.write(result.imageBytes) }
-                        cont.resume(output)
-                    } catch (exc: IOException) {
-                        LogContext.log.e(TAG, "Unable to write JPEG image to file", exc)
-                        cont.resumeWithException(exc)
-                    }
+    suspend fun saveResult(result: CombinedCaptureResult): File = when (result.format) {
+        ImageFormat.JPEG ->
+            withContext(Dispatchers.IO) {
+                when (jpegOutputStrategy) {
+                    JpegOutputStrategy.PIXEL_NORMALIZED -> saveTransformedJpeg(result)
+                    JpegOutputStrategy.EXIF_ONLY -> saveExifOnlyJpeg(result)
                 }
             }
 
-            // When the format is RAW we use the DngCreator utility library
-            //            ImageFormat.RAW_SENSOR -> {
-            //                val dngCreator = DngCreator(characteristics, result.metadata)
-            //                try {
-            //                    val output = createFile(context.requireContext(), "dng")
-            // FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
-            //                    cont.resume(output)
-            //                } catch (exc: IOException) {
-            //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
-            //                    cont.resumeWithException(exc)
-            //                }
-            //            }
-
-            // No other formats are supported by this sample
-            else -> {
-                val exc = RuntimeException("Unknown image format: ${result.format}")
-                LogContext.log.e(TAG, exc.message, exc)
-                cont.resumeWithException(exc)
+        // Re-encoding a DEPTH_JPEG would discard its depth metadata.
+        ImageFormat.DEPTH_JPEG ->
+            withContext(Dispatchers.IO) {
+                try {
+                    val output = context.createImageFile("jpg")
+                    FileOutputStream(output).use { it.write(result.imageBytes) }
+                    output
+                } catch (exc: IOException) {
+                    LogContext.log.e(TAG, "Unable to write JPEG image to file", exc)
+                    throw exc
+                }
             }
+
+        // When the format is RAW we use the DngCreator utility library
+        //            ImageFormat.RAW_SENSOR -> {
+        //                val dngCreator = DngCreator(characteristics, result.metadata)
+        //                try {
+        //                    val output = createFile(context.requireContext(), "dng")
+        // FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+        //                    cont.resume(output)
+        //                } catch (exc: IOException) {
+        //                    LogContext.log.e(TAG, "Unable to write DNG image to file", exc)
+        //                    cont.resumeWithException(exc)
+        //                }
+        //            }
+
+        // No other formats are supported by this sample
+        else -> {
+            val exc = RuntimeException("Unknown image format: ${result.format}")
+            LogContext.log.e(TAG, exc.message, exc)
+            throw exc
+        }
+    }
+
+    /** Applies the same pixel-level rotation/mirroring semantics used by the CameraX module. */
+    private fun saveTransformedJpeg(result: CombinedCaptureResult): File {
+        val output = context.createImageFile("jpg")
+        var sourceBitmap: Bitmap? = null
+        var transformedBitmap: Bitmap? = null
+        try {
+            val decodedBitmap = requireNotNull(
+                BitmapFactory.decodeByteArray(result.imageBytes, 0, result.imageBytes.size)
+            ) { "Unable to decode captured JPEG" }
+            sourceBitmap = decodedBitmap
+            val matrix = decodeExifOrientation(result.orientation)
+            val outputBitmap = Bitmap.createBitmap(
+                decodedBitmap,
+                0,
+                0,
+                decodedBitmap.width,
+                decodedBitmap.height,
+                matrix,
+                true
+            )
+            transformedBitmap = outputBitmap
+            if (outputBitmap !== decodedBitmap) {
+                decodedBitmap.recycle()
+                sourceBitmap = null
+            }
+            FileOutputStream(output).use { stream ->
+                if (!outputBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
+                    throw IOException("Unable to encode transformed JPEG")
+                }
+            }
+            return output
+        } catch (exc: CancellationException) {
+            output.delete()
+            throw exc
+        } catch (exc: Exception) {
+            output.delete()
+            LogContext.log.e(TAG, "Unable to transform and write JPEG image", exc)
+            throw exc
+        } finally {
+            if (transformedBitmap !== sourceBitmap) transformedBitmap?.recycle()
+            sourceBitmap?.recycle()
+        }
+    }
+
+    /** Writes the original compressed JPEG and records orientation without bitmap allocation. */
+    private fun saveExifOnlyJpeg(result: CombinedCaptureResult): File {
+        val output = context.createImageFile("jpg")
+        try {
+            FileOutputStream(output).use { it.write(result.imageBytes) }
+            output.setExifOrientation(result.orientation)
+            return output
+        } catch (exc: CancellationException) {
+            output.delete()
+            throw exc
+        } catch (exc: Exception) {
+            output.delete()
+            LogContext.log.e(TAG, "Unable to write JPEG with EXIF orientation", exc)
+            throw exc
         }
     }
 
@@ -1176,7 +1506,11 @@ class Camera2ComponentHelper(
         try {
             // There is no need to call session.close() method. Please check its comment
             //            if (::session.isInitialized) session.close()
-            if (::camera.isInitialized) camera.close()
+            if (::camera.isInitialized) {
+                val device = camera
+                device.close()
+                clearOpenedCamera(device)
+            }
             if (::imageReader.isInitialized) imageReader.close()
 
             if (::cameraEncoder.isInitialized) cameraEncoder.stop()
@@ -1202,14 +1536,26 @@ class Camera2ComponentHelper(
             cameraThread.quitSafely()
             imageReaderHandler.removeCallbacksAndMessages(null)
             imageReaderThread.quitSafely()
+            // Release the session-configuration executor so the thread does not leak when the
+            // view is destroyed (remediation CAM2-6). shutdown() is idempotent.
+            if (!singleExecutor.isShutdown) singleExecutor.shutdown()
         } catch (e: Exception) {
             LogContext.log.e(TAG, "stopCameraThread() error.")
         }
         LogContext.log.i(TAG, "=====> stopCameraThread() being called <=====")
     }
 
-    /** Handy method to release all the camera resources. */
+    /**
+     * Releases all camera resources: cancels queued/in-flight switches and the helper's own
+     * [cameraScope], closes the camera device, and stops the background threads.
+     *
+     * Lifecycle contract: the host MUST call this from its own teardown (Activity `onDestroy` /
+     * Fragment `onDestroyView`). The helper no longer piggybacks on an Activity `lifecycleScope`,
+     * so failing to call [release] leaks the [cameraScope] and any captured context
+     * (remediation R-2).
+     */
     fun release() {
+        cameraScope.cancel()
         closeCamera()
         stopCameraThread()
     }
@@ -1226,6 +1572,14 @@ class Camera2ComponentHelper(
         /** Maximum time allowed to wait for the result of an image capture */
         private const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
 
+        /** Maximum time to wait for the old camera device to close during a lens switch. */
+        private const val CAMERA_CLOSE_TIMEOUT_MILLIS: Long = 3000
+
+        /**
+         * Sentinel for the legacy IDataProcessStrategy parameter retained for API compatibility.
+         */
+        private const val LEGACY_SENSOR_ORIENTATION_UNUSED: Int = -1
+
         // ===== Camera Recording - Start ============================================
         val ORIENTATIONS = mapOf(
             Surface.ROTATION_0 to 90,
@@ -1233,6 +1587,8 @@ class Camera2ComponentHelper(
             Surface.ROTATION_180 to 270,
             Surface.ROTATION_270 to 180
         )
+
+        private val VALID_OUTPUT_ORIENTATIONS = setOf(0, 90, 180, 270)
 
         const val TEMPLATE_TYPE_RECORD = 1
         const val TEMPLATE_TYPE_PHOTO = 2

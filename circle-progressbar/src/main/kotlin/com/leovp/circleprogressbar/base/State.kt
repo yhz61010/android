@@ -19,11 +19,13 @@ abstract class State(private val view: View) {
 
     protected var internalIcon: Drawable? = null
         set(value) {
-            field = value
+            field = value?.mutate()?.apply { setTint(iconTint) }
             view.invalidate()
         }
 
-    fun getIcon(): Drawable = internalIcon!!
+    fun getIcon(): Drawable = checkNotNull(internalIcon) {
+        "Icon is not configured for state ${status()}"
+    }
 
     var width: Int = Resources.getSystem().dp2px(48f)
         set(value) {
@@ -41,6 +43,7 @@ abstract class State(private val view: View) {
     var iconTint: Int = DEF_ICON_TINT
         set(value) {
             field = value
+            internalIcon?.setTint(value)
             view.invalidate()
         }
 

@@ -27,25 +27,28 @@ internal fun Context.getPreviewViewMaxHeight(): Int {
 }
 
 internal fun CameraCharacteristics.getConfigMap(): StreamConfigurationMap =
-    get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-
-internal fun CameraCharacteristics.isFlashSupported(): Boolean =
-    get(CameraCharacteristics.FLASH_INFO_AVAILABLE)!!
-
-internal fun CameraCharacteristics.hardwareLevel(): Int =
-    get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!
-
-internal fun CameraCharacteristics.hardwareLevelName(): String =
-    when (get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)!!) {
-        0 -> "LIMIT"
-        1 -> "FULL"
-        2 -> "LEGACY"
-        3 -> "LEVEL_3"
-        else -> "NA"
+    checkNotNull(get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)) {
+        "Camera does not expose a stream configuration map"
     }
 
-internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> =
-    get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)!!
+internal fun CameraCharacteristics.isFlashSupported(): Boolean =
+    get(CameraCharacteristics.FLASH_INFO_AVAILABLE) ?: false
+
+internal fun CameraCharacteristics.hardwareLevel(): Int =
+    get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+        ?: CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY
+
+internal fun CameraCharacteristics.hardwareLevelName(): String = when (hardwareLevel()) {
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED -> "LIMIT"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL -> "FULL"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY -> "LEGACY"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> "LEVEL_3"
+    else -> "NA"
+}
+
+internal fun CameraCharacteristics.supportedFpsRanges(): Array<Range<Int>> = get(
+    CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES
+) ?: emptyArray()
 
 internal fun CameraCharacteristics.cameraSensorOrientation(): Int =
     get(CameraCharacteristics.SENSOR_ORIENTATION) ?: -1

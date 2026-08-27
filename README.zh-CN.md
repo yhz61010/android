@@ -62,7 +62,7 @@
 
 未正确安装 Git LFS 时，受 LFS 管理的文件只会显示为大约 130 字节的指针文件。安装 Git LFS 并运行 `git lfs pull` 即可获取实际内容。
 
-更多说明请参阅 [Git LFS 指南](00-documents/git-lfs-guide.md)。
+更多说明请参阅 [Git LFS 指南](00-documents/git-lfs-guide-zh.md)。
 
 # 项目概览
 

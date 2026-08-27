@@ -40,29 +40,17 @@ open class BaseHttpRequest {
         return httpClientBuilder.build()
     }
 
-    private val logInterceptor: Interceptor
-        get() {
-            val logInterceptor = HttpLoggingInterceptor()
-            logInterceptor.level = HttpLoggingInterceptor.Level.BODY
-            return logInterceptor
+    /**
+     * HTTP logging verbosity. Defaults to [HttpLoggingInterceptor.Level.NONE] so request/response
+     * bodies and headers are never logged unless the host app explicitly opts in (remediation
+     * HTTP-1). Raise to [HttpLoggingInterceptor.Level.BODY]/`HEADERS` only in debug builds; the
+     * interceptor redacts sensitive headers by name and bounds body logging size.
+     */
+    @Volatile
+    var logLevel: HttpLoggingInterceptor.Level = HttpLoggingInterceptor.Level.NONE
 
-            //        return new LoggingInterceptor.Builder()
-            //                .loggable(BuildConfig.DEBUG)
-            //                .setLevel(Level.BASIC)
-            //                .log(Platform.INFO)
-            //                .request("Request")
-            //                .response("Response")
-            // //                .addHeader("version", BuildConfig.VERSION_NAME)
-            // //                .addQueryParam("query", "0")
-            // //              .logger(new Logger() {
-            // //                  @Override
-            // //                  public void log(int level, String tag, String msg) {
-            // //                      Log.w(tag, msg);
-            // //                  }
-            // //              })
-            // //              .executor(Executors.newSingleThreadExecutor())
-            //                .build();
-        }
+    private val logInterceptor: Interceptor
+        get() = HttpLoggingInterceptor().apply { level = logLevel }
 
     private fun getHeaderInterceptor(headerMap: Map<String, String>? = null): Interceptor =
         Interceptor { chain: Interceptor.Chain ->
@@ -71,11 +59,8 @@ open class BaseHttpRequest {
             // .addHeader("Content-Type", "application/json")
             headerMap?.let {
                 for ((k, v) in headerMap) {
-                    LogContext.log.d(
-                        TAG,
-                        "Assign cookie: $k=$v",
-                        outputType = LogOutType.HTTP_HEADER
-                    )
+                    // Log the header name only; never log the value, which may carry credentials.
+                    LogContext.log.d(TAG, "Add header: $k", outputType = LogOutType.HTTP_HEADER)
                     build.addHeader(k, v)
                 }
             }

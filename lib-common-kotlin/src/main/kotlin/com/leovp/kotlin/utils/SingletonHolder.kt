@@ -26,7 +26,7 @@ open class SingletonHolder<out T, in A>(creator: (A) -> T) {
     @Volatile
     private var instance: T? = null
 
-    fun getInstance(arg: A): T = instance ?: synchronized(this) {
+    open fun getInstance(arg: A): T = instance ?: synchronized(this) {
         val inst =
             instance ?: checkNotNull(creator) { "creator already consumed" }(arg)
                 .also { instance = it }

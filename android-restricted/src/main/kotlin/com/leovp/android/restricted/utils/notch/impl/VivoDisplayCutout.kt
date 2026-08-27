@@ -7,7 +7,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import com.leovp.android.exts.calculateNotchRect
-import com.leovp.android.exts.densityDpi
+import com.leovp.android.exts.density
 import com.leovp.android.restricted.utils.notch.DisplayCutout
 
 /** vivo will not render on notch */
@@ -38,8 +38,8 @@ internal class VivoDisplayCutout : DisplayCutout {
     }
 
     /** According to the vivo official document, we use fixed value 27dp. */
-    private fun getNotchHeight(ctx: Context) = 27 * ctx.densityDpi
+    private fun getNotchHeight(ctx: Context) = (27 * ctx.density).toInt()
 
     /** According to the vivo official document, we use fixed value 100dp. */
-    private fun getNotchWidth(ctx: Context) = 100 * ctx.densityDpi
+    private fun getNotchWidth(ctx: Context) = (100 * ctx.density).toInt()
 }

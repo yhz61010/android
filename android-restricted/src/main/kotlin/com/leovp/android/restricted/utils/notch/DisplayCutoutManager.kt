@@ -12,6 +12,7 @@ import com.leovp.android.exts.isXiaoMi
 import com.leovp.android.restricted.utils.notch.impl.AndroidPDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.HuaweiDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.OppoDisplayCutout
+import com.leovp.android.restricted.utils.notch.impl.VivoDisplayCutout
 import com.leovp.android.restricted.utils.notch.impl.XiaoMiDisplayCutout
 import com.leovp.kotlin.utils.SingletonHolder
 
@@ -32,7 +33,11 @@ import com.leovp.kotlin.utils.SingletonHolder
  * Date: 20-11-26 下午7:39
  */
 class DisplayCutoutManager private constructor(private val activity: Activity) {
-    companion object : SingletonHolder<DisplayCutoutManager, Activity>(::DisplayCutoutManager)
+    companion object : SingletonHolder<DisplayCutoutManager, Activity>(::DisplayCutoutManager) {
+        // Keep the inherited JVM method shape for existing binaries, but do not retain Activity
+        // instances. Every call receives a manager bound only to the supplied Activity.
+        override fun getInstance(arg: Activity): DisplayCutoutManager = DisplayCutoutManager(arg)
+    }
 
     private val displayCutout: DisplayCutout? by lazy { getConcreteDisplayCutout() }
 
@@ -75,7 +80,7 @@ class DisplayCutoutManager private constructor(private val activity: Activity) {
             when {
                 activity.isHuaWei -> displayCutout = HuaweiDisplayCutout()
                 activity.isOppo -> displayCutout = OppoDisplayCutout()
-                activity.isVivo -> displayCutout = HuaweiDisplayCutout()
+                activity.isVivo -> displayCutout = VivoDisplayCutout()
                 activity.isXiaoMi -> displayCutout = XiaoMiDisplayCutout()
             }
         }

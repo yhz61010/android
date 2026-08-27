@@ -2,9 +2,9 @@ package com.leovp.demo.basiccomponents.examples
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.setOnSingleClickListener
 import com.leovp.android.exts.toast
-import com.leovp.androidbase.exts.kotlin.sleep
 import com.leovp.circleprogressbar.CircleProgressbar
 import com.leovp.circleprogressbar.base.DefaultOnClickListener
 import com.leovp.circleprogressbar.base.State
@@ -13,7 +13,8 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCircleProgressbarBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import kotlin.concurrent.thread
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Author: Michael Leo
@@ -34,26 +35,26 @@ class CircleProgressbarActivity :
         binding.btnDownload.setOnSingleClickListener { btn ->
             btn.isEnabled = false
             binding.vDownload.setDeterminate()
-            thread {
+            lifecycleScope.launch {
                 for (prog in 0..100) {
-                    sleep(50)
+                    delay(50)
                     binding.vDownload.currentProgress = prog
                 }
                 binding.vDownload.setFinish()
-                runOnUiThread { btn.isEnabled = true }
+                btn.isEnabled = true
             }
         }
 
         binding.btnUpload.setOnSingleClickListener { btn ->
             btn.isEnabled = false
             binding.vUpload.setDeterminate()
-            thread {
+            lifecycleScope.launch {
                 for (prog in 0..100) {
-                    sleep(20)
+                    delay(20)
                     binding.vUpload.currentProgress = prog
                 }
                 binding.vUpload.setError()
-                runOnUiThread { btn.isEnabled = true }
+                btn.isEnabled = true
             }
         }
 

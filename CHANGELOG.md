@@ -102,6 +102,9 @@
 - **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
   设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将
   `VideoView` 放入黑色容器并居中，横屏录像回放时上下显示黑边，不再居上显示。
+- **camerax 前摄录像水平镜像**:`VideoCapture` 使用
+  `MirrorMode.MIRROR_MODE_ON_FRONT_ONLY`，使前摄保存的视频与默认镜像预览保持一致，同时维持后摄不镜像；
+  前后摄横竖屏录像已通过真机回归。
 - **camerax 前置横屏照片缩略图方向**:照片旋转、镜像和文件重写全部完成后才通知界面加载最新缩略图，避免
   Coil 提前读取并缓存尚未处理的原始文件，导致按钮缩略图方向与相册最终照片不一致。
 - **camera2live 横屏照片方向与镜像**:拍照请求使用物理方向监听结果设置 `JPEG_ORIENTATION`,不再只依赖可能
@@ -117,6 +120,9 @@
 - **P3 健壮性边界补齐**:`GZipUtil.isGzip()` 对 0/1 字节输入返回 `false`;相机特征缺值采用明确异常或
   安全默认值，native bitmap 处理返回空时回退 Android 镜像/旋转；亮度计算改用无装箱累加并始终关闭 `ImageProxy`;
   `CircleProgressbar` 回调期间可安全修改监听器列表。
+- **circle-progressbar Demo 完成进度时不再跨线程操作 View**:Download/Upload 示例改用
+  `lifecycleScope` 主线程协程配合非阻塞 `delay()` 更新进度、完成/错误状态和按钮，修复后台线程调用
+  `ValueAnimator.cancel()` 导致的 `Animators may only be run on Looper threads` 闪退；真机回归已通过。
 - **P3 日志与错误处理补齐**:`AppExt`、刘海屏适配、动态 Activity 启动、KeepAlive 和 audio 资源操作
   记录完整 throwable;动态 Activity 类不存在时记日志并安全返回。挂起音频释放继续重抛
   `CancellationException`，普通释放异常保持记录后兼容返回。

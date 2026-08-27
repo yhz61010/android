@@ -32,4 +32,16 @@ CameraX 宿主可覆写 `CameraXActivity.getJpegOutputStrategy()`；Camera2Live 
 - Camera2Live 输入调度测试覆盖“超大帧保留 input buffer ID，后续合法帧复用并消费同一槽位”。
 - 目标 Kotlin 模块已通过 `--rerun-tasks` 编译。
 
-当前没有连接设备。录像方向/颜色、不同厂商 MediaCodec 行为，以及目标相册对 `EXIF_ONLY` 的渲染仍需真机回归。
+### 实现时验证边界
+
+实现及自动化验证阶段没有连接设备；当时录像方向/颜色、不同厂商 MediaCodec 行为，以及目标相册对
+`EXIF_ONLY` 的渲染均保留为真机回归项。
+
+### 2026-08-27 真机验证补充
+
+- 维护者确认当前分支计划内的 Camera2Live 真机测试全部通过，包括预览、拍照、录像、方向/镜像/颜色、镜头
+  切换及生命周期路径。
+- 维护者确认 CameraX 真机回归通过；后续发现的前摄横屏录像未镜像问题已使用
+  `MIRROR_MODE_ON_FRONT_ONLY` 修复，并再次通过真机验证（`2c5bf2bcb`）。
+- 上述结果只代表维护者实际覆盖的设备组合。不同传感器方向、YUV 输出格式、MediaCodec 厂商、折叠状态和
+  其他 OEM 设备仍应保留在发布矩阵中；未实际覆盖的组合不得标记为已验证。

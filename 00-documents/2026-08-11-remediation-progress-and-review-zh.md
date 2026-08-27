@@ -1,6 +1,6 @@
-# 八模块整改 —— 进度与代码审查记录（2026-08-11，更新至 2026-08-13）
+# 八模块整改 —— 进度与代码审查记录（2026-08-11，更新至 2026-08-27）
 
-> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-13 的落地进度，以及针对
+> 本文记录 `LeoAndroidBaseUtil` 八模块整改任务截至 2026-08-27 的落地进度，以及针对
 > Codex 两轮审查修复所做的正式 code-review 结论（首次复审确认 9 项代码问题 +
 > 1 项维护性建议、驳回 2 项；当前状态见 §1 与 §3）。
 > 关联文档：`2026-08-04-remediation-impl-plan-zh.md`（P0→P3 路线图）、
@@ -24,7 +24,7 @@
 累计：72 项确认整改已完成 **72 项**（P0+P1+P2+P3）；本轮审查
 **R-1/R-2/R-3、R-4/R-6/R-7/R-8/R-10 已修复**，R-5 部分修复（深改暂缓，决策 B），
 R-9 维护性重构已完成。两个决策项 `CX-5`、`LB-3` 均已于 2026-08-13 修复（见 CHANGELOG 与
-`superpowers/specs/` 下对应设计文档；`CX-5` 代码与构建验证完成、真机回归待执行，`LB-3` 为纯逻辑
+`superpowers/specs/` 下对应设计文档；`CX-5` 已完成代码、构建及真机回归，`LB-3` 为纯逻辑
 已补单测）。仅余不计入 72 项的 R-5 深改（待真机条件）。
 
 > 说明：P2 由 Codex 于 2026-08-06 一次性完成（`7da7c444c`）。已于 2026-08-12 完成我方独立逐项
@@ -55,21 +55,27 @@ ea55a2bf4 fix: remediate P0 issues from eight-module review (CIP-1, CAM2-1, HTTP
 - 新增 `Camera2ComponentHelper.CameraErrorListener`、audio 各 `*AndJoin()` suspend 变体
 - `SingletonHolder.getInstance` 改 `open`（供 `DisplayCutoutManager` override，二进制兼容需要）
 
-### ⚠️ 未验证事项
+### 2026-08-27 真机回归补充
+
+- **Camera2Live**：维护者确认当前分支计划内的预览、拍照、录像、方向/镜像/颜色、镜头切换及生命周期真机
+  回归全部通过。
+- **CameraX**：维护者确认权限、生命周期、拍照、录像方向与回放布局等真机回归通过。前摄横屏录像进一步发现
+  保存文件未镜像，已通过 `MIRROR_MODE_ON_FRONT_ONLY` 修复并再次通过真机验证（`2c5bf2bcb`）。
+- **circle-progressbar Demo**：Download/Upload 原先从工作线程更新 View，进度结束时调用
+  `ValueAnimator.cancel()` 触发 `Animators may only be run on Looper threads`。示例已改为
+  `lifecycleScope` 主线程协程（`0a13bb627`），完成和错误两条路径均通过真机验证。
+
+### ⚠️ 剩余未验证事项
 
 - P3 完成后及本次 CIP-2/CAM2-10 补齐后运行 `./gradlew staticCheck --continue --rerun-tasks`
   **均已通过**（2026-08-12；本次 1421 个任务全部执行，耗时 1m40s）。相关目标模块 XML 报告合计 87 个 JVM 测试，
   0 failure / 0 error。
   注意：staticCheck 只覆盖编译/detekt/ktlint/单测，
-  **不**替代 R-3、R-4、R-7 的真机运行时验证；修复结论还依赖代码复审和对应回归测试。
-- audio / camera 真机回归未做（录制停止后重预览、返回栈、旋屏、前后台快切、进相机即返回；
-  Camera2 还需连续快速切换前后镜头并检查黑屏、UI 状态和 `ERROR_CAMERA_IN_USE`）。
-- CX-5 已通过 `:camerax:compileDebugKotlin`、`:camerax:detekt`、`:camerax:ktlintCheck` 和全仓
-  `assembleDebug` 强制重跑；真机仍需验证旋转/前后台恢复、返回栈 View 重建、相机切换动画中途离页及
-  比例切换重绑。尤其应确认动画中途离页后延迟 UI 恢复随 View 生命周期取消，logcat 无 binding
-  空指针异常。当前状态为“代码与构建验证完成，真机回归待执行”。
-- P3 `CX-9c` 仍需真机验证两条路径：首次进入时已授权，以及权限弹窗授权后返回；每条路径都应只导航
-  一次，前后台切换或 STARTED 状态恢复不应再次导航，授权回调后立即离页不应崩溃。
+  **不**替代真机运行时验证；本轮 Camera2Live、CameraX 与 circle-progressbar 相关路径已补真机闭环，其他
+  模块仍依赖各自的代码复审和回归测试。
+- audio 真机回归尚未完成，包括录制/播放停止、返回栈、旋屏、前后台快速切换及重复释放。
+- 当前结论只覆盖维护者实际使用的真机组合；不同 `SENSOR_ORIENTATION`、YUV420P/YUV420SP、MediaCodec
+  厂商、折叠设备状态及其他 OEM 组合仍属于发布回归矩阵，不能由单一设备结果替代。
 - 版本号（`leo-version`）未 bump。
 
 ---

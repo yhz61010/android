@@ -58,7 +58,7 @@ This project uses **Git LFS** to manage large binary files (`.so`, `.a`, `.mp3`,
 
 > **Without Git LFS**, LFS-tracked files will appear as ~130-byte pointer files instead of actual content. Install Git LFS and run `git lfs pull` to fix this.
 
-For more details, see `00-documents/git-lfs-guide.md`.
+For more details, see `00-documents/git-lfs-guide-zh.md`.
 
 # Troubleshooting
 

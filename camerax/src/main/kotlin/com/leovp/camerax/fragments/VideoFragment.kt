@@ -24,6 +24,7 @@ import androidx.annotation.RequiresPermission
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.DynamicRange
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.MirrorMode
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
 import androidx.camera.core.resolutionselector.ResolutionSelector
@@ -297,7 +298,9 @@ class VideoFragment : BaseCameraXFragment<FragmentVideoBinding>() {
         //   - record video/audio to MediaStore(only shown here), File, ParcelFileDescriptor
         //   - be used create recording(s) (the recording performs recording)
         val recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
-        videoCapture = VideoCapture.withOutput(recorder)
+        videoCapture = VideoCapture.Builder(recorder)
+            .setMirrorMode(MirrorMode.MIRROR_MODE_ON_FRONT_ONLY)
+            .build()
         videoCapture.targetRotation = targetRotation
 
         val camProvider = cameraProvider

@@ -1,6 +1,7 @@
 package com.leovp.androidbase.utils.cipher
 
 import androidx.annotation.IntRange
+import com.leovp.log.LogContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -23,7 +24,15 @@ import java.util.zip.ZipOutputStream
 
 object ZipUtil {
 
+    private const val TAG = "ZipUtil"
+
     private const val BUFFER_SIZE = 8192
+
+    /** Default per-entry decompressed size cap (200 MiB) used by [unzip]. */
+    private const val DEFAULT_MAX_ENTRY_SIZE_BYTES = 200L * 1024 * 1024
+
+    /** Default total decompressed size cap (1 GiB) used by [unzip]. */
+    private const val DEFAULT_MAX_TOTAL_SIZE_BYTES = 1024L * 1024 * 1024
 
     /**
      * Checks if a file is likely a valid ZIP file by checking its magic number.
@@ -165,35 +174,148 @@ object ZipUtil {
     }
 
     /**
+     * Output size limits applied by [unzip] to mitigate ZIP bombs.
+     *
+     * @property maxEntryBytes Maximum decompressed size allowed for a single entry.
+     * @property maxTotalBytes Maximum decompressed size allowed for the whole archive.
+     */
+    data class UnzipLimits(
+        val maxEntryBytes: Long = DEFAULT_MAX_ENTRY_SIZE_BYTES,
+        val maxTotalBytes: Long = DEFAULT_MAX_TOTAL_SIZE_BYTES,
+    )
+
+    /**
      * Extract a ZIP file to a specified directory.
+     *
+     * Security notes:
+     * - Each entry is resolved against the canonical destination path, so entries that would
+     *   escape the destination (e.g. `../evil.txt`, absolute paths, or symlinked parents) are
+     *   rejected with [IllegalArgumentException] (Zip Slip protection).
+     * - Per-entry and total decompressed sizes are capped by [limits] to mitigate ZIP bombs.
+     * - Each entry is written to a temporary file first. Existing targets are moved to a backup
+     *   before replacement and restored if the final rename fails, avoiding partial output and
+     *   preserving the previous file on replacement failure.
+     *
      * @param zipFilePath Path to the ZIP file.
      * @param destDir Destination directory where files will be extracted.
+     * @param limits Decompression size limits; defaults to [UnzipLimits].
      */
-    fun unzip(zipFilePath: String, destDir: String) {
-        val destFile = File(destDir)
-        if (!destFile.exists()) destFile.mkdirs()
+    @JvmOverloads
+    fun unzip(zipFilePath: String, destDir: String, limits: UnzipLimits = UnzipLimits()) {
+        val destFile = File(destDir).canonicalFile
+        require(destFile.isDirectory || destFile.mkdirs()) {
+            "Cannot create destination directory: $destFile"
+        }
+        val destRoot = destFile.path + File.separator
 
         ZipInputStream(BufferedInputStream(FileInputStream(zipFilePath))).use { zipIn ->
-            var entry: ZipEntry?
             val buffer = ByteArray(BUFFER_SIZE)
+            var totalWritten = 0L
 
-            while (zipIn.nextEntry.also { entry = it } != null) {
-                val entryFile = File(destFile, entry!!.name)
+            while (true) {
+                val entry = zipIn.nextEntry ?: break
+                val entryFile = File(destFile, entry.name)
+                require(isInsideDest(entryFile.canonicalPath, destFile.path, destRoot)) {
+                    "Blocked Zip Slip path traversal for entry: ${entry.name}"
+                }
 
                 if (entry.isDirectory) {
-                    entryFile.mkdirs()
-                } else {
-                    entryFile.parentFile?.mkdirs()
-                    FileOutputStream(entryFile).use { fos ->
-                        BufferedOutputStream(fos).use { bos ->
-                            var length: Int
-                            while (zipIn.read(buffer).also { length = it } != -1) {
-                                bos.write(buffer, 0, length)
-                            }
-                        }
+                    require(entryFile.isDirectory || entryFile.mkdirs()) {
+                        "Cannot create directory for entry: ${entry.name}"
                     }
+                } else {
+                    totalWritten = extractEntry(
+                        zipIn = zipIn,
+                        entryFile = entryFile,
+                        destPath = destFile.path,
+                        destRoot = destRoot,
+                        buffer = buffer,
+                        totalWrittenSoFar = totalWritten,
+                        limits = limits,
+                        entryName = entry.name
+                    )
                 }
+                zipIn.closeEntry()
             }
         }
+    }
+
+    private fun isInsideDest(canonicalPath: String, destPath: String, destRoot: String): Boolean =
+        canonicalPath == destPath || canonicalPath.startsWith(destRoot)
+
+    @Suppress("LongParameterList")
+    private fun extractEntry(
+        zipIn: ZipInputStream,
+        entryFile: File,
+        destPath: String,
+        destRoot: String,
+        buffer: ByteArray,
+        totalWrittenSoFar: Long,
+        limits: UnzipLimits,
+        entryName: String,
+    ): Long {
+        val parent =
+            requireNotNull(entryFile.parentFile) {
+                "Missing parent directory for entry: $entryName"
+            }
+        require(parent.isDirectory || parent.mkdirs()) { "Cannot create directory: $parent" }
+        require(isInsideDest(parent.canonicalPath, destPath, destRoot)) {
+            "Blocked Zip Slip path traversal for entry: $entryName"
+        }
+        require(!entryFile.isDirectory) {
+            "Cannot replace existing directory with file entry: $entryName"
+        }
+
+        var totalWritten = totalWrittenSoFar
+        val tempFile = File.createTempFile(".unzip-", ".tmp", parent)
+        try {
+            BufferedOutputStream(FileOutputStream(tempFile)).use { bos ->
+                var entryWritten = 0L
+                while (true) {
+                    val length = zipIn.read(buffer)
+                    if (length == -1) break
+                    entryWritten += length
+                    totalWritten += length
+                    require(entryWritten <= limits.maxEntryBytes) {
+                        "Entry exceeds size limit (${limits.maxEntryBytes} bytes): $entryName"
+                    }
+                    require(totalWritten <= limits.maxTotalBytes) {
+                        "Archive exceeds total size limit (${limits.maxTotalBytes} bytes)"
+                    }
+                    bos.write(buffer, 0, length)
+                }
+            }
+            val backupFile = if (entryFile.exists()) {
+                File.createTempFile(".unzip-backup-", ".tmp", parent).also { backup ->
+                    require(backup.delete()) { "Cannot prepare backup for entry: $entryName" }
+                    require(entryFile.renameTo(backup)) {
+                        "Cannot back up existing entry before replacement: $entryName"
+                    }
+                }
+            } else {
+                null
+            }
+            if (!tempFile.renameTo(entryFile)) {
+                val restored = backupFile?.renameTo(entryFile) ?: true
+                check(restored) {
+                    "Cannot restore existing entry after replacement failed: $entryName; " +
+                        "backup=${backupFile?.absolutePath}"
+                }
+                error("Cannot move extracted entry into place: $entryName")
+            }
+            // The backup is a plain file at this point; report deletion failure rather than
+            // silently leaving it behind (remediation R-6).
+            backupFile?.let { backup ->
+                if (backup.exists() && !backup.delete()) {
+                    LogContext.log.w(
+                        TAG,
+                        "Failed to delete unzip backup file: ${backup.absolutePath}"
+                    )
+                }
+            }
+        } finally {
+            tempFile.delete() // Remove the temp file if it is still present (e.g. on failure).
+        }
+        return totalWritten
     }
 }

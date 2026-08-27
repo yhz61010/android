@@ -2,6 +2,8 @@
 
 package com.leovp.audio
 
+import com.leovp.audio.base.runCatchingPreservingCancellation
+
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
@@ -41,11 +43,18 @@ class AudioTrackPlayer(
     private val audioTrack: AudioTrack
 
     init {
-        val minBufferSize = getMinBufferSize(
+        require(minPlayBufferSizeRatio > 0) { "minPlayBufferSizeRatio must be positive" }
+        val platformMinBufferSize = getMinBufferSize(
             audioDecoderInfo.sampleRate,
             audioDecoderInfo.channelConfig,
             audioDecoderInfo.audioFormat
-        ) * minPlayBufferSizeRatio
+        )
+        require(platformMinBufferSize > 0) {
+            "Invalid AudioTrack parameters: $audioDecoderInfo (code=$platformMinBufferSize)"
+        }
+        val computedBufferSize = platformMinBufferSize.toLong() * minPlayBufferSizeRatio
+        require(computedBufferSize <= Int.MAX_VALUE) { "AudioTrack buffer size overflow" }
+        val minBufferSize = computedBufferSize.toInt()
         LogContext.log.w(
             TAG,
             "$audioDecoderInfo minPlayBufferSizeRatio=$minPlayBufferSizeRatio " +
@@ -104,6 +113,7 @@ class AudioTrackPlayer(
         if (pcmBytes.isEmpty()) {
             return 0
         }
+        require(pcmBytes.size % 2 == 0) { "PCM16 byte count must be even" }
         if (STATE_UNINITIALIZED == audioTrack.state) {
             return 0
         }
@@ -113,6 +123,10 @@ class AudioTrackPlayer(
             // Play decoded audio data in PCM
             val playData = pcmBytes.toShortArrayLE()
             wroteSize = audioTrack.write(playData, 0, playData.size)
+            if (wroteSize < 0) {
+                LogContext.log.e(TAG, "AudioTrack.write error=$wroteSize")
+                return wroteSize
+            }
             if (BuildConfig.DEBUG) {
                 LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")
             }
@@ -137,7 +151,8 @@ class AudioTrackPlayer(
             return
         }
         LogContext.log.w(TAG, "resume()")
-        runCatching { audioTrack.play() }.onFailure { it.printStackTrace() }
+        runCatchingPreservingCancellation { audioTrack.play() }
+            .onFailure { LogContext.log.e(TAG, "AudioTrack resume failed", it) }
     }
 
     /**
@@ -156,12 +171,12 @@ class AudioTrackPlayer(
             return
         }
         LogContext.log.w(TAG, "pause()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (audioTrack.state == STATE_INITIALIZED) {
                 audioTrack.pause()
                 audioTrack.flush()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack pause failed", it) }
     }
 
     /**
@@ -181,13 +196,13 @@ class AudioTrackPlayer(
         }
         pause()
         LogContext.log.w(TAG, "stop()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (
                 audioTrack.state == STATE_INITIALIZED
             ) {
                 audioTrack.stop()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack stop failed", it) }
     }
 
     fun release() {
@@ -196,10 +211,10 @@ class AudioTrackPlayer(
         }
         stop()
         LogContext.log.w(TAG, "release()")
-        runCatching {
+        runCatchingPreservingCancellation {
             if (audioTrack.state == STATE_INITIALIZED) {
                 audioTrack.release()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "AudioTrack release failed", it) }
     }
 }

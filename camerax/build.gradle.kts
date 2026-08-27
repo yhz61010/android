@@ -47,6 +47,8 @@ dependencies {
     api(libs.xx.permissions)
     api(libs.subsampling.scale.image.view)
 
+    testImplementation(libs.bundles.test)
+
     // This is the enhanced version of [subsampling-scale-image-view-androidx]
     //    implementation "com.github.piasy:BigImageViewer:$bigImageViewerVersion"
 }

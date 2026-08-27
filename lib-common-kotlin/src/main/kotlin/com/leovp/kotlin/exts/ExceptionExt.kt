@@ -40,9 +40,9 @@ inline fun multiCatch(
 ) {
     try {
         runBlock()
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
-        // Cancellation must always propagate; never swallow it (remediation H16).
-        if (e is CancellationException) throw e
         if (exceptions.any { it.isInstance(e) }) {
             // No catchBlock means the caller opted out of handling: re-throw, don't swallow.
             catchBlock?.invoke(e) ?: throw e

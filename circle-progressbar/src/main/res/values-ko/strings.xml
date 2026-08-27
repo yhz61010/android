@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="circle_progressbar_description">진행률 컨트롤</string>
+    <string name="circle_progressbar_state_idle">대기 중</string>
+    <string name="circle_progressbar_state_indeterminate">진행 중</string>
+    <string name="circle_progressbar_state_determinate">진행률 %1$d/%2$d</string>
+    <string name="circle_progressbar_state_finished">완료</string>
+    <string name="circle_progressbar_state_error">오류</string>
+    <string name="circle_progressbar_state_cancelled">취소됨</string>
+</resources>

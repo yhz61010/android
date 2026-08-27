@@ -25,7 +25,7 @@ class FloatExtUnitTest {
     fun `round formats with English separators regardless of default locale`() {
         val original = Locale.getDefault()
         try {
-            // Under GERMANY the decimal separator is ',', which used to make toDouble() throw (H15).
+            // Under GERMANY the decimal separator is ',', which used to make toDouble() throw.
             Locale.setDefault(Locale.GERMANY)
             assertEquals(3.1, 3.14.round(1), 0.0)
             assertEquals(3.14, 3.14159.round(2), 0.0)

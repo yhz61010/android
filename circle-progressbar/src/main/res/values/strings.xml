@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="circle_progressbar_description">Progress control</string>
+    <string name="circle_progressbar_state_idle">Idle</string>
+    <string name="circle_progressbar_state_indeterminate">In progress</string>
+    <string name="circle_progressbar_state_determinate">Progress %1$d of %2$d</string>
+    <string name="circle_progressbar_state_finished">Finished</string>
+    <string name="circle_progressbar_state_error">Error</string>
+    <string name="circle_progressbar_state_cancelled">Cancelled</string>
+</resources>

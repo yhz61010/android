@@ -33,17 +33,8 @@ fun Bitmap?.recycledSafety() {
 /**
  * Convert bitmap to bytes.
  */
-fun Bitmap.toBytes(): ByteArray {
-    val size = this.byteCount
-
-    val buffer = ByteBuffer.allocate(size)
-    val bytes = ByteArray(size)
-
-    this.copyPixelsToBuffer(buffer)
-    buffer.rewind()
-    buffer.get(bytes)
-
-    return bytes
+fun Bitmap.toBytes(): ByteArray = ByteArray(byteCount).also { bytes ->
+    copyPixelsToBuffer(ByteBuffer.wrap(bytes))
 }
 
 /**

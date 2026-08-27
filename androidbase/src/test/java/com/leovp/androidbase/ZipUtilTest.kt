@@ -3,11 +3,16 @@ package com.leovp.androidbase
 import android.util.Log
 import com.leovp.androidbase.utils.cipher.ZipUtil
 import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.test.Test
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.TestInstance
@@ -201,5 +206,86 @@ class ZipUtilTest {
 
         // Verify content is correct
         assertEquals("This is file 1", content)
+    }
+
+    /**
+     * Build a ZIP whose entries are provided verbatim (used to craft malicious archives that
+     * [ZipUtil.zip] would never produce, e.g. path-traversal entry names).
+     */
+    private fun buildRawZip(target: File, entries: List<Pair<String, ByteArray>>) {
+        ZipOutputStream(FileOutputStream(target)).use { zipOut ->
+            entries.forEach { (name, bytes) ->
+                zipOut.putNextEntry(ZipEntry(name))
+                zipOut.write(bytes)
+                zipOut.closeEntry()
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("CIP-1: unzip rejects Zip Slip path traversal and writes nothing outside dest")
+    fun unzipRejectsZipSlipTest() {
+        // Arrange: a malicious archive with a `../` traversal entry.
+        val evilZip = File(baseDir, "evil.zip")
+        val slipDest = File(baseDir, "slip-extract").apply { mkdirs() }
+        buildRawZip(evilZip, listOf("../evil.txt" to "pwned".toByteArray()))
+        val escapedTarget = File(baseDir, "evil.txt")
+        escapedTarget.delete()
+
+        // Act + Assert: extraction is blocked, and nothing is written outside the destination.
+        assertThrows(IllegalArgumentException::class.java) {
+            ZipUtil.unzip(evilZip.absolutePath, slipDest.absolutePath)
+        }
+        assertFalse(escapedTarget.exists(), "Traversal entry must not be written outside dest")
+
+        evilZip.delete()
+        slipDest.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("CIP-1: unzip enforces per-entry size cap and leaves no partial file")
+    fun unzipEnforcesSizeCapTest() {
+        // Arrange: a single entry larger than the configured per-entry cap.
+        val bigZip = File(baseDir, "big.zip")
+        val sizeDest = File(baseDir, "size-extract").apply { mkdirs() }
+        buildRawZip(bigZip, listOf("big.bin" to ByteArray(4096) { 1 }))
+
+        // Act + Assert: extraction aborts and no partial target file remains.
+        assertThrows(IllegalArgumentException::class.java) {
+            ZipUtil.unzip(
+                bigZip.absolutePath,
+                sizeDest.absolutePath,
+                ZipUtil.UnzipLimits(maxEntryBytes = 1024, maxTotalBytes = 1024)
+            )
+        }
+        assertFalse(
+            File(sizeDest, "big.bin").exists(),
+            "Oversize entry must not leave a partial file"
+        )
+
+        bigZip.delete()
+        sizeDest.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("R-6: unzip rejects a file entry that collides with an existing directory")
+    fun unzipRejectsFileEntryOverExistingDirectoryTest() {
+        val collisionZip = File(baseDir, "collision.zip")
+        val collisionDest = File(baseDir, "collision-extract").apply { mkdirs() }
+        val existingDirectory = File(collisionDest, "entry").apply { mkdirs() }
+        val existingFile = File(existingDirectory, "keep.txt").apply { writeText("keep") }
+        buildRawZip(collisionZip, listOf("entry" to "replacement".toByteArray()))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            ZipUtil.unzip(collisionZip.absolutePath, collisionDest.absolutePath)
+        }
+        assertEquals("keep", existingFile.readText())
+        assertFalse(
+            collisionDest.listFiles().orEmpty().any { it.name.startsWith(".unzip-backup-") },
+            "Rejected collisions must not leave backup entries"
+        )
+
+        collisionZip.delete()
+        collisionDest.deleteRecursively()
     }
 }

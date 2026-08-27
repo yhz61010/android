@@ -32,6 +32,9 @@ dependencies {
     api(projects.yuv)
     api(projects.libExif)
 
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
+
     // ===== The following dependencies are needed in [androidbase-sdk] module =====
     //    api project(':log-sdk')
     //    api project(':lib-json')

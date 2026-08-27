@@ -2,9 +2,18 @@ package com.leovp.bytes
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class BytesConversionUnitTest {
+
+    @Test
+    fun oddByteArraysCannotBeConvertedToPcm16() {
+        assertThrows(IllegalArgumentException::class.java) { byteArrayOf(1).toShortArray() }
+        assertThrows(IllegalArgumentException::class.java) { byteArrayOf(1).toShortArrayLE() }
+        assertArrayEquals(shortArrayOf(), byteArrayOf().toShortArray())
+        assertArrayEquals(shortArrayOf(), byteArrayOf().toShortArrayLE())
+    }
 
     @Test
     fun hexConverter() {
@@ -666,5 +675,27 @@ class BytesConversionUnitTest {
             byteArrayOf(0x02, 0x03, 0x04, 0x15, 0x16, 0x36),
             byteArrayOf(0x7F, 0x01, 0x02, 0x03, 0x04, 0x15, 0x16, 0x36).readBytes(6, 2)
         )
+    }
+
+    @Test
+    fun asciiConverter() {
+        // default delimiter "," between characters
+        assertEquals("H,i", byteArrayOf(72, 105).toAsciiString())
+        // empty delimiter concatenates
+        assertEquals("Hi", byteArrayOf(72, 105).toAsciiString(""))
+        // lower boundary 0x00 (NUL) is valid ASCII
+        assertEquals(0.toChar().toString(), byteArrayOf(0).toAsciiString())
+        // upper boundary 0x7F (DEL) is valid ASCII; single element -> no delimiter
+        assertEquals(0x7F.toChar().toString(), byteArrayOf(0x7F).toAsciiString())
+        // empty array -> empty string
+        assertEquals("", byteArrayOf().toAsciiString())
+        // 0x80 is not ASCII -> fail fast
+        assertThrows(IllegalArgumentException::class.java) {
+            byteArrayOf(0x80.toByte()).toAsciiString()
+        }
+        // 0xFF (-1) is not ASCII -> fail fast
+        assertThrows(IllegalArgumentException::class.java) {
+            byteArrayOf(0xFF.toByte()).toAsciiString()
+        }
     }
 }

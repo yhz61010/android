@@ -1,5 +1,18 @@
 # 八模块整改实现细节（2026-08-04）
 
+> **实施状态（更新至 2026-08-12）**：`fix/eight-module-remediation` 已完成 P0-P3 共 72 项确认整改。
+> P2 的 26 项实现 ID 为
+> `CAM2-4/5/9/10`、`AR-2/3/4/5/6/8`、`ABN-2/3/4`、`CIP-2`、
+> `AUD-9/10/11/12`、`CX-6/7`、`CPB-3/4/5`、`HTTP-5`、`LB-2/4`。
+> P3 的 16 项实现 ID 为 `CIP-4`、`ABN-5/6/7`、`AR-9/10`、`AUD-13/14`、
+> `CX-8/9a/9b/9c`、`CPB-6`、`HTTP-6/7`、`LB-5`。`CX-5` 与 `LB-3` 是不计入 72 项的
+> 独立决策门槛，保持未改。
+> 下文的“现状代码”和行号仍描述审查基线 `master@d24931c9`，不能当作当前分支未修复清单；
+> “目标代码”继续保留为设计依据。实际实现与兼容决策以当前源码及根目录 `CHANGELOG.md` 为准。
+> 八个受影响模块的强制重跑编译/单元测试、`ktlintCheck` 和 `detekt` 已通过；P3 完成后的全仓
+> `staticCheck --continue --rerun-tasks` 也已通过（1421 个任务全部执行）。详细结果见进度文档；
+> 相机/音频生命周期与硬件行为仍需按计划做真机回归。
+
 本文件是《[整改实现计划](./2026-08-04-remediation-impl-plan-zh.md)》的配套细节：每条给出 `文件:行`、根因、现状→目标代码、兼容/边界、测试、回归风险。基线 `master@d24931c9`。ID 与计划文档一致，其中 72 条为已确认整改项，CX-5 与 LB-3 为实施前必须确认的决策项。
 
 > 通用说明：无 `src/test` 的模块（camera2live、camerax、circle-progressbar、android-restricted、audio）需先新建测试源集；框架/硬件强耦合逻辑建议抽纯函数后单测。含 `log` 依赖的模块用 `LogContext`，`lib-bytes` 用 `require`/`android.util.Log`（不得引入 log）。跨模块统一模式见计划文档 §3（T1–T8）。
@@ -206,7 +219,7 @@ override fun onDestroyView() {
 }
 // stopCameraThread(): append singleExecutor.shutdown().
 ```
-- 兼容/边界：helper 绑到视图生命周期。回归：中，改变复用语义，回归“录制停止后重新预览 / 返回栈 / 旋屏”。
+- 兼容/边界：helper 绑到视图生命周期，内部异步任务使用可在 `release()` 中取消的 helper 自有 scope；每次 `onViewCreated` 必须重置释放幂等标记，否则同一 Fragment 的第二个 View 无法释放。回归：中，改变复用语义，回归“录制停止后重新预览 / 返回栈 / 旋屏”。
 
 ### CAM2-7 [HIGH/P1] onStop 主线程 sleep(100)+关相机/编码器 → ANR
 - 位置：`view/BaseCamera2Fragment.kt:203-211` → `stopRecording/stopRepeating(含 sleep(100))/closeCamera`
@@ -225,7 +238,7 @@ private fun stopRepeating() {
 ### CAM2-8 [HIGH/P1] takePhoto/createCaptureSession 用不可取消 suspendCoroutine
 - 位置：`:632-658`（createCaptureSession）、`:870`（takePhoto）
 - 目标：改 `suspendCancellableCoroutine`，所有 resume 加 `if (cont.isActive)`，`invokeOnCancellation` 清理；takePhoto 见 CAM2-1。回归：中，回归“建会话/拍照进行中退出 Fragment”。
-- 说明：本条仅要求把 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）从不可取消挂起改为可取消实现。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，CAM2-8 无需替换它的挂起原语；但仍必须按 CAM2-2/CAM2-4 修复断连关闭、同步异常和取消清理，不能理解成 openCamera 整体无需修改。
+- 说明：本条仅要求把 `createCaptureSession`（`:632-658`）与 `takePhoto`（`:870`）从不可取消挂起改为可取消实现。`openCamera`（`:585-589`）已经使用 `suspendCancellableCoroutine`，无需替换挂起原语，但仍必须同步捕获 `SecurityException`/`CameraAccessException`，并在取消后关闭迟到的 `onOpened` 设备。由于 `CameraDevice.StateCallback` 在 `cameraHandler` 线程执行，而取消和切换通常在主线程执行，`openedCamera` 必须使用 `AtomicReference`；登记和按设备身份清理均使用 CAS，避免旧回调覆盖或清除新设备状态。
 
 ### CAM2-9 [MEDIUM/P2] CameraAvcEncoder.setCallback 应在 configure 前 + 专用 Handler
 - 位置：`codec/CameraAvcEncoder.kt:193-199`
@@ -309,8 +322,17 @@ fun unzip(
                             output.write(buffer, 0, length)
                         }
                     }
-                    if (entryFile.exists()) require(entryFile.delete()) { "Cannot replace ${entry.name}" }
-                    require(tempFile.renameTo(entryFile)) { "Cannot move extracted entry: ${entry.name}" }
+                    val backupFile = if (entryFile.exists()) {
+                        File.createTempFile(".unzip-backup-", ".tmp", parent).also { backup ->
+                            require(backup.delete()) { "Cannot prepare backup for ${entry.name}" }
+                            require(entryFile.renameTo(backup)) { "Cannot back up ${entry.name}" }
+                        }
+                    } else null
+                    if (!tempFile.renameTo(entryFile)) {
+                        check(backupFile?.renameTo(entryFile) ?: true) { "Cannot restore ${entry.name}" }
+                        error("Cannot move extracted entry: ${entry.name}")
+                    }
+                    backupFile?.delete()
                 } finally {
                     tempFile.delete() // Removes a partial file on failure.
                 }
@@ -320,7 +342,7 @@ fun unzip(
     }
 }
 ```
-- 兼容/边界：minSdk 21；`@JvmOverloads` 保留原有两参数 JVM 入口，默认限制必须在 CHANGELOG 说明，并允许调用方显式收紧。`canonicalPath` 可阻止既有软链父目录逃逸，但不能完全消除目录被其它线程并发替换的 TOCTOU；目标目录应由应用私有、可信代码控制。测试：追加 `../evil.txt`、绝对路径、既有软链父目录、超限后无部分文件及正常嵌套解压。回归：中。
+- 兼容/边界：minSdk 21；`@JvmOverloads` 保留原有两参数 JVM 入口，默认限制必须在 CHANGELOG 说明，并允许调用方显式收紧。替换既有文件时不能先删除旧文件；先同目录备份，最终 rename 失败时恢复旧文件。`File.renameTo` 不承诺跨平台原子性，因此文档不能宣称“原子替换”。`canonicalPath` 可阻止既有软链父目录逃逸，但不能完全消除目录被其它线程并发替换的 TOCTOU；目标目录应由应用私有、可信代码控制。测试：追加 `../evil.txt`、绝对路径、既有软链父目录、超限后无部分文件、替换失败保留旧文件及正常嵌套解压。回归：中。
 
 ### CIP-2 [MEDIUM/P2] AES/PBKDF2 密钥材料未彻底清零
 - 位置：`AESUtil.kt:304,450`（`secKey.toHexString`）、`PBKDF2Util.kt:422-450`（provider 路径 PBEKeySpec）
@@ -412,13 +434,15 @@ override fun onReceive(context: Context, intent: Intent) {
 
 ### AR-1 [HIGH/P1] DisplayCutoutManager 单例持首个 Activity（T1 例外）
 - 位置：`notch/DisplayCutoutManager.kt:34-35`
-- 目标：去掉 `SingletonHolder`，改每 Activity 独立实例：
+- 目标：改为每 Activity 独立实例，同时保留已发布的 `SingletonHolder` 继承和擦除后的 JVM bridge：
 ```kotlin
 class DisplayCutoutManager private constructor(private val activity: Activity) {
-    companion object { @JvmStatic fun getInstance(activity: Activity) = DisplayCutoutManager(activity) }
+    companion object : SingletonHolder<DisplayCutoutManager, Activity>(::DisplayCutoutManager) {
+        override fun getInstance(arg: Activity) = DisplayCutoutManager(arg)
+    }
 }
 ```
-- 兼容/边界：公开 API `getInstance(activity)` 不变。测试：两 Activity 返回不同实例。回归：中，语义由全局单例变每次新建（本类无可变共享状态，安全）。
+- 兼容/边界：`SingletonHolder.getInstance` 需改为 `open`；当前 companion 同时保留 `getInstance(Activity)` 与 bridge `getInstance(Object)`，避免既有二进制调用出现 `NoSuchMethodError`。测试：两 Activity 返回不同实例，并用 `javap` 或二进制兼容工具检查两个入口。回归：中，语义由全局单例变每次新建（本类无可变共享状态，安全）。
 
 ### AR-2 [HIGH/P2] vivo 误路由到 HuaweiDisplayCutout
 - 位置：`notch/DisplayCutoutManager.kt:78`。目标：`activity.isVivo -> displayCutout = VivoDisplayCutout()` 并补 import。须与 AR-5 一并落地。回归：低。
@@ -504,7 +528,7 @@ suspend fun releaseAndJoin() {
 }
 // Synchronous.start(): codecJob = ioScope.launch { do { ensureActive() } while (process()); onEndOfStream() }
 ```
-- 兼容/边界：`releaseAndJoin()` 必须维持“返回时后台任务已退出且 codec 已释放”的确定语义，因此禁止 codec worker 自身调用；worker 遇到错误时只上报终止原因并退出，由外部 owner 调用释放。若业务确实需要从 worker 发起请求，应另设名称明确的 `requestRelease(): Job/Deferred<Unit>`，调用方通过返回对象观察完成，不能让 `releaseAndJoin()` fire-and-forget。现有非 suspend `release()` 是公开接口，不能直接删除或改成异步返回；落地前需提供弃用和迁移入口。`releaseCodecOnce()` 使用原子状态保证只执行一次。回归：中高。
+- 兼容/边界：`releaseAndJoin()` 必须维持“返回时后台任务已退出且 codec 已释放”的确定语义，因此禁止 codec worker 自身调用；worker 遇到错误时只上报终止原因并退出，由外部 owner 调用释放。现有非 suspend `release()` 是公开接口，保留原 JVM 签名和同步释放语义：先取消 worker/scope，再幂等释放 codec；不能改为后台 fire-and-forget。需要等待 worker 退出的调用方迁移到 `releaseAndJoin()`。`releaseCodecOnce()` 使用原子状态保证只执行一次。回归：中高。
 
 ### AUD-2 [HIGH/P1] AacDecoder.onInputData 阻塞 take() 取消唤不醒（T4）
 - 位置：`aac/AacDecoder.kt:83-86`。目标：
@@ -513,7 +537,7 @@ override fun onInputData(inBuf: ByteBuffer): Int =
     queue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.let { inBuf.put(it); it.size } ?: 0
 // private const val POLL_TIMEOUT_MS = 50L
 ```
-- 兼容/边界：返回 0 需 `process()` 对 size<=0 跳过 `queueInputBuffer`（与 AUD-8 一并）。回归：中。
+- 兼容/边界：`dequeueInputBuffer()` 成功后必须归还对应输入槽。返回 0 时仍调用 `queueInputBuffer(index, 0, 0, pts, 0)` 提交空 buffer；不能跳过，否则输入槽会逐个耗尽并导致解码永久停滞。回归：中。
 
 ### AUD-3 [HIGH/P1] MicRecorder.stopRecord 取消后不等录音任务结束（T4）
 - 位置：`MicRecorder.kt:94-175`。目标：保存 recordJob，先 `stop()` 让 native read 返回，再通过 suspend 入口等待并释放；防止从 `onRecording()` 所在 job 调用时 self-join，并统一保证 `onStop()` 只通知一次：
@@ -526,18 +550,14 @@ suspend fun stopRecordAndJoin() {
     var ok = true
     runCatching { if (audioRecord.state == AudioRecord.STATE_INITIALIZED) audioRecord.stop() }.onFailure { ok=false; LogContext.log.e(TAG,"stop error",it) }
     val job = recordJob
-    if (job === currentCoroutineContext()[Job]) {
-        job.cancel()
-        teardownScope.launch { job.join(); finishRecorderRelease(ok) }
-        return
-    }
+    require(job !== currentCoroutineContext()[Job]) { "Must be called by an external owner" }
     job?.cancelAndJoin()
     recordJob = null
     ioScope.cancel()
-    finishRecorderRelease(ok)
+    finishRecorderReleaseAndJoin(ok) // Awaits AudioEncoderWrapper.releaseAndJoin().
 }
 ```
-`teardownScope` 必须独立于被取消的工作 scope，`releaseCodecOnce()`/`finishRecorderRelease()` 使用原子状态保证只执行一次。现有非 suspend `stopRecord()` 的兼容策略与 AUD-1 同时确定，不能简单塞入 `runBlocking`。回归：中高。
+`releaseCodecOnce()`/`finishRecorderReleaseAndJoin()` 使用原子状态保证只执行一次，并通过完成信号让重复的 suspend 停止调用等待已经开始的异常清理。编码器 wrapper 必须提供并转发 `releaseAndJoin()`，否则只等待录音 job 仍不能保证编码器 worker 已退出。现有非 suspend `stopRecord()` 保留同步释放兼容语义，不能简单塞入 `runBlocking`，也不能改为后台 fire-and-forget。回归：中高。
 
 ### AUD-4 [HIGH/P1] Stream Player audioDecoder/csd 并发无锁 TOCTOU
 - 位置：`aac/AacStreamPlayer.kt:71-161`、`opus/OpusStreamPlayer.kt:78-170`。目标：用私有状态锁或单线程 command queue 串行化 init/decode/flush/stop；外部 `dropFrameCallback` 必须移出锁，释放流程与 AUD-1 的 suspend 入口统一：
@@ -662,15 +682,15 @@ fun startRecord() {
 - 位置：`utils/SoundManager.kt:17`（注入点 `base/BaseCameraXFragment.kt:152`）。目标：存 applicationContext；`soundPool` 改可空并支持 release 后重建：
 ```kotlin
 class SoundManager private constructor(context: Context) {
-    private val appCtx = context.applicationContext
+    val ctx: Context = context.applicationContext
     private var soundPool: SoundPool? = null
-    suspend fun loadSounds() = withContext(Dispatchers.IO) { soundPool?.release(); soundPool = SoundPool.Builder()...build().apply { load(appCtx, R.raw...) } }
+    suspend fun loadSounds() = withContext(Dispatchers.IO) { soundPool?.release(); soundPool = SoundPool.Builder()...build().apply { load(ctx, R.raw...) } }
     fun release() { runCatching { soundPool?.autoPause(); soundPool?.release() }; soundPool = null }
     private fun playSound(id: Int, v: Float) { soundPool?.play(id, v, v, 1, 0, 1f) } // No-op until loaded.
 }
 // Injection: SoundManager.getInstance(requireContext().applicationContext)
 ```
-回归：低（play 未加载由崩溃变 no-op）。
+- 兼容/边界：历史公开 `val ctx/getCtx()` 必须保留以维持 API/ABI，但返回 application context，不再持有调用方 Activity。回归：低（play 未加载由崩溃变 no-op）。
 
 ### CX-2 [HIGH/P1] captureForBytes 未在 finally 关闭 ImageProxy（T3）
 - 位置：`base/BaseCameraXFragment.kt:226-297`（close 在 247 中段）。目标：`image.use{}`：
@@ -708,11 +728,14 @@ override fun onCaptureSuccess(image: ImageProxy) {
 private var _binding: B? = null
 // Preserve the published binding getter/setter visibility until the compatibility migration.
 // New internal code reads only through a View-lifecycle-bound accessor.
+var binding: B
+    get() = viewBinding
+    set(value) { _binding = value }
 val viewBinding: B get() = checkNotNull(_binding) { "binding accessed outside of view lifecycle" }
-override fun onCreateView(...): View { _binding = getViewBinding(...); return viewBinding.root }
+override fun onCreateView(...): View { binding = getViewBinding(...); return viewBinding.root }
 override fun onDestroyView() { _binding = null; super.onDestroyView() }
 ```
-- 兼容/边界：当前 `lateinit var binding` 是公开属性。直接改成 `protected val` 会删除公开 setter、降低 getter 可见性，属于源码和二进制不兼容。落地前用 binary compatibility 工具确认 API；必要时保留并弃用旧属性，在下一个 major 版本再移除。与 CX-3 互补。回归：中高。
+- 兼容/边界：当前 `lateinit var binding` 是公开属性。直接改成 `protected val` 会删除公开 setter、降低 getter 可见性，属于源码和二进制不兼容。本轮保留公开 getter/setter，并让其委托给可空 backing；内部读取优先用 `viewBinding`。与 CX-3 互补。回归：中高。
 
 ### CX-5 [DECISION] bindToLifecycle(this) 使 use case 长于 View
 - 位置：`CameraFragment.kt:408`（VideoFragment 已用 viewLifecycleOwner）。目标（评估后）：对齐 `viewLifecycleOwner`。**需先确认**是否有意在 View 短暂重建期保活相机；若是则保留并加注释说明，否则统一为 `viewLifecycleOwner`。回归：中。
@@ -755,6 +778,7 @@ val luma = if (data.isEmpty()) 0.0 else sum.toDouble() / data.size
 override fun onAttachedToWindow() { super.onAttachedToWindow(); if (currState==State.Type.STATE_INDETERMINATE && ::internalIndeterminateAnimator.isInitialized && !internalIndeterminateAnimator.isStarted) internalIndeterminateAnimator.start() }
 override fun onDetachedFromWindow() { if (::internalIndeterminateAnimator.isInitialized) internalIndeterminateAnimator.cancel(); super.onDetachedFromWindow() }
 // First line of setIdle/setFinish/setError: cancel the initialized animator.
+// setIndeterminate(): start only when isAttachedToWindow; onAttachedToWindow resumes it.
 ```
 用 `cancel()`（非 end）避免 detach 时多一次 update/invalidate。回归：中。
 
@@ -816,7 +840,7 @@ fun getRetrofit(baseUrl: String): Retrofit =
 每次读取不可变 header 快照，不能保留调用方可继续修改的 Map。`getRetrofitBuilder` 为现有函数名；若为了连接池复用缓存 OkHttpClient，缓存 key 必须包含 header、timeout、TLS 和日志配置。回归：低-中。
 
 ### HTTP-3 [HIGH/P0] source.request(Long.MAX_VALUE) 整体读入内存 OOM
-- 位置：`okhttp/HttpLoggingInterceptor.kt:166-175,235-251`。目标：请求和响应都限制日志副本。响应最多 `request(limit + 1)`，再从 `source.buffer.clone()` 只读取 `min(buffer.size, limit)` 字节；不能对整个 clone 调 `readString()`。请求体若 `contentLength > limit`、长度未知、one-shot 或 duplex，直接省略 BODY；其余通过有界 sink/Buffer 记录。charset 用 `?: DEFAULT_CHARSET`，日志注明截断。覆盖 gzip/encoded、已经预缓冲超过 limit、未知长度及大请求体测试。回归：中（业务 body 不得被消费或修改）。
+- 位置：`okhttp/HttpLoggingInterceptor.kt:166-175,235-251`。目标：请求和响应都限制日志副本。响应最多 `request(limit + 1)`，再从 `source.buffer.clone()` 只读取 `min(buffer.size, limit)` 字节；不能对整个 clone 调 `readString()`。请求体若 `contentLength > limit`、长度未知、one-shot 或 duplex，直接省略 BODY；其余通过有界 sink/Buffer 记录。该 sink 最多接受 `limit + 1` 个字节并主动终止日志副本写入，不能信任 `contentLength()`，以覆盖自定义 RequestBody 虚报长度的情况。charset 用 `?: DEFAULT_CHARSET`，日志注明截断。覆盖 gzip/encoded、已经预缓冲超过 limit、未知长度、虚报长度及大请求体测试。回归：中（业务 body 不得被消费或修改）。
 
 ### HTTP-4 [HIGH/P1] BaseProgressObserver Disposable 不暴露取消入口
 - 位置：`observers/base/BaseProgressObserver.kt:19-22`。目标：

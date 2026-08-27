@@ -15,7 +15,7 @@ fun Byte.toBytes(): ByteArray = byteArrayOf(this)
  */
 fun Int.asByteAndForceToBytes(): ByteArray = this.toByte().toBytes()
 
-fun ByteArray.readByte(index: Int = 0): Byte = (this[index].toInt() and 0xFF).toByte()
+fun ByteArray.readByte(index: Int = 0): Byte = this[index]
 
 fun ByteArray.readBytes(length: Int, srcPos: Int = 0): ByteArray {
     val bytes = ByteArray(length)
@@ -31,15 +31,15 @@ fun ByteArray.readShortLE(index: Int = 0): Short = (
     (this[index + 1].toInt() shl 8) or (this[index + 0].toInt() and 0xFF)
     ).toShort()
 
-fun ByteArray.readInt(index: Int = 0): Int = this[3 + index].toInt() and 0xFF or
-    (this[2 + index].toInt() and 0xFF shl 8) or
-    (this[1 + index].toInt() and 0xFF shl 16) or
-    (this[0 + index].toInt() and 0xFF shl 24)
+fun ByteArray.readInt(index: Int = 0): Int = (this[index + 3].toInt() and 0xFF) or
+    ((this[index + 2].toInt() and 0xFF) shl 8) or
+    ((this[index + 1].toInt() and 0xFF) shl 16) or
+    ((this[index].toInt() and 0xFF) shl 24)
 
-fun ByteArray.readIntLE(index: Int = 0): Int = this[index].toInt() and 0xFF or
-    (this[index + 1].toInt() and 0xFF shl 8) or
-    (this[index + 2].toInt() and 0xFF shl 16) or
-    (this[index + 3].toInt() and 0xFF shl 24)
+fun ByteArray.readIntLE(index: Int = 0): Int = (this[index].toInt() and 0xFF) or
+    ((this[index + 1].toInt() and 0xFF) shl 8) or
+    ((this[index + 2].toInt() and 0xFF) shl 16) or
+    ((this[index + 3].toInt() and 0xFF) shl 24)
 
 fun ByteArray.readLong(index: Int = 0): Long {
     var result: Long = 0
@@ -115,35 +115,27 @@ fun Byte.toHexString(
     addPadding: Boolean =
         false
 ) = let { if (addPadding) "%02X".format(it) else "%X".format(it) }
-fun ByteArray.toAsciiString(delimiter: CharSequence = ",") =
-    map { it.toInt().toChar() }.joinToString(delimiter)
 
 /**
- * Attention.
- * This method is a little bit slow so be aware that if you use it in loop.
+ * Converts each byte to its 7-bit ASCII character and joins them with [delimiter].
+ *
+ * Strict ASCII only: every byte MUST be in 0..127 (0x00..0x7F, control chars and DEL included).
+ * A byte >= 0x80 is not a valid ASCII code point and fails fast with [IllegalArgumentException]
+ * instead of being silently mangled by sign extension. For arbitrary bytes use [toHexString].
+ *
+ * @param delimiter separator inserted between characters (default ",").
+ * @return the joined ASCII string ("" for an empty array).
+ * @throws IllegalArgumentException if any byte is outside 0..127.
  */
-// fun ByteArray.toHexString(delimiter: CharSequence = " ") = joinToString(delimiter) {
-// "%02X".format(it) }
-
-// fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
-//     if (this.isEmpty()) return ""
-//     val result = StringBuilder()
-//     forEach {
-//         val octet = it.toInt()
-//         val highBit = octet and 0x0F
-//         val lowBit = (octet and 0xF0).ushr(4)
-//         if (highBit == 0) {
-//             if (addPadding) result.append(HEX_CHARS[highBit])
-//             result.append(HEX_CHARS[lowBit])
-//         } else {
-//             result.append(HEX_CHARS[highBit])
-//             result.append(HEX_CHARS[lowBit])
-//         }
-//         if (delimiter.isNotEmpty()) result.append(delimiter)
-//     }
-//     if (delimiter.isNotEmpty()) result.deleteCharAt(result.length - 1)
-//     return result.toString()
-// }
+fun ByteArray.toAsciiString(delimiter: CharSequence = ","): String = mapIndexed { index, byte ->
+    val code = byte.toInt() and 0xFF
+    require(code <= 0x7F) {
+        val value = "0x%02X".format(code)
+        "toAsciiString: byte at index $index is $value, " +
+            "outside ASCII range 0x00..0x7F"
+    }
+    code.toChar()
+}.joinToString(delimiter)
 
 fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence = ","): String {
     if (this.isEmpty()) return ""
@@ -168,17 +160,23 @@ fun ByteArray.toHexString(addPadding: Boolean = false, delimiter: CharSequence =
 /**
  * The length of byte array must be an even number.
  */
-fun ByteArray.toShortArray() = ShortArray(this.size ushr 1) {
-    // You can replace `+` with 'or'
-    ((this[it shl 1].toInt() shl 8) + (this[(it shl 1) + 1].toInt() and 0xFF)).toShort()
+fun ByteArray.toShortArray(): ShortArray {
+    require(size % 2 == 0) { "ByteArray size must be even for PCM16 conversion; was $size" }
+    return ShortArray(size ushr 1) {
+        // You can replace `+` with 'or'
+        ((this[it shl 1].toInt() shl 8) + (this[(it shl 1) + 1].toInt() and 0xFF)).toShort()
+    }
 }
 
 /**
  * The length of byte array must be an even number.
  */
-fun ByteArray.toShortArrayLE() = ShortArray(this.size ushr 1) {
-    // You can replace `+` with 'or'
-    ((this[it shl 1].toInt() and 0xFF) + (this[(it shl 1) + 1].toInt() shl 8)).toShort()
+fun ByteArray.toShortArrayLE(): ShortArray {
+    require(size % 2 == 0) { "ByteArray size must be even for PCM16 conversion; was $size" }
+    return ShortArray(size ushr 1) {
+        // You can replace `+` with 'or'
+        ((this[it shl 1].toInt() and 0xFF) + (this[(it shl 1) + 1].toInt() shl 8)).toShort()
+    }
 }
 
 fun ShortArray.toByteArrayLE() = ByteArray(this.size shl 1) {

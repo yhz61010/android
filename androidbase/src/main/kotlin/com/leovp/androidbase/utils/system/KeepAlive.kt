@@ -12,11 +12,11 @@ import android.os.SystemClock
 import androidx.annotation.RawRes
 import androidx.core.content.ContextCompat
 import com.leovp.log.LogContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -68,7 +68,7 @@ class KeepAlive(
                 isLooping = true
                 start()
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure { LogContext.log.e(TAG, "MediaPlayer start failed", it) }
 
         val aliveTimeInMs: Long = (keepAliveTimeInMin * 60 * 1000).toLong()
         val alarmManager: AlarmManager = ContextCompat.getSystemService(
@@ -90,27 +90,46 @@ class KeepAlive(
         )
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pendingIntent)
 
-        job = CoroutineScope(Dispatchers.Main).launch {
+        job = CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             KeepAliveBus.events.collect {
                 LogContext.log.d(TAG, "KeepAlive event received.")
-                callback()
+                try {
+                    callback()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "KeepAlive callback failed", e)
+                }
             }
         }
     }
 
     fun release() {
         LogContext.log.w(TAG, "Release keepAlive()")
-        runCatching { mediaPlayer?.run { release() } }.onFailure { it.printStackTrace() }
+        val player = mediaPlayer
+        mediaPlayer = null
+        runCatching { player?.release() }
+            .onFailure { LogContext.log.e(TAG, "MediaPlayer release failed", it) }
         job?.cancel()
         job = null
     }
 
     internal class KeepAliveReceiver : BroadcastReceiver() {
-        @OptIn(DelicateCoroutinesApi::class)
         override fun onReceive(context: Context, intent: Intent) {
             LogContext.log.d(TAG, "KeepAliveReceiver")
-            GlobalScope.launch {
-                KeepAliveBus.sendAliveEvent()
+            // Keep the broadcast alive across the async emit instead of leaking a GlobalScope job
+            // (remediation ABN-1). goAsync() grants a ~10s window; finish() must run in finally.
+            val pendingResult = goAsync()
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                try {
+                    KeepAliveBus.sendAliveEvent()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "sendAliveEvent failed: ${e.message}", e)
+                } finally {
+                    pendingResult.finish()
+                }
             }
         }
     }

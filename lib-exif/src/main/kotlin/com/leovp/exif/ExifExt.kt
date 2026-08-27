@@ -17,6 +17,14 @@ import java.util.*
 
 private val SDF = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.ENGLISH)
 
+/** Updates only the JPEG EXIF orientation without decoding or re-encoding its pixels. */
+fun File.setExifOrientation(orientation: Int) {
+    ExifInterface(this).apply {
+        setAttribute(ExifInterface.TAG_ORIENTATION, orientation.toString())
+        saveAttributes()
+    }
+}
+
 /** Transforms rotation and mirroring information into one of the [ExifInterface] constants */
 fun computeExifOrientation(rotationDegrees: Int, mirrored: Boolean): Int = when {
     rotationDegrees == 0 && !mirrored -> ExifInterface.ORIENTATION_NORMAL

@@ -28,7 +28,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - `./gradlew :android-restricted:mergeReleaseConsumerProguardFiles --rerun-tasks`：针对 `android-restricted` consumer ProGuard 问题的最窄验证任务。
 - `./gradlew clean`：清理 Gradle 构建产物。
 
-构建前请将 `gradle.properties.template` 复制为 `gradle.properties`。按照 `README.md` 和 `00-documents/git-lfs-guide.md` 中的说明安装 Git LFS。
+构建前请将 `gradle.properties.template` 复制为 `gradle.properties`。按照 `README.md` 和 `00-documents/git-lfs-guide-zh.md` 中的说明安装 Git LFS。
 
 ## 代码风格、日志与命名规范
 遵循 Kotlin 优先约定，使用 4 空格缩进，Gradle 配置使用 Kotlin DSL。包名保持在 `com.leovp.*` 之下，其中需要受限或敏感权限的工具应优先放在 `android-restricted`，避免重新把敏感权限依赖混入 `androidbase`。命名方式与现有代码保持一致：类和对象使用 `UpperCamelCase`，函数和属性使用 `lowerCamelCase`，常量使用 `UPPER_SNAKE_CASE`。测试类通常以 `Test` 或 `UnitTest` 结尾。提交前运行 `ktlintCheck` 和 `detekt`；根级配置使用 `10-configs/detekt.yml`。Detekt 与 ktlint 都由根项目统一应用到所有模块，且 detekt 使用零容忍策略；删除或重构代码后，要同步清理失效的 import、私有成员和死代码，避免未用符号导致检查失败。
@@ -50,7 +50,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 ## 发布与二进制文件注意事项
 所有 Android library 子项目默认通过根构建逻辑配置 `consumerProguardFiles("consumer-rules.pro")`。新增库模块时必须在模块根目录提供 `consumer-rules.pro`，即使当前没有保留规则也应保留空文件，否则 release consumer ProGuard 合并和 JitPack 发布会失败。
 
-仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
+仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide-zh.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
 
 项目 AI 生成文档统一放在 `00-documents/`。该目录下生成的所有文档只维护中文内容，无需创建或维护英文版。Superpowers 生成的 specs、plans 和 implementation notes 放在 `00-documents/superpowers/`，同样只维护中文内容。
 

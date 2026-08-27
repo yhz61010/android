@@ -52,7 +52,7 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 
 仓库使用 Git LFS 管理大型二进制文件。新增或替换 `.so`、`.a`、媒体样本、源码压缩包等大文件前，先检查 `.gitattributes` 和 `00-documents/git-lfs-guide.md`；不要提交 LFS 指针损坏或未拉取完整内容的构建结果。
 
-项目 AI 生成文档统一放在 `00-documents/`。Superpowers 生成的 specs、plans 和 implementation notes 放在 `00-documents/superpowers/`，并按本仓库约定只维护中文内容。
+项目 AI 生成文档统一放在 `00-documents/`。该目录下生成的所有文档只维护中文内容，无需创建或维护英文版。Superpowers 生成的 specs、plans 和 implementation notes 放在 `00-documents/superpowers/`，同样只维护中文内容。
 
 ## 面向代理的说明
 在本仓库中与贡献者沟通时使用中文。代码注释与 commit 内容使用英文。
@@ -80,8 +80,8 @@ Android 资源通常位于 `src/main/res`。Native 构建入口可能位于 `src
 - 与贡献者沟通时使用中文。
 - `AGENTS.md` 只使用中文；不再维护 `AGENTS.zh-CN.md`。
 - 代码注释与 commit 内容使用英文。
-- 创建或更新文档文件时，同时维护英文版和中文版；除中文配套文档外，Markdown 与代码注释仍以英文为主。
-- 例外：Superpowers 生成的 specs、plans 和 implementation notes 只使用中文。
+- 在 `00-documents/` 下创建或更新的所有文档只维护中文，无需生成或维护英文版。
+- 除 `00-documents/` 下的中文文档外，代码注释仍以英文为主。
 - 文档保存到 `00-documents`，不要放到 `docs`。
 
 如果 Claude 相关说明与 CodeX 相关说明存在重叠，遵循更严格的规则；如果存在冲突，优先遵循直接的 system、developer 和 [AGENTS.md](/home/yhz61010/StudioProjects/android/AGENTS.md) 指令，再将 [CLAUDE.md](/home/yhz61010/StudioProjects/android/CLAUDE.md) 与 `.claude/**` 作为补充说明使用。

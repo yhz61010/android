@@ -11,3 +11,7 @@
 FFmpeg 动态库。
 
 所有编码器和解码器类均实现 `Closeable`，应优先使用 `use {}` 或显式调用 `close()`。
+
+H.264/HEVC 需要完整消费所有输出时，应使用 `decodeFrames(packet)`，并在最后一个 packet 后调用
+`drain()`，取回保留输出和因 B 帧重排而延迟的帧。兼容 API `decode(packet)` 会保留额外帧；之后调用
+`decodeFrames()` 时会先返回这些帧，若仍有剩余则由 `drain()` 返回。开始 drain 后，解码器不再接受新 packet。

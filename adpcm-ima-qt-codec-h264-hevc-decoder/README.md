@@ -12,3 +12,8 @@ Maven/POM-only consumers must enforce this rule themselves. Do not use `pickFirs
 FFmpeg libraries.
 
 All encoder and decoder classes implement `Closeable`. Prefer `use {}` or call `close()` explicitly.
+
+For H.264/HEVC, use `decodeFrames(packet)` when every output frame must be consumed and call `drain()`
+after the final packet to retrieve retained and B-frame-delayed output. The compatibility
+`decode(packet)` API retains extra frames; a later `decodeFrames()` returns those retained frames first,
+and `drain()` returns any that remain. The decoder does not accept more packets after draining starts.

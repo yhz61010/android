@@ -144,7 +144,8 @@ int AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket
             return ret;
         }
 
-        callback(pPkt->data, pPkt->size);
+        const bool should_continue = callback(pPkt->data, pPkt->size);
         av_packet_unref(pPkt);
+        if (!should_continue) return AVERROR_EXIT;
     }
 }

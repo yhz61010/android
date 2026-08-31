@@ -116,7 +116,10 @@
   清理 compressor、文件、行缓冲与错误跳转路径，失败时删除不完整文件。FFmpeg wrapper 对 packet
   补齐 `AV_INPUT_BUFFER_PADDING_SIZE`，复用 packet/frame/图像缓冲，按实际 sample format 和
   `nb_samples` 复制音频，并统一 handle 初始化回滚、实例锁互斥及幂等关闭。ADPCM 编码不再静默丢弃
-  不完整 PCM 帧，改为抛出 `IllegalArgumentException`。
+  不完整 PCM 帧，改为抛出 `IllegalArgumentException`；Java 编码回调抛异常时立即终止当前批次，
+  不再继续推进编码器并丢弃剩余输出。H.264/HEVC 解码现在按 FFmpeg send/receive 状态机处理
+  `EAGAIN`，被拒绝的 packet 会在排空输出后重送；新增 `decodeFrames()` 接收单 packet 的全部当前输出，
+  并通过 `drain()` 在 EOS 取回额外输出和 B 帧延迟帧。既有 `decode()` 保留并按序缓存额外帧。
 
 - **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
   设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将

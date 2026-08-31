@@ -100,10 +100,19 @@ JNIEXPORT jbyteArray JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArra
         return nullptr;
     }
     jbyteArray output = env->NewByteArray(pcm_length);
-    if (output != nullptr) {
-        env->SetByteArrayRegion(output, 0, pcm_length, reinterpret_cast<const jbyte *>(pcm));
+    if (output == nullptr) {
+        delete[] pcm;
+        if (!env->ExceptionCheck()) {
+            ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoded PCM output");
+        }
+        return nullptr;
     }
+    env->SetByteArrayRegion(output, 0, pcm_length, reinterpret_cast<const jbyte *>(pcm));
     delete[] pcm;
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
     return output;
 }
 

@@ -29,6 +29,8 @@ struct H264HevcDecoderContext {
     AVPixelFormat lastSwsSourceFormat = AV_PIX_FMT_NONE;
     uint8_t *imageBuffer = nullptr;
     size_t imageBufferCapacity = 0;
+    bool drainStarted = false;
+    bool drainFinished = false;
 };
 
 namespace {
@@ -135,6 +137,135 @@ public:
 private:
     AVFrame *frame_;
 };
+
+jobject CreateFrameList(JNIEnv *env, jmethodID *add_method) {
+    jclass list_class = env->FindClass("java/util/ArrayList");
+    if (list_class == nullptr) return nullptr;
+    jmethodID constructor = env->GetMethodID(list_class, "<init>", "()V");
+    *add_method = env->GetMethodID(list_class, "add", "(Ljava/lang/Object;)Z");
+    if (constructor == nullptr || *add_method == nullptr || env->ExceptionCheck()) {
+        env->DeleteLocalRef(list_class);
+        return nullptr;
+    }
+    jobject list = env->NewObject(list_class, constructor);
+    env->DeleteLocalRef(list_class);
+    return list;
+}
+
+jobject CreateDecodedFrame(JNIEnv *env, H264HevcDecoderContext *decoder) {
+    AVFrame *frame = decoder->frame;
+    const AVPixelFormat output_format = decoder->outputFormat == AV_PIX_FMT_NONE
+                                        ? static_cast<AVPixelFormat>(frame->format)
+                                        : decoder->outputFormat;
+    const int image_size = av_image_get_buffer_size(output_format, frame->width, frame->height, 1);
+    if (image_size <= 0) {
+        ThrowException(env, "java/lang/IllegalStateException", "Invalid decoded frame dimensions");
+        return nullptr;
+    }
+    if (!EnsureImageBuffer(decoder, static_cast<size_t>(image_size))) {
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoded image buffer");
+        return nullptr;
+    }
+
+    int written_bytes;
+    if (decoder->outputFormat != AV_PIX_FMT_NONE) {
+        const AVPixelFormat source_format =
+                ConvertDeprecatedFormat(static_cast<AVPixelFormat>(frame->format));
+        if (decoder->convertContext == nullptr || decoder->lastSwsWidth != frame->width ||
+            decoder->lastSwsHeight != frame->height ||
+            decoder->lastSwsSourceFormat != source_format) {
+            sws_freeContext(decoder->convertContext);
+            decoder->convertContext = sws_getContext(
+                    frame->width, frame->height, source_format,
+                    frame->width, frame->height, decoder->outputFormat,
+                    SWS_POINT, nullptr, nullptr, nullptr);
+            if (decoder->convertContext == nullptr) {
+                ThrowException(env, "java/lang/IllegalStateException",
+                               "Unable to create pixel converter");
+                return nullptr;
+            }
+            decoder->lastSwsWidth = frame->width;
+            decoder->lastSwsHeight = frame->height;
+            decoder->lastSwsSourceFormat = source_format;
+        }
+        if (av_image_fill_arrays(decoder->convertedFrame->data,
+                                 decoder->convertedFrame->linesize,
+                                 decoder->imageBuffer, decoder->outputFormat,
+                                 frame->width, frame->height, 1) < 0 ||
+            sws_scale(decoder->convertContext, frame->data, frame->linesize, 0,
+                      frame->height, decoder->convertedFrame->data,
+                      decoder->convertedFrame->linesize) <= 0) {
+            ThrowException(env, "java/lang/IllegalStateException", "Pixel conversion failed");
+            return nullptr;
+        }
+        written_bytes = image_size;
+    } else {
+        written_bytes = av_image_copy_to_buffer(
+                decoder->imageBuffer, image_size,
+                const_cast<const uint8_t *const *>(frame->data), frame->linesize,
+                static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
+    }
+    if (written_bytes <= 0) {
+        ThrowException(env, "java/lang/IllegalStateException", "Unable to copy decoded frame");
+        return nullptr;
+    }
+
+    jbyteArray output = env->NewByteArray(written_bytes);
+    if (output == nullptr) {
+        if (!env->ExceptionCheck()) {
+            ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoded output");
+        }
+        return nullptr;
+    }
+    env->SetByteArrayRegion(output, 0, written_bytes,
+                            reinterpret_cast<const jbyte *>(decoder->imageBuffer));
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
+    jclass frame_class = env->FindClass(
+            H264_HEVC_PACKAGE_BASE "video/H264HevcDecoder$DecodedVideoFrame");
+    jmethodID constructor = frame_class == nullptr
+                            ? nullptr
+                            : env->GetMethodID(frame_class, "<init>", "([BIII)V");
+    if (constructor == nullptr || env->ExceptionCheck()) {
+        if (frame_class != nullptr) env->DeleteLocalRef(frame_class);
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
+    jobject result = env->NewObject(frame_class, constructor, output,
+                                    static_cast<int>(output_format), frame->width, frame->height);
+    env->DeleteLocalRef(frame_class);
+    env->DeleteLocalRef(output);
+    return result;
+}
+
+int ReceiveFrames(JNIEnv *env, H264HevcDecoderContext *decoder, jobject output,
+                  jmethodID add_method, bool *reached_eof) {
+    int received = 0;
+    *reached_eof = false;
+    for (;;) {
+        const int result = avcodec_receive_frame(decoder->codecContext, decoder->frame);
+        if (result == AVERROR(EAGAIN)) return received;
+        if (result == AVERROR_EOF) {
+            *reached_eof = true;
+            return received;
+        }
+        if (result < 0) {
+            LOGE("Unable to receive decoded video frame. code=%d", result);
+            ThrowException(env, "java/lang/IllegalStateException", "Video decoding failed");
+            return -1;
+        }
+
+        FrameUnrefGuard frame_guard(decoder->frame);
+        jobject decoded_frame = CreateDecodedFrame(env, decoder);
+        if (decoded_frame == nullptr) return -1;
+        env->CallBooleanMethod(output, add_method, decoded_frame);
+        env->DeleteLocalRef(decoded_frame);
+        if (env->ExceptionCheck()) return -1;
+        ++received;
+    }
+}
 
 }  // namespace
 
@@ -276,7 +407,7 @@ JNIEXPORT void JNICALL NativeRelease(JNIEnv *env, jobject object) {
     DestroyDecoderContext(decoder);
 }
 
-JNIEXPORT jobject JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArray encoded_array) {
+JNIEXPORT jobject JNICALL NativeDecodeFrames(JNIEnv *env, jobject object, jbyteArray encoded_array) {
     H264HevcDecoderContext *decoder = GetDecoderContext(env, object);
     if (decoder == nullptr) {
         ThrowException(env, "java/lang/IllegalStateException", "Decoder is closed");
@@ -286,11 +417,21 @@ JNIEXPORT jobject JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArray e
         ThrowException(env, "java/lang/IllegalArgumentException", "Encoded frame must not be empty");
         return nullptr;
     }
+    if (decoder->drainStarted) {
+        ThrowException(env, "java/lang/IllegalStateException",
+                       "Decoder has reached end of input and cannot accept more packets");
+        return nullptr;
+    }
+
+    jmethodID add_method = nullptr;
+    jobject output = CreateFrameList(env, &add_method);
+    if (output == nullptr) return nullptr;
 
     const jsize encoded_length = env->GetArrayLength(encoded_array);
     av_packet_unref(decoder->packet);
     av_frame_unref(decoder->frame);
     if (av_new_packet(decoder->packet, encoded_length) < 0) {
+        env->DeleteLocalRef(output);
         ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate video packet");
         return nullptr;
     }
@@ -298,90 +439,108 @@ JNIEXPORT jobject JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArray e
                             reinterpret_cast<jbyte *>(decoder->packet->data));
     if (env->ExceptionCheck()) {
         av_packet_unref(decoder->packet);
+        env->DeleteLocalRef(output);
         return nullptr;
     }
     std::memset(decoder->packet->data + encoded_length, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-    if (avcodec_send_packet(decoder->codecContext, decoder->packet) < 0 ||
-        avcodec_receive_frame(decoder->codecContext, decoder->frame) < 0) {
+
+    int send_result;
+    for (;;) {
+        send_result = avcodec_send_packet(decoder->codecContext, decoder->packet);
+        if (send_result != AVERROR(EAGAIN)) break;
+
+        bool reached_eof = false;
+        const int received = ReceiveFrames(env, decoder, output, add_method, &reached_eof);
+        if (received <= 0 || reached_eof || env->ExceptionCheck()) {
+            if (!env->ExceptionCheck()) {
+                ThrowException(env, "java/lang/IllegalStateException",
+                               "Decoder made no progress while accepting input");
+            }
+            av_packet_unref(decoder->packet);
+            env->DeleteLocalRef(output);
+            return nullptr;
+        }
+    }
+    if (send_result < 0) {
+        LOGE("Unable to send video packet. code=%d", send_result);
         av_packet_unref(decoder->packet);
+        env->DeleteLocalRef(output);
+        ThrowException(env, "java/lang/IllegalStateException", "Unable to send video packet");
         return nullptr;
     }
     av_packet_unref(decoder->packet);
-    FrameUnrefGuard frame_guard(decoder->frame);
 
-    AVFrame *frame = decoder->frame;
-    const AVPixelFormat output_format = decoder->outputFormat == AV_PIX_FMT_NONE
-                                        ? static_cast<AVPixelFormat>(frame->format)
-                                        : decoder->outputFormat;
-    const int image_size = av_image_get_buffer_size(output_format, frame->width, frame->height, 1);
-    if (image_size <= 0) return nullptr;
-    if (!EnsureImageBuffer(decoder, static_cast<size_t>(image_size))) {
-        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoded image buffer");
+    bool reached_eof = false;
+    if (ReceiveFrames(env, decoder, output, add_method, &reached_eof) < 0) {
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
+    return output;
+}
+
+JNIEXPORT jobject JNICALL NativeDrain(JNIEnv *env, jobject object) {
+    H264HevcDecoderContext *decoder = GetDecoderContext(env, object);
+    if (decoder == nullptr) {
+        ThrowException(env, "java/lang/IllegalStateException", "Decoder is closed");
         return nullptr;
     }
 
-    int written_bytes;
-    if (decoder->outputFormat != AV_PIX_FMT_NONE) {
-        const AVPixelFormat source_format =
-                ConvertDeprecatedFormat(static_cast<AVPixelFormat>(frame->format));
-        if (decoder->convertContext == nullptr || decoder->lastSwsWidth != frame->width ||
-            decoder->lastSwsHeight != frame->height ||
-            decoder->lastSwsSourceFormat != source_format) {
-            sws_freeContext(decoder->convertContext);
-            decoder->convertContext = sws_getContext(
-                    frame->width, frame->height, source_format,
-                    frame->width, frame->height, decoder->outputFormat,
-                    SWS_POINT, nullptr, nullptr, nullptr);
-            if (decoder->convertContext == nullptr) {
-                ThrowException(env, "java/lang/IllegalStateException", "Unable to create pixel converter");
+    jmethodID add_method = nullptr;
+    jobject output = CreateFrameList(env, &add_method);
+    if (output == nullptr) return nullptr;
+    if (decoder->drainFinished) return output;
+
+    if (!decoder->drainStarted) {
+        for (;;) {
+            const int send_result = avcodec_send_packet(decoder->codecContext, nullptr);
+            if (send_result == 0) {
+                decoder->drainStarted = true;
+                break;
+            }
+            if (send_result == AVERROR_EOF) {
+                decoder->drainStarted = true;
+                decoder->drainFinished = true;
+                return output;
+            }
+            if (send_result != AVERROR(EAGAIN)) {
+                LOGE("Unable to start video decoder drain. code=%d", send_result);
+                env->DeleteLocalRef(output);
+                ThrowException(env, "java/lang/IllegalStateException",
+                               "Unable to drain video decoder");
                 return nullptr;
             }
-            decoder->lastSwsWidth = frame->width;
-            decoder->lastSwsHeight = frame->height;
-            decoder->lastSwsSourceFormat = source_format;
-        }
-        if (av_image_fill_arrays(decoder->convertedFrame->data,
-                                 decoder->convertedFrame->linesize,
-                                 decoder->imageBuffer, decoder->outputFormat,
-                                 frame->width, frame->height, 1) < 0 ||
-            sws_scale(decoder->convertContext, frame->data, frame->linesize, 0,
-                      frame->height, decoder->convertedFrame->data,
-                      decoder->convertedFrame->linesize) <= 0) {
-            ThrowException(env, "java/lang/IllegalStateException", "Pixel conversion failed");
-            return nullptr;
-        }
-        written_bytes = image_size;
-    } else {
-        written_bytes = av_image_copy_to_buffer(
-                decoder->imageBuffer, image_size,
-                const_cast<const uint8_t *const *>(frame->data), frame->linesize,
-                static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
-    }
-    if (written_bytes <= 0) return nullptr;
 
-    jbyteArray output = env->NewByteArray(written_bytes);
-    if (output == nullptr) return nullptr;
-    env->SetByteArrayRegion(output, 0, written_bytes,
-                            reinterpret_cast<const jbyte *>(decoder->imageBuffer));
-    if (env->ExceptionCheck()) {
+            bool reached_eof = false;
+            const int received = ReceiveFrames(env, decoder, output, add_method, &reached_eof);
+            if (received <= 0 || env->ExceptionCheck()) {
+                if (!env->ExceptionCheck()) {
+                    ThrowException(env, "java/lang/IllegalStateException",
+                                   "Decoder made no progress while starting drain");
+                }
+                env->DeleteLocalRef(output);
+                return nullptr;
+            }
+            if (reached_eof) {
+                decoder->drainStarted = true;
+                decoder->drainFinished = true;
+                return output;
+            }
+        }
+    }
+
+    bool reached_eof = false;
+    if (ReceiveFrames(env, decoder, output, add_method, &reached_eof) < 0) {
         env->DeleteLocalRef(output);
         return nullptr;
     }
-    jclass frame_class = env->FindClass(
-            H264_HEVC_PACKAGE_BASE "video/H264HevcDecoder$DecodedVideoFrame");
-    jmethodID constructor = frame_class == nullptr
-                            ? nullptr
-                            : env->GetMethodID(frame_class, "<init>", "([BIII)V");
-    if (constructor == nullptr || env->ExceptionCheck()) {
-        if (frame_class != nullptr) env->DeleteLocalRef(frame_class);
+    if (!reached_eof) {
         env->DeleteLocalRef(output);
+        ThrowException(env, "java/lang/IllegalStateException",
+                       "Decoder drain ended before end of stream");
         return nullptr;
     }
-    jobject result = env->NewObject(frame_class, constructor, output,
-                                    static_cast<int>(output_format), frame->width, frame->height);
-    env->DeleteLocalRef(frame_class);
-    env->DeleteLocalRef(output);
-    return result;
+    decoder->drainFinished = true;
+    return output;
 }
 
 JNIEXPORT jstring JNICALL NativeGetVersion(JNIEnv *env, jobject) {
@@ -392,8 +551,9 @@ static JNINativeMethod methods[] = {
         {"nativeInit", "([B[B[B[B[BI)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodeVideoInfo;",
          reinterpret_cast<void *>(NativeInit)},
         {"nativeRelease", "()V", reinterpret_cast<void *>(NativeRelease)},
-        {"nativeDecode", "([B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodedVideoFrame;",
-         reinterpret_cast<void *>(NativeDecode)},
+        {"nativeDecodeFrames", "([B)Ljava/util/List;",
+         reinterpret_cast<void *>(NativeDecodeFrames)},
+        {"nativeDrain", "()Ljava/util/List;", reinterpret_cast<void *>(NativeDrain)},
         {"nativeGetVersion", "()Ljava/lang/String;", reinterpret_cast<void *>(NativeGetVersion)},
 };
 

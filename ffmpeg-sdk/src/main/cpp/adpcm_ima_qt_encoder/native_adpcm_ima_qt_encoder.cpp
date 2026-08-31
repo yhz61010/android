@@ -101,18 +101,19 @@ JNIEXPORT void JNICALL NativeEncode(JNIEnv *env, jobject object, jbyteArray pcm_
     bool callback_failed = false;
     const int result = encoder->encode(
             reinterpret_cast<const uint8_t *>(pcm), pcm_length,
-            [env, object, callback_method, &callback_failed](uint8_t *data, int length) {
-                if (callback_failed || env->ExceptionCheck()) return;
+            [env, object, callback_method, &callback_failed](const uint8_t *data, int length) {
+                if (callback_failed || env->ExceptionCheck()) return false;
                 jbyteArray encoded = env->NewByteArray(length);
                 if (encoded == nullptr) {
                     callback_failed = true;
-                    return;
+                    return false;
                 }
                 env->SetByteArrayRegion(encoded, 0, length,
                                         reinterpret_cast<const jbyte *>(data));
                 if (!env->ExceptionCheck()) env->CallVoidMethod(object, callback_method, encoded);
                 callback_failed = env->ExceptionCheck();
                 env->DeleteLocalRef(encoded);
+                return !callback_failed;
             });
     env->ReleaseByteArrayElements(pcm_array, pcm, JNI_ABORT);
     if (callback_failed) return;

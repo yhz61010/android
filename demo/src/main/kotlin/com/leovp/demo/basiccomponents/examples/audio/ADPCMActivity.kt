@@ -42,19 +42,23 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         inputStream.close()
 
         val outFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
-        val os = BufferedOutputStream(FileOutputStream(outFile))
-
         thread {
-            val adpcmImaQtEncoder = AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000)
-            adpcmImaQtEncoder.encodedCallback = object : EncodeAudioCallback {
-                override fun onEncodedUpdate(encodedAudio: ByteArray) {
-                    os.write(encodedAudio)
+            runCatching {
+                BufferedOutputStream(FileOutputStream(outFile)).use { outputStream ->
+                    AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000).use { encoder ->
+                        encoder.encodedCallback = object : EncodeAudioCallback {
+                            override fun onEncodedUpdate(encodedAudio: ByteArray) {
+                                outputStream.write(encodedAudio)
+                            }
+                        }
+                        encoder.encode(pcmData)
+                    }
                 }
+            }.onSuccess {
+                toast("Encode done!")
+            }.onFailure {
+                LogContext.log.e(ITAG, "Unable to encode ADPCM audio.", it)
             }
-            adpcmImaQtEncoder.encode(pcmData)
-            adpcmImaQtEncoder.release()
-            os.close()
-            toast("Encode done!")
         }
     }
 
@@ -75,27 +79,33 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
             )
         player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
-        val adpcmQT = AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
         thread {
-            // val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
-            val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
-            val inputStream = FileInputStream(inFile)
-            val musicBytes = inputStream.readBytes()
-            inputStream.close()
-            val chunkSize: Int = adpcmQT.chunkSize()
-            for (i in musicBytes.indices step chunkSize) {
-                val chunk = musicBytes.copyOfRange(i, i + chunkSize)
-                val st = SystemClock.elapsedRealtimeNanos()
-                val pcmBytes = adpcmQT.decode(chunk)
-                LogContext.log.i(
-                    ITAG,
-                    "PCM[${pcmBytes.size}] " +
-                        "cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
-                )
-                player?.play(pcmBytes)
+            runCatching {
+                AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount).use { decoder ->
+                    // val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
+                    val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
+                    val musicBytes = FileInputStream(inFile).use { it.readBytes() }
+                    val chunkSize = decoder.chunkSize()
+                    require(musicBytes.size % chunkSize == 0) {
+                        "ADPCM file contains an incomplete trailing chunk."
+                    }
+                    for (i in musicBytes.indices step chunkSize) {
+                        val chunk = musicBytes.copyOfRange(i, i + chunkSize)
+                        val st = SystemClock.elapsedRealtimeNanos()
+                        val pcmBytes = decoder.decode(chunk)
+                        LogContext.log.i(
+                            ITAG,
+                            "PCM[${pcmBytes.size}] " +
+                                "cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
+                        )
+                        player?.play(pcmBytes)
+                    }
+                }
+            }.onFailure {
+                LogContext.log.e(ITAG, "Unable to decode ADPCM audio.", it)
+            }.also {
+                player?.release()
             }
-            adpcmQT.release()
-            player?.release()
         }
     }
 

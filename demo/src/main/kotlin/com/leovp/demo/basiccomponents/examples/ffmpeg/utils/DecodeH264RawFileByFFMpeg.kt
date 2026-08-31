@@ -79,6 +79,15 @@ class DecodeH264RawFileByFFMpeg {
     private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
         videoDecoder.decode(rawVideo)
 
+    private fun renderFrame(frame: H264HevcDecoder.DecodedVideoFrame) {
+        val yuv420Type = if (videoInfo.pixelFormatId < 0) {
+            BaseRenderer.Yuv420Type.I420
+        } else {
+            BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
+        }
+        glSurfaceView.render(frame.yuvOrRgbBytes, yuv420Type)
+    }
+
     private lateinit var rf: RandomAccessFile
 
     private var currentIndex = 0L
@@ -185,9 +194,14 @@ class DecodeH264RawFileByFFMpeg {
         decodeJob = ioScope.launch {
             val startIdx = 4
             runCatching {
+                var reachedEndOfFile = false
                 while (isDecoding && !isClosed) {
                     ensureActive()
-                    val bytes = getRawH264() ?: break
+                    val bytes = getRawH264()
+                    if (bytes == null) {
+                        reachedEndOfFile = true
+                        break
+                    }
                     var previousStart = 0
                     for (i in startIdx until bytes.size) {
                         // Check if we should stop decoding
@@ -207,13 +221,8 @@ class DecodeH264RawFileByFFMpeg {
                                     val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
                                         decodeVideo(frame)
                                     val st2 = SystemClock.elapsedRealtimeNanos()
-                                    decodeFrame?.let {
-                                        val yuv420Type = if (videoInfo.pixelFormatId < 0) {
-                                            BaseRenderer.Yuv420Type.I420
-                                        } else {
-                                            BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
-                                        }
-                                        glSurfaceView.render(it.yuvOrRgbBytes, yuv420Type)
+                                    decodeFrame?.let { decodedFrame ->
+                                        renderFrame(decodedFrame)
 
                                         // it.yuvOrRgbBytes.toBitmapFromBytes(it.width,
                                         // it.height)?.writeToFile(File("/sdcard/yuv2bgr/argb32-$i.b
@@ -240,6 +249,8 @@ class DecodeH264RawFileByFFMpeg {
                                     // If closed, still record time for sleep calculation
                                     st3 = SystemClock.elapsedRealtimeNanos()
                                 }
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
                                 st3 = SystemClock.elapsedRealtimeNanos()
                                 LogContext.log.e(TAG, "decode error.", e)
@@ -253,6 +264,9 @@ class DecodeH264RawFileByFFMpeg {
                             }
                         }
                     }
+                }
+                if (reachedEndOfFile && !isClosed) {
+                    videoDecoder.drain().forEach(::renderFrame)
                 }
             }.onFailure {
                 if (it !is CancellationException) {

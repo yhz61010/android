@@ -3,144 +3,136 @@ package com.leovp.image
 import android.graphics.Bitmap
 import android.util.Log
 import java.io.Closeable
-import java.nio.ByteBuffer
 
 /**
- * Usage:
- * ```
- * val bmpProcessor = BitmapProcessor(bmp)
- * bmpProcessor.flipBitmapHorizontal()
- * bmpProcessor.rotateBitmapCw90()
- * val newBmp: Bitmap? = bmpProcessor.bitmap
- * bmpProcessor.free()
- * ```
+ * Performs bitmap transformations in native memory.
  *
+ * Use [use] or call [close] as soon as the processor is no longer needed.
  *
  * Author: Michael Leo
  * Date: 2022/6/23 14:32
  */
 class BitmapProcessor(bitmap: Bitmap) : Closeable {
-    init {
-        setBitmap(bitmap)
-    }
-
     companion object {
         init {
             System.loadLibrary("leo-bitmap")
         }
     }
 
-    var bitmapByteBuffer: ByteBuffer? = null
-
     enum class ScaleMethod {
         NearestNeighbour,
         BilinearInterpolation
     }
 
-    private external fun setBitmapData(bitmap: Bitmap): ByteBuffer
-    private external fun getBitmapFromSavedBitmapData(handler: ByteBuffer): Bitmap
-    private external fun freeBitmapData(handler: ByteBuffer)
+    private var nativeHandle: Long = nativeSetBitmapData(bitmap)
+    private var closed: Boolean = false
 
-    private external fun rotateBitmapCcw90(handler: ByteBuffer)
-    private external fun rotateBitmapCw90(handler: ByteBuffer)
-    private external fun rotateBitmap180(handler: ByteBuffer)
+    init {
+        check(nativeHandle != 0L) { "Unable to create native Bitmap data." }
+    }
 
-    private external fun cropBitmap(
-        handler: ByteBuffer,
+    private external fun nativeSetBitmapData(bitmap: Bitmap): Long
+    private external fun nativeGetBitmap(handle: Long): Bitmap
+    private external fun nativeFreeBitmapData(handle: Long)
+    private external fun nativeRotateBitmapCcw90(handle: Long)
+    private external fun nativeRotateBitmapCw90(handle: Long)
+    private external fun nativeRotateBitmap180(handle: Long)
+
+    private external fun nativeCropBitmap(
+        handle: Long,
         left: Int,
         top: Int,
         right: Int,
         bottom: Int
     )
 
-    private external fun scaleNNBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
-    private external fun scaleBIBitmap(handler: ByteBuffer, newWidth: Int, newHeight: Int)
+    private external fun nativeScaleNNBitmap(handle: Long, newWidth: Int, newHeight: Int)
+    private external fun nativeScaleBIBitmap(handle: Long, newWidth: Int, newHeight: Int)
+    private external fun nativeFlipBitmapHorizontal(handle: Long)
+    private external fun nativeFlipBitmapVertical(handle: Long)
 
-    private external fun flipBitmapHorizontal(handler: ByteBuffer)
-    private external fun flipBitmapVertical(handler: ByteBuffer)
-
+    @Synchronized
     fun setBitmap(bitmap: Bitmap) {
-        if (bitmapByteBuffer != null) free()
-        bitmapByteBuffer = setBitmapData(bitmap)
+        checkOpen()
+        val newHandle = nativeSetBitmapData(bitmap)
+        check(newHandle != 0L) { "Unable to create native Bitmap data." }
+        val oldHandle = nativeHandle
+        nativeHandle = newHandle
+        nativeFreeBitmapData(oldHandle)
     }
 
-    fun rotateBitmapCcw90() = bitmapByteBuffer?.let { rotateBitmapCcw90(it) }
+    @Synchronized
+    fun rotateBitmapCcw90() = nativeRotateBitmapCcw90(requireHandle())
 
-    fun rotateBitmapCw90() = bitmapByteBuffer?.let { rotateBitmapCw90(it) }
+    @Synchronized
+    fun rotateBitmapCw90() = nativeRotateBitmapCw90(requireHandle())
 
-    fun rotateBitmap180() = bitmapByteBuffer?.let { rotateBitmap180(it) }
+    @Synchronized
+    fun rotateBitmap180() = nativeRotateBitmap180(requireHandle())
 
-    fun cropBitmap(left: Int, top: Int, right: Int, bottom: Int) = bitmapByteBuffer?.let {
-        cropBitmap(it, left, top, right, bottom)
+    @Synchronized
+    fun cropBitmap(left: Int, top: Int, right: Int, bottom: Int) =
+        nativeCropBitmap(requireHandle(), left, top, right, bottom)
+
+    val bitmap: Bitmap
+        @Synchronized get() = nativeGetBitmap(requireHandle())
+
+    @Synchronized
+    fun getBitmapAndFree(): Bitmap = try {
+        nativeGetBitmap(requireHandle())
+    } finally {
+        close()
     }
 
-    val bitmap: Bitmap? get() = bitmapByteBuffer?.let { getBitmapFromSavedBitmapData(it) }
-    fun getBitmapAndFree(): Bitmap? {
-        val bmp = bitmap
-        free()
-        return bmp
-    }
-
+    @Synchronized
     fun scaleBitmap(
         newWidth: Int,
         newHeight: Int,
         scaleMethod: ScaleMethod = ScaleMethod.NearestNeighbour
     ) {
-        val innerHandler = bitmapByteBuffer ?: return
+        val handle = requireHandle()
         when (scaleMethod) {
-            ScaleMethod.BilinearInterpolation -> scaleBIBitmap(innerHandler, newWidth, newHeight)
-            ScaleMethod.NearestNeighbour -> scaleNNBitmap(innerHandler, newWidth, newHeight)
+            ScaleMethod.BilinearInterpolation -> nativeScaleBIBitmap(handle, newWidth, newHeight)
+            ScaleMethod.NearestNeighbour -> nativeScaleNNBitmap(handle, newWidth, newHeight)
         }
     }
 
-    /**
-     * flips a bitmap horizontally, as such: <br></br>
-     *
-     * <pre>
-     * 123    321
-     * 456 => 654
-     * 789    987
-     * </pre>
-     */
-    //
-    fun flipBitmapHorizontal() = bitmapByteBuffer?.let { flipBitmapHorizontal(it) }
+    /** Flips the bitmap horizontally. */
+    @Synchronized
+    fun flipBitmapHorizontal() = nativeFlipBitmapHorizontal(requireHandle())
 
-    /**
-     * Flips the bitmap on vertically, as such:<br></br>
-     *
-     * <pre>
-     * 123    789
-     * 456 => 456
-     * 789    123
-     * </pre>
-     */
-    fun flipBitmapVertical() = bitmapByteBuffer?.let { flipBitmapVertical(it) }
+    /** Flips the bitmap vertically. */
+    @Synchronized
+    fun flipBitmapVertical() = nativeFlipBitmapVertical(requireHandle())
 
-    fun free() {
-        bitmapByteBuffer?.let {
-            freeBitmapData(it)
-            bitmapByteBuffer = null
-        }
+    /** Releases the native bitmap. Repeated calls have no effect. */
+    fun free() = close()
+
+    @Synchronized
+    override fun close() {
+        if (closed) return
+        val handle = nativeHandle
+        nativeHandle = 0L
+        closed = true
+        nativeFreeBitmapData(handle)
     }
 
-    /**
-     * To override finalize(), all you need to do is simply declare it, without using the override
-     * keyword.
-     *
-     * https://kotlinlang.org/docs/java-interop.html#finalize
-     */
-    internal fun finalize() {
-        if (bitmapByteBuffer == null) return
+    @Suppress("deprecation")
+    protected fun finalize() {
+        if (closed) return
         Log.w(
             "LEO-Native",
-            "JNI bitmap wasn't freed manually. Free it by finalize automatically. " +
-                "You'd better to free the bitmap as soon as you can."
+            "JNI bitmap was not closed explicitly. Release it with use {} or close()."
         )
-        free()
+        runCatching { close() }
     }
 
-    override fun close() {
-        if (bitmapByteBuffer == null) return
-        free()
+    private fun requireHandle(): Long {
+        checkOpen()
+        return nativeHandle
+    }
+
+    private fun checkOpen() {
+        check(!closed && nativeHandle != 0L) { "BitmapProcessor is closed." }
     }
 }

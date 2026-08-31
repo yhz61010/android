@@ -1,13 +1,10 @@
 package com.leovp.ffmpeg.audio.adpcm
 
 import androidx.annotation.Keep
+import java.io.Closeable
 
-/**
- * Author: Michael Leo
- * Date: 2021/6/11 09:57
- */
-@Keep // Prevents ProGuard/R8 from removing the nativeHandle field used by JNI.
-class AdpcmImaQtDecoder private constructor() {
+@Keep
+class AdpcmImaQtDecoder private constructor() : Closeable {
     companion object {
         init {
             System.loadLibrary("adpcm-ima-qt-decoder")
@@ -16,38 +13,50 @@ class AdpcmImaQtDecoder private constructor() {
         }
     }
 
-    /** Stores the native C++ object pointer. Accessed by JNI only. */
     @Suppress("unused")
     private var nativeHandle: Long = 0L
 
     constructor(sampleRate: Int, channels: Int) : this() {
-        init(sampleRate, channels)
+        require(sampleRate > 0) { "Sample rate must be positive." }
+        require(channels == 1 || channels == 2) { "Channel count must be 1 or 2." }
+        check(nativeInit(sampleRate, channels) == 0 && nativeHandle != 0L) {
+            "Unable to initialize the ADPCM decoder."
+        }
     }
 
-    private external fun init(sampleRate: Int, channels: Int): Int
-    external fun release()
+    @Synchronized
+    fun decode(adpcmBytes: ByteArray): ByteArray {
+        checkOpen()
+        require(adpcmBytes.size == nativeChunkSize()) {
+            "ADPCM input must contain exactly one 34-byte chunk per channel."
+        }
+        return checkNotNull(nativeDecode(adpcmBytes)) { "ADPCM decoder rejected the input." }
+    }
 
-    /**
-     * In QuickTime, IMA is encoded by chunks of 34 bytes (=64 samples) for each channel.
-     * Channel data is interleaved per-chunk.
-     *
-     * That means for mono audio, it will decode 34 bytes each time,
-     * for stereo audio, it will decode 68 bytes each time,
-     *
-     * @param adpcmBytes The length of this parameter is 34 bytes * channels
-     * @return The returned pcm data is interleaved.
-     * Like this:
-     * ```
-     * |L0       |L0        |R0       |R0        |L1       |L1        |L1       |R1        |
-     * |---------|----------|---------|----------|---------|----------|---------|----------|
-     * |Low 8bits|High 8bits|Low 8bits|High 8bits|Low 8bits|High 8bits|Low 8bits|High 8bits|
-     * ```
-     */
-    external fun decode(adpcmBytes: ByteArray): ByteArray
-    external fun getVersion(): String
+    @Synchronized
+    fun chunkSize(): Int {
+        checkOpen()
+        return nativeChunkSize()
+    }
 
-    /**
-     * @return The result is 34 bytes * channels
-     */
-    external fun chunkSize(): Int
+    fun getVersion(): String = nativeGetVersion()
+
+    @Synchronized
+    fun release() {
+        if (nativeHandle == 0L) return
+        nativeRelease()
+        check(nativeHandle == 0L) { "Native decoder release did not clear its handle." }
+    }
+
+    override fun close() = release()
+
+    private fun checkOpen() {
+        check(nativeHandle != 0L) { "ADPCM decoder is closed." }
+    }
+
+    private external fun nativeInit(sampleRate: Int, channels: Int): Int
+    private external fun nativeRelease()
+    private external fun nativeDecode(adpcmBytes: ByteArray): ByteArray?
+    private external fun nativeGetVersion(): String
+    private external fun nativeChunkSize(): Int
 }

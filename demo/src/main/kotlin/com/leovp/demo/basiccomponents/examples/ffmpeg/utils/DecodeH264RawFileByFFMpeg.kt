@@ -12,6 +12,8 @@ import com.leovp.opengl.BaseRenderer
 import com.leovp.opengl.ui.LeoGLSurfaceView
 import java.io.File
 import java.io.RandomAccessFile
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,6 +31,8 @@ class DecodeH264RawFileByFFMpeg {
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
+    private var decodeJob: Job? = null
+    private val resourcesClosed = AtomicBoolean(false)
     private lateinit var glSurfaceView: LeoGLSurfaceView
 
     private lateinit var videoInfo: H264HevcDecoder.DecodeVideoInfo
@@ -146,18 +150,30 @@ class DecodeH264RawFileByFFMpeg {
 
     fun close() {
         LogContext.log.d(TAG, "close()")
+        if (isClosed) return
         isClosed = true
-        // Stop decoding loop first
         isDecoding = false
-        // Cancel the scope and wait for it to finish
-        ioScope.cancel()
-        // Give some time for the decoding thread to stop
-        Thread.sleep(100)
-        // Then release the decoder
-        try {
-            videoDecoder.release()
-        } catch (e: Exception) {
-            LogContext.log.e(TAG, "Error releasing decoder", e)
+
+        val runningJob = decodeJob
+        if (runningJob == null) {
+            releaseResources()
+            ioScope.cancel()
+            return
+        }
+        runningJob.invokeOnCompletion {
+            releaseResources()
+            ioScope.cancel()
+        }
+        runningJob.cancel()
+    }
+
+    private fun releaseResources() {
+        if (!resourcesClosed.compareAndSet(false, true)) return
+        runCatching { videoDecoder.close() }
+            .onFailure { LogContext.log.e(TAG, "Error releasing decoder", it) }
+        if (::rf.isInitialized) {
+            runCatching { rf.close() }
+                .onFailure { LogContext.log.e(TAG, "Error closing input file", it) }
         }
     }
 
@@ -165,7 +181,8 @@ class DecodeH264RawFileByFFMpeg {
         // FIXME
         // If you use coroutines here, the video will be displayed. I don't know why!!!
         isDecoding = true
-        ioScope.launch {
+        if (isClosed || decodeJob?.isActive == true) return
+        decodeJob = ioScope.launch {
             val startIdx = 4
             runCatching {
                 while (isDecoding && !isClosed) {
@@ -237,7 +254,11 @@ class DecodeH264RawFileByFFMpeg {
                         }
                     }
                 }
-            }.onFailure { it.printStackTrace() }
+            }.onFailure {
+                if (it !is CancellationException) {
+                    LogContext.log.e(TAG, "Decoding failed", it)
+                }
+            }
         }
     }
 

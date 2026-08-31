@@ -1,38 +1,74 @@
 #include <jni.h>
-#include <string>
+
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <new>
+
 #include "logger.h"
 
-#ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
-
-#include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
 #include <libavcodec/jni.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/pixdesc.h>
+#include <libswscale/swscale.h>
+}
 
 #define H264_HEVC_PACKAGE_BASE "com/leovp/ffmpeg/"
 
 struct H264HevcDecoderContext {
-    AVCodecContext *ctx = nullptr;
+    AVCodecContext *codecContext = nullptr;
     AVFrame *frame = nullptr;
-    AVPacket *pkt = nullptr;
-
-    struct SwsContext *convertCxt = nullptr;
-    AVFrame *bmpFrame = nullptr;
-    AVPixelFormat bmpFormat = AV_PIX_FMT_NONE;
-
-    // Cached dimensions for SwsContext reuse
+    AVPacket *packet = nullptr;
+    SwsContext *convertContext = nullptr;
+    AVFrame *convertedFrame = nullptr;
+    AVPixelFormat outputFormat = AV_PIX_FMT_NONE;
     int lastSwsWidth = 0;
     int lastSwsHeight = 0;
-    AVPixelFormat lastSwsSrcFmt = AV_PIX_FMT_NONE;
+    AVPixelFormat lastSwsSourceFormat = AV_PIX_FMT_NONE;
+    uint8_t *imageBuffer = nullptr;
+    size_t imageBufferCapacity = 0;
 };
 
-// 把已经废除的格式转换成新的格式，防止报 "deprecated pixel format used, make sure you did set range correctly" 错误
-AVPixelFormat convertDeprecatedFormat(enum AVPixelFormat format)
-{
-    switch (format)
-    {
+namespace {
+
+void ThrowException(JNIEnv *env, const char *class_name, const char *message) {
+    if (env->ExceptionCheck()) return;
+    jclass clazz = env->FindClass(class_name);
+    if (clazz != nullptr) {
+        env->ThrowNew(clazz, message);
+        env->DeleteLocalRef(clazz);
+    }
+}
+
+jfieldID GetHandleField(JNIEnv *env, jobject object) {
+    jclass clazz = env->GetObjectClass(object);
+    if (clazz == nullptr) return nullptr;
+    jfieldID field = env->GetFieldID(clazz, "nativeHandle", "J");
+    env->DeleteLocalRef(clazz);
+    return field;
+}
+
+H264HevcDecoderContext *GetDecoderContext(JNIEnv *env, jobject object) {
+    jfieldID field = GetHandleField(env, object);
+    if (field == nullptr) return nullptr;
+    return reinterpret_cast<H264HevcDecoderContext *>(env->GetLongField(object, field));
+}
+
+void DestroyDecoderContext(H264HevcDecoderContext *context) {
+    if (context == nullptr) return;
+    if (context->convertContext != nullptr) sws_freeContext(context->convertContext);
+    av_freep(&context->imageBuffer);
+    if (context->convertedFrame != nullptr) av_frame_free(&context->convertedFrame);
+    if (context->packet != nullptr) av_packet_free(&context->packet);
+    if (context->frame != nullptr) av_frame_free(&context->frame);
+    if (context->codecContext != nullptr) avcodec_free_context(&context->codecContext);
+    delete context;
+}
+
+AVPixelFormat ConvertDeprecatedFormat(AVPixelFormat format) {
+    switch (format) {
         case AV_PIX_FMT_YUVJ420P:
             return AV_PIX_FMT_YUV420P;
         case AV_PIX_FMT_YUVJ422P:
@@ -46,297 +82,329 @@ AVPixelFormat convertDeprecatedFormat(enum AVPixelFormat format)
     }
 }
 
-static jfieldID getHandleField(JNIEnv *env, jobject obj) {
-    jclass clazz = env->GetObjectClass(obj);
-    jfieldID fid = env->GetFieldID(clazz, "nativeHandle", "J");
-    env->DeleteLocalRef(clazz);
-    return fid;
+AVPixelFormat ResolveOutputFormat(jint rgb_type) {
+    switch (rgb_type) {
+        case 1:
+            return AV_PIX_FMT_BGRA;
+        case 2:
+            return AV_PIX_FMT_RGBA;
+        case 3:
+            return AV_PIX_FMT_ARGB;
+        case 4:
+            return AV_PIX_FMT_ABGR;
+        case 5:
+            return AV_PIX_FMT_BGR24;
+        case 6:
+            return AV_PIX_FMT_RGB24;
+        default:
+            return AV_PIX_FMT_NONE;
+    }
 }
 
-static H264HevcDecoderContext *getDecoderCtx(JNIEnv *env, jobject obj) {
-    jlong handle = env->GetLongField(obj, getHandleField(env, obj));
-    return reinterpret_cast<H264HevcDecoderContext *>(handle);
+bool CopyArray(JNIEnv *env, jbyteArray source, uint8_t *destination, size_t *offset) {
+    if (source == nullptr) return true;
+    const jsize length = env->GetArrayLength(source);
+    if (length == 0) return true;
+    env->GetByteArrayRegion(source, 0, length,
+                            reinterpret_cast<jbyte *>(destination + *offset));
+    if (env->ExceptionCheck()) return false;
+    *offset += static_cast<size_t>(length);
+    return true;
 }
 
-/**
- * @param spsByteArray The data start with separator like 0x0, 0x0, 0x0, 0x01
- * @param ppsByteArray NOT Used. The data start with separator like 0x0, 0x0, 0x0, 0x01
- */
-JNIEXPORT jobject JNICALL init(JNIEnv *env, jobject obj,
-                               jbyteArray vpsByteArray,
-                               jbyteArray spsByteArray, jbyteArray ppsByteArray,
-                               jbyteArray prefixSeiByteArray, jbyteArray suffixSeiByteArray,
-                               jint rgbType) {
-    LOGE("H264 & HEVC decoder init.");
+bool EnsureImageBuffer(H264HevcDecoderContext *context, size_t required) {
+    if (required <= context->imageBufferCapacity) return true;
+    void *resized = av_realloc(context->imageBuffer, required);
+    if (resized == nullptr) return false;
+    context->imageBuffer = static_cast<uint8_t *>(resized);
+    context->imageBufferCapacity = required;
+    return true;
+}
 
-    AVCodecID codecId = AV_CODEC_ID_H264;
+class FrameUnrefGuard {
+public:
+    explicit FrameUnrefGuard(AVFrame *frame) : frame_(frame) {}
 
-    int vpsLen = 0;
-    uint8_t *vps_unit8_t_array = nullptr;
+    ~FrameUnrefGuard() {
+        av_frame_unref(frame_);
+    }
 
-    int prefixSeiLen = 0;
-    uint8_t *prefixSei_unit8_t_array = nullptr;
+    FrameUnrefGuard(const FrameUnrefGuard &) = delete;
+    FrameUnrefGuard &operator=(const FrameUnrefGuard &) = delete;
 
-    int suffixSeiLen = 0;
-    uint8_t *suffixSei_unit8_t_array = nullptr;
+private:
+    AVFrame *frame_;
+};
 
-    if (nullptr != vpsByteArray) {
-        codecId = AV_CODEC_ID_HEVC;
+}  // namespace
 
-        vpsLen = env->GetArrayLength(vpsByteArray);
-        vps_unit8_t_array = new uint8_t[vpsLen];
-        env->GetByteArrayRegion(vpsByteArray, 0, vpsLen, reinterpret_cast<jbyte *>(vps_unit8_t_array));
+JNIEXPORT jobject JNICALL NativeInit(JNIEnv *env, jobject object, jbyteArray vps_array,
+                                     jbyteArray sps_array, jbyteArray pps_array,
+                                     jbyteArray prefix_sei_array, jbyteArray suffix_sei_array,
+                                     jint rgb_type) {
+    if (GetDecoderContext(env, object) != nullptr) {
+        ThrowException(env, "java/lang/IllegalStateException", "Decoder is already initialized");
+        return nullptr;
+    }
+    if (sps_array == nullptr || pps_array == nullptr ||
+        env->GetArrayLength(sps_array) == 0 || env->GetArrayLength(pps_array) == 0 ||
+        (vps_array != nullptr && env->GetArrayLength(vps_array) == 0)) {
+        ThrowException(env, "java/lang/IllegalArgumentException", "SPS/PPS and optional VPS must not be empty");
+        return nullptr;
+    }
 
-        if (nullptr != prefixSeiByteArray) {
-            prefixSeiLen = env->GetArrayLength(prefixSeiByteArray);
-            prefixSei_unit8_t_array = new uint8_t[prefixSeiLen];
-            env->GetByteArrayRegion(prefixSeiByteArray, 0, prefixSeiLen, reinterpret_cast<jbyte *>(prefixSei_unit8_t_array));
+    const AVCodecID codec_id = vps_array == nullptr ? AV_CODEC_ID_H264 : AV_CODEC_ID_HEVC;
+    const jbyteArray arrays[] = {
+            vps_array, sps_array, pps_array, prefix_sei_array, suffix_sei_array};
+    uint64_t csd_length = 0;
+    for (jbyteArray array : arrays) {
+        if (array != nullptr) csd_length += static_cast<uint64_t>(env->GetArrayLength(array));
+    }
+    if (csd_length == 0 ||
+        csd_length > static_cast<uint64_t>(std::numeric_limits<int>::max()) -
+                     AV_INPUT_BUFFER_PADDING_SIZE) {
+        ThrowException(env, "java/lang/IllegalArgumentException", "Codec-specific data is too large");
+        return nullptr;
+    }
+
+    auto *decoder = new(std::nothrow) H264HevcDecoderContext();
+    if (decoder == nullptr) {
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoder context");
+        return nullptr;
+    }
+    const AVCodec *codec = avcodec_find_decoder(codec_id);
+    if (codec == nullptr) {
+        DestroyDecoderContext(decoder);
+        ThrowException(env, "java/lang/IllegalStateException", "Requested video decoder was not found");
+        return nullptr;
+    }
+    decoder->codecContext = avcodec_alloc_context3(codec);
+    if (decoder->codecContext == nullptr) {
+        DestroyDecoderContext(decoder);
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate video codec context");
+        return nullptr;
+    }
+    decoder->codecContext->extradata = static_cast<uint8_t *>(
+            av_mallocz(static_cast<size_t>(csd_length) + AV_INPUT_BUFFER_PADDING_SIZE));
+    if (decoder->codecContext->extradata == nullptr) {
+        DestroyDecoderContext(decoder);
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate codec-specific data");
+        return nullptr;
+    }
+    decoder->codecContext->extradata_size = static_cast<int>(csd_length);
+    size_t offset = 0;
+    for (jbyteArray array : arrays) {
+        if (!CopyArray(env, array, decoder->codecContext->extradata, &offset)) {
+            DestroyDecoderContext(decoder);
+            return nullptr;
         }
-
-        if (nullptr != suffixSeiByteArray) {
-            suffixSeiLen = env->GetArrayLength(suffixSeiByteArray);
-            suffixSei_unit8_t_array = new uint8_t[suffixSeiLen];
-            env->GetByteArrayRegion(suffixSeiByteArray, 0, suffixSeiLen, reinterpret_cast<jbyte *>(suffixSei_unit8_t_array));
-        }
     }
-
-    int spsLen = env->GetArrayLength(spsByteArray);
-    auto *sps_unit8_t_array = new uint8_t[spsLen];
-    env->GetByteArrayRegion(spsByteArray, 0, spsLen, reinterpret_cast<jbyte *>(sps_unit8_t_array));
-
-    int ppsLen = env->GetArrayLength(ppsByteArray);
-    auto *pps_unit8_t_array = new uint8_t[ppsLen];
-    env->GetByteArrayRegion(ppsByteArray, 0, ppsLen, reinterpret_cast<jbyte *>(pps_unit8_t_array));
-
-    int csdLen = vpsLen + spsLen + ppsLen + prefixSeiLen + suffixSeiLen;
-    auto *csd_array = new uint8_t[csdLen];
-    if (nullptr != vps_unit8_t_array) {
-        memcpy(csd_array, vps_unit8_t_array, vpsLen);
-    }
-    memcpy(csd_array + vpsLen, sps_unit8_t_array, spsLen);
-    memcpy(csd_array + vpsLen + spsLen, pps_unit8_t_array, ppsLen);
-    if (nullptr != prefixSei_unit8_t_array) {
-        memcpy(csd_array + vpsLen + spsLen + ppsLen, prefixSei_unit8_t_array, prefixSeiLen);
-    }
-    if (nullptr != suffixSei_unit8_t_array) {
-        memcpy(csd_array + vpsLen + spsLen + ppsLen + prefixSeiLen, suffixSei_unit8_t_array, suffixSeiLen);
-    }
-
-    delete[] vps_unit8_t_array;
-    delete[] sps_unit8_t_array;
-    delete[] pps_unit8_t_array;
-    delete[] prefixSei_unit8_t_array;
-    delete[] suffixSei_unit8_t_array;
-
-    const AVCodec *codec = avcodec_find_decoder(codecId);
-    if (!codec) {
-        LOGE("Decoder not found for codec id=%d", codecId);
-        delete[] csd_array;
+    if (avcodec_open2(decoder->codecContext, codec, nullptr) < 0) {
+        DestroyDecoderContext(decoder);
+        ThrowException(env, "java/lang/IllegalStateException", "Unable to open video decoder");
         return nullptr;
     }
 
-    AVCodecContext *ctx = avcodec_alloc_context3(codec);
-    if (!ctx) {
-        LOGE("Could not allocate codec context");
-        delete[] csd_array;
+    decoder->frame = av_frame_alloc();
+    decoder->packet = av_packet_alloc();
+    decoder->outputFormat = ResolveOutputFormat(rgb_type);
+    if (decoder->outputFormat != AV_PIX_FMT_NONE) decoder->convertedFrame = av_frame_alloc();
+    if (decoder->frame == nullptr || decoder->packet == nullptr ||
+        (decoder->outputFormat != AV_PIX_FMT_NONE && decoder->convertedFrame == nullptr)) {
+        DestroyDecoderContext(decoder);
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate video frame resources");
         return nullptr;
     }
 
-    ctx->extradata = (uint8_t *) av_malloc(csdLen + AV_INPUT_BUFFER_PADDING_SIZE);
-    ctx->extradata_size = csdLen;
-    memcpy(ctx->extradata, csd_array, csdLen);
-    memset(&ctx->extradata[ctx->extradata_size], 0, AV_INPUT_BUFFER_PADDING_SIZE);
-
-    delete[] csd_array;
-
-    int ret = avcodec_open2(ctx, codec, nullptr);
-    if (ret < 0) {
-        LOGE("avcodec_open2 error. code=%d", ret);
-        avcodec_free_context(&ctx);
+    jclass info_class = env->FindClass(
+            H264_HEVC_PACKAGE_BASE "video/H264HevcDecoder$DecodeVideoInfo");
+    jmethodID constructor = info_class == nullptr
+                            ? nullptr
+                            : env->GetMethodID(
+                                    info_class, "<init>",
+                                    "(ILjava/lang/String;ILjava/lang/String;II)V");
+    if (constructor == nullptr || env->ExceptionCheck()) {
+        if (info_class != nullptr) env->DeleteLocalRef(info_class);
+        DestroyDecoderContext(decoder);
+        return nullptr;
+    }
+    const char *codec_name_chars = avcodec_get_name(decoder->codecContext->codec_id);
+    const char *pixel_format_chars = av_get_pix_fmt_name(decoder->codecContext->pix_fmt);
+    jstring codec_name = codec_name_chars == nullptr ? nullptr : env->NewStringUTF(codec_name_chars);
+    jstring pixel_format_name = pixel_format_chars == nullptr
+                                ? nullptr
+                                : env->NewStringUTF(pixel_format_chars);
+    if (env->ExceptionCheck()) {
+        if (codec_name != nullptr) env->DeleteLocalRef(codec_name);
+        if (pixel_format_name != nullptr) env->DeleteLocalRef(pixel_format_name);
+        env->DeleteLocalRef(info_class);
+        DestroyDecoderContext(decoder);
+        return nullptr;
+    }
+    jobject result = env->NewObject(info_class, constructor,
+                                    static_cast<int>(decoder->codecContext->codec_id), codec_name,
+                                    static_cast<int>(decoder->codecContext->pix_fmt), pixel_format_name,
+                                    decoder->codecContext->width, decoder->codecContext->height);
+    if (codec_name != nullptr) env->DeleteLocalRef(codec_name);
+    if (pixel_format_name != nullptr) env->DeleteLocalRef(pixel_format_name);
+    env->DeleteLocalRef(info_class);
+    if (result == nullptr || env->ExceptionCheck()) {
+        DestroyDecoderContext(decoder);
         return nullptr;
     }
 
-    char buf[1024];
-    avcodec_string(buf, sizeof(buf), ctx, 0);
-    LOGE("%s", buf);
-
-    jclass returnBean = env->FindClass(H264_HEVC_PACKAGE_BASE"video/H264HevcDecoder$DecodeVideoInfo");
-    jmethodID returnObjConstructor = env->GetMethodID(returnBean, "<init>", "(ILjava/lang/String;ILjava/lang/String;II)V");
-
-    jstring codecName = env->NewStringUTF(avcodec_get_name(ctx->codec_id));
-    jstring pixFmtName = env->NewStringUTF(av_get_pix_fmt_name(ctx->pix_fmt));
-    jobject returnObj = env->NewObject(returnBean, returnObjConstructor,
-                                       (int) ctx->codec_id, codecName,
-                                       (int) ctx->pix_fmt, pixFmtName,
-                                       ctx->width, ctx->height);
-    env->DeleteLocalRef(codecName);
-    env->DeleteLocalRef(pixFmtName);
-    env->DeleteLocalRef(returnBean);
-
-    // Create decoder context
-    auto *decoderCtx = new H264HevcDecoderContext();
-    decoderCtx->ctx = ctx;
-    decoderCtx->frame = av_frame_alloc();
-    decoderCtx->pkt = av_packet_alloc();
-
-    switch(rgbType) {
-        case 1:  decoderCtx->bmpFormat = AV_PIX_FMT_BGRA;  break;
-        case 2:  decoderCtx->bmpFormat = AV_PIX_FMT_RGBA;  break;
-        case 3:  decoderCtx->bmpFormat = AV_PIX_FMT_ARGB;  break;
-        case 4:  decoderCtx->bmpFormat = AV_PIX_FMT_ABGR;  break;
-        case 5:  decoderCtx->bmpFormat = AV_PIX_FMT_BGR24; break;
-        case 6:  decoderCtx->bmpFormat = AV_PIX_FMT_RGB24; break;
-        default: decoderCtx->bmpFormat = AV_PIX_FMT_NONE;  break;
+    jfieldID handle_field = GetHandleField(env, object);
+    if (handle_field == nullptr) {
+        env->DeleteLocalRef(result);
+        DestroyDecoderContext(decoder);
+        return nullptr;
     }
-    if (AV_PIX_FMT_NONE != decoderCtx->bmpFormat) {
-        decoderCtx->bmpFrame = av_frame_alloc();
+    env->SetLongField(object, handle_field, reinterpret_cast<jlong>(decoder));
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(result);
+        DestroyDecoderContext(decoder);
+        return nullptr;
     }
-
-    env->SetLongField(obj, getHandleField(env, obj), reinterpret_cast<jlong>(decoderCtx));
-
-    return returnObj;
+    return result;
 }
 
-JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj) {
-    auto *decoderCtx = getDecoderCtx(env, obj);
-    if (decoderCtx == nullptr) return;
-
-    if (decoderCtx->ctx != nullptr) {
-        avcodec_free_context(&decoderCtx->ctx);
-    }
-    if (decoderCtx->frame != nullptr) {
-        av_frame_free(&decoderCtx->frame);
-    }
-    if (decoderCtx->pkt != nullptr) {
-        av_packet_free(&decoderCtx->pkt);
-    }
-    if (decoderCtx->bmpFrame != nullptr) {
-        av_frame_free(&decoderCtx->bmpFrame);
-    }
-    if (decoderCtx->convertCxt != nullptr) {
-        sws_freeContext(decoderCtx->convertCxt);
-    }
-
-    delete decoderCtx;
-    env->SetLongField(obj, getHandleField(env, obj), 0L);
-
-    LOGE("H264 & HEVC decoder released!");
+JNIEXPORT void JNICALL NativeRelease(JNIEnv *env, jobject object) {
+    jfieldID field = GetHandleField(env, object);
+    if (field == nullptr) return;
+    auto *decoder = reinterpret_cast<H264HevcDecoderContext *>(env->GetLongField(object, field));
+    env->SetLongField(object, field, 0L);
+    DestroyDecoderContext(decoder);
 }
 
-JNIEXPORT jobject JNICALL decode(JNIEnv *env, jobject obj, jbyteArray videoRawByteArray) {
-    auto *decoderCtx = getDecoderCtx(env, obj);
-    if (decoderCtx == nullptr) return nullptr;
-
-    int videoRawLen = env->GetArrayLength(videoRawByteArray);
-    auto *video_raw_unit8_t_array = new uint8_t[videoRawLen];
-    env->GetByteArrayRegion(videoRawByteArray, 0, videoRawLen, reinterpret_cast<jbyte *>(video_raw_unit8_t_array));
-
-    decoderCtx->pkt->data = video_raw_unit8_t_array;
-    decoderCtx->pkt->size = videoRawLen;
-    int ret;
-    if ((ret = avcodec_send_packet(decoderCtx->ctx, decoderCtx->pkt)) < 0) {
-        LOGE("avcodec_send_packet() error. code=%d", ret);
-        delete[] video_raw_unit8_t_array;
+JNIEXPORT jobject JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArray encoded_array) {
+    H264HevcDecoderContext *decoder = GetDecoderContext(env, object);
+    if (decoder == nullptr) {
+        ThrowException(env, "java/lang/IllegalStateException", "Decoder is closed");
         return nullptr;
     }
-    if ((ret = avcodec_receive_frame(decoderCtx->ctx, decoderCtx->frame)) < 0) {
-        LOGE("avcodec_receive_frame() error. code=%d", ret);
-        delete[] video_raw_unit8_t_array;
+    if (encoded_array == nullptr || env->GetArrayLength(encoded_array) <= 0) {
+        ThrowException(env, "java/lang/IllegalArgumentException", "Encoded frame must not be empty");
         return nullptr;
     }
 
-    AVFrame *frame = decoderCtx->frame;
-    auto format = (AVPixelFormat) frame->format;
-    if (AV_PIX_FMT_NONE != decoderCtx->bmpFormat) {
-        format = decoderCtx->bmpFormat;
+    const jsize encoded_length = env->GetArrayLength(encoded_array);
+    av_packet_unref(decoder->packet);
+    av_frame_unref(decoder->frame);
+    if (av_new_packet(decoder->packet, encoded_length) < 0) {
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate video packet");
+        return nullptr;
     }
-    int image_buffer_size = av_image_get_buffer_size(format, frame->width, frame->height, 32);
-    auto *image_byte_buffer = av_malloc(image_buffer_size);
+    env->GetByteArrayRegion(encoded_array, 0, encoded_length,
+                            reinterpret_cast<jbyte *>(decoder->packet->data));
+    if (env->ExceptionCheck()) {
+        av_packet_unref(decoder->packet);
+        return nullptr;
+    }
+    std::memset(decoder->packet->data + encoded_length, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+    if (avcodec_send_packet(decoder->codecContext, decoder->packet) < 0 ||
+        avcodec_receive_frame(decoder->codecContext, decoder->frame) < 0) {
+        av_packet_unref(decoder->packet);
+        return nullptr;
+    }
+    av_packet_unref(decoder->packet);
+    FrameUnrefGuard frame_guard(decoder->frame);
 
-    int written_image_bytes = 0;
-    if (AV_PIX_FMT_NONE != decoderCtx->bmpFormat) {
-        AVPixelFormat yuvFmt = convertDeprecatedFormat(decoderCtx->ctx->pix_fmt);
+    AVFrame *frame = decoder->frame;
+    const AVPixelFormat output_format = decoder->outputFormat == AV_PIX_FMT_NONE
+                                        ? static_cast<AVPixelFormat>(frame->format)
+                                        : decoder->outputFormat;
+    const int image_size = av_image_get_buffer_size(output_format, frame->width, frame->height, 1);
+    if (image_size <= 0) return nullptr;
+    if (!EnsureImageBuffer(decoder, static_cast<size_t>(image_size))) {
+        ThrowException(env, "java/lang/OutOfMemoryError", "Unable to allocate decoded image buffer");
+        return nullptr;
+    }
 
-        // Reuse SwsContext if dimensions and format haven't changed
-        if (decoderCtx->convertCxt == nullptr ||
-            decoderCtx->lastSwsWidth != frame->width ||
-            decoderCtx->lastSwsHeight != frame->height ||
-            decoderCtx->lastSwsSrcFmt != yuvFmt) {
-
-            if (decoderCtx->convertCxt != nullptr) {
-                sws_freeContext(decoderCtx->convertCxt);
-            }
-            decoderCtx->convertCxt = sws_getContext(
-                    frame->width, frame->height, yuvFmt,
-                    frame->width, frame->height, decoderCtx->bmpFormat,
+    int written_bytes;
+    if (decoder->outputFormat != AV_PIX_FMT_NONE) {
+        const AVPixelFormat source_format =
+                ConvertDeprecatedFormat(static_cast<AVPixelFormat>(frame->format));
+        if (decoder->convertContext == nullptr || decoder->lastSwsWidth != frame->width ||
+            decoder->lastSwsHeight != frame->height ||
+            decoder->lastSwsSourceFormat != source_format) {
+            sws_freeContext(decoder->convertContext);
+            decoder->convertContext = sws_getContext(
+                    frame->width, frame->height, source_format,
+                    frame->width, frame->height, decoder->outputFormat,
                     SWS_POINT, nullptr, nullptr, nullptr);
-            decoderCtx->lastSwsWidth = frame->width;
-            decoderCtx->lastSwsHeight = frame->height;
-            decoderCtx->lastSwsSrcFmt = yuvFmt;
+            if (decoder->convertContext == nullptr) {
+                ThrowException(env, "java/lang/IllegalStateException", "Unable to create pixel converter");
+                return nullptr;
+            }
+            decoder->lastSwsWidth = frame->width;
+            decoder->lastSwsHeight = frame->height;
+            decoder->lastSwsSourceFormat = source_format;
         }
-
-        av_image_fill_arrays(decoderCtx->bmpFrame->data, decoderCtx->bmpFrame->linesize,
-                             (uint8_t *)image_byte_buffer,
-                             format, frame->width, frame->height, 1);
-        sws_scale(decoderCtx->convertCxt, frame->data, frame->linesize, 0, frame->height,
-                  decoderCtx->bmpFrame->data, decoderCtx->bmpFrame->linesize);
-        written_image_bytes = image_buffer_size;
+        if (av_image_fill_arrays(decoder->convertedFrame->data,
+                                 decoder->convertedFrame->linesize,
+                                 decoder->imageBuffer, decoder->outputFormat,
+                                 frame->width, frame->height, 1) < 0 ||
+            sws_scale(decoder->convertContext, frame->data, frame->linesize, 0,
+                      frame->height, decoder->convertedFrame->data,
+                      decoder->convertedFrame->linesize) <= 0) {
+            ThrowException(env, "java/lang/IllegalStateException", "Pixel conversion failed");
+            return nullptr;
+        }
+        written_bytes = image_size;
     } else {
-        written_image_bytes = av_image_copy_to_buffer((uint8_t *) image_byte_buffer, image_buffer_size,
-                                                      (const uint8_t *const *) frame->data, (const int *) frame->linesize,
-                                                      (AVPixelFormat) frame->format, frame->width, frame->height, 1);
+        written_bytes = av_image_copy_to_buffer(
+                decoder->imageBuffer, image_size,
+                const_cast<const uint8_t *const *>(frame->data), frame->linesize,
+                static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
     }
+    if (written_bytes <= 0) return nullptr;
 
-    jbyteArray out_byte_array = env->NewByteArray(written_image_bytes);
-    env->SetByteArrayRegion(out_byte_array, 0, written_image_bytes, reinterpret_cast<const jbyte *>(image_byte_buffer));
-    av_free(image_byte_buffer);
-    delete[] video_raw_unit8_t_array;
-
-    jclass returnBean = env->FindClass(H264_HEVC_PACKAGE_BASE"video/H264HevcDecoder$DecodedVideoFrame");
-    jmethodID returnObjConstructor = env->GetMethodID(returnBean, "<init>", "([BIII)V");
-    jobject returnObj = env->NewObject(returnBean, returnObjConstructor, out_byte_array, frame->format, frame->width, frame->height);
-    env->DeleteLocalRef(returnBean);
-    env->DeleteLocalRef(out_byte_array);
-    return returnObj;
+    jbyteArray output = env->NewByteArray(written_bytes);
+    if (output == nullptr) return nullptr;
+    env->SetByteArrayRegion(output, 0, written_bytes,
+                            reinterpret_cast<const jbyte *>(decoder->imageBuffer));
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
+    jclass frame_class = env->FindClass(
+            H264_HEVC_PACKAGE_BASE "video/H264HevcDecoder$DecodedVideoFrame");
+    jmethodID constructor = frame_class == nullptr
+                            ? nullptr
+                            : env->GetMethodID(frame_class, "<init>", "([BIII)V");
+    if (constructor == nullptr || env->ExceptionCheck()) {
+        if (frame_class != nullptr) env->DeleteLocalRef(frame_class);
+        env->DeleteLocalRef(output);
+        return nullptr;
+    }
+    jobject result = env->NewObject(frame_class, constructor, output,
+                                    static_cast<int>(output_format), frame->width, frame->height);
+    env->DeleteLocalRef(frame_class);
+    env->DeleteLocalRef(output);
+    return result;
 }
 
-JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, __attribute__((unused)) jobject thiz) {
+JNIEXPORT jstring JNICALL NativeGetVersion(JNIEnv *env, jobject) {
     return env->NewStringUTF("1.0.0");
 }
 
-// =============================
-
 static JNINativeMethod methods[] = {
-        {(char*)"init",      (char*)"([B[B[B[B[BI)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodeVideoInfo;",(void *) init},
-        {(char*)"release",   (char*)"()V",                                                                  (void *) release},
-        {(char*)"decode",    (char*)"([B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodedVideoFrame;",       (void *) decode},
-        {(char*)"getVersion",(char*)"()Ljava/lang/String;",                                                 (void *) getVersion},
+        {"nativeInit", "([B[B[B[B[BI)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodeVideoInfo;",
+         reinterpret_cast<void *>(NativeInit)},
+        {"nativeRelease", "()V", reinterpret_cast<void *>(NativeRelease)},
+        {"nativeDecode", "([B)Lcom/leovp/ffmpeg/video/H264HevcDecoder$DecodedVideoFrame;",
+         reinterpret_cast<void *>(NativeDecode)},
+        {"nativeGetVersion", "()Ljava/lang/String;", reinterpret_cast<void *>(NativeGetVersion)},
 };
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env;
-
-    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-        LOGE("JNI_OnLoad GetEnv error.");
-        return JNI_ERR;
-    }
-
-    jclass clz = env->FindClass(H264_HEVC_PACKAGE_BASE"video/H264HevcDecoder");
-    if (clz == nullptr) {
-        LOGE("JNI_OnLoad FindClass error.");
-        return JNI_ERR;
-    }
-
-    if (env->RegisterNatives(clz, methods, sizeof(methods) / sizeof(methods[0]))) {
-        LOGE("JNI_OnLoad RegisterNatives error.");
-        return JNI_ERR;
-    }
-
-    av_jni_set_java_vm(vm, reserved);
-
-    return JNI_VERSION_1_6;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
+    jclass clazz = env->FindClass(H264_HEVC_PACKAGE_BASE "video/H264HevcDecoder");
+    if (clazz == nullptr) return JNI_ERR;
+    const jint result = env->RegisterNatives(clazz, methods,
+                                             sizeof(methods) / sizeof(methods[0]));
+    env->DeleteLocalRef(clazz);
+    if (result != 0) return JNI_ERR;
+    return av_jni_set_java_vm(vm, reserved) >= 0 ? JNI_VERSION_1_6 : JNI_ERR;
 }
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */

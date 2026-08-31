@@ -1,478 +1,427 @@
 #include "BitmapRotateNative.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <limits>
+#include <new>
+#include <utility>
+
 #define IMAGE_PACKAGE_BASE "com/leovp/image/"
 
-int32_t convertArgbToInt(ARGB argb)
-{
-    return (argb.alpha) | (argb.red << 24) | (argb.green << 16) | (argb.blue << 8);
-}
+namespace {
 
-void convertIntToArgb(uint32_t pixel, ARGB *argb)
-{
-    argb->red = ((pixel >> 24) & 0xff);
-    argb->green = ((pixel >> 16) & 0xff);
-    argb->blue = ((pixel >> 8) & 0xff);
-    argb->alpha = (pixel & 0xff);
-}
-
-/** crops the bitmap within to be smaller. note that no validations are done */
-JNIEXPORT void JNICALL CropBitmap(JNIEnv *env, jobject obj,
-                                  jobject handle,
-                                  uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    uint32_t oldWidth = jniBitmap->_bitmapInfo.width;
-    uint32_t newWidth = right - left, newHeight = bottom - top;
-    uint32_t *newBitmapPixels = new uint32_t[newWidth * newHeight];
-    uint32_t *whereToGet = previousData + left + top * oldWidth;
-    uint32_t *whereToPut = newBitmapPixels;
-    for (int y = top; y < bottom; ++y)
-    {
-        memcpy(whereToPut, whereToGet, sizeof(uint32_t) * newWidth);
-        whereToGet += oldWidth;
-        whereToPut += newWidth;
+void ThrowException(JNIEnv *env, const char *class_name, const char *message) {
+    if (env->ExceptionCheck()) return;
+    jclass exception_class = env->FindClass(class_name);
+    if (exception_class != nullptr) {
+        env->ThrowNew(exception_class, message);
+        env->DeleteLocalRef(exception_class);
     }
-    // done copying , so replace old data with new one
-    delete[] previousData;
-    jniBitmap->_storedBitmapPixels = newBitmapPixels;
-    jniBitmap->_bitmapInfo.width = newWidth;
-    jniBitmap->_bitmapInfo.height = newHeight;
 }
 
-/**rotates the inner bitmap data by 90 degrees counter clock wise*/ //
-JNIEXPORT void JNICALL RotateBitmapCcw90(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    uint32_t newWidth = jniBitmap->_bitmapInfo.height;
-    uint32_t newHeight = jniBitmap->_bitmapInfo.width;
-    jniBitmap->_bitmapInfo.width = newWidth;
-    jniBitmap->_bitmapInfo.height = newHeight;
-    uint32_t *newBitmapPixels = new uint32_t[newWidth * newHeight];
-    int whereToGet = 0;
-    // XY. ... ... ..X
-    // ...>Y..>...>..Y
-    // ... X.. .YX ...
-    for (int x = 0; x < newWidth; ++x)
-    {
-        for (int y = newHeight - 1; y >= 0; --y)
-        {
-            // take from each row (up to bottom), from left to right
-            uint32_t pixel = previousData[whereToGet++];
-            newBitmapPixels[newWidth * y + x] = pixel;
+void ThrowIllegalArgumentException(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/IllegalArgumentException", message);
+}
+
+void ThrowIllegalStateException(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/IllegalStateException", message);
+}
+
+void ThrowOutOfMemoryError(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/OutOfMemoryError", message);
+}
+
+bool CheckedPixelCount(jint width, jint height, size_t *pixel_count) {
+    if (width <= 0 || height <= 0) return false;
+    const uint64_t count = static_cast<uint64_t>(width) * static_cast<uint64_t>(height);
+    if (count > std::numeric_limits<size_t>::max() / sizeof(uint32_t)) return false;
+    *pixel_count = static_cast<size_t>(count);
+    return true;
+}
+
+JniBitmap *GetBitmap(JNIEnv *env, jlong handle) {
+    if (handle == 0) {
+        ThrowIllegalStateException(env, "BitmapProcessor is closed");
+        return nullptr;
+    }
+    auto *bitmap = reinterpret_cast<JniBitmap *>(static_cast<intptr_t>(handle));
+    if (bitmap->pixels == nullptr || bitmap->bitmapInfo.width == 0 ||
+        bitmap->bitmapInfo.height == 0) {
+        ThrowIllegalStateException(env, "Native bitmap data is unavailable");
+        return nullptr;
+    }
+    return bitmap;
+}
+
+std::unique_ptr<uint32_t[]> AllocatePixels(JNIEnv *env, jint width, jint height,
+                                           size_t *pixel_count) {
+    if (!CheckedPixelCount(width, height, pixel_count)) {
+        ThrowIllegalArgumentException(env, "Bitmap dimensions are invalid or too large");
+        return nullptr;
+    }
+    std::unique_ptr<uint32_t[]> pixels(new(std::nothrow) uint32_t[*pixel_count]);
+    if (pixels == nullptr) ThrowOutOfMemoryError(env, "Unable to allocate native bitmap pixels");
+    return pixels;
+}
+
+uint8_t InterpolateChannel(uint32_t top_left, uint32_t top_right, uint32_t bottom_left,
+                           uint32_t bottom_right, int shift, double x_fraction,
+                           double y_fraction) {
+    const double top = ((top_left >> shift) & 0xffU) * (1.0 - x_fraction) +
+                       ((top_right >> shift) & 0xffU) * x_fraction;
+    const double bottom = ((bottom_left >> shift) & 0xffU) * (1.0 - x_fraction) +
+                          ((bottom_right >> shift) & 0xffU) * x_fraction;
+    return static_cast<uint8_t>(std::round(top * (1.0 - y_fraction) + bottom * y_fraction));
+}
+
+uint32_t InterpolatePixel(uint32_t top_left, uint32_t top_right, uint32_t bottom_left,
+                          uint32_t bottom_right, double x_fraction, double y_fraction) {
+    uint32_t result = 0;
+    for (int shift = 0; shift <= 24; shift += 8) {
+        result |= static_cast<uint32_t>(InterpolateChannel(
+                top_left, top_right, bottom_left, bottom_right, shift,
+                x_fraction, y_fraction)) << shift;
+    }
+    return result;
+}
+
+}  // namespace
+
+JNIEXPORT jlong JNICALL NativeSetBitmapData(JNIEnv *env, jobject, jobject bitmap) {
+    if (bitmap == nullptr) {
+        ThrowIllegalArgumentException(env, "Bitmap must not be null");
+        return 0;
+    }
+
+    AndroidBitmapInfo bitmap_info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &bitmap_info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        ThrowIllegalStateException(env, "Unable to read Bitmap information");
+        return 0;
+    }
+    if (bitmap_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        ThrowIllegalArgumentException(env, "Bitmap must use ARGB_8888 configuration");
+        return 0;
+    }
+    size_t pixel_count;
+    if (!CheckedPixelCount(static_cast<jint>(bitmap_info.width),
+                           static_cast<jint>(bitmap_info.height), &pixel_count) ||
+        bitmap_info.stride < static_cast<uint64_t>(bitmap_info.width) * sizeof(uint32_t)) {
+        ThrowIllegalArgumentException(env, "Bitmap dimensions or stride are invalid");
+        return 0;
+    }
+
+    std::unique_ptr<JniBitmap> native_bitmap(new(std::nothrow) JniBitmap());
+    if (native_bitmap == nullptr) {
+        ThrowOutOfMemoryError(env, "Unable to allocate native Bitmap state");
+        return 0;
+    }
+    native_bitmap->pixels.reset(new(std::nothrow) uint32_t[pixel_count]);
+    if (native_bitmap->pixels == nullptr) {
+        ThrowOutOfMemoryError(env, "Unable to allocate native bitmap pixels");
+        return 0;
+    }
+
+    void *bitmap_pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &bitmap_pixels) != ANDROID_BITMAP_RESULT_SUCCESS ||
+        bitmap_pixels == nullptr) {
+        ThrowIllegalStateException(env, "Unable to lock Bitmap pixels");
+        return 0;
+    }
+    const size_t row_bytes = static_cast<size_t>(bitmap_info.width) * sizeof(uint32_t);
+    for (uint32_t row = 0; row < bitmap_info.height; ++row) {
+        const auto *source_row = static_cast<const uint8_t *>(bitmap_pixels) +
+                                 static_cast<size_t>(row) * bitmap_info.stride;
+        std::memcpy(native_bitmap->pixels.get() + static_cast<size_t>(row) * bitmap_info.width,
+                    source_row, row_bytes);
+    }
+    const int unlock_result = AndroidBitmap_unlockPixels(env, bitmap);
+    if (unlock_result != ANDROID_BITMAP_RESULT_SUCCESS) {
+        ThrowIllegalStateException(env, "Unable to unlock Bitmap pixels");
+        return 0;
+    }
+
+    native_bitmap->bitmapInfo = bitmap_info;
+    native_bitmap->bitmapInfo.stride = static_cast<uint32_t>(row_bytes);
+    return static_cast<jlong>(reinterpret_cast<intptr_t>(native_bitmap.release()));
+}
+
+JNIEXPORT jobject JNICALL NativeGetBitmap(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *native_bitmap = GetBitmap(env, handle);
+    if (native_bitmap == nullptr) return nullptr;
+
+    jclass bitmap_class = env->FindClass("android/graphics/Bitmap");
+    jclass config_class = env->FindClass("android/graphics/Bitmap$Config");
+    if (bitmap_class == nullptr || config_class == nullptr) {
+        if (bitmap_class != nullptr) env->DeleteLocalRef(bitmap_class);
+        if (config_class != nullptr) env->DeleteLocalRef(config_class);
+        if (!env->ExceptionCheck()) {
+            ThrowIllegalStateException(env, "Unable to resolve Android Bitmap classes");
+        }
+        return nullptr;
+    }
+    jfieldID argb_field = env->GetStaticFieldID(
+            config_class, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+    jmethodID create_method = env->GetStaticMethodID(
+            bitmap_class, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+    if (argb_field == nullptr || create_method == nullptr || env->ExceptionCheck()) {
+        env->DeleteLocalRef(config_class);
+        env->DeleteLocalRef(bitmap_class);
+        return nullptr;
+    }
+    jobject config = env->GetStaticObjectField(config_class, argb_field);
+    if (config == nullptr) {
+        env->DeleteLocalRef(config_class);
+        env->DeleteLocalRef(bitmap_class);
+        if (!env->ExceptionCheck()) {
+            ThrowIllegalStateException(env, "Unable to resolve ARGB_8888 Bitmap configuration");
+        }
+        return nullptr;
+    }
+    jobject bitmap = env->CallStaticObjectMethod(bitmap_class, create_method,
+                                                  native_bitmap->bitmapInfo.width,
+                                                  native_bitmap->bitmapInfo.height, config);
+    if (config != nullptr) env->DeleteLocalRef(config);
+    env->DeleteLocalRef(config_class);
+    env->DeleteLocalRef(bitmap_class);
+    if (bitmap == nullptr || env->ExceptionCheck()) {
+        if (!env->ExceptionCheck()) {
+            ThrowIllegalStateException(env, "Unable to create output Bitmap");
+        }
+        return nullptr;
+    }
+
+    AndroidBitmapInfo output_info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &output_info) != ANDROID_BITMAP_RESULT_SUCCESS ||
+        output_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888 ||
+        output_info.stride < static_cast<uint64_t>(output_info.width) * sizeof(uint32_t)) {
+        env->DeleteLocalRef(bitmap);
+        ThrowIllegalStateException(env, "Created Bitmap has invalid pixel storage");
+        return nullptr;
+    }
+
+    void *bitmap_pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &bitmap_pixels) != ANDROID_BITMAP_RESULT_SUCCESS ||
+        bitmap_pixels == nullptr) {
+        env->DeleteLocalRef(bitmap);
+        ThrowIllegalStateException(env, "Unable to lock created Bitmap pixels");
+        return nullptr;
+    }
+    const size_t row_bytes = static_cast<size_t>(native_bitmap->bitmapInfo.width) * sizeof(uint32_t);
+    for (uint32_t row = 0; row < native_bitmap->bitmapInfo.height; ++row) {
+        auto *destination_row = static_cast<uint8_t *>(bitmap_pixels) +
+                                static_cast<size_t>(row) * output_info.stride;
+        std::memcpy(destination_row,
+                    native_bitmap->pixels.get() +
+                    static_cast<size_t>(row) * native_bitmap->bitmapInfo.width,
+                    row_bytes);
+    }
+    const int unlock_result = AndroidBitmap_unlockPixels(env, bitmap);
+    if (unlock_result != ANDROID_BITMAP_RESULT_SUCCESS) {
+        env->DeleteLocalRef(bitmap);
+        ThrowIllegalStateException(env, "Unable to unlock created Bitmap pixels");
+        return nullptr;
+    }
+    return bitmap;
+}
+
+JNIEXPORT void JNICALL NativeFreeBitmapData(JNIEnv *, jobject, jlong handle) {
+    delete reinterpret_cast<JniBitmap *>(static_cast<intptr_t>(handle));
+}
+
+JNIEXPORT void JNICALL NativeRotateBitmapCcw90(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
+    const jint old_height = static_cast<jint>(bitmap->bitmapInfo.height);
+    size_t pixel_count;
+    auto output = AllocatePixels(env, old_height, old_width, &pixel_count);
+    if (output == nullptr) return;
+    for (jint y = 0; y < old_height; ++y) {
+        for (jint x = 0; x < old_width; ++x) {
+            const size_t source_index = static_cast<size_t>(y) * old_width + x;
+            const size_t destination_index =
+                    static_cast<size_t>(old_width - 1 - x) * old_height + y;
+            output[destination_index] = bitmap->pixels[source_index];
         }
     }
-    delete[] previousData;
-    jniBitmap->_storedBitmapPixels = newBitmapPixels;
+    bitmap->pixels = std::move(output);
+    bitmap->bitmapInfo.width = static_cast<uint32_t>(old_height);
+    bitmap->bitmapInfo.height = static_cast<uint32_t>(old_width);
+    bitmap->bitmapInfo.stride = static_cast<uint32_t>(old_height * sizeof(uint32_t));
 }
 
-/**rotates the inner bitmap data by 90 degrees clock wise*/ //
-JNIEXPORT void JNICALL RotateBitmapCw90(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    uint32_t newWidth = jniBitmap->_bitmapInfo.height;
-    uint32_t newHeight = jniBitmap->_bitmapInfo.width;
-    jniBitmap->_bitmapInfo.width = newWidth;
-    jniBitmap->_bitmapInfo.height = newHeight;
-    uint32_t *newBitmapPixels = new uint32_t[newWidth * newHeight];
-    int whereToGet = 0;
-    // XY. ..X ... ...
-    // ...>..Y>...>Y..
-    // ... ... .YX X..
-    jniBitmap->_storedBitmapPixels = newBitmapPixels;
-    for (int x = newWidth - 1; x >= 0; --x)
-    {
-        for (int y = 0; y < newHeight; ++y)
-        {
-            // take from each row (up to bottom), from left to right
-            uint32_t pixel = previousData[whereToGet++];
-            newBitmapPixels[newWidth * y + x] = pixel;
+JNIEXPORT void JNICALL NativeRotateBitmapCw90(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
+    const jint old_height = static_cast<jint>(bitmap->bitmapInfo.height);
+    size_t pixel_count;
+    auto output = AllocatePixels(env, old_height, old_width, &pixel_count);
+    if (output == nullptr) return;
+    for (jint y = 0; y < old_height; ++y) {
+        for (jint x = 0; x < old_width; ++x) {
+            const size_t source_index = static_cast<size_t>(y) * old_width + x;
+            const size_t destination_index =
+                    static_cast<size_t>(x) * old_height + (old_height - 1 - y);
+            output[destination_index] = bitmap->pixels[source_index];
         }
     }
-    delete[] previousData;
+    bitmap->pixels = std::move(output);
+    bitmap->bitmapInfo.width = static_cast<uint32_t>(old_height);
+    bitmap->bitmapInfo.height = static_cast<uint32_t>(old_width);
+    bitmap->bitmapInfo.stride = static_cast<uint32_t>(old_height * sizeof(uint32_t));
 }
 
-/**rotates the inner bitmap data by 180 degrees (*/ //
-JNIEXPORT void JNICALL RotateBitmap180(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
+JNIEXPORT void JNICALL NativeRotateBitmap180(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    size_t pixel_count;
+    if (!CheckedPixelCount(static_cast<jint>(bitmap->bitmapInfo.width),
+                           static_cast<jint>(bitmap->bitmapInfo.height), &pixel_count)) {
+        ThrowIllegalStateException(env, "Stored Bitmap dimensions are invalid");
         return;
-    uint32_t *pixels = jniBitmap->_storedBitmapPixels;
-    uint32_t *pixels2 = jniBitmap->_storedBitmapPixels;
-    uint32_t width = jniBitmap->_bitmapInfo.width;
-    uint32_t height = jniBitmap->_bitmapInfo.height;
-    // no need to create a totally new bitmap - it's the exact same size as the original
-    //  1234 fedc
-    //  5678>ba09
-    //  90ab>8765
-    //  cdef 4321
-    int whereToGet = 0;
-    for (int y = height - 1; y >= height / 2; --y)
-    {
-        for (int x = width - 1; x >= 0; --x)
-        {
-            // take from each row (up to bottom), from left to right
-            uint32_t tempPixel = pixels2[width * y + x];
-            pixels2[width * y + x] = pixels[whereToGet];
-            pixels[whereToGet] = tempPixel;
-            ++whereToGet;
+    }
+    std::reverse(bitmap->pixels.get(), bitmap->pixels.get() + pixel_count);
+}
+
+JNIEXPORT void JNICALL NativeCropBitmap(JNIEnv *env, jobject, jlong handle, jint left,
+                                         jint top, jint right, jint bottom) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
+    const jint old_height = static_cast<jint>(bitmap->bitmapInfo.height);
+    if (left < 0 || top < 0 || left >= right || top >= bottom ||
+        right > old_width || bottom > old_height) {
+        ThrowIllegalArgumentException(env, "Crop rectangle must be inside the Bitmap");
+        return;
+    }
+    const jint new_width = right - left;
+    const jint new_height = bottom - top;
+    size_t pixel_count;
+    auto output = AllocatePixels(env, new_width, new_height, &pixel_count);
+    if (output == nullptr) return;
+    for (jint row = 0; row < new_height; ++row) {
+        const size_t source_offset = static_cast<size_t>(top + row) * old_width + left;
+        const size_t destination_offset = static_cast<size_t>(row) * new_width;
+        std::memcpy(output.get() + destination_offset, bitmap->pixels.get() + source_offset,
+                    static_cast<size_t>(new_width) * sizeof(uint32_t));
+    }
+    bitmap->pixels = std::move(output);
+    bitmap->bitmapInfo.width = static_cast<uint32_t>(new_width);
+    bitmap->bitmapInfo.height = static_cast<uint32_t>(new_height);
+    bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
+}
+
+JNIEXPORT void JNICALL NativeScaleNNBitmap(JNIEnv *env, jobject, jlong handle,
+                                            jint new_width, jint new_height) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    size_t pixel_count;
+    auto output = AllocatePixels(env, new_width, new_height, &pixel_count);
+    if (output == nullptr) return;
+    const size_t old_width = bitmap->bitmapInfo.width;
+    const size_t old_height = bitmap->bitmapInfo.height;
+    for (size_t y = 0; y < static_cast<size_t>(new_height); ++y) {
+        const size_t source_y = std::min(y * old_height / static_cast<size_t>(new_height),
+                                         old_height - 1);
+        for (size_t x = 0; x < static_cast<size_t>(new_width); ++x) {
+            const size_t source_x = std::min(x * old_width / static_cast<size_t>(new_width),
+                                             old_width - 1);
+            output[y * static_cast<size_t>(new_width) + x] =
+                    bitmap->pixels[source_y * old_width + source_x];
         }
     }
-    // if the height isn't even, flip the middle row :
-    if (height % 2 == 1)
-    {
-        int y = height / 2;
-        whereToGet = width * y;
-        int lastXToHandle = width % 2 == 0 ? (width / 2) : (width / 2) - 1;
-        for (int x = width - 1; x >= lastXToHandle; --x)
-        {
-            uint32_t tempPixel = pixels2[width * y + x];
-            pixels2[width * y + x] = pixels[whereToGet];
-            pixels[whereToGet] = tempPixel;
-            ++whereToGet;
+    bitmap->pixels = std::move(output);
+    bitmap->bitmapInfo.width = static_cast<uint32_t>(new_width);
+    bitmap->bitmapInfo.height = static_cast<uint32_t>(new_height);
+    bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
+}
+
+JNIEXPORT void JNICALL NativeScaleBIBitmap(JNIEnv *env, jobject, jlong handle,
+                                            jint new_width, jint new_height) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    size_t pixel_count;
+    auto output = AllocatePixels(env, new_width, new_height, &pixel_count);
+    if (output == nullptr) return;
+    const size_t old_width = bitmap->bitmapInfo.width;
+    const size_t old_height = bitmap->bitmapInfo.height;
+    for (size_t y = 0; y < static_cast<size_t>(new_height); ++y) {
+        const double source_y = new_height == 1
+                                ? 0.0
+                                : static_cast<double>(y) * (old_height - 1) / (new_height - 1);
+        const size_t y0 = static_cast<size_t>(source_y);
+        const size_t y1 = std::min(y0 + 1, old_height - 1);
+        const double y_fraction = source_y - static_cast<double>(y0);
+        for (size_t x = 0; x < static_cast<size_t>(new_width); ++x) {
+            const double source_x = new_width == 1
+                                    ? 0.0
+                                    : static_cast<double>(x) * (old_width - 1) / (new_width - 1);
+            const size_t x0 = static_cast<size_t>(source_x);
+            const size_t x1 = std::min(x0 + 1, old_width - 1);
+            const double x_fraction = source_x - static_cast<double>(x0);
+            output[y * static_cast<size_t>(new_width) + x] = InterpolatePixel(
+                    bitmap->pixels[y0 * old_width + x0], bitmap->pixels[y0 * old_width + x1],
+                    bitmap->pixels[y1 * old_width + x0], bitmap->pixels[y1 * old_width + x1],
+                    x_fraction, y_fraction);
         }
     }
+    bitmap->pixels = std::move(output);
+    bitmap->bitmapInfo.width = static_cast<uint32_t>(new_width);
+    bitmap->bitmapInfo.height = static_cast<uint32_t>(new_height);
+    bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
 }
 
-/**free bitmap*/ //
-JNIEXPORT void JNICALL FreeBitmapData(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    delete[] jniBitmap->_storedBitmapPixels;
-    jniBitmap->_storedBitmapPixels = NULL;
-    delete jniBitmap;
+JNIEXPORT void JNICALL NativeFlipBitmapHorizontal(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    const size_t width = bitmap->bitmapInfo.width;
+    const size_t height = bitmap->bitmapInfo.height;
+    for (size_t y = 0; y < height; ++y) {
+        std::reverse(bitmap->pixels.get() + y * width,
+                     bitmap->pixels.get() + (y + 1) * width);
+    }
 }
 
-/**restore java bitmap (from JNI data)*/ //
-JNIEXPORT jobject GetBitmapFromSavedBitmapData(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-    {
-        LOGD("no bitmap data was stored. returning null...");
-        return NULL;
-    }
-    //
-    // creating a new bitmap to put the pixels into it - using Bitmap Bitmap.createBitmap (int width, int height, Bitmap.Config config) :
-    //
-    jclass bitmapCls = env->FindClass("android/graphics/Bitmap");
-    jmethodID createBitmapFunction = env->GetStaticMethodID(bitmapCls,
-                                                            "createBitmap",
-                                                            "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-    jstring configName = env->NewStringUTF("ARGB_8888");
-    jclass bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
-    jmethodID valueOfBitmapConfigFunction = env->GetStaticMethodID(
-        bitmapConfigClass, "valueOf",
-        "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
-    jobject bitmapConfig = env->CallStaticObjectMethod(bitmapConfigClass, valueOfBitmapConfigFunction, configName);
-    jobject newBitmap = env->CallStaticObjectMethod(bitmapCls,
-                                                    createBitmapFunction, jniBitmap->_bitmapInfo.width,
-                                                    jniBitmap->_bitmapInfo.height, bitmapConfig);
-    //
-    // putting the pixels into the new bitmap:
-    //
-    int ret;
-    void *bitmapPixels;
-    if ((ret = AndroidBitmap_lockPixels(env, newBitmap, &bitmapPixels)) < 0)
-    {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-        return NULL;
-    }
-    uint32_t *newBitmapPixels = (uint32_t *)bitmapPixels;
-    int pixelsCount = jniBitmap->_bitmapInfo.height * jniBitmap->_bitmapInfo.width;
-    memcpy(newBitmapPixels, jniBitmap->_storedBitmapPixels, sizeof(uint32_t) * pixelsCount);
-    AndroidBitmap_unlockPixels(env, newBitmap);
-    // LOGD("returning the new bitmap");
-    return newBitmap;
-}
-
-/**store java bitmap as JNI data*/
-JNIEXPORT jobject JNICALL SetBitmapData(JNIEnv *env, jobject obj, jobject bitmap)
-{
-    AndroidBitmapInfo bitmapInfo;
-    uint32_t *storedBitmapPixels = NULL;
-    // LOGD("reading bitmap info...");
-    int ret;
-    if ((ret = AndroidBitmap_getInfo(env, bitmap, &bitmapInfo)) < 0)
-    {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-        return NULL;
-    }
-    // LOGD("width:%d height:%d stride:%d", bitmapInfo.width, bitmapInfo.height, bitmapInfo.stride);
-    if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888)
-    {
-        LOGE("Bitmap format is not RGBA_8888!");
-        return NULL;
-    }
-    //
-    // read pixels of bitmap into native memory :
-    //
-    // LOGD("reading bitmap pixels...");
-    void *bitmapPixels;
-    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &bitmapPixels)) < 0)
-    {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-        return NULL;
-    }
-    uint32_t *src = (uint32_t *)bitmapPixels;
-    storedBitmapPixels = new uint32_t[bitmapInfo.height * bitmapInfo.width];
-    int pixelsCount = bitmapInfo.height * bitmapInfo.width;
-    memcpy(storedBitmapPixels, src, sizeof(uint32_t) * pixelsCount);
-    AndroidBitmap_unlockPixels(env, bitmap);
-    JniBitmap *jniBitmap = new JniBitmap();
-    jniBitmap->_bitmapInfo = bitmapInfo;
-    jniBitmap->_storedBitmapPixels = storedBitmapPixels;
-    return env->NewDirectByteBuffer(jniBitmap, 0);
-}
-
-/**scales the image using the fastest, simplest algorithm called "nearest neighbor" */ //
-JNIEXPORT void JNICALL ScaleNNBitmap(JNIEnv *env, jobject obj,
-                                     jobject handle,
-                                     uint32_t newWidth, uint32_t newHeight)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t oldWidth = jniBitmap->_bitmapInfo.width;
-    uint32_t oldHeight = jniBitmap->_bitmapInfo.height;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    uint32_t *newBitmapPixels = new uint32_t[newWidth * newHeight];
-    int x2, y2;
-    int whereToPut = 0;
-    for (int y = 0; y < newHeight; ++y)
-    {
-        for (int x = 0; x < newWidth; ++x)
-        {
-            x2 = x * oldWidth / newWidth;
-            if (x2 < 0)
-                x2 = 0;
-            else if (x2 >= oldWidth)
-                x2 = oldWidth - 1;
-            y2 = y * oldHeight / newHeight;
-            if (y2 < 0)
-                y2 = 0;
-            else if (y2 >= oldHeight)
-                y2 = oldHeight - 1;
-            newBitmapPixels[whereToPut++] = previousData[(y2 * oldWidth) + x2];
-            // same as : newBitmapPixels[(y * newWidth) + x] = previousData[(y2 * oldWidth) + x2];
-        }
-    }
-
-    delete[] previousData;
-    jniBitmap->_storedBitmapPixels = newBitmapPixels;
-    jniBitmap->_bitmapInfo.width = newWidth;
-    jniBitmap->_bitmapInfo.height = newHeight;
-}
-
-/**scales the image using a high-quality algorithm called "Bilinear Interpolation"
- * code is based on old university code I've made in Java:
- * http://stackoverflow.com/questions/23230047/trying-to-convert-bilinear-interpolation-code-from-java-to-c-c-on-android/23302384#23302384
- * */
-JNIEXPORT void JNICALL ScaleBIBitmap(JNIEnv *env, jobject obj,
-                                     jobject handle,
-                                     uint32_t newWidth, uint32_t newHeight)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t oldWidth = jniBitmap->_bitmapInfo.width;
-    uint32_t oldHeight = jniBitmap->_bitmapInfo.height;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    uint32_t *newBitmapPixels = new uint32_t[newWidth * newHeight];
-    // position of the top left pixel of the 4 pixels to use interpolation on
-    int xTopLeft, yTopLeft;
-    int x, y, lastTopLefty;
-    float xRatio = (float)newWidth / (float)oldWidth;
-    float yratio = (float)newHeight / (float)oldHeight;
-    // Y color ratio to use on left and right pixels for interpolation
-    float ycRatio2 = 0, ycRatio1 = 0;
-    // pixel target in the src
-    float xt, yt;
-    // X color ratio to use on left and right pixels for interpolation
-    float xcRatio2 = 0, xcratio1 = 0;
-    ARGB rgbTopLeft, rgbTopRight, rgbBottomLeft, rgbBottomRight, rgbTopMiddle,
-        rgbBottomMiddle, result;
-    for (x = 0; x < newWidth; ++x)
-    {
-        xTopLeft = (int)(xt = x / xRatio);
-        // when meeting the most right edge, move left a little
-        if (xTopLeft >= oldWidth - 1)
-            xTopLeft--;
-        if (xt <= xTopLeft + 1)
-        {
-            // we are between the left and right pixel
-            xcratio1 = xt - xTopLeft;
-            // color ratio in favor of the right pixel color
-            xcRatio2 = 1 - xcratio1;
-        }
-        for (y = 0, lastTopLefty = -30000; y < newHeight; ++y)
-        {
-            yTopLeft = (int)(yt = y / yratio);
-            // when meeting the most bottom edge, move up a little
-            if (yTopLeft >= oldHeight - 1)
-                --yTopLeft;
-            if (lastTopLefty == yTopLeft - 1)
-            {
-                // we went down only one rectangle
-                rgbTopLeft = rgbBottomLeft;
-                rgbTopRight = rgbBottomRight;
-                rgbTopMiddle = rgbBottomMiddle;
-                // rgbBottomLeft=startingImageData[xTopLeft][yTopLeft+1];
-                convertIntToArgb(previousData[((yTopLeft + 1) * oldWidth) + xTopLeft], &rgbBottomLeft);
-                // rgbBottomRight=startingImageData[xTopLeft+1][yTopLeft+1];
-                convertIntToArgb(previousData[((yTopLeft + 1) * oldWidth) + (xTopLeft + 1)], &rgbBottomRight);
-                rgbBottomMiddle.alpha = rgbBottomLeft.alpha * xcRatio2 + rgbBottomRight.alpha * xcratio1;
-                rgbBottomMiddle.red = rgbBottomLeft.red * xcRatio2 + rgbBottomRight.red * xcratio1;
-                rgbBottomMiddle.green = rgbBottomLeft.green * xcRatio2 + rgbBottomRight.green * xcratio1;
-                rgbBottomMiddle.blue = rgbBottomLeft.blue * xcRatio2 + rgbBottomRight.blue * xcratio1;
-            }
-            else if (lastTopLefty != yTopLeft)
-            {
-                // we went to a totally different rectangle (happens in every loop start,and might happen more when making the picture smaller)
-                // rgbTopLeft=startingImageData[xTopLeft][yTopLeft];
-                convertIntToArgb(previousData[(yTopLeft * oldWidth) + xTopLeft], &rgbTopLeft);
-                // rgbTopRight=startingImageData[xTopLeft+1][yTopLeft];
-                convertIntToArgb(previousData[(yTopLeft * oldWidth) + xTopLeft + 1], &rgbTopRight);
-                rgbTopMiddle.alpha = rgbTopLeft.alpha * xcRatio2 + rgbTopRight.alpha * xcratio1;
-                rgbTopMiddle.red = rgbTopLeft.red * xcRatio2 + rgbTopRight.red * xcratio1;
-                rgbTopMiddle.green = rgbTopLeft.green * xcRatio2 + rgbTopRight.green * xcratio1;
-                rgbTopMiddle.blue = rgbTopLeft.blue * xcRatio2 + rgbTopRight.blue * xcratio1;
-                // rgbBottomLeft=startingImageData[xTopLeft][yTopLeft+1];
-                convertIntToArgb(previousData[((yTopLeft + 1) * oldWidth) + xTopLeft], &rgbBottomLeft);
-                // rgbBottomRight=startingImageData[xTopLeft+1][yTopLeft+1];
-                convertIntToArgb(previousData[((yTopLeft + 1) * oldWidth) + (xTopLeft + 1)], &rgbBottomRight);
-                rgbBottomMiddle.alpha = rgbBottomLeft.alpha * xcRatio2 + rgbBottomRight.alpha * xcratio1;
-                rgbBottomMiddle.red = rgbBottomLeft.red * xcRatio2 + rgbBottomRight.red * xcratio1;
-                rgbBottomMiddle.green = rgbBottomLeft.green * xcRatio2 + rgbBottomRight.green * xcratio1;
-                rgbBottomMiddle.blue = rgbBottomLeft.blue * xcRatio2 + rgbBottomRight.blue * xcratio1;
-            }
-            lastTopLefty = yTopLeft;
-            if (yt <= yTopLeft + 1)
-            {
-                // color ratio in favor of the bottom pixel color
-                ycRatio1 = yt - yTopLeft;
-                ycRatio2 = 1 - ycRatio1;
-            }
-            // prepared all pixels to look at, so finally set the new pixel data
-            result.alpha = rgbTopMiddle.alpha * ycRatio2 + rgbBottomMiddle.alpha * ycRatio1;
-            result.blue = rgbTopMiddle.blue * ycRatio2 + rgbBottomMiddle.blue * ycRatio1;
-            result.red = rgbTopMiddle.red * ycRatio2 + rgbBottomMiddle.red * ycRatio1;
-            result.green = rgbTopMiddle.green * ycRatio2 + rgbBottomMiddle.green * ycRatio1;
-            newBitmapPixels[(y * newWidth) + x] = convertArgbToInt(result);
-        }
-    }
-    // get rid of old data, and replace it with new one
-    delete[] previousData;
-    jniBitmap->_storedBitmapPixels = newBitmapPixels;
-    jniBitmap->_bitmapInfo.width = newWidth;
-    jniBitmap->_bitmapInfo.height = newHeight;
-}
-
-/** flips a bitmap horizontally, as such:
- *
- * 123    321
- * 456 => 654
- * 789    987
- *
- * */
-JNIEXPORT void JNICALL FlipBitmapHorizontal(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    int width = jniBitmap->_bitmapInfo.width, middle = width / 2, height = jniBitmap->_bitmapInfo.height;
-    for (int y = 0; y < height; ++y)
-    {
-        // for each row, switch between the first pixels and the last ones
-        uint32_t *idx1 = previousData + width * y;
-        uint32_t *idx2 = previousData + width * (y + 1) - 1;
-        for (int x = 0; x < middle; ++x)
-        {
-            uint32_t pixel = *idx1; // pixel= previousData[rowStart + x];
-            *idx1 = *idx2;          // previousData[rowStart + x] =previousData[rowStart + (width - x - 1)];
-            *idx2 = pixel;          // previousData[rowStart + (width - x - 1)] = pixel;
-            ++idx1;
-            --idx2;
+JNIEXPORT void JNICALL NativeFlipBitmapVertical(JNIEnv *env, jobject, jlong handle) {
+    JniBitmap *bitmap = GetBitmap(env, handle);
+    if (bitmap == nullptr) return;
+    const size_t width = bitmap->bitmapInfo.width;
+    const size_t height = bitmap->bitmapInfo.height;
+    for (size_t y = 0; y < height / 2; ++y) {
+        const size_t opposite_y = height - 1 - y;
+        for (size_t x = 0; x < width; ++x) {
+            std::swap(bitmap->pixels[y * width + x],
+                      bitmap->pixels[opposite_y * width + x]);
         }
     }
 }
-
-/** flips a bitmap vertically, as such:
- *
- * 123    789
- * 456 => 456
- * 789    123
- * */
-JNIEXPORT void JNICALL FlipBitmapVertical(JNIEnv *env, jobject obj, jobject handle)
-{
-    JniBitmap *jniBitmap = (JniBitmap *)env->GetDirectBufferAddress(handle);
-    if (jniBitmap == NULL || jniBitmap->_storedBitmapPixels == NULL)
-        return;
-    uint32_t *previousData = jniBitmap->_storedBitmapPixels;
-    int width = jniBitmap->_bitmapInfo.width, height = jniBitmap->_bitmapInfo.height, middle = height / 2;
-    for (int y = 0; y < middle; ++y)
-    {
-        // for each row till the middle row, switch its pixels with the one at the bottom
-        uint32_t *idx1 = previousData + width * y;
-        uint32_t *idx2 = previousData + width * (height - y - 1);
-        for (int x = 0; x < width; ++x)
-        {
-            uint32_t pixel = *idx1;
-            *idx1 = *idx2;
-            *idx2 = pixel;
-            ++idx2;
-            ++idx1;
-        }
-    }
-}
-
-// =============================
 
 static JNINativeMethod methods[] = {
-        {"setBitmapData",                 "(Landroid/graphics/Bitmap;)Ljava/nio/ByteBuffer;", (void *) SetBitmapData},
-        {"getBitmapFromSavedBitmapData",  "(Ljava/nio/ByteBuffer;)Landroid/graphics/Bitmap;", (void *) GetBitmapFromSavedBitmapData},
-        {"freeBitmapData",                "(Ljava/nio/ByteBuffer;)V",                         (void *) FreeBitmapData},
-        {"rotateBitmapCcw90",             "(Ljava/nio/ByteBuffer;)V",                         (void *) RotateBitmapCcw90},
-        {"rotateBitmapCw90",              "(Ljava/nio/ByteBuffer;)V",                         (void *) RotateBitmapCw90},
-        {"rotateBitmap180",               "(Ljava/nio/ByteBuffer;)V",                         (void *) RotateBitmap180},
-        {"cropBitmap",                    "(Ljava/nio/ByteBuffer;IIII)V",                     (void *) CropBitmap},
-        {"scaleNNBitmap",                 "(Ljava/nio/ByteBuffer;II)V",                       (void *) ScaleNNBitmap},
-        {"scaleBIBitmap",                 "(Ljava/nio/ByteBuffer;II)V",                       (void *) ScaleBIBitmap},
-        {"flipBitmapHorizontal",          "(Ljava/nio/ByteBuffer;)V",                         (void *) FlipBitmapHorizontal},
-        {"flipBitmapVertical",            "(Ljava/nio/ByteBuffer;)V",                         (void *) FlipBitmapVertical},
+        {"nativeSetBitmapData", "(Landroid/graphics/Bitmap;)J",
+         reinterpret_cast<void *>(NativeSetBitmapData)},
+        {"nativeGetBitmap", "(J)Landroid/graphics/Bitmap;",
+         reinterpret_cast<void *>(NativeGetBitmap)},
+        {"nativeFreeBitmapData", "(J)V", reinterpret_cast<void *>(NativeFreeBitmapData)},
+        {"nativeRotateBitmapCcw90", "(J)V", reinterpret_cast<void *>(NativeRotateBitmapCcw90)},
+        {"nativeRotateBitmapCw90", "(J)V", reinterpret_cast<void *>(NativeRotateBitmapCw90)},
+        {"nativeRotateBitmap180", "(J)V", reinterpret_cast<void *>(NativeRotateBitmap180)},
+        {"nativeCropBitmap", "(JIIII)V", reinterpret_cast<void *>(NativeCropBitmap)},
+        {"nativeScaleNNBitmap", "(JII)V", reinterpret_cast<void *>(NativeScaleNNBitmap)},
+        {"nativeScaleBIBitmap", "(JII)V", reinterpret_cast<void *>(NativeScaleBIBitmap)},
+        {"nativeFlipBitmapHorizontal", "(J)V",
+         reinterpret_cast<void *>(NativeFlipBitmapHorizontal)},
+        {"nativeFlipBitmapVertical", "(J)V", reinterpret_cast<void *>(NativeFlipBitmapVertical)},
 };
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved)
-{
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
     JNIEnv *env;
-
-    if (vm->GetEnv((void **)&env, JNI_VERSION_1_6) != JNI_OK)
-    {
-        return JNI_ERR;
-    }
-
-    jclass clz = env->FindClass(IMAGE_PACKAGE_BASE "BitmapProcessor");
-    if (clz == nullptr)
-    {
-        return JNI_ERR;
-    }
-
-    if (env->RegisterNatives(clz, methods, sizeof(methods) / sizeof(methods[0])))
-    {
-        return JNI_ERR;
-    }
-
-    return JNI_VERSION_1_6;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
+    jclass clazz = env->FindClass(IMAGE_PACKAGE_BASE "BitmapProcessor");
+    if (clazz == nullptr) return JNI_ERR;
+    const jint result = env->RegisterNatives(clazz, methods,
+                                             sizeof(methods) / sizeof(methods[0]));
+    env->DeleteLocalRef(clazz);
+    return result == 0 ? JNI_VERSION_1_6 : JNI_ERR;
 }

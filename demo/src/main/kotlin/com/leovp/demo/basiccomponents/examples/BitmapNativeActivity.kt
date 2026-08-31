@@ -122,9 +122,9 @@ class BitmapNativeActivity :
 
         var bmpFromNative: Bitmap?
         var cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                rotateBitmapCw90()
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.rotateBitmapCw90()
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native cw90 cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -137,9 +137,9 @@ class BitmapNativeActivity :
         )
 
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                rotateBitmap180()
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.rotateBitmap180()
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native 180 cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -152,9 +152,9 @@ class BitmapNativeActivity :
         )
 
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                rotateBitmapCcw90()
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.rotateBitmapCcw90()
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native ccw90 cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -167,9 +167,9 @@ class BitmapNativeActivity :
         )
 
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                flipBitmapHorizontal()
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.flipBitmapHorizontal()
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native horizontal cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -182,9 +182,9 @@ class BitmapNativeActivity :
         )
 
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                flipBitmapVertical()
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.flipBitmapVertical()
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native flip vertical cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -198,9 +198,9 @@ class BitmapNativeActivity :
 
         bmp = BitmapFactory.decodeResource(resources, resId)
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                cropBitmap(150, 150, 350, 350)
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.cropBitmap(150, 150, 350, 350)
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native crop cost=${(cost / 1000f / 1000).round(3)}ms")
@@ -214,9 +214,9 @@ class BitmapNativeActivity :
 
         bmp = BitmapFactory.decodeResource(resources, resId)
         cost = measureNanoTime {
-            bmpFromNative = BitmapProcessor(bmp).run {
-                scaleBitmap(200, 200, BitmapProcessor.ScaleMethod.NearestNeighbour)
-                getBitmapAndFree()
+            bmpFromNative = BitmapProcessor(bmp).use { processor ->
+                processor.scaleBitmap(200, 200, BitmapProcessor.ScaleMethod.NearestNeighbour)
+                processor.bitmap
             }
         }
         LogContext.log.w(ITAG, "native scale cost=${(cost / 1000f / 1000).round(3)}ms")

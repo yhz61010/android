@@ -1,7 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
 # 初始化环境变量
-. config.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/config.sh"
 
 # ==================================
 
@@ -71,7 +73,7 @@ function build_one
 
     make clean
     # shellcheck disable=SC2046
-    make -j $(nproc)
+    make -j "$(nproc)"
     make install
     popd || exit
 }
@@ -108,4 +110,4 @@ export CC=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang
 export CXX=$TOOLCHAINS/bin/x86_64-linux-android$MIN_SDK_VER-clang++
 build_one
 
-bash gradle-build-and-copy-to-module_ffmpeg_h264_hevc_decoder.sh
+bash "$SCRIPT_DIR/gradle-build-and-copy-to-module_ffmpeg_h264_hevc_decoder.sh"

@@ -29,7 +29,7 @@ private:
     AVPacket *pkt = nullptr;
     bool valid = false;
 
-    static void do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, const EncoderCallback &callback);
+    static int do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, const EncoderCallback &callback);
 
 public:
     AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate);
@@ -37,7 +37,9 @@ public:
 
     [[nodiscard]] bool isValid() const { return valid; }
 
-    void encode(const uint8_t *pcmByteArray, int pcmLen, const EncoderCallback &callback);
+    [[nodiscard]] int getInputFrameBytes() const;
+
+    int encode(const uint8_t *pcmByteArray, int pcmLen, const EncoderCallback &callback);
 };
 
 #endif //LEOANDROIDBASEUTIL_ADPCM_IMA_QT_ENCODER_H

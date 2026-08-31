@@ -1,5 +1,10 @@
 ## Native Build
 
+> **Breaking change:** `BitmapProcessor.bitmapByteBuffer` and its JVM accessors have been removed.
+> The native handle is now a private `Long`. Use only the public transformation methods and release
+> every processor with `close()` or `use {}`. Closing is idempotent and use after close throws
+> `IllegalStateException`.
+
 This module uses **CMake** to build the native `libleo-bitmap.so` library. The source files are located in `src/main/cpp/`.
 
 ### Build via Android Studio

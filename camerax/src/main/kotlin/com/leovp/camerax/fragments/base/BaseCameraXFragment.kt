@@ -605,8 +605,13 @@ abstract class BaseCameraXFragment<B : ViewBinding> : Fragment() {
     }
 
     private fun BitmapProcessor.resultOr(fallback: () -> Bitmap): Bitmap =
-        getBitmapAndFree() ?: fallback().also {
-            LogContext.log.e(logTag, "BitmapProcessor returned no bitmap; using Android fallback")
+        runCatching { use { processor -> processor.bitmap } }.getOrElse { throwable ->
+            LogContext.log.e(
+                logTag,
+                "BitmapProcessor failed; using Android fallback",
+                throwable
+            )
+            fallback()
         }
 
     private fun showShutterAnimation(viewFinder: PreviewView) {

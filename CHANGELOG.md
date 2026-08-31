@@ -57,6 +57,17 @@
 
 ### 变更 (Changed)
 
+- **Native API 与发布契约收敛**：`BitmapProcessor.bitmapByteBuffer` 及其 JVM getter/setter 已直接删除，
+  Native handle 改为私有 `Long`。这是源码和二进制不兼容变更；调用方必须改用公开变换 API，并通过
+  `close()/use {}` 管理生命周期。三个预编译 FFmpeg AAR 现在通过 Gradle Module Metadata 共享
+  `ffmpeg-native-runtime` capability，强制音频独立版、视频独立版和组合版三选一；会掩盖错误组合的
+  Native `pickFirsts` 已移除。只读取 Maven POM 的消费端仍需自行遵守三选一约束。
+- **ffmpeg-javacpp ABI 收窄**：发布 AAR 现在明确只支持 `arm64-v8a`，只引入 FFmpeg 与 JavaCPP 的
+  `android-arm64` classifier，不再声明 `armeabi-v7a`、`x86` 或 `x86_64` 支持。
+- **YUV_420_888 平面 API**：新增接受 Y/U/V `ByteBuffer`、各平面 row stride/pixel stride 的
+  `android420ToI420()` 重载，支持 direct、heap、只读 buffer 和非零 position，且不改变调用方 buffer
+  状态。旧扁平数组重载已弃用，并只接受 `pixelStrideUV == 1`。
+
 - **P3 低风险清理与规范化完成**:`KeepAlive` 使用 `SupervisorJob` 并隔离 callback 异常，释放后清空
   `MediaPlayer`;`android-restricted` 和 `audio` 的目标路径不再调用 `printStackTrace()`，统一通过
   `LogContext` 保留异常上下文。audio 模块的 `runCatching` 路径统一通过内部 helper 保证
@@ -98,6 +109,14 @@
   回退到 idle,并新增状态描述供无障碍服务读取。
 
 ### 修复 (Fixed)
+
+- **Native 内存安全、错误路径与生命周期**：YUV JNI 统一校验尺寸、格式、stride、裁剪和数组长度，
+  修复 RGB24 行 stride 与 NV12 旋转后目标 stride；Bitmap crop/scale/rotate 改为受检分配并处理带
+  stride Bitmap、`1xN/Nx1` 双线性缩放、幂等关闭和关闭后调用；JPEG 压缩改为逐行 RGBA→RGB，完整
+  清理 compressor、文件、行缓冲与错误跳转路径，失败时删除不完整文件。FFmpeg wrapper 对 packet
+  补齐 `AV_INPUT_BUFFER_PADDING_SIZE`，复用 packet/frame/图像缓冲，按实际 sample format 和
+  `nb_samples` 复制音频，并统一 handle 初始化回滚、实例锁互斥及幂等关闭。ADPCM 编码不再静默丢弃
+  不完整 PCM 帧，改为抛出 `IllegalArgumentException`。
 
 - **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
   设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将

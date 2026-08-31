@@ -1,5 +1,10 @@
 #!/bin/bash
 
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # shellcheck disable=SC2034
 FFMPEG_FOLDER=ffmpeg-8.1.1
 NDK_PATH=/home/yhz61010/Android/Sdk/ndk/29.0.14206865
@@ -10,6 +15,15 @@ HOST_TAG=linux-${HOST_ARCH}
 MIN_SDK_VER=21
 PKG_CONFIG_PATH=$(which pkg-config | sed 's/pkg-config$//' )
 
+test -d "$NDK_PATH/toolchains/llvm/prebuilt" || {
+    echo "NDK not found: $NDK_PATH" >&2
+    return 1
+}
+test -d "$SCRIPT_DIR/$FFMPEG_FOLDER" || {
+    echo "FFmpeg source not found: $SCRIPT_DIR/$FFMPEG_FOLDER" >&2
+    return 1
+}
+
 # ==================================
 
 TOOLCHAINS=${NDK_PATH}/toolchains/llvm/prebuilt/${HOST_TAG}
@@ -18,6 +32,6 @@ SYSROOT=${TOOLCHAINS}/sysroot
 # ==================================
 
 echo "-> Current working directory=$(pwd)"
-rm -rf prebuilt
-rm -rf ../libs
-rm -rf ../obj
+rm -rf "$SCRIPT_DIR/prebuilt"
+rm -rf "$SCRIPT_DIR/../libs"
+rm -rf "$SCRIPT_DIR/../obj"

@@ -1,218 +1,228 @@
-#include <jni.h>
-#include <string>
 #include <android/bitmap.h>
 #include <android/log.h>
+#include <jni.h>
+
 #include <csetjmp>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-
 #include "include/jpeglib.h"
-#include "include/turbojpeg.h"
-
-#ifdef __cplusplus
+#include "include/jerror.h"
 }
-#endif
 
 #define LOG_TAG "LEO-JPEG"
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define JPEG_PACKAGE_BASE "com/leovp/jpeg/"
 
-typedef uint8_t BYTE;
+namespace {
 
-struct my_error_mgr {
-    struct jpeg_error_mgr pub;
-    jmp_buf setjmp_buffer; /* for return to caller */
+struct JpegErrorManager {
+    jpeg_error_mgr manager;
+    jmp_buf jumpBuffer;
+    bool outOfMemory;
 };
-typedef struct my_error_mgr *my_error_ptr;
 
-METHODDEF(void) my_error_exit(j_common_ptr cinfo) {
-    auto myerr = (my_error_ptr) cinfo->err;
-    (*cinfo->err->output_message)(cinfo);
-    LOGE("jpeg_message_table[%d]:%s", myerr->pub.msg_code,
-         myerr->pub.jpeg_message_table[myerr->pub.msg_code]);
-    longjmp(myerr->setjmp_buffer, 1);
+struct JpegWriteState {
+    jpeg_compress_struct compressor;
+    JpegErrorManager error;
+    FILE *file;
+    uint8_t *row;
+    bool compressorCreated;
+    bool success;
+};
+
+enum WriteResult {
+    WRITE_SUCCESS = 0,
+    WRITE_FAILED = -1,
+    WRITE_OUT_OF_MEMORY = -2,
+};
+
+void ThrowException(JNIEnv *env, const char *class_name, const char *message) {
+    if (env->ExceptionCheck()) return;
+    jclass exception_class = env->FindClass(class_name);
+    if (exception_class != nullptr) {
+        env->ThrowNew(exception_class, message);
+        env->DeleteLocalRef(exception_class);
+    }
 }
 
-
-int write_JPEG_file(BYTE *data, uint32_t w, uint32_t h, int quality,
-                    const char *outFilename, jboolean optimize) {
-    //jpeg的结构体，保存的比如宽、高、位深、图片格式等信息
-    struct jpeg_compress_struct cinfo{};
-
-    /* Step 1: allocate and initialize JPEG compression object */
-
-    /* We set up the normal JPEG error routines, then override error_exit. */
-    struct my_error_mgr jem{};
-    cinfo.err = jpeg_std_error(&jem.pub);
-    jem.pub.error_exit = my_error_exit;
-    /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jem.setjmp_buffer)) {
-        /* If we get here, the JPEG code has signaled an error.
-         and return.
-         */
-        return -1;
-    }
-    jpeg_create_compress(&cinfo);
-
-    /* Step 2: specify data destination (eg, a file) */
-
-    FILE *outfile = fopen(outFilename, "wb");
-    if (outfile == nullptr) {
-        LOGE("can't open %s", outFilename);
-        return -1;
-    }
-    jpeg_stdio_dest(&cinfo, outfile);
-
-    /* Step 3: set parameters for compression */
-
-    cinfo.image_width = w;      /* image width and height, in pixels */
-    cinfo.image_height = h;
-    cinfo.input_components = 3;           /* # of color components per pixel */
-    cinfo.in_color_space = JCS_RGB;       /* colorspace of input image */
-
-    /*  源码地址：
-      [http://androidos.net.cn/androidossearch?query=SkImageDecoder_libjpeg.cpp](http://androidos.net.cn/androidossearch?query=SkImageDecoder_libjpeg.cpp)
-
-      >=android 7.0 后的源码已经设置为true了
-      ...省略其它代码
-      Tells libjpeg-turbo to compute optimal Huffman coding tables
-      for the image.  This improves compression at the cost of
-      slower encode performance.
-      cinfo.optimize_coding = TRUE;
-      jpeg_set_quality(&cinfo, quality, TRUE);
-      ...省略其它代码*/
-
-
-    cinfo.optimize_coding = optimize;
-    //哈夫曼编码和算术编码，TRUE=arithmetic coding, FALSE=Huffman
-    if (optimize) {
-        cinfo.arith_code = false;
-    } else {
-        cinfo.arith_code = true;
-    }
-    // 其它参数 全部设置默认参数
-    jpeg_set_defaults(&cinfo);
-    //设置质量
-    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
-
-    /* Step 4: Start compressor */
-
-    jpeg_start_compress(&cinfo, TRUE);
-
-
-    /* Step 5: while (scan lines remain to be written) */
-    /*           jpeg_write_scanlines(...); */
-
-    JSAMPROW row_pointer[1];
-    uint32_t row_stride;
-    //一行的RGB数量
-    row_stride = cinfo.image_width * 3; /* JSAMPLEs per row in image_buffer */
-    //一行一行遍历
-    while (cinfo.next_scanline < cinfo.image_height) {
-        //得到一行的首地址
-        row_pointer[0] = &data[cinfo.next_scanline * row_stride];
-        //此方法会将jcs.next_scanline加1
-        jpeg_write_scanlines(&cinfo, row_pointer, 1);//row_pointer就是一行的首地址，1：写入的行数
-    }
-    /* Step 6: Finish compression */
-    jpeg_finish_compress(&cinfo);
-    /* After finish_compress, we can close the output file. */
-    fclose(outfile);
-
-    /* Step 7: release JPEG compression object */
-
-    /* This is an important step since it will release a good deal of memory. */
-    jpeg_destroy_compress(&cinfo);
-
-    /* And we're done! */
-    return 0;
+void ThrowIllegalArgumentException(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/IllegalArgumentException", message);
 }
 
-JNIEXPORT jint JNICALL compressBitmap(JNIEnv *env, __attribute__((unused)) jobject,
-                                      jobject bitmap,
-                                      jint quality,
-                                      jstring outFilPath,
-                                      jboolean optimize) {
-    //获取Bitmap信息
-    AndroidBitmapInfo android_bitmap_info;
-    AndroidBitmap_getInfo(env, bitmap, &android_bitmap_info);
-    //获取bitmap的 宽，高，format
-    uint32_t w = android_bitmap_info.width;
-    uint32_t h = android_bitmap_info.height;
+void ThrowIllegalStateException(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/IllegalStateException", message);
+}
 
-//    LOGE("bitmap w=%d h=%d", w, h);
+void ThrowOutOfMemoryError(JNIEnv *env, const char *message) {
+    ThrowException(env, "java/lang/OutOfMemoryError", message);
+}
 
-    //读取Bitmap所有像素信息
-    BYTE *pixelsColor;
-    AndroidBitmap_lockPixels(env, bitmap, (void **) &pixelsColor);
+METHODDEF(void) JpegErrorExit(j_common_ptr compressor) {
+    auto *error = reinterpret_cast<JpegErrorManager *>(compressor->err);
+    char message[JMSG_LENGTH_MAX] = {};
+    (*compressor->err->format_message)(compressor, message);
+    LOGE("JPEG compression failed: %s", message);
+    error->outOfMemory = compressor->err->msg_code == JERR_OUT_OF_MEMORY;
+    longjmp(error->jumpBuffer, 1);
+}
 
-    int i, j;
-    BYTE r, g, b;
-    //存储RGB所有像素点
-    BYTE *data = (BYTE *) malloc(w * h * 3);
-    // 临时保存指向像素内存的首地址
-    BYTE *tempData = data;
+int WriteJpegFile(const uint8_t *bitmap_pixels, const AndroidBitmapInfo *bitmap_info,
+                  jint quality, const char *output_path, jboolean optimize,
+                  bool *file_was_opened) {
+    *file_was_opened = false;
+    auto *state = static_cast<JpegWriteState *>(std::calloc(1, sizeof(JpegWriteState)));
+    if (state == nullptr) return WRITE_OUT_OF_MEMORY;
 
-    uint32_t color;
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j++) {
-            // 取出一个像素  去调了alpha，然后保存到data中，对应指针++
-            color = *((uint32_t *) pixelsColor);
+    state->compressor.err = jpeg_std_error(&state->error.manager);
+    state->error.manager.error_exit = JpegErrorExit;
+    if (setjmp(state->error.jumpBuffer) != 0) goto cleanup;
 
-            // 在jni层中，Bitmap像素点的值是ABGR，而不是ARGB，也就是说，高端到低端：A，B，G，R
-            b = ((color & 0x00FF0000) >> 16);
-            g = ((color & 0x0000FF00) >> 8);
-            r = ((color & 0x000000FF));
+    state->compressorCreated = true;
+    jpeg_create_compress(&state->compressor);
+    state->file = std::fopen(output_path, "wb");
+    if (state->file == nullptr) {
+        LOGE("Unable to open JPEG output: %s", output_path);
+        goto cleanup;
+    }
+    jpeg_stdio_dest(&state->compressor, state->file);
 
-            // jpeg压缩需要的是rgb
-            //  for example, R,G,B,R,G,B,R,G,B,... for 24-bit RGB color.
-            *data = r;
-            *(data + 1) = g;
-            *(data + 2) = b;
-            data += 3;
-            pixelsColor += 4;
+    state->compressor.image_width = bitmap_info->width;
+    state->compressor.image_height = bitmap_info->height;
+    state->compressor.input_components = 3;
+    state->compressor.in_color_space = JCS_RGB;
+    jpeg_set_defaults(&state->compressor);
+    state->compressor.optimize_coding = optimize == JNI_TRUE;
+    state->compressor.arith_code = FALSE;
+    jpeg_set_quality(&state->compressor, quality, TRUE);
+
+    state->row = static_cast<uint8_t *>(
+            std::malloc(static_cast<size_t>(bitmap_info->width) * 3U));
+    if (state->row == nullptr) {
+        state->error.outOfMemory = true;
+        goto cleanup;
+    }
+
+    jpeg_start_compress(&state->compressor, TRUE);
+    while (state->compressor.next_scanline < state->compressor.image_height) {
+        const auto *source_row = bitmap_pixels +
+                                 static_cast<size_t>(state->compressor.next_scanline) *
+                                 bitmap_info->stride;
+        for (uint32_t x = 0; x < bitmap_info->width; ++x) {
+            state->row[x * 3U] = source_row[x * 4U];
+            state->row[x * 3U + 1U] = source_row[x * 4U + 1U];
+            state->row[x * 3U + 2U] = source_row[x * 4U + 2U];
         }
+        JSAMPROW row_pointer[1] = {state->row};
+        if (jpeg_write_scanlines(&state->compressor, row_pointer, 1) != 1) goto cleanup;
     }
-    AndroidBitmap_unlockPixels(env, bitmap);
+    jpeg_finish_compress(&state->compressor);
+    state->success = true;
 
-    char *path = (char *) env->GetStringUTFChars(outFilPath, nullptr);
-//    LOGE("path=%s", path);
-
-    // Libjpeg进行压缩
-    int resultCode = write_JPEG_file(tempData, w, h, quality, path, optimize);
-    if (resultCode == -1) {
-        return -1;
-    }
-    env->ReleaseStringUTFChars(outFilPath, path);
-    free(tempData);
-    return 0;
+cleanup:
+    *file_was_opened = state->file != nullptr;
+    if (state->compressorCreated) jpeg_destroy_compress(&state->compressor);
+    if (state->file != nullptr && std::fclose(state->file) != 0) state->success = false;
+    std::free(state->row);
+    const int result = state->success
+                       ? WRITE_SUCCESS
+                       : (state->error.outOfMemory ? WRITE_OUT_OF_MEMORY : WRITE_FAILED);
+    std::free(state);
+    return result;
 }
 
-// =============================
+}  // namespace
+
+JNIEXPORT jint JNICALL CompressBitmap(JNIEnv *env, jobject, jobject bitmap, jint quality,
+                                      jstring output_path, jboolean optimize) {
+    if (bitmap == nullptr || output_path == nullptr) {
+        ThrowIllegalArgumentException(env, "Bitmap and output path must not be null");
+        return -1;
+    }
+    if (quality < 0 || quality > 100) {
+        ThrowIllegalArgumentException(env, "JPEG quality must be between 0 and 100");
+        return -1;
+    }
+
+    AndroidBitmapInfo bitmap_info{};
+    if (AndroidBitmap_getInfo(env, bitmap, &bitmap_info) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        ThrowIllegalStateException(env, "Unable to read Bitmap information");
+        return -1;
+    }
+    if (bitmap_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        ThrowIllegalArgumentException(env, "Bitmap must use ARGB_8888 configuration");
+        return -1;
+    }
+    const uint64_t minimum_stride = static_cast<uint64_t>(bitmap_info.width) * 4U;
+    const uint64_t bitmap_span =
+            static_cast<uint64_t>(bitmap_info.stride) * bitmap_info.height;
+    const uint64_t jpeg_row_size = static_cast<uint64_t>(bitmap_info.width) * 3U;
+    if (bitmap_info.width == 0 || bitmap_info.height == 0 ||
+        bitmap_info.stride < minimum_stride ||
+        bitmap_span > std::numeric_limits<size_t>::max() ||
+        jpeg_row_size > std::numeric_limits<size_t>::max()) {
+        ThrowIllegalArgumentException(env, "Bitmap dimensions or stride are invalid");
+        return -1;
+    }
+
+    void *bitmap_pixels = nullptr;
+    if (AndroidBitmap_lockPixels(env, bitmap, &bitmap_pixels) != ANDROID_BITMAP_RESULT_SUCCESS ||
+        bitmap_pixels == nullptr) {
+        ThrowIllegalStateException(env, "Unable to lock Bitmap pixels");
+        return -1;
+    }
+
+    const char *path = env->GetStringUTFChars(output_path, nullptr);
+    if (path == nullptr) {
+        AndroidBitmap_unlockPixels(env, bitmap);
+        if (!env->ExceptionCheck()) ThrowOutOfMemoryError(env, "Unable to access output path");
+        return -1;
+    }
+    if (path[0] == '\0') {
+        env->ReleaseStringUTFChars(output_path, path);
+        AndroidBitmap_unlockPixels(env, bitmap);
+        ThrowIllegalArgumentException(env, "Output path must not be empty");
+        return -1;
+    }
+
+    bool file_was_opened = false;
+    const int result = WriteJpegFile(static_cast<const uint8_t *>(bitmap_pixels),
+                                     &bitmap_info, quality, path, optimize,
+                                     &file_was_opened);
+    if (result != WRITE_SUCCESS && file_was_opened) std::remove(path);
+    env->ReleaseStringUTFChars(output_path, path);
+    const int unlock_result = AndroidBitmap_unlockPixels(env, bitmap);
+    if (unlock_result != ANDROID_BITMAP_RESULT_SUCCESS) {
+        ThrowIllegalStateException(env, "Unable to unlock Bitmap pixels");
+        return -1;
+    }
+    if (result == WRITE_OUT_OF_MEMORY) {
+        ThrowOutOfMemoryError(env, "Unable to allocate JPEG compression memory");
+        return -1;
+    }
+    if (result != WRITE_SUCCESS) {
+        ThrowIllegalStateException(env, "JPEG compression failed");
+        return -1;
+    }
+    return 0;
+}
 
 static JNINativeMethod methods[] = {
         {"compressBitmap", "(Landroid/graphics/Bitmap;ILjava/lang/String;Z)I",
-         (void *) compressBitmap},
+         reinterpret_cast<void *>(CompressBitmap)},
 };
 
-JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __attribute__((unused)) void *reserved) {
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
     JNIEnv *env;
-
-    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-        return JNI_ERR;
-    }
-
-    jclass clz = env->FindClass(JPEG_PACKAGE_BASE"JPEGUtil");
-    if (clz == nullptr) {
-        return JNI_ERR;
-    }
-
-    if (env->RegisterNatives(clz, methods, sizeof(methods) / sizeof(methods[0]))) {
-        return JNI_ERR;
-    }
-
-    return JNI_VERSION_1_6;
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
+    jclass clazz = env->FindClass(JPEG_PACKAGE_BASE "JPEGUtil");
+    if (clazz == nullptr) return JNI_ERR;
+    const jint result = env->RegisterNatives(clazz, methods,
+                                             sizeof(methods) / sizeof(methods[0]));
+    env->DeleteLocalRef(clazz);
+    return result == 0 ? JNI_VERSION_1_6 : JNI_ERR;
 }

@@ -14,8 +14,11 @@ object JPEGUtil {
     }
 
     /**
-     * This method is not only slower but also generated larger file
-     * than Android [Bitmap.compress] method.
+     * Compresses an ARGB_8888 [bitmap] into a JPEG file.
+     *
+     * [quality] must be between 0 and 100. A successful call returns `0`. Invalid parameters,
+     * output failures, native encoder failures, and allocation failures are reported as
+     * exceptions instead of negative return codes.
      */
     external fun compressBitmap(
         bitmap: Bitmap,

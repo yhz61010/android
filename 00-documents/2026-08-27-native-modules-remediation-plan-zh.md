@@ -2,7 +2,7 @@
 
 ## 1. 文档目的
 
-本文统合 `review/native-modules` 分支上的 Codex 初审、Claude Code 独立盲审和 Claude Code 对原方案的复核结果，给出唯一的代码级实施方案。本文只描述整改方案，不修改生产代码，也不把 Gradle 构建通过等同于 Native 运行时问题已经解决。
+本文统合 `review/native-modules` 分支上的 Codex 初审、Claude Code 独立盲审和 Claude Code 对原方案的复核结果，给出唯一的代码级实施方案。本文最初只描述整改方案；截至 2026-08-31，方案对应的生产代码已经开始实施，但仍不把 Gradle 构建通过等同于 Native 运行时问题已经解决。
 
 交叉审查输入如下：
 
@@ -11,6 +11,31 @@
 - Codex 对上述反馈的源码复核：重新检查 `lib-image`、`yuv`、`jpeg`、`ffmpeg-javacpp`、`ffmpeg-sdk`、三个 FFmpeg wrapper 的源码、Gradle 配置和预编译 `.so`
 
 两份 `_cc.md` 保留为原始审查证据，不直接作为实施清单；若其表述与本文不同，以本文经源码复核并修正后的方案为准。已确认的主要修正是：引入 CRITICAL 级别、把 `lib-image` 内存安全提前到 P0、显式处理 `transformI420()` 的空返回契约和 `std::bad_alloc`。同时修正两处原始反馈中的实现表述：`lib-image` 当前没有显式启用 `-fno-exceptions`，但未捕获 C++ 分配异常越过 JNI 边界仍会终止进程；`AndroidBitmap_getInfo()` 失败时不能调用 unlock，只有 `AndroidBitmap_lockPixels()` 成功后才允许解锁。
+
+### 1.1 实施状态与验证记录（2026-08-31）
+
+当前工作区已按 A～G 批次完成主要代码改造，包括 YUV/JPEG/Bitmap JNI 边界校验、私有 Native handle 与幂等关闭、JavaCPP/FFmpeg 资源所有权、FFmpeg 输入 padding、热路径缓冲复用、三个 FFmpeg AAR 的三选一 capability、`ffmpeg-javacpp` arm64 限定，以及对应 README/CHANGELOG。三个 FFmpeg profile 已从 `ffmpeg-sdk` 源码重新生成并复制到发布模块，不是只修改 C++ 源码而继续沿用旧二进制。
+
+本机已完成以下验证：
+
+- 使用 JDK 17 对 `lib-image`、`yuv`、`jpeg`、`ffmpeg-javacpp`、三个 FFmpeg wrapper、`camerax` 和 `demo` 执行目标 `ktlintCheck`/`detekt`，全部通过。
+- 对七个受影响库执行 `assembleDebug --rerun-tasks`，并重新编译 `camerax`、`demo`；构建通过。
+- `yuv`、`lib-image`、`jpeg` 的仪器测试 APK 已成功组装，但尚未在设备上执行。
+- 全仓库 `testDebugUnitTest --rerun-tasks --continue` 已执行完毕，没有单元测试失败；全仓库静态检查仍受本轮范围外的既有 ktlint/detekt 违规影响，不能标记为全仓库通过。
+- 真实发布到临时 Maven 仓库后，三个 FFmpeg 模块的单模块正向消费均可组装；“音频+视频”“音频+组合”“视频+组合”三种负向组合均因共享 capability 冲突而失败。验证脚本位于 `10-configs/ffmpeg-runtime-consumer-test/verify.sh`。
+- 三个 wrapper 的 release AAR 均包含预期的四 ABI 和各自 profile 所需库；68 个发布 `.so` 已检查 ELF 位数、SONAME 和 64 位 LOAD segment 的 16KB 对齐，未发现错误。
+- `git lfs fsck` 通过；三个 wrapper 中的 Kotlin 重复实现保持逐字一致。
+- `ffmpeg-javacpp` 的 Gradle Module Metadata 和 POM 只选择 `android-arm64` Native classifier；其 AAR 本体不内嵌传递依赖的 `.so`，Native 文件由发布元数据声明的 JavaCPP/FFmpeg classifier 依赖提供。
+- `javap` 已确认 `BitmapProcessor` 不再暴露 `bitmapByteBuffer`，Native handle 为私有 `long`，并且兜底方法字节码名为真正的 `finalize()`。
+
+当前仍未满足发布完成定义，原因如下：
+
+- `adb devices -l` 当前没有已连接设备，因此新增仪器测试、FFmpeg 最小解码、并发 close、长时间循环和真实输出一致性尚未执行。
+- 尚未取得 ASan/HWASan 运行证据，A～C 的 CRITICAL 项不能仅凭静态审查和构建结果关闭。
+- 16KB 页兼容性目前只有 ELF 静态对齐检查，仍需在对应真机上验证所有依赖库可加载。
+- YUV/JPEG/H.264/ADPCM 的同机型整改前后性能、Native heap 和 P95 数据尚未采集。
+
+因此，本节表示“代码实现和本机构建验证已完成到当前阶段”，不表示第 14 节的全部完成条件已经满足，也不构成发布许可。
 
 - 审查基线：`7f28edf8fb7b238d2a7a3500ffac4fb01f265d4c`
 - 远端主线：`origin/master`

@@ -39,6 +39,13 @@ val jvmTargetVersion by extra {
 
 val useResourcePrefix = false
 
+private val ffmpegNativeRuntimeModules =
+    setOf(
+        "adpcm-ima-qt-codec",
+        "h264-hevc-decoder",
+        "adpcm-ima-qt-codec-h264-hevc-decoder"
+    )
+
 /**
  * resourcePrefix 的校验规则：
  * 1. 针对可识别类型的文件夹中的非 `values` 文件夹目录，校验 `XML` 文件的文件前缀是否符合规则。
@@ -197,6 +204,20 @@ allprojects {
 }
 
 subprojects {
+    if (name in ffmpegNativeRuntimeModules) {
+        configurations.matching {
+            it.name in setOf(
+                "releaseApiElements",
+                "releaseRuntimeElements",
+                "releaseVariantReleaseApiPublication",
+                "releaseVariantReleaseRuntimePublication"
+            )
+        }.configureEach {
+            outgoing.capability("${project.group}:${project.name}:${project.version}")
+            outgoing.capability("com.leovp.android:ffmpeg-native-runtime:${project.version}")
+        }
+    }
+
     // AGP 9.0 has built-in Kotlin support, so kotlin-android plugin is no longer needed.
     // apply(
     //     plugin =

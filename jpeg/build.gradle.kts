@@ -59,6 +59,7 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "includes" to listOf("*.jar"))))
     api(libs.androidx.annotation)
+    androidTestImplementation(libs.bundles.android.test)
 }
 
 /** When use it: sourceJar.get() */

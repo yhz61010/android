@@ -44,6 +44,7 @@ dependencies {
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.test.runtime.only)
+    androidTestImplementation(libs.bundles.android.test)
 }
 
 /** When use it: sourceJar.get() */

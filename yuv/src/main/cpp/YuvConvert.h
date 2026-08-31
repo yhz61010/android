@@ -14,36 +14,36 @@ extern "C" {
 }
 #endif
 
-void android420ToI420(const uint8_t *src_android420_data, jint src_pixel_stride_uv, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree);
+int android420ToI420(const uint8_t *src_android420_data, jint src_pixel_stride_uv, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree);
 
-void convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree);
+int convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree);
 
-void mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
+int mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
 
-void flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
+int flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data);
 
-void rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
+int rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
 
-void scaleI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode);
+int scaleI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode);
 
-void cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top);
+int cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint height, uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top);
 
-void i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv21_data);
+int i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv21_data);
 
-void i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv12_data);
+int i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv12_data);
 
-void nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_i420_data);
+int nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_i420_data);
 
-void nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
+int nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree);
 
-void mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data);
+int mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data);
 
-void scaleNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode);
+int scaleNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode);
 
-void nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data);
+int nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data);
 
 // --------------------
 
-void i420ToRgb24(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_rgb24_data, jint dst_rgb24_data_len);
+int i420ToRgb24(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_rgb24_data);
 
 #endif //LEOANDROIDBASEUTIL_YUVCONVERT_H

@@ -1,6 +1,7 @@
 package com.leovp.yuv
 
 import androidx.annotation.Keep
+import java.nio.ByteBuffer
 
 /**
  * Author: Michael Leo
@@ -27,14 +28,15 @@ object YuvUtil {
     const val SCALE_FILTER_BILINEAR = 2 // Faster than box, but lower quality scaling down.
     const val SCALE_FILTER_BOX = 3 // Highest quality.
 
-    /**
-     * Maybe the [convertToI420] method is what you want unless you find a way to get
-     * [pixelStrideUV] automatically.
-     *
-     * @param pixelStrideUV How can I get this parameter automatically?
-     *                      1: I420
-     *                      2: NV21/NV12
-     */
+    /** Converts tightly packed planar I420 data with optional vertical flip and rotation. */
+    @Deprecated(
+        message = "Use the plane-based overload for YUV_420_888 images.",
+        replaceWith = ReplaceWith(
+            "android420ToI420(yBuffer, uBuffer, vBuffer, yRowStride, uRowStride, " +
+                "vRowStride, yPixelStride, uPixelStride, vPixelStride, width, height, " +
+                "verticallyFlip, degree)"
+        )
+    )
     external fun android420ToI420(
         srcYuvByteArray: ByteArray,
         pixelStrideUV: Int,
@@ -42,7 +44,105 @@ object YuvUtil {
         height: Int,
         verticallyFlip: Boolean,
         degree: Int = ROTATE_0
-    ): ByteArray?
+    ): ByteArray
+
+    /**
+     * Converts three [android.media.ImageFormat.YUV_420_888] planes to tightly packed I420.
+     *
+     * Each plane is read from its current [ByteBuffer.position] without changing the caller's
+     * position or limit. Row and pixel strides are measured in bytes. Both direct and heap
+     * buffers, including read-only buffers, are supported.
+     */
+    @Suppress("LongParameterList")
+    fun android420ToI420(
+        yBuffer: ByteBuffer,
+        uBuffer: ByteBuffer,
+        vBuffer: ByteBuffer,
+        yRowStride: Int,
+        uRowStride: Int,
+        vRowStride: Int,
+        yPixelStride: Int,
+        uPixelStride: Int,
+        vPixelStride: Int,
+        width: Int,
+        height: Int,
+        verticallyFlip: Boolean,
+        degree: Int = ROTATE_0,
+    ): ByteArray {
+        require(width > 0 && height > 0 && width % 2 == 0 && height % 2 == 0) {
+            "Width and height must be positive even values."
+        }
+        require(
+            degree == ROTATE_0 ||
+                degree == ROTATE_90 ||
+                degree == ROTATE_180 ||
+                degree == ROTATE_270
+        ) {
+            "Rotation must be 0, 90, 180, or 270 degrees."
+        }
+
+        val ySize = checkedPlaneSize(width, height)
+        val chromaWidth = width / 2
+        val chromaHeight = height / 2
+        val chromaSize = checkedPlaneSize(chromaWidth, chromaHeight)
+        val outputSize = ySize.toLong() + chromaSize.toLong() * 2L
+        require(outputSize <= Int.MAX_VALUE) { "I420 output is too large." }
+
+        if (
+            yBuffer.isDirect &&
+            uBuffer.isDirect &&
+            vBuffer.isDirect &&
+            yPixelStride == 1 &&
+            uPixelStride == vPixelStride
+        ) {
+            return android420ToI420Direct(
+                yBuffer.slice(),
+                uBuffer.slice(),
+                vBuffer.slice(),
+                yRowStride,
+                uRowStride,
+                vRowStride,
+                yPixelStride,
+                uPixelStride,
+                vPixelStride,
+                width,
+                height,
+                verticallyFlip,
+                degree
+            )
+        }
+
+        val packedI420 = ByteArray(outputSize.toInt())
+        copyPlane(yBuffer, yRowStride, yPixelStride, width, height, packedI420, 0)
+        copyPlane(uBuffer, uRowStride, uPixelStride, chromaWidth, chromaHeight, packedI420, ySize)
+        copyPlane(
+            vBuffer,
+            vRowStride,
+            vPixelStride,
+            chromaWidth,
+            chromaHeight,
+            packedI420,
+            ySize + chromaSize
+        )
+        return convertToI420(packedI420, I420, width, height, verticallyFlip, degree)
+    }
+
+    @Suppress("LongParameterList")
+    private external fun android420ToI420Direct(
+        yBuffer: ByteBuffer,
+        uBuffer: ByteBuffer,
+        vBuffer: ByteBuffer,
+        yRowStride: Int,
+        uRowStride: Int,
+        vRowStride: Int,
+        yPixelStride: Int,
+        uPixelStride: Int,
+        vPixelStride: Int,
+        width: Int,
+        height: Int,
+        verticallyFlip: Boolean,
+        degree: Int
+    ): ByteArray
 
     /**
      * Convert specified YUV data to I420 with vertically flipping and rotating at the same time.
@@ -75,7 +175,7 @@ object YuvUtil {
         height: Int,
         verticallyFlip: Boolean,
         degree: Int = ROTATE_0
-    ): ByteArray?
+    ): ByteArray
 
     /**
      * @param width The original video width before rotation.
@@ -154,7 +254,7 @@ object YuvUtil {
         dstHeight: Int,
         left: Int,
         top: Int
-    ): ByteArray?
+    ): ByteArray
 
     external fun i420ToNv21(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
@@ -201,9 +301,44 @@ object YuvUtil {
     external fun nv21ToNv12(nv21ByteArray: ByteArray, width: Int, height: Int): ByteArray
 
     /**
-     * **NOT** work now.
-     *
-     * The `libyuv` doesn't include the jpeg library. So it doesn't work now.
+     * Returns tightly packed RGB24 data with three bytes per pixel and [width] * 3 bytes per row.
      */
     external fun i420ToRgb24(i420ByteArray: ByteArray, width: Int, height: Int): ByteArray
+
+    private fun checkedPlaneSize(width: Int, height: Int): Int {
+        val size = width.toLong() * height.toLong()
+        require(size in 1..Int.MAX_VALUE.toLong()) { "Plane size is invalid or too large." }
+        return size.toInt()
+    }
+
+    @Suppress("LongParameterList")
+    private fun copyPlane(
+        source: ByteBuffer,
+        rowStride: Int,
+        pixelStride: Int,
+        width: Int,
+        height: Int,
+        destination: ByteArray,
+        destinationOffset: Int,
+    ) {
+        require(rowStride > 0 && pixelStride > 0) { "Plane strides must be positive." }
+        val minimumRowBytes = (width.toLong() - 1L) * pixelStride + 1L
+        require(minimumRowBytes <= rowStride.toLong()) {
+            "Row stride is smaller than the bytes required by the plane width."
+        }
+        val requiredBytes = (height.toLong() - 1L) * rowStride + minimumRowBytes
+        require(requiredBytes <= source.remaining().toLong()) {
+            "Plane buffer is smaller than required by its dimensions and strides."
+        }
+
+        val duplicate = source.duplicate()
+        val sourceOffset = duplicate.position()
+        var destinationIndex = destinationOffset
+        repeat(height) { row ->
+            val rowOffset = sourceOffset + row * rowStride
+            repeat(width) { column ->
+                destination[destinationIndex++] = duplicate.get(rowOffset + column * pixelStride)
+            }
+        }
+    }
 }

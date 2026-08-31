@@ -1,6 +1,10 @@
 #include "adpcm_ima_qt_encoder.h"
 #include "logger.h"
 
+#include <cerrno>
+#include <climits>
+#include <cstring>
+
 AdpcmImaQtEncoder::AdpcmImaQtEncoder(int sampleRate, int channels, int bitRate) {
     LOGE("ADPCM encoder init. sampleRate: %d, channels: %d bitRate: %d", sampleRate, channels, bitRate);
     const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_ADPCM_IMA_QT);
@@ -78,56 +82,66 @@ AdpcmImaQtEncoder::~AdpcmImaQtEncoder() {
     LOGE("ADPCM encoder released!");
 }
 
-void AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen, const EncoderCallback &callback) {
-    bool isStereo = ctx->ch_layout.nb_channels == 2;
-    const int BUF_SIZE = frame->linesize[0] * ctx->ch_layout.nb_channels;
-    auto *out0 = new uint8_t[BUF_SIZE];
-    uint8_t *out1 = nullptr;
-    if (isStereo) out1 = new uint8_t[BUF_SIZE];
+int AdpcmImaQtEncoder::encode(const uint8_t *pcm_unit8_t_array, int pcmLen,
+                              const EncoderCallback &callback) {
+    const int bytes_per_sample = av_get_bytes_per_sample(ctx->sample_fmt);
+    const int channels = ctx->ch_layout.nb_channels;
+    const int frame_bytes = getInputFrameBytes();
+    if (pcm_unit8_t_array == nullptr || pcmLen <= 0 || frame_bytes <= 0 ||
+        pcmLen % frame_bytes != 0) {
+        return AVERROR(EINVAL);
+    }
 
-    const int loopStep = 2 * ctx->ch_layout.nb_channels;
-    int ret;
-    for (int loop = 0; loop < pcmLen / BUF_SIZE; loop++) {
-        ret = av_frame_make_writable(frame);
+    for (int loop = 0; loop < pcmLen / frame_bytes; loop++) {
+        int ret = av_frame_make_writable(frame);
         if (ret < 0) {
             LOGE("av_frame_make_writable error. code=%d", ret);
-            break;
+            return ret;
         }
 
-        for (int idx = 0; idx < BUF_SIZE / loopStep; idx++) {
-            out0[idx * 2 + 0] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 0];
-            out0[idx * 2 + 1] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 1];
-
-            if (isStereo) {
-                out1[idx * 2 + 0] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 2];
-                out1[idx * 2 + 1] = pcm_unit8_t_array[loop * BUF_SIZE + idx * loopStep + 3];
+        const uint8_t *input_frame = pcm_unit8_t_array + loop * frame_bytes;
+        for (int sample = 0; sample < frame->nb_samples; ++sample) {
+            for (int channel = 0; channel < channels; ++channel) {
+                memcpy(frame->data[channel] + sample * bytes_per_sample,
+                       input_frame + (sample * channels + channel) * bytes_per_sample,
+                       bytes_per_sample);
             }
         }
 
-        frame->data[0] = out0;
-        if (isStereo) frame->data[1] = out1;
-
-        do_encode(ctx, frame, pkt, callback);
+        ret = do_encode(ctx, frame, pkt, callback);
+        if (ret < 0) return ret;
     }
-
-    delete[] out0;
-    delete[] out1; // safe to delete[] nullptr
+    return 0;
 }
 
-void AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt, const EncoderCallback &callback) {
+int AdpcmImaQtEncoder::getInputFrameBytes() const {
+    if (ctx == nullptr || frame == nullptr) return 0;
+    const int bytes_per_sample = av_get_bytes_per_sample(ctx->sample_fmt);
+    const int channels = ctx->ch_layout.nb_channels;
+    const int64_t frame_bytes =
+            static_cast<int64_t>(frame->nb_samples) * channels * bytes_per_sample;
+    return bytes_per_sample > 0 && channels > 0 && frame_bytes <= INT_MAX
+           ? static_cast<int>(frame_bytes)
+           : 0;
+}
+
+int AdpcmImaQtEncoder::do_encode(AVCodecContext *pCtx, AVFrame *pFrame, AVPacket *pPkt,
+                                 const EncoderCallback &callback) {
+    av_packet_unref(pPkt);
     int ret = avcodec_send_frame(pCtx, pFrame);
     if (ret < 0) {
         LOGE("Error sending the frame to the encoder. code=%d", ret);
-        return;
+        return ret;
     }
 
     for(;;) {
         ret = avcodec_receive_packet(pCtx, pPkt);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-            return;
+            return 0;
         else if (ret < 0) {
             LOGE("Error encoding audio frame. code=%d", ret);
-            return;
+            av_packet_unref(pPkt);
+            return ret;
         }
 
         callback(pPkt->data, pPkt->size);

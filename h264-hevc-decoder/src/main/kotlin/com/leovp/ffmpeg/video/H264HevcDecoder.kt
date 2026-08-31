@@ -1,13 +1,11 @@
 package com.leovp.ffmpeg.video
 
 import androidx.annotation.Keep
+import java.io.Closeable
 
-/**
- * Author: Michael Leo
- * Date: 2021/6/11 09:57
- */
-@Keep // Prevents ProGuard/R8 from removing the nativeHandle field used by JNI.
-class H264HevcDecoder {
+/** H.264/HEVC software decoder backed by an instance-owned native context. */
+@Keep
+class H264HevcDecoder : Closeable {
     companion object {
         init {
             System.loadLibrary("h264-hevc-decoder")
@@ -17,10 +15,10 @@ class H264HevcDecoder {
         }
     }
 
-    /** Stores the native C++ object pointer. Accessed by JNI only. */
     @Suppress("unused")
     private var nativeHandle: Long = 0L
 
+    @Synchronized
     fun init(
         vpsBytes: ByteArray?,
         spsBytes: ByteArray,
@@ -28,21 +26,43 @@ class H264HevcDecoder {
         prefixSei: ByteArray? = null,
         suffixSei: ByteArray? = null,
         rgbType: RgbType = RgbType.AV_PIX_FMT_NONE
-    ): DecodeVideoInfo = init(vpsBytes, spsBytes, ppsBytes, prefixSei, suffixSei, rgbType.type)
+    ): DecodeVideoInfo {
+        check(nativeHandle == 0L) { "Decoder is already initialized." }
+        require(spsBytes.isNotEmpty() && ppsBytes.isNotEmpty()) { "SPS and PPS must not be empty." }
+        if (vpsBytes != null) require(vpsBytes.isNotEmpty()) { "VPS must not be empty." }
+        return nativeInit(vpsBytes, spsBytes, ppsBytes, prefixSei, suffixSei, rgbType.type)
+    }
 
-    private external fun init(
+    @Synchronized
+    fun decode(encodedBytes: ByteArray): DecodedVideoFrame? {
+        check(nativeHandle != 0L) { "Decoder is not initialized or is already closed." }
+        require(encodedBytes.isNotEmpty()) { "Encoded frame must not be empty." }
+        return nativeDecode(encodedBytes)
+    }
+
+    fun getVersion(): String = nativeGetVersion()
+
+    @Synchronized
+    fun release() {
+        if (nativeHandle == 0L) return
+        nativeRelease()
+        check(nativeHandle == 0L) { "Native decoder release did not clear its handle." }
+    }
+
+    override fun close() = release()
+
+    private external fun nativeInit(
         vpsBytes: ByteArray?,
         spsBytes: ByteArray,
         ppsBytes: ByteArray,
-        prefixSei: ByteArray? = null,
-        suffixSei: ByteArray? = null,
-        rgbType: Int = RgbType.AV_PIX_FMT_NONE.type
+        prefixSei: ByteArray?,
+        suffixSei: ByteArray?,
+        rgbType: Int
     ): DecodeVideoInfo
 
-    external fun release()
-
-    external fun decode(encodedBytes: ByteArray): DecodedVideoFrame?
-    external fun getVersion(): String
+    private external fun nativeRelease()
+    private external fun nativeDecode(encodedBytes: ByteArray): DecodedVideoFrame?
+    private external fun nativeGetVersion(): String
 
     @Keep
     class DecodedVideoFrame(
@@ -65,8 +85,8 @@ class H264HevcDecoder {
     @Keep
     enum class RgbType(val type: Int) {
         AV_PIX_FMT_NONE(-1),
-        AV_PIX_FMT_BGRA(1), // For Mac x86_64
-        AV_PIX_FMT_RGBA(2), // For Android
+        AV_PIX_FMT_BGRA(1),
+        AV_PIX_FMT_RGBA(2),
         AV_PIX_FMT_ARGB(3),
         AV_PIX_FMT_ABGR(4),
         AV_PIX_FMT_BGR24(5),

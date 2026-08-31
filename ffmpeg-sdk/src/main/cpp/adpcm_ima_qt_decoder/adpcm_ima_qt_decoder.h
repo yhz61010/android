@@ -35,7 +35,7 @@ public:
      * Decodes ADPCM data to PCM. The returned buffer is always newly allocated
      * and must be freed by the caller with delete[].
      */
-    uint8_t *decode(uint8_t *adpcmByteArray, int length, int *outPcmLength);
+    uint8_t *decode(const uint8_t *adpcmByteArray, int length, int *outPcmLength);
 
     [[maybe_unused]] [[nodiscard]] int getSampleRate() const;
 

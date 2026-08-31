@@ -39,7 +39,7 @@ class LeoTextureView @JvmOverloads constructor(
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
     }
 
-    var isH265 = false
+    private var isH265 = false
 
     var touchHelper: TouchHelper? = null
 

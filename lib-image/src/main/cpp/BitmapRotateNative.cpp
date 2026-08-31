@@ -88,7 +88,7 @@ uint32_t InterpolatePixel(uint32_t top_left, uint32_t top_right, uint32_t bottom
 
 }  // namespace
 
-JNIEXPORT jlong JNICALL NativeSetBitmapData(JNIEnv *env, jobject, jobject bitmap) {
+static jlong NativeSetBitmapData(JNIEnv *env, jobject, jobject bitmap) {
     if (bitmap == nullptr) {
         ThrowIllegalArgumentException(env, "Bitmap must not be null");
         return 0;
@@ -146,7 +146,7 @@ JNIEXPORT jlong JNICALL NativeSetBitmapData(JNIEnv *env, jobject, jobject bitmap
     return static_cast<jlong>(reinterpret_cast<intptr_t>(native_bitmap.release()));
 }
 
-JNIEXPORT jobject JNICALL NativeGetBitmap(JNIEnv *env, jobject, jlong handle) {
+static jobject NativeGetBitmap(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *native_bitmap = GetBitmap(env, handle);
     if (native_bitmap == nullptr) return nullptr;
 
@@ -225,11 +225,11 @@ JNIEXPORT jobject JNICALL NativeGetBitmap(JNIEnv *env, jobject, jlong handle) {
     return bitmap;
 }
 
-JNIEXPORT void JNICALL NativeFreeBitmapData(JNIEnv *, jobject, jlong handle) {
+static void NativeFreeBitmapData(JNIEnv *, jobject, jlong handle) {
     delete reinterpret_cast<JniBitmap *>(static_cast<intptr_t>(handle));
 }
 
-JNIEXPORT void JNICALL NativeRotateBitmapCcw90(JNIEnv *env, jobject, jlong handle) {
+static void NativeRotateBitmapCcw90(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
@@ -251,7 +251,7 @@ JNIEXPORT void JNICALL NativeRotateBitmapCcw90(JNIEnv *env, jobject, jlong handl
     bitmap->bitmapInfo.stride = static_cast<uint32_t>(old_height * sizeof(uint32_t));
 }
 
-JNIEXPORT void JNICALL NativeRotateBitmapCw90(JNIEnv *env, jobject, jlong handle) {
+static void NativeRotateBitmapCw90(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
@@ -273,7 +273,7 @@ JNIEXPORT void JNICALL NativeRotateBitmapCw90(JNIEnv *env, jobject, jlong handle
     bitmap->bitmapInfo.stride = static_cast<uint32_t>(old_height * sizeof(uint32_t));
 }
 
-JNIEXPORT void JNICALL NativeRotateBitmap180(JNIEnv *env, jobject, jlong handle) {
+static void NativeRotateBitmap180(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     size_t pixel_count;
@@ -285,8 +285,8 @@ JNIEXPORT void JNICALL NativeRotateBitmap180(JNIEnv *env, jobject, jlong handle)
     std::reverse(bitmap->pixels.get(), bitmap->pixels.get() + pixel_count);
 }
 
-JNIEXPORT void JNICALL NativeCropBitmap(JNIEnv *env, jobject, jlong handle, jint left,
-                                         jint top, jint right, jint bottom) {
+static void NativeCropBitmap(JNIEnv *env, jobject, jlong handle, jint left,
+                             jint top, jint right, jint bottom) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     const jint old_width = static_cast<jint>(bitmap->bitmapInfo.width);
@@ -313,8 +313,8 @@ JNIEXPORT void JNICALL NativeCropBitmap(JNIEnv *env, jobject, jlong handle, jint
     bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
 }
 
-JNIEXPORT void JNICALL NativeScaleNNBitmap(JNIEnv *env, jobject, jlong handle,
-                                            jint new_width, jint new_height) {
+static void NativeScaleNNBitmap(JNIEnv *env, jobject, jlong handle,
+                                jint new_width, jint new_height) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     size_t pixel_count;
@@ -338,8 +338,8 @@ JNIEXPORT void JNICALL NativeScaleNNBitmap(JNIEnv *env, jobject, jlong handle,
     bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
 }
 
-JNIEXPORT void JNICALL NativeScaleBIBitmap(JNIEnv *env, jobject, jlong handle,
-                                            jint new_width, jint new_height) {
+static void NativeScaleBIBitmap(JNIEnv *env, jobject, jlong handle,
+                                jint new_width, jint new_height) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     size_t pixel_count;
@@ -373,7 +373,7 @@ JNIEXPORT void JNICALL NativeScaleBIBitmap(JNIEnv *env, jobject, jlong handle,
     bitmap->bitmapInfo.stride = static_cast<uint32_t>(new_width * sizeof(uint32_t));
 }
 
-JNIEXPORT void JNICALL NativeFlipBitmapHorizontal(JNIEnv *env, jobject, jlong handle) {
+static void NativeFlipBitmapHorizontal(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     const size_t width = bitmap->bitmapInfo.width;
@@ -384,7 +384,7 @@ JNIEXPORT void JNICALL NativeFlipBitmapHorizontal(JNIEnv *env, jobject, jlong ha
     }
 }
 
-JNIEXPORT void JNICALL NativeFlipBitmapVertical(JNIEnv *env, jobject, jlong handle) {
+static void NativeFlipBitmapVertical(JNIEnv *env, jobject, jlong handle) {
     JniBitmap *bitmap = GetBitmap(env, handle);
     if (bitmap == nullptr) return;
     const size_t width = bitmap->bitmapInfo.width;

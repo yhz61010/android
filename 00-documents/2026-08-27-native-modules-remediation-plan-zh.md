@@ -35,6 +35,36 @@
 - 16KB 页兼容性目前只有 ELF 静态对齐检查，仍需在对应真机上验证所有依赖库可加载。
 - YUV/JPEG/H.264/ADPCM 的同机型整改前后性能、Native heap 和 P95 数据尚未采集。
 
+### 1.2 实现复审后的追加整改（2026-08-31）
+
+Claude Code 对 `4a1d99d25` 的实现复审由维护者复制到
+`2026-08-31-native-modules-implementation-review_cc.md` 后，Codex 又按当前源码和 FFmpeg 8.1.1
+send/receive 契约复核。原复审新增问题中，两项库问题、两项 demo 问题和列出的 LOW 清理项均已处理：
+
+- ADPCM encoder callback 改为返回继续/中止信号；Java callback 抛异常或 JNI 输出分配失败时，
+  C++ 外层立即停止当前批次，不再继续消费剩余 PCM 并静默丢弃输出。
+- H.264/HEVC 不再把 send/receive 的 `EAGAIN` 混为同一种失败。send 拒绝 packet 时会先排空输出并
+  重送同一个 packet；send 成功后循环 receive 到 EAGAIN。新增 `decodeFrames()` 接收当前全部输出，
+  `drain()` 在 EOS 获取 Kotlin pending 帧和 codec 内部的 B 帧延迟输出；既有 `decode()` 保持兼容并
+  按序缓存额外帧。drain 开始和 drain 完成使用独立状态，异常路径不会重新开放输入，只允许重试 drain。
+- H.264/H.265 demo 显式重抛 `CancellationException`，自然 EOF 时 drain；ADPCM demo 使用 `use`
+  关闭 codec/流，并明确拒绝不足一个 chunk 的尾部输入。
+- 删除两个未参与构建的旧 `.bak`，订正 ADPCM JNI header；YUV plane size/offset 改 64 位；JPEG
+  `FindClass` 失败清理 pending exception；lib-image 注册函数改为内部链接；ADPCM decoder 输出 OOM
+  路径显式清理。
+
+追加整改后已重新完成三个 FFmpeg 8.1.1 profile 的四 ABI 构建和 wrapper 复制，并验证：
+
+- `ffmpeg-sdk:assembleRelease --rerun-tasks` 四 ABI 通过；默认 `settings.gradle.kts` 已恢复为不激活
+  `ffmpeg-sdk`。
+- 受影响的七个模块与 `demo:assembleDevDebug --rerun-tasks` 通过；目标 ktlint/detekt 通过。
+- 三个 wrapper 的 68 个 `.so` 通过 ABI/ELF class、SONAME、64 位 16KB LOAD 对齐和 LFS fsck；
+  H.264/HEVC 四 ABI JNI 二进制均包含新的 `nativeDecodeFrames`/`nativeDrain` 注册。
+
+同时纠正原复审的证据表述：没有证据支持“Claude Code 实编译 3 ABI + `-Wconversion` 零告警”；当前
+JPEG Gradle 构建实际覆盖四 ABI，且编译参数不含 `-Wconversion`。LFS 实体当前已完整拉取，不能写成
+“只有有效指针、实体未拉取”。完整纠正和验证边界以实现复审文档为准。
+
 因此，本节表示“代码实现和本机构建验证已完成到当前阶段”，不表示第 14 节的全部完成条件已经满足，也不构成发布许可。
 
 - 审查基线：`7f28edf8fb7b238d2a7a3500ffac4fb01f265d4c`

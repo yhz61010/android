@@ -7,11 +7,11 @@
 extern "C" {
 #endif
 
-JNIEXPORT jint JNICALL init(JNIEnv *env, jobject obj, jint sampleRate, jint channels);
-JNIEXPORT jbyteArray JNICALL decode(JNIEnv *env, jobject obj, jbyteArray adpcmByteArray);
-JNIEXPORT void JNICALL release(JNIEnv *env, jobject obj);
-JNIEXPORT jint JNICALL chunkSize(JNIEnv *env, jobject obj);
-JNIEXPORT jstring JNICALL getVersion(JNIEnv *env, jobject thiz);
+JNIEXPORT jint JNICALL NativeInit(JNIEnv *env, jobject object, jint sample_rate, jint channels);
+JNIEXPORT jbyteArray JNICALL NativeDecode(JNIEnv *env, jobject object, jbyteArray input_array);
+JNIEXPORT void JNICALL NativeRelease(JNIEnv *env, jobject object);
+JNIEXPORT jint JNICALL NativeChunkSize(JNIEnv *env, jobject object);
+JNIEXPORT jstring JNICALL NativeGetVersion(JNIEnv *env, jobject object);
 
 #ifdef __cplusplus
 }

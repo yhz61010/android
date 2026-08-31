@@ -137,8 +137,8 @@ cleanup:
 
 }  // namespace
 
-JNIEXPORT jint JNICALL CompressBitmap(JNIEnv *env, jobject, jobject bitmap, jint quality,
-                                      jstring output_path, jboolean optimize) {
+static jint CompressBitmap(JNIEnv *env, jobject, jobject bitmap, jint quality,
+                           jstring output_path, jboolean optimize) {
     if (bitmap == nullptr || output_path == nullptr) {
         ThrowIllegalArgumentException(env, "Bitmap and output path must not be null");
         return -1;
@@ -220,7 +220,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
     JNIEnv *env;
     if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
     jclass clazz = env->FindClass(JPEG_PACKAGE_BASE "JPEGUtil");
-    if (clazz == nullptr) return JNI_ERR;
+    if (clazz == nullptr) {
+        env->ExceptionClear();
+        return JNI_ERR;
+    }
     const jint result = env->RegisterNatives(clazz, methods,
                                              sizeof(methods) / sizeof(methods[0]));
     env->DeleteLocalRef(clazz);

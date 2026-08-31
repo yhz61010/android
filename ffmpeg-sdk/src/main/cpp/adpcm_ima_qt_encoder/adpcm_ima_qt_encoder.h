@@ -2,7 +2,6 @@
 #define LEOANDROIDBASEUTIL_ADPCM_IMA_QT_ENCODER_H
 
 #include <jni.h>
-#include <string>
 #include <functional>
 
 #ifdef __cplusplus
@@ -20,7 +19,8 @@ extern "C" {
 }
 #endif
 
-using EncoderCallback = std::function<void(uint8_t *encodedAudioData, int encodedAudioLength)>;
+using EncoderCallback =
+        std::function<bool(const uint8_t *encodedAudioData, int encodedAudioLength)>;
 
 class AdpcmImaQtEncoder {
 private:

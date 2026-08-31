@@ -13,6 +13,17 @@ Gradle Module Metadata 中的共享 capability 会保护 Gradle 消费端。只�
 
 ## 生命周期
 
-`H264HevcDecoder` 实现了 `Closeable`。每个实例只能初始化一次，解码操作由实例锁串行执行，并应通过
-`use {}` 或 `close()` 释放。重复关闭不会产生副作用；初始化前或关闭后解码会抛出
+`H264HevcDecoder` 实现了 `Closeable`。同一实例每次只处理一条流，解码操作由实例锁串行执行，
+并应通过 `use {}` 或 `close()` 释放。重复关闭不会产生副作用；初始化前或关闭后解码会抛出
 `IllegalStateException`。
+
+## 解码输出契约
+
+`decode(packet)` 继续供每次调用最多消费一帧的既有代码使用。FFmpeg 对一个 packet 可能产生 0 帧、
+1 帧或多帧，解码器会保留额外输出，不再直接丢弃。需要完整接收输出的新代码应使用
+`decodeFrames(packet)`。如果之前的兼容 API `decode()` 留下额外帧，`decodeFrames()` 会先返回这些帧，
+再返回处理当前 packet 时新产生的所有可取输出。
+
+送入最后一个 packet 后，必须以 `drain()` 作为流结束步骤。它会返回此前保留的帧以及 codec 内部延迟的
+帧，包括因 B 帧重排而延迟的输出。开始 drain 后，该实例不再接受新输入；处理另一条流时应关闭并
+重新初始化当前实例，或使用新实例。

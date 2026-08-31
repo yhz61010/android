@@ -1,8 +1,8 @@
 #include "YuvConvert.h"
 
 int android420ToI420(const uint8_t *src_android420_data, jint src_pixel_stride_uv, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = src_i420_y_size >> 2;
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = src_i420_y_size >> 2;
 
     const uint8_t *src_i420_y_data = src_android420_data;
     const uint8_t *src_i420_u_data = src_android420_data + src_i420_y_size;
@@ -28,8 +28,8 @@ int android420ToI420(const uint8_t *src_android420_data, jint src_pixel_stride_u
 }
 
 int convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jint width, jint height, uint8_t *dst_i420_data, jboolean vertically_flip, jint degree) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = src_i420_y_size >> 2;
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = src_i420_y_size >> 2;
 
     uint8_t *dst_i420_y_data = dst_i420_data;
     uint8_t *dst_i420_u_data = dst_i420_data + src_i420_y_size;
@@ -65,8 +65,8 @@ int convertToI420(const uint8_t *src_yuv_data, jint src_length, jint format, jin
 }
 
 int mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = src_i420_y_size >> 2;
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = src_i420_y_size >> 2;
 
     const uint8_t *src_i420_y_data = src_i420_data;
     const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
@@ -86,8 +86,8 @@ int mirrorI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *d
 }
 
 int flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = src_i420_y_size >> 2;
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = src_i420_y_size >> 2;
 
     const uint8_t *src_i420_y_data = src_i420_data;
     const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
@@ -107,8 +107,8 @@ int flipVerticallyI420(const uint8_t *src_i420_data, jint width, jint height, ui
 }
 
 int rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     const uint8_t *src_i420_y_data = src_i420_data;
     const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
@@ -142,14 +142,15 @@ int rotateI420(const uint8_t *src_i420_data, jint width, jint height, uint8_t *d
 
 int scaleI420(const uint8_t *src_i420_data, jint width, jint height,
                uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint mode) {
-    jint src_i420_y_size = width * height;
-    jint src_i420_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_i420_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
     const uint8_t *src_i420_y_data = src_i420_data;
     const uint8_t *src_i420_u_data = src_i420_data + src_i420_y_size;
     const uint8_t *src_i420_v_data = src_i420_data + src_i420_y_size + src_i420_u_size;
 
-    jint dst_i420_y_size = dst_width * dst_height;
-    jint dst_i420_u_size = (dst_width >> 1) * (dst_height >> 1);
+    const int64_t dst_i420_y_size = static_cast<int64_t>(dst_width) * dst_height;
+    const int64_t dst_i420_u_size =
+            static_cast<int64_t>(dst_width >> 1) * (dst_height >> 1);
     uint8_t *dst_i420_y_data = dst_i420_data;
     uint8_t *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
     uint8_t *dst_i420_v_data = dst_i420_data + dst_i420_y_size + dst_i420_u_size;
@@ -167,8 +168,9 @@ int scaleI420(const uint8_t *src_i420_data, jint width, jint height,
 
 int cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint height,
               uint8_t *dst_i420_data, jint dst_width, jint dst_height, jint left, jint top) {
-    jint dst_i420_y_size = dst_width * dst_height;
-    jint dst_i420_u_size = (dst_width >> 1) * (dst_height >> 1);
+    const int64_t dst_i420_y_size = static_cast<int64_t>(dst_width) * dst_height;
+    const int64_t dst_i420_u_size =
+            static_cast<int64_t>(dst_width >> 1) * (dst_height >> 1);
 
     uint8_t *dst_i420_y_data = dst_i420_data;
     uint8_t *dst_i420_u_data = dst_i420_data + dst_i420_y_size;
@@ -185,8 +187,8 @@ int cropI420(const uint8_t *src_i420_data, jint src_length, jint width, jint hei
 }
 
 int i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv21_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     uint8_t *dst_nv21_y_data = dst_nv21_data;
     uint8_t *dst_nv21_uv_data = dst_nv21_data + src_y_size;
@@ -204,8 +206,8 @@ int i420ToNv21(const uint8_t *src_i420_data, jint width, jint height, uint8_t *d
 }
 
 int i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_nv12_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     uint8_t *dst_nv12_y_data = dst_nv12_data;
     uint8_t *dst_nv12_uv_data = dst_nv12_data + src_y_size;
@@ -223,8 +225,8 @@ int i420ToNv12(const uint8_t *src_i420_data, jint width, jint height, uint8_t *d
 }
 
 int nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_i420_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     const uint8_t *src_nv21_y_data = src_nv21_data;
     const uint8_t *src_nv21_vu_data = src_nv21_data + src_y_size;
@@ -243,11 +245,11 @@ int nv21ToI420(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *d
 
 int nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_i420_data, jint degree) {
     // NV12 video size
-    jint nv12_y_size = width * height;
+    const int64_t nv12_y_size = static_cast<int64_t>(width) * height;
 
     // YUV420 video size
-    jint i420_y_size = width * height;
-    jint i420_u_size = (width >> 1) * (height >> 1);
+    const int64_t i420_y_size = static_cast<int64_t>(width) * height;
+    const int64_t i420_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     // src: buffer address of Y channel and UV channel
     const uint8_t *src_y_data = src_nv12_data;
@@ -277,7 +279,7 @@ int nv12ToI420(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *d
 
 int mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *dst_nv12_data) {
     // NV12 video size
-    jint src_nv12_y_size = width * height;
+    const int64_t src_nv12_y_size = static_cast<int64_t>(width) * height;
 
     const uint8_t *src_y_data = src_nv12_data;
     const uint8_t *src_uv_data = src_nv12_data + src_nv12_y_size;
@@ -295,12 +297,12 @@ int mirrorNV12(const uint8_t *src_nv12_data, jint width, jint height, uint8_t *d
 int scaleNV12(const uint8_t *src_nv12_data, jint width, jint height,
                uint8_t *dst_nv12_data, jint dst_width, jint dst_height, jint mode) {
     // NV12 video size
-    jint src_nv12_y_size = width * height;
+    const int64_t src_nv12_y_size = static_cast<int64_t>(width) * height;
 
     const uint8_t *src_y_data = src_nv12_data;
     const uint8_t *src_uv_data = src_nv12_data + src_nv12_y_size;
 
-    jint dst_nv12_y_size = dst_width * dst_height;
+    const int64_t dst_nv12_y_size = static_cast<int64_t>(dst_width) * dst_height;
     uint8_t *dst_nv12_y_data = dst_nv12_data;
     uint8_t *dst_nv12_uv_data = dst_nv12_data + dst_nv12_y_size;
 
@@ -314,7 +316,7 @@ int scaleNV12(const uint8_t *src_nv12_data, jint width, jint height,
 }
 
 int nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *dst_nv12_data) {
-    jint src_y_size = width * height;
+    const int64_t src_y_size = static_cast<int64_t>(width) * height;
 
     const uint8_t *src_nv21_y_data = src_nv21_data;
     const uint8_t *src_nv21_vu_data = src_nv21_data + src_y_size;
@@ -332,8 +334,8 @@ int nv21ToNV12(const uint8_t *src_nv21_data, jint width, jint height, uint8_t *d
 // --------------------
 
 int i420ToRgb24(const uint8_t *src_i420_data, jint width, jint height, uint8_t *dst_rgb24_data) {
-    jint src_y_size = width * height;
-    jint src_u_size = (width >> 1) * (height >> 1);
+    const int64_t src_y_size = static_cast<int64_t>(width) * height;
+    const int64_t src_u_size = static_cast<int64_t>(width >> 1) * (height >> 1);
 
     const uint8_t *src_i420_y_data = src_i420_data;
     const uint8_t *src_i420_u_data = src_i420_data + src_y_size;

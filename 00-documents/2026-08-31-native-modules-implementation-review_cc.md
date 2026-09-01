@@ -158,6 +158,40 @@ Claude Code 对 `50c9949ed` 的后续复审经源码和 JNI 契约复核后，�
 仍有两项公开语义需要维护者决定：Native 在同一次调用中先产生部分帧再发生硬错误时，是继续采用强失败
 语义还是新增“帧 + 错误”结果类型；兼容 API `decode()` 的 pending 队列是否增加上限及采用何种溢出策略。
 
+### 4.6 真机暴露的 Demo Annex-B packet 边界错误
+
+P3H 真机回归最初在 `FFMpegH264Activity.onCreate()` 抛出 `Unable to send video packet`。Native 返回码
+`-1094995529` 为 `AVERROR_INVALIDDATA`。核对样本后确认根因不在新的 send/receive 状态机，而在旧 Demo：
+
+- 固定按 NAL 序号解释参数集，实际把 H.264 的 SEI 当 SPS、SPS 当 PPS；H.265 也被开头两个 prefix SEI
+  整体错位；
+- 只识别 4 字节 start code，漏掉 H.264 样本中的 3 字节 start code；
+- 初始化后把 CSD 当普通视频 packet 再发送；
+- 把重复 PPS/VPS/SPS/SEI 单独送入 `avcodec_send_packet()`，没有恢复它们与后续 IDR 共同组成的 packet
+  边界；
+- 旧 Native 吞掉 send 硬错误，导致这些输入错误此前没有向上暴露。
+
+当前 Demo 新增顺序式 Annex-B reader，按 NAL type 获取实际参数集，同时支持 3/4 字节 start code；CSD
+只用于 decoder 初始化；后续将 VCL 图像前的非图像 NAL 与该图像合并为一个 packet，再通过
+`decodeFrames()` 完整消费输出，自然 EOF 调用 `drain()`。Activity 初始化失败会记录异常、关闭资源并
+结束页面，不再形成未捕获启动异常。详细样本 offset、两阶段定位和验证证据见
+`2026-08-31-native-h264-drain-followup-fixes_cc.md` 第 6 节。
+
+### 4.7 H.264 初始化尺寸为 0 导致 OpenGL 黑屏
+
+packet 修复后的第一轮 P3H 检查只确认 H.264/H.265 日志持续输出 1920×800 帧，没有检查 Surface 的实际
+画面。用户随后发现 H.264 页面仍为黑色背景，而 H.265 正常。对比日志确认 H.264 在首帧之前的
+`DecodeVideoInfo` 为 `0×0`、像素格式 `-1`；H.265 初始化时已经是 `1920×800 yuv420p`。
+
+重构前的 H.264 Demo 硬编码渲染尺寸 1920×800；删除硬编码后，代码直接把 H.264 初始化返回的 0×0 交给
+OpenGL。`GLRenderer` 忽略无效尺寸，YUV 缓冲保持 0 容量，即使后续帧已经成功解码，`onDrawFrame()` 也
+不会上传纹理或绘制。这解释了“解码日志正常、Surface 持续 requestRender、实际仍黑屏”的组合现象。
+
+当前 H.264/H.265 Demo 只在初始化尺寸有效时预配置渲染器，并在每个实际解码帧到达时按帧宽高完成首次
+配置或处理分辨率变化。`GLRenderer.setVideoDimension()` 同时改为与喂帧、绘制共用实例锁，且宽或高任一
+变化都会重建 YUV 缓冲。详细因果链与重新验证见
+`2026-08-31-native-h264-drain-followup-fixes_cc.md` 第 7 节。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -178,11 +212,18 @@ Claude Code 对 `50c9949ed` 的后续复审经源码和 JNI 契约复核后，�
 - 三个 wrapper 共 68 个 `.so`：ABI/ELF class、SONAME、64 位 LOAD segment 16KB 对齐检查通过；
   数量分别为音频 20、视频 20、组合 28。
 - `git lfs fsck` 通过。
+- `AnnexBNalUnitReaderTest` 覆盖混合 start code、NAL type 和参数集/图像组合 packet，执行通过；
+  `demo` 的 ktlint、detekt 与 Kotlin 编译重新通过。
+- `:demo:assembleDevDebug --rerun-tasks` 再次通过，600 个任务实际执行；APK 已安装到 P3H。
+- P3H 上仓库 H.264/H.265 原始样本均持续输出 1920×800 帧；第一轮只检查日志，未发现 H.264 Surface
+  仍为黑屏，因此该轮不能算完整播放验证；
+- 动态帧尺寸修复后重新安装 APK，分别查看并截图确认 H.264 与 H.265 页面都有实际视频画面；最终日志未
+  出现 `Unable to send video packet`、`Unable to receive video frame` 或 `FATAL EXCEPTION`。
 
 ### 5.2 尚未完成
 
-- 当前没有把构建通过写成真机通过；仍需确认 `adb devices -l` 并执行设备测试。
-- H.264/H.265：带 B 帧、单 packet 多帧、损坏 packet、自然 EOS drain、主动取消、重复 drain。
+- H.264/H.265 仓库样本与组合 wrapper 已完成 P3H 真机回归；仍需覆盖带 B 帧、单 packet 多帧、
+  多 slice access unit、损坏 packet、主动取消、重复 drain 和独立视频 wrapper。
 - ADPCM：Java callback 在批次中途抛异常后，确认后续 PCM 未被消费；非完整 frame/chunk；长时间循环。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
 - ASan/HWASan、16KB 页设备真实加载、P95/Native heap/长跑数据。
@@ -190,10 +231,11 @@ Claude Code 对 `50c9949ed` 的后续复审经源码和 JNI 契约复核后，�
 
 ## 6. 最终结论
 
-基线提交可以继续进入设备验证阶段；原复审新增的代码问题已在当前工作区修复，复审文档中不准确的
-FFmpeg 状态机、严重度、编译和 LFS 表述也已纠正。发布门禁仍未达到：在完成真机、sanitizer、16KB
-加载和真实媒体输出验证前，只能标记为“源码整改和本机构建验证完成”，不能标记为“发布验证完成”或
-“已证明无内存安全回归”。
+基线提交可以继续进入剩余设备验证阶段；原复审新增的代码问题和 P3H 回归暴露的 Demo packet 边界错误
+和后续 H.264 OpenGL 黑屏均已在当前工作区修复，仓库 H.264/H.265 样本已完成组合 wrapper 真机可视播放
+验证。发布门禁仍未达到：在完成其它 Native 模块真机、sanitizer、16KB 加载、异常媒体和长时间输出验证前，
+不能标记为“发布验证完成”
+或“已证明无内存安全回归”。
 
 交叉参考：
 

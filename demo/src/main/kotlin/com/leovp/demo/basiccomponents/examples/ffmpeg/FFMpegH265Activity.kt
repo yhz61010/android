@@ -6,6 +6,7 @@ import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.basiccomponents.examples.ffmpeg.utils.DecodeH265RawFileByFFMpeg
 import com.leovp.demo.databinding.ActivityFfmpegH265Binding
+import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import com.leovp.opengl.ui.LeoGLSurfaceView
 
@@ -31,8 +32,14 @@ class FFMpegH265Activity :
                 getExternalFilesDir(null)!!.absolutePath,
                 "h265.h265"
             )
-        decodeObjByFFMpeg.init(rawFileFullPath, glSurfaceView)
-        decodeObjByFFMpeg.startDecoding()
+        runCatching {
+            decodeObjByFFMpeg.init(rawFileFullPath, glSurfaceView)
+            decodeObjByFFMpeg.startDecoding()
+        }.onFailure {
+            LogContext.log.e(getTagName(), "Unable to initialize H.265 decoder demo", it)
+            decodeObjByFFMpeg.close()
+            finish()
+        }
     }
 
     override fun onDestroy() {

@@ -122,6 +122,12 @@
   并通过 `drain()` 在 EOS 取回额外输出和 B 帧延迟帧。既有 `decode()` 保留并按序缓存额外帧。
   `drain()` 仅在 Native 成功后清空 Kotlin pending 帧，异常重试不再丢失已缓存输出；JNI 类、构造器、
   `ArrayList.add()` 和 handle 字段改为加载期缓存并在卸载时释放，避免逐帧类与方法解析。
+- **FFmpeg H.264/H.265 Demo Annex-B packet 修复**：顺序 reader 同时支持 3/4 字节 start code，并按
+  NAL type 查找真实 VPS/SPS/PPS，不再依赖样本中的固定序号或把 CSD 当普通视频 packet 重送。重复的
+  SEI/VPS/SPS/PPS 会与后续 VCL 图像合并成完整 packet 后再调用 `decodeFrames()`，修复 Native 正确暴露
+  `AVERROR_INVALIDDATA` 后的页面启动闪退和关键帧前周期性发送错误。渲染尺寸改为在实际解码帧到达时
+  初始化并跟随帧尺寸变化，避免 H.264 初始化元数据为 0×0 时 OpenGL YUV 缓冲未分配而持续黑屏；尺寸
+  更新与喂帧、绘制使用同一实例锁。仓库两份样本已在 P3H 真机完成可视播放回归。
 
 - **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
   设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将

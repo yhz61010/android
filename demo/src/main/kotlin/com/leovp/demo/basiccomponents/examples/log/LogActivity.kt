@@ -2,6 +2,7 @@ package com.leovp.demo.basiccomponents.examples.log
 
 import android.os.Bundle
 import android.util.Log
+import com.leovp.android.restricted.utils.DeviceUtilRestricted
 import com.leovp.android.restricted.utils.getSerialNumber
 import com.leovp.android.utils.DeviceUtil
 import com.leovp.demo.R
@@ -17,7 +18,7 @@ import com.leovp.log.base.w
  *
  * After initializing, the usage is very simple:
  * ```kotlin
- * LogContext.log.w(ITAG, "Device Info:\n${DeviceUtil.getDeviceInfo(this)}")
+ * LogContext.log.w(ITAG, "Device Info:\n${DeviceUtilRestricted.getDeviceInfo(this)}")
  * ```
  */
 class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activity_log) {
@@ -48,18 +49,14 @@ class LogActivity : BaseDemonstrationActivity<ActivityLogBinding>(R.layout.activ
         LogContext.log.e(TAG, "Hello e", Exception("exception-e"), outputType = LogOutType(11))
         LogContext.log.f(TAG, "Hello f", Exception("exception-f"), outputType = LogOutType(12))
 
+        val batteryCap = DeviceUtilRestricted.getInstance(this@LogActivity).batteryCapacity
         w {
             tag = TAG
             outputType = LogOutType(13)
             message = "2Device Info:\n${
                 DeviceUtil.getInstance(this@LogActivity).getDeviceInfo() +
                     "\nSerial Number    : ${getSerialNumber()}\n" +
-                    "\nBattery Capacity : ${
-                        com.leovp.android.restricted.utils
-                            .DeviceUtil
-                            .getInstance(this@LogActivity)
-                            .batteryCapacity
-                    }"
+                    "\nBattery Capacity : $batteryCap"
             }"
         }
 

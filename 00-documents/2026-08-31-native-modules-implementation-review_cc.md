@@ -21,7 +21,8 @@
 
 1. 对基线提交进行静态复审时，没有发现新的 CRITICAL/HIGH 内存安全问题；原统一方案中的
    CRITICAL/HIGH 源码修复均能在当前代码中定位到对应实现。
-2. 原复审新发现的两个库问题、两个 demo 问题和列出的 LOW 清理项均已在当前工作区整改。
+2. 原复审新发现的两个库问题、两个 demo 问题和列出的 LOW 清理项均已整改；后续复审中成立且不涉及
+   公开语义选择的 H.264/HEVC JNI 与 drain 问题也已修复。
 3. 不能写成“已证明没有内存安全回归”。真机、ASan/HWASan、16KB 设备加载、B 帧真实输出、
    ADPCM 回调异常和长时间内存曲线仍是发布门禁。
 4. 本文记录的是当前工作区状态；后续提交时仍须重新核对 commit、LFS 对象和远端状态。
@@ -116,7 +117,8 @@ ELF 静态检查通过，但运行功能仍需设备验证”。LFS 指针格式
 - `decodeFrames(packet)`：返回历史 pending 输出与当前 packet 处理后所有可用帧，适合需要完整消费的调用方。
 - `drain()`：发送 EOS，返回 Kotlin pending 帧和 codec 内部延迟帧；重复调用返回空列表且保持幂等。
 - drain 开始后拒绝新输入；Kotlin 单独记录 drain 是否完成，因此 Native drain 中途抛异常时也不会错误地
-  恢复送包，只允许重试 drain；release 会清空 pending 队列并保持幂等。
+  恢复送包，只允许重试 drain；Native drain 成功后才清空 Kotlin pending 队列，因此异常重试不会丢失
+  已缓存帧；release 会清空 pending 队列并保持幂等。
 
 Native 层新增 `nativeDecodeFrames`/`nativeDrain`，每次 receive 成功都会先复制为独立 Java
 `DecodedVideoFrame`，再 unref FFmpeg frame，因此不会把可变 AVFrame 内存暴露给 Kotlin。
@@ -139,6 +141,23 @@ Native 层新增 `nativeDecodeFrames`/`nativeDrain`，每次 receive 成功都�
 - lib-image 仅经 `RegisterNatives` 使用的函数改为 `static`；
 - ADPCM decoder 的输出 `NewByteArray` 失败路径显式保持/补充 OOM，并在退出前释放 Native PCM。
 
+### 4.5 H.264/HEVC 后续复审整改
+
+Claude Code 对 `50c9949ed` 的后续复审经源码和 JNI 契约复核后，实际处理如下：
+
+- `NativeInit()` 的两次 `NewStringUTF()` 分别立即检查 pending exception，第一次失败后不再调用第二次；
+- `drain()` 改为 Native 成功后才合并并清空 Kotlin pending 队列，异常时已缓存帧保持可重试；
+- `JNI_OnLoad()` 缓存 decoder、返回类型和 `ArrayList` 的 global class ref、构造器、`add()` 与 handle 字段，
+  解码热路径不再逐帧 `FindClass()`/`GetMethodID()`；`JNI_OnUnload()` 负责释放 global ref；
+- send 返回 `AVERROR_EOF` 时使用明确的“decoder 已到输入末尾”错误信息。
+
+原复审中另外两项建议未采用：`JNI_OnLoad()` 失败返回 `JNI_ERR` 前不强制清除类/方法查找产生的原异常，
+这与 Android NDK 示例一致；发生 pending exception 后也不能再次调用 `SetLongField()` 尝试把 handle 写 0。
+完整理由见 `2026-08-31-native-h264-drain-followup-fixes_cc.md`。
+
+仍有两项公开语义需要维护者决定：Native 在同一次调用中先产生部分帧再发生硬错误时，是继续采用强失败
+语义还是新增“帧 + 错误”结果类型；兼容 API `decode()` 的 pending 队列是否增加上限及采用何种溢出策略。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -155,7 +174,7 @@ Native 层新增 `nativeDecodeFrames`/`nativeDrain`，每次 receive 成功都�
   重新执行通过。
 - 两个 wrapper 中的 `H264HevcDecoder.kt` 逐字一致。
 - 四 ABI 的 `libh264-hevc-decoder.so` 均包含 `nativeDecodeFrames` 和 `nativeDrain` 注册字符串；
-  ADPCM encoder 二进制包含新的完整 frame 契约。
+  后续重建的 8 个视频 decoder 二进制还导出 `JNI_OnUnload`；ADPCM encoder 二进制包含新的完整 frame 契约。
 - 三个 wrapper 共 68 个 `.so`：ABI/ELF class、SONAME、64 位 LOAD segment 16KB 对齐检查通过；
   数量分别为音频 20、视频 20、组合 28。
 - `git lfs fsck` 通过。

@@ -77,13 +77,13 @@ class H264HevcDecoder : Closeable {
     @Synchronized
     fun drain(): List<DecodedVideoFrame> {
         check(nativeHandle != 0L) { "Decoder is not initialized or is already closed." }
-        val result = ArrayList<DecodedVideoFrame>(pendingFrames.size)
-        while (pendingFrames.isNotEmpty()) result.add(pendingFrames.removeFirst())
         endOfInput = true
-        if (!drainCompleted) {
-            result.addAll(nativeDrain())
-            drainCompleted = true
-        }
+        val drainedFrames = if (drainCompleted) emptyList() else nativeDrain()
+        val result = ArrayList<DecodedVideoFrame>(pendingFrames.size + drainedFrames.size)
+        result.addAll(pendingFrames)
+        result.addAll(drainedFrames)
+        pendingFrames.clear()
+        drainCompleted = true
         return result
     }
 

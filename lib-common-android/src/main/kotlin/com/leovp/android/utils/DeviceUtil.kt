@@ -217,49 +217,47 @@ class DeviceUtil private constructor(private val ctx: Context) {
             "(${ctx.densityDpi}:${ctx.density})  (xdpi=${ctx.xdpi} ydpi=${ctx.ydpi})  " +
             "(${availableSize.width}x${availableSize.height}($statusBarHeight)+$navBarHeight)  " +
             "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
+        val networkType = NetworkUtil.getNetworkTypeName(ctx)
+        val networkGen = NetworkUtil.getNetworkGeneration(ctx)
+        val networkGenStr = if (NetworkUtil.TYPE_WIFI == networkType) "" else "(${networkGen})"
+        val glEsVersionStr = Integer.toHexString(configInfo.reqGlEsVersion)
         """
-            Device basic information:
-            App version      : ${ctx.versionName}(${ctx.versionCode})
-            Device locale    : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
-            Default locale   : ${LangUtil.getInstance(ctx).getDefaultLanguageCountryCode()}
-            Network Type     : ${NetworkUtil.getNetworkTypeName(ctx)}(
-                ${NetworkUtil.getNetworkGeneration(ctx)}
-            )
-            Manufacturer     : $manufacturer
-            Brand            : $brand
-            Board            : $board
-            OsVersion        : $osVersion($osVersionSdkInt)
-            DeviceName       : $deviceName
-            Model            : $model
-            Product          : $product
-            Host             : $host
-            Hardware         : $hardware
-            CPU              : $cpuInfo
-            CPU Arch         : $cpuArch
-            OpenGL ES Version: ${configInfo.glEsVersion} [0x${
-            Integer.toHexString(
-                configInfo.reqGlEsVersion
-            )
-        }]
-            Supported ABIS   : ${supportedCpuArchs.contentToString()}
-            Display          : $display
-            Screen           : $screenInfo
-            MemoryUsage      : $memUsage
-            ${memInfo.third.round()}% Used
-            External Storage : $externalStorageBytesInReadable
-            Fingerprint      : ${Build.FINGERPRINT}
-            Tablet           : ${ctx.isTablet()}
-            Emulator         : ${isProbablyAnEmulator()}
-            MAC              : ${NetworkUtil.getMacAddress(ctx)}
-            IMEI:
-                    slot0: ${getImei(ctx, 0) ?: "NA"}
-                    slot1: ${getImei(ctx, 1) ?: "NA"}
-            Device Features:
-                    Full screen device        : ${ctx.isFullScreenDevice}
-                    Navigation bar is showing : ${ctx.isNavigationBarShown}
-
-            Cost: ${SystemClock.elapsedRealtime() - st}ms
-        """.trimIndent()
+            |Device basic information:
+            |App version      : ${ctx.versionName}(${ctx.versionCode})
+            |Device locale    : ${LangUtil.getInstance(ctx).getDeviceLanguageCountryCode()}
+            |Default locale   : ${LangUtil.getInstance(ctx).getDefaultLanguageCountryCode()}
+            |Network Type     : $networkType$networkGenStr
+            |Manufacturer     : $manufacturer
+            |Brand            : $brand
+            |Board            : $board
+            |OsVersion        : $osVersion($osVersionSdkInt)
+            |DeviceName       : $deviceName
+            |Model            : $model
+            |Product          : $product
+            |Host             : $host
+            |Hardware         : $hardware
+            |CPU              : $cpuInfo
+            |CPU Arch         : $cpuArch
+            |OpenGL ES Version: ${configInfo.glEsVersion} [0x$glEsVersionStr]
+            |Supported ABIS   : ${supportedCpuArchs.contentToString()}
+            |Display          : $display
+            |Screen           : $screenInfo
+            |MemoryUsage      : $memUsage
+            |${memInfo.third.round()}% Used
+            |External Storage : $externalStorageBytesInReadable
+            |Fingerprint      : ${Build.FINGERPRINT}
+            |Tablet           : ${ctx.isTablet()}
+            |Emulator         : ${isProbablyAnEmulator()}
+            |MAC              : ${NetworkUtil.getMacAddress(ctx)}
+            |IMEI:
+            |        slot0: ${getImei(ctx, 0) ?: "NA"}
+            |        slot1: ${getImei(ctx, 1) ?: "NA"}
+            |Device Features:
+            |        Full screen device        : ${ctx.isFullScreenDevice}
+            |        Navigation bar is showing : ${ctx.isNavigationBarShown}
+            |
+            |Cost: ${SystemClock.elapsedRealtime() - st}ms
+        """.trimMargin()
     }.getOrElse {
         // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
         Log.e("DeviceUtil", "getDeviceInfo failed", it)

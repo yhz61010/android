@@ -2,7 +2,9 @@ package com.leovp.demo.basiccomponents.examples
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.lifecycle.lifecycleScope
+import com.leovp.android.restricted.utils.DeviceUtilRestricted
 import com.leovp.android.restricted.utils.getSerialNumber
 import com.leovp.android.restricted.utils.notch.DisplayCutoutManager
 import com.leovp.android.utils.DeviceUtil
@@ -33,11 +35,12 @@ class DeviceInfoActivity :
         // LogContext.log.i(TAG, "Name: ${it.name}") }
         CodecUtil.getAllSupportedCodecList().forEach { LogContext.log.i(TAG, "Name: ${it.name}") }
 
+        val st = SystemClock.elapsedRealtime()
         val deviceInfo = DeviceUtil.getInstance(this).getDeviceInfo() +
             "\nSerial Number    : ${getSerialNumber()}" +
             "\nBattery Capacity : ${
-                com.leovp.android.restricted.utils.DeviceUtil.getInstance(this).batteryCapacity
-            }"
+                DeviceUtilRestricted.getInstance(this).batteryCapacity
+            }\nCost: ${SystemClock.elapsedRealtime() - st}ms"
         binding.tv.text = deviceInfo
         LogContext.log.i(TAG, deviceInfo)
 

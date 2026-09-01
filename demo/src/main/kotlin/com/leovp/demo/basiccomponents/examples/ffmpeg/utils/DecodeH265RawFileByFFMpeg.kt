@@ -2,16 +2,12 @@ package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 
 import android.os.SystemClock
 import com.leovp.android.exts.screenAvailableResolution
-import com.leovp.androidbase.exts.kotlin.truncate
-import com.leovp.androidbase.utils.media.H265Util
-import com.leovp.bytes.toHexString
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
 import com.leovp.log.LogContext
 import com.leovp.opengl.BaseRenderer
 import com.leovp.opengl.ui.LeoGLSurfaceView
 import java.io.File
-import java.io.RandomAccessFile
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -121,6 +117,14 @@ import kotlinx.coroutines.launch
 class DecodeH265RawFileByFFMpeg {
     companion object {
         private const val TAG = "FFMpegH265"
+        private const val FRAME_INTERVAL_MS = 1_000L / 30
+        private const val H265_NAL_VPS = 32
+        private const val H265_NAL_SPS = 33
+        private const val H265_NAL_PPS = 34
+        private const val H265_NAL_PREFIX_SEI = 39
+        private const val H265_NAL_SUFFIX_SEI = 40
+        private const val H265_NAL_VCL_MIN = 0
+        private const val H265_NAL_VCL_MAX = 31
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
@@ -129,7 +133,11 @@ class DecodeH265RawFileByFFMpeg {
     private lateinit var glSurfaceView: LeoGLSurfaceView
 
     private lateinit var videoInfo: H264HevcDecoder.DecodeVideoInfo
-    private var csd0Size: Int = 0
+    private lateinit var nalUnitReader: AnnexBNalUnitReader
+    private var renderWidth = 0
+    private var renderHeight = 0
+    private var configuredVideoWidth = 0
+    private var configuredVideoHeight = 0
 
     private val videoDecoder = H264HevcDecoder()
 
@@ -141,35 +149,38 @@ class DecodeH265RawFileByFFMpeg {
 
     fun init(videoFile: String, glSurfaceView: LeoGLSurfaceView) {
         this.glSurfaceView = glSurfaceView
-        rf = RandomAccessFile(File(videoFile), "r")
-        LogContext.log.w(TAG, "File length=${rf.length()}")
+        val file = File(videoFile)
+        LogContext.log.w(TAG, "File length=${file.length()}")
+        nalUnitReader = AnnexBNalUnitReader(file.inputStream())
 
-        val vps = getNalu()!!
-        val sps = getNalu()!!
-        val pps = getNalu()!!
-        val psei = getNalu()!!
-        val ssei = getNalu()!!
+        var vps: ByteArray? = null
+        var sps: ByteArray? = null
+        var pps: ByteArray? = null
+        while (vps == null || sps == null || pps == null) {
+            val nalUnit =
+                checkNotNull(nalUnitReader.nextNalUnit()) {
+                    "H.265 stream ended before VPS, SPS, and PPS were found."
+                }
+            when (h265NalUnitType(nalUnit)) {
+                H265_NAL_VPS -> if (vps == null) vps = nalUnit
+                H265_NAL_SPS -> if (sps == null) sps = nalUnit
+                H265_NAL_PPS -> if (pps == null) pps = nalUnit
+            }
+        }
 
-        LogContext.log.w(TAG, "vps[${vps.size}]=${vps.toHexString()}")
-        LogContext.log.w(TAG, "sps[${sps.size}]=${sps.toHexString()}")
-        LogContext.log.w(TAG, "pps[${pps.size}]=${pps.toHexString()}")
-        LogContext.log.w(TAG, "prefix_sei[${psei.size}]=${psei.toHexString().truncate(80)}")
-        LogContext.log.w(TAG, "suffix_sei[${ssei.size}]=${ssei.toHexString().truncate(80)}")
-
-        val csd0 = vps + sps + pps + psei + ssei
-        LogContext.log.w(TAG, "csd0[${csd0.size}]=${csd0.toHexString().truncate(180)}")
-        csd0Size = csd0.size
-        currentIndex = csd0Size.toLong()
-
-        videoInfo = initDecoder(vps, sps, pps, psei, ssei)
-        val renderSize = glSurfaceView.context.screenAvailableResolution
-        glSurfaceView.setVideoDimension(
-            videoInfo.width,
-            videoInfo.height,
-            renderSize.width,
-            renderSize.height
+        val vpsBytes = checkNotNull(vps)
+        val spsBytes = checkNotNull(sps)
+        val ppsBytes = checkNotNull(pps)
+        LogContext.log.w(
+            TAG,
+            "vps[${vpsBytes.size}], sps[${spsBytes.size}], pps[${ppsBytes.size}]"
         )
-        decodeVideo(csd0)
+
+        videoInfo = initDecoder(vpsBytes, spsBytes, ppsBytes, null, null)
+        val renderSize = glSurfaceView.context.screenAvailableResolution
+        renderWidth = renderSize.width
+        renderHeight = renderSize.height
+        updateVideoDimension(videoInfo.width, videoInfo.height)
     }
 
     private fun initDecoder(
@@ -185,10 +196,11 @@ class DecodeH265RawFileByFFMpeg {
         return videoInfo
     }
 
-    private fun decodeVideo(rawVideo: ByteArray): H264HevcDecoder.DecodedVideoFrame? =
-        videoDecoder.decode(rawVideo)
+    private fun decodeVideo(rawVideo: ByteArray): List<H264HevcDecoder.DecodedVideoFrame> =
+        videoDecoder.decodeFrames(rawVideo)
 
     private fun renderFrame(frame: H264HevcDecoder.DecodedVideoFrame) {
+        updateVideoDimension(frame.width, frame.height)
         val yuv420Type = if (videoInfo.pixelFormatId < 0) {
             BaseRenderer.Yuv420Type.I420
         } else {
@@ -197,73 +209,12 @@ class DecodeH265RawFileByFFMpeg {
         glSurfaceView.render(frame.yuvOrRgbBytes, yuv420Type)
     }
 
-    private lateinit var rf: RandomAccessFile
-
-    private var currentIndex = 0L
-    private fun getRawH265(bufferSize: Int = 1_000_000): ByteArray? {
-        val bb = ByteArray(bufferSize)
-        //        LogContext.log.w(TAG, "Current file pos=$currentIndex")
-        rf.seek(currentIndex)
-        var readSize = rf.read(bb, 0, bufferSize)
-        if (readSize == -1) {
-            return null
-        }
-        for (i in 4 until readSize) {
-            if (findStartCode4(bb, readSize - i)) {
-                readSize -= i
-                break
-            }
-        }
-        val wholeNalu = ByteArray(readSize)
-        System.arraycopy(bb, 0, wholeNalu, 0, readSize)
-        currentIndex += readSize
-        return wholeNalu
-    }
-
-    private fun getNalu(): ByteArray? {
-        var curIndex = 0
-        val bb = ByteArray(800_000)
-        rf.read(bb, curIndex, 4)
-        if (findStartCode4(bb, 0)) {
-            curIndex = 4
-        }
-        var findNALStartCode = false
-        var nextNalStartPos = 0
-        var reWind = 0
-        while (!findNALStartCode) {
-            val hex = rf.read()
-            //            val naluType = getNaluType(hex.toByte())
-            //                LogContext.log.w(TAG, "NALU Type=$naluType")
-            if (curIndex >= bb.size) {
-                return null
-            }
-            bb[curIndex++] = hex.toByte()
-            if (hex == -1) {
-                nextNalStartPos = curIndex
-            }
-            if (findStartCode4(bb, curIndex - 4)) {
-                findNALStartCode = true
-                reWind = 4
-                nextNalStartPos = curIndex - reWind
-            }
-        }
-        val nal = ByteArray(nextNalStartPos)
-        System.arraycopy(bb, 0, nal, 0, nextNalStartPos)
-        val pos = rf.filePointer
-        val setPos = pos - reWind
-        rf.seek(setPos)
-        return nal
-    }
-
-    // Find NALU prefix "00 00 00 01"
-    private fun findStartCode4(bb: ByteArray, offSet: Int): Boolean {
-        if (offSet < 0) {
-            return false
-        }
-        return bb[offSet].toInt() == 0 &&
-            bb[offSet + 1].toInt() == 0 &&
-            bb[offSet + 2].toInt() == 0 &&
-            bb[offSet + 3].toInt() == 1
+    private fun updateVideoDimension(width: Int, height: Int) {
+        if (width <= 0 || height <= 0) return
+        if (width == configuredVideoWidth && height == configuredVideoHeight) return
+        glSurfaceView.setVideoDimension(width, height, renderWidth, renderHeight)
+        configuredVideoWidth = width
+        configuredVideoHeight = height
     }
 
     fun close() {
@@ -289,8 +240,8 @@ class DecodeH265RawFileByFFMpeg {
         if (!resourcesClosed.compareAndSet(false, true)) return
         runCatching { videoDecoder.close() }
             .onFailure { LogContext.log.e(TAG, "Error releasing decoder", it) }
-        if (::rf.isInitialized) {
-            runCatching { rf.close() }
+        if (::nalUnitReader.isInitialized) {
+            runCatching { nalUnitReader.close() }
                 .onFailure { LogContext.log.e(TAG, "Error closing input file", it) }
         }
     }
@@ -301,72 +252,22 @@ class DecodeH265RawFileByFFMpeg {
         isDecoding = true
         if (isClosed || decodeJob?.isActive == true) return
         decodeJob = ioScope.launch {
-            val startIdx = 4
             runCatching {
                 var reachedEndOfFile = false
                 while (isDecoding && !isClosed) {
                     ensureActive()
-                    val bytes = getRawH265()
-                    if (bytes == null) {
+                    val nalUnitGroup =
+                        nalUnitReader.nextNalUnitGroupEndingWith {
+                            h265NalUnitType(it) in H265_NAL_VCL_MIN..H265_NAL_VCL_MAX
+                        }
+                    if (nalUnitGroup == null) {
                         reachedEndOfFile = true
                         break
                     }
-                    var previousStart = 0
-                    for (i in startIdx until bytes.size) {
-                        // Check if we should stop decoding
-                        if (!isDecoding || isClosed) {
-                            break
-                        }
-                        ensureActive()
-                        if (findStartCode4(bytes, i)) {
-                            val frame = ByteArray(i - previousStart)
-                            System.arraycopy(bytes, previousStart, frame, 0, frame.size)
-
-                            val st1 = SystemClock.elapsedRealtime()
-                            var st3: Long
-                            try {
-                                // Don't decode if already closed
-                                if (!isClosed) {
-                                    val decodeFrame: H264HevcDecoder.DecodedVideoFrame? =
-                                        decodeVideo(frame)
-                                    val st2 = SystemClock.elapsedRealtimeNanos()
-                                    decodeFrame?.let(::renderFrame)
-                                    st3 = SystemClock.elapsedRealtimeNanos()
-                                    val naluType = when {
-                                        H265Util.isVps(frame) -> "VPS"
-                                        H265Util.isSps(frame) -> "SPS"
-                                        H265Util.isPps(frame) -> "PPS"
-                                        H265Util.isIdrFrame(frame) -> "IDR"
-                                        H265Util.isPFrame(frame) -> "P"
-                                        H265Util.isSei(frame) -> "SEI"
-                                        else -> H265Util.getNaluType(frame).toString()
-                                    }
-                                    LogContext.log.w(
-                                        TAG,
-                                        "frame[$naluType][${frame.size}][decode " +
-                                            "cost=${st2 / 1000_000 - st1}ms]" +
-                                            "[render cost=${(st3 - st2) / 1000}us] " +
-                                            "${decodeFrame?.width}x${decodeFrame?.height}"
-                                    )
-                                } else {
-                                    // If closed, still record time for sleep calculation
-                                    st3 = SystemClock.elapsedRealtimeNanos()
-                                }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                st3 = SystemClock.elapsedRealtimeNanos()
-                                LogContext.log.e(TAG, "decode error.", e)
-                            }
-
-                            previousStart = i
-                            // FIXME We'd better control the FPS by SpeedManager
-                            val sleepOffset: Long = 1000 / 30 - (st3 / 1000_000 - st1)
-                            if (sleepOffset > 0 && !isClosed) {
-                                Thread.sleep(sleepOffset)
-                            }
-                        }
-                    }
+                    decodeAndRender(
+                        nalUnitGroup.bytes,
+                        h265NalUnitType(nalUnitGroup.endingNalUnit)
+                    )
                 }
                 if (reachedEndOfFile && !isClosed) {
                     videoDecoder.drain().forEach(::renderFrame)
@@ -379,6 +280,42 @@ class DecodeH265RawFileByFFMpeg {
         }
     }
 
-    @Suppress("unused")
-    private fun getNaluType(nalu: Byte): Int = ((nalu.toInt() and 0x07E) shr 1)
+    private fun decodeAndRender(encodedPacket: ByteArray, nalType: Int) {
+        val startNs = SystemClock.elapsedRealtimeNanos()
+        var endNs = startNs
+        try {
+            if (isClosed) return
+            val decodedFrames = decodeVideo(encodedPacket)
+            val decodedNs = SystemClock.elapsedRealtimeNanos()
+            decodedFrames.forEach(::renderFrame)
+            endNs = SystemClock.elapsedRealtimeNanos()
+            val nalTypeName =
+                when (nalType) {
+                    H265_NAL_VPS -> "VPS"
+                    H265_NAL_SPS -> "SPS"
+                    H265_NAL_PPS -> "PPS"
+                    H265_NAL_PREFIX_SEI -> "PREFIX_SEI"
+                    H265_NAL_SUFFIX_SEI -> "SUFFIX_SEI"
+                    in 16..21 -> "IDR"
+                    in 0..31 -> "VCL"
+                    else -> nalType.toString()
+                }
+            val lastFrame = decodedFrames.lastOrNull()
+            LogContext.log.w(
+                TAG,
+                "frame[$nalTypeName][${encodedPacket.size}][decode " +
+                    "cost=${(decodedNs - startNs) / 1_000_000}ms]" +
+                    "[render cost=${(endNs - decodedNs) / 1_000}us] " +
+                    "outputs=${decodedFrames.size} ${lastFrame?.width}x${lastFrame?.height}"
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            endNs = SystemClock.elapsedRealtimeNanos()
+            LogContext.log.e(TAG, "decode error.", e)
+        }
+
+        val sleepOffset = FRAME_INTERVAL_MS - (endNs - startNs) / 1_000_000
+        if (sleepOffset > 0 && !isClosed) Thread.sleep(sleepOffset)
+    }
 }

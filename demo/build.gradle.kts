@@ -419,6 +419,7 @@ dependencies {
     implementation(libs.net)
     // Net - dependencies - End
 
+    testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.bundles.test.runtime.only)
     androidTestImplementation(libs.bundles.test)
     androidTestImplementation(libs.bundles.android.test)

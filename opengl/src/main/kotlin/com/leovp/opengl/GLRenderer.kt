@@ -187,6 +187,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      * @param width 宽度
      * @param height 高度
      */
+    @Synchronized
     fun setVideoDimension(width: Int, height: Int, renderWidth: Int, renderHeight: Int) {
         LogContext.log.i(
             tag,
@@ -203,17 +204,15 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 renderHeight
             )
 
-            if (width != videoWidth && height != videoHeight) {
+            if (width != videoWidth || height != videoHeight) {
                 this.videoWidth = width
                 this.videoHeight = height
                 val yArraySize = width * height
                 val uArraySize = yArraySize / 4
-                synchronized(this) {
-                    y = ByteBuffer.allocate(yArraySize)
-                    u = ByteBuffer.allocate(uArraySize)
-                    v = ByteBuffer.allocate(uArraySize)
-                    uv = ByteBuffer.allocate(uArraySize * 2)
-                }
+                y = ByteBuffer.allocate(yArraySize)
+                u = ByteBuffer.allocate(uArraySize)
+                v = ByteBuffer.allocate(uArraySize)
+                uv = ByteBuffer.allocate(uArraySize * 2)
             }
         }
     }

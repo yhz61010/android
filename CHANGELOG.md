@@ -120,6 +120,8 @@
   不再继续推进编码器并丢弃剩余输出。H.264/HEVC 解码现在按 FFmpeg send/receive 状态机处理
   `EAGAIN`，被拒绝的 packet 会在排空输出后重送；新增 `decodeFrames()` 接收单 packet 的全部当前输出，
   并通过 `drain()` 在 EOS 取回额外输出和 B 帧延迟帧。既有 `decode()` 保留并按序缓存额外帧。
+  `drain()` 仅在 Native 成功后清空 Kotlin pending 帧，异常重试不再丢失已缓存输出；JNI 类、构造器、
+  `ArrayList.add()` 和 handle 字段改为加载期缓存并在卸载时释放，避免逐帧类与方法解析。
 
 - **camerax 锁定竖屏时的横屏录像方向与回放位置**:`VideoFragment` 使用 `OrientationEventListener` 跟踪
   设备物理方向并只更新 `VideoCapture.targetRotation`，保持摄像取景框的原有竖屏布局；`PhotoFragment` 将

@@ -67,6 +67,23 @@ JPEG Gradle 构建实际覆盖四 ABI，且编译参数不含 `-Wconversion`。L
 
 因此，本节表示“代码实现和本机构建验证已完成到当前阶段”，不表示第 14 节的全部完成条件已经满足，也不构成发布许可。
 
+### 1.3 H.264/HEVC 后续复审整改（2026-08-31）
+
+Claude Code 对 `50c9949ed` 的后续复审已整合到
+`2026-08-31-native-h264-drain-followup-fixes_cc.md`。经 Codex 按当前源码和 JNI 契约复核后：
+
+- 修复 `NativeInit()` 连续 `NewStringUTF()` 间未立即检查异常的问题；
+- 修复 `drain()` 在 Native 失败前提前移除 Kotlin pending 帧的问题；
+- 在 `JNI_OnLoad()` 缓存 decoder、输出类型、`ArrayList`、构造器、字段和方法 ID，并在
+  `JNI_OnUnload()` 释放 global ref，消除逐帧类/方法解析；
+- 区分 `avcodec_send_packet()` 的 `AVERROR_EOF` 错误信息；
+- 不采用“`JNI_OnLoad()` 返回失败前一律 `ExceptionClear()`”和“pending exception 下二次
+  `SetLongField()` 清零”的建议，避免抹去原加载失败原因或在异常挂起时继续调用不允许的 JNI API。
+
+独立视频与音视频组合 profile 已重新生成四 ABI 二进制；目标 Gradle 构建和静态检查通过。`decode()`
+pending 队列的硬上限/溢出策略，以及 Native 同次调用部分成功后又失败时的返回语义，仍需维护者确认后再
+改变公开 API。本追加整改不替代真机、CheckJNI/HWASan、16KB 页和长时间内存验证。
+
 - 审查基线：`7f28edf8fb7b238d2a7a3500ffac4fb01f265d4c`
 - 远端主线：`origin/master`
 - 直接构建 Native 的模块：`lib-image`、`yuv`、`jpeg`

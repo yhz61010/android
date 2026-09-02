@@ -109,13 +109,20 @@ abstract class BaseMediaCodecAsynchronous(
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
             if (isReleasing) return
-            // Subsequent data will conform to new format.
-            // Can ignore if using getOutputFormat(outputBufferId)
-            this@BaseMediaCodecAsynchronous.format = format // option B
+            withCodecOperationLock {
+                if (isReleasing) return@withCodecOperationLock
+                // Subsequent data will conform to new format.
+                // Can ignore if using getOutputFormat(outputBufferId)
+                this@BaseMediaCodecAsynchronous.format = format // option B
+            }
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            if (!isReleasing) this@BaseMediaCodecAsynchronous.onError(codec, e)
+            if (isReleasing) return
+            withCodecOperationLock {
+                if (isReleasing) return@withCodecOperationLock
+                this@BaseMediaCodecAsynchronous.onError(codec, e)
+            }
         }
     }
 }

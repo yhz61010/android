@@ -18,7 +18,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
 import android.view.Surface
-import androidx.annotation.RequiresApi
 import com.leovp.image.compressBitmap
 import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
@@ -26,6 +25,7 @@ import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.lang.ref.WeakReference
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -33,7 +33,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
- * Require API 26 (Android 8.0+)
+ * Screenshot-based H.26x recording strategy for API 21 and later.
  *
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
@@ -42,6 +42,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     companion object {
         private const val TAG = "ScrShotRec"
+
+        // EGL_ANDROID_recordable. The public EGLExt field was added in API 26.
+        private const val EGL_RECORDABLE_ANDROID = 0x3142
     }
 
     @Volatile
@@ -214,7 +217,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         EGL14.eglSwapBuffers(eglDisplay, eglSurface)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun initEgl() {
         surface = h26xEncoder?.createInputSurface()
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
@@ -238,15 +240,33 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             EGL14.EGL_BLUE_SIZE, 8,
             EGL14.EGL_ALPHA_SIZE, 8,
             EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
-            EGLExt.EGL_RECORDABLE_ANDROID, 1,
+            EGL_RECORDABLE_ANDROID, 1,
             EGL14.EGL_NONE
         )
         val configs = arrayOfNulls<EGLConfig>(1)
         val nConfigs = IntArray(1)
-        EGL14.eglChooseConfig(eglDisplay, attribList, 0, configs, 0, configs.size, nConfigs, 0)
-
-        var err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
+        val configChosen = EGL14.eglChooseConfig(
+            eglDisplay,
+            attribList,
+            0,
+            configs,
+            0,
+            configs.size,
+            nConfigs,
+            0
+        )
+        val chooseConfigError = EGL14.eglGetError()
+        if (
+            !configChosen ||
+            chooseConfigError != EGL14.EGL_SUCCESS ||
+            nConfigs[0] <= 0 ||
+            configs[0] == null
+        ) {
+            throw RuntimeException(
+                "eglChooseConfig(): success=$configChosen count=${nConfigs[0]} " +
+                    "error=${GLUtils.getEGLErrorString(chooseConfigError)}"
+            )
+        }
 
         val ctxAttribs = intArrayOf(
             EGL14.EGL_CONTEXT_CLIENT_VERSION,
@@ -261,7 +281,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             0
         )
 
-        err = EGL14.eglGetError()
+        var err = EGL14.eglGetError()
         if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
 
         val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
@@ -298,7 +318,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         eglSurface = EGL14.EGL_NO_SURFACE
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onInit() {
         val format = MediaFormat.createVideoFormat(
             when (builder.encodeType) {
@@ -360,7 +379,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         // Prepare surface
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun startRecord(act: Activity) {
         CoroutineScope(Dispatchers.IO).launch {
             onInit()
@@ -380,7 +398,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                     }
                     it.recycle()
                 }
-                delay(32)
+                delay(32.milliseconds)
             }
         }
     }

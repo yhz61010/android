@@ -45,14 +45,14 @@ abstract class BaseMediaCodec(
 
     private val codecReleased = AtomicBoolean(false)
 
-    /** Serializes synchronous worker operations with stop/flush/release. */
+    /** Serializes codec callbacks and worker operations with stop/flush/release. */
     private val codecOperationLock = ReentrantLock()
 
     /**
-     * Set as soon as an intentional teardown ([release] / [releaseAndJoin]) begins. The worker may
-     * still be mid-`process()` on the codec when we cancel it without joining (legacy [release]);
-     * an exception it then throws is expected shutdown noise, not a real failure. Subclasses check
-     * this to avoid reporting a spurious codec failure during teardown (remediation R-4).
+     * Set as soon as an intentional teardown ([stop], [release], or [releaseAndJoin]) begins. A
+     * worker or asynchronous callback may still be waiting to enter a codec operation; any
+     * exception caused by that teardown is expected shutdown noise, not a real failure. Subclasses
+     * check this flag before touching the codec or reporting a spurious failure (remediation R-4).
      */
     private val releasing = AtomicBoolean(false)
 
@@ -71,6 +71,7 @@ abstract class BaseMediaCodec(
 
     open fun stop() {
         require(::codec.isInitialized) { "Did you call start() before?" }
+        releasing.set(true)
         withCodecOperationLock {
             runCatchingPreservingCancellation { codec.stop() }
                 .onFailure { LogContext.log.e(TAG, "stop() error", it) }
@@ -111,8 +112,12 @@ abstract class BaseMediaCodec(
             // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
             runCatchingPreservingCancellation { codec.release() }
                 .onFailure { LogContext.log.e(TAG, "release error", it) }
+            onCodecReleased()
         }
     }
+
+    /** Clears subclass state after the codec has been released under [codecOperationLock]. */
+    protected open fun onCodecReleased() = Unit
 
     /**
      * Release resource.

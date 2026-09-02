@@ -80,6 +80,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     private var audioPlayer: AudioPlayer? = null
     private var aacFilePlayer: AacFilePlayer? = null
     private var opusFilePlayer: OpusFilePlayer? = null
+    private var playPcmThread: Thread? = null
 
     private var audioReceiver: AudioReceiver? = null
     private var audioSender: AudioSender? = null
@@ -117,7 +118,6 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
             if (isChecked) record(AudioType.OPUS) else stopRecording()
         }
 
-        var playPcmThread: Thread? = null
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
                 audioPlayer = AudioPlayer(
@@ -127,13 +127,14 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     usage = AUDIO_ATTR_USAGE,
                     contentType = AUDIO_ATTR_CONTENT_TYPE
                 )
-                playPcmThread = Thread {
+                val playbackThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmIs.use { input ->
                         val bufferSize = 8 shl 10
                         val readBuffer = ByteArray(bufferSize)
-                        var readSize: Int
-                        while (input.read(readBuffer).also { readSize = it } != -1) {
+                        while (!Thread.currentThread().isInterrupted) {
+                            val readSize = input.read(readBuffer)
+                            if (readSize == -1) break
                             LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
                             val pcmData =
                                 if (readSize == readBuffer.size) {
@@ -146,10 +147,10 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                         runOnUiThread { btn.isChecked = false }
                     }
                 }
-                playPcmThread.start()
+                playPcmThread = playbackThread
+                playbackThread.start()
             } else {
-                playPcmThread?.interrupt()
-                audioPlayer?.release()
+                stopPcmPlayback()
             }
         }
 
@@ -166,7 +167,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     // LogContext.log.e(TAG, "=====> End callback <=====")
                 }
             } else {
-                aacFilePlayer?.stop()
+                stopAacPlayback()
             }
         }
 
@@ -184,7 +185,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     // LogContext.log.e(TAG, "=====> End callback <=====")
                 }
             } else {
-                opusFilePlayer?.stop()
+                stopOpusPlayback()
             }
         }
     }
@@ -269,13 +270,38 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         ioScope.launch { recorder.stopRecordAndJoin() }
     }
 
+    private fun stopPcmPlayback() {
+        val playbackThread = playPcmThread
+        val player = audioPlayer
+        playPcmThread = null
+        audioPlayer = null
+        if (playbackThread == null && player == null) return
+        playbackThread?.interrupt()
+        ioScope.launch {
+            playbackThread?.join()
+            player?.release()
+        }
+    }
+
+    private fun stopAacPlayback() {
+        val player = aacFilePlayer ?: return
+        aacFilePlayer = null
+        ioScope.launch { player.stop() }
+    }
+
+    private fun stopOpusPlayback() {
+        val player = opusFilePlayer ?: return
+        opusFilePlayer = null
+        ioScope.launch { player.stop() }
+    }
+
     override fun onStop() {
         ioScope.launch { audioReceiver?.stopServer() }
         ioScope.launch { audioSender?.stop() }
         stopRecording()
-        ioScope.launch { audioPlayer?.release() }
-        aacFilePlayer?.stop()
-        opusFilePlayer?.stop()
+        stopPcmPlayback()
+        stopAacPlayback()
+        stopOpusPlayback()
         super.onStop()
     }
 

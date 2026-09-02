@@ -115,7 +115,8 @@ class TouchHelper(private val touchListener: TouchListener) {
         //        }
         runCatching {
             // Resolve the pointer index for this id; getX/getY are index-based, not id-based
-            // (remediation H2). A stale/absent id yields -1, in which case there is nothing to report.
+            // (remediation H2). A stale/absent id yields -1, in which case there is nothing to
+            // report.
             val pointerIndex = event.findPointerIndex(activePointerId)
             if (pointerIndex < 0) return@runCatching
             touchListener.onEvent(

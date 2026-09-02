@@ -37,7 +37,9 @@ class FileDocumentUtilTest {
     }
 
     @Test
-    fun `resolveWithinBase keeps a traversal display name inside the base dir`(@TempDir base: File) {
+    fun `resolveWithinBase keeps a traversal display name inside the base dir`(
+        @TempDir base: File,
+    ) {
         val resolved = FileDocumentUtil.resolveWithinBase(base, "../../evil.db")
 
         resolved.name shouldBeEqualTo "evil.db"
@@ -58,7 +60,8 @@ class FileDocumentUtilTest {
 
     @Test
     fun `stripRawDownloadPrefix strips document-raw and raw prefixes`() {
-        FileDocumentUtil.stripRawDownloadPrefix("/document/raw:/storage/emulated/0/x.pdf") shouldBeEqualTo
+        val documentRawPath = "/document/raw:/storage/emulated/0/x.pdf"
+        FileDocumentUtil.stripRawDownloadPrefix(documentRawPath) shouldBeEqualTo
             "/storage/emulated/0/x.pdf"
         FileDocumentUtil.stripRawDownloadPrefix("raw:/a/b") shouldBeEqualTo "/a/b"
         FileDocumentUtil.stripRawDownloadPrefix("/plain/path") shouldBeEqualTo "/plain/path"

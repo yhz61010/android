@@ -137,8 +137,8 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
                         try {
                             lis.onBecameBackground()
                         } catch (e: Exception) {
-                            // Do not swallow silently; surface via android.util.Log without adding a
-                            // project log dependency (remediation M-A1).
+                            // Do not swallow silently; surface via android.util.Log without adding
+                            // a project log dependency (remediation M-A1).
                             Log.e(TAG, "onBecameBackground() exception", e)
                         }
                     }

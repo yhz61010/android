@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -182,10 +181,9 @@ object FileDocumentUtil {
      * null [path] (opaque Uris) by returning null rather than throwing (remediation H3).
      */
     @VisibleForTesting
-    internal fun stripRawDownloadPrefix(path: String?): String? =
-        path
-            ?.replaceFirst("^/document/raw:".toRegex(), "")
-            ?.replaceFirst("^raw:".toRegex(), "")
+    internal fun stripRawDownloadPrefix(path: String?): String? = path
+        ?.replaceFirst("^/document/raw:".toRegex(), "")
+        ?.replaceFirst("^raw:".toRegex(), "")
 
     /**
      * Sanitizes an externally-supplied file name (e.g. a content Uri DISPLAY_NAME) down to a bare
@@ -270,15 +268,17 @@ object FileDocumentUtil {
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (nameIndex < 0 || !cursor.moveToFirst()) return null
                 val name = cursor.getString(nameIndex) ?: return null
-                // Sanitize the untrusted DISPLAY_NAME so it cannot escape cacheDir (remediation C1).
+                // Sanitize the untrusted DISPLAY_NAME so it cannot escape cacheDir
+                // (remediation C1).
                 val file = resolveWithinBase(context.cacheDir, name)
 
                 val input = context.contentResolver.openInputStream(uri) ?: return null
                 input.use { inputStream ->
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
-                        // Do not size the buffer from InputStream.available(): content providers may
-                        // legally return 0, and a zero-length buffer makes read() return 0 forever.
+                        // Do not size the buffer from InputStream.available(): content providers
+                        // may legally return 0, and a zero-length buffer makes read() return 0
+                        // forever.
                         val buffers = ByteArray(8 * 1024)
                         while (inputStream.read(buffers).also { read = it } != -1) {
                             outputStream.write(buffers, 0, read)

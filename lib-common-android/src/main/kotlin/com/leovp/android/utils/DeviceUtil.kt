@@ -219,7 +219,7 @@ class DeviceUtil private constructor(private val ctx: Context) {
             "(${availableSize.height}+$navBarHeight=${availableSize.height + navBarHeight})"
         val networkType = NetworkUtil.getNetworkTypeName(ctx)
         val networkGen = NetworkUtil.getNetworkGeneration(ctx)
-        val networkGenStr = if (NetworkUtil.TYPE_WIFI == networkType) "" else "(${networkGen})"
+        val networkGenStr = if (NetworkUtil.TYPE_WIFI == networkType) "" else "($networkGen)"
         val glEsVersionStr = Integer.toHexString(configInfo.reqGlEsVersion)
         """
             |Device basic information:

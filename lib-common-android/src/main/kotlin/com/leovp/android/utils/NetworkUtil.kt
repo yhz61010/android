@@ -241,8 +241,8 @@ object NetworkUtil {
             Manifest.permission.READ_PHONE_STATE
         ]
     )
-    fun getNetworkGeneration(ctx: Context): String? {
-        return if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
+    fun getNetworkGeneration(ctx: Context): String? =
+        if (TYPE_CELLULAR == getNetworkTypeName(ctx)) {
             when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
                     getNetworkGeneration(ctx.telephonyManager.dataNetworkType)
@@ -256,7 +256,6 @@ object NetworkUtil {
         } else {
             null
         }
-    }
 
     data class WifiSignal(val linkSpeed: Int, val rssi: Int, val scoreIn5: Int, val score: Int)
 

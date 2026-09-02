@@ -94,7 +94,8 @@ object ShellUtil {
 
         // Drain stdout and stderr concurrently BEFORE reaping the exit code. A child that fills its
         // output pipe blocks on write; calling waitFor() first (or reading the two streams
-        // sequentially) would let neither side progress and the call would deadlock (remediation H1).
+        // sequentially) would let neither side progress and the call would deadlock
+        // (remediation H1).
         val (successMsg, errorMsg) = drainStreams(process.inputStream, process.errorStream)
         result = process.waitFor()
         // process.destroy()
@@ -123,16 +124,15 @@ object ShellUtil {
         return outSink.toString() to errSink.toString()
     }
 
-    private fun readStreamAsync(stream: InputStream, sink: StringBuilder): Thread =
-        Thread {
-            try {
-                stream.bufferedReader(StandardCharsets.UTF_8).use { br ->
-                    br.useLines { seq -> sink.append(seq.toList().joinToString(LINE_SEP)) }
-                }
-            } catch (e: IOException) {
-                Log.e(TAG, "readStream failed: ${e.message}")
+    private fun readStreamAsync(stream: InputStream, sink: StringBuilder): Thread = Thread {
+        try {
+            stream.bufferedReader(StandardCharsets.UTF_8).use { br ->
+                br.useLines { seq -> sink.append(seq.toList().joinToString(LINE_SEP)) }
             }
-        }.apply { start() }
+        } catch (e: IOException) {
+            Log.e(TAG, "readStream failed: ${e.message}")
+        }
+    }.apply { start() }
 
     fun forceStop(pkgName: String) {
         execCmd("am force-stop ${requireValidPackage(pkgName)}", true)

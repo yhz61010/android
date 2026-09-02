@@ -263,6 +263,76 @@ LEO-MediaCodecAsync E Input buffer callback failed: java.lang.IllegalStateExcept
 本修复没有把所有 `IllegalStateException` 静默处理为正常情况：只有 `releasing=true` 的主动 teardown
 窗口会抑制预期噪声；录音或编码运行期间的同类异常仍会保留完整日志，便于发现真实设备/codec 故障。
 
+### 4.10 Audio Demo 的 PCM 尾包与 OPUS 自然结束处理错误
+
+完成 AAC 停止竞态修复后，又在 P3H 上复测了 PCM 和 OPUS 的完整录制、停止与文件播放链路。停止阶段没有
+再次出现 teardown 错误，但播放日志暴露出两个独立问题：
+
+1. PCM 播放循环使用 8192 字节复用缓冲读取文件，却无条件把整个缓冲传给 `AudioPlayer.play()`。当最后一次
+   `read()` 小于 8192 时，缓冲后部仍是上一次读取留下的数据，因而会重复播放旧 PCM，并使输出长度超过文件
+   的真实长度。
+2. Demo 的 OPUS 文件格式是重复的 `[|leo|][payload]`，最后一个音频 payload 后没有结束标记。旧播放器必须
+   找到“下一个”标记才解码当前帧，因此自然 EOF 被误记成 `Read file. EOF` 和
+   `Can't find start code` Error，最后一个 OPUS 音频帧也不会送入 decoder。
+3. OPUS 的正常逐帧队列状态使用 Error 级别输出，造成日志噪声；输入 `RandomAccessFile` 没有在自然结束或
+   `stop()` 时确定关闭；播放协程使用不可取消的 `queue.take()`，共享完成标志也不是线程安全类型。
+
+修复方法如下：
+
+- PCM 最后一包按 `readSize` 截取后再播放；完整 8192 字节读取仍直接复用原缓冲，不增加常规路径分配。
+- 新增可单测的 `OpusFramedFileReader`。它校验当前位置的起始标记，后续找到标记时以该标记作为 payload
+  末端，找不到时则把文件自然结尾作为最后一个 payload 的末端。因此 EOF 成为合法边界，不再是异常。
+- OPUS 播放循环逐个提交 reader 返回的 payload，并记录已提交和已播放帧数；文件读取完成后最多等待 3 秒
+  排空 decoder 输出和 PCM 队列。成功时记录 `Playback completed: submitted=N played=N`，超时才记录 Error。
+- 逐帧队列状态降为 Debug 并限频到每 50 帧最多一条；输入文件在读取协程 `finally`、幂等 `stop()` 和
+  同步初始化失败回滚中关闭；播放队列改用带超时的 `poll()`，完成标志和计数改为原子类型，协程取消后
+  不再永久阻塞在 `take()`。
+- 新增 `OpusFramedFileReaderTest`，覆盖配置帧、中间音频帧、无尾标记的最后音频帧以及起始标记缺失。
+
+对应到代码级别，本次修改为：
+
+- `AudioActivity.kt` 的 PCM 文件循环继续复用 8192 字节缓冲，但仅在 `readSize == 8192` 时直接传递原数组；
+  短读时使用 `copyOf(readSize)` 生成精确长度的尾包。不能通过给剩余区域补 0 解决，因为那仍会人为延长
+  音频；也不能把每次读取都改成复制，否则会给正常 PCM 播放增加持续分配。
+- `OpusFramedFileReader.kt` 将“当前位置必须是 start code”和“payload 的结束位置”分开处理。下一 start code
+  存在时返回其位置，不存在时返回 `null` 并使用 `file.length()`，从格式层面表达“这是最后一个 payload”，
+  而不是依靠捕获 `EOFException` 猜测是否正常结束。
+- reader 对 start code、payload 长度和位置溢出进行显式校验。位置计算没有使用 Android API 24 才可直接
+  依赖的 `Math.addExact()`，而是使用手工上界检查，保持仓库 minSdk 21 契约。
+- `OpusFilePlayer.kt` 只在成功解析配置并启动 decoder 后进入三个工作协程；同步初始化任一步骤失败都会
+  调用幂等 `stop()`，关闭文件并释放已创建的 decoder/`AudioTrack`，避免损坏文件留下半初始化资源。
+- 文件读取协程、PCM 播放协程和完成观察协程分别负责提交、播放和收尾。完成条件不再是非原子的普通
+  `Boolean + queue.isEmpty()`，而是读取完成标志、提交帧计数、播放帧计数和 PCM 队列共同满足；3 秒超时
+  只用于发现 decoder 没有返回全部输出，不能把丢帧静默当成正常完成。
+
+### 4.11 主动停止期间的系统 AudioRecord 与 Codec2/FMQ 日志
+
+最终 P3H 复测中，应用层 teardown 错误已经消失，但按进程过滤完整 logcat 后仍可看到：
+
+```text
+AudioRecord-JNI: Error -38 during AudioRecord native read
+CCodecConfig: query failed ... (BAD_INDEX)
+CCodecConfig: config failed => CORRUPTED
+FMQ: grantorIdx must be less than 3
+```
+
+它们与此前修复的应用层错误不是同一个问题：
+
+1. `AudioRecord-JNI -38` 与 `MicRecorder` 主动停止处于同一时间点。录音协程正阻塞在 Native `read()` 时，
+   另一协程调用 `AudioRecord.stop()` 使读取立即返回负状态；Framework/JNI 在结果回到 Kotlin 之前已经输出
+   自己的 Error，因此应用无法通过调整 `LogContext` 级别消除它。`MicRecorder` 仍需调用 `stop()` 来及时
+   唤醒读取并保证 `stopRecordAndJoin()` 能确定结束；若为消除这条系统日志而只设置标志、被动等待读取，
+   会重新引入停止延迟甚至设备异常时无法 join 的风险。
+2. Codec2 的 `BAD_INDEX`/`CORRUPTED` 与 FMQ `grantorIdx` 出现在 OPUS encoder/decoder 初始化阶段，是该
+   P3H 平台 codec 实现探测配置项和创建队列时输出的底层诊断。当前测试中 codec 随后正常产出数据，且
+   OPUS 达到 `submitted == played`，因此只能判定它们在本设备、本次路径上是非致命平台日志，不能据此
+   在库中伪造参数、屏蔽系统日志或切换 codec。
+
+本轮对此采取“保留确定性生命周期语义，不做无依据代码规避”的处理。判断其升级为真实缺陷的门槛是：
+同时出现应用层 `AudioRecord.read error`、MediaCodec callback 异常、编码/解码失败、提交与播放帧数不一致、
+按钮无法复位、崩溃或资源持续增长。最终两轮 PCM/OPUS 回归均未出现这些伴随现象，所以文档将系统日志
+单独记录，但不把它们列为未修复问题。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -306,6 +376,22 @@ LEO-MediaCodecAsync E Input buffer callback failed: java.lang.IllegalStateExcept
   `Input buffer callback failed`、`Output buffer callback failed` 或 `FATAL EXCEPTION`。最后生成的 AAC
   文件能够持续解码为 4096 字节 PCM、播放到 EOS，播放按钮自动复位；ADB 只能确认播放链路与状态，
   实际听感仍以人工验收为准。
+- PCM/OPUS 播放修复后，使用 JBR 17 将 `audio` 和 `demo` 的 ktlint、detekt、单元测试及
+  `:demo:assembleDevDebug` 合并执行并加 `--rerun-tasks`，641 个任务全部实际执行并通过。
+- 新 APK 安装到同一台 P3H 后重新录制并播放 PCM。最后一次文件读取为 3584 字节，紧随其后的
+  `AudioTrackPlayer` 日志为 `PCM[3584] Play[3584]`，证明尾包没有扩成 8192 字节；录制停止、文件播放和
+  自动复位期间均无 `AudioRecord.read error`、MediaCodec 错误或崩溃。
+- 同一 APK 重新录制并自然播放 OPUS，最终日志为
+  `Playback completed: submitted=194 played=194`。未出现 `Read file. EOF`、
+  `Can't find start code`、`Decode OPUS file failed`、输出排空超时、MediaCodec teardown 错误或崩溃。
+- 完成 minSdk 21 兼容处理、同步初始化失败回滚和队列日志限频后，最终 APK 再次安装到 P3H。新录制 PCM
+  的尾包为 4608 字节，读取与 `AudioTrack` 写入长度均为 4608 字节；新录制 OPUS 自然播放完成，最终为
+  `submitted=192 played=192`，192 帧期间仅输出 3 条队列状态 Debug 日志，验证每 50 帧限频生效。PCM 与
+  OPUS 播放按钮均自动复位，应用进程保持存活。
+- 最终日志仍包含系统 `AudioRecord-JNI: Error -38 during AudioRecord native read` 以及设备 Codec2/FMQ 的
+  `BAD_INDEX`、`CORRUPTED`、`grantorIdx` 诊断。这些日志分别出现在主动 `AudioRecord.stop()` 唤醒 Native
+  阻塞读取和厂商 codec 初始化阶段；应用层没有 `AudioRecord.read error`、失败回调、MediaCodec 异常或
+  功能中断，PCM/OPUS 均完整结束。因此它们属于本机平台实现噪声，不通过改变库的确定性停止语义规避。
 
 ### 5.2 尚未完成
 
@@ -314,10 +400,8 @@ LEO-MediaCodecAsync E Input buffer callback failed: java.lang.IllegalStateExcept
 - ADPCM：Java callback 在批次中途抛异常后，确认后续 PCM 未被消费；非完整 frame/chunk；长时间循环。
 - ADPCM Demo：当前验证时 P3H 已从 `adb devices` 断开，修复后的 Encode/Play 点击回归仍待设备重新连接后
   完成；上述结论只覆盖源码、JVM 测试、四 ABI Native 重建和 Demo APK 构建。
-- Audio Demo：PCM/AAC/OPUS 的停止日志和 AAC 录音期间直接退页已在 P3H 通过，AAC 文件也已完成解码
-  播放链路验证；仍需人工确认录音听感。顺带执行的 OPUS 文件播放能持续输出 3840 字节 PCM，但自然 EOF
-  后现有 `OpusFilePlayer` 会记录 `Can't find start code` Error；它不属于本次停止录音 teardown 竞态，
-  也没有重新出现本次目标错误，需作为独立问题另行评估。
+- Audio Demo：PCM/AAC/OPUS 的停止日志、PCM/OPUS 自然文件播放和 AAC 录音期间直接退页已在 P3H 通过，
+  AAC 文件也已完成解码播放链路验证；仍需维护者人工确认三种格式的录音与播放听感。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
 - ASan/HWASan、16KB 页设备真实加载、P95/Native heap/长跑数据。
 - 本轮没有执行或宣称 JPEG `-Wconversion` 零告警验证。
@@ -330,7 +414,8 @@ LEO-MediaCodecAsync E Input buffer callback failed: java.lang.IllegalStateExcept
 不能标记为“发布验证完成”或“已证明无内存安全回归”。ADPCM Demo 尾帧修复已完成源码、Native、JVM 和
 APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须补做。Audio Demo 停止 AAC 录音的 teardown
 竞态已完成源码、并发 JVM 测试、静态检查、APK 构建以及 P3H 上 PCM/AAC/OPUS 停止、AAC 退页和 AAC
-播放链路验证；人工听感仍待维护者确认，OPUS 文件自然 EOF 的既有错误日志不纳入本次修复。
+播放链路验证。后续发现的 PCM 尾包重复数据与 OPUS 自然 EOF 伪错误/末帧丢失也已修复，并完成单测、
+静态检查、APK 构建及 P3H 文件播放验证；三种格式的实际听感仍待维护者人工确认。
 
 交叉参考：
 

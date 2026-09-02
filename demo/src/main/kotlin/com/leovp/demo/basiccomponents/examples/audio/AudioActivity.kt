@@ -106,15 +106,15 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         binding.tvIp.text = NetworkUtil.getIp()[0]
 
         binding.btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.PCM) else micRecorder?.stopRecord()
+            if (isChecked) record(AudioType.PCM) else stopRecording()
         }
 
         binding.btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.AAC) else micRecorder?.stopRecord()
+            if (isChecked) record(AudioType.AAC) else stopRecording()
         }
 
         binding.btnRecordOpus.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.OPUS) else micRecorder?.stopRecord()
+            if (isChecked) record(AudioType.OPUS) else stopRecording()
         }
 
         var playPcmThread: Thread? = null
@@ -257,13 +257,17 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
             }
     }
 
+    private fun stopRecording() {
+        val recorder = micRecorder ?: return
+        micRecorder = null
+        ioScope.launch { recorder.stopRecordAndJoin() }
+    }
+
     override fun onStop() {
         ioScope.launch { audioReceiver?.stopServer() }
         ioScope.launch { audioSender?.stop() }
-        ioScope.launch {
-            micRecorder?.stopRecord()
-            audioPlayer?.release()
-        }
+        stopRecording()
+        ioScope.launch { audioPlayer?.release() }
         aacFilePlayer?.stop()
         opusFilePlayer?.stop()
         super.onStop()

@@ -10,6 +10,7 @@ import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityAudioCipherBinding
 import com.leovp.log.base.ITAG
+import com.leovp.log.base.d
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -70,6 +71,7 @@ class AudioCipherActivity :
             }
             launch(Dispatchers.Main) { binding.btnEncryptAudio.isEnabled = true }
             toast("Music file encrypted! cost=$cost")
+            d(ITAG) { "Music file encrypted! cost=$cost" }
         }
     }
 
@@ -85,6 +87,7 @@ class AudioCipherActivity :
             }
             launch(Dispatchers.Main) { binding.btnDecryptAudio.isEnabled = true }
             toast("Play decrypted music! cost=$cost")
+            d(ITAG) { "Play decrypted music! cost=$cost" }
         }
     }
 

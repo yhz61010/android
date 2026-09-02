@@ -11,6 +11,7 @@ JNIEXPORT jint JNICALL NativeInit(JNIEnv *env, jobject object, jint sample_rate,
                                   jint channels, jint bit_rate);
 JNIEXPORT void JNICALL NativeRelease(JNIEnv *env, jobject object);
 JNIEXPORT void JNICALL NativeEncode(JNIEnv *env, jobject object, jbyteArray pcm_array);
+JNIEXPORT jint JNICALL NativeInputFrameBytes(JNIEnv *env, jobject object);
 JNIEXPORT jstring JNICALL NativeGetVersion(JNIEnv *env, jobject object);
 
 #ifdef __cplusplus

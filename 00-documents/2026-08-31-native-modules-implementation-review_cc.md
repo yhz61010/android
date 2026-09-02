@@ -192,6 +192,35 @@ OpenGL。`GLRenderer` 忽略无效尺寸，YUV 缓冲保持 0 容量，即使后
 变化都会重建 YUV 缓冲。详细因果链与重新验证见
 `2026-08-31-native-h264-drain-followup-fixes_cc.md` 第 7 节。
 
+### 4.8 ADPCM Demo 样本尾帧不完整
+
+P3H 点击 ADPCM Demo 的编码按钮后出现：
+
+```text
+java.lang.IllegalArgumentException: PCM input must contain a whole number of encoder frames
+    at com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder.nativeEncode(Native Method)
+    at com.leovp.ffmpeg.audio.adpcm.AdpcmImaQtEncoder.encode(AdpcmImaQtEncoder.kt:40)
+    at com.leovp.demo.basiccomponents.examples.audio.ADPCMActivity.onEncodeToADPCMClick(ADPCMActivity.kt:54)
+```
+
+这是完整帧契约正确暴露了 Demo 输入问题，并非 Native frame size 计算错误。仓库 PCM 样本大小为
+1,894,464 字节；IMA-QT encoder 的 `frame_size` 为每声道 64 个 sample，当前双声道 S16 交错输入每帧需要
+`64 × 2 × 2 = 256` 字节。样本包含 7,400 个完整帧后还剩 64 字节，只相当于 16 个双声道 sample，不能
+直接作为一个 64-sample encoder frame 提交。旧实现会静默丢弃这 64 字节；本轮严格校验按设计拒绝输入，
+但 Demo 没有同步处理尾帧。
+
+修复保留 library 的严格输入契约，不在通用 encoder 内默认缓存或静默补齐：
+
+1. `AdpcmImaQtEncoder` 新增公开的 `inputFrameBytes()`，从实际 Native encoder context 查询当前配置所需的
+   交错 PCM 帧字节数；独立音频 wrapper 和音视频组合 wrapper 保持逐字一致；
+2. Kotlin `encode()` 在进入 Native 前检查非空和 frame-byte 对齐，错误信息包含实际要求的字节数；Native
+   继续保留相同防御性校验；
+3. Demo 的一次性文件转换明确选择“尾部补静音”策略：按 `inputFrameBytes()` 将最后不足一帧的数据补 0，
+   本样本由 1,894,464 补到 1,894,656 字节，增加 192 字节静音，不再丢弃原有 64 字节 PCM；
+4. 增加 JVM 测试覆盖已对齐输入不复制、不完整输入补 0 和非法 frame size；
+5. 新 JNI 方法已按四 ABI 重建，并只替换两个 wrapper 中对应的 `libadpcm-ima-qt-encoder.so`，避免改变
+   两个互斥 profile 各自不同的 FFmpeg runtime 配置。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -219,12 +248,20 @@ OpenGL。`GLRenderer` 忽略无效尺寸，YUV 缓冲保持 0 容量，即使后
   仍为黑屏，因此该轮不能算完整播放验证；
 - 动态帧尺寸修复后重新安装 APK，分别查看并截图确认 H.264 与 H.265 页面都有实际视频画面；最终日志未
   出现 `Unable to send video packet`、`Unable to receive video frame` 或 `FATAL EXCEPTION`。
+- ADPCM encoder JNI 使用 JBR 17 和 NDK 29 对四 ABI 重建通过；两个 wrapper 的 encoder `.so` 均已替换，
+  同 ABI 文件 SHA-256 一致；新增 `nativeInputFrameBytes` 注册字符串可在八个二进制中检出，64 位 ELF 的
+  LOAD segment 仍保持 16KB 对齐；
+- `PcmFramePaddingTest`、Demo 和两个 ADPCM wrapper 的 ktlint/detekt 强制重跑通过；
+  `:demo:assembleDevDebug --rerun-tasks` 通过，600 个任务实际执行；两个 wrapper 的 release AAR 也已强制
+  重建通过。
 
 ### 5.2 尚未完成
 
 - H.264/H.265 仓库样本与组合 wrapper 已完成 P3H 真机回归；仍需覆盖带 B 帧、单 packet 多帧、
   多 slice access unit、损坏 packet、主动取消、重复 drain 和独立视频 wrapper。
 - ADPCM：Java callback 在批次中途抛异常后，确认后续 PCM 未被消费；非完整 frame/chunk；长时间循环。
+- ADPCM Demo：当前验证时 P3H 已从 `adb devices` 断开，修复后的 Encode/Play 点击回归仍待设备重新连接后
+  完成；上述结论只覆盖源码、JVM 测试、四 ABI Native 重建和 Demo APK 构建。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
 - ASan/HWASan、16KB 页设备真实加载、P95/Native heap/长跑数据。
 - 本轮没有执行或宣称 JPEG `-Wconversion` 零告警验证。
@@ -234,8 +271,8 @@ OpenGL。`GLRenderer` 忽略无效尺寸，YUV 缓冲保持 0 容量，即使后
 基线提交可以继续进入剩余设备验证阶段；原复审新增的代码问题和 P3H 回归暴露的 Demo packet 边界错误
 和后续 H.264 OpenGL 黑屏均已在当前工作区修复，仓库 H.264/H.265 样本已完成组合 wrapper 真机可视播放
 验证。发布门禁仍未达到：在完成其它 Native 模块真机、sanitizer、16KB 加载、异常媒体和长时间输出验证前，
-不能标记为“发布验证完成”
-或“已证明无内存安全回归”。
+不能标记为“发布验证完成”或“已证明无内存安全回归”。ADPCM Demo 尾帧修复已完成源码、Native、JVM 和
+APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须补做。
 
 交叉参考：
 

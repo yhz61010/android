@@ -35,6 +35,12 @@ class AdpcmImaQtEncoder private constructor() : Closeable {
     fun encode(pcmBytes: ByteArray) {
         check(nativeHandle != 0L && !releasePending) { "ADPCM encoder is closed." }
         check(!encoding) { "Reentrant ADPCM encoding is not supported." }
+        val frameBytes = nativeInputFrameBytes()
+        check(frameBytes > 0) { "ADPCM encoder returned an invalid input frame size." }
+        require(pcmBytes.isNotEmpty()) { "PCM input must not be empty." }
+        require(pcmBytes.size % frameBytes == 0) {
+            "PCM input size must be a multiple of $frameBytes bytes."
+        }
         encoding = true
         try {
             nativeEncode(pcmBytes)
@@ -45,6 +51,15 @@ class AdpcmImaQtEncoder private constructor() : Closeable {
     }
 
     fun getVersion(): String = nativeGetVersion()
+
+    /** Returns the required interleaved PCM byte count for one encoder frame. */
+    @Synchronized
+    fun inputFrameBytes(): Int {
+        check(nativeHandle != 0L && !releasePending) { "ADPCM encoder is closed." }
+        return nativeInputFrameBytes().also {
+            check(it > 0) { "ADPCM encoder returned an invalid input frame size." }
+        }
+    }
 
     @Synchronized
     fun release() {
@@ -71,5 +86,6 @@ class AdpcmImaQtEncoder private constructor() : Closeable {
     private external fun nativeInit(sampleRate: Int, channels: Int, bitRate: Int): Int
     private external fun nativeRelease()
     private external fun nativeEncode(pcmBytes: ByteArray)
+    private external fun nativeInputFrameBytes(): Int
     private external fun nativeGetVersion(): String
 }

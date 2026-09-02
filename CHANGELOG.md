@@ -122,6 +122,9 @@
   并通过 `drain()` 在 EOS 取回额外输出和 B 帧延迟帧。既有 `decode()` 保留并按序缓存额外帧。
   `drain()` 仅在 Native 成功后清空 Kotlin pending 帧，异常重试不再丢失已缓存输出；JNI 类、构造器、
   `ArrayList.add()` 和 handle 字段改为加载期缓存并在卸载时释放，避免逐帧类与方法解析。
+- **ADPCM Demo 不完整 PCM 尾帧**：encoder 公开 `inputFrameBytes()` 返回实际配置要求的交错 PCM 帧大小，
+  Kotlin 在进入 JNI 前执行完整帧校验；Demo 对一次性 PCM 文件的最后不足帧显式补静音，不再因严格完整帧
+  契约抛异常，也不恢复旧版静默丢弃尾部数据的行为。两个 wrapper 的四 ABI encoder JNI 已同步重建。
 - **FFmpeg H.264/H.265 Demo Annex-B packet 修复**：顺序 reader 同时支持 3/4 字节 start code，并按
   NAL type 查找真实 VPS/SPS/PPS，不再依赖样本中的固定序号或把 CSD 当普通视频 packet 重送。重复的
   SEI/VPS/SPS/PPS 会与后续 VCL 图像合并成完整 packet 后再调用 `decodeFrames()`，修复 Native 正确暴露

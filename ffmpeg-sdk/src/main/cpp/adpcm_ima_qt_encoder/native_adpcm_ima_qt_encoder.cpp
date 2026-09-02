@@ -122,6 +122,20 @@ JNIEXPORT void JNICALL NativeEncode(JNIEnv *env, jobject object, jbyteArray pcm_
     }
 }
 
+JNIEXPORT jint JNICALL NativeInputFrameBytes(JNIEnv *env, jobject object) {
+    auto *encoder = GetEncoder(env, object);
+    if (encoder == nullptr) {
+        ThrowException(env, "java/lang/IllegalStateException", "Encoder is closed");
+        return 0;
+    }
+    const int frame_bytes = encoder->getInputFrameBytes();
+    if (frame_bytes <= 0) {
+        ThrowException(env, "java/lang/IllegalStateException", "Invalid encoder frame size");
+        return 0;
+    }
+    return frame_bytes;
+}
+
 JNIEXPORT jstring JNICALL NativeGetVersion(JNIEnv *env, jobject) {
     return env->NewStringUTF("1.0.0");
 }
@@ -130,6 +144,7 @@ static JNINativeMethod methods[] = {
         {"nativeInit", "(III)I", reinterpret_cast<void *>(NativeInit)},
         {"nativeRelease", "()V", reinterpret_cast<void *>(NativeRelease)},
         {"nativeEncode", "([B)V", reinterpret_cast<void *>(NativeEncode)},
+        {"nativeInputFrameBytes", "()I", reinterpret_cast<void *>(NativeInputFrameBytes)},
         {"nativeGetVersion", "()Ljava/lang/String;", reinterpret_cast<void *>(NativeGetVersion)},
 };
 

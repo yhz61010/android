@@ -51,7 +51,16 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                                 outputStream.write(encodedAudio)
                             }
                         }
-                        encoder.encode(pcmData)
+                        val inputFrameBytes = encoder.inputFrameBytes()
+                        val alignedPcmData = pcmData.padPcmWithSilence(inputFrameBytes)
+                        if (alignedPcmData !== pcmData) {
+                            LogContext.log.w(
+                                ITAG,
+                                "Pad PCM input from ${pcmData.size} to " +
+                                    "${alignedPcmData.size} bytes."
+                            )
+                        }
+                        encoder.encode(alignedPcmData)
                     }
                 }
             }.onSuccess {
@@ -113,4 +122,13 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         player?.release()
         super.onDestroy()
     }
+}
+
+internal fun ByteArray.padPcmWithSilence(frameBytes: Int): ByteArray {
+    require(frameBytes > 0) { "Frame size must be positive." }
+    val remainder = size % frameBytes
+    if (remainder == 0) return this
+    val paddingBytes = frameBytes - remainder
+    require(size <= Int.MAX_VALUE - paddingBytes) { "Padded PCM input is too large." }
+    return copyOf(size + paddingBytes)
 }

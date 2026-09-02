@@ -297,7 +297,7 @@ class DecodeH265RawFileByFFMpeg {
                     H265_NAL_PREFIX_SEI -> "PREFIX_SEI"
                     H265_NAL_SUFFIX_SEI -> "SUFFIX_SEI"
                     in 16..21 -> "IDR"
-                    in 0..31 -> "VCL"
+                    in 0..31 -> "VCL" // VCL NAL unit
                     else -> nalType.toString()
                 }
             val lastFrame = decodedFrames.lastOrNull()

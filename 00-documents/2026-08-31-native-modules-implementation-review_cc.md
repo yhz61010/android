@@ -333,6 +333,50 @@ FMQ: grantorIdx must be less than 3
 按钮无法复位、崩溃或资源持续增长。最终两轮 PCM/OPUS 回归均未出现这些伴随现象，所以文档将系统日志
 单独记录，但不把它们列为未修复问题。
 
+### 4.12 Audio MediaCodec 生命周期后续复审整改
+
+Claude Code 对音频 teardown 修复再次复审后指出 4 个非阻塞问题。按当前源码核对，4 项均成立，其中 OPUS
+CSD 问题不只是“空安全的 benign race”：确定性 `releaseAndJoin()` 原本不会经过 `OpusEncoder.release()`，
+因此释放完成后仍可能保留旧 CSD；旧 `release()` 又在公共 codec 锁外先清空 3 个字段，正在执行的配置帧回调
+可能随后把旧值写回来。
+
+本轮修复如下：
+
+1. `BaseMediaCodecAsynchronous.onOutputFormatChanged()` 和 `onError()` 与输入、输出 buffer 回调统一使用
+   `withCodecOperationLock`，并在锁内再次检查 teardown 状态。这样即使回调通过第一次快速检查后才被
+   release/stop 抢先，也不会在 teardown 开始后修改共享 format 或调用外部错误处理。
+2. `BaseMediaCodec.stop()` 在等待公共锁之前设置 teardown 标志。已经排队但尚未进入锁的异步回调会退出，
+   同步 worker 也不会把 stop 引起的 `IllegalStateException` 当成运行期 codec 故障或伪造正常 EOS。
+3. `BaseMediaCodec` 新增锁内 `onCodecReleased()` 清理钩子，由 `releaseCodecOnce()` 唯一调用，因此兼容
+   `release()` 和确定性 `releaseAndJoin()` 两条释放路径，且只在底层 codec 首次释放时执行。
+4. `OpusEncoder` 把 `csd0/csd1/csd2` 三次独立写入改为一个 `@Volatile OpusCsd` 快照。公开 getter 名称和
+   JVM getter 保持不变；配置回调一次发布完整快照，释放钩子一次清空，不再暴露三字段的部分更新状态。
+5. `AudioActivity` 不再在主线程直接停止 PCM、AAC 和 OPUS 文件播放器。主线程只摘除当前引用并发出停止
+   请求，Codec、AudioTrack 和文件释放均在 IO scope 执行；PCM 路径还会先中断并 join 文件读取线程，再
+   释放播放器，避免读取线程与 AudioTrack/decoder 释放并发。
+6. `BaseMediaCodecAsynchronousTest` 新增 stop 后迟到 input/format/error 回调测试，以及
+   `releaseAndJoin()` 必须执行子类清理钩子的回归测试。
+
+这里没有把所有 callback 异常都吞掉：仅 stop/release 已开始后的迟到回调会被忽略；正常运行期间的
+`onError()` 仍传给实现方，input/output 异常仍保留 Error 日志。
+
+### 4.13 Screenshot2H26xStrategy 的 API 21 EGL 兼容
+
+“Start Recording Screen by Screenshot”在当前 P3H 上选择 HEVC 时可能因为设备没有 H.265 encoder 而无法
+创建 codec；这是设备能力问题，按维护者决定不在本轮增加 H.264 自动降级。代码审查同时发现另一个独立的
+低版本兼容问题：`Screenshot2H26xStrategy` 直接引用 `EGLExt.EGL_RECORDABLE_ANDROID`，该公开字段从 API 26
+才可直接使用，导致类和入口被 `@RequiresApi(26)` 限制，和仓库 minSdk 21 不一致。
+
+`EGL_RECORDABLE_ANDROID` 对应 `EGL_ANDROID_recordable` 扩展属性，其固定 token 为 `0x3142`。当前实现改为在
+模块内声明该常量，只把它作为 `eglChooseConfig()` 的属性传给 EGL，不再链接 API 26 才公开的 Java 字段；
+因此移除了 `initEgl()`、`onInit()` 和 `startRecord()` 的 API 26 注解。`EGLExt.eglPresentationTimeANDROID()`
+仍保留，因为它本身不构成本次 API 26 字段引用问题。
+
+同时补强了 EGL config 选择结果校验：必须同时满足 `eglChooseConfig()` 返回成功、`eglGetError()` 为
+`EGL_SUCCESS`、配置数量大于 0 且首个配置非空，否则抛出包含 success/count/EGL error 的明确异常，避免
+后续用空 config 创建 context 时才得到难定位的失败。该修改解决的是 API 链接与错误报告问题，不保证任意
+API 21 设备一定提供满足录制要求的 EGL config，也不代表设备一定具备 H.265 硬件编码器。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -392,6 +436,10 @@ FMQ: grantorIdx must be less than 3
   `BAD_INDEX`、`CORRUPTED`、`grantorIdx` 诊断。这些日志分别出现在主动 `AudioRecord.stop()` 唤醒 Native
   阻塞读取和厂商 codec 初始化阶段；应用层没有 `AudioRecord.read error`、失败回调、MediaCodec 异常或
   功能中断，PCM/OPUS 均完整结束。因此它们属于本机平台实现噪声，不通过改变库的确定性停止语义规避。
+- Audio 生命周期后续修复新增的 stop 回调守卫与释放钩子测试通过；`audio`、`screencapture` 和 `demo`
+  相关的 lint、ktlint、detekt、单元测试与 `:demo:assembleDevDebug` 合并使用 `--rerun-tasks` 强制重跑，
+  802 个任务全部实际执行并通过；`screencapture` 当前没有 JVM 单元测试源码，因此该模块测试任务为
+  `NO-SOURCE`。
 
 ### 5.2 尚未完成
 
@@ -401,7 +449,10 @@ FMQ: grantorIdx must be less than 3
 - ADPCM Demo：当前验证时 P3H 已从 `adb devices` 断开，修复后的 Encode/Play 点击回归仍待设备重新连接后
   完成；上述结论只覆盖源码、JVM 测试、四 ABI Native 重建和 Demo APK 构建。
 - Audio Demo：PCM/AAC/OPUS 的停止日志、PCM/OPUS 自然文件播放和 AAC 录音期间直接退页已在 P3H 通过，
-  AAC 文件也已完成解码播放链路验证；仍需维护者人工确认三种格式的录音与播放听感。
+  AAC 文件也已完成解码播放链路验证；本轮将文件播放器释放移到 IO 后，仍需复测三种格式播放中主动停止、
+  自然结束、快速重复进入退出及实际听感，并确认没有主线程卡顿或 teardown 错误。
+- Screenshot 录屏：API 21 兼容代码已完成编译和静态检查；仍需至少一台 API 21～25 真机用 H.264 路径验证
+  EGL config、首帧画面、停止释放和重复进入退出。P3H 的 H.265 encoder 缺失不作为本轮代码回归失败。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
 - ASan/HWASan、16KB 页设备真实加载、P95/Native heap/长跑数据。
 - 本轮没有执行或宣称 JPEG `-Wconversion` 零告警验证。
@@ -416,6 +467,10 @@ APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须�
 竞态已完成源码、并发 JVM 测试、静态检查、APK 构建以及 P3H 上 PCM/AAC/OPUS 停止、AAC 退页和 AAC
 播放链路验证。后续发现的 PCM 尾包重复数据与 OPUS 自然 EOF 伪错误/末帧丢失也已修复，并完成单测、
 静态检查、APK 构建及 P3H 文件播放验证；三种格式的实际听感仍待维护者人工确认。
+后续复审发现的 format/error 回调锁窗口、stop-only 守卫、OPUS CSD 发布/清理竞态和 Demo 主线程播放器
+释放均已完成代码整改与 JVM/编译验证，仍需补播放器停止真机回归。Screenshot 录屏已消除对 API 26
+`EGLExt.EGL_RECORDABLE_ANDROID` Java 字段的直接依赖并加强 EGL config 校验，但 API 21～25 真机验证尚未
+完成，且该兼容修改不改变设备是否支持 HEVC encoder 的硬件能力边界。
 
 交叉参考：
 

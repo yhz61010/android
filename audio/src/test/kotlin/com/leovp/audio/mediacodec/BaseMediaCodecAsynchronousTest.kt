@@ -14,8 +14,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class BaseMediaCodecAsynchronousTest {
     @Suppress("DEPRECATION")
@@ -72,6 +75,41 @@ class BaseMediaCodecAsynchronousTest {
         }
     }
 
+    @Test
+    fun `late callbacks are ignored after stop begins`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        val initialFormat = mockk<MediaFormat>()
+        val changedFormat = mockk<MediaFormat>()
+        val codecException = mockk<MediaCodec.CodecException>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec)
+
+        subject.attachCallback(initialFormat)
+        subject.stop()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 1)
+        callbackSlot.captured.onOutputFormatChanged(mediaCodec, changedFormat)
+        callbackSlot.captured.onError(mediaCodec, codecException)
+
+        verify(exactly = 0) { mediaCodec.getInputBuffer(any()) }
+        assertSame(initialFormat, subject.currentFormat())
+        assertEquals(0, subject.errorCount)
+    }
+
+    @Test
+    fun `deterministic release invokes subclass cleanup hook`() = runTest {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec)
+
+        subject.attachCallback()
+        subject.releaseAndJoin()
+
+        assertEquals(1, subject.releaseHookCount)
+        verify(exactly = 1) { mediaCodec.release() }
+    }
+
     private class TestCodec(
         private val mediaCodec: MediaCodec,
         private val enteredInput: CountDownLatch? = null,
@@ -81,10 +119,18 @@ class BaseMediaCodecAsynchronousTest {
         sampleRate = 8_000,
         channelCount = 1
     ) {
-        fun attachCallback() {
+        var errorCount: Int = 0
+            private set
+        var releaseHookCount: Int = 0
+            private set
+
+        fun attachCallback(initialFormat: MediaFormat? = null) {
             codec = mediaCodec
+            initialFormat?.let { format = it }
             setMediaCodecOptions(mediaCodec)
         }
+
+        fun currentFormat(): MediaFormat = format
 
         override fun setFormatOptions(format: MediaFormat) = Unit
 
@@ -104,5 +150,13 @@ class BaseMediaCodecAsynchronousTest {
         ) = Unit
 
         override fun computePresentationTimeUs(): Long = 0
+
+        override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+            errorCount++
+        }
+
+        override fun onCodecReleased() {
+            releaseHookCount++
+        }
     }
 }

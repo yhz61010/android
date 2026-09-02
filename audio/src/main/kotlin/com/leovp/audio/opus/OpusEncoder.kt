@@ -7,6 +7,7 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
+import com.leovp.audio.mediacodec.bean.OpusCsd
 import com.leovp.audio.mediacodec.utils.AudioCodecUtil
 import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toByteArray
@@ -175,12 +176,12 @@ class OpusEncoder(
     /** The total bytes of audio data. */
     private var totalPcmBytes: Long = 0
 
-    var csd0: ByteArray? = null
-        private set
-    var csd1: ByteArray? = null
-        private set
-    var csd2: ByteArray? = null
-        private set
+    @Volatile
+    private var codecSpecificData: OpusCsd? = null
+
+    val csd0: ByteArray? get() = codecSpecificData?.csd0
+    val csd1: ByteArray? get() = codecSpecificData?.csd1
+    val csd2: ByteArray? get() = codecSpecificData?.csd2
 
     override fun setFormatOptions(format: MediaFormat) {
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
@@ -189,6 +190,7 @@ class OpusEncoder(
 
     override fun start() {
         totalPcmBytes = 0
+        codecSpecificData = null
         super.start()
     }
 
@@ -206,19 +208,22 @@ class OpusEncoder(
         if (isConfig) {
             LogContext.log.w(TAG, "Found config frame.")
             val opusCsd = AudioCodecUtil.parseOpusConfigFrame(outBuf) // little endian
-            csd0 = opusCsd?.csd0
-            csd1 = opusCsd?.csd1
-            csd2 = opusCsd?.csd2
-            LogContext.log.w(TAG, "csd0[${csd0?.size}] HEX[${csd0?.toHexString()}]")
+            codecSpecificData = opusCsd
             LogContext.log.w(
                 TAG,
-                "csd1[${csd1?.size}]=${csd1?.readLongLE()?.formatDecimalSeparator()} " +
-                    "HEX[${csd1?.toHexString()}]"
+                "csd0[${opusCsd?.csd0?.size}] HEX[${opusCsd?.csd0?.toHexString()}]"
             )
             LogContext.log.w(
                 TAG,
-                "csd2[${csd2?.size}]=${csd2?.readLongLE()?.formatDecimalSeparator()} " +
-                    "HEX[${csd2?.toHexString()}]"
+                "csd1[${opusCsd?.csd1?.size}]=" +
+                    "${opusCsd?.csd1?.readLongLE()?.formatDecimalSeparator()} " +
+                    "HEX[${opusCsd?.csd1?.toHexString()}]"
+            )
+            LogContext.log.w(
+                TAG,
+                "csd2[${opusCsd?.csd2?.size}]=" +
+                    "${opusCsd?.csd2?.readLongLE()?.formatDecimalSeparator()} " +
+                    "HEX[${opusCsd?.csd2?.toHexString()}]"
             )
             outBuf.flip()
         }
@@ -233,10 +238,7 @@ class OpusEncoder(
         super.stop()
     }
 
-    override fun release() {
-        csd0 = null
-        csd1 = null
-        csd2 = null
-        super.release()
+    override fun onCodecReleased() {
+        codecSpecificData = null
     }
 }

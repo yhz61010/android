@@ -159,6 +159,10 @@ class MicRecorder(
                         recordSize == 0 -> continue
 
                         else -> {
+                            // AudioRecord.stop() wakes a blocked read with a negative status on
+                            // some devices. It is an expected shutdown signal after `stopped` is
+                            // set, not a recording failure.
+                            if (stopped.get()) break
                             LogContext.log.e(TAG, "AudioRecord.read error=$recordSize")
                             handleRecordingFailure()
                             break

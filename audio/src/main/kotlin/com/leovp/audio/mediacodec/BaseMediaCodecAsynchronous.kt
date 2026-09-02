@@ -8,7 +8,6 @@ import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.log.LogContext
-import java.nio.ByteBuffer
 
 /**
  * Author: Michael Leo
@@ -31,20 +30,32 @@ abstract class BaseMediaCodecAsynchronous(
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
+            if (isReleasing) return
             runCatchingPreservingCancellation {
-                val inputBuf = codec.getInputBuffer(index) ?: return
-                // Clear exist data.
-                inputBuf.clear()
-                // Fill inputBuffer with valid data.
-                val size = onInputData(inputBuf)
-                // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
-                val pts = computePresentationTimeUs()
-                if (pts < 0) {
-                    codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                } else {
-                    codec.queueInputBuffer(index, 0, size, pts, 0)
+                withCodecOperationLock {
+                    if (isReleasing) return@withCodecOperationLock
+                    val inputBuf = codec.getInputBuffer(index) ?: return@withCodecOperationLock
+                    // Clear exist data.
+                    inputBuf.clear()
+                    // Fill inputBuffer with valid data.
+                    val size = onInputData(inputBuf)
+                    // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
+                    val pts = computePresentationTimeUs()
+                    if (pts < 0) {
+                        codec.queueInputBuffer(
+                            index,
+                            0,
+                            0,
+                            0,
+                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                        )
+                    } else {
+                        codec.queueInputBuffer(index, 0, size, pts, 0)
+                    }
                 }
-            }.onFailure { LogContext.log.e(TAG, "Input buffer callback failed", it) }
+            }.onFailure {
+                if (!isReleasing) LogContext.log.e(TAG, "Input buffer callback failed", it)
+            }
         }
 
         override fun onOutputBufferAvailable(
@@ -52,45 +63,59 @@ abstract class BaseMediaCodecAsynchronous(
             index: Int,
             info: MediaCodec.BufferInfo
         ) {
+            if (isReleasing) return
             runCatchingPreservingCancellation {
-                val outputBuffer: ByteBuffer? = codec.getOutputBuffer(index) // little endian
-                // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-                // bufferFormat is equivalent to member variable outputFormat
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    // LogContext.log.d(TAG, "onOutputBufferAvailable length=${info.size}")
-                    // val copiedBuffer = it.copyAll()
-                    // if (BuildConfig.DEBUG) LogContext.log.d(TAG,
-                    // "copiedBuffer
-                    // ori[${copiedBuffer.remaining()}]=${copiedBuffer.toByteArray().toHexStringLE()
-                    // }")
-                    // val outBytes = it.toByteArray()
-                    when {
-                        (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
-                            onOutputData(it, info, isConfig = true, isKeyFrame = false)
+                withCodecOperationLock {
+                    if (isReleasing) return@withCodecOperationLock
+                    val outputBuffer = codec.getOutputBuffer(index) ?: return@withCodecOperationLock
+                    try {
+                        when {
+                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
+                                onOutputData(
+                                    outputBuffer,
+                                    info,
+                                    isConfig = true,
+                                    isKeyFrame = false
+                                )
 
-                        (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
-                            onOutputData(it, info, isConfig = false, isKeyFrame = true)
+                            (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
+                                onOutputData(
+                                    outputBuffer,
+                                    info,
+                                    isConfig = false,
+                                    isKeyFrame = true
+                                )
 
-                        (
-                            info.flags and
-                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                            ) != 0 -> onEndOfStream()
-                        else -> onOutputData(it, info, isConfig = false, isKeyFrame = false)
+                            (
+                                info.flags and
+                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                                ) != 0 -> onEndOfStream()
+                            else ->
+                                onOutputData(
+                                    outputBuffer,
+                                    info,
+                                    isConfig = false,
+                                    isKeyFrame = false
+                                )
+                        }
+                    } finally {
+                        codec.releaseOutputBuffer(index, false)
                     }
-                    codec.releaseOutputBuffer(index, false)
                 }
-            }.onFailure { LogContext.log.e(TAG, "Output buffer callback failed", it) }
+            }.onFailure {
+                if (!isReleasing) LogContext.log.e(TAG, "Output buffer callback failed", it)
+            }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+            if (isReleasing) return
             // Subsequent data will conform to new format.
             // Can ignore if using getOutputFormat(outputBufferId)
             this@BaseMediaCodecAsynchronous.format = format // option B
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            this@BaseMediaCodecAsynchronous.onError(codec, e)
+            if (!isReleasing) this@BaseMediaCodecAsynchronous.onError(codec, e)
         }
     }
 }

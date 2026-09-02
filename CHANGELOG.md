@@ -176,6 +176,11 @@
   的完整 `process()` 迭代以及 `stop()`/`flush()`/`release()`;旧同步 `release()` 在取消 worker 后会
   等待当前 codec 迭代退出再释放底层对象,不再与 `dequeue/queue/releaseOutputBuffer` 并发。`releasing`
   标志继续避免主动关停被误报为 codec 失败或正常 EOS,并新增并发回归测试。
+- **异步音频编码停止不再产生伪错误**:`BaseMediaCodecAsynchronous` 的输入/输出回调与 release 使用
+  同一 codec 操作锁,释放开始后忽略已排队的迟到回调,并保证输出 buffer 在回调异常时仍会归还;
+  `MicRecorder` 将主动 `AudioRecord.stop()` 唤醒 `read()` 产生的负状态识别为正常退出。Audio Demo
+  改用 `stopRecordAndJoin()`,停止 AAC/OPUS/PCM 时不再记录 `AudioRecord.read error=-3` 或释放后的
+  `MediaCodec IllegalStateException`。
 - **R-5 空闲解码不再刷屏(部分修复)**:`process()` 仅在真正 drain 到输出时才打印 "Decode cost"
   日志,消除流静默时每秒约 20 条日志;更正 `AacDecoder.onInputData` 过时注释。**说明**:空输入仍
   提交 0 字节 buffer 归还输入槽——按 Codex 建议,消除该 churn 的结构性改动(先等数据再 dequeue /

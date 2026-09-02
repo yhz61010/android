@@ -221,6 +221,48 @@ java.lang.IllegalArgumentException: PCM input must contain a whole number of enc
 5. 新 JNI 方法已按四 ABI 重建，并只替换两个 wrapper 中对应的 `libadpcm-ima-qt-encoder.so`，避免改变
    两个互斥 profile 各自不同的 FFmpeg runtime 配置。
 
+### 4.9 Audio Demo 停止 AAC 录音时出现 teardown 伪错误
+
+P3H 点击 Audio Demo 的“Record AAC”开始录音，再次点击停止时功能正常、文件能够生成，也没有闪退，
+但日志稳定出现两组错误：
+
+```text
+LEO-MicRec E AudioRecord.read error=-3
+LEO-MediaCodecAsync E Input buffer callback failed: java.lang.IllegalStateException
+```
+
+这不是麦克风在录音过程中自行失效，也不是 AAC 数据编码失败，而是主动停止路径中的两个生命周期竞态：
+
+1. `MicRecorder.stopRecord()` 先把 `stopped` 设为 `true`，再调用 `AudioRecord.stop()`。部分设备会用
+   `AudioRecord.ERROR_INVALID_OPERATION(-3)` 唤醒此时阻塞在 Native 的 `read()`；原录音循环把所有负值
+   都当成真实读取故障，因而误记 Error 并从录音线程再次进入失败清理。日志中的 `Recording released.`
+   来自录音线程，证明本次正是该错误分支抢先取得幂等 release 权限。
+2. Audio Demo 仍在调用已经弃用的非挂起 `stopRecord()`。该兼容入口只取消录音 Job，不能等待录音线程和
+   encoder 完成退出；与此同时，异步 `MediaCodec.Callback` 注册在创建 encoder 的主线程 Looper 上，
+   已经进入消息队列的 `onInputBufferAvailable()` 不会因为另一个线程释放 codec 而自动从队列中消失。
+   迟到回调随后调用 `getInputBuffer()` 或 `queueInputBuffer()`，codec 已处于 released 状态，所以抛出
+   `IllegalStateException`。异常虽被 `runCatching` 捕获而没有造成闪退，但释放过程并不干净。
+3. 此前 R-4 的共享 codec 操作锁只覆盖同步 worker；`BaseMediaCodecAsynchronous` 的输入、输出回调没有
+   使用该锁，也没有在 `releasing` 状态下提前退出。因此仅把日志降级或吞掉异常不能解决实际并发访问。
+
+当前修复保持公开兼容入口不变，并在 library 与 Demo 两层闭环：
+
+- `MicRecorder` 收到负读取状态时先检查 `stopped`。主动停止后的负值只结束循环，不再触发失败清理；
+  录音期间出现的真实负错误码仍记录 Error，并继续走 `onStop(false)` 的故障释放路径。
+- `BaseMediaCodecAsynchronous` 的输入和输出回调改为与 `stop()`/`flush()`/`release()` 共用
+  `withCodecOperationLock`。release 若在回调执行期间开始，会等待当前 codec 操作完成；release 已开始后
+  才到达的回调则在接触 codec 前退出，消除检查状态与实际调用之间的 TOCTOU 窗口。
+- 输入、输出及 codec error 回调仅在非主动释放状态上报异常；输出 buffer 改在 `finally` 中归还，避免
+  外部 `onOutputData()` 抛异常时占住 codec buffer。
+- `AudioActivity` 在主线程先摘除当前 `MicRecorder` 引用，再由 IO scope 调用
+  `stopRecordAndJoin()`，等待录音 Job 退出并走 encoder 的确定性释放入口。PCM、AAC、OPUS 三个录音按钮
+  和 Activity `onStop()` 共用同一停止方法。
+- 新增异步 codec JVM 并发测试：一条覆盖 release 开始后的迟到输入回调不再访问 codec；另一条用 latch
+  证明 release 会等待正在执行的输入回调归还 input buffer 后才释放底层 codec。
+
+本修复没有把所有 `IllegalStateException` 静默处理为正常情况：只有 `releasing=true` 的主动 teardown
+窗口会抑制预期噪声；录音或编码运行期间的同类异常仍会保留完整日志，便于发现真实设备/codec 故障。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -254,6 +296,16 @@ java.lang.IllegalArgumentException: PCM input must contain a whole number of enc
 - `PcmFramePaddingTest`、Demo 和两个 ADPCM wrapper 的 ktlint/detekt 强制重跑通过；
   `:demo:assembleDevDebug --rerun-tasks` 通过，600 个任务实际执行；两个 wrapper 的 release AAR 也已强制
   重建通过。
+- `BaseMediaCodecAsynchronousTest` 新增两条 teardown 并发回归；`audio:ktlintCheck` 与
+  `audio:testDebugUnitTest` 使用 `--rerun-tasks` 执行通过。
+- `audio:detekt`、`demo:ktlintCheck`、`demo:detekt`、`demo:testDevDebugUnitTest` 和
+  `demo:assembleDevDebug` 使用 `--rerun-tasks` 执行通过；Demo 组合任务实际执行 621 个任务。
+- 新 APK 安装到 P3H 后，AAC 连续完成 3 轮开始/停止，PCM 和 OPUS 各完成 1 轮开始/停止；另在 AAC
+  录音期间直接返回上一页，`onStop()` 也完成确定性清理。各路径均出现正常的
+  `Stop recording audio` 和 `Recording released.`，没有 `AudioRecord.read error=-3`、
+  `Input buffer callback failed`、`Output buffer callback failed` 或 `FATAL EXCEPTION`。最后生成的 AAC
+  文件能够持续解码为 4096 字节 PCM、播放到 EOS，播放按钮自动复位；ADB 只能确认播放链路与状态，
+  实际听感仍以人工验收为准。
 
 ### 5.2 尚未完成
 
@@ -262,6 +314,10 @@ java.lang.IllegalArgumentException: PCM input must contain a whole number of enc
 - ADPCM：Java callback 在批次中途抛异常后，确认后续 PCM 未被消费；非完整 frame/chunk；长时间循环。
 - ADPCM Demo：当前验证时 P3H 已从 `adb devices` 断开，修复后的 Encode/Play 点击回归仍待设备重新连接后
   完成；上述结论只覆盖源码、JVM 测试、四 ABI Native 重建和 Demo APK 构建。
+- Audio Demo：PCM/AAC/OPUS 的停止日志和 AAC 录音期间直接退页已在 P3H 通过，AAC 文件也已完成解码
+  播放链路验证；仍需人工确认录音听感。顺带执行的 OPUS 文件播放能持续输出 3840 字节 PCM，但自然 EOF
+  后现有 `OpusFilePlayer` 会记录 `Can't find start code` Error；它不属于本次停止录音 teardown 竞态，
+  也没有重新出现本次目标错误，需作为独立问题另行评估。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
 - ASan/HWASan、16KB 页设备真实加载、P95/Native heap/长跑数据。
 - 本轮没有执行或宣称 JPEG `-Wconversion` 零告警验证。
@@ -272,7 +328,9 @@ java.lang.IllegalArgumentException: PCM input must contain a whole number of enc
 和后续 H.264 OpenGL 黑屏均已在当前工作区修复，仓库 H.264/H.265 样本已完成组合 wrapper 真机可视播放
 验证。发布门禁仍未达到：在完成其它 Native 模块真机、sanitizer、16KB 加载、异常媒体和长时间输出验证前，
 不能标记为“发布验证完成”或“已证明无内存安全回归”。ADPCM Demo 尾帧修复已完成源码、Native、JVM 和
-APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须补做。
+APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须补做。Audio Demo 停止 AAC 录音的 teardown
+竞态已完成源码、并发 JVM 测试、静态检查、APK 构建以及 P3H 上 PCM/AAC/OPUS 停止、AAC 退页和 AAC
+播放链路验证；人工听感仍待维护者确认，OPUS 文件自然 EOF 的既有错误日志不纳入本次修复。
 
 交叉参考：
 

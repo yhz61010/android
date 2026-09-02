@@ -89,7 +89,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())
-            .request { grantedList, deniedList ->
+            .request { _, deniedList ->
                 val allGranted = deniedList.isEmpty()
                 if (allGranted) {
                     toast("Grand recording permission")
@@ -135,7 +135,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                         var readSize: Int
                         while (input.read(readBuffer).also { readSize = it } != -1) {
                             LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
-                            audioPlayer?.play(readBuffer)
+                            val pcmData =
+                                if (readSize == readBuffer.size) {
+                                    readBuffer
+                                } else {
+                                    readBuffer.copyOf(readSize)
+                                }
+                            audioPlayer?.play(pcmData)
                         }
                         runOnUiThread { btn.isChecked = false }
                     }
@@ -234,7 +240,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         recordType = type
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())
-            .request { grantedList, deniedList ->
+            .request { _, deniedList ->
                 val allGranted = deniedList.isEmpty()
                 if (allGranted) {
                     LogContext.log.i(ITAG, "Record type: $type")

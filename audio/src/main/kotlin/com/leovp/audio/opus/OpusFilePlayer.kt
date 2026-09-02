@@ -2,29 +2,30 @@ package com.leovp.audio.opus
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioTrack
 import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
-import com.leovp.audio.mediacodec.bean.OpusCsd
 import com.leovp.audio.mediacodec.utils.AudioCodecUtil
-import com.leovp.bytes.readBytes
 import com.leovp.bytes.readLongLE
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
-import java.io.EOFException
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.nio.ByteOrder
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Author: Michael Leo
@@ -40,12 +41,13 @@ class OpusFilePlayer(
 ) {
     companion object {
         private const val TAG = "OpusFilePlayer"
+        private const val OUTPUT_DRAIN_TIMEOUT_MS = 3_000L
+        private const val QUEUE_LOG_INTERVAL_FRAMES = 50L
         const val START_CODE = "|leo|"
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
 
-    private val startCodeSize = START_CODE.length
     private val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("opus-file-player"))
 
     private val audioTrackPlayer: AudioTrackPlayer =
@@ -55,35 +57,57 @@ class OpusFilePlayer(
     // private var cb: (() -> Unit)? = null
 
     private lateinit var rf: RandomAccessFile
+    private val stopped = AtomicBoolean(false)
 
     fun playOpus(opusFile: File, endCallback: () -> Unit) {
         // cb = endCallback
-        audioTrackPlayer.play()
-        rf = RandomAccessFile(opusFile, "r")
-        LogContext.log.w(TAG, "File length=${rf.length()}")
-        val opusCsd = getCsd()!!
-        LogContext.log.w(TAG, "csd0=${opusCsd.csd0.toHexString()}")
-        LogContext.log.w(TAG, "csd1=${opusCsd.csd1.readLongLE()} ${opusCsd.csd1.toHexString()}")
-        LogContext.log.w(TAG, "csd2=${opusCsd.csd2.readLongLE()} ${opusCsd.csd2.toHexString()}")
-        decoder = OpusDecoder(
-            sampleRate = audioDecoderInfo.sampleRate,
-            channelCount = audioDecoderInfo.channelCount,
-            audioFormat = audioDecoderInfo.audioFormat,
-            csd0 = opusCsd.csd0,
-            csd1 = opusCsd.csd1,
-            csd2 = opusCsd.csd2,
-            callback = object : IDecodeCallback {
-                override fun onDecoded(pcmData: ByteArray) {
-                    queue.put(pcmData)
-                    // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}]
-                    // pcm[${pcmData.size}]")
-                }
+        val playbackInput = try {
+            rf = RandomAccessFile(opusFile, "r")
+            LogContext.log.w(TAG, "File length=${rf.length()}")
+            val framedFileReader = OpusFramedFileReader(rf, START_CODE.encodeToByteArray())
+            val csdPayload = framedFileReader.readPayload(0)
+            val firstAudioFramePosition = requireNotNull(csdPayload.nextStartCodePosition) {
+                "OPUS file does not contain an audio frame"
             }
-        ).apply { start() }
+            val opusCsd = requireNotNull(
+                AudioCodecUtil.parseOpusConfigFrame(csdPayload.data, ByteOrder.LITTLE_ENDIAN)
+            ) { "Invalid OPUS codec configuration" }
+            LogContext.log.w(TAG, "csd0=${opusCsd.csd0.toHexString()}")
+            LogContext.log.w(
+                TAG,
+                "csd1=${opusCsd.csd1.readLongLE()} ${opusCsd.csd1.toHexString()}"
+            )
+            LogContext.log.w(
+                TAG,
+                "csd2=${opusCsd.csd2.readLongLE()} ${opusCsd.csd2.toHexString()}"
+            )
+            decoder = OpusDecoder(
+                sampleRate = audioDecoderInfo.sampleRate,
+                channelCount = audioDecoderInfo.channelCount,
+                audioFormat = audioDecoderInfo.audioFormat,
+                csd0 = opusCsd.csd0,
+                csd1 = opusCsd.csd1,
+                csd2 = opusCsd.csd2,
+                callback = object : IDecodeCallback {
+                    override fun onDecoded(pcmData: ByteArray) {
+                        if (pcmData.isNotEmpty()) queue.put(pcmData)
+                        // LogContext.log.i(TAG, "onDecoded -> queue[${queue.size}]
+                        // pcm[${pcmData.size}]")
+                    }
+                }
+            ).apply { start() }
+            audioTrackPlayer.play()
+            OpusPlaybackInput(framedFileReader, firstAudioFramePosition)
+        } catch (e: Exception) {
+            stop()
+            throw e
+        }
 
-        var isDecodeDone = false
+        val isDecodeDone = AtomicBoolean(false)
+        val submittedFrameCount = AtomicLong(0)
+        val playedFrameCount = AtomicLong(0)
         ioScope.launch(Dispatchers.IO) {
-            var startCodeBeginPos = findStartCode(startCodeSize.toLong())
+            var startCodeBeginPos = playbackInput.firstAudioFramePosition
 
             val maxFrameSizeMs: Long = 20 // ms
             val baseDelay = 10L
@@ -91,24 +115,16 @@ class OpusFilePlayer(
 
             var frame: Long = 0
             var calcDelay = baseDelay
-            isDecodeDone = false
             var delayChanged = false
-            while (true) {
-                ensureActive()
-                var startCodeEndPos: Long = 0
-                var foundError = false
-                try {
-                    startCodeEndPos = findStartCode(startCodeBeginPos + startCodeSize)
-                    require(startCodeEndPos > -1) { "Can't find start code." }
-                    // LogContext.log.w(tag, "startCodeBeginPos=$startCodeBeginPos
-                    // startCodeEndPos=$startCodeEndPos")
-                    val audioFrameData =
-                        ByteArray((startCodeEndPos - startCodeBeginPos - startCodeSize).toInt())
-                    rf.seek(startCodeBeginPos + startCodeSize)
-                    rf.readFully(audioFrameData)
-                    // LogContext.log.d(tag,
-                    // "audioFrameData[${audioFrameData.size}]=${audioFrameData.toHexString()}")
-                    decoder?.decode(audioFrameData)
+            try {
+                while (true) {
+                    ensureActive()
+                    val payload = playbackInput.reader.readPayload(startCodeBeginPos)
+                    require(payload.data.isNotEmpty()) { "Empty OPUS audio frame" }
+                    check(decoder?.decode(payload.data) == true) {
+                        "OPUS decoder input queue is full"
+                    }
+                    val submittedFrames = submittedFrameCount.incrementAndGet()
                     val delayMs = if (calcDelay > maxFrameSizeMs) maxFrameSizeMs else calcDelay
                     if (queue.size < 1) {
                         calcDelay = 10
@@ -127,109 +143,84 @@ class OpusFilePlayer(
                             delayChanged = false
                         }
                     }
-                    LogContext.log.e(
-                        TAG,
-                        "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged " +
-                            "maxFrameSize=$maxFrameSize frame=$frame"
-                    )
+                    if (submittedFrames % QUEUE_LOG_INTERVAL_FRAMES == 0L) {
+                        LogContext.log.d(
+                            TAG,
+                            "queue[${queue.size}] delay=$delayMs delayChanged=$delayChanged " +
+                                "maxFrameSize=$maxFrameSize frame=$frame"
+                        )
+                    }
                     delay(delayMs)
-                } catch (e: EOFException) {
-                    LogContext.log.e(TAG, "EOFException", e)
-                    foundError = true
-                } catch (ioe: IOException) {
-                    LogContext.log.e(TAG, "IOException", ioe)
-                    foundError = true
-                } catch (nase: NegativeArraySizeException) {
-                    LogContext.log.e(TAG, "NegativeArraySizeException", nase)
-                    foundError = true
-                } catch (iae: IllegalArgumentException) {
-                    LogContext.log.e(TAG, "IllegalArgumentException", iae)
-                    foundError = true
+                    startCodeBeginPos = payload.nextStartCodePosition ?: break
                 }
-                if (foundError) {
-                    break
-                }
-                startCodeBeginPos = startCodeEndPos
-            } // end while
-            isDecodeDone = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (!stopped.get()) LogContext.log.e(TAG, "Decode OPUS file failed", e)
+            } finally {
+                closeInputFile()
+                isDecodeDone.set(true)
+            }
         }
 
         ioScope.launch(Dispatchers.IO) {
             while (true) {
                 ensureActive()
-                val pcmData: ByteArray = queue.take()
+                val pcmData = queue.poll(100, TimeUnit.MILLISECONDS) ?: continue
                 // LogContext.log.w(TAG, "play -> queue[${queue.size}] pcm=${pcmData.size}")
                 audioTrackPlayer.write(pcmData)
+                playedFrameCount.incrementAndGet()
             }
         }
 
         ioScope.launch {
-            while (true) {
-                if (isDecodeDone && queue.isEmpty()) {
-                    break
+            while (!isDecodeDone.get()) delay(100)
+            val drained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT_MS) {
+                while (
+                    playedFrameCount.get() < submittedFrameCount.get() ||
+                    queue.isNotEmpty()
+                ) {
+                    delay(50)
                 }
-                delay(100)
+                true
+            } ?: false
+            if (!drained && !stopped.get()) {
+                LogContext.log.e(
+                    TAG,
+                    "Timed out draining OPUS output: submitted=${submittedFrameCount.get()} " +
+                        "played=${playedFrameCount.get()} queue=${queue.size}"
+                )
+            } else if (!stopped.get()) {
+                LogContext.log.i(
+                    TAG,
+                    "Playback completed: submitted=${submittedFrameCount.get()} " +
+                        "played=${playedFrameCount.get()}"
+                )
             }
             endCallback.invoke()
         }
     }
 
     fun stop() {
-        if (audioTrackPlayer.state == AudioTrack.STATE_UNINITIALIZED) {
-            return
-        }
+        if (!stopped.compareAndSet(false, true)) return
+        ioScope.cancel()
+        closeInputFile()
         audioTrackPlayer.release()
         decoder?.release()
-        ioScope.cancel()
         queue.clear()
     }
 
-    private fun getCsd(): OpusCsd? {
-        val csdEndPos = findStartCode(5)
-        // LogContext.log.w(tag, "csd end pos=$csdEndPos")
-
-        val csdBytes = ByteArray((csdEndPos - startCodeSize).toInt())
+    private fun closeInputFile() {
+        if (!::rf.isInitialized) return
         try {
-            rf.seek(startCodeSize.toLong())
-            rf.readFully(csdBytes)
-        } catch (e: EOFException) {
-            LogContext.log.e(TAG, "EOFException", e)
-        } catch (ioe: IOException) {
-            LogContext.log.e(TAG, "IOException", ioe)
+            rf.close()
+        } catch (e: IOException) {
+            if (!stopped.get()) LogContext.log.e(TAG, "Close OPUS input failed", e)
         }
-
-        LogContext.log.w(TAG, "csd[${csdBytes.size}]=${csdBytes.toHexString()}")
-        return AudioCodecUtil.parseOpusConfigFrame(csdBytes, ByteOrder.LITTLE_ENDIAN)
-    }
-
-    private fun isStartCode(bb: ByteArray, offset: Int = 0): Boolean {
-        if (offset < 0) {
-            return false
-        }
-        return bb.readBytes(startCodeSize, offset).decodeToString() == START_CODE
-    }
-
-    private fun findStartCode(startPos: Long): Long {
-        var curPos = startPos
-        val startCodeBytes = ByteArray(startCodeSize)
-        while (true) {
-            try {
-                rf.seek(curPos)
-                rf.readFully(startCodeBytes)
-                // LogContext.log.i(tag, "startCodeBytes=${startCodeBytes.decodeToString()}")
-            } catch (e: EOFException) {
-                LogContext.log.w(TAG, "Read file. EOF", e)
-                break
-            } catch (ioe: IOException) {
-                LogContext.log.e(TAG, "IOException", ioe)
-                break
-            }
-            if (isStartCode(startCodeBytes)) {
-                return curPos
-            } else {
-                curPos++
-            }
-        }
-        return -1
     }
 }
+
+private data class OpusPlaybackInput(
+    val reader: OpusFramedFileReader,
+    val firstAudioFramePosition: Long,
+)

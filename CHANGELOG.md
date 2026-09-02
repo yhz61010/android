@@ -181,6 +181,10 @@
   `MicRecorder` 将主动 `AudioRecord.stop()` 唤醒 `read()` 产生的负状态识别为正常退出。Audio Demo
   改用 `stopRecordAndJoin()`,停止 AAC/OPUS/PCM 时不再记录 `AudioRecord.read error=-3` 或释放后的
   `MediaCodec IllegalStateException`。
+- **PCM/OPUS 文件播放边界修复**:Audio Demo 的 PCM 播放按最后一次 `read()` 的实际长度写入，避免尾包
+  重放复用缓冲中的旧样本；`OpusFilePlayer` 将文件自然结尾识别为最后一个 payload 的合法边界，不再记录
+  `Can't find start code` 伪错误或丢弃末帧。OPUS 输入文件确定关闭，完成状态改用原子变量，播放队列等待
+  可取消，队列状态日志降为 Debug 并限频为每 50 帧最多一条，自然完成时核对提交/播放帧数。
 - **R-5 空闲解码不再刷屏(部分修复)**:`process()` 仅在真正 drain 到输出时才打印 "Decode cost"
   日志,消除流静默时每秒约 20 条日志;更正 `AacDecoder.onInputData` 过时注释。**说明**:空输入仍
   提交 0 字节 buffer 归还输入槽——按 Codex 建议,消除该 churn 的结构性改动(先等数据再 dequeue /

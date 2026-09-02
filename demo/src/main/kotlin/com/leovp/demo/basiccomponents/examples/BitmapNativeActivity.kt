@@ -19,6 +19,7 @@ import com.leovp.jpeg.JPEGUtil
 import com.leovp.kotlin.exts.round
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.log.base.d
 import kotlin.system.measureNanoTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,13 +55,13 @@ class BitmapNativeActivity :
             androidProcessedBmp = beautyBmp.rotate(90f)
         }
         LogContext.log.w(ITAG, "android cw90 cost=${(androidCost / 1000f / 1000).round(3)}us")
-        androidProcessedBmp?.writeToFile(
-            createFile(
-                "JPEG",
-                "11_android_cw90.jpg",
-                Environment.DIRECTORY_PICTURES
-            )
+        val tempFile = createFile(
+            "JPEG",
+            "11_android_cw90.jpg",
+            Environment.DIRECTORY_PICTURES
         )
+        d(ITAG) { "File=$tempFile" }
+        androidProcessedBmp?.writeToFile(tempFile)
         androidProcessedBmp?.recycle()
 
         androidCost = measureNanoTime {

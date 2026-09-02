@@ -322,7 +322,7 @@ object NetworkUtil {
 
     private fun generateWifiSignal(wifiInfo: WifiInfo): WifiSignal {
         val linkSpeed: Int = wifiInfo.linkSpeed
-        /* Rssi
+        /* RSSI
          * 0 —— (-55)dBm        满格(4格)信号
          * (-55) —— (-70)dBm    3格信号
          * (-70) —— (-85)dBm    2格信号
@@ -462,16 +462,16 @@ object NetworkUtil {
 
     private fun getNetworkGeneration(networkType: Int?): String? = when (networkType) {
         // TelephonyManager.NETWORK_TYPE_IDEN,
-        TelephonyManager.NETWORK_TYPE_1xRTT,
-        TelephonyManager.NETWORK_TYPE_CDMA,
+        // TelephonyManager.NETWORK_TYPE_1xRTT,
+        // TelephonyManager.NETWORK_TYPE_CDMA,
         TelephonyManager.NETWORK_TYPE_EDGE,
         TelephonyManager.NETWORK_TYPE_GPRS,
         TelephonyManager.NETWORK_TYPE_GSM -> "2G"
 
-        TelephonyManager.NETWORK_TYPE_EHRPD,
-        TelephonyManager.NETWORK_TYPE_EVDO_0,
-        TelephonyManager.NETWORK_TYPE_EVDO_A,
-        TelephonyManager.NETWORK_TYPE_EVDO_B,
+        // TelephonyManager.NETWORK_TYPE_EHRPD,
+        // TelephonyManager.NETWORK_TYPE_EVDO_0,
+        // TelephonyManager.NETWORK_TYPE_EVDO_A,
+        // TelephonyManager.NETWORK_TYPE_EVDO_B,
         TelephonyManager.NETWORK_TYPE_HSDPA,
         TelephonyManager.NETWORK_TYPE_HSPA,
         TelephonyManager.NETWORK_TYPE_HSPAP,

@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.view.View
 import android.view.Window
 import java.lang.ref.WeakReference
+import androidx.core.graphics.createBitmap
 
 /**
  * Author: Michael Leo
@@ -18,8 +19,8 @@ object CaptureUtil {
      *
      * You can **ONLY** record the specified view or activity window .
      *
-     * For activity window, the known components that can not be recorded are list here:(including
-     * but not limited to these components)
+     * For activity window, the known components that can not be recorded are list here:
+     * (including but not limited to these components)
      *
      * - Toast
      * - Soft keyboard
@@ -29,7 +30,7 @@ object CaptureUtil {
     @Suppress("WeakerAccess")
     fun takeScreenshot(view: View, config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap? =
         runCatching {
-            Bitmap.createBitmap(view.width, view.height, config).also {
+            createBitmap(view.width, view.height, config).also {
                 view.draw(Canvas(it))
             }
         }.getOrNull()
@@ -39,8 +40,8 @@ object CaptureUtil {
      *
      * You can **ONLY** record the activity window.
      *
-     * The known components that can not be recorded are list here:(including but not limited to
-     * these components)
+     * The known components that can not be recorded are list here:
+     * (including but not limited to these components)
      *
      * - Toast
      * - Soft keyboard
@@ -50,6 +51,6 @@ object CaptureUtil {
 
     fun takeScreenshot(
         act: WeakReference<Activity>,
-        config: Bitmap.Config = Bitmap.Config.ARGB_8888
+        config: Bitmap.Config = Bitmap.Config.ARGB_8888,
     ): Bitmap? = Falcon.takeScreenshotBitmap(act, config)
 }

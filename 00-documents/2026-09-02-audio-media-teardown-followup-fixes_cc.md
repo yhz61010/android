@@ -18,8 +18,8 @@
 | `b9fa704f8` | APPROVE | 0 | 0 | 0 | 1 |
 | `dce403f17` | APPROVE | 0 | 0 | 0 | 0 |
 
-**必须在合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
-H2、H3 仍待处理。
+**审查时要求合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
+H2、H3 及第二轮 H4 已在后续整改代码中闭环，详见 §8。真机发布验证仍待完成。
 
 > **2026-09-03 第二轮复审补充**：`eb8bf5f5f` + `6bb73dfd6` 已审查完毕。Codex 对新增结论
 > 逐条复核后，确认 1 个 HIGH（H4）、10 个 MEDIUM（M10～M19）和 6 个 LOW。当前阻塞项为
@@ -495,8 +495,8 @@ Demo 的回调随即取消按钮选中 -> `stop()` -> `AudioTrackPlayer.release(
 | `eb8bf5f5f` | **APPROVE** | 0 | 0 | 5（M14～M17、M19） | 3 |
 | `6bb73dfd6` | **BLOCK** | 0 | 1（H4） | 5（M10～M13、M18） | 3 |
 
-**当前阻塞项：H2、H3（OPUS，未修）+ H4（AAC，本轮新增）。**M18（原 H5）是需要明确的
-资源所有权契约，但不再作为 HIGH 阻塞项。
+**本次复审当时的阻塞项：H2、H3（OPUS）+ H4（AAC）。**这些问题已在后续整改代码中处理，
+见 §8。M18（原 H5）是需要明确的资源所有权契约，但不再作为 HIGH 阻塞项。
 
 ---
 
@@ -802,3 +802,121 @@ Codex 对本文档第一轮内容提出 5 处更正，经逐条回读源码核�
 **master 仍保留这些映射**，确认最初结论正确。`-S` 命中 `d775ff91a` 只是因为该提交**引入**了
 这些常量，不能据此判断当前状态。**教训：子代理结论与自己已直接核验的观察冲突时，
 应以重新直接核验为准，而不是采信任一方。**
+
+---
+
+# 8. 整改实现记录（2026-09-03）
+
+本节记录在上述审查结论基础上实际落地的代码，不把静态验证等同于真机验证。
+
+## 8.1 MediaCodec 基类
+
+- `BaseMediaCodecSynchronous` 不再在提交输入 EOS 后立即退出。现在分别跟踪“输入 EOS 已提交”和
+  “输出 EOS 已收到”，输入结束后使用有界等待继续排空，直到收到真实输出 EOS 才结束 worker。
+- 带 EOS 标志且 `size > 0` 的输出先交给 `onOutputData()`，再报告完成；完成回调从输出 drain 分支移到
+  worker 唯一出口，消除尾帧丢失和双重 `onEndOfStream()`。
+- 同步、异步输入路径均保证已取得的 input buffer 在 `getInputBuffer()` 返回空、输入回调抛异常或尺寸
+  校验失败时以 0 字节归还，避免 input buffer starvation。输出回调统一通过 `finally` 释放 output buffer；
+  异步 EOS buffer 同样先交付有效数据。
+- `onOutputFormatChanged()` 恢复向子类公开钩子转发；format/error/input/output 与启动、释放钩子均明确
+  受同一 codec 操作锁保护。KDoc 已写明这些钩子必须有界、不可阻塞、不可同步等待 teardown。
+- `codecJob` 增加 `@Volatile`，保留确定性释放路径中的锁后重读；`onCodecReleased()` 文档明确其在 codec
+  从未创建时也会恰好调用一次。
+- AAC/OPUS decoder 的 PTS 改为按成功接受的输入帧递增，不再用输出帧数推导下一输入时间戳。
+
+对应闭环：M1、M2、M13、M15、M16、M17、L1、L11、L13、L15、L17，以及 input buffer 异常归还的
+同型 starvation 风险。
+
+## 8.2 AAC 文件与流播放
+
+- `AacFilePlayer` 新增独立 `started` CAS。第二次 `playAac()` 会在写 callback、创建 extractor 或改变
+  AudioTrack 前失败，现有播放会话不会被覆盖或终止，关闭 H4。
+- `playAac()` 改为挂起入口并在 IO dispatcher 完成 extractor/codec 初始化；初始化失败先进入共享终态、
+  释放资源，再把原异常重新抛给调用方。Demo 会记录错误、恢复按钮并给出提示，关闭 M11。
+- 自然 EOF 由独立 terminal scope 执行 teardown，避免 codec worker join 自身；主动停止与自然结束共用
+  `Mutex + CompletableDeferred` 终态屏障，并发 `stop()` 都会等待同一轮清理。资源全部释放、屏障完成后
+  才调用完成 callback，因此 callback 内再次调用 `stop()` 不会自等待，关闭 M10、M18、L12、L13。
+- `MediaExtractor.sampleTime` 改为在 `readSampleData()` 与 `advance()` 之前捕获。旧实现先前移 extractor
+  再读取时间戳，会把当前 AAC access unit 错配为下一帧时间戳，并可能把最后一帧误判成 EOF；现在输入
+  PTS 与实际送入 codec 的样本一一对应。自然结束还会依据 `AudioTrack.playbackHeadPosition` 等待已写入
+  PCM 真正播放完成（最多 3 秒），再停止并释放 AudioTrack，避免 AAC 尾音被 flush。
+- `AacStreamPlayer` 对相同重复 CSD 幂等忽略，对活动会话中的变化 CSD 明确拒绝并记录错误，不再覆盖旧
+  decoder；小于 2 字节的非法配置也不会越界，关闭 M19。
+
+## 8.3 OPUS 文件与流播放
+
+- `OpusFilePlayer` 的 MediaCodec 输出 callback 从阻塞 `queue.put()` 改为有界队列 `offer()`；PCM 写入由
+  IO 消费任务执行。队列持续满时按首帧及每 50 帧限频记录丢弃，不阻塞 callback 或主线程，关闭 H2。
+- `stop()` 改为挂起并采用确定性所有权顺序：阻止新生产、取消任务、关闭输入文件、`AudioTrack.stop()`
+  唤醒在途阻塞写、等待所有文件/播放任务退出、等待 decoder 释放，最后清队列并释放 AudioTrack。
+  `StreamPlayerStopper` 也使用相同顺序；`AudioTrackPlayer.write()` 对释放竞态异常记录并安全返回，关闭 H3、M12。
+- decoder 新增显式输入 EOS marker。文件生产者在最后一个完整帧后提交 EOS；输入队列瞬时满改为可取消
+  重试，不再以 `IllegalStateException` 中止播放；自然完成依据真实 codec EOS 与同口径 PCM 入队/消费数，
+  不再比较 decoder 输入数和输出数，关闭 M5、M6、L14。
+- 自然结束先等待软件 PCM 队列耗尽，再依据 `AudioTrack.playbackHeadPosition` 等待硬件播放到已写入帧数，
+  最后进入共享终态，避免完成 callback 立即触发 flush 丢尾音，关闭 M9。
+- `playOpus()` 改为挂起并在 IO dispatcher 初始化；OPUS framing 扫描从逐字节 `seek + readFully` 改为
+  8 KiB 分块 KMP 扫描。空文件、末尾裸 start code、EOF 截断 start code 均增加单测，初始化错误重新抛出，
+  后续异步错误在清理完成后走 error callback，关闭 M7、L6～L10。
+- `OpusStreamPlayer` 的 decoder callback 同样改为非阻塞入队，由 IO worker 写 AudioTrack；flush/stop 会
+  清理等待 PCM，避免异步 codec callback 在主线程执行阻塞音频写。
+
+## 8.4 Screenshot H.26x 初始化失败
+
+- `ScreenDataListener` 新增带默认实现的 `onError(Throwable)`，现有实现无需强制修改。
+- `Screenshot2H26xStrategy.startRecord()` 捕获并区分协程取消与普通初始化/录制异常。普通异常会记录完整
+  throwable，按逆序释放已创建的 MediaCodec、input Surface、EGL surface/context/display，再调用错误回调；
+  错误回调自身异常也会被隔离。
+- MediaCodec 在创建后立即登记到策略字段，再执行 `configure()` 和 `setCallback()`；因此任一步骤抛错时，
+  公共失败清理路径都能释放已经创建但尚未完整配置的 codec。删除了配置阶段读取 `outputFormat` 的无效操作，
+  输出格式只由合法的 `onOutputFormatChanged()` 回调提供。
+- `releaseEgl()` 能处理 null、`EGL_NO_DISPLAY`、`EGL_NO_CONTEXT` 和 `EGL_NO_SURFACE` 的部分初始化状态，
+  关闭 M3。API 21～25 的真实 EGL/编码能力仍必须真机验证。
+
+## 8.5 API 与变更记录
+
+- `CHANGELOG.md` 已补充 `AacDecoder.decode()` JVM 描述符变化、`flush()` 非运行态抛错、AAC/OPUS 文件
+  播放器挂起 API、OPUS decoder 构造器变化、EOS/teardown 修复以及 Screenshot 异步错误入口，关闭 M4、M14。
+- `AudioActivity` 已迁移到挂起播放 API，错误时恢复 UI；Activity 的 IO scope 在 `onDestroy()` 后拒绝新任务，
+  同时允许 `onStop()` 已提交的确定性清理完成，关闭 M8。
+- 删除 `RecordSingleAppScreenActivity` 中两处过期的 API 26 注释；`ShellUtil.getProcessesList()` 改用
+  可空局部行变量和 `use` 自动关闭 reader；恢复 CDMA/EVDO 网络代际映射并对平台弃用常量做局部 suppress；
+  `AacEncoderWrapper.encoder` 收窄为 `val`，关闭 L3～L5、L17 的剩余项。
+
+## 8.6 已完成验证与剩余真机项
+
+已使用 JDK 17 和 `--rerun-tasks` 完成：
+
+- `:audio:testDebugUnitTest`
+- `:audio:ktlintCheck`
+- `:audio:detekt`
+- `:lib-common-android:testDebugUnitTest`
+- `:lib-common-android:ktlintCheck`
+- `:lib-common-android:detekt`
+- `:screencapture:ktlintCheck`
+- `:screencapture:detekt`
+- `:demo:assembleDevDebug`
+
+新增测试覆盖同步 EOS 延迟输出与单次完成、异步 EOS 尾数据、input buffer 异常归还、并发 `start()`、
+两种 release API 幂等、format/error 在途回调锁、迟到 output callback，以及 OPUS 文件边界。
+
+已在 SUNMI P3H（Android 11 / API 30）完成可自动观察的真机冒烟验证：
+
+- 安装并启动 `demo-dev-debug.apk` 成功，进程保持存活。
+- AAC 文件自然播放收到真实输出 EOS，尾部 PCM 在 EOS 前继续交付，按钮自动复位；主动停止路径也未出现
+  `MediaExtractor`、MediaCodec 或 AudioTrack teardown 异常。该项只确认状态与日志，尾音听感仍需人工确认。
+- OPUS 文件自然播放两次均正常结束，其中一次统计为 `queued=37`、`consumed=37`、`dropped=0`。
+  另录制约 7 秒文件后，在播放队列达到 34 时主动停止，未出现 ANR、崩溃、MediaCodec 非法状态或
+  AudioTrack 释放竞态；测试后已恢复设备原有 OPUS 文件。
+- 将 OPUS 文件临时置空后点击播放，会在 IO 协程报告明确的 `No start code at position 0`，按钮恢复未选中，
+  Activity 与进程保持存活；测试后已恢复原文件。
+- 设备不支持 H.265 encoder 时，Screenshot 录制初始化失败会记录完整错误，Activity 与进程保持存活，
+  不再发生未捕获异常闪退。该结果只验证失败清理，不代表 H.264 录制或 API 21～25 兼容性已经验证。
+
+仍待执行或确认：
+
+1. 人工确认 AAC/OPUS 自然结束和主动停止时的声音、尾音完整性，并继续覆盖快速重复操作及截断文件。
+2. 用更长或更高负载的 OPUS 输入让 PCM 队列接近 64 槽上限，再停止并确认无 ANR、callback 卡死或
+   AudioTrack 释放竞态。
+3. AAC/OPUS 流播放的开始、丢帧重同步、停止与重新创建播放器。
+4. API 21～25 与较新 Android 各至少一台设备验证 Screenshot H.264；H.265 仅在设备声明支持时验证。

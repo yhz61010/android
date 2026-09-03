@@ -141,24 +141,24 @@ object ShellUtil {
     // ========================================================================
     fun getProcessesList(isRoot: Boolean = false): List<LinuxProcess> {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
-        val reader = BufferedReader(StringReader(processesListString), 256 shl 10)
         val processes: MutableList<LinuxProcess> = ArrayList()
         try {
-            var info: LinuxProcess
-            var line: String
-            while (reader.readLine().also { line = it } != null) {
-                val tokens = line.split("\\s+".toRegex()).toTypedArray()
-                if (tokens.size > 8) {
-                    info = LinuxProcess(Integer.valueOf(tokens[1]))
-                    info.user = tokens[0]
-                    info.ppid = Integer.valueOf(tokens[2])
-                    info.vsize = tokens[3]
-                    info.rss = tokens[4]
-                    info.wchan = tokens[5]
-                    info.pc = tokens[6]
-                    info.status = tokens[7]
-                    info.name = tokens[8]
-                    processes.add(info)
+            BufferedReader(StringReader(processesListString), 256 shl 10).use { reader ->
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    val tokens = line.split("\\s+".toRegex()).toTypedArray()
+                    if (tokens.size > 8) {
+                        val info = LinuxProcess(Integer.valueOf(tokens[1]))
+                        info.user = tokens[0]
+                        info.ppid = Integer.valueOf(tokens[2])
+                        info.vsize = tokens[3]
+                        info.rss = tokens[4]
+                        info.wchan = tokens[5]
+                        info.pc = tokens[6]
+                        info.status = tokens[7]
+                        info.name = tokens[8]
+                        processes.add(info)
+                    }
                 }
             }
         } catch (e: IOException) {

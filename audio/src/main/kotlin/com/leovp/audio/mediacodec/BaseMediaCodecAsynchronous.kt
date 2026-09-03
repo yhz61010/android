@@ -34,23 +34,44 @@ abstract class BaseMediaCodecAsynchronous(
             runCatchingPreservingCancellation {
                 withCodecOperationLock {
                     if (isReleasing) return@withCodecOperationLock
-                    val inputBuf = codec.getInputBuffer(index) ?: return@withCodecOperationLock
-                    // Clear exist data.
-                    inputBuf.clear()
-                    // Fill inputBuffer with valid data.
-                    val size = onInputData(inputBuf)
-                    // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
-                    val pts = computePresentationTimeUs()
-                    if (pts < 0) {
-                        codec.queueInputBuffer(
-                            index,
-                            0,
-                            0,
-                            0,
-                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                        )
-                    } else {
-                        codec.queueInputBuffer(index, 0, size, pts, 0)
+                    var inputQueued = false
+                    try {
+                        val inputBuf = codec.getInputBuffer(index)
+                        if (inputBuf == null) {
+                            codec.queueInputBuffer(index, 0, 0, 0, 0)
+                            inputQueued = true
+                            return@withCodecOperationLock
+                        }
+                        // Clear exist data.
+                        inputBuf.clear()
+                        // Fill inputBuffer with valid data.
+                        val size = onInputData(inputBuf)
+                        // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
+                        val pts = computePresentationTimeUs()
+                        if (pts < 0) {
+                            codec.queueInputBuffer(
+                                index,
+                                0,
+                                0,
+                                0,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
+                        } else {
+                            require(size >= 0) { "Codec input size must be non-negative" }
+                            require(size <= inputBuf.capacity()) {
+                                "Codec input size $size exceeds buffer capacity " +
+                                    inputBuf.capacity()
+                            }
+                            codec.queueInputBuffer(index, 0, size, pts, 0)
+                        }
+                        inputQueued = true
+                    } catch (original: Throwable) {
+                        if (!inputQueued) {
+                            runCatching {
+                                codec.queueInputBuffer(index, 0, 0, 0, 0)
+                            }.onFailure(original::addSuppressed)
+                        }
+                        throw original
                     }
                 }
             }.onFailure {
@@ -67,37 +88,22 @@ abstract class BaseMediaCodecAsynchronous(
             runCatchingPreservingCancellation {
                 withCodecOperationLock {
                     if (isReleasing) return@withCodecOperationLock
-                    val outputBuffer = codec.getOutputBuffer(index) ?: return@withCodecOperationLock
+                    val outputBuffer = codec.getOutputBuffer(index)
+                    if (outputBuffer == null) {
+                        codec.releaseOutputBuffer(index, false)
+                        return@withCodecOperationLock
+                    }
                     try {
-                        when {
-                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0 ->
-                                onOutputData(
-                                    outputBuffer,
-                                    info,
-                                    isConfig = true,
-                                    isKeyFrame = false
-                                )
-
-                            (info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0 ->
-                                onOutputData(
-                                    outputBuffer,
-                                    info,
-                                    isConfig = false,
-                                    isKeyFrame = true
-                                )
-
-                            (
-                                info.flags and
-                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM
-                                ) != 0 -> onEndOfStream()
-                            else ->
-                                onOutputData(
-                                    outputBuffer,
-                                    info,
-                                    isConfig = false,
-                                    isKeyFrame = false
-                                )
+                        val isConfig =
+                            info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
+                        val isKeyFrame =
+                            info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
+                        val isEndOfStream =
+                            info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+                        if (info.size > 0 || isConfig) {
+                            onOutputData(outputBuffer, info, isConfig, isKeyFrame)
                         }
+                        if (isEndOfStream) onEndOfStream()
                     } finally {
                         codec.releaseOutputBuffer(index, false)
                     }
@@ -114,6 +120,7 @@ abstract class BaseMediaCodecAsynchronous(
                 // Subsequent data will conform to new format.
                 // Can ignore if using getOutputFormat(outputBufferId)
                 this@BaseMediaCodecAsynchronous.format = format // option B
+                this@BaseMediaCodecAsynchronous.onOutputFormatChanged(codec, format)
             }
         }
 

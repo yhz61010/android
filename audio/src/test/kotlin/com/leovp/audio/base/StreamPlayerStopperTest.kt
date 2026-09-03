@@ -21,6 +21,7 @@ class StreamPlayerStopperTest {
         val scope = CoroutineScope(Job())
         val audioTrackPlayer = mockk<AudioTrackPlayer>()
         val decoder = Any()
+        every { audioTrackPlayer.stop() } answers { events += "stop-audio-track" }
         every { audioTrackPlayer.release() } answers { events += "audio-track" }
         val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
             events += "detach-decoder"
@@ -33,10 +34,16 @@ class StreamPlayerStopperTest {
         }
 
         assertEquals(
-            listOf("detach-decoder", "audio-track", "release-decoder"),
+            listOf(
+                "detach-decoder",
+                "stop-audio-track",
+                "release-decoder",
+                "audio-track"
+            ),
             events
         )
         assertFalse(scope.isActive)
+        verify(exactly = 1) { audioTrackPlayer.stop() }
         verify(exactly = 1) { audioTrackPlayer.release() }
     }
 
@@ -45,6 +52,7 @@ class StreamPlayerStopperTest {
         val events = mutableListOf<String>()
         val scope = CoroutineScope(Job())
         val audioTrackPlayer = mockk<AudioTrackPlayer>()
+        every { audioTrackPlayer.stop() } answers { events += "stop-audio-track" }
         every { audioTrackPlayer.release() } answers { events += "audio-track" }
         val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
             events += "detach-decoder"
@@ -63,10 +71,16 @@ class StreamPlayerStopperTest {
 
         assertIs<CancellationException>(thrown)
         assertEquals(
-            listOf("detach-decoder", "audio-track", "release-decoder"),
+            listOf(
+                "detach-decoder",
+                "stop-audio-track",
+                "release-decoder",
+                "audio-track"
+            ),
             events
         )
         assertFalse(scope.isActive)
+        verify(exactly = 1) { audioTrackPlayer.stop() }
         verify(exactly = 1) { audioTrackPlayer.release() }
     }
 
@@ -75,6 +89,7 @@ class StreamPlayerStopperTest {
         val events = mutableListOf<String>()
         val scope = CoroutineScope(Job())
         val audioTrackPlayer = mockk<AudioTrackPlayer>()
+        every { audioTrackPlayer.stop() } answers { events += "stop-audio-track" }
         every { audioTrackPlayer.release() } answers { events += "audio-track" }
         val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
             events += "detach-decoder"
@@ -87,10 +102,16 @@ class StreamPlayerStopperTest {
         }
 
         assertEquals(
-            listOf("detach-decoder", "audio-track", "release-decoder"),
+            listOf(
+                "detach-decoder",
+                "stop-audio-track",
+                "release-decoder",
+                "audio-track"
+            ),
             events
         )
         assertFalse(scope.isActive)
+        verify(exactly = 1) { audioTrackPlayer.stop() }
         verify(exactly = 1) { audioTrackPlayer.release() }
     }
 }

@@ -27,6 +27,7 @@ import com.leovp.screencapture.screenshot.CaptureUtil
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -72,7 +73,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private lateinit var screenshotThread: HandlerThread
     private lateinit var screenshotHandler: Handler
 
-    private var outputFormat: MediaFormat? = null
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
         }
@@ -83,8 +83,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             info: MediaCodec.BufferInfo
         ) {
             val outputBuffer = codec.getOutputBuffer(outputBufferId)
-            // val bufferFormat = codec.getOutputFormat(outputBufferId) // option A
-            // bufferFormat is equivalent to member variable outputFormat
             // outputBuffer is ready to be processed or rendered.
             outputBuffer?.let {
                 val encodedBytes = ByteArray(info.size)
@@ -128,9 +126,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
             // LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
-            // Subsequent data will conform to new format.
-            // Can ignore if using getOutputFormat(outputBufferId)
-            outputFormat = format // option B
+            // Subsequent data will conform to the new format.
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
@@ -303,11 +299,18 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     private fun releaseEgl() {
-        if (eglDisplay != EGL14.EGL_NO_DISPLAY) {
-            EGL14.eglDestroySurface(eglDisplay, eglSurface)
-            EGL14.eglDestroyContext(eglDisplay, eglContext)
+        val display = eglDisplay
+        val context = eglContext
+        val windowSurface = eglSurface
+        if (display != null && display != EGL14.EGL_NO_DISPLAY) {
+            if (windowSurface != null && windowSurface != EGL14.EGL_NO_SURFACE) {
+                EGL14.eglDestroySurface(display, windowSurface)
+            }
+            if (context != null && context != EGL14.EGL_NO_CONTEXT) {
+                EGL14.eglDestroyContext(display, context)
+            }
             EGL14.eglReleaseThread()
-            EGL14.eglTerminate(eglDisplay)
+            EGL14.eglTerminate(display)
         }
 
         surface?.release()
@@ -355,16 +358,17 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             }
         }
         //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        h26xEncoder = MediaCodec.createEncoderByType(
+        val encoder = MediaCodec.createEncoderByType(
             when (builder.encodeType) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
             }
-        ).also {
-            it.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            outputFormat = it.outputFormat // option B
-            it.setCallback(mediaCodecCallback)
-        }
+        )
+        // Publish ownership immediately so a configure/setCallback failure can release this
+        // partially initialized codec through the common failure path.
+        h26xEncoder = encoder
+        encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        encoder.setCallback(mediaCodecCallback)
 
         initEgl()
 
@@ -381,24 +385,34 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     fun startRecord(act: Activity) {
         CoroutineScope(Dispatchers.IO).launch {
-            onInit()
-            onStart()
-            while (isRecording) {
-                ensureActive()
-                CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
-                    if (builder.sampleSize > 1) {
-                        val compressedBitmap = it.compressBitmap(
-                            builder.quality,
-                            builder.sampleSize
-                        )
-                        encodeImages(compressedBitmap)
-                        compressedBitmap.recycle()
-                    } else {
-                        encodeImages(it)
+            try {
+                onInit()
+                onStart()
+                while (isRecording) {
+                    ensureActive()
+                    CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
+                        if (builder.sampleSize > 1) {
+                            val compressedBitmap = it.compressBitmap(
+                                builder.quality,
+                                builder.sampleSize
+                            )
+                            encodeImages(compressedBitmap)
+                            compressedBitmap.recycle()
+                        } else {
+                            encodeImages(it)
+                        }
+                        it.recycle()
                     }
-                    it.recycle()
+                    delay(32.milliseconds)
                 }
-                delay(32.milliseconds)
+            } catch (e: CancellationException) {
+                releaseAfterFailure()
+                throw e
+            } catch (e: Throwable) {
+                LogContext.log.e(TAG, "Screenshot recording failed", e)
+                releaseAfterFailure()
+                runCatching { builder.screenDataListener.onError(e) }
+                    .onFailure { LogContext.log.e(TAG, "Screen error callback failed", it) }
             }
         }
     }
@@ -409,10 +423,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     override fun onRelease() {
-        onStop()
-        releaseHandler()
-        h26xEncoder?.release()
-        releaseEgl()
+        releaseResources(stopEncoder = true)
     }
 
     override fun getVideoSize(): Size = Size(builder.width, builder.height)
@@ -425,5 +436,24 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private fun releaseHandler() {
         if (::screenshotHandler.isInitialized) screenshotHandler.removeCallbacksAndMessages(null)
         if (::screenshotThread.isInitialized) screenshotThread.quitSafely()
+    }
+
+    private fun releaseAfterFailure() {
+        releaseResources(stopEncoder = false)
+    }
+
+    private fun releaseResources(stopEncoder: Boolean) {
+        isRecording = false
+        releaseHandler()
+        val encoder = h26xEncoder
+        h26xEncoder = null
+        if (stopEncoder) {
+            runCatching { encoder?.stop() }
+                .onFailure { LogContext.log.e(TAG, "Encoder stop failed", it) }
+        }
+        runCatching { encoder?.release() }
+            .onFailure { LogContext.log.e(TAG, "Encoder release failed", it) }
+        runCatching { releaseEgl() }
+            .onFailure { LogContext.log.e(TAG, "EGL release failed", it) }
     }
 }

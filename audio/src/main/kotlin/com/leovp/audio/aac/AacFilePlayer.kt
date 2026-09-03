@@ -4,7 +4,6 @@ import com.leovp.audio.base.runCatchingPreservingCancellation
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioTrack
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -15,6 +14,7 @@ import com.leovp.bytes.toByteArray
 import com.leovp.log.LogContext
 import java.io.File
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Author: Michael Leo
@@ -44,6 +44,7 @@ class AacFilePlayer(
     private var mediaExtractor: MediaExtractor? = null
 
     private var cb: (() -> Unit)? = null
+    private val stopped = AtomicBoolean(false)
 
     override fun setFormatOptions(format: MediaFormat) {}
 
@@ -89,31 +90,58 @@ class AacFilePlayer(
     }
 
     fun playAac(aacFile: File, endCallback: () -> Unit) {
+        check(!stopped.get()) { "AacFilePlayer is already stopped" }
         cb = endCallback
-        audioTrackPlayer.play()
         runCatchingPreservingCancellation {
             mediaExtractor = MediaExtractor().apply { setDataSource(aacFile.absolutePath) }
             for (i in 0 until mediaExtractor!!.trackCount) {
                 val format = mediaExtractor?.getTrackFormat(i)
                 mime = format?.getString(MediaFormat.KEY_MIME)
-                if (mime!!.startsWith("audio/")) {
+                if (mime?.startsWith("audio/") == true) {
                     mediaExtractor?.selectTrack(i)
                     mediaFormat = format
                     break
                 }
             }
-            if (mediaFormat == null || mime.isNullOrBlank()) return
+            check(mediaFormat != null && !mime.isNullOrBlank()) {
+                "AAC file does not contain a supported audio track"
+            }
+            audioTrackPlayer.play()
             start()
-        }.onFailure { LogContext.log.e(TAG, "AAC playback start failed", it) }
+        }.onFailure {
+            LogContext.log.e(TAG, "AAC playback start failed", it)
+            releaseAfterStartFailure()
+        }
     }
 
-    fun stop() {
-        if (audioTrackPlayer.state == AudioTrack.STATE_UNINITIALIZED) {
-            return
+    /**
+     * Stops this one-shot player and waits for its codec worker before releasing input resources.
+     */
+    suspend fun stop() {
+        if (!stopped.compareAndSet(false, true)) return
+        // AudioTrack.stop() wakes a potentially blocking write so releaseAndJoin() can wait for
+        // the codec worker without racing AudioTrack.release().
+        audioTrackPlayer.stop()
+        try {
+            releaseAndJoin()
+        } finally {
+            releaseExternalResources()
         }
-        runCatchingPreservingCancellation { mediaExtractor?.release() }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun releaseAfterStartFailure() {
+        if (!stopped.compareAndSet(false, true)) return
+        super.release()
+        releaseExternalResources()
+    }
+
+    private fun releaseExternalResources() {
+        val extractor = mediaExtractor
+        mediaExtractor = null
+        runCatchingPreservingCancellation { extractor?.release() }
             .onFailure { LogContext.log.e(TAG, "MediaExtractor release failed", it) }
         audioTrackPlayer.release()
-        super.release()
+        cb = null
     }
 }

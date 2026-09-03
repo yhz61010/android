@@ -21,6 +21,10 @@
 **必须在合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
 H2、H3 仍待处理。
 
+> **2026-09-03 第二轮复审补充**：`eb8bf5f5f` + `6bb73dfd6` 已审查完毕。Codex 对新增结论
+> 逐条复核后，确认 1 个 HIGH（H4）、10 个 MEDIUM（M10～M19）和 6 个 LOW。当前阻塞项为
+> **H2、H3、H4**，详见本文 §7。
+
 代理实跑结果：`:audio:testDebugUnitTest --tests "com.leovp.audio.opus.*"` 2/2 通过；
 `:audio:detekt`、`:audio:ktlintCheck` 均干净 —— 因此**本轮无静态检查类问题**，下列全部是逻辑/并发缺陷。
 
@@ -473,3 +477,328 @@ Demo 的回调随即取消按钮选中 -> `stop()` -> `AudioTrackPlayer.release(
 | 7 | M8、M9 | 泄漏与尾音丢失 |
 | 8 | M1、M4 | 文档与 CHANGELOG，影响外部使用者但不影响运行 |
 | 9 | L1~L10 | 可择机处理；L4、L5 属既有问题 |
+
+---
+
+# 7. 第二轮复审（2026-09-03）
+
+- 审查范围：`dce403f17..6bb73dfd6`，共 2 个提交
+  - `eb8bf5f5f` refactor(audio): make codec sessions one-shot
+  - `6bb73dfd6` fix(audio): synchronize AAC file player teardown
+- 审查方式：两个并行专项代理独立审查 + 主审人逐条回读源码复核（含实跑
+  `:audio:compileDebugKotlin`、`:audio:testDebugUnitTest --rerun-tasks`）
+
+## 7.0 结论摘要
+
+| 提交 | 结论 | CRITICAL | HIGH | MEDIUM | LOW |
+|------|------|---------|------|--------|-----|
+| `eb8bf5f5f` | **APPROVE** | 0 | 0 | 5（M14～M17、M19） | 3 |
+| `6bb73dfd6` | **BLOCK** | 0 | 1（H4） | 5（M10～M13、M18） | 3 |
+
+**当前阻塞项：H2、H3（OPUS，未修）+ H4（AAC，本轮新增）。**M18（原 H5）是需要明确的
+资源所有权契约，但不再作为 HIGH 阻塞项。
+
+---
+
+## 7.1 H1 已关闭：一次性会话重构验证通过
+
+`eb8bf5f5f` 对 H1 的处理**正确且完整**，且关键在于**响亮失败而非静默失效**：
+
+| 路径 | teardown 后行为 |
+|------|----------------|
+| `start()`（`BaseMediaCodec.kt:89`） | `check(CAS(NEW, STARTING))` -> 立即抛 `IllegalStateException`，不静默 |
+| `release()`（`:192`） | `markReleasing()` 在 `RELEASED` 返回 false -> no-op，幂等 |
+| `releaseAndJoin()`（`:140`） | 同一守卫；codec 经 CAS 恰好释放一次 |
+| `flush()`（`:206`） | `check(state == RUNNING)` -> 抛出，不静默 |
+| `process()`（Sync `:56`） | `isReleasing` -> `false`，worker 退出，`onEndOfStream()` 正确抑制 |
+| 四个异步回调 | 快路径 + 锁内 `isReleasing` 重检，未变 |
+
+- **原子性无 TOCTOU**：`AtomicReference<LifecycleState>`（`:58`）；`start()` 闸是**单次
+  `compareAndSet(NEW, STARTING)`**，两线程不可能同时通过；`markReleasing()`（`:216`）是 CAS 重试循环。
+- **`release()` 与 `start()` 竞争已验证**：`start()` 全程持 `codecOperationLock`，并在 `createCodec()`
+  与 `codec.start()` 之后各重检一次状态，catch 块拆除半成品 codec；两者最终都收敛到 `RELEASED`。
+  `releaseAndJoin()` 的双 `cancelAndJoin()`（`:148`/`:153`）成立，因为 `codecJob` 的赋值在锁内，
+  重读发生在 `releaseCodecOnce()` 取锁之后。
+- **此前确认的 5 条 teardown 不变量全部存活**。`start()` 失败路径 `:115` 直接把状态设为
+  `RELEASING`，再执行一次性资源清理；这里没有调用 `markReleasing()`，但终态语义成立。
+- **仓库内无调用方被破坏**：逐个核查 `AacStreamPlayer.kt:61-79`、`OpusStreamPlayer.kt:66-86`、
+  `OpusFilePlayer.kt:84-98`、`AacEncoderWrapper.kt:24-38`、`OpusEncoderWrapper.kt:24-38`、
+  `MicRecorder.kt:97`、`AudioActivity.kt:159/176`，全部已是「每会话新建实例」，
+  不存在 `onStop` 里 stop / `onStart` 里 start 的配对。
+- **项目规则干净**：未新增 `!!`；`start()` 的 `catch (e: Exception)` 虽会捕获
+  `CancellationException`（JVM 上是 `IllegalStateException` 子类），但在 `:122` 重抛，契约成立。
+
+`6bb73dfd6` 对 AAC **正常停止路径**的修复同样正确：`stop()`（`AacFilePlayer.kt:120-130`）先
+`audioTrackPlayer.stop()` 唤醒阻塞的 native write，再 `releaseAndJoin()`（不持锁 join），
+最后在 `finally` 中 `releaseExternalResources()` 释放 extractor 与 AudioTrack。
+AAC 此前的 extractor 提前释放竞态和 AudioTrack 释放竞态在该路径上均已消除；这不代表 OPUS 的
+H2/H3 已修复。`stop()` 幂等，`CancellationException` 全程重抛。
+
+---
+
+## 7.2 必修项（HIGH）
+
+### H4（HIGH，`6bb73dfd6`）第二次 `playAac()` 会覆盖输入资源并同步终止当前会话
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt:91-115`、`:132-137`
+- 调用点：`demo/.../examples/audio/AudioActivity.kt:165`（主线程）
+
+`playAac()` 只有 `check(!stopped.get())`（`:92`）这一道闸，**没有「是否已启动」闸**。同一个实例在
+运行中被再次调用时，第二次调用不会在修改状态前响亮失败。
+运行中再次调用时：
+
+1. `:95` 直接覆盖 `mediaExtractor` —— 第一个 extractor 泄漏，且**存活中的 worker 的
+   `onInputData`（`:60`）随即读到新字段**；
+2. `:110` 的 `start()` 因一次性状态机抛出。该 `check` 在 `start()` 的 try/catch **之外**
+   （`BaseMediaCodec.kt:90`），因此不触发自清理，`lifecycleState` 保持 `RUNNING`；
+3. `.onFailure` -> `releaseAfterStartFailure()`（`:132`）-> `super.release()`，把当前运行会话切换到
+   `RELEASING`，并使用已弃用的非 join 释放入口；
+4. 这发生在**调用方线程**（`playAac` 非 suspend，Demo 从主线程调用）。该路径没有像 `stop()` 那样先
+   `audioTrackPlayer.stop()`；如果 worker 正持锁执行阻塞式 `AudioTrack.write`，主线程会等待
+   `codecOperationLock`，形成不可控的 UI 卡顿，极端设备状态下存在 ANR 风险；
+5. `super.release()` 取得并释放 `codecOperationLock` 后，生命周期已经是 `RELEASING`，worker 即使尚未
+   完成协程收尾，也不能再次进入 codec/extractor 访问区。因此随后释放外部资源**不会**重新产生
+   `MediaExtractor.readSampleData()` 竞态；原复审所述“形态 B 原样回归”推导过强。
+
+该问题成立的核心是：旧 extractor 确定泄漏、正在运行的会话被意外终止，以及调用线程可能同步等待 codec
+锁；不是外部资源释放后 worker 必然继续访问。
+
+**建议修法**：
+
+1. 在赋值 `cb`、创建 extractor 或改变 AudioTrack 前，用 `started: AtomicBoolean` 执行一次性 CAS；重复调用
+   应立即抛出，并保持现有会话完全不变；
+2. 一次性闸建立后，`releaseAfterStartFailure()` 只处理首次初始化失败，不再承担“终止正在运行会话”的
+   职责；
+3. 同时按 M11 统一启动失败契约，避免在主线程隐式执行一套调用方不可见的同步清理。
+
+---
+
+## 7.3 建议修复（MEDIUM）
+
+### M10 EOF 回调与挂起停止的组合容易诱发自等待死锁
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt:87-89`、`:120`
+
+CHANGELOG 已声明的破坏性变更要求 `stop()` 从挂起上下文调用，但该类唯一的完成信号是
+**运行在 codec worker 上的非挂起回调**。调用方若直接写成
+`runBlocking { player.stop() }` 会**绕过自 join 防护**：
+`require(codecJob !== currentCoroutineContext()[Job])`（`BaseMediaCodec.kt:141`）
+因 `runBlocking` 装入新 `Job` 而通过，随后 `codecJob?.cancelAndJoin()`
+**从 worker 线程 join worker 自身** -> 在 `NonCancellable` 下**永久死锁**。
+
+原结论中“从 EOF 无合法停止途径”表述过强：调用方可以向独立的 owner scope 派发 `stop()`，Demo 当前
+正是把按钮状态切回主线程，再由 Activity 的 IO scope 停止播放器。问题在于 API 没有说明线程/Job 约束，
+很容易写出上述死锁用法。
+
+单纯把 `endCallback` 改为 suspend 也不能解决问题：回调仍运行在 codec worker 中，从该回调直接调用
+`stop()` 依然是在等待自身。应与 M13、M18 一并设计以下一种明确契约：
+
+1. 播放器在 worker 结束后通过不需要 join 自身的内部终态路径自动清理，再通知调用方完成；或
+2. 完成事件只通知独立 owner，公开文档明确禁止在回调线程阻塞等待 `stop()`，并提供可等待的共享终态结果。
+
+### M11 `playAac()` 吞掉全部启动失败，调用方永不知情
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt:111-114`
+
+新增的 `check(...)`（"AAC file does not contain a supported audio track"）以及
+`setDataSource` 的 `IOException` 只被记为一行日志；`playAac` 正常返回，`cb` 在 `:145` 被置 null
+且**永不触发** —— 调用方会一直以为在播放。而同一函数的 `:92` 又会把
+`IllegalStateException` 抛出去：**一个 API 两套互相矛盾的错误契约**。
+违反项目规则「不得静默吞错 / UI 侧需给出可理解的错误信息」。
+
+**建议**：通过回调或返回值 / `Result` 上报失败，并统一该函数的错误契约。
+
+### M12 `AacFilePlayer` 与 `OpusFilePlayer` 现在契约互斥
+
+- 文件：`audio/.../aac/AacFilePlayer.kt:120`（`suspend fun stop()`）
+  vs `audio/.../opus/OpusFilePlayer.kt:204`（`fun stop()`）
+- 可见于：`demo/.../examples/audio/AudioActivity.kt:289`（AAC）与 `:295`（OPUS）
+
+同族两个播放器的停止语义已经分叉：`AudioActivity` 里的 `ioScope.launch` 包装
+**对 AAC 有意义（等待 worker 退出），对 OPUS 完全无效**。而 H2/H3 在 OPUS 侧确认仍然存在。
+
+**建议**：让 `OpusFilePlayer` 采用与 AAC 相同的所有权原则（先停止生产并唤醒阻塞操作，再等待任务和
+decoder 退出，最后释放文件与 AudioTrack），一次性收敛两个播放器的终态契约。OPUS 另有文件读取、解码、
+PCM 消费和 drain 等多个任务，不能机械复制 AAC 的代码顺序；这仍是 H2、H3 的推荐落地方向。
+
+### M13 同步路径尾音丢失，且 `onEndOfStream()` 可能触发两次（既有，基类）
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecSynchronous.kt:76-91`、`:159`
+
+`pts < 0` 时排入 `BUFFER_FLAG_END_OF_STREAM`、置 `isFinish = true`、**只再 drain 一次**，
+随后 `return !isFinish` 结束 worker 循环。codec 内仍滞留的若干帧（codec 延迟通常数帧）
+永远不会被排空，**文件最后几帧被静默丢弃**。因此 `:121` 的 EOS 分支实际不可达；
+若在同一轮真的到达，`onEndOfStream()` 会在那里与 `:52` 各触发一次 -> **end callback 被调用两次**。
+
+`OpusFilePlayer` 有显式的 `OUTPUT_DRAIN_TIMEOUT_MS` 排空（`opus/OpusFilePlayer.kt:176-201`），
+同步路径没有等价物。非本轮引入，但它削弱了文档中「自然结束」已验证的结论。
+
+### M14 CHANGELOG 对公开 API 破坏的二进制影响说明仍不完整（`eb8bf5f5f`）
+
+- 文件：`CHANGELOG.md`
+
+现有破坏性变更条目已覆盖 `stop()` 删除、`start()` 终态化、encoder `queue` 私有化、
+「新会话需新建实例」，并且已经明确写出 `AacDecoder.decode()` 改为返回入队结果。原复审称
+`decode()` 返回类型变化“完全遗漏”是误报，但说明仍缺两个层次：
+
+1. **`AacDecoder.decode()` 返回类型 `Unit` -> `Boolean` 的二进制影响未说明**
+   （`audio/.../aac/AacDecoder.kt`：`dce403f17` 的 `:105` 为 `fun decode(aacData: ByteArray)`，
+   现为 `:104 fun decode(aacData: ByteArray): Boolean`）。
+   JVM 描述符 `([B)V` -> `([B)Z`：外部**预编译**调用方得到的是运行期 `NoSuchMethodError`，
+   而不是编译错误。CHANGELOG 已记录行为变化，但应把它明确列入破坏性变更并说明需要重新编译调用方。
+   （`OpusDecoder.kt:80` 不受影响，它原本就推断为 `Boolean`。）
+2. **`flush()` 非 `RUNNING` 即抛 `IllegalStateException` 的行为变化确实遗漏**
+   （`BaseMediaCodec.kt:206-214`）。此前对已启动后停止的 codec 是成功或仅记日志。
+   仓库内调用方有包装（`AacStreamPlayer.kt:160`、`OpusStreamPlayer.kt:171`），外部调用方没有。
+
+完整破坏清单（供 CHANGELOG 参考）：`stop()` 删除；`start()` `open` -> `final`（`:89`）；
+`AacEncoder.queue`（`AacEncoder.kt:75`）与 `OpusEncoder.queue`（`OpusEncoder.kt:174`）
+`public` -> `private`；以上两项。新增 protected 面：`onBeforeCodecStart()`、`onCodecStarted()`、`isRunning`。
+
+### M15 子类钩子现在在 `codecOperationLock` 内执行，但 KDoc 未说明
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodec.kt:95-113`、KDoc `:126-130`
+
+`onBeforeCodecStart()`、`createMediaFormat()`、`createCodec()`、`codec.start()` 与
+`onCodecStarted()` 全部在 `withCodecOperationLock` 内执行。而钩子 KDoc 只写了
+「重置每会话子类状态」/「启动子类工作」。
+
+**失效场景**：外部子类若在 `onCodecStarted()` 中做一次有界但缓慢的等待，
+会在该时长内**阻塞所有异步回调与全部 teardown** —— 这是此前不存在的挂起类别，且无任何文档警告。
+（`BaseMediaCodecSynchronous.onCodecStarted()` `:44` 本身是正确的，只做 `ioScope.launch`。）
+
+**建议**：在钩子 KDoc 上明确「在 codec 操作锁内调用，实现必须有界、不得阻塞、不得同步等待其他线程」。
+
+### M16 `codecJob` 是非 `@Volatile` 的 `protected var`，跨线程读写
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodec.kt:55`
+  （已核实为 `protected var codecJob: Job? = null`，无 `@Volatile`）
+- 写：`BaseMediaCodecSynchronous.kt:46`；读/写：`BaseMediaCodec.kt:148`、`:153`、`:154`、`:196`、`:197`
+
+当前**仅**依靠一条不显眼的 happens-before 成立：`start()` 在 `codecOperationLock` 内写它，
+而 `releaseAndJoin()` 的重读跟在 `releaseCodecOnce()` 取锁/释放锁之后。
+但 `release()`（`:196`）**完全无锁**读它 —— 今天成立只是因为 `ioScope.cancel()` 使此后安装的
+job 天生已取消。
+
+因此当前代码没有可直接复现的 worker 泄漏：确定性路径会在取得 codec 锁后重读，兼容路径即使没看到
+新 job，也会先永久取消其 scope。该项属于并发可维护性加固，不应描述成已经发生的数据竞争故障。
+
+**建议**：标记 `@Volatile`（或改 `AtomicReference`），并把上述排序理由写入注释；
+否则未来一次把重读移出锁的重构，会**静默丢掉 join**。
+
+### M17 一次性会话的新测试有效，但仍缺三类用例
+
+- 文件：`audio/src/test/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecAsynchronousTest.kt`
+
+以下 4 个用例在移除一次性守卫后**都会失败**（即它们是有效的）：
+`:103` 二次 `start()` 被拒；`:120` 启动失败释放半初始化 codec 且进入终态；
+`:139` 未启动即释放后不能启动；`:154` `start()`/`release()` 并发。
+
+**仍缺**：
+
+1. **双线程并发 `start()`** —— CAS 正是为它而设，却无任何用例覆盖；
+2. 成功启动后调用两次 `release()`，或 `release()` 后再 `releaseAndJoin()`，验证底层 codec
+   **恰好释放一次**；启动失败后再调用 `release()` 的现有测试已经覆盖了幂等释放的一种路径；
+3. teardown 后 `onOutputBufferAvailable` 的惰性（`:81` 只覆盖了 input / formatChanged / onError）。
+
+`6bb73dfd6` **未新增任何测试**；而 `BaseMediaCodecAsynchronousTest.kt:200` 已证明这类生命周期
+时序在 JVM 上可 mock，因此同步路径的释放顺序测试是可行的。
+
+### M18（原 H5，严重度修正为 MEDIUM）AAC 自然 EOF 的资源所有权契约不明确
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt:87-89`
+
+```kotlin
+override fun onEndOfStream() {
+    cb?.invoke()
+}
+```
+
+自然结束时，播放器自身不会释放 `MediaExtractor`、`AudioTrack` 或 `MediaCodec`，需要调用方在完成回调
+之后再执行 `stop()`。Demo 会把按钮切回未选中状态，并由监听器在 Activity 的 IO scope 中调用 `stop()`，
+所以仓库内已验证路径能够完整释放，并非必然泄漏。
+
+问题在于公开 API 没有说明“完成回调只表示读取结束，调用方仍拥有停止责任”。外部调用方若把回调理解为
+播放器已经结束并释放，每次自然播放都会保留一组 Native 资源。鉴于正确管理生命周期的调用方可以安全
+释放，且当前 Demo 已遵守该流程，本项从 HIGH 调整为 MEDIUM，不再作为本轮阻塞项。
+
+推荐的一次性播放器语义仍是让 EOF 与主动停止收敛到同一终态，但必须与 M10、M13 一起设计：先正确提交
+并排空 EOS，随后通过不会 join 当前 worker 自身的内部终态路径释放资源，最后再通知调用方。若暂不实现
+自动释放，则必须在公开 KDoc 中明确 owner 的 `stop()` 责任和禁止在完成回调线程中阻塞等待自身。
+
+### M19（原 L16，严重度提升为 MEDIUM）重复 AAC CSD 会覆盖并泄漏现有 decoder
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacStreamPlayer.kt:87-88`
+
+`startPlayingStream()` 把任何小于 10 字节的 payload 都交给 `initDecoderLocked()`，没有像
+`OpusStreamPlayer` 那样先检查 `csd0 == null`。第二个短 CSD 到达时，`initAudioDecoder()` 会直接把
+`audioDecoder` 改成新实例；旧 decoder 在没有 release 的情况下失去最后一个引用，其 MediaCodec 无法再
+被确定性释放，只能依赖运行时后续清理，且一次性会话语义使它不可能再被恢复使用。
+
+这是确定的 Native 资源所有权丢失，不应只列为 LOW。建议对重复且相同的 CSD 幂等忽略；若协议允许 CSD
+变化，则在锁内摘除旧 decoder、提交新状态，再在锁外通过确定性挂起入口释放旧实例，禁止直接覆盖。
+
+---
+
+## 7.4 可选项（LOW，第二轮新增，共 6 项）
+
+| 编号 | 文件:行 | 内容 |
+|------|---------|------|
+| L11 | `audio/.../aac/AacFilePlayer.kt:54`、`:97` | `createDecoderByType(mime!!)` 与 `mediaExtractor!!.trackCount` 仍使用 `!!`，违反项目硬性规则（本次删掉了旧 `:99` 的一处却留下这两处）。当前调用图上不会 NPE，但 `createCodec()` 是公开 override。改用 `requireNotNull(mime)` / 已非空的局部变量。**注意 detekt 通过并不代表合规 —— 当前配置不拦 `!!`。** |
+| L12 | `audio/.../aac/AacFilePlayer.kt:120-130`、`:142-144` | `suspend fun stop()` 体内全是阻塞调用（`audioTrackPlayer.stop()`、`codecOperationLock.lock()`、`MediaExtractor.release()`、`AudioTrack.release()`）却无 `withContext(Dispatchers.IO)`，依赖调用方给对 dispatcher。Demo 恰好从 IO 调用（`AudioActivity.kt:289`），但库函数不应依赖这一点。 |
+| L13 | `audio/.../aac/AacFilePlayer.kt:121` | `stop()` 幂等但**不是屏障**：并发第二次调用经 CAS 立即返回，而第一次仍在 `releaseAndJoin()` 内 —— 不兑现 KDoc 承诺的「已等待其 codec worker」。建议以共享 `Deferred`/`Job` latch，让所有调用方等待同一次 teardown。 |
+| L14 | `audio/.../opus/OpusFilePlayer.kt:124` | `check(decoder?.decode(...) == true) { "OPUS decoder input queue is full" }` 的诊断信息现在会误导：`decode()` 已改为 `isRunning && queue.offer(...)`，并发 `stop()` 时会报「队列已满」。被 `:159` 的 `if (!stopped.get())` 抑制，无用户可见影响，但信息错误。（与 M6 同一处，修 M6 时一并处理。） |
+| L15 | `audio/.../mediacodec/BaseMediaCodec.kt:176`、KDoc `:181` | `onCodecReleased()` 现在位于 `::codec.isInitialized` 守卫之外，codec 从未创建时也会触发（由 `:147` 的测试确认）。仓库内 4 个子类都安全，但 KDoc「在 codec 被释放之后」已不符实，需更新，并写明「实现必须能应对从未启动的 codec」。 |
+| L17 | `BaseMediaCodecAsynchronousTest.kt:80`；`AacEncoderWrapper.kt:24` | 前者缺少四个同族用例都有的 `@Suppress("DEPRECATION")`，构建在 `:91` 产生警告；后者用 `var encoder` 而 `val` 即可（`OpusEncoderWrapper.kt:24` 已正确用 `val`）。 |
+
+---
+
+## 7.5 第二轮修复优先级
+
+| 顺序 | 项 | 理由 |
+|------|-----|------|
+| 1 | **H2 + H3 + M12 合并处理** | 按 AAC 已验证的所有权原则重新设计 `OpusFilePlayer`，同时消除阻塞队列死锁、停止竞态和同族播放器契约分叉 |
+| 2 | **H4** | 第二次 `playAac()` 会确定泄漏旧 extractor、终止现有会话，并可能在调用线程等待 codec 锁 |
+| 3 | **M13 + M18 + M10 合并处理** | 正确 EOS 排空、自然结束资源所有权和完成回调线程语义相互依赖，拆开修容易固化尾音丢失或自等待死锁 |
+| 4 | M19 | 重复 AAC CSD 会确定覆盖并泄漏 MediaCodec，严重度已由 LOW 提升为 MEDIUM |
+| 5 | M11 | 启动失败只记日志，调用方无法统一处理失败或恢复 UI |
+| 6 | M14 | `decode()` 已记录但缺二进制影响；`flush()` 行为变化确实遗漏 |
+| 7 | M15、M16 | 契约文档与可见性加固；当前路径正确，但未来重构容易破坏隐含排序 |
+| 8 | M17 | 补并发 start、成功启动后的幂等 release 和迟到 output callback 测试 |
+| 9 | L11～L15、L17 | 可择机处理；L11 属项目硬性规则违反，建议优先 |
+
+---
+
+## 7.6 主审人自我更正记录
+
+Codex 对本文档第一轮内容提出 5 处更正，经逐条回读源码核验，**全部成立**，现记录如下以免后续沿用错误结论：
+
+1. **`OpusEncoder.csd0/1/2` 原本即为 `private set`**（`eb5ab94eb` 的 `:178-183`）。
+   `var` -> `val` **不构成**公开 setter 移除，原 M4 第 1 项是误报。
+   成因：初次核查用 `grep "csd"` 匹配，把紧随其后的 `private set` 行过滤掉了。
+2. **`stop()` 不会把 `codecReleased` 置为 `true`**，原 H1 第 3 点的推导有误。
+   泄漏结论仍成立，但机理是**第一个 codec 被第二次 `createCodec()` 覆盖**后无法再释放。
+3. **`ScreenDataListener` 只有 `onDataUpdate()`**，不存在错误回调，
+   原 M3 中「通过既有 listener 上报错误」的修法不可直接实施，需先扩展接口。
+4. **「约 1~3 秒/MB」缺乏基准测试证据**，已按 Codex 修改删除该量化结论。
+5. **H3 的机理表述过强**：「必然由 native write 抛 `IllegalStateException`」缺少 API 契约支持。
+   正确修法是所有权排序（停生产 -> 取消播放任务 -> `AudioTrack.stop()/pause()` 唤醒阻塞写
+   -> 等任务退出 -> 最后 `release()`），异常捕获只能作为兜底。
+6. **H4 的第二种竞态推导过强**：重复 `playAac()` 确实泄漏旧 extractor、终止当前会话并可能阻塞
+   调用线程；但 `super.release()` 在返回前已通过 codec 锁排除当前迭代，且 `RELEASING` 阻止 worker
+   再次进入，所以之后释放外部资源不会重新造成 `readSampleData()` 访问已释放 extractor。
+7. **原 H5 严重度过高**：自然 EOF 后资源需要调用方 `stop()` 的事实成立，但 Demo 已正确执行该责任，
+   不是所有路径都会必然泄漏。该项改为 M18，作为公开所有权契约和一次性播放器终态设计问题处理。
+8. **M10 的结论与建议过强**：独立 owner scope 可以合法调用挂起 `stop()`；真正危险的是在 codec worker
+   回调中用 `runBlocking` 等待自身。把回调改成 suspend 并不能改变 worker 身份，必须设计独立终态路径。
+9. **M14 部分误报**：CHANGELOG 已写明 `AacDecoder.decode()` 返回入队结果；遗漏的是其 JVM 描述符变化
+   对预编译调用方的影响，以及非 `RUNNING` 状态调用 `flush()` 的新失败行为。
+10. **原 L16 严重度过低**：重复 AAC CSD 会直接覆盖未释放的 decoder，属于确定的 MediaCodec 所有权
+    丢失，已提升为 M19。
+
+另有一处**主审人自身的反复**需记录：关于 L5（NetworkUtil）的归属，第一轮结论正确（本分支
+`6fac4bdd5` 注释掉了这些常量），中途因过度采信子代理的 `git log -S` 结果而错误改判为
+「2022 年既有」，随后经 `git show origin/master:...NetworkUtil.kt` 核实
+**master 仍保留这些映射**，确认最初结论正确。`-S` 命中 `d775ff91a` 只是因为该提交**引入**了
+这些常量，不能据此判断当前状态。**教训：子代理结论与自己已直接核验的观察冲突时，
+应以重新直接核验为准，而不是采信任一方。**

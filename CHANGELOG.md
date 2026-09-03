@@ -185,14 +185,19 @@
   确保旧设备 `onClosed` 完成后才打开新设备。`BaseCamera2Fragment` 同时按 ToggleButton 的
   `isChecked` 明确请求前置/后置镜头,避免连续点击丢失最后一次选择。
 - **R-4 codec worker 与生命周期操作串行化**:`BaseMediaCodec` 使用共享可重入锁串行执行同步 worker
-  的完整 `process()` 迭代以及 `stop()`/`flush()`/`release()`;旧同步 `release()` 在取消 worker 后会
-  等待当前 codec 迭代退出再释放底层对象,不再与 `dequeue/queue/releaseOutputBuffer` 并发。`releasing`
-  标志继续避免主动关停被误报为 codec 失败或正常 EOS,并新增并发回归测试。
+  的完整 `process()` 迭代以及 `flush()`/`release()`；同步 `release()` 在取消 worker 后会等待当前 codec
+  迭代退出再释放底层对象，不再与 `dequeue/queue/releaseOutputBuffer` 并发。生命周期状态继续避免主动
+  关停被误报为 codec 失败或正常 EOS，并新增并发回归测试。
 - **异步音频编码停止不再产生伪错误**:`BaseMediaCodecAsynchronous` 的输入/输出回调与 release 使用
   同一 codec 操作锁,释放开始后忽略已排队的迟到回调,并保证输出 buffer 在回调异常时仍会归还;
   `MicRecorder` 将主动 `AudioRecord.stop()` 唤醒 `read()` 产生的负状态识别为正常退出。Audio Demo
   改用 `stopRecordAndJoin()`,停止 AAC/OPUS/PCM 时不再记录 `AudioRecord.read error=-3` 或释放后的
   `MediaCodec IllegalStateException`。
+- **AAC 文件播放停止不再访问已释放的 MediaExtractor**：`AacFilePlayer.stop()` 改为确定性的挂起停止；
+  先停止 AudioTrack 以唤醒阻塞写，再通过 `releaseAndJoin()` 等待 codec worker 完全退出，最后释放
+  MediaExtractor 和 AudioTrack。修复 worker 与 `MediaExtractor.release()` 竞争导致
+  `readSampleData()` 抛出 `IllegalStateException`。初始化失败和无有效音轨也会完整回收外部资源。
+  - **破坏性变更**：`AacFilePlayer.stop()` 现在必须从协程或其它挂起上下文调用。
 - **PCM/OPUS 文件播放边界修复**:Audio Demo 的 PCM 播放按最后一次 `read()` 的实际长度写入，避免尾包
   重放复用缓冲中的旧样本；`OpusFilePlayer` 将文件自然结尾识别为最后一个 payload 的合法边界，不再记录
   `Can't find start code` 伪错误或丢弃末帧。OPUS 输入文件确定关闭，完成状态改用原子变量，播放队列等待

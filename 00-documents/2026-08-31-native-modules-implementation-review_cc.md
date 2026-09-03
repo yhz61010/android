@@ -416,6 +416,36 @@ NEW -> STARTING -> RUNNING -> RELEASING -> RELEASED
 回归测试新增一次性启动、启动失败清理、未启动即释放和 start/release 并发用例；既有迟到回调测试改为验证
 terminal release。该策略是有意的源码/API 行为收敛：调用方开始新会话时必须创建新的 codec 包装器实例。
 
+### 4.15 AAC 文件播放停止时提前释放 MediaExtractor
+
+一次性会话改造后的真机复测中，AAC 文件播放点击停止会记录：
+
+```text
+Codec illegal state, stopping: java.lang.IllegalStateException
+    at android.media.MediaExtractor.readSampleData(Native Method)
+    at com.leovp.audio.aac.AacFilePlayer.onInputData(AacFilePlayer.kt:59)
+```
+
+异常虽然由同步 codec worker 捕获而没有导致闪退，但它不是 MediaCodec 自身状态错误。原
+`AacFilePlayer.stop()` 先调用 `MediaExtractor.release()`，最后才调用基类 release；worker 在停止通知前
+仍可能执行 `readSampleData()`，从而访问已经释放的 extractor。由于基类此时仍为 `RUNNING`，该异常也不会
+被 teardown 守卫识别为主动停止噪声。
+
+本轮没有通过吞掉 `IllegalStateException` 或降低日志级别掩盖竞态，而是明确资源所有权顺序：
+
+1. `AacFilePlayer.stop()` 改为挂起函数并增加一次性停止门控；
+2. 先调用 `AudioTrack.stop()`，唤醒可能阻塞在 Native 写入中的 codec worker；
+3. 调用 `releaseAndJoin()`，切换到 `RELEASING`、取消 worker、等待其退出并释放 MediaCodec；
+4. worker 完全退出后再释放 `MediaExtractor` 和 `AudioTrack`，并清除完成回调；
+5. 播放初始化失败使用独立清理路径，使未启动或部分启动的 codec、extractor 和 AudioTrack 同样进入终态；
+6. 没有有效音轨时改为明确失败并进入清理路径，不再从内联 `runCatching` 中非局部返回而遗漏资源释放。
+
+这是有意的公开 API 行为变更：直接调用 `AacFilePlayer.stop()` 的调用方必须从协程或其它挂起上下文调用。
+这样停止返回时能够保证 worker 已退出，避免继续保留一个无法兑现资源释放完成语义的同步入口。
+
+修复 APK 在 P3H 上完成自动连续回归后，维护者又按实际使用流程手动复测 AAC 播放与主动停止，确认功能
+恢复正常，停止时不再出现上述异常。本问题的代码、构建、自动真机回归和人工验收均已闭环。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -485,6 +515,14 @@ terminal release。该策略是有意的源码/API 行为收敛：调用方开�
 - 直接下游验证执行 `audio:lintDebug`、`audio:assembleDebug`、`demo:ktlintCheck`、`demo:detekt`、
   `demo:testDevDebugUnitTest` 和 `demo:assembleDevDebug`，同样使用 `--rerun-tasks` 强制重跑，723 个任务
   全部实际执行并通过。输出仅包含仓库已有弃用 API 和平台 API 警告，没有新增失败。
+- AAC 文件播放停止顺序修复后，`audio:testDebugUnitTest`、`audio:ktlintCheck`、`audio:detekt` 和
+  `demo:compileDevDebugKotlin` 使用 `--rerun-tasks` 强制重跑，355 个任务全部实际执行并通过。首次检查仅
+  发现新增 KDoc 超过 100 字符限制，换行后复跑通过；随后完整执行 `audio:lintDebug`、
+  `audio:assembleDebug`、Demo 静态检查、单元测试和 `demo:assembleDevDebug`，723 个任务全部实际执行并
+  通过。其余输出为仓库已有弃用 API 警告。新 APK 安装到 P3H 后，使用已有 AAC 文件完成 4 轮播放中
+  主动停止，其中后 3 轮连续执行；日志对应出现 4 次启动和 4 次停止，进程保持存活，未出现
+  `Codec illegal state`、`MediaExtractor.readSampleData()` 或 `FATAL EXCEPTION`。维护者随后手动执行同一
+  使用流程，确认 AAC 播放和主动停止功能正常。
 
 ### 5.2 尚未完成
 
@@ -496,7 +534,8 @@ terminal release。该策略是有意的源码/API 行为收敛：调用方开�
 - Audio Demo：PCM/AAC/OPUS 的停止日志、PCM/OPUS 自然文件播放和 AAC 录音期间直接退页已在 P3H 通过，
   AAC 文件也已完成解码播放链路验证；本轮将文件播放器释放移到 IO 后，仍需复测三种格式播放中主动停止、
   自然结束、快速重复进入退出及实际听感，并确认没有主线程卡顿或 teardown 错误。一次性 codec 会话的
-  JVM、静态检查和 APK 构建已通过，但其“结束旧会话后创建新包装器再开始”的完整 Demo 流程仍需真机复测。
+  JVM、静态检查和 APK 构建已通过；AAC extractor 释放顺序以及“结束旧会话后创建新包装器再开始”已完成
+  4 轮 P3H 主动停止回归，并由维护者手动验收通过。PCM/OPUS 的同类重复会话和实际听感仍需人工复测。
 - Screenshot 录屏：API 21 兼容代码已完成编译和静态检查；仍需至少一台 API 21～25 真机用 H.264 路径验证
   EGL config、首帧画面、停止释放和重复进入退出。P3H 的 H.265 encoder 缺失不作为本轮代码回归失败。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
@@ -518,7 +557,9 @@ APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须�
 `EGLExt.EGL_RECORDABLE_ANDROID` Java 字段的直接依赖并加强 EGL config 校验，但 API 21～25 真机验证尚未
 完成，且该兼容修改不改变设备是否支持 HEVC encoder 的硬件能力边界。`BaseMediaCodec` 已在不保留旧版
 复用兼容性的前提下改为“一实例一会话”，并完成并发单测、静态检查和直接下游构建；这项破坏性收敛以
-隔离队列、PTS、CSD、EOS、回调和 worker 所有权为优先，真机仍需验证连续会话通过新建包装器正常完成。
+隔离队列、PTS、CSD、EOS、回调和 worker 所有权为优先。后续发现的 AAC 文件播放停止顺序竞态也已修复，
+P3H 上 4 轮 AAC 播放中主动停止及新建包装器重复会话均未再出现 extractor 非法状态或崩溃，维护者手动
+复测也确认功能正常。
 
 交叉参考：
 

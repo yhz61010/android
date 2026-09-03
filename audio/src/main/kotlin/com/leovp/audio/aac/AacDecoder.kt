@@ -40,7 +40,8 @@ class AacDecoder(
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
 
-    private var frameCount: Long = 0
+    private var inputFrameCount: Long = 0
+    private var currentInputPtsUs: Long = 0
 
     val queueSize: Int get() = queue.size
 
@@ -78,17 +79,19 @@ class AacDecoder(
     }
 
     override fun onBeforeCodecStart() {
-        frameCount = 0
+        inputFrameCount = 0
+        currentInputPtsUs = 0
     }
 
     // Poll with a timeout instead of blocking take() so coroutine cancellation is honored quickly.
     // Returns 0 when no data is available within the timeout; process() then returns the dequeued
     // input slot with a 0-byte (non-EOS) buffer so the codec's input slots are not exhausted.
-    override fun onInputData(inBuf: ByteBuffer): Int =
-        queue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.let {
-            inBuf.put(it)
-            it.size
-        } ?: 0
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        val input = queue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS) ?: return 0
+        inBuf.put(input)
+        currentInputPtsUs = inputFrameCount++ * 1_000_000L * 1024 / sampleRate
+        return input.size
+    }
 
     override fun onOutputData(
         outBuf: ByteBuffer,
@@ -97,7 +100,6 @@ class AacDecoder(
         isKeyFrame: Boolean
     ) {
         // LogContext.log.e(TAG, "--->>> onOutputData[${outData.remaining()}]")
-        frameCount++
         callback.onDecoded(outBuf.toByteArray())
     }
 
@@ -108,9 +110,11 @@ class AacDecoder(
 
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
-    override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
+    override fun computePresentationTimeUs(): Long = currentInputPtsUs
 
     override fun onCodecReleased() {
         queue.clear()
+        inputFrameCount = 0
+        currentInputPtsUs = 0
     }
 }

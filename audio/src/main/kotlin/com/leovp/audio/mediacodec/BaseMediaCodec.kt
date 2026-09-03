@@ -52,6 +52,7 @@ abstract class BaseMediaCodec(
      * The codec worker coroutine. Assigned by the synchronous worker launch (see
      * [BaseMediaCodecSynchronous]). Owned here so [releaseAndJoin] can join it deterministically.
      */
+    @Volatile
     protected var codecJob: Job? = null
 
     private val codecReleased = AtomicBoolean(false)
@@ -123,10 +124,21 @@ abstract class BaseMediaCodec(
         }
     }
 
-    /** Resets per-session subclass state immediately before codec creation. */
+    /**
+     * Resets per-session subclass state immediately before codec creation.
+     *
+     * This hook runs while the codec operation lock is held. Implementations must be bounded and
+     * non-blocking, and must not synchronously wait for work that can require a codec callback or
+     * lifecycle operation.
+     */
     protected open fun onBeforeCodecStart() = Unit
 
-    /** Starts subclass work after the codec has entered the running state. */
+    /**
+     * Starts subclass work after the codec has entered the running state.
+     *
+     * This hook runs while the codec operation lock is held. Implementations must only schedule
+     * work and return promptly; they must not synchronously wait for that work to finish.
+     */
     protected open fun onCodecStarted() = Unit
 
     /**
@@ -178,7 +190,13 @@ abstract class BaseMediaCodec(
         }
     }
 
-    /** Clears subclass state after the codec has been released under [codecOperationLock]. */
+    /**
+     * Clears subclass state exactly once under the codec operation lock.
+     *
+     * This hook is also invoked when teardown happens before a codec was created. Implementations
+     * must therefore tolerate a never-started session and return promptly without waiting for
+     * codec callbacks or lifecycle operations.
+     */
     protected open fun onCodecReleased() = Unit
 
     /**
@@ -228,8 +246,9 @@ abstract class BaseMediaCodec(
     /**
      * Runs a synchronous codec operation under the same lock used by lifecycle teardown.
      *
-     * Synchronous processing invokes subclass input/output callbacks while holding this lock, so
-     * lifecycle operations wait for the current callback to return. Keep those callbacks bounded.
+     * Codec processing invokes subclass input/output, format-change, error, and lifecycle hooks
+     * while holding this lock, so lifecycle operations wait for the current callback to return.
+     * Keep all such callbacks bounded and never synchronously wait for teardown from them.
      */
     protected fun <T> withCodecOperationLock(action: () -> T): T =
         codecOperationLock.withLock(action)

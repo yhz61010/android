@@ -44,6 +44,43 @@ class OpusFramedFileReaderTest {
         }
     }
 
+    @Test
+    fun `empty file is rejected`() {
+        withTemporaryFile(byteArrayOf()) {
+            val reader = OpusFramedFileReader(it, "|leo|".encodeToByteArray())
+
+            assertFailsWith<IllegalArgumentException> { reader.readPayload(0) }
+        }
+    }
+
+    @Test
+    fun `trailing start code produces an empty final payload`() {
+        val startCode = "|leo|".encodeToByteArray()
+        withTemporaryFile(startCode + byteArrayOf(1, 2) + startCode) {
+            val reader = OpusFramedFileReader(it, startCode)
+
+            val first = reader.readPayload(0)
+            val last = reader.readPayload(requireNotNull(first.nextStartCodePosition))
+
+            assertContentEquals(byteArrayOf(), last.data)
+            assertNull(last.nextStartCodePosition)
+        }
+    }
+
+    @Test
+    fun `partial start code at end remains payload data`() {
+        val startCode = "|leo|".encodeToByteArray()
+        val partialStartCode = "|le".encodeToByteArray()
+        withTemporaryFile(startCode + byteArrayOf(1, 2) + partialStartCode) {
+            val reader = OpusFramedFileReader(it, startCode)
+
+            val payload = reader.readPayload(0)
+
+            assertContentEquals(byteArrayOf(1, 2) + partialStartCode, payload.data)
+            assertNull(payload.nextStartCodePosition)
+        }
+    }
+
     private fun withTemporaryFile(data: ByteArray, block: (RandomAccessFile) -> Unit) {
         val file = File.createTempFile("opus-reader", ".bin")
         try {

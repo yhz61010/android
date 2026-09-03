@@ -33,6 +33,10 @@ interface IAudioMediaCodec {
         isKeyFrame: Boolean
     )
 
+    /**
+     * Called while the codec operation lock is held. Implementations must return promptly and
+     * must not synchronously wait for codec teardown.
+     */
     fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {}
 
     /**
@@ -73,6 +77,10 @@ interface IAudioMediaCodec {
      */
     fun computePresentationTimeUs(): Long
 
+    /**
+     * Called while the codec operation lock is held. Implementations must return promptly and
+     * must not synchronously wait for codec teardown.
+     */
     fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {}
 
     // ==========

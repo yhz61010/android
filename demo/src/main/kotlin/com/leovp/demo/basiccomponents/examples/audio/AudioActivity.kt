@@ -29,7 +29,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URI
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.activity_audio) {
@@ -65,7 +67,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityAudioBinding =
         ActivityAudioBinding.inflate(layoutInflater)
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScopeJob = SupervisorJob()
+    private val ioScope = CoroutineScope(ioScopeJob + Dispatchers.IO)
 
     private val pcmFile by lazy { this.createFile("audio.pcm") }
     private val aacFile by lazy { this.createFile("audio.aac") }
@@ -156,15 +159,28 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         binding.btnPlayAac.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                aacFilePlayer = AacFilePlayer(
+                val player = AacFilePlayer(
                     this@AudioActivity,
                     audioDecoderInfo,
                     AUDIO_ATTR_USAGE,
                     AUDIO_ATTR_CONTENT_TYPE
                 )
-                aacFilePlayer?.playAac(aacFile) {
-                    runOnUiThread { btn.isChecked = false }
-                    // LogContext.log.e(TAG, "=====> End callback <=====")
+                aacFilePlayer = player
+                ioScope.launch {
+                    try {
+                        player.playAac(aacFile) {
+                            runOnUiThread { btn.isChecked = false }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        LogContext.log.e(TAG, "Play AAC file failed", e)
+                        runOnUiThread {
+                            if (aacFilePlayer === player) aacFilePlayer = null
+                            btn.isChecked = false
+                            toast("Unable to play AAC file")
+                        }
+                    }
                 }
             } else {
                 stopAacPlayback()
@@ -173,16 +189,37 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         binding.btnPlayOpus.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                opusFilePlayer =
-                    OpusFilePlayer(
-                        this@AudioActivity,
-                        audioDecoderInfo,
-                        AUDIO_ATTR_USAGE,
-                        AUDIO_ATTR_CONTENT_TYPE
-                    )
-                opusFilePlayer?.playOpus(opusFile) {
-                    runOnUiThread { btn.isChecked = false }
-                    // LogContext.log.e(TAG, "=====> End callback <=====")
+                val player = OpusFilePlayer(
+                    this@AudioActivity,
+                    audioDecoderInfo,
+                    AUDIO_ATTR_USAGE,
+                    AUDIO_ATTR_CONTENT_TYPE
+                )
+                opusFilePlayer = player
+                ioScope.launch {
+                    try {
+                        player.playOpus(
+                            opusFile = opusFile,
+                            endCallback = { runOnUiThread { btn.isChecked = false } },
+                            errorCallback = { error ->
+                                LogContext.log.e(TAG, "Play OPUS file failed", error)
+                                runOnUiThread {
+                                    if (opusFilePlayer === player) opusFilePlayer = null
+                                    btn.isChecked = false
+                                    toast("Unable to play OPUS file")
+                                }
+                            }
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        LogContext.log.e(TAG, "Start OPUS playback failed", e)
+                        runOnUiThread {
+                            if (opusFilePlayer === player) opusFilePlayer = null
+                            btn.isChecked = false
+                            toast("Unable to play OPUS file")
+                        }
+                    }
                 }
             } else {
                 stopOpusPlayback()
@@ -303,6 +340,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         stopAacPlayback()
         stopOpusPlayback()
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        // onStop() has already scheduled deterministic teardown in this scope. Reject new work
+        // while allowing those cleanup children to finish and release their Activity references.
+        ioScopeJob.complete()
+        super.onDestroy()
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {

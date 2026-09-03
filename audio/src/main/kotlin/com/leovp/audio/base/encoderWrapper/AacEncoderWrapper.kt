@@ -21,7 +21,7 @@ class AacEncoderWrapper(
         private const val TAG = "AacEncoderWrapper"
     }
 
-    private var encoder = AacEncoder(
+    private val encoder = AacEncoder(
         sampleRate = encoderInfo.sampleRate,
         channelCount = encoderInfo.channelCount,
         bitrate = encoderInfo.bitrate,

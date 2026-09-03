@@ -10,6 +10,7 @@ import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.bytes.toByteArray
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc6716
@@ -19,6 +20,7 @@ import java.util.concurrent.ArrayBlockingQueue
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
+@Suppress("LongParameterList")
 class OpusDecoder(
     sampleRate: Int,
     channelCount: Int,
@@ -27,6 +29,8 @@ class OpusDecoder(
     val csd1: ByteArray,
     val csd2: ByteArray,
     private val callback: IDecodeCallback,
+    private val endCallback: () -> Unit = {},
+    private val errorCallback: (Throwable) -> Unit = {},
 ) : BaseMediaCodecAsynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,
@@ -38,10 +42,15 @@ class OpusDecoder(
     }
 
     private val queue = ArrayBlockingQueue<ByteArray>(64)
+    private val eosMarker = ByteArray(0)
+    private val eosRequested = AtomicBoolean(false)
 
-    private var frameCount: Long = 0
+    private var inputFrameCount: Long = 0
+    private var currentInputPtsUs: Long = 0
+    private var currentInputIsEos = false
 
     val queueSize: Int get() = queue.size
+    val isAcceptingInput: Boolean get() = isRunning && !eosRequested.get()
 
     override fun setFormatOptions(format: MediaFormat) {
         // https://developer.android.com/reference/android/media/MediaCodec#CSD
@@ -55,13 +64,20 @@ class OpusDecoder(
     }
 
     override fun onBeforeCodecStart() {
-        frameCount = 0
+        inputFrameCount = 0
+        currentInputPtsUs = 0
+        currentInputIsEos = false
+        eosRequested.set(false)
     }
 
-    override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
-        inBuf.put(it)
-        it.size
-    } ?: 0
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        val input = queue.poll()
+        currentInputIsEos = input === eosMarker
+        if (input == null || currentInputIsEos) return 0
+        inBuf.put(input)
+        currentInputPtsUs = inputFrameCount++ * 1_000_000L * 1024 / sampleRate
+        return input.size
+    }
 
     override fun onOutputData(
         outBuf: ByteBuffer,
@@ -69,17 +85,41 @@ class OpusDecoder(
         isConfig: Boolean,
         isKeyFrame: Boolean
     ) {
-        frameCount++
         callback.onDecoded(outBuf.toByteArray())
     }
 
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
-    override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
+    override fun computePresentationTimeUs(): Long = if (currentInputIsEos) {
+        -1
+    } else {
+        currentInputPtsUs
+    }
 
-    fun decode(rawData: ByteArray): Boolean = isRunning && queue.offer(rawData)
+    fun decode(rawData: ByteArray): Boolean =
+        rawData.isNotEmpty() && isRunning && !eosRequested.get() && queue.offer(rawData)
+
+    /** Queues input EOS after all previously accepted OPUS frames. Safe to retry on `false`. */
+    fun signalEndOfStream(): Boolean {
+        if (!isRunning || !eosRequested.compareAndSet(false, true)) return eosRequested.get()
+        if (queue.offer(eosMarker)) return true
+        eosRequested.set(false)
+        return false
+    }
+
+    override fun onEndOfStream() {
+        endCallback.invoke()
+    }
+
+    override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+        errorCallback.invoke(e)
+    }
 
     override fun onCodecReleased() {
         queue.clear()
+        currentInputIsEos = false
+        inputFrameCount = 0
+        currentInputPtsUs = 0
+        eosRequested.set(false)
     }
 }

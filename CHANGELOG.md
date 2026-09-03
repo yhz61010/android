@@ -63,8 +63,16 @@
   重试都会明确失败；启动失败会释放已部分初始化的 MediaCodec。AAC/OPUS encoder 输入队列改为私有，
   统一通过只在运行态接收数据的 `encode()` 投递；`AacDecoder.decode()` 改为返回是否成功入队。
   - **破坏性变更**：外部子类不能再覆写 `start()`/`stop()`；直接访问 encoder `queue` 的调用方迁移到
-    `encode()`；开始新会话时创建新的 codec 包装器实例。该选择避免队列、PTS、CSD、EOS、迟到回调和
-    worker 跨会话污染；若将来需要降低 codec 创建延迟，应使用独立资源池或显式重配置 API。
+    `encode()`；开始新会话时创建新的 codec 包装器实例。`AacDecoder.decode()` 的 JVM 描述符由
+    `([B)V` 变为 `([B)Z`，预编译调用方必须重新编译，否则会在运行时得到 `NoSuchMethodError`；非
+    `RUNNING` 状态调用 `flush()` 现在会抛出 `IllegalStateException`。该选择避免队列、PTS、CSD、EOS、
+    迟到回调和 worker 跨会话污染；若将来需要降低 codec 创建延迟，应使用独立资源池或显式重配置 API。
+- **AAC/OPUS 文件播放器采用确定性一次性会话**：`playAac()`、`playOpus()` 与两个播放器的 `stop()`
+  统一为挂起入口，初始化和文件扫描在 IO dispatcher 执行；重复启动会在修改任何运行态资源前失败，
+  初始化错误在清理完成后重新抛出，异步 OPUS 错误通过独立错误回调上报。自然结束与主动停止收敛到同一
+  终态，完成回调只会在 MediaCodec、输入文件和 AudioTrack 全部释放后触发。
+  - **破坏性变更**：调用方必须从协程调用 `playAac()`、`playOpus()` 和 `OpusFilePlayer.stop()`；
+    `OpusDecoder` 新增 EOS/错误回调构造参数，依赖旧构造器描述符的预编译调用方需要重新编译。
 - **Screenshot H.26x 录屏兼容 API 21**：不再直接引用 API 26 才公开的
   `EGLExt.EGL_RECORDABLE_ANDROID` Java 字段，改用 `EGL_ANDROID_recordable` 固定 token `0x3142`，并加强
   EGL config 选择校验，因此移除 `Screenshot2H26xStrategy` 的 API 26 注解。API 21～25 真机验证仍待完成；
@@ -121,6 +129,18 @@
   回退到 idle,并新增状态描述供无障碍服务读取。
 
 ### 修复 (Fixed)
+
+- **Audio MediaCodec EOS 与播放器 teardown**：同步 codec 送入输入 EOS 后会持续排空到真实输出 EOS，
+  EOS buffer 中的有效尾帧先交付再完成，且完成回调只触发一次；同步和异步路径会在输入处理异常、空
+  input buffer 或输出回调异常时归还已取得的 codec buffer，避免 buffer starvation。OPUS 文件播放改用
+  codec EOS，不再比较不同语义的输入/输出计数；解码背压改为可取消重试，解码 PCM 回调只做非阻塞入队，
+  AudioTrack 写入移到 IO 消费任务。停止顺序固定为停止生产、关闭输入、唤醒阻塞写、等待任务与 decoder、
+  最后释放 AudioTrack；自然结束还会等待软件 PCM 队列和 AudioTrack playback head，避免尾音被 flush。
+  AAC/OPUS decoder 的 PTS 改按已接受输入帧递增，不再依赖尚未产生的输出帧数。重复 AAC CSD 会被幂等
+  忽略，活动会话中的变更 CSD 会明确拒绝，不再覆盖并泄漏旧 decoder。
+- **Screenshot H.26x 初始化失败不再崩溃**：EGL config/context/window surface、input Surface 或编码器
+  初始化失败时按确定顺序释放部分资源并记录完整异常，再通过 `ScreenDataListener.onError()` 默认错误入口
+  上报；失败不会再从裸 IO 协程逃逸为未捕获异常。EGL 清理同时兼容未完整初始化的 null/no-display 状态。
 
 - **Native 内存安全、错误路径与生命周期**：YUV JNI 统一校验尺寸、格式、stride、裁剪和数组长度，
   修复 RGB24 行 stride 与 NV12 旋转后目标 stride；Bitmap crop/scale/rotate 改为受检分配并处理带

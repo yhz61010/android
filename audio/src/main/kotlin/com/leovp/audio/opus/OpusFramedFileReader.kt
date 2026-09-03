@@ -2,11 +2,16 @@ package com.leovp.audio.opus
 
 import java.io.RandomAccessFile
 
-internal data class OpusFilePayload(val data: ByteArray, val nextStartCodePosition: Long?)
+internal class OpusFilePayload(val data: ByteArray, val nextStartCodePosition: Long?)
 
 /** Reads payloads separated by the legacy OPUS demo start code. */
 internal class OpusFramedFileReader(private val file: RandomAccessFile, startCode: ByteArray) {
+    companion object {
+        private const val SCAN_BUFFER_SIZE = 8 * 1024
+    }
+
     private val startCode = startCode.copyOf()
+    private val prefixTable = buildPrefixTable(this.startCode)
 
     init {
         require(this.startCode.isNotEmpty()) { "Start code must not be empty" }
@@ -15,9 +20,6 @@ internal class OpusFramedFileReader(private val file: RandomAccessFile, startCod
     fun readPayload(startCodePosition: Long): OpusFilePayload {
         require(hasStartCodeAt(startCodePosition)) {
             "No start code at position $startCodePosition"
-        }
-        require(startCodePosition <= Long.MAX_VALUE - startCode.size) {
-            "OPUS payload position overflow"
         }
         val payloadStart = startCodePosition + startCode.size
         val nextStartCodePosition = findStartCode(payloadStart)
@@ -37,16 +39,26 @@ internal class OpusFramedFileReader(private val file: RandomAccessFile, startCod
     }
 
     private fun findStartCode(startPosition: Long): Long? {
-        val lastPossiblePosition = file.length() - startCode.size
-        var currentPosition = startPosition
-        val candidate = ByteArray(startCode.size)
-        while (currentPosition <= lastPossiblePosition) {
-            file.seek(currentPosition)
-            file.readFully(candidate)
-            if (candidate.contentEquals(startCode)) return currentPosition
-            currentPosition++
+        if (startPosition > file.length() - startCode.size) return null
+        file.seek(startPosition)
+        val scanBuffer = ByteArray(SCAN_BUFFER_SIZE)
+        var absolutePosition = startPosition
+        var matchedBytes = 0
+        while (true) {
+            val readSize = file.read(scanBuffer)
+            if (readSize < 0) return null
+            for (index in 0 until readSize) {
+                val currentByte = scanBuffer[index]
+                while (matchedBytes > 0 && currentByte != startCode[matchedBytes]) {
+                    matchedBytes = prefixTable[matchedBytes - 1]
+                }
+                if (currentByte == startCode[matchedBytes]) matchedBytes++
+                if (matchedBytes == startCode.size) {
+                    return absolutePosition + index - startCode.size + 1
+                }
+            }
+            absolutePosition += readSize
         }
-        return null
     }
 
     private fun hasStartCodeAt(position: Long): Boolean {
@@ -55,5 +67,18 @@ internal class OpusFramedFileReader(private val file: RandomAccessFile, startCod
         file.seek(position)
         file.readFully(candidate)
         return candidate.contentEquals(startCode)
+    }
+
+    private fun buildPrefixTable(pattern: ByteArray): IntArray {
+        val prefix = IntArray(pattern.size)
+        var matchedBytes = 0
+        for (index in 1 until pattern.size) {
+            while (matchedBytes > 0 && pattern[index] != pattern[matchedBytes]) {
+                matchedBytes = prefix[matchedBytes - 1]
+            }
+            if (pattern[index] == pattern[matchedBytes]) matchedBytes++
+            prefix[index] = matchedBytes
+        }
+        return prefix
     }
 }

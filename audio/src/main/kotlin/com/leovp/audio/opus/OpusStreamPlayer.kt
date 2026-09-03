@@ -11,12 +11,17 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -34,6 +39,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     }
 
     private var audioLatencyThresholdInMs = AUDIO_INIT_LATENCY_IN_MS
+    private val decodedPcmQueue = ArrayBlockingQueue<ByteArray>(AUDIO_DATA_QUEUE_CAPACITY)
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
 
@@ -73,13 +79,8 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
                     LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
-                    if (pcmData.isNotEmpty()) {
-                        if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) return
-                        if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
-                            LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
-                            // Play decoded audio data in PCM
-                            audioTrackPlayer.write(pcmData)
-                        }
+                    if (pcmData.isNotEmpty() && !decodedPcmQueue.offer(pcmData)) {
+                        LogContext.log.w(TAG, "Drop decoded PCM: playback queue is full")
                     }
                 }
             }
@@ -124,6 +125,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             csd1 = newCsd1
             csd2 = newCsd2
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
+            ioScope.launch { consumeDecodedPcm() }
             ioScope.launch {
                 delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS)
                 synchronized(lock) {
@@ -169,6 +171,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             )
             frameCount = 0
             runCatchingPreservingCancellation { decoder.flush() }.getOrNull()
+            decodedPcmQueue.clear()
             runCatchingPreservingCancellation { audioTrackPlayer.pause() }.getOrNull()
             runCatchingPreservingCancellation { audioTrackPlayer.play() }.getOrNull()
             if (dropFrameTimes.get() >= RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES) {
@@ -217,7 +220,26 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         csd2 = null
         frameCount = 0
         dropFrameTimes.set(0)
+        decodedPcmQueue.clear()
         old
+    }
+
+    private suspend fun consumeDecodedPcm() {
+        try {
+            while (true) {
+                currentCoroutineContext().ensureActive()
+                val pcmData = decodedPcmQueue.poll(100, TimeUnit.MILLISECONDS) ?: continue
+                if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) continue
+                if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
+                    LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
+                    audioTrackPlayer.write(pcmData)
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            LogContext.log.e(TAG, "Decoded PCM playback failed", e)
+        }
     }
 
     @Suppress("unused")

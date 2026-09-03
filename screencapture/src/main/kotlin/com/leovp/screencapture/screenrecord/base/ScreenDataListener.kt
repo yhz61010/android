@@ -12,4 +12,7 @@ interface ScreenDataListener {
      * [ScreenCapture.BY_MEDIA_CODEC]. In other cases, `-1` will be returned.
      */
     fun onDataUpdate(buffer: Any, flags: Int = -1, presentationTimeUs: Long = -1)
+
+    /** Called when a screen processor fails asynchronously. */
+    fun onError(error: Throwable) {}
 }

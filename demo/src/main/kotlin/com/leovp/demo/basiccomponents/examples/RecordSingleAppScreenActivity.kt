@@ -66,7 +66,6 @@ class RecordSingleAppScreenActivity :
         }
     }
 
-    // @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -109,7 +108,6 @@ class RecordSingleAppScreenActivity :
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                // @RequiresApi(Build.VERSION_CODES.O)
                 (screenProcessor as Screenshot2H26xStrategy).startRecord(this)
             } else {
                 videoH26xOsForDebug.flush()

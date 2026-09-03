@@ -84,6 +84,26 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         val shouldResync = synchronized(lock) {
             // We should use a better way to check CSD0
             if (audioData.size < 10) {
+                if (audioData.size < 2) {
+                    LogContext.log.e(
+                        TAG,
+                        "Invalid AAC codec configuration: ${audioData.size} bytes"
+                    )
+                    return
+                }
+                val incomingCsd = audioData.copyOfRange(audioData.size - 2, audioData.size)
+                val activeCsd = csd0
+                if (activeCsd != null) {
+                    if (activeCsd.contentEquals(incomingCsd)) {
+                        LogContext.log.d(TAG, "Ignore duplicate AAC codec configuration")
+                    } else {
+                        LogContext.log.e(
+                            TAG,
+                            "Ignore changed AAC codec configuration during an active session"
+                        )
+                    }
+                    return
+                }
                 initDecoderLocked(audioData)
                 return
             }

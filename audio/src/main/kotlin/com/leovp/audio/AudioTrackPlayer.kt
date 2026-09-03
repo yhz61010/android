@@ -114,25 +114,28 @@ class AudioTrackPlayer(
             return 0
         }
         require(pcmBytes.size % 2 == 0) { "PCM16 byte count must be even" }
-        if (STATE_UNINITIALIZED == audioTrack.state) {
-            return 0
-        }
-        var wroteSize = 0
-        if (PLAYSTATE_PLAYING == audioTrack.playState) {
-            // val st = SystemClock.elapsedRealtime()
-            // Play decoded audio data in PCM
-            val playData = pcmBytes.toShortArrayLE()
-            wroteSize = audioTrack.write(playData, 0, playData.size)
-            if (wroteSize < 0) {
-                LogContext.log.e(TAG, "AudioTrack.write error=$wroteSize")
-                return wroteSize
+        return runCatchingPreservingCancellation {
+            if (STATE_UNINITIALIZED == audioTrack.state) return@runCatchingPreservingCancellation 0
+            var wroteSize = 0
+            if (PLAYSTATE_PLAYING == audioTrack.playState) {
+                // val st = SystemClock.elapsedRealtime()
+                // Play decoded audio data in PCM
+                val playData = pcmBytes.toShortArrayLE()
+                wroteSize = audioTrack.write(playData, 0, playData.size)
+                if (wroteSize < 0) {
+                    LogContext.log.e(TAG, "AudioTrack.write error=$wroteSize")
+                    return@runCatchingPreservingCancellation wroteSize
+                }
+                if (BuildConfig.DEBUG) {
+                    LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")
+                }
             }
-            if (BuildConfig.DEBUG) {
-                LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")
-            }
+            // wroteSize is the length of short array. So we need to convert it to byte length.
+            wroteSize * 2
+        }.getOrElse {
+            LogContext.log.e(TAG, "AudioTrack.write failed", it)
+            0
         }
-        // wroteSize is the length of short array. So we need to convert it to byte length.
-        return wroteSize * 2
     }
 
     /**

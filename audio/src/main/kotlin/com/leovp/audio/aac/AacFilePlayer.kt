@@ -107,7 +107,7 @@ class AacFilePlayer(
         }.onFailure { LogContext.log.e(TAG, "AAC playback start failed", it) }
     }
 
-    override fun stop() {
+    fun stop() {
         if (audioTrackPlayer.state == AudioTrack.STATE_UNINITIALIZED) {
             return
         }

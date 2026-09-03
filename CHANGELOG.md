@@ -57,6 +57,18 @@
 
 ### 变更 (Changed)
 
+- **BaseMediaCodec 改为一次性会话**：同一个 AAC/OPUS encoder/decoder 包装器只能调用一次 `start()`；
+  结束后必须创建新实例，不再支持 `stop() -> start()` 复用。基类删除公开 `stop()`，新增
+  `NEW -> STARTING -> RUNNING -> RELEASING -> RELEASED` 生命周期，重复启动、释放后启动和启动失败后
+  重试都会明确失败；启动失败会释放已部分初始化的 MediaCodec。AAC/OPUS encoder 输入队列改为私有，
+  统一通过只在运行态接收数据的 `encode()` 投递；`AacDecoder.decode()` 改为返回是否成功入队。
+  - **破坏性变更**：外部子类不能再覆写 `start()`/`stop()`；直接访问 encoder `queue` 的调用方迁移到
+    `encode()`；开始新会话时创建新的 codec 包装器实例。该选择避免队列、PTS、CSD、EOS、迟到回调和
+    worker 跨会话污染；若将来需要降低 codec 创建延迟，应使用独立资源池或显式重配置 API。
+- **Screenshot H.26x 录屏兼容 API 21**：不再直接引用 API 26 才公开的
+  `EGLExt.EGL_RECORDABLE_ANDROID` Java 字段，改用 `EGL_ANDROID_recordable` 固定 token `0x3142`，并加强
+  EGL config 选择校验，因此移除 `Screenshot2H26xStrategy` 的 API 26 注解。API 21～25 真机验证仍待完成；
+  该变更不代表设备一定具备 H.265 encoder。
 - **Native API 与发布契约收敛**：`BitmapProcessor.bitmapByteBuffer` 及其 JVM getter/setter 已直接删除，
   Native handle 改为私有 `Long`。这是源码和二进制不兼容变更；调用方必须改用公开变换 API，并通过
   `close()/use {}` 管理生命周期。三个预编译 FFmpeg AAR 现在通过 Gradle Module Metadata 共享

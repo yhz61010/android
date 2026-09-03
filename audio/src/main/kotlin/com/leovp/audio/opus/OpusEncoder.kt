@@ -171,7 +171,7 @@ class OpusEncoder(
         private const val TAG = "OpusEn"
     }
 
-    val queue = ArrayBlockingQueue<ByteArray>(64)
+    private val queue = ArrayBlockingQueue<ByteArray>(64)
 
     /** The total bytes of audio data. */
     private var totalPcmBytes: Long = 0
@@ -188,10 +188,9 @@ class OpusEncoder(
         // format.setInteger(MediaFormat.KEY_COMPLEXITY, 3)
     }
 
-    override fun start() {
+    override fun onBeforeCodecStart() {
         totalPcmBytes = 0
         codecSpecificData = null
-        super.start()
     }
 
     override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
@@ -233,12 +232,10 @@ class OpusEncoder(
     override fun computePresentationTimeUs(): Long =
         1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
 
-    override fun stop() {
-        queue.clear()
-        super.stop()
-    }
+    fun encode(input: ByteArray): Boolean = isRunning && queue.offer(input)
 
     override fun onCodecReleased() {
+        queue.clear()
         codecSpecificData = null
     }
 }

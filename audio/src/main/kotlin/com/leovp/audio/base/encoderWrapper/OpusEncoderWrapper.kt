@@ -38,7 +38,7 @@ class OpusEncoderWrapper(
     ).apply { start() }
 
     override fun encode(input: ByteArray) {
-        encoder.queue.offer(input)
+        encoder.encode(input)
     }
 
     override fun release() {

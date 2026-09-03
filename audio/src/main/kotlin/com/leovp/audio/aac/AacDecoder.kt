@@ -77,9 +77,8 @@ class AacDecoder(
         format.setByteBuffer("csd-0", csd0BB)
     }
 
-    override fun start() {
+    override fun onBeforeCodecStart() {
         frameCount = 0
-        super.start()
     }
 
     // Poll with a timeout instead of blocking take() so coroutine cancellation is honored quickly.
@@ -102,17 +101,16 @@ class AacDecoder(
         callback.onDecoded(outBuf.toByteArray())
     }
 
-    fun decode(aacData: ByteArray) {
+    fun decode(aacData: ByteArray): Boolean {
         // LogContext.log.e(TAG, "--->>> decode[${aacData.size}] queue[${queue.size}]")
-        queue.offer(aacData)
+        return isRunning && queue.offer(aacData)
     }
 
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
     override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
 
-    override fun stop() {
+    override fun onCodecReleased() {
         queue.clear()
-        super.stop()
     }
 }

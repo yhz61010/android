@@ -377,6 +377,45 @@ CSD 问题不只是“空安全的 benign race”：确定性 `releaseAndJoin()`
 后续用空 config 创建 context 时才得到难定位的失败。该修改解决的是 API 链接与错误报告问题，不保证任意
 API 21 设备一定提供满足录制要求的 EGL config，也不代表设备一定具备 H.265 硬件编码器。
 
+### 4.14 BaseMediaCodec 收敛为一次性会话
+
+后续复审指出，`BaseMediaCodec.stop()` 会把 teardown 标志置位，而第二次 `start()` 既不复位标志，又会
+创建新的 MediaCodec。这会让新 codec 启动后被回调守卫静默拦截，同时旧 codec 在字段被覆盖前没有释放。
+Codex 复核后确认，简单复位 `releasing`/`codecReleased` 不能正确解决问题：一轮编解码还包含输入输出队列、
+PTS、帧计数、CSD、EOS、回调和同步 worker；若复用同一包装器，还必须阻止上一轮迟到回调或 worker 访问
+下一轮 codec。
+
+本轮在明确不考虑旧版 `stop() -> start()` 兼容性的前提下，选择“一实例一会话”，而不是实现跨会话复用：
+
+```text
+NEW -> STARTING -> RUNNING -> RELEASING -> RELEASED
+```
+
+理由如下：
+
+1. 新会话直接创建新的 encoder/decoder 包装器，可以天然隔离队列、时间戳、CSD 和回调所有权；功能上仍能
+   连续执行任意数量的编解码会话。
+2. `ioScope` 在 release 时永久取消，复活原对象会要求重建 scope、worker 和所有子类状态，复杂度与收益
+   不成比例。
+3. 当前会话内需要丢弃积压数据时仍可使用 `flush()`；如未来实测 codec 创建延迟成为瓶颈，应设计独立资源池
+   或显式 `resetAndReconfigure()`，而不是让 `start()` 隐式承担两种生命周期语义。
+
+代码改动：
+
+- `BaseMediaCodec.start()` 固定为一次性入口，不再允许子类覆写；第二次调用、释放后调用或启动失败后重试均
+  明确抛出 `IllegalStateException`。
+- 基类删除 `stop()`；AAC/OPUS 子类的计数和 CSD 初始化迁到 `onBeforeCodecStart()`，队列和 CSD 清理迁到
+  只执行一次的 `onCodecReleased()`。
+- 启动流程与 release 共用 codec 操作锁。创建、配置或启动任一步骤失败时，会释放已经部分初始化的 codec
+  并进入 `RELEASED`，不保留可重试的半初始化对象。
+- `release()`/`releaseAndJoin()` 可从未启动、启动中或运行中进入终态；确定性释放使用不可取消清理区，并
+  在获得 codec 锁后再次读取同步 worker 引用，覆盖 start/release 并发安装 worker 的窗口。
+- AAC/OPUS encoder 不再公开可绕过生命周期的输入队列，改用 `encode()`；encoder/decoder 仅在
+  `RUNNING` 状态接受数据，释放开始后返回失败。
+
+回归测试新增一次性启动、启动失败清理、未启动即释放和 start/release 并发用例；既有迟到回调测试改为验证
+terminal release。该策略是有意的源码/API 行为收敛：调用方开始新会话时必须创建新的 codec 包装器实例。
+
 ## 5. 本轮真实验证记录
 
 ### 5.1 已通过
@@ -440,6 +479,12 @@ API 21 设备一定提供满足录制要求的 EGL config，也不代表设备�
   相关的 lint、ktlint、detekt、单元测试与 `:demo:assembleDevDebug` 合并使用 `--rerun-tasks` 强制重跑，
   802 个任务全部实际执行并通过；`screencapture` 当前没有 JVM 单元测试源码，因此该模块测试任务为
   `NO-SOURCE`。
+- `BaseMediaCodec` 一次性会话改造后，`audio:testDebugUnitTest`、`audio:ktlintCheck` 和
+  `audio:detekt` 使用 `--rerun-tasks` 强制重跑并通过，共执行 110 个任务；audio 模块共执行 20 个单元
+  测试且无失败。新增用例覆盖重复启动、启动失败后的部分资源释放、未启动即释放以及 start/release 并发。
+- 直接下游验证执行 `audio:lintDebug`、`audio:assembleDebug`、`demo:ktlintCheck`、`demo:detekt`、
+  `demo:testDevDebugUnitTest` 和 `demo:assembleDevDebug`，同样使用 `--rerun-tasks` 强制重跑，723 个任务
+  全部实际执行并通过。输出仅包含仓库已有弃用 API 和平台 API 警告，没有新增失败。
 
 ### 5.2 尚未完成
 
@@ -450,7 +495,8 @@ API 21 设备一定提供满足录制要求的 EGL config，也不代表设备�
   完成；上述结论只覆盖源码、JVM 测试、四 ABI Native 重建和 Demo APK 构建。
 - Audio Demo：PCM/AAC/OPUS 的停止日志、PCM/OPUS 自然文件播放和 AAC 录音期间直接退页已在 P3H 通过，
   AAC 文件也已完成解码播放链路验证；本轮将文件播放器释放移到 IO 后，仍需复测三种格式播放中主动停止、
-  自然结束、快速重复进入退出及实际听感，并确认没有主线程卡顿或 teardown 错误。
+  自然结束、快速重复进入退出及实际听感，并确认没有主线程卡顿或 teardown 错误。一次性 codec 会话的
+  JVM、静态检查和 APK 构建已通过，但其“结束旧会话后创建新包装器再开始”的完整 Demo 流程仍需真机复测。
 - Screenshot 录屏：API 21 兼容代码已完成编译和静态检查；仍需至少一台 API 21～25 真机用 H.264 路径验证
   EGL config、首帧画面、停止释放和重复进入退出。P3H 的 H.265 encoder 缺失不作为本轮代码回归失败。
 - yuv/lib-image/jpeg：新增仪器测试、非法输入、并发 close、recycled/HARDWARE Bitmap 和输出一致性。
@@ -470,7 +516,9 @@ APK 构建验证，但设备在安装前断开，Encode/Play 真机回归仍须�
 后续复审发现的 format/error 回调锁窗口、stop-only 守卫、OPUS CSD 发布/清理竞态和 Demo 主线程播放器
 释放均已完成代码整改与 JVM/编译验证，仍需补播放器停止真机回归。Screenshot 录屏已消除对 API 26
 `EGLExt.EGL_RECORDABLE_ANDROID` Java 字段的直接依赖并加强 EGL config 校验，但 API 21～25 真机验证尚未
-完成，且该兼容修改不改变设备是否支持 HEVC encoder 的硬件能力边界。
+完成，且该兼容修改不改变设备是否支持 HEVC encoder 的硬件能力边界。`BaseMediaCodec` 已在不保留旧版
+复用兼容性的前提下改为“一实例一会话”，并完成并发单测、静态检查和直接下游构建；这项破坏性收敛以
+隔离队列、PTS、CSD、EOS、回调和 worker 所有权为优先，真机仍需验证连续会话通过新建包装器正常完成。
 
 交叉参考：
 

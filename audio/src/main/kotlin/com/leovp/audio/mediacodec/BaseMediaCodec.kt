@@ -7,15 +7,18 @@ import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 
 /**
  * Author: Michael Leo
@@ -32,6 +35,14 @@ abstract class BaseMediaCodec(
         private const val TAG = "BaseMediaCodec"
     }
 
+    private enum class LifecycleState {
+        NEW,
+        STARTING,
+        RUNNING,
+        RELEASING,
+        RELEASED,
+    }
+
     internal lateinit var format: MediaFormat
     internal lateinit var codec: MediaCodec
 
@@ -44,39 +55,79 @@ abstract class BaseMediaCodec(
     protected var codecJob: Job? = null
 
     private val codecReleased = AtomicBoolean(false)
+    private val lifecycleState = AtomicReference(LifecycleState.NEW)
 
-    /** Serializes codec callbacks and worker operations with stop/flush/release. */
+    /** Serializes codec callbacks and worker operations with flush/release. */
     private val codecOperationLock = ReentrantLock()
 
     /**
-     * Set as soon as an intentional teardown ([stop], [release], or [releaseAndJoin]) begins. A
-     * worker or asynchronous callback may still be waiting to enter a codec operation; any
-     * exception caused by that teardown is expected shutdown noise, not a real failure. Subclasses
-     * check this flag before touching the codec or reporting a spurious failure (remediation R-4).
+     * True as soon as terminal teardown begins. A worker or asynchronous callback may still be
+     * waiting to enter a codec operation; any exception caused by teardown is expected shutdown
+     * noise, not a real failure.
      */
-    private val releasing = AtomicBoolean(false)
+    protected val isReleasing: Boolean
+        get() = when (lifecycleState.get()) {
+            LifecycleState.RELEASING,
+            LifecycleState.RELEASED -> true
+            else -> false
+        }
 
-    /** Whether an intentional teardown is in progress; see [releasing]. */
-    protected val isReleasing: Boolean get() = releasing.get()
+    /** Whether this one-shot session currently accepts input. */
+    protected val isRunning: Boolean get() = lifecycleState.get() == LifecycleState.RUNNING
 
     abstract fun setFormatOptions(format: MediaFormat)
 
     open fun setMediaCodecOptions(codec: MediaCodec) = Unit
 
-    open fun start() {
-        createMediaFormat()
-        createCodec()
-        codec.start()
-    }
+    /**
+     * Starts this one-shot codec session.
+     *
+     * A wrapper instance cannot be restarted after it has started or begun teardown. Create a new
+     * encoder/decoder instance for every new session. This keeps queues, timestamps, codec-specific
+     * data, callbacks, and worker ownership isolated between sessions.
+     */
+    fun start() {
+        check(lifecycleState.compareAndSet(LifecycleState.NEW, LifecycleState.STARTING)) {
+            "A BaseMediaCodec instance can only be started once"
+        }
 
-    open fun stop() {
-        require(::codec.isInitialized) { "Did you call start() before?" }
-        releasing.set(true)
-        withCodecOperationLock {
-            runCatchingPreservingCancellation { codec.stop() }
-                .onFailure { LogContext.log.e(TAG, "stop() error", it) }
+        try {
+            withCodecOperationLock {
+                check(lifecycleState.get() == LifecycleState.STARTING) {
+                    "Codec teardown began while start() was in progress"
+                }
+                onBeforeCodecStart()
+                createMediaFormat()
+                createCodec()
+                check(lifecycleState.get() == LifecycleState.STARTING) {
+                    "Codec teardown began while start() was in progress"
+                }
+                codec.start()
+                check(
+                    lifecycleState.compareAndSet(
+                        LifecycleState.STARTING,
+                        LifecycleState.RUNNING
+                    )
+                ) { "Codec teardown began while start() was in progress" }
+                onCodecStarted()
+            }
+        } catch (e: Exception) {
+            lifecycleState.set(LifecycleState.RELEASING)
+            ioScope.cancel()
+            try {
+                releaseCodecOnce()
+            } finally {
+                lifecycleState.set(LifecycleState.RELEASED)
+            }
+            throw e
         }
     }
+
+    /** Resets per-session subclass state immediately before codec creation. */
+    protected open fun onBeforeCodecStart() = Unit
+
+    /** Starts subclass work after the codec has entered the running state. */
+    protected open fun onCodecStarted() = Unit
 
     /**
      * Deterministic lifecycle teardown: cancel and join the codec worker, cancel [ioScope], then
@@ -87,32 +138,43 @@ abstract class BaseMediaCodec(
      * expose a separate `requestRelease()` returning a [Job] instead of calling this.
      */
     suspend fun releaseAndJoin() {
-        val job = codecJob
-        require(job !== currentCoroutineContext()[Job]) {
+        require(codecJob !== currentCoroutineContext()[Job]) {
             "releaseAndJoin() must be called by an external owner, not the codec worker"
         }
-        releasing.set(true)
-        job?.cancelAndJoin()
-        codecJob = null
-        ioScope.cancel()
-        releaseCodecOnce()
+        if (!markReleasing()) return
+        try {
+            withContext(NonCancellable) {
+                ioScope.cancel()
+                codecJob?.cancelAndJoin()
+                releaseCodecOnce()
+                // start() may have installed a synchronous worker while release was waiting for
+                // the codec operation lock. Re-read and join it before deterministic teardown
+                // returns.
+                codecJob?.cancelAndJoin()
+                codecJob = null
+            }
+        } finally {
+            lifecycleState.set(LifecycleState.RELEASED)
+        }
     }
 
     /**
-     * Idempotent codec teardown. Only stops/releases the codec and flips the released flag.
+     * Idempotent codec teardown. Releases the codec and flips the released flag.
      * Does NOT cancel scopes or start any fire-and-forget work.
      */
     protected fun releaseCodecOnce() {
-        require(::codec.isInitialized) { "Did you call start() before?" }
         withCodecOperationLock {
             if (!codecReleased.compareAndSet(false, true)) return@withCodecOperationLock
-            runCatchingPreservingCancellation { codec.flush() }
-                .onFailure { LogContext.log.e(TAG, "flush error", it) }
+            if (::codec.isInitialized) {
+                runCatchingPreservingCancellation { codec.flush() }
+                    .onFailure { LogContext.log.e(TAG, "flush error", it) }
 
-            // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
-            runCatchingPreservingCancellation { codec.release() }
-                .onFailure { LogContext.log.e(TAG, "release error", it) }
-            onCodecReleased()
+                // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
+                runCatchingPreservingCancellation { codec.release() }
+                    .onFailure { LogContext.log.e(TAG, "release error", it) }
+            }
+            runCatchingPreservingCancellation { onCodecReleased() }
+                .onFailure { LogContext.log.e(TAG, "Subclass cleanup error", it) }
         }
     }
 
@@ -128,21 +190,38 @@ abstract class BaseMediaCodec(
         ReplaceWith("releaseAndJoin()")
     )
     open fun release() {
-        require(::codec.isInitialized) { "Did you call start() before?" }
+        if (!markReleasing()) return
         // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
         // when it must also wait for the worker to finish.
-        releasing.set(true)
         codecJob?.cancel()
         codecJob = null
         ioScope.cancel()
-        releaseCodecOnce()
+        try {
+            releaseCodecOnce()
+        } finally {
+            lifecycleState.set(LifecycleState.RELEASED)
+        }
     }
 
     open fun flush() {
-        require(::codec.isInitialized) { "Did you call start() before?" }
         withCodecOperationLock {
+            check(lifecycleState.get() == LifecycleState.RUNNING) {
+                "flush() requires a running codec session"
+            }
             runCatchingPreservingCancellation { codec.flush() }
                 .onFailure { LogContext.log.e(TAG, "flush error", it) }
+        }
+    }
+
+    private fun markReleasing(): Boolean {
+        while (true) {
+            when (val state = lifecycleState.get()) {
+                LifecycleState.RELEASED -> return false
+                LifecycleState.RELEASING -> return true
+                else -> if (lifecycleState.compareAndSet(state, LifecycleState.RELEASING)) {
+                    return true
+                }
+            }
         }
     }
 

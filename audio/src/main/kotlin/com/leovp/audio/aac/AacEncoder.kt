@@ -72,7 +72,7 @@ class AacEncoder(
         }
     }
 
-    val queue = ArrayBlockingQueue<ByteArray>(64)
+    private val queue = ArrayBlockingQueue<ByteArray>(64)
 
     /** The total bytes of audio data. */
     private var totalPcmBytes: Long = 0
@@ -86,9 +86,9 @@ class AacEncoder(
         // setInteger(MediaFormat.KEY_CHANNEL_MASK, DEFAULT_AUDIO_FORMAT)
     }
 
-    override fun start() {
+    override fun onBeforeCodecStart() {
         totalPcmBytes = 0
-        super.start()
+        csd0 = null
     }
 
     override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
@@ -231,5 +231,12 @@ class AacEncoder(
     override fun computePresentationTimeUs(): Long {
         // LogContext.log.d(TAG, "totalPcmBytes=$totalPcmBytes")
         return 1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
+    }
+
+    fun encode(input: ByteArray): Boolean = isRunning && queue.offer(input)
+
+    override fun onCodecReleased() {
+        queue.clear()
+        csd0 = null
     }
 }

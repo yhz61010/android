@@ -54,9 +54,8 @@ class OpusDecoder(
         // format.setInteger(MediaFormat.KEY_COMPLEXITY, 3)
     }
 
-    override fun start() {
+    override fun onBeforeCodecStart() {
         frameCount = 0
-        super.start()
     }
 
     override fun onInputData(inBuf: ByteBuffer): Int = queue.poll()?.let {
@@ -78,10 +77,9 @@ class OpusDecoder(
     // presentationTimeUs = totalFrames * timeUsPerFrame
     override fun computePresentationTimeUs(): Long = frameCount * (1_000_000L / sampleRate * 1024)
 
-    fun decode(rawData: ByteArray) = queue.offer(rawData)
+    fun decode(rawData: ByteArray): Boolean = isRunning && queue.offer(rawData)
 
-    override fun stop() {
+    override fun onCodecReleased() {
         queue.clear()
-        super.stop()
     }
 }

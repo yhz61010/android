@@ -1,0 +1,475 @@
+# Audio / Media Teardown 后续修复清单（Claude Code 审查产出）
+
+- 审查范围：`eb5ab94eb..dce403f17`，共 4 个提交
+  - `87fd1c7ac` fix(audio): handle PCM and OPUS file boundaries
+  - `df7825309` fix(media): harden codec teardown and API 21 EGL
+  - `b9fa704f8` chore(lib-common-android): fix static analysis violations
+  - `dce403f17` chore(demo): log audio cipher completion
+- 审查方式：三个并行专项代理独立审查 + 主审人逐条回读源码复核。H2 由两个代理**独立复现**。
+- 交叉引用：`00-documents/2026-08-31-native-modules-implementation-review_cc.md` §4.12、§4.13
+- 本文档为待修问题清单，**不含真机验证结论**
+
+## 0. 结论摘要
+
+| 提交 | 结论 | CRITICAL | HIGH | MEDIUM | LOW |
+|------|------|---------|------|--------|-----|
+| `87fd1c7ac` | **BLOCK** | 0 | 2（H2、H3） | 5 | 5 |
+| `df7825309` | **BLOCK** | 0 | 1（H1） | 3 | 3 |
+| `b9fa704f8` | APPROVE | 0 | 0 | 0 | 1 |
+| `dce403f17` | APPROVE | 0 | 0 | 0 | 0 |
+
+**必须在合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
+H2、H3 仍待处理。
+
+代理实跑结果：`:audio:testDebugUnitTest --tests "com.leovp.audio.opus.*"` 2/2 通过；
+`:audio:detekt`、`:audio:ktlintCheck` 均干净 —— 因此**本轮无静态检查类问题**，下列全部是逻辑/并发缺陷。
+
+---
+
+## 1. 必修项（HIGH）
+
+### H1（HIGH，已修复）`BaseMediaCodec` 生命周期语义不完整
+
+原实现同时暴露 `start()` 与 `stop()`，但没有定义同一实例能否再次启动。`stop()` 把 teardown 标志永久
+置位，第二次 `start()` 又会新建 codec，因此会出现新 codec 已启动、回调或同步 worker 却被 teardown
+标志静默拦截的问题。与此同时，第一次创建的 codec 只执行 `stop()`，字段随后被新实例覆盖，旧 codec
+无法再被显式释放。
+
+Codex 复核同时更正原审查中的一个推导：`stop()` 并不会把 `codecReleased` 置为 `true`，所以第二个 codec
+并非因为该标志而无法释放；真正泄漏的是被第二次 `createCodec()` 覆盖的第一个 codec。仅在 `start()` 中
+执行 `releasing.set(false)` / `codecReleased.set(false)` 既不能释放旧实例，也不能防止旧同步 worker 或迟到
+回调进入新会话，因此不采用原建议的两行复位方案。
+
+#### 最终决策：一个包装器实例只承载一个 codec 会话
+
+本轮明确不保留 `stop() -> start()` 复用兼容性，生命周期收敛为：
+
+```text
+NEW -> STARTING -> RUNNING -> RELEASING -> RELEASED
+```
+
+选择一次性会话而不是复用的理由：
+
+1. 一轮编解码包含输入/输出队列、PTS、帧计数、CSD、EOS、回调、worker 和错误状态。新建包装器能天然
+   隔离这些状态；复用则必须为每项定义重置规则，并处理上一轮迟到回调和 worker 跨代访问。
+2. `ioScope` 在释放时会永久取消，复活同一对象与现有资源所有权模型冲突。
+3. 继续当前会话应使用明确的输入暂停或 `flush()`；结束后开始新会话应创建新的 encoder/decoder，功能
+   能力不减少，但生命周期契约更容易验证。
+4. 若未来实测 MediaCodec 创建延迟成为瓶颈，应设计独立的资源池或显式 `resetAndReconfigure()`，不让普通
+   `start()` 同时承担首次启动和跨会话复活两种语义。
+
+#### 代码修改
+
+- `BaseMediaCodec.start()` 不再可覆写，并通过原子生命周期状态保证每个实例只能调用一次；运行中重复启动、
+  释放后启动、启动失败后重试都会明确抛出 `IllegalStateException`。
+- 删除基类公开 `stop()`。AAC/OPUS 子类原先在 `stop()` 中执行的队列清理迁入 `onCodecReleased()`；
+  每轮帧计数和 CSD 初始化迁入 `onBeforeCodecStart()`。
+- 启动任一步骤失败时进入终态，并释放已经部分创建的 MediaCodec，不留下半初始化实例。
+- `release()`/`releaseAndJoin()` 可从未启动、启动中或运行中进入终态；释放和子类清理继续只执行一次。
+- AAC/OPUS encoder 的输入队列改为私有，通过 `encode()` 接收数据；encoder/decoder 只有在 `RUNNING`
+  状态才接受输入，teardown 后的新数据会返回失败。
+- `releaseAndJoin()` 在不可取消清理区等待同步 worker，并在等待 codec 锁后再次读取 worker 引用，覆盖
+  `start()` 与释放并发时才刚安装 worker 的窗口。
+
+#### 回归测试
+
+新增或调整测试覆盖：第二次 `start()` 被拒绝；启动失败释放部分初始化 codec 且实例保持终态；未启动就
+释放后不能启动；`start()` 与 `release()` 并发时 release 等待初始化临界区、底层 codec 只释放一次；
+终态后的迟到 input/format/error 回调全部忽略。H1 不再以“恢复 restart”为验收标准，而以“任何实例只
+能启动一轮，所有结束路径都确定进入终态”为验收标准。
+
+---
+
+### H2（HIGH，`87fd1c7ac` 引入的回归）`OpusFilePlayer.stop()` 顺序变更导致主线程永久死锁
+
+> 两个独立代理均定位到此问题。
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt`
+- 位置：队列声明 `:49`；生产者 `onDecoded` `:93`；消费者 `:169`；`stop()` `:204-211`
+
+**问题**：`onDecoded`（`:93`）在容量 64 的有界 `ArrayBlockingQueue` 上执行**阻塞** `queue.put()`，
+而 `onDecoded` 运行于 `onOutputBufferAvailable` 内 —— 该回调在 `df7825309` 之后
+**持有 `codecOperationLock`**（`BaseMediaCodecAsynchronous` 用 `withCodecOperationLock` 包裹
+`onOutputData`）。本次提交同时改了 `stop()` 内的释放顺序：
+
+| 步骤 | 旧（`eb5ab94eb`） | 新（`87fd1c7ac`，当前） |
+|------|------------------|------------------------|
+| 1 | `decoder?.release()` | **`ioScope.cancel()`** <- 先杀掉唯一消费者 |
+| 2 | `ioScope.cancel()` | `closeInputFile()` |
+| 3 | `queue.clear()` | `audioTrackPlayer.release()` |
+| 4 | — | `decoder?.release()` |
+| 5 | — | `queue.clear()` <- **不可达** |
+
+旧顺序下执行 `decoder.release()` 时消费者仍在运行、仍在排空队列，被阻塞的 `put()` 能被唤醒；
+新顺序**先取消了唯一消费者**，因此队列满时：
+
+1. 回调线程卡死在 `queue.put()`，且**持有 `codecOperationLock`**；
+2. `stop()` 继续执行到 `decoder?.release()` -> `releaseCodecOnce()` -> `withCodecOperationLock`
+   -> **永久阻塞**；
+3. `queue.clear()`（`:210`）是唯一会发出 `notFull` 信号唤醒 putter 的调用，却排在 release 之后，
+   永远执行不到 -> 死锁无法自解，MediaCodec 与 AudioTrack 均不会被释放。
+
+`isReleasing` 快路径救不了：回调**已经进入锁内**才阻塞。
+
+**队列确实会满**：`:129-145` 的自适应 delay 逻辑本身就是为应对队列积压而存在的。
+
+**且落在主线程**：`BaseMediaCodecAsynchronous.kt:28` 的 `codec.setCallback(mediaCodecCallback)`
+未传入 `Handler`，MediaCodec 使用构造时的 `EventHandler`（`Looper.myLooper() ?: getMainLooper()`）；
+`playOpus()` 由 `AudioActivity.kt:183` 的 `setOnCheckedChangeListener` 进入，即构造于主线程
+-> 回调落在主线程 -> 结果是**硬 ANR + 永久挂死**。
+
+**建议修法**（推荐两项同时做）：
+
+1. 调整 `stop()` 顺序，让队列先排空：
+
+```kotlin
+fun stop() {
+    if (!stopped.compareAndSet(false, true)) return
+    ioScope.cancel()
+    closeInputFile()
+    queue.clear()          // 移到 release 之前，唤醒可能阻塞的 put()
+    audioTrackPlayer.release()
+    decoder?.release()
+    queue.clear()          // 释放后再清一次，回收残留引用
+}
+```
+
+   仅此一项仍有窗口：生产者可能在第一次 `clear()` 之后、`release()` 之前再次填满队列。
+   因此第 2 项才是根治。
+
+2. 把生产者改成**不可阻塞**：
+
+```kotlin
+override fun onDecoded(pcmData: ByteArray) {
+    if (pcmData.isEmpty()) return
+    if (!queue.offer(pcmData, DECODED_QUEUE_OFFER_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+        // 队列持续满 = 消费端已停止或严重滞后：丢弃并计数，绝不阻塞回调线程
+        droppedFrameCount.incrementAndGet()
+        LogContext.log.w(TAG, "Drop decoded PCM, queue full")
+    }
+}
+```
+
+**不要这样修**：不要把队列改成无界（`LinkedBlockingQueue()`）来回避阻塞 —— 那会把死锁换成
+解码快于播放时的无界内存增长；也不要在 `onDecoded` 里 catch `InterruptedException` 后吞掉。
+
+**同型问题（同一轮一并处理）**：`audio/src/main/kotlin/com/leovp/audio/opus/OpusStreamPlayer.kt:81`
+经 `AudioTrackPlayer.kt:125` 解析到阻塞的 `audioTrack.write(short[], ...)`，同样在持锁回调中执行、
+同样落在主线程。
+
+**说明**：把消费者从不可取消的 `queue.take()` 改为 `queue.poll(100, MILLISECONDS)`（`:169`）
+本身是正确改进，但被上述释放顺序回归抵消，需一并修复才生效。
+
+---
+
+### H3（HIGH）`stop()` 在播放协程可能仍处于阻塞 `write()` 时释放 AudioTrack -> 崩溃
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt:171`、`:206-208`
+- 相关：`audio/src/main/kotlin/com/leovp/audio/AudioTrackPlayer.kt:112-135`
+
+**问题**：`ioScope.cancel()` 是**协作式**取消。`:166-174` 的消费协程可能正阻塞在
+`AudioTrackPlayer.write()` -> `AudioTrack.write()` —— 在 `MODE_STREAM` 下这是**阻塞的、
+不可取消的 native 调用**。而 `stop()` 在 `audioTrackPlayer.release()`（`:208`）之前
+**没有 join 该 job**。
+
+`AudioTrackPlayer.write` 存在 TOCTOU：先检查 `audioTrack.state` / `audioTrack.playState`
+（普通 Java 字段），再调用 native `write`。若 `release()` 落在这个窗口内，native 调用抛
+`IllegalStateException` —— 该处**没有** `runCatchingPreservingCancellation` 包裹；
+`ioScope` 又无 `CoroutineExceptionHandler` -> 异常直达默认未捕获处理器 -> **应用崩溃**。
+
+**建议修法**（择一或并用）：
+
+1. 把 `OpusFilePlayer.stop()` 改为 `suspend`，在释放前 `cancelAndJoin()` 播放 job；
+   若必须保留非 suspend 签名，参照 `BaseMediaCodec.releaseAndJoin()` 提供一个确定性的
+   `stopAndJoin()`，并让 Demo 侧调用它。
+2. 在 `AudioTrackPlayer.write` 内用 `runCatchingPreservingCancellation` 包裹 native `write`，
+   把释放竞态期的 `IllegalStateException` 降级为返回 0（`CancellationException` 仍须重抛）。
+
+**Codex 复核修正**：释放与在途阻塞写并发的风险成立，但“必然由 native write 抛
+`IllegalStateException`”缺少 API 契约支持。Android 的阻塞写文档说明，其他线程调用 `stop()`/`pause()`
+可以中断写入并返回短写。因此最终修复顺序应是：停止生产、取消播放任务、调用 AudioTrack 的
+`stop()`/`pause()` 唤醒阻塞写、等待任务退出、最后 `release()`。单独在 release 前直接
+`cancelAndJoin()` 仍可能等待一个尚未被唤醒的 native write，异常捕获只能作为兜底，不能代替所有权排序。
+
+---
+
+## 2. 建议修复（MEDIUM）
+
+### M1 `onError` 现在在持锁状态下回调，公开扩展点新增未文档化的约束
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecAsynchronous.kt:124`
+- KDoc：`audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodec.kt:149-154`
+
+`IAudioMediaCodec.onError` 默认空实现，仓库内无 override，**当前无实际缺陷**。但纳入
+`withCodecOperationLock` 后，实现方若在 `onError` 中把 teardown 派发到别的线程并等待其完成，
+就会死锁 —— 修改前不会。现有 KDoc 只说明「同步处理会在持锁状态下调用子类的 input/output 回调」，
+未覆盖新纳入的两个回调。
+
+**建议**：更新 `BaseMediaCodec.kt:149-154` KDoc 明确列出 `onOutputFormatChanged` 与 `onError`；
+并在 `IAudioMediaCodec.onError` 上补充「实现必须有界、不得阻塞、不得同步等待其他线程完成 teardown」。
+
+### M2 新增测试未覆盖本次真正要防的竞态
+
+- 文件：`audio/src/test/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecAsynchronousTest.kt:79-97`
+
+`late callbacks are ignored after stop begins` 是**纯单线程**用例：`stop()` 已完全返回并释放锁
+之后才调用回调，因此只验证了快路径 `if (isReleasing) return`。
+**即使 `onError` / `onOutputFormatChanged` 完全不加 `withCodecOperationLock`，该用例也照样通过**
+—— 它覆盖的是上一轮的 #2（`stop()` 标志），而非 #1（format/error 锁窗口）。
+
+该文件 `:42-76` 已有正确范式（两个 executor + latch，证明 `release()` 会等待在途回调完成），
+format/error 路径缺同款用例。
+
+**建议补充三个用例**：
+
+1. **format/error 在途竞态**：仿 `:42-76`，让 `onOutputFormatChanged` / `onError` 在回调中卡住，
+   验证 `release()` 会等待其完成；该用例应在临时移除 `withCodecOperationLock` 后**失败**。
+2. **一次性会话约束**（对应 H1）：第二次 `start()`、释放后 `start()`、启动失败后重试均应失败；
+   `start()` 与 release 并发时部分初始化 codec 必须只释放一次。
+3. **`onCodecReleased()` 恰好一次**：分别经 `release()` 与 `releaseAndJoin()` 验证。
+
+**Codex 复核修正**：当前异步实现没有把 format 变化转发给
+`IAudioMediaCodec.onOutputFormatChanged()`，因此 format 路径暂时没有可阻塞的子类测试点。应先决定删除
+该死 API，或恢复转发后再按上述方式测试；error 路径可以直接使用阻塞 override 验证。
+
+### M3 `initEgl()` 失败路径泄漏 encoder / input Surface / EGLDisplay，且直接崩溃进程
+
+- 文件：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/strategies/Screenshot2H26xStrategy.kt`
+- 新增抛点：`:265-269`（本次新增的 `eglChooseConfig()` 严格校验）；既有抛点：`:285`、`:296`
+- 调用点：`:383-385`
+
+新增校验的抛出位置在 `surface = h26xEncoder?.createInputSurface()`（`:221`）与 `eglInitialize()`
+（`:231`）**之后**。而 `onInit()` 由裸 `CoroutineScope(Dispatchers.IO).launch` 调用（`:383-385`），
+无 `CoroutineExceptionHandler`、外部无 try/catch -> 异常直达线程未捕获处理器 -> **进程崩溃**，
+同时 MediaCodec encoder、其 input `Surface`、以及已 `eglInitialize()` 但从未 `eglTerminate()` 的
+`EGLDisplay` 全部泄漏。既有 `:285` / `:296` 抛点是同样问题，且因新增校验而更易触发。
+
+**建议**：把 `initEgl()` 包进 try/catch，失败时 `releaseEgl()` + 释放 encoder/Surface + 置空，
+并通过既有的 `builder.screenDataListener` 上报错误，而不是让异常逃逸崩溃进程。
+`CancellationException` 必须重抛 —— 使用仓库既有的 `runCatchingPreservingCancellation`，
+不要用裸 `catch (e: Exception)`。
+
+**Codex 复核修正**：`ScreenDataListener` 当前只有 `onDataUpdate()`，不存在错误回调，所以上述“通过既有
+listener 上报错误”不能直接实施。修复时需新增带默认实现的错误入口或独立 error listener，或者在不扩展
+公开 API 时至少完成确定性清理并记录错误。
+
+### M4 CHANGELOG 缺少 Screenshot API 21 能力范围变更
+
+- 文件：`CHANGELOG.md`
+
+本轮只记录了 PCM/OPUS 播放边界修复，遗漏了 `df7825309` 的以下能力范围变更：
+
+1. **`Screenshot2H26xStrategy` 移除 3 处 `@RequiresApi(26)`**，把该录屏策略可用范围从 API 26
+   放宽至 minSdk 21。这是对外能力范围的**扩大**，且 API 21~25 真机尚未验证，
+   应记录并附「API 21~25 未完成真机验证」限定说明。
+
+原审查把 `OpusEncoder.csd0/csd1/csd2` 从 `var` 改成 `val` 判定为移除公开 setter，这是误判：旧属性均为
+`private set`，外部从未获得 setter；新实现保留相同公开 JVM getter，因此不构成所述源码或二进制破坏。
+该项无需作为 breaking change 记录。
+
+补充确认：`OpusFramedFileReader` / `OpusFilePayload` 均为 `internal`，不构成新公开 API，无需记入 CHANGELOG。
+
+### M5 排空判定拿 decoder **输入**数与**输出**数相比 -> 确定性 3 秒卡顿 + 同类伪错误
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt:178-192`
+
+`submittedFrameCount` 统计**送入 decoder 的 OPUS 帧数**（`:127`）；
+`playedFrameCount` 统计**写入 AudioTrack 的 PCM buffer 数**（`:172`）。两者不是同一个量：
+
+- 全程未发送 `BUFFER_FLAG_END_OF_STREAM`，输入 EOF 时 codec 内部仍持有的帧永远不会被吐出；
+- `:93` 过滤掉空输出（`if (pcmData.isNotEmpty())`），会永久性地少计输出侧。
+
+一旦两者发散，`playedFrameCount < submittedFrameCount` 恒不可满足 -> `withTimeoutOrNull` 耗满
+3 秒 -> `endCallback` 延迟 3 秒，并记录一条伪 Error `Timed out draining OPUS output`
+—— 正是本次提交刚刚消除的那类伪错误（`Can't find start code`）的同型症状。
+
+> 注：`00-documents/2026-08-31-native-modules-implementation-review_cc.md` §5.1 记录的
+> `submitted=194 played=194` / `submitted=192 played=192` 说明在 P3H 上两者恰好相等；
+> 但这**不是格式或 API 保证**，换设备/换 codec 即可能发散。
+
+**建议**：改用 codec 的排空信号（发送 EOS + `onEndOfStream`），或者干脆去掉输入/输出计数比较，
+只等待 `queue.isEmpty()`。
+
+### M6 瞬时解码背压现在会直接终止播放
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt:122-126`
+
+`OpusDecoder.decode()` 内部是对 64 槽 `ArrayBlockingQueue` 的 `offer()`，输入队列满时返回 `false`。
+当前 `check(decoder?.decode(payload.data) == true) { "OPUS decoder input queue is full" }`
+把这个**可恢复的瞬时状态**转成 `IllegalStateException`，被 `:158` 捕获、记为 Error，
+**整个解码循环终止，播放在文件中途结束**。本次提交之前该帧只是被静默丢弃。
+
+另外当 `decoder` 为 `null` 时 `null == true` 走同一分支，错误信息具有误导性。
+
+**建议**：区分「decoder 为 null」（真错误）与「输入队列满」（重试/丢帧 + Warn），不要用 `check` 终止循环。
+
+### M7 `playOpus()` 在调用线程做阻塞文件 I/O，而 Demo 在主线程调用
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt:64-100`、
+  `audio/src/main/kotlin/com/leovp/audio/opus/OpusFramedFileReader.kt:43-48`
+- 调用点：`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/AudioActivity.kt:183`
+  （`setOnCheckedChangeListener` 内 -> 主线程）
+
+`findStartCode` 在**无缓冲** `RandomAccessFile` 上，每扫描 1 字节做一次 `seek` + `readFully`
+系统调用对。文件正常时 CSD 扫描约 19 字节，开销可忽略；但若文件**没有第二个 start code**
+（被截断、损坏、或选错文件），`readPayload(0)` 会在主线程上逐字节扫完整个文件，文件较大时可能造成
+明显卡顿乃至 ANR。原审查给出的“约 1~3 秒/MB”没有基准测试证据，不作为量化结论保留。
+
+另外：空的 `audio.opus`（从未录制就点 "Play OPUS"，`createFile()` 会创建 0 字节文件）会让
+`require(hasStartCodeAt(0))` 抛 `IllegalArgumentException` 直接从 `playOpus` 逃出到 UI 线程；
+`AudioActivity` 无 try/catch -> **崩溃**。（此前 `getCsd()!!` 同样会崩，属既有行为，
+但「边界处理」这个提交正是关闭它的合适位置。）
+
+**建议**：`playOpus()` 的同步初始化段整体移到 IO 线程；`OpusFramedFileReader` 改用带缓冲的批量
+扫描而非逐字节 `seek`；并对空文件/无 start code 给出明确的失败回调而非抛到 UI 线程。
+
+### M8 `AudioActivity.ioScope` 从不取消，生命周期超出 Activity
+
+- 文件：`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/AudioActivity.kt:68`
+
+`CoroutineScope(Dispatchers.IO)` 无 `onDestroy` 覆写；`BaseDemonstrationActivity.onDestroy`
+只反注册 EventBus。`:312` / `:317` 的 job 捕获了 `this@AudioActivity`。
+上一轮「把 `stop()` 移出主线程」的修复方向正确，但**残留了 scope 泄漏**。
+
+**建议**：改用 `lifecycleScope`，或在 `onDestroy` 中取消该 scope。
+
+### M9 最后一段 PCM 仍被丢弃
+
+- 路径：`OpusFilePlayer.kt:200` -> `AudioActivity.kt:183` -> `stopOpusPlayback()`
+  -> `AudioTrackPlayer.release()`
+
+`endCallback` 在**软件队列**清空时即触发，但 `write()` 只是把数据**排入 AudioTrack**。
+Demo 的回调随即取消按钮选中 -> `stop()` -> `AudioTrackPlayer.release()` -> `stop()` -> `pause()` + `flush()`，
+**丢弃尚未播出的尾部音频**。最后一个 OPUS 帧现在能正确提交了（这是本次提交的正向改进），
+但最后约 `minBufferSize` 长度的音频仍会被丢掉。
+
+**建议**：release 前改用 `AudioTrack.stop()`（让已排入的数据播完）而非 `pause()` + `flush()`，
+或依据 `playbackHeadPosition` 等待播放真正到达写入总量后再释放。
+
+---
+
+## 3. 可选项（LOW）
+
+| 编号 | 文件:行 | 内容 |
+|------|---------|------|
+| L1 | `audio/.../mediacodec/iter/IAudioMediaCodec.kt:66` | `onOutputFormatChanged` 是**死 API**：异步回调只赋值 `this.format` 从不转发，同步路径也不调。本次恰好改到该方法却留着永不触发的钩子。 |
+| L2 | `audio/.../mediacodec/BaseMediaCodec.kt:115` | `onCodecReleased()` 是 `releaseCodecOnce()` 中**唯一**未用 `runCatchingPreservingCancellation` 包裹的调用；子类钩子抛异常会在 codec 已释放后逃逸出 `release()` / `releaseAndJoin()`。 |
+| L3 | `demo/.../screenrecord/RecordSingleAppScreenActivity.kt:112` | 残留 `// @RequiresApi(Build.VERSION_CODES.O)` 陈旧注释，与本次移除 API 26 约束不一致。 |
+| L4 | `lib-common-android/.../utils/shell/ShellUtil.kt:143-150` | `var line: String`（非空）从 Java 平台类型 `readLine()` 赋值，EOF 时 `:150` 的 `line.split(...)` 解引用 null -> 更严格空检查代码生成下抛 NPE；`reader` 亦未 `use { }` 关闭。既有问题，本次未触及。修时注意不要引入 `!!`。 |
+| L5 | `lib-common-android/.../utils/NetworkUtil.kt:463-473`、`:485`；显示于 `DeviceUtil.kt:222` | `1xRTT`/`CDMA`/`EHRPD`/`EVDO_*` 被注释后落入 `else -> null`，CDMA/EVDO 制式下设备信息可能渲染为 `(null)`。原归属判断错误：`origin/master` 仍保留这些映射，当前分支的 `6fac4bdd5` 才将其注释，因此这是当前分支回归，虽不在本文四提交审查范围内，仍应在合入前恢复并按需加 `@Suppress("DEPRECATION")`。 |
+| L6 | `audio/.../opus/OpusFramedFileReader.kt:19-21` | 溢出 `require` 不可达：`:16` 的 `hasStartCodeAt` 已把 `startCodePosition` 限制在 `<= file.length() - startCode.size`。 |
+| L7 | `audio/.../opus/OpusFramedFileReader.kt:5` | `data class` 含 `ByteArray` 属性 -> `equals`/`hashCode` 退化为基于身份比较。 |
+| L8 | `audio/.../opus/OpusFilePlayer.kt:206` | `stop()` 永久取消 `ioScope`，实例单次可用；二次 `playOpus()` 会打开文件并启动 codec 却静默不启动任何协程。Demo 每次新建实例，故为潜在问题。 |
+| L9 | `audio/.../opus/OpusFilePlayer.kt:84-98` | 若 `start()` 在 `.apply {}` 内抛出，`decoder` 仍为 `null`，`:101` 的 catch -> `stop()` -> `decoder?.release()` 空操作 -> **半启动的 MediaCodec 泄漏**。 |
+| L10 | `audio/src/test/kotlin/com/leovp/audio/opus/OpusFramedFileReaderTest.kt` | 仅 2 个用例。缺：空文件；**末尾裸 start code**（实际可达 —— `AudioActivity.kt:217-218` 把 start code 与 payload 分两次 `write()`，中途被杀即产生零长末 payload，随后触发 `OpusFilePlayer.kt:123` 的 `require(payload.data.isNotEmpty())` 并记伪 Error）；EOF 处截断的 start code；payload 内部的 start code 别名。 |
+
+---
+
+## 4. 正面确认（无需改动，避免重复劳动）
+
+### 4.1 teardown 不变量全部保持
+
+- terminal teardown 先切换到 `RELEASING` 再等待 codec 锁；`release()` 与 `releaseAndJoin()` 都遵循该
+  顺序，基类 `stop()` 已按一次性会话决策删除。
+- 四个回调均为「快路径检查 + 锁内二次检查」。
+- `onCodecReleased()` 位于 `codecReleased.compareAndSet` 保护块内（`:108-116`），
+  对 `release()` 与 `releaseAndJoin()` 两条路径都恰好一次。
+- `job?.cancelAndJoin()`（`:95`）先于取锁（`:98`），无锁序死锁。
+- **死锁与重入两项假设证否**：`MediaCodec.stop()/flush()/release()` 只做 `native_*()` +
+  `mCallbackHandler.removeMessages()`，从不 join Java 回调 Handler，且回调派发路径不持
+  `mListenerLock`；回调恒经 `Handler` 派发，不会从 `stop()`/`release()` 内联重入。
+  因此给 `onError` 加锁**不引入新的锁序或二次释放风险**。
+
+### 4.2 上一轮 4 项 MEDIUM 的闭环情况
+
+| 上轮编号 | 内容 | 状态 |
+|---------|------|------|
+| #1 | `onOutputFormatChanged`/`onError` 绕过共享锁 | **已闭环**（但缺回归测试，见 M2） |
+| #2 | `stop()` 未置 teardown 标志 | 原补丁引入 H1；现已由一次性会话状态机替代，基类不再暴露 `stop()` |
+| #3 | `OpusEncoder` csd 三字段竞态 | **已闭环**（在 `df7825309`）：单个 `@Volatile codecSpecificData: OpusCsd?` 原子换整体，`onOutputData` 在锁内写、`onCodecReleased()` 清空（由 `releaseCodecOnce()` 在 `withCodecOperationLock` 内调用）。无死锁（同线程 `ReentrantLock` 直调）、无 NPE（getter 保持可空，调用方用 `?.`），且保留 `getCsd0/1/2` JVM getter 名。 |
+| #4 | `AudioActivity.onStop()` 主线程阻塞 | **已闭环**（在 `df7825309`）：`stopAacPlayback`/`stopOpusPlayback`（`AudioActivity.kt:286-296`）先摘除字段引用再 `ioScope.launch { player.stop() }`；`stop()` 不触碰 Activity 状态，无 use-after-destroy。残留 scope 泄漏见 M8。 |
+
+### 4.3 `87fd1c7ac` 的核心修复是正确的
+
+- **不存在 partial-read 缺陷**：`OpusFramedFileReader.kt:33/45/56` 全部使用 `readFully`。
+- **边界数学正确**：`hasStartCodeAt:53` 对短于 start code 的文件不下溢；`:26` 的
+  `payloadSize in 0..Int.MAX_VALUE` 是有效防护；负长度结构上不可能（`nextStartCodePosition >= payloadStart`）。
+- **主修复本身正确**：`OpusFilePlayer.kt:154` 的
+  `startCodeBeginPos = payload.nextStartCodePosition ?: break` 在 `break` **之前**已提交最后一帧，
+  自然 EOF 不再丢帧、不再产生伪错误。
+- **取消规则遵守**：`OpusFilePlayer.kt:156-157` 在通用 catch 之前重抛 `CancellationException`；
+  `:160-163` 的 `finally` 关闭文件。新代码中**无 `!!`**，`:69`/`:72` 使用 `requireNotNull`。
+- `stop()` 经 `stopped.compareAndSet` 幂等；`closeInputFile()` 有 `::rf.isInitialized` 保护。
+
+### 4.4 API 21 EGL 兼容改动正确
+
+- `0x3142` 是 `EGL_ANDROID_recordable` 的正确 token 值。
+- `EGLExt.EGL_RECORDABLE_ANDROID` 确实自 API 26 才作为公开 Java 字段可用；而
+  `EGLExt.eglPresentationTimeANDROID()`（`:210`）早于 API 21，保留该 import 正确。
+- `EGL14`、`eglCreateWindowSurface(..., Object win, ...)`、`MediaCodec.setCallback`、
+  `createInputSurface` 均为 API <= 21。
+- 其余版本分支与真实 API 级别吻合：`:352` `KEY_LEVEL` = API 23、`:346` `KEY_PROFILE` = API 21、
+  `:340` `KEY_MAX_FPS_TO_ENCODER` 为内联字符串常量。
+- 因此三处 `@RequiresApi(26)` 的移除**在 API 链接层面成立**；`androidx.annotation.RequiresApi`
+  已正确移除，`android.os.Build` 与 `EGLExt` 仍在使用，无 detekt 未用 import。
+- 该结论**不代表**任意 API 21 设备一定提供满足录制要求的 EGL config，也不代表设备具备 H.265 硬件编码器。
+
+### 4.5 `b9fa704f8` 确认为真正的 no-op
+
+用 `git show -w --ignore-blank-lines` 隔离后，全部非空白改动为：注释重排 5 处、无用 import 1 个、
+块体转表达式体 2 处、冗余字符串模板花括号 1 处、lambda 花括号合并 1 处。三项高危假设全部证否：
+
+- **无任何 `catch` 子句被改动**（`-w` diff 中 0 行 `catch`/`try`/`runCatching`），
+  不存在 `CancellationException` 被吞的规则违反。
+- **`ShellUtil` 关键不变量完好**：`drainStreams(...)`（`:98-99`）仍在 `process.waitFor()` **之前**
+  调用，未回归 stderr 未排空死锁；`:126-135` 仍起两个线程并 `join()`；`readStreamAsync` 仍用
+  `bufferedReader(...).use { }` 且仍以 `.apply { start() }` 结尾（丢掉它才是隐形杀手，未发生）；
+  `forceStop`（`:138`）仍经正则校验的 `requireValidPackage()`（`:42`），无新增注入面。
+- **测试未被削弱**：`FileDocumentUtilTest.kt:40` 仅参数换行加尾逗号，`:63` 把字面量提取为
+  `val documentRawPath`（值相同）；全部断言与路径穿越校验
+  `canonicalPath.startsWith(base.canonicalPath + File.separator)` 一字未改。
+- 移除的 `import android.database.Cursor` 之后 `Cursor` 仅出现在 KDoc/注释中，安全。
+- `lib-common-android` 仍无 `com.leovp.log` 依赖，模块日志规则未破。
+
+### 4.6 `dce403f17` 无敏感信息泄漏
+
+`AudioCipherActivity.kt:74,90` 新增的两行日志只输出 `measureTimeMillis` 得到的 `Long` 耗时，
+未插值 `secretKey`、IV 或明文/密文 `ByteArray`。
+
+---
+
+## 5. 修复后的验证要求
+
+1. **静态检查与单测**：`audio`、`screencapture`、`demo`、`lib-common-android` 的
+   `ktlintCheck`、`detekt`、`testDebugUnitTest` 与 `:demo:assembleDevDebug`，
+   本轮改动路径必须加 `--rerun-tasks` 强制重跑，不接受 `UP-TO-DATE`。
+2. **新增回归测试必须先红后绿**：M2 的「format/error 在途竞态」用例应在临时移除
+   `withCodecOperationLock` 后失败、恢复后通过；H1 用例应证明同一实例第二次启动、释放后启动和启动
+   失败后重试均被拒绝，并覆盖 `start()` 与 release 并发清理。
+3. **真机验证（发布门槛，尚未满足）**：
+   - **H2 重现验证**：OPUS 文件播放过程中，在解码快于播放、队列接近满时点击停止，
+     确认无 ANR、无挂死，进程存活且播放按钮复位。
+   - **H3 重现验证**：播放中途反复快速点击停止，确认不出现
+     `IllegalStateException` 崩溃。
+   - **M7 验证**：对空的 / 被截断的 `audio.opus` 点击播放，确认给出错误提示而非崩溃或 ANR。
+   - PCM / AAC / OPUS 三种格式的播放中主动停止、自然结束、快速重复进入退出，
+     确认无主线程卡顿与 teardown 错误，并完成人工听感确认（含 M9 的尾音是否完整）。
+   - Screenshot 录屏：至少一台 API 21~25 真机，用 H.264 路径验证 EGL config 选择、首帧画面、
+     停止释放与重复进入退出；同时验证 M3 修复后 `initEgl()` 失败不再崩溃进程。
+4. 上述真机项完成前，本轮改动**不得标记为「发布验证完成」**。
+
+---
+
+## 6. 修复优先级建议
+
+| 顺序 | 项 | 理由 |
+|------|-----|------|
+| 1 | H2 | 主线程永久挂死 + ANR，两个独立代理复现，最严重 |
+| 2 | H3 | 停止竞态导致应用崩溃，用户可感知 |
+| 已完成 | H1 | 已改为一次性 codec 会话，删除基类 `stop()` 并补生命周期状态与回归测试 |
+| 4 | M3、M7 | 均会崩溃进程（EGL 初始化失败 / 空文件播放） |
+| 5 | M5、M6 | 伪错误与中途停播，直接影响本次提交想解决的问题 |
+| 6 | M2 | 缺回归测试意味着 H1 与 #1 可能再次回归 |
+| 7 | M8、M9 | 泄漏与尾音丢失 |
+| 8 | M1、M4 | 文档与 CHANGELOG，影响外部使用者但不影响运行 |
+| 9 | L1~L10 | 可择机处理；L4、L5 属既有问题 |

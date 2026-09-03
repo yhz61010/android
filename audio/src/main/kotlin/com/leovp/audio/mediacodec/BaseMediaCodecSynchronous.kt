@@ -41,9 +41,8 @@ abstract class BaseMediaCodecSynchronous(
         LogContext.log.e(TAG, "Codec failure reported", e)
     }
 
-    override fun start() {
+    override fun onCodecStarted() {
         codecFailed.set(false)
-        super.start()
         codecJob = ioScope.launch {
             do {
                 ensureActive()

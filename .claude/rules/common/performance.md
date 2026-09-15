@@ -2,20 +2,20 @@
 
 ## Model Selection Strategy
 
-**Haiku 4.5** (90% of Sonnet capability, 3x cost savings):
-- Lightweight agents with frequent invocation
-- Pair programming and code generation
-- Worker agents in multi-agent systems
+**Subagents use the same model as the current session.**
 
-**Sonnet 4.6** (Best coding model):
-- Main development work
-- Orchestrating multi-agent workflows
-- Complex coding tasks
-
-**Opus 4.8** (Deepest reasoning):
-- Complex architectural decisions
-- Maximum reasoning requirements
-- Research and analysis tasks
+- When invoking any subagent (ECC plugin agents such as `kotlin-reviewer`,
+  `cpp-reviewer`, `code-reviewer`, `security-reviewer`, `planner`, `tdd-guide`,
+  and built-in agents), always pass the Agent tool's `model` parameter set to
+  the current session model, overriding the `model:` declared in the agent
+  definition (`sonnet` / `opus` / `haiku`).
+- The session model is configured in `~/.claude/settings.json` (currently
+  Fable 5.1, i.e. `model: "fable"` for the override). If the session model
+  changes, follow the new session model.
+- `fork` subagents inherit the session model automatically; no override needed.
+- Do not downgrade subagents to smaller models for cost savings in this
+  project; consistent quality across the main session and its agents takes
+  priority.
 
 ## Context Window Management
 

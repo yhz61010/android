@@ -16,6 +16,8 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -61,9 +63,11 @@ class AacFilePlayer(
     private val writtenAudioFrames = AtomicLong(0)
 
     private var cb: (() -> Unit)? = null
+    private var errorCb: ((Throwable) -> Unit)? = null
     private val started = AtomicBoolean(false)
     private val terminalStarted = AtomicBoolean(false)
     private val terminalCompletion = CompletableDeferred<Unit>()
+    private val terminalFailure = AtomicReference<Throwable?>(null)
     private val terminalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineName("aac-file-player-terminal")
     )
@@ -119,21 +123,34 @@ class AacFilePlayer(
 
     override fun onEndOfStream() {
         // Teardown must run outside the codec worker; releaseAndJoin() cannot join its caller.
-        terminalScope.launch { finishPlayback(notifyCompletion = true) }
+        terminalScope.launch { finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false) }
+    }
+
+    override fun notifyCodecFailure(error: Throwable) {
+        terminalScope.launch {
+            finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
+        }
     }
 
     /**
      * Starts this one-shot player.
      *
      * Initialization failures are cleaned up and then rethrown to the caller. Calling this method
-     * more than once always fails before any active playback state is changed.
+     * more than once always fails before any active playback state is changed. [endCallback] is
+     * only invoked after natural completion; asynchronous failures invoke [errorCallback] after
+     * cleanup, while an explicit [stop] invokes neither callback.
      *
      * @throws IllegalStateException if playback was already started or the file has no AAC track.
      * @throws Exception if the extractor, AudioTrack, or MediaCodec cannot be initialized.
      */
-    suspend fun playAac(aacFile: File, endCallback: () -> Unit) {
+    suspend fun playAac(
+        aacFile: File,
+        endCallback: () -> Unit,
+        errorCallback: (Throwable) -> Unit = {},
+    ) {
         check(started.compareAndSet(false, true)) { "AacFilePlayer can only be started once" }
         cb = endCallback
+        errorCb = errorCallback
         try {
             withContext(Dispatchers.IO) {
                 lifecycleMutex.withLock {
@@ -157,10 +174,21 @@ class AacFilePlayer(
                     start()
                 }
             }
+        } catch (e: CancellationException) {
+            try {
+                withContext(Dispatchers.IO + NonCancellable) {
+                    finishPlayback(TerminalReason.ExplicitStop)
+                }
+            } catch (cleanupFailure: Throwable) {
+                e.addSuppressed(cleanupFailure)
+            }
+            throw e
         } catch (e: Exception) {
             LogContext.log.e(TAG, "AAC playback start failed", e)
             try {
-                finishPlayback(notifyCompletion = false)
+                withContext(Dispatchers.IO + NonCancellable) {
+                    finishPlayback(TerminalReason.ExplicitStop)
+                }
             } catch (cleanupFailure: Throwable) {
                 e.addSuppressed(cleanupFailure)
             }
@@ -172,22 +200,24 @@ class AacFilePlayer(
      * Stops this one-shot player and waits for its codec worker before releasing input resources.
      */
     suspend fun stop() {
-        withContext(Dispatchers.IO) { finishPlayback(notifyCompletion = false) }
+        withContext(Dispatchers.IO) { finishPlayback(TerminalReason.ExplicitStop) }
     }
 
-    private suspend fun finishPlayback(notifyCompletion: Boolean) {
+    private suspend fun finishPlayback(reason: TerminalReason, propagateFailure: Boolean = true) {
         if (!terminalStarted.compareAndSet(false, true)) {
             terminalCompletion.await()
+            if (propagateFailure) terminalFailure.get()?.let { throw it }
             return
         }
 
-        val completionCallback = if (notifyCompletion) cb else null
+        val completionCallback = cb
+        val failureCallback = errorCb
         var releaseFailure: Throwable? = null
         withContext(NonCancellable) {
             try {
                 lifecycleMutex.withLock {
                     try {
-                        if (notifyCompletion) awaitAudioTrackDrain()
+                        if (reason == TerminalReason.NaturalEnd) awaitAudioTrackDrain()
                         // stop() wakes a potentially blocking write before releaseAndJoin() waits
                         // for the codec worker, so AudioTrack.release() never races that write.
                         audioTrackPlayer.stop()
@@ -204,18 +234,35 @@ class AacFilePlayer(
                             // Complete the teardown barrier before invoking client code. A
                             // completion callback may synchronously call stop(), which must return
                             // instead of waiting on itself.
+                            val playbackFailure = (reason as? TerminalReason.Failure)?.error
+                            val cleanupError = releaseFailure
+                            if (playbackFailure != null && cleanupError != null) {
+                                playbackFailure.addSuppressed(cleanupError)
+                            }
+                            terminalFailure.set(playbackFailure ?: cleanupError)
                             terminalCompletion.complete(Unit)
                         }
                     }
                 }
 
-                runCatchingPreservingCancellation { completionCallback?.invoke() }
-                    .onFailure { LogContext.log.e(TAG, "AAC completion callback failed", it) }
+                val finalFailure = terminalFailure.get()
+                when {
+                    finalFailure != null -> invokeClientCallback {
+                        failureCallback?.invoke(finalFailure)
+                    }
+                    reason == TerminalReason.NaturalEnd ->
+                        invokeClientCallback(completionCallback)
+                }
             } finally {
                 terminalScope.cancel()
             }
         }
-        releaseFailure?.let { throw it }
+        if (propagateFailure) releaseFailure?.let { throw it }
+    }
+
+    private fun invokeClientCallback(callback: (() -> Unit)?) {
+        runCatchingPreservingCancellation { callback?.invoke() }
+            .onFailure { LogContext.log.e(TAG, "AAC playback callback failed", it) }
     }
 
     private suspend fun awaitAudioTrackDrain() {
@@ -245,5 +292,12 @@ class AacFilePlayer(
         audioTrackPlayer.release()
         currentSampleTimeUs = -1
         cb = null
+        errorCb = null
     }
+}
+
+private sealed interface TerminalReason {
+    data object ExplicitStop : TerminalReason
+    data object NaturalEnd : TerminalReason
+    data class Failure(val error: Throwable) : TerminalReason
 }

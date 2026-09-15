@@ -22,10 +22,17 @@ interface IAudioMediaCodec {
     /**
      * Fill [inBuf] with valid data.
      *
+     * Called while the codec operation lock is held. Implementations must return promptly and must
+     * not synchronously wait for codec teardown.
+     *
      * @return The length of bytes of valid input data. This value must be greater than equal to 0.
      */
     fun onInputData(inBuf: ByteBuffer): Int
 
+    /**
+     * Called while the codec operation lock is held. Implementations must return promptly and must
+     * not synchronously wait for codec teardown.
+     */
     fun onOutputData(
         outBuf: ByteBuffer,
         info: MediaCodec.BufferInfo,
@@ -84,5 +91,9 @@ interface IAudioMediaCodec {
     fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {}
 
     // ==========
+    /**
+     * Called while the codec operation lock is held. Implementations must only signal completion
+     * and return promptly; terminal cleanup must run in another coroutine or thread.
+     */
     fun onEndOfStream() {}
 }

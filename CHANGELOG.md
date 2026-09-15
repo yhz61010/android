@@ -72,7 +72,8 @@
   初始化错误在清理完成后重新抛出，异步 OPUS 错误通过独立错误回调上报。自然结束与主动停止收敛到同一
   终态，完成回调只会在 MediaCodec、输入文件和 AudioTrack 全部释放后触发。
   - **破坏性变更**：调用方必须从协程调用 `playAac()`、`playOpus()` 和 `OpusFilePlayer.stop()`；
-    `OpusDecoder` 新增 EOS/错误回调构造参数，依赖旧构造器描述符的预编译调用方需要重新编译。
+    `AacFilePlayer.playAac()` 新增错误回调参数，`OpusDecoder` 新增 EOS/错误回调构造参数，依赖旧
+    JVM 描述符的预编译调用方需要重新编译。显式 stop 不触发自然完成回调，异步失败只触发错误回调。
 - **Screenshot H.26x 录屏兼容 API 21**：不再直接引用 API 26 才公开的
   `EGLExt.EGL_RECORDABLE_ANDROID` Java 字段，改用 `EGL_ANDROID_recordable` 固定 token `0x3142`，并加强
   EGL config 选择校验，因此移除 `Screenshot2H26xStrategy` 的 API 26 注解。API 21～25 真机验证仍待完成；
@@ -130,6 +131,13 @@
 
 ### 修复 (Fixed)
 
+- **floatview 窗口释放**：移除窗口按成功注册状态处理，不再依赖首次 attach 前可能为空的
+  `windowToken`；显示失败回滚已添加窗口，清理动画、方向任务与触摸监听器。
+  Activity（含包装 Context）创建的窗口在 Activity 销毁时立即释放，包括系统悬浮窗。
+  **行为变更**：退场动画期间 tag 保持占用，可用 `remove(true)` 接管释放；相同 tag 须等
+  移除完成后再创建。窗口操作限定主线程。跨 Activity 保留的系统悬浮窗应由 Service 管理，
+  View 和回调不得保留旧 Activity，并在 Service 结束时显式移除。
+
 - **Audio MediaCodec EOS 与播放器 teardown**：同步 codec 送入输入 EOS 后会持续排空到真实输出 EOS，
   EOS buffer 中的有效尾帧先交付再完成，且完成回调只触发一次；同步和异步路径会在输入处理异常、空
   input buffer 或输出回调异常时归还已取得的 codec buffer，避免 buffer starvation。OPUS 文件播放改用
@@ -137,10 +145,21 @@
   AudioTrack 写入移到 IO 消费任务。停止顺序固定为停止生产、关闭输入、唤醒阻塞写、等待任务与 decoder、
   最后释放 AudioTrack；自然结束还会等待软件 PCM 队列和 AudioTrack playback head，避免尾音被 flush。
   AAC/OPUS decoder 的 PTS 改按已接受输入帧递增，不再依赖尚未产生的输出帧数。重复 AAC CSD 会被幂等
-  忽略，活动会话中的变更 CSD 会明确拒绝，不再覆盖并泄漏旧 decoder。
+  忽略，活动会话中的变更 CSD 会明确拒绝，不再覆盖并泄漏旧 decoder。同步与异步 codec 处理失败
+  统一通知 owner；输入 EOS 后等待输出 EOS 最多 3 秒，超时按失败终态释放而不是伪装成自然完成。
+  OPUS 文件生产者在 PCM 队列高水位暂停喂帧，队列仍溢出时明确失败，不再静默丢弃文件音频。
+  AAC/OPUS stream player 在 stop 后拒绝迟到 CSD，避免在已释放 AudioTrack 上重建并泄漏 decoder。
+  即使 codec 为带 EOS flag 的 output index 返回 null buffer，也会归还 index 并完成 EOS，不再误报超时。
+  - **行为变更**：空的非 config 输出不再调用 `onOutputData()`；带 payload 的 EOS 会先调用
+    `onOutputData()` 再调用 `onEndOfStream()`；`onOutputFormatChanged()` 现在会在同步与异步路径实际触发。
 - **Screenshot H.26x 初始化失败不再崩溃**：EGL config/context/window surface、input Surface 或编码器
   初始化失败时按确定顺序释放部分资源并记录完整异常，再通过 `ScreenDataListener.onError()` 默认错误入口
-  上报；失败不会再从裸 IO 协程逃逸为未捕获异常。EGL 清理同时兼容未完整初始化的 null/no-display 状态。
+  上报；失败不会再从裸 IO 协程逃逸为未捕获异常。EGL 创建、逐帧绘制与销毁统一到专用单线程，
+  `releaseAndJoin()` 可等待录制循环及 callback handler 完全退出后再关闭输出流，避免 EGL/codec 跨线程释放竞态。
+  Demo 在 Activity 销毁时也会发出停止请求并等待清理。EGL 清理同时兼容未完整初始化的
+  null/no-display 状态。
+- **ShellUtil toybox `ps` 兼容性**：进程列表解析会跳过 `USER PID ...` 表头及其他 PID/PPID 非数字行，
+  不再因把 `"PID"` 转为整数而抛出 `NumberFormatException`。
 
 - **Native 内存安全、错误路径与生命周期**：YUV JNI 统一校验尺寸、格式、stride、裁剪和数组长度，
   修复 RGB24 行 stride 与 NV12 旋转后目标 stride；Bitmap crop/scale/rotate 改为受检分配并处理带

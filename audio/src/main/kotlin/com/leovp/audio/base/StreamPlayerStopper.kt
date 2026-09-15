@@ -4,10 +4,12 @@ import com.leovp.audio.AudioTrackPlayer
 import com.leovp.log.LogContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 
 /** Coordinates the shared teardown order for stream players without exposing a public API. */
@@ -29,10 +31,15 @@ internal class StreamPlayerStopper<Decoder>(
     }
 
     suspend fun stopAndJoin(releaseDecoderAndJoin: suspend (Decoder) -> Unit) {
-        withContext(NonCancellable) {
+        val ownerJob = ioScope.coroutineContext[Job]
+        val callerJob = currentCoroutineContext()[Job]
+        require(ownerJob == null || callerJob == null || !ownerJob.containsJob(callerJob)) {
+            "stopAndJoin() must be called outside the player-owned coroutine scope"
+        }
+        withContext(Dispatchers.IO + NonCancellable) {
             val decoder = prepareStop()
             try {
-                ioScope.coroutineContext[Job]?.cancelAndJoin()
+                ownerJob?.cancelAndJoin()
                 decoder?.let { releaseDecoderAndJoin(it) }
             } catch (e: CancellationException) {
                 throw e
@@ -44,6 +51,9 @@ internal class StreamPlayerStopper<Decoder>(
         }
         LogContext.log.w(tag, "stopPlaying() done")
     }
+
+    private fun Job.containsJob(target: Job): Boolean =
+        children.any { child -> child === target || child.containsJob(target) }
 
     private fun prepareStop(): Decoder? {
         LogContext.log.w(tag, "Stop playing audio")

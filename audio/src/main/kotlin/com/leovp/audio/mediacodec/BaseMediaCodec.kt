@@ -76,8 +76,16 @@ abstract class BaseMediaCodec(
     /** Whether this one-shot session currently accepts input. */
     protected val isRunning: Boolean get() = lifecycleState.get() == LifecycleState.RUNNING
 
+    /**
+     * Configures [format] while the codec operation lock is held. Implementations must be bounded
+     * and must not wait for codec callbacks or teardown.
+     */
     abstract fun setFormatOptions(format: MediaFormat)
 
+    /**
+     * Configures [codec] while the codec operation lock is held. Implementations must be bounded
+     * and must not wait for codec callbacks or teardown.
+     */
     open fun setMediaCodecOptions(codec: MediaCodec) = Unit
 
     /**
@@ -200,6 +208,22 @@ abstract class BaseMediaCodec(
     protected open fun onCodecReleased() = Unit
 
     /**
+     * Reports an unrecoverable codec processing failure to the owner.
+     *
+     * This callback is invoked outside [withCodecOperationLock]. Implementations should schedule
+     * terminal cleanup and return promptly; the failed codec instance must not be reused.
+     */
+    open fun notifyCodecFailure(error: Throwable) {
+        LogContext.log.e(TAG, "Codec failure reported", error)
+    }
+
+    /** Delivers a codec failure without allowing an owner callback exception to kill the worker. */
+    protected fun reportCodecFailure(error: Throwable) {
+        runCatchingPreservingCancellation { notifyCodecFailure(error) }
+            .onFailure { LogContext.log.e(TAG, "Codec failure callback failed", it) }
+    }
+
+    /**
      * Release resource.
      */
     @Deprecated(
@@ -254,7 +278,8 @@ abstract class BaseMediaCodec(
         codecOperationLock.withLock(action)
 
     /**
-     * Most of the time, you do NOT need to override this method.
+     * Creates the media format while the codec operation lock is held. Overrides must be bounded
+     * and must not wait for codec callbacks or teardown.
      */
     open fun createMediaFormat() {
         LogContext.log.w(
@@ -268,7 +293,8 @@ abstract class BaseMediaCodec(
     }
 
     /**
-     * Most of the time, you do NOT need to override this method.
+     * Creates and configures the codec while the codec operation lock is held. Overrides must be
+     * bounded and must not wait for codec callbacks or teardown.
      */
     open fun createCodec() {
         LogContext.log.w(TAG, "createCodec() codec=$codecName isEncoding=$isEncoding")

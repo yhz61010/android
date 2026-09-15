@@ -270,7 +270,7 @@ class FloatViewActivity :
     //    }
 
     override fun onDestroy() {
-        FloatView.removeAll()
+        FloatView.removeAll(immediately = true)
         super.onDestroy()
     }
 

@@ -28,8 +28,10 @@ import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URI
-import kotlinx.coroutines.CoroutineScope
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -68,7 +70,10 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         ActivityAudioBinding.inflate(layoutInflater)
 
     private val ioScopeJob = SupervisorJob()
-    private val ioScope = CoroutineScope(ioScopeJob + Dispatchers.IO)
+    private val ioExceptionHandler = CoroutineExceptionHandler { _, error ->
+        LogContext.log.e(TAG, "Unhandled audio demo coroutine failure", error)
+    }
+    private val ioScope = CoroutineScope(ioScopeJob + Dispatchers.IO + ioExceptionHandler)
 
     private val pcmFile by lazy { this.createFile("audio.pcm") }
     private val aacFile by lazy { this.createFile("audio.aac") }
@@ -84,6 +89,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     private var aacFilePlayer: AacFilePlayer? = null
     private var opusFilePlayer: OpusFilePlayer? = null
     private var playPcmThread: Thread? = null
+    private val pcmInputStream = AtomicReference<BufferedInputStream?>(null)
 
     private var audioReceiver: AudioReceiver? = null
     private var audioSender: AudioSender? = null
@@ -132,21 +138,30 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 )
                 val playbackThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
-                    pcmIs.use { input ->
-                        val bufferSize = 8 shl 10
-                        val readBuffer = ByteArray(bufferSize)
-                        while (!Thread.currentThread().isInterrupted) {
-                            val readSize = input.read(readBuffer)
-                            if (readSize == -1) break
-                            LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
-                            val pcmData =
-                                if (readSize == readBuffer.size) {
-                                    readBuffer
-                                } else {
-                                    readBuffer.copyOf(readSize)
-                                }
-                            audioPlayer?.play(pcmData)
+                    pcmInputStream.set(pcmIs)
+                    try {
+                        pcmIs.use { input ->
+                            val bufferSize = 8 shl 10
+                            val readBuffer = ByteArray(bufferSize)
+                            while (!Thread.currentThread().isInterrupted) {
+                                val readSize = input.read(readBuffer)
+                                if (readSize == -1) break
+                                LogContext.log.i(TAG, "PcmPlayer read size[$readSize]")
+                                val pcmData =
+                                    if (readSize == readBuffer.size) {
+                                        readBuffer
+                                    } else {
+                                        readBuffer.copyOf(readSize)
+                                    }
+                                audioPlayer?.play(pcmData)
+                            }
                         }
+                    } catch (e: Exception) {
+                        if (!Thread.currentThread().isInterrupted) {
+                            LogContext.log.e(TAG, "PCM playback failed", e)
+                        }
+                    } finally {
+                        pcmInputStream.compareAndSet(pcmIs, null)
                         runOnUiThread { btn.isChecked = false }
                     }
                 }
@@ -168,9 +183,18 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 aacFilePlayer = player
                 ioScope.launch {
                     try {
-                        player.playAac(aacFile) {
-                            runOnUiThread { btn.isChecked = false }
-                        }
+                        player.playAac(
+                            aacFile = aacFile,
+                            endCallback = { runOnUiThread { btn.isChecked = false } },
+                            errorCallback = { error ->
+                                LogContext.log.e(TAG, "AAC playback failed", error)
+                                runOnUiThread {
+                                    if (aacFilePlayer === player) aacFilePlayer = null
+                                    btn.isChecked = false
+                                    toast("Unable to play AAC file")
+                                }
+                            }
+                        )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
@@ -304,7 +328,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     private fun stopRecording() {
         val recorder = micRecorder ?: return
         micRecorder = null
-        ioScope.launch { recorder.stopRecordAndJoin() }
+        launchCleanup("Stop recording") { recorder.stopRecordAndJoin() }
     }
 
     private fun stopPcmPlayback() {
@@ -313,8 +337,10 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         playPcmThread = null
         audioPlayer = null
         if (playbackThread == null && player == null) return
+        runCatching { pcmInputStream.getAndSet(null)?.close() }
+            .onFailure { LogContext.log.e(TAG, "Close PCM input failed", it) }
         playbackThread?.interrupt()
-        ioScope.launch {
+        launchCleanup("Stop PCM playback") {
             playbackThread?.join()
             player?.release()
         }
@@ -323,18 +349,18 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     private fun stopAacPlayback() {
         val player = aacFilePlayer ?: return
         aacFilePlayer = null
-        ioScope.launch { player.stop() }
+        launchCleanup("Stop AAC playback") { player.stop() }
     }
 
     private fun stopOpusPlayback() {
         val player = opusFilePlayer ?: return
         opusFilePlayer = null
-        ioScope.launch { player.stop() }
+        launchCleanup("Stop OPUS playback") { player.stop() }
     }
 
     override fun onStop() {
-        ioScope.launch { audioReceiver?.stopServer() }
-        ioScope.launch { audioSender?.stop() }
+        launchCleanup("Stop audio receiver") { audioReceiver?.stopServer() }
+        launchCleanup("Stop audio sender") { audioSender?.stop() }
         stopRecording()
         stopPcmPlayback()
         stopAacPlayback()
@@ -347,6 +373,18 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         // while allowing those cleanup children to finish and release their Activity references.
         ioScopeJob.complete()
         super.onDestroy()
+    }
+
+    private fun launchCleanup(name: String, block: suspend () -> Unit) {
+        ioScope.launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                LogContext.log.e(TAG, "$name failed", e)
+            }
+        }
     }
 
     fun onAudioSenderClick(@Suppress("UNUSED_PARAMETER") view: View) {

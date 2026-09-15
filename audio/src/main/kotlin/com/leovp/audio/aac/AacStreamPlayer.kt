@@ -11,6 +11,7 @@ import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +53,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     private var audioDecoder: AacDecoder? = null
 
     private var csd0: ByteArray? = null
+    private val stopped = AtomicBoolean(false)
 
     private val streamPlayerStopper =
         StreamPlayerStopper(TAG, ioScope, audioTrackPlayer, ::detachDecoderForStop)
@@ -80,8 +82,10 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
+        if (stopped.get()) return
         // dropFrameCallback is invoked OUTSIDE the monitor to avoid callback re-entry deadlocks.
         val shouldResync = synchronized(lock) {
+            if (stopped.get()) return
             // We should use a better way to check CSD0
             if (audioData.size < 10) {
                 if (audioData.size < 2) {
@@ -201,6 +205,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
      * then awaits the old decoder OUTSIDE the lock to avoid suspension or callback re-entry.
      */
     suspend fun stopPlayingAndJoin() {
+        stopped.set(true)
         streamPlayerStopper.stopAndJoin { it.releaseAndJoin() }
     }
 
@@ -214,10 +219,12 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         ReplaceWith("stopPlayingAndJoin()")
     )
     fun stopPlaying() {
+        stopped.set(true)
         streamPlayerStopper.stop { it.release() }
     }
 
     private fun detachDecoderForStop(): AacDecoder? = synchronized(lock) {
+        stopped.set(true)
         generation++
         val old = audioDecoder
         audioDecoder = null

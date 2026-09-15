@@ -17,6 +17,8 @@ android {
 
 dependencies {
     api(libs.androidx.core.ktx)
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

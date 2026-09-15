@@ -16,6 +16,7 @@ import com.leovp.floatview.framework.FloatViewManager
  * Date: 2022/7/7 16:23
  */
 @Keep
+@MainThread
 class FloatViewAttribute(private val tag: String) {
 
     val customView: View? = FloatViewManager.getConfig(tag)?.customView
@@ -79,6 +80,8 @@ class FloatViewAttribute(private val tag: String) {
 
     /**
      *  **Destroy** the specific float view.
+     * Animated removal keeps the tag reserved until detachment. Use immediate removal to
+     * finish pending teardown before recreating the same tag or destroying its owner.
      */
     fun remove(immediately: Boolean = false) = FloatViewManager.remove(tag, immediately)
 

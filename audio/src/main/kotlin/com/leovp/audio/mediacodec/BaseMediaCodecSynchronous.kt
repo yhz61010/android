@@ -4,12 +4,14 @@ package com.leovp.audio.mediacodec
 
 import android.media.AudioFormat
 import android.media.MediaCodec
+import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Author: Michael Leo
@@ -26,6 +28,7 @@ abstract class BaseMediaCodecSynchronous(
         private const val TAG = "MediaCodecSync"
         private const val EOS_OUTPUT_TIMEOUT_US = 10_000L
         private const val EOS_RETRY_DELAY_MS = 1L
+        private const val DEFAULT_EOS_DRAIN_TIMEOUT_MS = 3_000L
     }
 
     /**
@@ -36,24 +39,34 @@ abstract class BaseMediaCodecSynchronous(
     private var inputEosQueued = false
     private var outputEosReceived = false
 
-    /**
-     * Reports a codec failure to the owner. Override to rebuild the codec or surface the error via
-     * an independent error callback. Default implementation just logs. Do NOT busy-retry on the
-     * same (already broken) codec instance here.
-     */
-    open fun notifyCodecFailure(e: Throwable) {
-        LogContext.log.e(TAG, "Codec failure reported", e)
-    }
+    /** Maximum wall-clock wait for output EOS after input EOS has been queued. */
+    protected open val eosDrainTimeoutMs: Long = DEFAULT_EOS_DRAIN_TIMEOUT_MS
 
     override fun onCodecStarted() {
         codecFailed.set(false)
         inputEosQueued = false
         outputEosReceived = false
         codecJob = ioScope.launch {
-            while (true) {
+            while (!inputEosQueued) {
                 ensureActive()
                 if (!process()) break
-                if (inputEosQueued) delay(EOS_RETRY_DELAY_MS)
+            }
+            if (!codecFailed.get() && inputEosQueued && !outputEosReceived) {
+                val receivedEos = withTimeoutOrNull(eosDrainTimeoutMs) {
+                    while (!outputEosReceived) {
+                        ensureActive()
+                        if (!process()) return@withTimeoutOrNull outputEosReceived
+                        delay(EOS_RETRY_DELAY_MS)
+                    }
+                    true
+                } ?: false
+                if (!receivedEos && !isReleasing) {
+                    val failure = IllegalStateException(
+                        "Timed out waiting for codec output EOS after ${eosDrainTimeoutMs}ms"
+                    )
+                    codecFailed.set(true)
+                    reportCodecFailure(failure)
+                }
             }
             // Only signal normal EOS. Error termination goes through notifyCodecFailure(), and an
             // intentional teardown (isReleasing) must not masquerade as a clean end-of-stream.
@@ -61,17 +74,12 @@ abstract class BaseMediaCodecSynchronous(
         }
     }
 
-    private fun process(): Boolean = withCodecOperationLock {
-        if (isReleasing) return@withCodecOperationLock false
-        processWithCodecLock()
-    }
-
-    /** Processes one input/output iteration while lifecycle teardown is excluded. */
-    @Suppress("ReturnCount")
-    private fun processWithCodecLock(): Boolean {
+    private fun process(): Boolean {
         try {
-            queueInputIfNeeded()
-            drainOutput()
+            return withCodecOperationLock {
+                if (isReleasing) return@withCodecOperationLock false
+                processWithCodecLock()
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: MediaCodec.CodecException) {
@@ -79,19 +87,26 @@ abstract class BaseMediaCodecSynchronous(
             if (isReleasing) return stopWorkerDuringRelease("CodecException")
             LogContext.log.e(TAG, "CodecException", e)
             codecFailed.set(true)
-            notifyCodecFailure(e)
-            return false
+            reportCodecFailure(e)
         } catch (e: IllegalStateException) {
             if (isReleasing) return stopWorkerDuringRelease("Codec illegal state")
             LogContext.log.e(TAG, "Codec illegal state, stopping", e)
             codecFailed.set(true)
-            return false
+            reportCodecFailure(e)
         } catch (e: Exception) {
             if (isReleasing) return stopWorkerDuringRelease("Decode error")
             LogContext.log.e(TAG, "Unexpected decode error, stopping", e)
             codecFailed.set(true)
-            return false
+            reportCodecFailure(e)
         }
+        return false
+    }
+
+    /** Processes one input/output iteration while lifecycle teardown is excluded. */
+    @Suppress("ReturnCount")
+    private fun processWithCodecLock(): Boolean {
+        queueInputIfNeeded()
+        drainOutput()
         return !outputEosReceived
     }
 
@@ -130,8 +145,9 @@ abstract class BaseMediaCodecSynchronous(
             }
         } catch (original: Throwable) {
             // A dequeued input index belongs to the client until it is queued back. Return an empty
-            // buffer before propagating the failure so one bad frame cannot starve the codec pool.
-            runCatching {
+            // buffer before propagating every failure, including cancellation, so one interrupted
+            // callback cannot starve the codec pool.
+            runCatchingPreservingCancellation {
                 codec.queueInputBuffer(inputIndex, 0, 0, 0, 0)
             }.onFailure(original::addSuppressed)
             throw original
@@ -155,17 +171,19 @@ abstract class BaseMediaCodecSynchronous(
         }
 
         while (outputIndex >= 0) {
-            val outputBuffer = codec.getOutputBuffer(outputIndex)
-            if (outputBuffer == null) {
-                LogContext.log.w(TAG, "getOutputBuffer($outputIndex) null; stop draining")
-                break
-            }
             val isEos = bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
+            var hasOutputBuffer = false
             try {
-                val isConfig = bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
-                val isKeyFrame = bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
-                if (bufferInfo.size > 0 || isConfig) {
-                    onOutputData(outputBuffer, bufferInfo, isConfig, isKeyFrame)
+                val outputBuffer = codec.getOutputBuffer(outputIndex)
+                if (outputBuffer == null) {
+                    LogContext.log.w(TAG, "getOutputBuffer($outputIndex) null; stop draining")
+                } else {
+                    hasOutputBuffer = true
+                    val isConfig = bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
+                    val isKeyFrame = bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
+                    if (bufferInfo.size > 0 || isConfig) {
+                        onOutputData(outputBuffer, bufferInfo, isConfig, isKeyFrame)
+                    }
                 }
             } finally {
                 codec.releaseOutputBuffer(outputIndex, false)
@@ -176,6 +194,7 @@ abstract class BaseMediaCodecSynchronous(
                 LogContext.log.w(TAG, "Output end of stream received")
                 break
             }
+            if (!hasOutputBuffer) break
             outputIndex = codec.dequeueOutputBuffer(bufferInfo, 0)
         }
         if (drainedOutput) {

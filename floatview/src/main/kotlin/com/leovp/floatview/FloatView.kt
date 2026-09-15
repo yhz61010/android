@@ -4,6 +4,7 @@ package com.leovp.floatview
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.MainThread
 import com.leovp.floatview.entities.DefaultConfig
 import com.leovp.floatview.entities.FloatViewAttribute
 import com.leovp.floatview.entities.GlobalConfig
@@ -25,10 +26,16 @@ import com.leovp.floatview.framework.FloatViewManager
  * @see [Float View](https://stackoverflow.com/a/53092436)
  * @see [Float View GitHub](https://github.com/aminography/FloatingWindowApp)
  */
+@MainThread
 class FloatView internal constructor(internal val context: Context) {
 
     companion object {
-        /** Create new FloatView. */
+        /**
+         * Create a float view on the main thread. Activity-backed contexts bind all windows
+         * (including overlays) to that Activity's destruction. For longer-lived overlays, use
+         * a Service context and views/listeners that do not retain an Activity, and remove them
+         * when the Service stops.
+         */
         fun with(context: Context): FloatViewCreator = FloatViewCreator(FloatView(context))
 
         /** Get the specified FloatView by tag name in order to change its attribute. */
@@ -48,6 +55,8 @@ class FloatView internal constructor(internal val context: Context) {
 
         /**
          * **Destroy** all float views.
+         * Use immediate removal during owner teardown. Animated removals remain addressable
+         * until their windows are detached, allowing a subsequent immediate removal to finish them.
          */
         fun removeAll(immediately: Boolean = false) = FloatViewManager.remove(immediately)
 

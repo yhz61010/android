@@ -13,6 +13,7 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
@@ -59,6 +60,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     private var csd0: ByteArray? = null
     private var csd1: ByteArray? = null
     private var csd2: ByteArray? = null
+    private val stopped = AtomicBoolean(false)
 
     private val streamPlayerStopper =
         StreamPlayerStopper(TAG, ioScope, audioTrackPlayer, ::detachDecoderForStop)
@@ -88,8 +90,10 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
+        if (stopped.get()) return
         // dropFrameCallback is invoked OUTSIDE the monitor to avoid callback re-entry deadlocks.
         val shouldResync = synchronized(lock) {
+            if (stopped.get()) return
             // We should use a better way to check csd0 (Identification Header)
             if (csd0 == null && audioData.size == 83) {
                 initDecoderLocked(audioData)
@@ -195,6 +199,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
      * then awaits the old decoder OUTSIDE the lock to avoid suspension or callback re-entry.
      */
     suspend fun stopPlayingAndJoin() {
+        stopped.set(true)
         streamPlayerStopper.stopAndJoin { it.releaseAndJoin() }
     }
 
@@ -208,10 +213,12 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         ReplaceWith("stopPlayingAndJoin()")
     )
     fun stopPlaying() {
+        stopped.set(true)
         streamPlayerStopper.stop { it.release() }
     }
 
     private fun detachDecoderForStop(): OpusDecoder? = synchronized(lock) {
+        stopped.set(true)
         generation++
         val old = audioDecoder
         audioDecoder = null

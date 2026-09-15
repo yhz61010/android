@@ -35,6 +35,7 @@ abstract class BaseMediaCodecAsynchronous(
                 withCodecOperationLock {
                     if (isReleasing) return@withCodecOperationLock
                     var inputQueued = false
+                    var fallbackFlags = 0
                     try {
                         val inputBuf = codec.getInputBuffer(index)
                         if (inputBuf == null) {
@@ -49,6 +50,7 @@ abstract class BaseMediaCodecAsynchronous(
                         // LogContext.log.d(TAG, "    -> inputBuf size=${inputBuf.remaining()}")
                         val pts = computePresentationTimeUs()
                         if (pts < 0) {
+                            fallbackFlags = MediaCodec.BUFFER_FLAG_END_OF_STREAM
                             codec.queueInputBuffer(
                                 index,
                                 0,
@@ -67,15 +69,18 @@ abstract class BaseMediaCodecAsynchronous(
                         inputQueued = true
                     } catch (original: Throwable) {
                         if (!inputQueued) {
-                            runCatching {
-                                codec.queueInputBuffer(index, 0, 0, 0, 0)
+                            runCatchingPreservingCancellation {
+                                codec.queueInputBuffer(index, 0, 0, 0, fallbackFlags)
                             }.onFailure(original::addSuppressed)
                         }
                         throw original
                     }
                 }
             }.onFailure {
-                if (!isReleasing) LogContext.log.e(TAG, "Input buffer callback failed", it)
+                if (!isReleasing) {
+                    LogContext.log.e(TAG, "Input buffer callback failed", it)
+                    reportCodecFailure(it)
+                }
             }
         }
 
@@ -88,19 +93,17 @@ abstract class BaseMediaCodecAsynchronous(
             runCatchingPreservingCancellation {
                 withCodecOperationLock {
                     if (isReleasing) return@withCodecOperationLock
-                    val outputBuffer = codec.getOutputBuffer(index)
-                    if (outputBuffer == null) {
-                        codec.releaseOutputBuffer(index, false)
-                        return@withCodecOperationLock
-                    }
                     try {
+                        val outputBuffer = codec.getOutputBuffer(index)
                         val isConfig =
                             info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
                         val isKeyFrame =
                             info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
                         val isEndOfStream =
                             info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
-                        if (info.size > 0 || isConfig) {
+                        if (outputBuffer == null) {
+                            LogContext.log.w(TAG, "getOutputBuffer($index) returned null")
+                        } else if (info.size > 0 || isConfig) {
                             onOutputData(outputBuffer, info, isConfig, isKeyFrame)
                         }
                         if (isEndOfStream) onEndOfStream()
@@ -109,7 +112,10 @@ abstract class BaseMediaCodecAsynchronous(
                     }
                 }
             }.onFailure {
-                if (!isReleasing) LogContext.log.e(TAG, "Output buffer callback failed", it)
+                if (!isReleasing) {
+                    LogContext.log.e(TAG, "Output buffer callback failed", it)
+                    reportCodecFailure(it)
+                }
             }
         }
 

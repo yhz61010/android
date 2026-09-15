@@ -91,6 +91,98 @@ class BaseMediaCodecAsynchronousTest {
         subject.release()
 
         verify(exactly = 1) { mediaCodec.queueInputBuffer(4, 0, 0, 0, 0) }
+        assertEquals(1, subject.failureCount)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `null input buffer is returned to codec`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(5) } returns null
+        val subject = TestCodec(mediaCodec)
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 5)
+        subject.release()
+
+        verify(exactly = 1) { mediaCodec.queueInputBuffer(5, 0, 0, 0, 0) }
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `oversized input returns buffer and reports failure`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(6) } returns ByteBuffer.allocate(8)
+        val subject = TestCodec(mediaCodec, inputSize = 16)
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 6)
+        subject.release()
+
+        verify(exactly = 1) { mediaCodec.queueInputBuffer(6, 0, 0, 0, 0) }
+        assertEquals(1, subject.failureCount)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `failed EOS submission preserves EOS flag during compensation`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(7) } returns ByteBuffer.allocate(8)
+        var attempts = 0
+        every {
+            mediaCodec.queueInputBuffer(
+                7,
+                0,
+                0,
+                0,
+                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            )
+        } answers {
+            if (attempts++ == 0) error("queue EOS failed")
+        }
+        val subject = TestCodec(mediaCodec, inputPtsUs = -1)
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 7)
+        subject.release()
+
+        verify(exactly = 2) {
+            mediaCodec.queueInputBuffer(
+                7,
+                0,
+                0,
+                0,
+                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            )
+        }
+        assertEquals(1, subject.failureCount)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `output lookup failure still returns buffer and reports failure`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getOutputBuffer(8) } throws IllegalStateException("lookup failed")
+        val subject = TestCodec(mediaCodec)
+
+        subject.attachCallback()
+        callbackSlot.captured.onOutputBufferAvailable(
+            mediaCodec,
+            8,
+            MediaCodec.BufferInfo()
+        )
+        subject.release()
+
+        verify(exactly = 1) { mediaCodec.releaseOutputBuffer(8, false) }
+        assertEquals(1, subject.failureCount)
     }
 
     @Suppress("DEPRECATION")
@@ -148,32 +240,53 @@ class BaseMediaCodecAsynchronousTest {
 
     @Suppress("DEPRECATION")
     @Test
-    fun `concurrent start admits only one caller`() {
-        val enteredStart = CountDownLatch(1)
-        val continueStart = CountDownLatch(1)
+    fun `null EOS output still reports completion and releases the buffer`() {
         val mediaCodec = mockk<MediaCodec>(relaxed = true)
         val callbackSlot = slot<MediaCodec.Callback>()
         every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
-        val subject = TestCodec(
-            mediaCodec,
-            enteredStart = enteredStart,
-            continueStart = continueStart
-        )
-        val startExecutor = Executors.newSingleThreadExecutor()
+        every { mediaCodec.getOutputBuffer(9) } returns null
+        val subject = TestCodec(mediaCodec)
+        val info = MediaCodec.BufferInfo().apply {
+            flags = MediaCodec.BUFFER_FLAG_END_OF_STREAM
+        }
+
+        subject.attachCallback()
+        callbackSlot.captured.onOutputBufferAvailable(mediaCodec, 9, info)
+        subject.release()
+
+        assertEquals(0, subject.outputCount)
+        assertEquals(1, subject.endCount)
+        verify(exactly = 1) { mediaCodec.releaseOutputBuffer(9, false) }
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `concurrent start admits only one caller`() {
+        val ready = CountDownLatch(2)
+        val startTogether = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec)
+        val startExecutor = Executors.newFixedThreadPool(2)
 
         try {
-            val firstStart = startExecutor.submit { subject.start() }
-            assertTrue(enteredStart.await(2, TimeUnit.SECONDS), "First start did not enter")
-
-            assertFailsWith<IllegalStateException> { subject.start() }
-            continueStart.countDown()
-            firstStart.get(2, TimeUnit.SECONDS)
+            val starts = List(2) {
+                startExecutor.submit<Boolean> {
+                    ready.countDown()
+                    assertTrue(startTogether.await(2, TimeUnit.SECONDS), "Start gate timed out")
+                    runCatching { subject.start() }.isSuccess
+                }
+            }
+            assertTrue(ready.await(2, TimeUnit.SECONDS), "Start callers were not ready")
+            startTogether.countDown()
+            assertEquals(1, starts.count { it.get(2, TimeUnit.SECONDS) })
             subject.release()
 
             verify(exactly = 1) { mediaCodec.start() }
             verify(exactly = 1) { mediaCodec.release() }
         } finally {
-            continueStart.countDown()
+            startTogether.countDown()
             startExecutor.shutdownNow()
         }
     }
@@ -380,6 +493,8 @@ class BaseMediaCodecAsynchronousTest {
         private val enteredError: CountDownLatch? = null,
         private val continueError: CountDownLatch? = null,
         private val failInput: Boolean = false,
+        private val inputSize: Int = 0,
+        private val inputPtsUs: Long = 0,
     ) : BaseMediaCodecAsynchronous(
         codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
         sampleRate = 8_000,
@@ -392,6 +507,8 @@ class BaseMediaCodecAsynchronousTest {
         var outputCount: Int = 0
             private set
         var endCount: Int = 0
+            private set
+        var failureCount: Int = 0
             private set
 
         fun attachCallback(initialFormat: MediaFormat? = null) {
@@ -423,7 +540,7 @@ class BaseMediaCodecAsynchronousTest {
             continueInput?.let {
                 assertTrue(it.await(2, TimeUnit.SECONDS), "Timed out waiting to continue")
             }
-            return 0
+            return inputSize
         }
 
         override fun onOutputData(
@@ -435,7 +552,11 @@ class BaseMediaCodecAsynchronousTest {
             outputCount++
         }
 
-        override fun computePresentationTimeUs(): Long = 0
+        override fun computePresentationTimeUs(): Long = inputPtsUs
+
+        override fun notifyCodecFailure(error: Throwable) {
+            failureCount++
+        }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
             enteredError?.countDown()

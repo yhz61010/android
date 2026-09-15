@@ -280,7 +280,7 @@ class ScreenShareMasterActivity :
 
     override fun onDestroy() {
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
-        FloatView.removeAll()
+        FloatView.removeAll(immediately = true)
         stopServer()
         mediaProjectService?.onReleaseScreenShare()
         if (bound) {

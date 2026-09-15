@@ -37,4 +37,21 @@ class ShellUtilTest {
             ShellUtil.uninstallApk("a; rm -rf /sdcard")
         }
     }
+
+    @Test
+    fun `process parser skips toybox header and parses process rows`() {
+        val output = """
+            USER PID PPID VSZ RSS WCHAN ADDR S NAME
+            root 1 0 10849520 9540 0 0 S init
+            shell 123 1 1000 200 futex 0 S sh
+        """.trimIndent()
+
+        val processes = ShellUtil.parseProcessesList(output)
+
+        processes.size shouldBeEqualTo 2
+        processes[0].pid shouldBeEqualTo 1
+        processes[0].name shouldBeEqualTo "init"
+        processes[1].pid shouldBeEqualTo 123
+        processes[1].ppid shouldBeEqualTo 1
+    }
 }

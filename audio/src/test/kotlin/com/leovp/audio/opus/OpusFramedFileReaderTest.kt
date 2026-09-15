@@ -81,6 +81,38 @@ class OpusFramedFileReaderTest {
         }
     }
 
+    @Test
+    fun `overlapping start code prefix remains payload data`() {
+        val startCode = "|leo|".encodeToByteArray()
+        val payload = "|le|lex".encodeToByteArray()
+        val nextPayload = byteArrayOf(9, 8, 7)
+        withTemporaryFile(startCode + payload + startCode + nextPayload) {
+            val reader = OpusFramedFileReader(it, startCode)
+
+            val first = reader.readPayload(0)
+            val second = reader.readPayload(requireNotNull(first.nextStartCodePosition))
+
+            assertContentEquals(payload, first.data)
+            assertContentEquals(nextPayload, second.data)
+        }
+    }
+
+    @Test
+    fun `start code crossing scan buffer boundary is found`() {
+        val startCode = "|leo|".encodeToByteArray()
+        val payload = ByteArray(8_190) { (it % 251).toByte() }
+        val nextPayload = byteArrayOf(4, 5, 6)
+        withTemporaryFile(startCode + payload + startCode + nextPayload) {
+            val reader = OpusFramedFileReader(it, startCode)
+
+            val first = reader.readPayload(0)
+            val second = reader.readPayload(requireNotNull(first.nextStartCodePosition))
+
+            assertContentEquals(payload, first.data)
+            assertContentEquals(nextPayload, second.data)
+        }
+    }
+
     private fun withTemporaryFile(data: ByteArray, block: (RandomAccessFile) -> Unit) {
         val file = File.createTempFile("opus-reader", ".bin")
         try {

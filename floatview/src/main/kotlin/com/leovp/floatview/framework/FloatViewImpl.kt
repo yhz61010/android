@@ -21,7 +21,6 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.IdRes
 import androidx.annotation.MainThread
-import androidx.core.animation.doOnCancel
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.children
@@ -42,7 +41,12 @@ import kotlin.math.max
  * Author: Michael Leo
  * Date: 2021/8/30 10:56
  */
-internal class FloatViewImpl(private val context: Context, internal var config: DefaultConfig) {
+@MainThread
+internal class FloatViewImpl(
+    private val context: Context,
+    internal var config: DefaultConfig,
+    private val onRemoved: (FloatViewImpl) -> Unit
+) {
     companion object {
         private const val TAG = "FVI"
         private const val ANIMATION_DURATION_START = 350L
@@ -51,6 +55,13 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     private val windowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     private lateinit var layoutParams: WindowManager.LayoutParams
+    private var windowAdded = false
+    private var removing = false
+    private var released = false
+    private var listenersRegistered = false
+    private var alphaAnimator: ObjectAnimator? = null
+    private var dockAnimator: ValueAnimator? = null
+    private val touchViews = mutableSetOf<View>()
 
     private var lastX: Int = 0
     private var lastY: Int = 0
@@ -69,6 +80,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         override fun onDisplayAdded(displayId: Int) = Unit
         override fun onDisplayRemoved(displayId: Int) = Unit
         override fun onDisplayChanged(displayId: Int) {
+            if (!windowAdded || removing || released) return
             if (displayId != Display.DEFAULT_DISPLAY) return
             val rotation = displayManager.getDisplay(displayId)?.rotation ?: return
             if (rotation != lastScrOri) updateScreenOrientation(rotation)
@@ -89,7 +101,9 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
             if (rotation != lastDeviceRotation) {
                 lastDeviceRotation = rotation
                 if (rotation != lastScrOri) {
-                    mainHandler.post { updateScreenOrientation(rotation) }
+                    mainHandler.post {
+                        if (windowAdded && !removing && !released) updateScreenOrientation(rotation)
+                    }
                 }
             }
         }
@@ -132,8 +146,11 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     private var prevLayoutX: Int = Int.MIN_VALUE
     private var prevLayoutY: Int = Int.MIN_VALUE
 
+    private val owner = FloatViewOwner(context) { remove(true) }
+
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener = View.OnTouchListener { view, event ->
+        if (!windowAdded || removing || released) return@OnTouchListener false
         val consumeIsAlwaysFalse = !config.enableDrag || config.fullScreenFloatView
 
         val totalDeltaX = lastX - firstX
@@ -234,6 +251,10 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     private fun startDockAnim(left: Int, top: Int, dockEdge: DockEdge) {
+        dockAnimator?.removeAllUpdateListeners()
+        dockAnimator?.cancel()
+        dockAnimator = null
+        if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             val viewWidth = v.width
             val viewHeight = v.height
@@ -308,6 +329,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                     }
                 }
             }?.apply {
+                dockAnimator = this
                 duration = config.dockAnimDuration
                 addUpdateListener {
                     val value = it.animatedValue as Int
@@ -335,6 +357,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     fun updateFloatViewGravity(gravity: Int) {
+        checkMainThread()
+        if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             config.gravity = gravity
             layoutParams.gravity = gravity
@@ -343,6 +367,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     fun updateFloatViewPosition(x: Int?, y: Int?, accumulateY: Boolean = false) {
+        checkMainThread()
+        if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             try {
                 x?.let {
@@ -404,6 +430,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         // Set touch listener on root view and child views with click listeners
         config.customView?.let { v ->
             v.setOnTouchListener(onTouchListener)
+            touchViews.add(v)
             addTouchListenerToChildViews(v, onTouchListener)
         }
     }
@@ -483,24 +510,30 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         if (view is ViewGroup) {
             if (view.hasOnClickListeners()) {
                 view.setOnTouchListener(touchListener)
+                touchViews.add(view)
             }
             view.children.forEach { child -> addTouchListenerToChildViews(child, touchListener) }
         } else {
             if (view.hasOnClickListeners()) {
                 view.setOnTouchListener(touchListener)
+                touchViews.add(view)
             }
         }
     }
 
     @MainThread
     fun updateAutoDock(dockEdge: DockEdge) {
+        checkMainThread()
         config.dockEdge = dockEdge
+        if (!windowAdded || removing || released) return
         startDockAnim(layoutParams.x, layoutParams.y, dockEdge)
     }
 
     @MainThread
     fun updateStickyEdge(stickyEdge: StickyEdge) {
+        checkMainThread()
         config.stickyEdge = stickyEdge
+        if (!windowAdded || removing || released) return
         updateLayoutForSticky(0, 0)
         try {
             windowManager.updateViewLayout(config.customView, layoutParams)
@@ -511,6 +544,8 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
 
     @MainThread
     fun updateScreenOrientation(orientation: Int) {
+        checkMainThread()
+        if (!windowAdded || removing || released) return
         val oldScreenSize = screenOrientSz
         lastScrOri = orientation
         config.screenOrientation = orientation
@@ -541,6 +576,12 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
         runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
     fun show() {
+        checkMainThread()
+        if (released || removing) return
+        if (!owner.isAlive) {
+            remove(true)
+            return
+        }
         runCatching {
             if (config.systemWindow && !context.canDrawOverlays) {
                 Log.w(
@@ -550,20 +591,24 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 )
             }
 
-            remove(true)
-            registerListeners()
+            unregisterListeners()
+            cancelAnimations()
+            if (!detachWindow()) return
             init()
             windowManager.addView(config.customView!!, layoutParams)
+            windowAdded = true
+            registerListeners()
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
         }.onFailure { e ->
-            unregisterListeners()
+            remove(true)
             Log.e(TAG, "show() failed", e)
         }
     }
 
     private fun registerListeners() {
+        listenersRegistered = true
         displayManager.registerDisplayListener(displayListener, mainHandler)
         if (config.followDeviceOrientation && orientationEventListener.canDetectOrientation()) {
             orientationEventListener.enable()
@@ -571,27 +616,38 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
     }
 
     private fun unregisterListeners() {
-        displayManager.unregisterDisplayListener(displayListener)
-        orientationEventListener.disable()
+        mainHandler.removeCallbacksAndMessages(null)
+        if (listenersRegistered) {
+            displayManager.unregisterDisplayListener(displayListener)
+            orientationEventListener.disable()
+            listenersRegistered = false
+        }
     }
 
     fun remove(immediately: Boolean = false) {
+        checkMainThread()
+        if (released || (removing && !immediately)) return
+        removing = true
         unregisterListeners()
-        if (immediately) {
-            config.customView?.let { v ->
-                hideCustomView(v)
-                if (v.windowToken != null) windowManager.removeViewImmediate(v)
-            }
+        cancelAnimations()
+        if (immediately || !windowAdded || !owner.isAlive || !config.enableAlphaAnimation) {
+            finishRemoval()
         } else {
-            visible(false) {
-                config.customView?.let { v ->
-                    if (v.windowToken != null) windowManager.removeViewImmediate(v)
-                }
+            try {
+                visible(false) { finishRemoval() }
+            } catch (e: Exception) {
+                Log.e(TAG, "Removal animation failed", e)
+                finishRemoval()
             }
         }
     }
 
     fun visible(show: Boolean, hideCallback: (() -> Unit)? = null) {
+        checkMainThread()
+        if (released || !windowAdded || (removing && hideCallback == null)) return
+        alphaAnimator?.removeAllListeners()
+        alphaAnimator?.cancel()
+        alphaAnimator = null
         config.customView?.let { v ->
             if (show) {
                 if (!config.enableAlphaAnimation) {
@@ -600,6 +656,7 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 }
                 ObjectAnimator.ofFloat(v, "alpha", 0.0f, 1.0f)
                     .apply {
+                        alphaAnimator = this
                         duration = ANIMATION_DURATION_START
                         removeAllListeners()
                         doOnStart { showCustomView(v) }
@@ -614,21 +671,66 @@ internal class FloatViewImpl(private val context: Context, internal var config: 
                 }
                 ObjectAnimator.ofFloat(v, "alpha", 1.0f, 0.0f)
                     .apply {
+                        alphaAnimator = this
                         duration = ANIMATION_DURATION_END
                         removeAllListeners()
                         setAutoCancel(true)
                         doOnEnd {
-                            hideCustomView(v)
-                            hideCallback?.invoke()
-                        }
-                        doOnCancel {
-                            hideCustomView(v)
-                            hideCallback?.invoke()
+                            alphaAnimator = null
+                            try {
+                                hideCustomView(v)
+                            } finally {
+                                hideCallback?.invoke()
+                            }
                         }
                         start()
                     }
             }
         }
+    }
+
+    private fun checkMainThread() {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "FloatView must run on the main thread"
+        }
+    }
+
+    private fun cancelAnimations() {
+        alphaAnimator?.removeAllListeners()
+        alphaAnimator?.cancel()
+        alphaAnimator = null
+        dockAnimator?.removeAllUpdateListeners()
+        dockAnimator?.cancel()
+        dockAnimator = null
+    }
+
+    private fun detachWindow(): Boolean {
+        if (!windowAdded) return true
+        try {
+            // Registration precedes View attachment; a null windowToken does not mean absent.
+            windowManager.removeViewImmediate(config.customView)
+        } catch (_: IllegalArgumentException) {
+            // The framework may have already removed the window during Activity teardown.
+        } catch (e: Exception) {
+            Log.e(TAG, "Window removal failed; retaining ownership for retry", e)
+            return false
+        }
+        windowAdded = false
+        return true
+    }
+
+    private fun finishRemoval() {
+        if (released) return
+        cancelAnimations()
+        if (!detachWindow()) return
+        released = true
+        config.isDisplaying = false
+        touchViews.forEach { it.setOnTouchListener(null) }
+        touchViews.clear()
+        config.touchEventListener = null
+        config.customView = null
+        owner.release()
+        onRemoved(this)
     }
 
     private fun showCustomView(view: View) {

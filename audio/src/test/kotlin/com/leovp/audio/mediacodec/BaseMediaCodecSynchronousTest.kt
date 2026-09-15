@@ -84,6 +84,82 @@ class BaseMediaCodecSynchronousTest {
         verify(exactly = 1) { mediaCodec.releaseOutputBuffer(1, false) }
     }
 
+    @Test
+    fun `worker reports immediate output EOS exactly once`() = runTest {
+        val endOfStream = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } returns 0
+        every { mediaCodec.getInputBuffer(0) } returns ByteBuffer.allocate(16)
+        every { mediaCodec.dequeueOutputBuffer(any(), any()) } answers {
+            firstArg<MediaCodec.BufferInfo>().flags = MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            1
+        }
+        every { mediaCodec.getOutputBuffer(1) } returns ByteBuffer.allocate(0)
+        val subject = EosCodec(mediaCodec, endOfStream)
+
+        subject.start()
+        assertTrue(endOfStream.await(2, TimeUnit.SECONDS), "Output EOS was not reported")
+        subject.releaseAndJoin()
+
+        assertEquals(1, subject.endCount.get())
+        verify(exactly = 1) { mediaCodec.releaseOutputBuffer(1, false) }
+    }
+
+    @Test
+    fun `worker reports EOS even when its output buffer is null`() = runTest {
+        val endOfStream = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } returns 0
+        every { mediaCodec.getInputBuffer(0) } returns ByteBuffer.allocate(16)
+        every { mediaCodec.dequeueOutputBuffer(any(), any()) } answers {
+            firstArg<MediaCodec.BufferInfo>().flags = MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            1
+        }
+        every { mediaCodec.getOutputBuffer(1) } returns null
+        val subject = EosCodec(mediaCodec, endOfStream)
+
+        subject.start()
+        assertTrue(endOfStream.await(2, TimeUnit.SECONDS), "Output EOS was not reported")
+        subject.releaseAndJoin()
+
+        assertEquals(0, subject.outputCount.get())
+        assertEquals(1, subject.endCount.get())
+        verify(exactly = 1) { mediaCodec.releaseOutputBuffer(1, false) }
+    }
+
+    @Test
+    fun `missing output EOS reports timeout failure`() = runTest {
+        val failure = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } returns 0
+        every { mediaCodec.getInputBuffer(0) } returns ByteBuffer.allocate(16)
+        every { mediaCodec.dequeueOutputBuffer(any(), any()) } returns
+            MediaCodec.INFO_TRY_AGAIN_LATER
+        val subject = FailureCodec(mediaCodec, failure, inputPtsUs = -1)
+
+        subject.start()
+        assertTrue(failure.await(2, TimeUnit.SECONDS), "EOS timeout was not reported")
+        subject.releaseAndJoin()
+
+        assertEquals(1, subject.failureCount.get())
+        assertEquals(0, subject.endCount.get())
+    }
+
+    @Test
+    fun `illegal codec state reports failure`() = runTest {
+        val failure = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } throws IllegalStateException("broken")
+        val subject = FailureCodec(mediaCodec, failure)
+
+        subject.start()
+        assertTrue(failure.await(2, TimeUnit.SECONDS), "Codec failure was not reported")
+        subject.releaseAndJoin()
+
+        assertEquals(1, subject.failureCount.get())
+        assertEquals(0, subject.endCount.get())
+    }
+
     private class BlockingCodec(
         private val mediaCodec: MediaCodec,
         private val enteredInput: CountDownLatch,
@@ -154,6 +230,49 @@ class BaseMediaCodecSynchronousTest {
         override fun onEndOfStream() {
             endCount.incrementAndGet()
             endOfStream.countDown()
+        }
+    }
+
+    private class FailureCodec(
+        private val mediaCodec: MediaCodec,
+        private val failure: CountDownLatch,
+        private val inputPtsUs: Long = 0,
+    ) : BaseMediaCodecSynchronous(
+        codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
+        sampleRate = 8_000,
+        channelCount = 1
+    ) {
+        val failureCount = AtomicInteger(0)
+        val endCount = AtomicInteger(0)
+
+        override val eosDrainTimeoutMs: Long = 50
+
+        override fun createMediaFormat() = Unit
+
+        override fun createCodec() {
+            codec = mediaCodec
+        }
+
+        override fun setFormatOptions(format: MediaFormat) = Unit
+
+        override fun onInputData(inBuf: ByteBuffer): Int = 0
+
+        override fun onOutputData(
+            outBuf: ByteBuffer,
+            info: MediaCodec.BufferInfo,
+            isConfig: Boolean,
+            isKeyFrame: Boolean,
+        ) = Unit
+
+        override fun computePresentationTimeUs(): Long = inputPtsUs
+
+        override fun notifyCodecFailure(error: Throwable) {
+            failureCount.incrementAndGet()
+            failure.countDown()
+        }
+
+        override fun onEndOfStream() {
+            endCount.incrementAndGet()
         }
     }
 }

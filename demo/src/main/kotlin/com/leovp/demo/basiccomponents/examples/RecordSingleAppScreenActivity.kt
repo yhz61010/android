@@ -4,6 +4,7 @@ import android.media.MediaCodec
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.densityDpi
 import com.leovp.android.exts.getBaseDirString
 import com.leovp.android.exts.screenAvailableResolution
@@ -22,6 +23,13 @@ import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xStrat
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RecordSingleAppScreenActivity :
     BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>(
@@ -36,7 +44,10 @@ class RecordSingleAppScreenActivity :
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenshotRecordH264Binding =
         ActivityScreenshotRecordH264Binding.inflate(layoutInflater)
 
-    private lateinit var videoH26xOsForDebug: BufferedOutputStream
+    private val outputLock = Any()
+    private val cleanupStarted = AtomicBoolean(false)
+    private var videoH26xOsForDebug: BufferedOutputStream? = null
+    private lateinit var screenProcessor: Screenshot2H26xStrategy
 
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
@@ -62,7 +73,18 @@ class RecordSingleAppScreenActivity :
                         "presentationTimeUs=$presentationTimeUs"
                 )
             }
-            videoH26xOsForDebug.write(data)
+            synchronized(outputLock) {
+                runCatching { videoH26xOsForDebug?.write(data) }
+                    .onFailure { LogContext.log.e(ITAG, "Write screen recording data failed", it) }
+            }
+        }
+
+        override fun onError(error: Throwable) {
+            LogContext.log.e(ITAG, "Screenshot recording failed", error)
+            runOnUiThread {
+                binding.toggleBtn.isChecked = false
+                toast("Unable to record screen")
+            }
         }
     }
 
@@ -89,7 +111,7 @@ class RecordSingleAppScreenActivity :
         // FIXME This does not seem to work. Check below setKeyFrameRate
         setting.fps = 5f
 
-        val screenProcessor = ScreenCapture.Builder(
+        screenProcessor = ScreenCapture.Builder(
             // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
             setting.width,
             // 800 1024 1280
@@ -104,16 +126,48 @@ class RecordSingleAppScreenActivity :
             .setKeyFrameRate(20)
             .setQuality(80)
             .setSampleSize(1)
-            .build()
+            .build() as Screenshot2H26xStrategy
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (screenProcessor as Screenshot2H26xStrategy).startRecord(this)
+                screenProcessor.startRecord(this)
             } else {
-                videoH26xOsForDebug.flush()
-                videoH26xOsForDebug.close()
-                screenProcessor.onRelease()
+                releaseRecorder()
             }
+        }
+    }
+
+    override fun onDestroy() {
+        releaseRecorder()
+        super.onDestroy()
+    }
+
+    private fun releaseRecorder() {
+        if (!cleanupStarted.compareAndSet(false, true)) return
+        binding.toggleBtn.isEnabled = false
+        lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withContext(Dispatchers.IO + NonCancellable) {
+                try {
+                    if (::screenProcessor.isInitialized) screenProcessor.releaseAndJoin()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(ITAG, "Release screenshot recorder failed", e)
+                } finally {
+                    closeVideoOutput()
+                }
+            }
+        }
+    }
+
+    private fun closeVideoOutput() {
+        synchronized(outputLock) {
+            val output = videoH26xOsForDebug ?: return
+            videoH26xOsForDebug = null
+            runCatching {
+                output.flush()
+                output.close()
+            }.onFailure { LogContext.log.e(ITAG, "Close screen recording output failed", it) }
         }
     }
 

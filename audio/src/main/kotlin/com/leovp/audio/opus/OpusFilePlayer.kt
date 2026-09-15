@@ -17,12 +17,14 @@ import java.io.RandomAccessFile
 import java.nio.ByteOrder
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -59,6 +61,9 @@ class OpusFilePlayer(
         private const val AUDIO_TRACK_DRAIN_TIMEOUT_MS = 3_000L
         private const val QUEUE_LOG_INTERVAL_FRAMES = 50L
         private const val INPUT_RETRY_DELAY_MS = 5L
+        private const val CODEC_EOS_TIMEOUT_MS = 3_000L
+        private const val PCM_QUEUE_HIGH_WATERMARK = 48
+        private const val PCM_QUEUE_LOW_WATERMARK = 32
         const val START_CODE = "|leo|"
     }
 
@@ -67,8 +72,12 @@ class OpusFilePlayer(
     private val ioScope = CoroutineScope(
         playbackScopeJob + Dispatchers.IO + CoroutineName("opus-file-player")
     )
+    private val terminalExceptionHandler = CoroutineExceptionHandler { _, error ->
+        LogContext.log.e(TAG, "Unhandled OPUS terminal cleanup failure", error)
+    }
     private val terminalScope = CoroutineScope(
-        SupervisorJob() + Dispatchers.IO + CoroutineName("opus-file-player-terminal")
+        SupervisorJob() + Dispatchers.IO + CoroutineName("opus-file-player-terminal") +
+            terminalExceptionHandler
     )
     private val lifecycleMutex = Mutex()
 
@@ -82,6 +91,7 @@ class OpusFilePlayer(
     private val started = AtomicBoolean(false)
     private val terminalStarted = AtomicBoolean(false)
     private val terminalCompletion = CompletableDeferred<Unit>()
+    private val terminalFailure = AtomicReference<Throwable?>(null)
     private val codecEos = CompletableDeferred<Unit>()
     private val queuedPcmCount = AtomicLong(0)
     private val consumedPcmCount = AtomicLong(0)
@@ -93,7 +103,8 @@ class OpusFilePlayer(
      *
      * The function returns after playback jobs have started. Initialization failures are cleaned
      * up and rethrown. Errors that happen later are delivered through [errorCallback] after all
-     * player resources have been released.
+     * player resources have been released. [endCallback] is only invoked after a natural end of
+     * stream; an explicit [stop] does not invoke either callback.
      */
     suspend fun playOpus(
         opusFile: File,
@@ -116,9 +127,20 @@ class OpusFilePlayer(
                     launchPlaybackJobs(playbackInput, playbackDecoder)
                 }
             }
+        } catch (e: CancellationException) {
+            try {
+                withContext(Dispatchers.IO + NonCancellable) {
+                    finishPlayback(TerminalReason.ExplicitStop)
+                }
+            } catch (cleanupFailure: Throwable) {
+                e.addSuppressed(cleanupFailure)
+            }
+            throw e
         } catch (e: Exception) {
             try {
-                finishPlayback(TerminalReason.ExplicitStop)
+                withContext(Dispatchers.IO + NonCancellable) {
+                    finishPlayback(TerminalReason.ExplicitStop)
+                }
             } catch (cleanupFailure: Throwable) {
                 e.addSuppressed(cleanupFailure)
             }
@@ -163,10 +185,8 @@ class OpusFilePlayer(
                     queuedPcmCount.incrementAndGet()
                     return
                 }
-                val dropped = droppedPcmCount.incrementAndGet()
-                if (dropped == 1L || dropped % QUEUE_LOG_INTERVAL_FRAMES == 0L) {
-                    LogContext.log.w(TAG, "Drop decoded PCM: queue is full; dropped=$dropped")
-                }
+                droppedPcmCount.incrementAndGet()
+                requestFailure(IllegalStateException("Decoded PCM queue is full"))
             }
         },
         endCallback = { codecEos.complete(Unit) },
@@ -195,6 +215,7 @@ class OpusFilePlayer(
         try {
             while (true) {
                 currentCoroutineContext().ensureActive()
+                awaitDecodedQueueCapacity()
                 val payload = input.reader.readPayload(startCodeBeginPos)
                 require(payload.data.isNotEmpty()) { "Empty OPUS audio frame" }
                 submitWithBackpressure(playbackDecoder, payload.data)
@@ -240,6 +261,14 @@ class OpusFilePlayer(
         }
     }
 
+    private suspend fun awaitDecodedQueueCapacity() {
+        if (queue.size < PCM_QUEUE_HIGH_WATERMARK) return
+        while (queue.size > PCM_QUEUE_LOW_WATERMARK) {
+            currentCoroutineContext().ensureActive()
+            delay(INPUT_RETRY_DELAY_MS)
+        }
+    }
+
     private suspend fun submitWithBackpressure(decoder: OpusDecoder, data: ByteArray) {
         while (!decoder.decode(data)) {
             currentCoroutineContext().ensureActive()
@@ -277,7 +306,18 @@ class OpusFilePlayer(
     }
 
     private suspend fun awaitNaturalCompletion() {
-        codecEos.await()
+        val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT_MS) {
+            codecEos.await()
+            true
+        } ?: false
+        if (!receivedCodecEos) {
+            val message =
+                "Timed out waiting for OPUS codec EOS after ${CODEC_EOS_TIMEOUT_MS}ms"
+            requestFailure(
+                TimeoutException(message)
+            )
+            return
+        }
         val softwareDrained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT_MS) {
             while (
                 queue.isNotEmpty() || consumedPcmCount.get() < queuedPcmCount.get()
@@ -307,7 +347,9 @@ class OpusFilePlayer(
             "Playback completed: queued=${queuedPcmCount.get()} " +
                 "consumed=${consumedPcmCount.get()} dropped=${droppedPcmCount.get()}"
         )
-        terminalScope.launch { finishPlayback(TerminalReason.NaturalEnd) }
+        terminalScope.launch {
+            finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false)
+        }
     }
 
     private suspend fun awaitAudioTrackDrain(): Boolean =
@@ -323,12 +365,15 @@ class OpusFilePlayer(
 
     private fun requestFailure(error: Throwable) {
         if (terminalStarted.get()) return
-        terminalScope.launch { finishPlayback(TerminalReason.Failure(error)) }
+        terminalScope.launch {
+            finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
+        }
     }
 
-    private suspend fun finishPlayback(reason: TerminalReason) {
+    private suspend fun finishPlayback(reason: TerminalReason, propagateFailure: Boolean = true) {
         if (!terminalStarted.compareAndSet(false, true)) {
             terminalCompletion.await()
+            if (propagateFailure) terminalFailure.get()?.let { throw it }
             return
         }
 
@@ -359,6 +404,12 @@ class OpusFilePlayer(
                             releaseFailure?.addSuppressed(cleanupFailure)
                                 ?: run { releaseFailure = cleanupFailure }
                         } finally {
+                            val playbackFailure = (reason as? TerminalReason.Failure)?.error
+                            val cleanupError = releaseFailure
+                            if (playbackFailure != null && cleanupError != null) {
+                                playbackFailure.addSuppressed(cleanupError)
+                            }
+                            terminalFailure.set(playbackFailure ?: cleanupError)
                             completionCallback = null
                             failureCallback = null
                             terminalCompletion.complete(Unit)
@@ -366,18 +417,19 @@ class OpusFilePlayer(
                     }
                 }
 
-                when (reason) {
-                    TerminalReason.NaturalEnd -> invokeClientCallback(onCompletion)
-                    is TerminalReason.Failure -> invokeClientCallback {
-                        onFailure?.invoke(reason.error)
+                val finalFailure = terminalFailure.get()
+                when {
+                    finalFailure != null -> invokeClientCallback {
+                        onFailure?.invoke(finalFailure)
                     }
-                    TerminalReason.ExplicitStop -> Unit
+                    reason == TerminalReason.NaturalEnd -> invokeClientCallback(onCompletion)
+                    else -> Unit
                 }
             } finally {
                 terminalScope.cancel()
             }
         }
-        releaseFailure?.let { throw it }
+        if (propagateFailure) releaseFailure?.let { throw it }
     }
 
     private fun invokeClientCallback(callback: (() -> Unit)?) {

@@ -13,6 +13,9 @@ interface ScreenDataListener {
      */
     fun onDataUpdate(buffer: Any, flags: Int = -1, presentationTimeUs: Long = -1)
 
-    /** Called when a screen processor fails asynchronously. */
+    /**
+     * Called after a screen processor fails asynchronously and releases its owned resources.
+     * Intentional cancellation or an explicit release does not invoke this callback.
+     */
     fun onError(error: Throwable) {}
 }

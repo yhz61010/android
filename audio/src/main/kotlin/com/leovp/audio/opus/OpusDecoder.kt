@@ -8,6 +8,7 @@ import android.media.MediaFormat
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.mediacodec.BaseMediaCodecAsynchronous
 import com.leovp.bytes.toByteArray
+import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -112,7 +113,12 @@ class OpusDecoder(
     }
 
     override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-        errorCallback.invoke(e)
+        notifyCodecFailure(e)
+    }
+
+    override fun notifyCodecFailure(error: Throwable) {
+        LogContext.log.e(TAG, "OPUS decoder failed", error)
+        errorCallback.invoke(error)
     }
 
     override fun onCodecReleased() {

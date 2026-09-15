@@ -25,10 +25,18 @@ import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.lang.ref.WeakReference
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
@@ -50,6 +58,23 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     @Volatile
     private var isRecording = false
+    private val releaseRequested = AtomicBoolean(false)
+    private val recordingFailure = AtomicReference<Throwable?>(null)
+    private val releaseCompleted = CompletableDeferred<Unit>()
+    private val lifecycleLock = Any()
+    private val codecCallbackLock = Any()
+    private val recordingExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "screenshot-h26x-egl")
+    }
+    private val recordingDispatcher = recordingExecutor.asCoroutineDispatcher()
+    private val recordingExceptionHandler = CoroutineExceptionHandler { _, error ->
+        LogContext.log.e(TAG, "Unhandled screenshot recording failure", error)
+    }
+    private val recordingScope = CoroutineScope(
+        SupervisorJob() + recordingDispatcher + recordingExceptionHandler
+    )
+    @Volatile
+    private var recordingJob: Job? = null
     private val mvp = getMvp()
 
     // EGL
@@ -82,46 +107,51 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             outputBufferId: Int,
             info: MediaCodec.BufferInfo
         ) {
-            val outputBuffer = codec.getOutputBuffer(outputBufferId)
-            // outputBuffer is ready to be processed or rendered.
-            outputBuffer?.let {
-                val encodedBytes = ByteArray(info.size)
-                it.get(encodedBytes)
+            synchronized(codecCallbackLock) {
+                if (h26xEncoder !== codec) return
+                val outputBuffer = codec.getOutputBuffer(outputBufferId)
+                // outputBuffer is ready to be processed or rendered.
+                outputBuffer?.let {
+                    val encodedBytes = ByteArray(info.size)
+                    it.get(encodedBytes)
 
-                info.presentationTimeUs = computePresentationTimeUs(++frameCount, builder.fps)
+                    val flags = info.flags
+                    val presentationTimeUs =
+                        computePresentationTimeUs(++frameCount, builder.fps)
 
-                when (info.flags) {
-                    MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                        vpsSpsPpsBytes = encodedBytes.copyOf()
-                        // LogContext.log.w(TAG, "Found SPS/PPS frame:
-                        // ${spsPpsBytes!!.contentToString()}")
+                    when (flags) {
+                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
+                            vpsSpsPpsBytes = encodedBytes.copyOf()
+                            // LogContext.log.w(TAG, "Found SPS/PPS frame:
+                            // ${spsPpsBytes!!.contentToString()}")
+                        }
+
+                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
+                            // LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
+                        }
+
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
+                            // Do nothing
+                        }
+
+                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
+                            // Do nothing
+                        }
+
+                        else -> {
+                            // Do nothing
+                        }
                     }
-
-                    MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-                        // LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
-                    }
-
-                    MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
-                        // Do nothing
-                    }
-
-                    MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
-                        // Do nothing
-                    }
-
-                    else -> {
-                        // Do nothing
+                    screenshotHandler.post {
+                        builder.screenDataListener.onDataUpdate(
+                            encodedBytes,
+                            flags,
+                            presentationTimeUs
+                        )
                     }
                 }
-                screenshotHandler.post {
-                    builder.screenDataListener.onDataUpdate(
-                        encodedBytes,
-                        info.flags,
-                        info.presentationTimeUs
-                    )
-                }
+                codec.releaseOutputBuffer(outputBufferId, false)
             }
-            codec.releaseOutputBuffer(outputBufferId, false)
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
@@ -130,7 +160,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            LogContext.log.d(TAG, "onError error=${e.message}", e)
+            synchronized(codecCallbackLock) {
+                if (h26xEncoder !== codec || releaseRequested.get()) return
+                LogContext.log.e(TAG, "Encoder failed", e)
+                recordingFailure.compareAndSet(null, e)
+                isRecording = false
+            }
         }
     }
 
@@ -303,6 +338,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         val context = eglContext
         val windowSurface = eglSurface
         if (display != null && display != EGL14.EGL_NO_DISPLAY) {
+            EGL14.eglMakeCurrent(
+                display,
+                EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_CONTEXT
+            )
             if (windowSurface != null && windowSurface != EGL14.EGL_NO_SURFACE) {
                 EGL14.eglDestroySurface(display, windowSurface)
             }
@@ -378,16 +419,21 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     override fun onStart() {
+        check(!releaseRequested.get()) { "Screenshot recorder is stopping" }
         isRecording = true
         h26xEncoder?.start()
         // Prepare surface
     }
 
     fun startRecord(act: Activity) {
-        CoroutineScope(Dispatchers.IO).launch {
+        val job = recordingScope.launch(start = CoroutineStart.LAZY) {
+            var encoderStarted = false
             try {
                 onInit()
+                ensureActive()
+                check(!releaseRequested.get()) { "Screenshot recorder was released during init" }
                 onStart()
+                encoderStarted = true
                 while (isRecording) {
                     ensureActive()
                     CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
@@ -406,24 +452,43 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                     delay(32.milliseconds)
                 }
             } catch (e: CancellationException) {
-                releaseAfterFailure()
-                throw e
+                if (!releaseRequested.get()) recordingFailure.compareAndSet(null, e)
             } catch (e: Throwable) {
                 LogContext.log.e(TAG, "Screenshot recording failed", e)
-                releaseAfterFailure()
-                runCatching { builder.screenDataListener.onError(e) }
-                    .onFailure { LogContext.log.e(TAG, "Screen error callback failed", it) }
+                recordingFailure.compareAndSet(null, e)
+            } finally {
+                releaseResourcesOnRecordingThread(stopEncoder = encoderStarted)
+                val failure = recordingFailure.get()
+                if (failure != null && failure !is CancellationException) {
+                    try {
+                        builder.screenDataListener.onError(failure)
+                    } catch (callbackFailure: Throwable) {
+                        LogContext.log.e(TAG, "Screen error callback failed", callbackFailure)
+                    }
+                }
+                releaseCompleted.complete(Unit)
+                recordingDispatcher.close()
             }
         }
+        synchronized(lifecycleLock) {
+            check(recordingJob == null) { "Screenshot recorder can only be started once" }
+            recordingJob = job
+        }
+        job.start()
     }
 
     override fun onStop() {
-        h26xEncoder?.stop()
-        isRecording = false
+        requestRelease()
     }
 
     override fun onRelease() {
-        releaseResources(stopEncoder = true)
+        requestRelease()
+    }
+
+    /** Requests release and suspends until the EGL owner thread has released every resource. */
+    suspend fun releaseAndJoin() {
+        requestRelease()
+        releaseCompleted.await()
     }
 
     override fun getVideoSize(): Size = Size(builder.width, builder.height)
@@ -433,27 +498,51 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         screenshotHandler = Handler(screenshotThread.looper)
     }
 
-    private fun releaseHandler() {
-        if (::screenshotHandler.isInitialized) screenshotHandler.removeCallbacksAndMessages(null)
-        if (::screenshotThread.isInitialized) screenshotThread.quitSafely()
-    }
-
-    private fun releaseAfterFailure() {
-        releaseResources(stopEncoder = false)
-    }
-
-    private fun releaseResources(stopEncoder: Boolean) {
-        isRecording = false
-        releaseHandler()
-        val encoder = h26xEncoder
-        h26xEncoder = null
-        if (stopEncoder) {
-            runCatching { encoder?.stop() }
-                .onFailure { LogContext.log.e(TAG, "Encoder stop failed", it) }
+    private fun releaseHandlerAndJoin() {
+        if (!::screenshotThread.isInitialized) return
+        screenshotThread.quitSafely()
+        try {
+            screenshotThread.join()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            LogContext.log.w(TAG, "Interrupted while joining screenshot callback thread", e)
         }
-        runCatching { encoder?.release() }
-            .onFailure { LogContext.log.e(TAG, "Encoder release failed", it) }
-        runCatching { releaseEgl() }
-            .onFailure { LogContext.log.e(TAG, "EGL release failed", it) }
+    }
+
+    private fun requestRelease() {
+        releaseRequested.set(true)
+        isRecording = false
+        if (recordingJob == null && releaseCompleted.complete(Unit)) {
+            recordingDispatcher.close()
+        }
+    }
+
+    private fun releaseResourcesOnRecordingThread(stopEncoder: Boolean) {
+        // Acquiring the callback lock waits for an in-flight callback. Detaching under the same
+        // lock makes every later callback return before touching the encoder.
+        val encoder = synchronized(codecCallbackLock) {
+            h26xEncoder.also { h26xEncoder = null }
+        }
+        if (stopEncoder) {
+            try {
+                encoder?.stop()
+            } catch (error: Throwable) {
+                LogContext.log.e(TAG, "Encoder stop failed", error)
+            }
+        }
+        synchronized(codecCallbackLock) {
+            try {
+                encoder?.release()
+            } catch (error: Throwable) {
+                LogContext.log.e(TAG, "Encoder release failed", error)
+            }
+        }
+        try {
+            releaseEgl()
+        } catch (error: Throwable) {
+            LogContext.log.e(TAG, "EGL release failed", error)
+        } finally {
+            releaseHandlerAndJoin()
+        }
     }
 }

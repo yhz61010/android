@@ -5,6 +5,7 @@ package com.leovp.floatview
 import android.view.LayoutInflater
 import android.view.View
 import androidx.annotation.LayoutRes
+import androidx.annotation.MainThread
 import com.leovp.floatview.entities.DefaultConfig
 import com.leovp.floatview.framework.FloatViewManager
 import com.leovp.floatview.utils.FloatViewScopeMarker
@@ -32,6 +33,7 @@ import com.leovp.floatview.utils.FloatViewScopeMarker
  * Date: 2022/7/7 10:18
  */
 @FloatViewScopeMarker
+@MainThread
 class FloatViewCreator internal constructor(floatingView: FloatView) {
     private val context = floatingView.context
 

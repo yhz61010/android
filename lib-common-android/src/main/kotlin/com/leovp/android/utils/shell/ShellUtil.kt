@@ -141,16 +141,22 @@ object ShellUtil {
     // ========================================================================
     fun getProcessesList(isRoot: Boolean = false): List<LinuxProcess> {
         val processesListString = execCmd(CMD_PS, isRoot).successMsg
+        return parseProcessesList(processesListString)
+    }
+
+    internal fun parseProcessesList(processesListString: String): List<LinuxProcess> {
         val processes: MutableList<LinuxProcess> = ArrayList()
         try {
             BufferedReader(StringReader(processesListString), 256 shl 10).use { reader ->
                 while (true) {
                     val line = reader.readLine() ?: break
-                    val tokens = line.split("\\s+".toRegex()).toTypedArray()
+                    val tokens = line.trim().split("\\s+".toRegex())
                     if (tokens.size > 8) {
-                        val info = LinuxProcess(Integer.valueOf(tokens[1]))
+                        val pid = tokens[1].toIntOrNull() ?: continue
+                        val ppid = tokens[2].toIntOrNull() ?: continue
+                        val info = LinuxProcess(pid)
                         info.user = tokens[0]
-                        info.ppid = Integer.valueOf(tokens[2])
+                        info.ppid = ppid
                         info.vsize = tokens[3]
                         info.rss = tokens[4]
                         info.wchan = tokens[5]

@@ -8,10 +8,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 
 class StreamPlayerStopperTest {
@@ -113,5 +116,25 @@ class StreamPlayerStopperTest {
         assertFalse(scope.isActive)
         verify(exactly = 1) { audioTrackPlayer.stop() }
         verify(exactly = 1) { audioTrackPlayer.release() }
+    }
+
+    @Test
+    fun `suspending stop rejects calls from its owned scope before side effects`() = runTest {
+        val ownerJob = Job()
+        val scope = CoroutineScope(ownerJob)
+        val audioTrackPlayer = mockk<AudioTrackPlayer>(relaxed = true)
+        val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) { Any() }
+
+        val child = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            assertIs<IllegalArgumentException>(
+                runCatching { subject.stopAndJoin {} }.exceptionOrNull()
+            )
+        }
+        child.join()
+
+        assertTrue(scope.isActive)
+        verify(exactly = 0) { audioTrackPlayer.stop() }
+        verify(exactly = 0) { audioTrackPlayer.release() }
+        ownerJob.cancel()
     }
 }

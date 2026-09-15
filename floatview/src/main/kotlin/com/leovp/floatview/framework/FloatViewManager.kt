@@ -1,6 +1,7 @@
 package com.leovp.floatview.framework
 
 import android.content.Context
+import android.os.Looper
 import com.leovp.floatview.entities.DefaultConfig
 import java.util.concurrent.ConcurrentHashMap
 
@@ -12,8 +13,14 @@ internal object FloatViewManager {
     private val windowMap = ConcurrentHashMap<String, FloatViewImpl>()
 
     fun create(context: Context, config: DefaultConfig) {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "FloatView must run on the main thread"
+        }
         if (!windowMap.containsKey(config.tag)) {
-            windowMap[config.tag] = FloatViewImpl(context, config)
+            val tag = config.tag
+            windowMap[tag] = FloatViewImpl(context, config) { removed ->
+                if (windowMap[tag] === removed) windowMap.remove(tag)
+            }
         } else {
             throw IllegalAccessError(
                 "Float view tag[${config.tag}] has already exist. Can't recreate it!"
@@ -29,14 +36,12 @@ internal object FloatViewManager {
 
     fun remove(tag: String, immediately: Boolean = false) {
         windowMap[tag]?.remove(immediately)
-        windowMap.remove(tag)
     }
 
     fun remove(immediately: Boolean = false) {
         //        Call requires API level 24 (current min is 21): java.lang.Iterable#forEach
         //        windowMap.forEach { (_, floatViewImpl) -> floatViewImpl.dismiss() }
         for ((tag, _) in windowMap) remove(tag, immediately)
-        windowMap.clear()
     }
 
     fun visible(tag: String, show: Boolean) {

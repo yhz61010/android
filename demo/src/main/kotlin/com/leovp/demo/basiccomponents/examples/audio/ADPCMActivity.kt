@@ -29,6 +29,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         private const val OUTPUT_IMA_FILE_NAME = "raw_adpcm_ima_qt.raw"
         private const val AUDIO_SAMPLE_RATE = 44100
         private const val AUDIO_CHANNELS = 2
+        private const val BIT_RATE = 64000
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityADPCMBinding =
@@ -45,7 +46,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
         thread {
             runCatching {
                 BufferedOutputStream(FileOutputStream(outFile)).use { outputStream ->
-                    AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, 64000).use { encoder ->
+                    AdpcmImaQtEncoder(AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, BIT_RATE).use { encoder ->
                         encoder.encodedCallback = object : EncodeAudioCallback {
                             override fun onEncodedUpdate(encodedAudio: ByteArray) {
                                 outputStream.write(encodedAudio)
@@ -77,9 +78,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                 AUDIO_SAMPLE_RATE,
 
                 @Suppress("SENSELESS_COMPARISON")
-                if (AUDIO_CHANNELS ==
-                    2
-                ) {
+                if (AUDIO_CHANNELS == 2) {
                     AudioFormat.CHANNEL_OUT_STEREO
                 } else {
                     AudioFormat.CHANNEL_OUT_MONO

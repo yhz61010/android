@@ -143,11 +143,25 @@ object Falcon {
 
     private fun drawRootsToBitmap(viewRoots: List<ViewRootData>, bitmap: Bitmap) {
         for (rootData in viewRoots) {
-            drawRootToBitmap(rootData, bitmap)
+            // One window that refuses to draw must not cost the whole frame. The remaining
+            // windows still produce a usable screenshot.
+            try {
+                drawRootToBitmap(rootData, bitmap)
+            } catch (e: Exception) {
+                LogContext.log.e(TAG, "Skip window that failed to draw", e)
+            }
         }
     }
 
     private fun drawRootToBitmap(config: ViewRootData, bitmap: Bitmap) {
+        // Roots are collected on the caller's thread and drawn later on the main thread. A
+        // window can be added or removed in between, and drawing a view whose AttachInfo is
+        // already gone throws inside View.onDrawScrollIndicators(). Re-check here, where the
+        // answer is reliable because this runs on the main thread.
+        if (!config.view.isAttachedToWindow) {
+            LogContext.log.w(TAG, "Skip detached window while taking screenshot")
+            return
+        }
         // now only dim supported
         if (config.layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND
             == WindowManager.LayoutParams.FLAG_DIM_BEHIND
@@ -225,6 +239,12 @@ object Falcon {
                 continue
             }
             if (!rootView.isShown) {
+                continue
+            }
+            // A root can sit in the global list before its first traversal or after it was
+            // detached. Its AttachInfo is null then, which makes its bounds meaningless and
+            // makes drawing it throw.
+            if (!rootView.isAttachedToWindow) {
                 continue
             }
             val location = IntArray(2)

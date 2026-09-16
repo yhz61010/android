@@ -168,6 +168,10 @@
   只在 `onCreate()` 构建一次录制器和一次输出流，停止（或 `onError()` 自动取消勾选）后没有任何
   路径恢复可用状态。现在清理完成后会重建录制器与输出流并重新启用按钮，可反复录制；退出页面时
   不再重建。
+  **修复**：`Falcon` 截图在窗口列表包含尚未完成首次 traversal 或已 detach 的 root view 时，
+  绘制会在 `View.onDrawScrollIndicators()` 内抛 `NullPointerException`（`AttachInfo` 为 null），
+  导致整帧丢失。现在采集时跳过未 attach 的 root，绘制前在主线程再次确认，并且单个窗口绘制失败
+  只跳过该窗口而不放弃整帧。
   EGL 清理同时兼容未完整初始化的 null/no-display 状态。`startRecord()` 与释放请求之间的注册竞态
   已用同一把锁消除；初始化期间收到的主动停止按取消处理，不再经 `onError()` 误报为失败。
   `Screenshot2H26xStrategy` 是一次性策略，`onStop()` 与 `onRelease()` 等价，已在 KDoc 标明。

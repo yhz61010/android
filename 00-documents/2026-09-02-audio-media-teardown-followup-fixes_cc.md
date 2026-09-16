@@ -2112,3 +2112,51 @@ API 与 Gradle 兼容性警告，本轮未扩大范围处理。
 
 待真机验证：API 21～26 与较新设备的录制、停止、重复进入退出、旋转及前后台切换；驱动初始化
 异常和输出异常时的实际资源释放。本轮未执行设备测试。
+
+### 15.2.1 验证覆盖缺口（重要）
+
+**上面的 `BUILD SUCCESSFUL` 只覆盖 `screencapture` 与 `demo` 的编译，不代表 §14 的改动已全部验证。**
+§14.6 要求的任务集与 §15.2 实际执行的任务集存在差异，以下**至今没有编译或静态检查过**：
+
+| 未执行的任务 | 涉及的未验证改动 |
+|--------------|------------------|
+| `:audio:testDebugUnitTest` | §14.2 P6（`OpusFilePlayer` 零字节写入判失败）、P7（停滞看门狗日志） |
+| `:audio:detekt`、`:audio:ktlintCheck` | 同上；P7 新增的多行日志字符串未过 ktlint |
+| `:demo:ktlintCheck`、`:demo:detekt` | §14.2 P2/P3 在 `RecordSingleAppScreenActivity` 的改动 |
+
+补齐命令：
+
+```bash
+./gradlew --continue :audio:testDebugUnitTest :audio:detekt :audio:ktlintCheck \
+  :demo:ktlintCheck :demo:detekt
+```
+
+在这三组任务跑通之前，**不应认为本分支已通过 `staticCheck`**。
+
+## 15.3 第九轮复核对 §15 的确认与补充
+
+对 `322cb6eed` 的独立复核结论：三处代码改动全部成立，未引入新缺陷。逐条核实要点：
+
+- **`onError()` 改为无条件 `requestRelease()` 不会吞掉真实失败**。`recordingFailure` 在
+  `requestRelease()` **之前**即已 `compareAndSet` 写入（`:208` / `:259`），协程 `finally` 的
+  `reportFailureIfAny()` 无条件执行且只过滤 `CancellationException`；协程路径与
+  `completeInlineRelease()` 两条上报路径互斥，不会重复回调。相比此前"等录制循环察觉
+  `isRecording=false` 才收尾"是严格改进。
+- **中断处理的两条时序成立**。排队中：`requestRelease()` 先置 `releaseRequested`，FIFO 保证 init
+  任务先执行并由 `beginInit()` 直接返回 `RELEASED`，不分配任何资源；已在飞：`initInProgress`
+  为 true 使其走 `teardownDeferredToInit`，由 `endInit()` 在 EGL 原线程接管释放。
+- **测试的编译前提均成立**：`h26xEncoder` 为 public `var`；`Builder(width, height, dpi, listener)`
+  签名匹配；`test` bundle 含 `kotlin-test-junit5`，故 `kotlin.test.Test` 映射到 Jupiter；
+  `initEgl()` 用到的 8 个 `EGL14` 方法与测试桩精确对应；`TextureRenderer.loadShader()` 无编译
+  状态校验，因此在 `unitTests.isReturnDefaultValues = true` 下 GLES20 桩不会抛异常。
+- **§6.1 的三处协程语义订正正确**，前几轮评审的原文确有技术错误（未捕获的
+  `CancellationException` 不会传播到父/兄弟协程；主线程可以运行协程）。以订正后的表述为准。
+
+本轮追加一处修改：
+
+| 编号 | 级别 | 问题 | 修法 |
+|------|------|------|------|
+| **P11** | LOW | `onInit()` 现在会抛 `InterruptedException`（Java 中为受检异常），但 Kotlin 默认不生成 `throws` 子句。Java 消费者写 `catch (InterruptedException e)` 会因"该异常不可能抛出"而**编译失败**，却仍可能在运行时收到它。对 JitPack 下游是现实问题 | `onInit()` 加 `@Throws(InterruptedException::class)`，使 JVM 签名如实声明。Kotlin 侧签名与行为不变 |
+
+未处理（仅记录）：新增测试使用 `kotlin.test.assert*` 而非项目约定的 Kluent
+（`.claude/rules/kotlin/testing.md`），不影响运行，留待后续统一。

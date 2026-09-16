@@ -476,7 +476,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      * @throws InterruptedException if the waiting caller is interrupted. Its interrupt status is
      * restored and teardown is requested on the EGL thread, including resources still being
      * initialized. Teardown may finish after this call throws.
+     *
+     * Annotated with [Throws] so the JVM signature declares [InterruptedException]. Without it a
+     * Java caller cannot even compile a `catch` for it, yet can still be handed one at runtime.
      */
+    @Throws(InterruptedException::class)
     override fun onInit() {
         synchronized(lifecycleLock) {
             // startRecord() initializes on the EGL thread it then occupies for the rest of the

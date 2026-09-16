@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,8 +69,12 @@ class AacFilePlayer(
     private val terminalStarted = AtomicBoolean(false)
     private val terminalCompletion = CompletableDeferred<Unit>()
     private val terminalFailure = AtomicReference<Throwable?>(null)
+    private val terminalExceptionHandler = CoroutineExceptionHandler { _, error ->
+        LogContext.log.e(TAG, "Unhandled AAC terminal cleanup failure", error)
+    }
     private val terminalScope = CoroutineScope(
-        SupervisorJob() + Dispatchers.IO + CoroutineName("aac-file-player-terminal")
+        SupervisorJob() + Dispatchers.IO + CoroutineName("aac-file-player-terminal") +
+            terminalExceptionHandler
     )
     private val lifecycleMutex = Mutex()
 
@@ -247,6 +252,8 @@ class AacFilePlayer(
 
                 val finalFailure = terminalFailure.get()
                 when {
+                    // An explicit stop() reports cleanup failures to its caller only.
+                    reason == TerminalReason.ExplicitStop -> Unit
                     finalFailure != null -> invokeClientCallback {
                         failureCallback?.invoke(finalFailure)
                     }

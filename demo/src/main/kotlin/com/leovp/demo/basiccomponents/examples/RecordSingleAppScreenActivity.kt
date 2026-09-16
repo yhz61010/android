@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class RecordSingleAppScreenActivity :
     BaseDemonstrationActivity<ActivityScreenshotRecordH264Binding>(
@@ -39,6 +40,7 @@ class RecordSingleAppScreenActivity :
 
     companion object {
         val VIDEO_ENCODE_TYPE = ScreenRecordMediaCodecStrategy.EncodeType.H265
+        private const val RELEASE_TIMEOUT_MS = 10_000L
     }
 
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityScreenshotRecordH264Binding =
@@ -148,7 +150,7 @@ class RecordSingleAppScreenActivity :
         lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withContext(Dispatchers.IO + NonCancellable) {
                 try {
-                    if (::screenProcessor.isInitialized) screenProcessor.releaseAndJoin()
+                    if (::screenProcessor.isInitialized) awaitRecorderRelease()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -157,6 +159,17 @@ class RecordSingleAppScreenActivity :
                     closeVideoOutput()
                 }
             }
+        }
+    }
+
+    /** Bounds the wait so a stuck native teardown cannot pin this Activity forever. */
+    private suspend fun awaitRecorderRelease() {
+        val released = withTimeoutOrNull(RELEASE_TIMEOUT_MS) {
+            screenProcessor.releaseAndJoin()
+            true
+        } ?: false
+        if (!released) {
+            LogContext.log.e(ITAG, "Screenshot recorder did not release in ${RELEASE_TIMEOUT_MS}ms")
         }
     }
 

@@ -146,6 +146,32 @@ class BaseMediaCodecSynchronousTest {
     }
 
     @Test
+    fun `failure inside the EOS drain loop is reported exactly once`() = runTest {
+        val failure = CountDownLatch(1)
+        val outputDequeueCount = AtomicInteger(0)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } returns 0
+        every { mediaCodec.getInputBuffer(0) } returns ByteBuffer.allocate(16)
+        // Input EOS is queued cleanly; the codec only breaks once the drain loop polls again.
+        every { mediaCodec.dequeueOutputBuffer(any(), any()) } answers {
+            if (outputDequeueCount.getAndIncrement() == 0) {
+                MediaCodec.INFO_TRY_AGAIN_LATER
+            } else {
+                throw IllegalStateException("codec died while draining")
+            }
+        }
+        val subject = FailureCodec(mediaCodec, failure, inputPtsUs = -1)
+
+        subject.start()
+        assertTrue(failure.await(2, TimeUnit.SECONDS), "Codec failure was not reported")
+        subject.releaseAndJoin()
+
+        // The drain timeout must not synthesize a second, misleading failure.
+        assertEquals(1, subject.failureCount.get())
+        assertEquals(0, subject.endCount.get())
+    }
+
+    @Test
     fun `illegal codec state reports failure`() = runTest {
         val failure = CountDownLatch(1)
         val mediaCodec = mockk<MediaCodec>(relaxed = true)

@@ -12,10 +12,9 @@ internal class FloatViewOwner(context: Context, private val onDestroyed: () -> U
     private val activity = findActivity(context)
 
     val isAlive: Boolean
-        get() = activity?.let { !it.isFinishing && !it.isDestroyed } ?: true
+        get() = activity?.isUsable ?: true
 
     init {
-        check(isAlive) { "Cannot create a float view for a finishing or destroyed Activity" }
         activity?.application?.registerActivityLifecycleCallbacks(this)
     }
 
@@ -34,14 +33,22 @@ internal class FloatViewOwner(context: Context, private val onDestroyed: () -> U
     override fun onActivityStopped(activity: Activity) = Unit
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 
-    private fun findActivity(context: Context): Activity? {
-        var current = context
-        while (current is ContextWrapper) {
-            if (current is Activity) return current
-            val base = current.baseContext
-            if (base === current) break
-            current = base
+    companion object {
+        /** `true` unless [context] is backed by a finishing or destroyed Activity. */
+        fun isContextAlive(context: Context): Boolean = findActivity(context)?.isUsable ?: true
+
+        private val Activity.isUsable: Boolean
+            get() = !isFinishing && !isDestroyed
+
+        private fun findActivity(context: Context): Activity? {
+            var current = context
+            while (current is ContextWrapper) {
+                if (current is Activity) return current
+                val base = current.baseContext
+                if (base === current) break
+                current = base
+            }
+            return null
         }
-        return null
     }
 }

@@ -306,6 +306,19 @@ class OpusFilePlayer(
     }
 
     private suspend fun awaitNaturalCompletion() {
+        try {
+            awaitDrainedNaturalEnd()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (!terminalStarted.get()) {
+                LogContext.log.e(TAG, "Await OPUS playback completion failed", e)
+                requestFailure(e)
+            }
+        }
+    }
+
+    private suspend fun awaitDrainedNaturalEnd() {
         val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT_MS) {
             codecEos.await()
             true
@@ -419,6 +432,8 @@ class OpusFilePlayer(
 
                 val finalFailure = terminalFailure.get()
                 when {
+                    // An explicit stop() reports cleanup failures to its caller only.
+                    reason == TerminalReason.ExplicitStop -> Unit
                     finalFailure != null -> invokeClientCallback {
                         onFailure?.invoke(finalFailure)
                     }

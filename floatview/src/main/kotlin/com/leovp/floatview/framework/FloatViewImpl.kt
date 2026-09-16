@@ -357,7 +357,7 @@ internal class FloatViewImpl(
     }
 
     fun updateFloatViewGravity(gravity: Int) {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             config.gravity = gravity
@@ -367,7 +367,7 @@ internal class FloatViewImpl(
     }
 
     fun updateFloatViewPosition(x: Int?, y: Int?, accumulateY: Boolean = false) {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             try {
@@ -523,7 +523,7 @@ internal class FloatViewImpl(
 
     @MainThread
     fun updateAutoDock(dockEdge: DockEdge) {
-        checkMainThread()
+        checkFloatViewMainThread()
         config.dockEdge = dockEdge
         if (!windowAdded || removing || released) return
         startDockAnim(layoutParams.x, layoutParams.y, dockEdge)
@@ -531,7 +531,7 @@ internal class FloatViewImpl(
 
     @MainThread
     fun updateStickyEdge(stickyEdge: StickyEdge) {
-        checkMainThread()
+        checkFloatViewMainThread()
         config.stickyEdge = stickyEdge
         if (!windowAdded || removing || released) return
         updateLayoutForSticky(0, 0)
@@ -544,7 +544,7 @@ internal class FloatViewImpl(
 
     @MainThread
     fun updateScreenOrientation(orientation: Int) {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (!windowAdded || removing || released) return
         val oldScreenSize = screenOrientSz
         lastScrOri = orientation
@@ -576,7 +576,7 @@ internal class FloatViewImpl(
         runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
     fun show() {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (released || removing) return
         if (!owner.isAlive) {
             remove(true)
@@ -625,7 +625,7 @@ internal class FloatViewImpl(
     }
 
     fun remove(immediately: Boolean = false) {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (released || (removing && !immediately)) return
         removing = true
         unregisterListeners()
@@ -643,7 +643,7 @@ internal class FloatViewImpl(
     }
 
     fun visible(show: Boolean, hideCallback: (() -> Unit)? = null) {
-        checkMainThread()
+        checkFloatViewMainThread()
         if (released || !windowAdded || (removing && hideCallback == null)) return
         alphaAnimator?.removeAllListeners()
         alphaAnimator?.cancel()
@@ -686,12 +686,6 @@ internal class FloatViewImpl(
                         start()
                     }
             }
-        }
-    }
-
-    private fun checkMainThread() {
-        check(Looper.myLooper() == Looper.getMainLooper()) {
-            "FloatView must run on the main thread"
         }
     }
 

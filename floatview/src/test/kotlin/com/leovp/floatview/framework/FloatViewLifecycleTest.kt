@@ -152,6 +152,25 @@ class FloatViewLifecycleTest {
         assertFalse(FloatView.default().exist())
     }
 
+    @Test
+    fun `build on a finishing activity is skipped without throwing`() {
+        controller.get().finish()
+        FloatView.with(context).layout(view).build()
+        assertFalse(FloatView.default().exist())
+        assertTrue(windows.isEmpty())
+    }
+
+    @Test
+    fun `window already removed by the framework is treated as detached`() {
+        create()
+        // Simulate Activity teardown having removed the window behind our back.
+        windows.remove(view)
+        every { windowManager.removeViewImmediate(view) } throws
+            IllegalArgumentException("View not attached to window manager")
+        FloatView.default().remove(true)
+        assertFalse(FloatView.default().exist())
+    }
+
     private fun create(animated: Boolean = false) {
         FloatView.with(context).layout(view).meta { _, _ ->
             enableAlphaAnimation = animated

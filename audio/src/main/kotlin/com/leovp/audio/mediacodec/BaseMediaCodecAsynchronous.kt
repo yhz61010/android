@@ -132,10 +132,14 @@ abstract class BaseMediaCodecAsynchronous(
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
             if (isReleasing) return
-            withCodecOperationLock {
-                if (isReleasing) return@withCodecOperationLock
-                this@BaseMediaCodecAsynchronous.onError(codec, e)
-            }
+            runCatchingPreservingCancellation {
+                withCodecOperationLock {
+                    if (isReleasing) return@withCodecOperationLock
+                    this@BaseMediaCodecAsynchronous.onError(codec, e)
+                }
+            }.onFailure { LogContext.log.e(TAG, "Codec error hook failed", it) }
+            // Owner notification happens outside the codec lock, as notifyCodecFailure() promises.
+            if (!isReleasing) reportCodecFailure(e)
         }
     }
 }

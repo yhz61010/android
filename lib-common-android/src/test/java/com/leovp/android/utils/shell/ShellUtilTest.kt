@@ -54,4 +54,50 @@ class ShellUtilTest {
         processes[1].pid shouldBeEqualTo 123
         processes[1].ppid shouldBeEqualTo 1
     }
+
+    @Test
+    fun `process parser tolerates leading whitespace on data rows`() {
+        val output = listOf(
+            "USER PID PPID VSZ RSS WCHAN ADDR S NAME",
+            "   root 1 0 10849520 9540 0 0 S init",
+            "\tshell 123 1 1000 200 futex 0 S sh",
+        ).joinToString("\n")
+
+        val processes = ShellUtil.parseProcessesList(output)
+
+        processes.map { it.pid } shouldBeEqualTo listOf(1, 123)
+        processes[1].name shouldBeEqualTo "sh"
+    }
+
+    @Test
+    fun `process parser skips a non-numeric row but keeps parsing later rows`() {
+        val output = """
+            root 1 0 10849520 9540 0 0 S init
+            root abc 1 1000 200 futex 0 S broken
+            shell 123 1 1000 200 futex 0 S sh
+        """.trimIndent()
+
+        val processes = ShellUtil.parseProcessesList(output)
+
+        processes.map { it.pid } shouldBeEqualTo listOf(1, 123)
+    }
+
+    @Test
+    fun `process parser skips rows with too few columns`() {
+        val output = """
+            root 1 0 10849520 9540 0 0 S init
+            root 2 0 short
+            shell 123 1 1000 200 futex 0 S sh
+        """.trimIndent()
+
+        val processes = ShellUtil.parseProcessesList(output)
+
+        processes.map { it.pid } shouldBeEqualTo listOf(1, 123)
+    }
+
+    @Test
+    fun `process parser returns empty list for empty or blank input`() {
+        ShellUtil.parseProcessesList("") shouldBeEqualTo emptyList()
+        ShellUtil.parseProcessesList("   \n\t\n") shouldBeEqualTo emptyList()
+    }
 }

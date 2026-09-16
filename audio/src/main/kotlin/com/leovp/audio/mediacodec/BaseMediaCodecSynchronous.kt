@@ -60,7 +60,9 @@ abstract class BaseMediaCodecSynchronous(
                     }
                     true
                 } ?: false
-                if (!receivedEos && !isReleasing) {
+                // A failure inside the drain loop has already been reported by process(); only a
+                // genuine timeout may synthesize a second, otherwise misleading, failure.
+                if (!receivedEos && !isReleasing && !codecFailed.get()) {
                     val failure = IllegalStateException(
                         "Timed out waiting for codec output EOS after ${eosDrainTimeoutMs}ms"
                     )

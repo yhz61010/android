@@ -41,6 +41,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
+/** Signals that teardown was requested while the recorder was still initializing. */
+private class ReleaseRequestedException :
+    CancellationException("Screenshot recorder was released during init")
+
 /**
  * Screenshot-based H.26x recording strategy for API 21 and later.
  *
@@ -73,8 +77,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private val recordingScope = CoroutineScope(
         SupervisorJob() + recordingDispatcher + recordingExceptionHandler
     )
-    @Volatile
+    /** Guarded by [lifecycleLock]. */
     private var recordingJob: Job? = null
+
+    /** Guarded by [lifecycleLock]. Latches on the first [startRecord] call. */
+    private var recordingStarted = false
     private val mvp = getMvp()
 
     // EGL
@@ -420,21 +427,44 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     override fun onStart() {
         check(!releaseRequested.get()) { "Screenshot recorder is stopping" }
-        isRecording = true
-        h26xEncoder?.start()
-        // Prepare surface
+        startEncoder()
     }
 
+    private fun startEncoder() {
+        isRecording = true
+        h26xEncoder?.start()
+    }
+
+    /** Turns a release that raced the recording coroutine into a cancellation, not a failure. */
+    private fun ensureNotReleased() {
+        if (releaseRequested.get()) throw ReleaseRequestedException()
+    }
+
+    /**
+     * Starts the one-shot recording loop. The recorder cannot be restarted after [onStop] or
+     * [onRelease]; build a new instance instead.
+     *
+     * @throws IllegalStateException if this recorder was already started.
+     */
     fun startRecord(act: Activity) {
+        synchronized(lifecycleLock) {
+            check(!recordingStarted) { "Screenshot recorder can only be started once" }
+            recordingStarted = true
+        }
         val job = recordingScope.launch(start = CoroutineStart.LAZY) {
             var encoderStarted = false
             try {
+                ensureNotReleased()
                 onInit()
                 ensureActive()
-                check(!releaseRequested.get()) { "Screenshot recorder was released during init" }
-                onStart()
+                // A release requested while onInit() was running is an intentional teardown, not
+                // a failure, so it must cancel instead of reaching screenDataListener.onError().
+                ensureNotReleased()
+                startEncoder()
                 encoderStarted = true
-                while (isRecording) {
+                // requestRelease() also cancels this job, so a start that races the release
+                // request cannot re-arm isRecording and keep the loop alive.
+                while (isRecording && !releaseRequested.get()) {
                     ensureActive()
                     CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
                         if (builder.sampleSize > 1) {
@@ -466,21 +496,42 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                         LogContext.log.e(TAG, "Screen error callback failed", callbackFailure)
                     }
                 }
-                releaseCompleted.complete(Unit)
-                recordingDispatcher.close()
             }
         }
-        synchronized(lifecycleLock) {
-            check(recordingJob == null) { "Screenshot recorder can only be started once" }
-            recordingJob = job
+        // Registering the job and completing the release barrier must be mutually exclusive:
+        // requestRelease() may already have finished the barrier and closed the dispatcher, in
+        // which case starting the job would dispatch onto a shut-down executor.
+        val accepted = synchronized(lifecycleLock) {
+            if (releaseCompleted.isCompleted) {
+                false
+            } else {
+                recordingJob = job
+                // Completing the barrier here, not in the body's finally, also covers a lazy job
+                // that is cancelled before it ever runs.
+                job.invokeOnCompletion {
+                    releaseCompleted.complete(Unit)
+                    recordingDispatcher.close()
+                }
+                true
+            }
+        }
+        if (!accepted) {
+            LogContext.log.w(TAG, "Recorder was released before it could start")
+            job.cancel()
+            return
         }
         job.start()
     }
 
+    /**
+     * Requests teardown. This strategy is one-shot, so unlike the general [ScreenProcessor]
+     * contract it cannot be started again afterwards; [onStop] and [onRelease] are equivalent.
+     */
     override fun onStop() {
         requestRelease()
     }
 
+    /** Equivalent to [onStop] for this one-shot strategy. */
     override fun onRelease() {
         requestRelease()
     }
@@ -512,9 +563,14 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private fun requestRelease() {
         releaseRequested.set(true)
         isRecording = false
-        if (recordingJob == null && releaseCompleted.complete(Unit)) {
-            recordingDispatcher.close()
+        // Decide under the same lock startRecord() uses, so a job that is being registered right
+        // now either wins (and owns the barrier) or is rejected before it is ever dispatched.
+        val activeJob = synchronized(lifecycleLock) {
+            val job = recordingJob
+            if (job == null && releaseCompleted.complete(Unit)) recordingDispatcher.close()
+            job
         }
+        activeJob?.cancel()
     }
 
     private fun releaseResourcesOnRecordingThread(stopEncoder: Boolean) {

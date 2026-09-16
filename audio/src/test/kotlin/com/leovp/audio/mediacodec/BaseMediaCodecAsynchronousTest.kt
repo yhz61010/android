@@ -326,6 +326,36 @@ class BaseMediaCodecAsynchronousTest {
         }
     }
 
+    @Test
+    fun `error callback notifies owner once outside the codec lock`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec, probeLockOnFailure = true)
+
+        subject.attachCallback()
+        callbackSlot.captured.onError(mediaCodec, mockk(relaxed = true))
+
+        assertEquals(1, subject.errorCount)
+        assertEquals(1, subject.failureCount)
+        assertEquals(true, subject.lockFreeDuringFailure)
+    }
+
+    @Test
+    fun `error hook failure is isolated and still notifies owner`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec, failError = true)
+
+        subject.attachCallback()
+        // A throwing subclass hook must not escape the MediaCodec callback thread.
+        callbackSlot.captured.onError(mediaCodec, mockk(relaxed = true))
+
+        assertEquals(1, subject.errorCount)
+        assertEquals(1, subject.failureCount)
+    }
+
     @Suppress("DEPRECATION")
     @Test
     fun `release waits for active error callback`() {
@@ -493,6 +523,8 @@ class BaseMediaCodecAsynchronousTest {
         private val enteredError: CountDownLatch? = null,
         private val continueError: CountDownLatch? = null,
         private val failInput: Boolean = false,
+        private val failError: Boolean = false,
+        private val probeLockOnFailure: Boolean = false,
         private val inputSize: Int = 0,
         private val inputPtsUs: Long = 0,
     ) : BaseMediaCodecAsynchronous(
@@ -509,6 +541,10 @@ class BaseMediaCodecAsynchronousTest {
         var endCount: Int = 0
             private set
         var failureCount: Int = 0
+            private set
+
+        /** Set by [notifyCodecFailure] when [probeLockOnFailure] is on. */
+        var lockFreeDuringFailure: Boolean? = null
             private set
 
         fun attachCallback(initialFormat: MediaFormat? = null) {
@@ -556,6 +592,18 @@ class BaseMediaCodecAsynchronousTest {
 
         override fun notifyCodecFailure(error: Throwable) {
             failureCount++
+            if (probeLockOnFailure) lockFreeDuringFailure = probeCodecLockIsFree()
+        }
+
+        /** `true` when another thread can take the codec operation lock right now. */
+        private fun probeCodecLockIsFree(): Boolean {
+            val probe = Executors.newSingleThreadExecutor()
+            return try {
+                val acquired = probe.submit { withCodecOperationLock { } }
+                runCatching { acquired.get(500, TimeUnit.MILLISECONDS) }.isSuccess
+            } finally {
+                probe.shutdownNow()
+            }
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
@@ -564,6 +612,7 @@ class BaseMediaCodecAsynchronousTest {
                 assertTrue(it.await(2, TimeUnit.SECONDS), "Timed out waiting for error callback")
             }
             errorCount++
+            if (failError) error("error hook failed")
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

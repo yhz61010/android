@@ -112,10 +112,6 @@ class OpusDecoder(
         endCallback.invoke()
     }
 
-    override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-        notifyCodecFailure(e)
-    }
-
     override fun notifyCodecFailure(error: Throwable) {
         LogContext.log.e(TAG, "OPUS decoder failed", error)
         errorCallback.invoke(error)

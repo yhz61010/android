@@ -2,8 +2,18 @@ package com.leovp.floatview.framework
 
 import android.content.Context
 import android.os.Looper
+import android.util.Log
 import com.leovp.floatview.entities.DefaultConfig
 import java.util.concurrent.ConcurrentHashMap
+
+private const val TAG = "FloatViewManager"
+
+/** Window manager operations are only valid on the main thread. */
+internal fun checkFloatViewMainThread() {
+    check(Looper.myLooper() == Looper.getMainLooper()) {
+        "FloatView must run on the main thread"
+    }
+}
 
 /**
  * Author: Michael Leo
@@ -12,9 +22,16 @@ import java.util.concurrent.ConcurrentHashMap
 internal object FloatViewManager {
     private val windowMap = ConcurrentHashMap<String, FloatViewImpl>()
 
+    /**
+     * Creates a float view for [config.tag]. Creation is skipped, with a warning, when [context]
+     * belongs to a finishing or destroyed Activity: the window could never be shown, and callers
+     * commonly reach this from asynchronous callbacks after the user has already left the screen.
+     */
     fun create(context: Context, config: DefaultConfig) {
-        check(Looper.myLooper() == Looper.getMainLooper()) {
-            "FloatView must run on the main thread"
+        checkFloatViewMainThread()
+        if (!FloatViewOwner.isContextAlive(context)) {
+            Log.w(TAG, "Skip float view tag[${config.tag}]: Activity is finishing or destroyed")
+            return
         }
         if (!windowMap.containsKey(config.tag)) {
             val tag = config.tag

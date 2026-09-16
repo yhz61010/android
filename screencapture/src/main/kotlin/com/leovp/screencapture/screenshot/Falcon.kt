@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.view.View
@@ -20,7 +21,9 @@ import java.io.IOException
 import java.io.OutputStream
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -34,6 +37,9 @@ import java.util.concurrent.atomic.AtomicReference
 object Falcon {
     //region Constants
     private const val TAG = "Falcon"
+
+    /** Upper bound on waiting for the main thread to draw one screenshot. */
+    private const val MAIN_THREAD_CAPTURE_TIMEOUT_MS = 1_000L
 
     //endregion
     //region Public API
@@ -52,8 +58,9 @@ object Falcon {
         requireNotNull(toFile) { "Parameter toFile cannot be null." }
         var bitmap: Bitmap? = null
         try {
-            bitmap = takeBitmapUnchecked(weakAct)
-            writeBitmap(bitmap, toFile)
+            val captured = takeBitmapUnchecked(weakAct)
+            bitmap = captured
+            writeBitmap(captured, toFile)
         } catch (e: Exception) {
             val message =
                 (
@@ -92,6 +99,24 @@ object Falcon {
     private fun takeBitmapUnchecked(
         weakAct: WeakReference<Activity>,
         config: Bitmap.Config = Bitmap.Config.ARGB_8888,
+    ): Bitmap = if (Looper.myLooper() == Looper.getMainLooper()) {
+        captureOnMainThread(weakAct, config)
+    } else {
+        captureFromOtherThread(weakAct, config)
+    }
+
+    /**
+     * Collects the window list, sizes the bitmap and draws, all in one main-thread turn.
+     *
+     * The window list and its layout params live in two `WindowManagerGlobal` lists that are
+     * mutated together under its own lock. Reading them from another thread can observe the two
+     * out of step, which misaligns a root with its layout params or throws while indexing. Doing
+     * the whole capture on the main thread removes that window, and makes the attach check
+     * before drawing reliable rather than a best guess made earlier on another thread.
+     */
+    private fun captureOnMainThread(
+        weakAct: WeakReference<Activity>,
+        config: Bitmap.Config,
     ): Bitmap {
         val viewRoots = getRootViews(weakAct)
         if (viewRoots.isEmpty()) {
@@ -108,37 +133,47 @@ object Falcon {
             }
         }
         val bitmap = createBitmap(maxWidth, maxHeight, config)
-
-        // We need to do it in main thread
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            drawRootsToBitmap(viewRoots, bitmap)
-        } else {
-            drawRootsToBitmapOtherThread(weakAct, viewRoots, bitmap)
-        }
+        drawRootsToBitmap(viewRoots, bitmap)
         return bitmap
     }
 
+    /**
+     * Hands the capture to the main thread and waits for it, bounded.
+     *
+     * The bitmap is created by the main-thread turn, so a caller that gives up on the timeout
+     * never holds a bitmap that the main thread may still be drawing into.
+     */
     @Throws(InterruptedException::class)
-    private fun drawRootsToBitmapOtherThread(
+    private fun captureFromOtherThread(
         weakAct: WeakReference<Activity>,
-        viewRoots: List<ViewRootData>,
-        bitmap: Bitmap,
-    ) {
+        config: Bitmap.Config,
+    ): Bitmap {
+        val activity = weakAct.get()
+            ?: throw UnableToTakeScreenshotException("Activity is gone before taking screenshot")
+        val captured = AtomicReference<Bitmap>()
         val errorInMainThread = AtomicReference<Throwable>()
         val latch = CountDownLatch(1)
-        weakAct.get()?.runOnUiThread {
-            runCatching {
-                drawRootsToBitmap(
-                    viewRoots,
-                    bitmap
-                )
-            }.getOrElse { errorInMainThread.set(it) }
-                .also { latch.countDown() }
-        } ?: latch.countDown()
-        latch.await()
-        errorInMainThread.get()?.let {
-            throw UnableToTakeScreenshotException(it)
+        activity.runOnUiThread {
+            try {
+                captured.set(captureOnMainThread(weakAct, config))
+            } catch (e: Throwable) {
+                errorInMainThread.set(e)
+            } finally {
+                latch.countDown()
+            }
         }
+        if (!latch.await(MAIN_THREAD_CAPTURE_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+            // Giving up does not stop the main-thread turn: it still runs and still produces a
+            // full-screen bitmap nobody will claim. Queue the recycle behind it, on the same
+            // looper, so a busy main thread does not leave one such bitmap per timed-out frame.
+            activity.runOnUiThread { captured.getAndSet(null)?.recycle() }
+            throw UnableToTakeScreenshotException(
+                "Main thread did not draw the screenshot within ${MAIN_THREAD_CAPTURE_TIMEOUT_MS}ms"
+            )
+        }
+        errorInMainThread.get()?.let { throw UnableToTakeScreenshotException(it) }
+        return captured.get()
+            ?: throw UnableToTakeScreenshotException("Screenshot was not produced")
     }
 
     private fun drawRootsToBitmap(viewRoots: List<ViewRootData>, bitmap: Bitmap) {
@@ -176,11 +211,11 @@ object Falcon {
     }
 
     @Throws(IOException::class)
-    private fun writeBitmap(bitmap: Bitmap?, toFile: File) {
+    private fun writeBitmap(bitmap: Bitmap, toFile: File) {
         var outputStream: OutputStream? = null
         try {
             outputStream = BufferedOutputStream(FileOutputStream(toFile))
-            bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         } finally {
             closeQuietly(outputStream)
         }
@@ -204,16 +239,21 @@ object Falcon {
 
         // Since minSdk is 21, Build.VERSION_CODES.JELLY_BEAN is always below minSdk.
         // We can safely use "mGlobal" which exists in API 21+.
-        val globalWindowManager: Any = getFieldValue("mGlobal", weakAct.get()?.windowManager)!!
+        val windowManager = weakAct.get()?.windowManager
+            ?: throw UnableToTakeScreenshotException("Activity is gone before taking screenshot")
+        val globalWindowManager: Any = checkNotNull(getFieldValue("mGlobal", windowManager)) {
+            "WindowManagerGlobal.mGlobal is not reachable on API ${Build.VERSION.SDK_INT}. " +
+                "It may be blocked by the non-SDK interface restrictions."
+        }
 
+        // These two are the fields most likely to be blocked, so they carry the same diagnosis as
+        // mGlobal above. Without it a blocked lookup surfaces as a bare cast NullPointerException
+        // and the log says only that the screenshot failed.
         val rootObjects = getFieldValue("mRoots", globalWindowManager)
         val paramsObject = getFieldValue("mParams", globalWindowManager)
-        val params: Array<WindowManager.LayoutParams>
-
-        //  There was a change to ArrayList implementation in 4.4
-        val roots: Array<Any> = (rootObjects as List<Any>).toTypedArray()
-        val paramsList = paramsObject as List<WindowManager.LayoutParams>
-        params = paramsList.toTypedArray()
+        val roots: Array<Any> = reflectedList<Any>("mRoots", rootObjects).toTypedArray()
+        val params: Array<WindowManager.LayoutParams> =
+            reflectedList<WindowManager.LayoutParams>("mParams", paramsObject).toTypedArray()
 
         val rootViews = viewRootData(roots, params)
         if (rootViews.isEmpty()) {
@@ -241,18 +281,15 @@ object Falcon {
             if (!rootView.isShown) {
                 continue
             }
-            // A root can sit in the global list before its first traversal or after it was
-            // detached. Its AttachInfo is null then, which makes its bounds meaningless and
-            // makes drawing it throw.
-            if (!rootView.isAttachedToWindow) {
-                continue
-            }
             val location = IntArray(2)
             rootView.getLocationOnScreen(location)
             val left = location[0]
             val top = location[1]
             val area = Rect(left, top, left + rootView.width, top + rootView.height)
-            rootViews.add(ViewRootData(rootView, area, params[i]))
+            // The root list and the params list are snapshotted separately, so a window removed
+            // in between leaves this index without params. Skip it instead of throwing.
+            val rootParams = params.getOrNull(i) ?: continue
+            rootViews.add(ViewRootData(rootView, area, rootParams))
         }
         return rootViews
     }
@@ -301,6 +338,20 @@ object Falcon {
         }
     }
 
+    /**
+     * Reads a reflected `WindowManagerGlobal` list, naming the field when it cannot be read.
+     *
+     * A blocked lookup yields null, and casting that straight to a non-null type would raise a
+     * [NullPointerException] that says nothing about why. Callers see the field name and the
+     * likely cause instead.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> reflectedList(fieldName: String, value: Any?): List<T> =
+        (value as? List<T>) ?: throw UnableToTakeScreenshotException(
+            "WindowManagerGlobal.$fieldName is not reachable on API ${Build.VERSION.SDK_INT}. " +
+                "It may be blocked by the non-SDK interface restrictions."
+        )
+
     private fun getFieldValue(fieldName: String, target: Any?): Any? = runCatching {
         getFieldValueUnchecked(fieldName, target)
     }.getOrNull()
@@ -312,18 +363,33 @@ object Falcon {
         }
     }.getOrNull()
 
+    /**
+     * Caches the fields this class reflects on. The names looked up here are fixed framework
+     * fields, so a hit is valid for the life of the process.
+     *
+     * Every capture walks these lookups, and capturing now runs on the main thread: without the
+     * cache each frame would call [Class.getDeclaredFields], which allocates a fresh array and a
+     * fresh [Field] for every declared field of classes as large as `ViewRootImpl` — tens of
+     * thousands of short-lived objects per second on the UI thread.
+     */
+    private val fieldCache = ConcurrentHashMap<String, Field>()
+
     private fun findField(name: String, clazz: Class<*>?): Field? {
+        if (clazz == null) return null
+        val cacheKey = "${clazz.name}#$name"
+        fieldCache[cacheKey]?.let { return it }
+        return findFieldUncached(name, clazz)?.also { fieldCache[cacheKey] = it }
+    }
+
+    private fun findFieldUncached(name: String, clazz: Class<*>?): Field? {
         var currentClass: Class<*>? = clazz
-        while (currentClass != Any::class.java) {
-            runCatching {
-                val refCurrentClass: Class<*> = currentClass!!
-                for (field in refCurrentClass.declaredFields) {
-                    if (name == field.name) {
-                        return field
-                    }
-                }
-                currentClass = refCurrentClass.superclass
-            }.onFailure { return null }
+        // The null check is part of the loop condition rather than left to a NullPointerException
+        // caught further down: a class with no superclass ends the walk, it is not an error.
+        while (currentClass != null && currentClass != Any::class.java) {
+            val inspected: Class<*> = currentClass
+            val declaredFields = runCatching { inspected.declaredFields }.getOrElse { return null }
+            declaredFields.firstOrNull { name == it.name }?.let { return it }
+            currentClass = runCatching { inspected.superclass }.getOrElse { return null }
         }
         LogContext.log.e(TAG, "Field $name not found for class $clazz")
         return null

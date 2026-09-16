@@ -24,6 +24,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -49,12 +50,20 @@ class RecordSingleAppScreenActivity :
 
     private val outputLock = Any()
     private val cleanupStarted = AtomicBoolean(false)
+
+    /**
+     * Identifies the recording session a recorder belongs to. A recorder that failed to release
+     * keeps running and still holds this Activity through its listener, so its callbacks must be
+     * dropped instead of reaching the next session's output stream.
+     */
+    private val activeSession = AtomicInteger(0)
     private var videoH26xOsForDebug: BufferedOutputStream? = null
     private lateinit var screenProcessor: Screenshot2H26xStrategy
     private lateinit var recorderSetting: ScreenShareSetting
 
-    private val screenDataListener = object : ScreenDataListener {
+    private fun screenDataListenerFor(session: Int) = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
+            if (session != activeSession.get()) return
             val data = buffer as ByteArray
             when (flags) {
                 MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> LogContext.log.i(
@@ -78,14 +87,25 @@ class RecordSingleAppScreenActivity :
                 )
             }
             synchronized(outputLock) {
+                // The authoritative check. The early exit above only saves the logging work: a
+                // retired recorder can pass it and then be descheduled until the next session
+                // has opened its own stream. Retiring a session and swapping the stream both
+                // happen under this lock, so a stale writer can never reach the new file.
+                if (session != activeSession.get()) return
                 runCatching { videoH26xOsForDebug?.write(data) }
                     .onFailure { LogContext.log.e(ITAG, "Write screen recording data failed", it) }
             }
         }
 
         override fun onError(error: Throwable) {
+            // A recorder that outlived its session must not stop the recording that replaced it.
+            if (session != activeSession.get()) return
             LogContext.log.e(ITAG, "Screenshot recording failed", error)
             runOnUiThread {
+                // Checked again here, not only above: the session can advance between posting
+                // this and running it, and switching the toggle off would then stop the healthy
+                // recording that replaced the one this error belongs to.
+                if (session != activeSession.get()) return@runOnUiThread
                 binding.toggleBtn.isChecked = false
                 toast("Unable to record screen")
             }
@@ -108,6 +128,10 @@ class RecordSingleAppScreenActivity :
 
         screenProcessor = createRecorder()
 
+        // Without this the checked state survives a configuration change and the listener below
+        // fires during state restore, starting a recording the user never asked for and
+        // truncating the file the previous instance is still flushing.
+        binding.toggleBtn.isSaveEnabled = false
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 startRecording()
@@ -130,6 +154,10 @@ class RecordSingleAppScreenActivity :
     /**
      * [Screenshot2H26xStrategy] is one-shot, so every recording session needs its own
      * recorder. Reusing a released one throws instead of recording.
+     *
+     * Retiring the previous session here, before [startRecording] can open the next output,
+     * is what makes the guard in [screenDataListenerFor] sound: a stale writer holding
+     * `outputLock` can only ever find the stream its own session opened.
      */
     private fun createRecorder(): Screenshot2H26xStrategy = ScreenCapture.Builder(
         recorderSetting.width,
@@ -137,7 +165,7 @@ class RecordSingleAppScreenActivity :
         recorderSetting.dpi,
         null,
         ScreenCapture.BY_IMAGE_2_H26X,
-        screenDataListener
+        screenDataListenerFor(activeSession.incrementAndGet())
     )
         .setEncodeType(VIDEO_ENCODE_TYPE)
         .setFps(recorderSetting.fps)
@@ -147,9 +175,11 @@ class RecordSingleAppScreenActivity :
         .build() as Screenshot2H26xStrategy
 
     private fun openVideoOutput() {
+        // A unique name per session: a fixed name would let a new recording truncate the previous
+        // one, and would let a recorder that outlived its session write into the new file.
         val dstFile = File(
             getBaseDirString("output"),
-            "screen" + when (VIDEO_ENCODE_TYPE) {
+            "screen-${System.currentTimeMillis()}" + when (VIDEO_ENCODE_TYPE) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
                 ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
             }
@@ -176,9 +206,10 @@ class RecordSingleAppScreenActivity :
         if (!cleanupStarted.compareAndSet(false, true)) return
         binding.toggleBtn.isEnabled = false
         lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            var released = false
             withContext(Dispatchers.IO + NonCancellable) {
                 try {
-                    if (::screenProcessor.isInitialized) awaitRecorderRelease()
+                    released = !::screenProcessor.isInitialized || awaitRecorderRelease()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -187,7 +218,14 @@ class RecordSingleAppScreenActivity :
                     closeVideoOutput()
                 }
             }
-            if (restartable) armNextRecording()
+            if (!restartable || isFinishing || isDestroyed) return@launch
+            if (released) {
+                armNextRecording()
+            } else {
+                // The abandoned recorder still owns the encoder and may still emit frames.
+                // Arming another session would let it corrupt the next recording.
+                toast("Recorder did not release. Screen recording is disabled.")
+            }
         }
     }
 
@@ -208,15 +246,27 @@ class RecordSingleAppScreenActivity :
      * wait: a recording thread stuck in a native call keeps running and still reaches this
      * Activity through the screen data listener, so the timeout is reported as an error
      * rather than treated as a completed release.
+     *
+     * @return true only when teardown finished within the budget **and** the recorder reported
+     * it as clean. The recorder opens its own barrier even after abandoning a callback thread
+     * that is still alive, so the budget alone does not prove the recorder is done with us.
      */
-    private suspend fun awaitRecorderRelease() {
-        val released = withTimeoutOrNull(RELEASE_TIMEOUT_MS.milliseconds) {
+    private suspend fun awaitRecorderRelease(): Boolean {
+        val clean = withTimeoutOrNull(RELEASE_TIMEOUT_MS.milliseconds) {
             screenProcessor.releaseAndJoin()
-            true
-        } ?: false
-        if (!released) {
-            LogContext.log.e(ITAG, "Screenshot recorder did not release in ${RELEASE_TIMEOUT_MS}ms")
         }
+        if (clean == true) return true
+        // Retire the session so the abandoned recorder's callbacks are ignored from now on.
+        activeSession.incrementAndGet()
+        if (clean == null) {
+            LogContext.log.e(ITAG, "Screenshot recorder did not release in ${RELEASE_TIMEOUT_MS}ms")
+        } else {
+            // Teardown finished, but the recorder abandoned a callback thread that is still
+            // alive and may still emit frames. Treating this as a clean release is what would
+            // let it write into the next session's file.
+            LogContext.log.e(ITAG, "Screenshot recorder abandoned its callback thread")
+        }
+        return false
     }
 
     private fun closeVideoOutput() {

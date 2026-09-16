@@ -131,6 +131,53 @@
 
 ### 修复 (Fixed)
 
+- **screencapture 截图录制器生命周期与 Falcon 截图**：`Screenshot2H26xStrategy` 的 EGL 属主由
+  "调用 `onInit()` 的那个线程"改为录制器自己的单线程 executor，所有 EGL 调用与拆除统一路由到
+  该线程，不再把 `MediaCodec.stop()` 和无界的回调线程 join 落到主线程上（回调线程 join 现有
+  2 秒上限，EGL 派发的排队等待有 5 秒上限）。`onInit()` 增加一次性闩，重复初始化不再创建第二套
+  encoder/EGL/Surface/回调线程并泄漏第一套；初始化中途失败现在会释放已创建的部分、关闭 EGL
+  线程并打开释放屏障，失败的录制器不再被自己的空闲线程钉在内存里，后续调用得到带原始 cause 的
+  错误而不是"尚未初始化"。停止前新增 `signalEndOfInputStream()` 并
+  最多等待 500ms，`ScreenDataListener` 现在能收到 `BUFFER_FLAG_END_OF_STREAM`。MediaCodec 回调
+  补 try/catch 与 `finally` 中的 `releaseOutputBuffer`，codec 进入 Error 态不再让进程崩溃或泄漏
+  buffer index；init-only 路径上的 codec 异步失败现在会触发拆除并回调 `onError()`。录制协程在
+  被派发前即遭取消时，其 `finally` 从未运行，此前会让 `onInit()` 已分配的 encoder、EGL 对象和
+  回调线程泄漏，而 `releaseAndJoin()` 仍报告释放成功；现在由协程的完成回调认领这次拆除。
+  `Falcon` 的窗口列表采集、位图尺寸计算与绘制合并到主线程的同一个 turn，`mRoots` 与 `mParams`
+  不再可能读到错位快照；非主线程调用最多等待 1 秒，超时只丢一帧并回收主线程产出的位图。
+  - **行为变更**：`onInit()` 对已释放实例、已开始录制的实例、以及上次初始化失败的实例改抛
+    `IllegalStateException`（原为 `CancellationException` 或无检查）；对 `onInit()` 失败过的实例
+    调用 `startRecord()` 同样立即抛出并带原始 cause。`onInit()` 先于 `startRecord()` 调用仍然有效，
+    但不是必需步骤。`ScreenProcessor` 接口文档改为"默认契约 + 实现可收紧"。
+
+- **demo 录屏页会话隔离**：录制开关禁用状态保存，旋转屏幕或切换系统语言触发 `recreate()` 时
+  不再自动开始一次用户未请求的录制并截断上一个实例仍在 flush 的文件。释放超时后不再武装下一次
+  会话（被放弃的录制器仍持有 encoder，会污染新录制），改为提示并保持开关禁用；每个录制器绑定
+  会话号，退休录制器的数据与错误回调一律丢弃；输出文件名改为 `screen-<时间戳>`。
+
+- **OPUS 播放 input EOS 看门狗**：生产者"活着但卡住"（如 `AudioTrack.write()` 因音频路由切换
+  阻塞）时，等待 input EOS 不再无限期挂起并静默持有 MediaCodec、AudioTrack 与文件句柄。改为
+  按已入队/已消费 PCM 帧数判断进展，连续 5 秒无进展才失败，长文件正常解码仍可等待任意久；
+  生产者自身失败时直接上报其原因，不再等满 codec EOS 预算后报一条误导性的超时。
+
+- **screencapture 释放结果与截图开销**：`Screenshot2H26xStrategy.releaseAndJoin()` 现在返回
+  `Boolean`（原 `Unit`）。回调线程超过 2 秒未结束时会被放弃，此前屏障照样打开、调用方无从得知，
+  于是一个仍可能投递残帧的录制器会被当成已干净释放，其数据可写进下一次录制的输出；现在这种情况
+  返回 `false`，调用方应据此退休该录制器的会话。`onInit()` 的文档改为明确**不得在主线程调用**
+  （最长阻塞 5 秒，与 EGL 线程认领竞争失败时无界），并发调用现在会阻塞到在飞的初始化真正完成，
+  不再在资源尚不存在时提前返回；重复启动编码器变为无操作，`onInit()` → `onStart()` →
+  `startRecord()` 的文档序列不再抛异常。`ScreenRecordMediaCodecStrategy.onRelease()` 去掉了
+  `videoEncoderLoop` 守卫——调用方先停止再释放，该守卫使编码器与 VirtualDisplay 从不释放。
+  `Falcon` 缓存其反射到的框架字段，截图改到主线程后不再每帧调用 `getDeclaredFields()`；
+  `mRoots` / `mParams` 被非 SDK 接口限制拦截时给出字段名与原因，不再是裸 NPE。
+
+- **demo 录屏页会话隔离（续）**：数据回调的会话号比对移入输出锁内，退役录制器不再可能在通过比对
+  后被调度出去、恢复时写进新会话的文件；释放不干净时区分"超时"与"回调线程被放弃"两种日志。
+
+- **OPUS 播放静音假成功**：`AudioTrack` 不处于播放状态时写入返回 0，此前被计为已消费，于是队列
+  被全速抽干、停滞检测认为一直有进展，最终以成功回调结束却什么都没播出。现在零字节写入即判失败；
+  停滞看门狗触发时记录队列与消费计数，不再无声失败。
+
 - **floatview 窗口释放**：移除窗口按成功注册状态处理，不再依赖首次 attach 前可能为空的
   `windowToken`；显示失败回滚已添加窗口，清理动画、方向任务与触摸监听器。
   Activity（含包装 Context）创建的窗口在 Activity 销毁时立即释放，包括系统悬浮窗。

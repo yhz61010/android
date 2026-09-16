@@ -1556,11 +1556,18 @@ owner 线程与 `Handler` 分两个 `@Volatile` 字段发布，存在"已写入 
   是否已请求或已被接管，是则抛 `ReleaseRequestedException`。该异常继承 `CancellationException`，
   录制协程按取消处理，不会误报 `onError()`。
 - `requestRelease()` 在锁内发现 `initInProgress` 为真时只标记移交，由 `endInit()` 在初始化线程执行。
-  清理因此既看到完整资源集合，又始终跑在持有 EGL context 的线程上；`onInit()` 的 `finally`
-  保证中途失败也会释放已创建部分。
+  清理因此既看到完整资源集合，又始终跑在持有 EGL context 的线程上。
 
 **行为变更**：对已请求释放的实例调用 `onInit()` 会抛 `CancellationException`，不再静默完成
 初始化并把资源孤立在无人释放的状态。
+
+> **勘误（§13 复审修正）**：本节原先还写有"`onInit()` 的 `finally` 保证中途失败也会释放已创建
+> 部分"，该说法对 `f86b2682a` 不成立。当时 `finally` 里只有 `if (endInit()) completeInlineRelease(...)`，
+> 而 `endInit()` 返回的是 `teardownDeferredToInit`——仅在并发释放被移交时为真。没有并发释放的
+> 普通初始化失败什么都不释放。该缺陷在 §13 中以 B3 记录并修复，原句已删除。
+>
+> **已被 §13 取代**：`EglOwner(thread, handler)` 类已删除，EGL 属主改为录制器自己的单线程
+> executor；`onInit()` 对已释放实例改抛 `IllegalStateException` 而非 `CancellationException`。
 
 ## 12.4 真机实测发现
 
@@ -1582,9 +1589,17 @@ owner 线程与 `Handler` 分两个 `@Volatile` 字段发布，存在"已写入 
 `takeScreenshotBitmap()` 捕获后返回 null，**整帧丢失**。触发条件是录制期间有窗口正在增删。
 该缺陷为既有问题，`Falcon.kt` 上次修改是 `c5218ffef`。
 
-修复三层：采集时跳过未 attach 的 root（顺带避免其失效边界影响位图尺寸计算）；
-绘制前在主线程再确认一次，因为采集在录制线程、绘制在主线程，中间状态会变；
-单个窗口绘制失败只跳过该窗口并记日志，不再放弃整帧。
+修复三层：采集时跳过未 attach 的 root；绘制前在主线程再确认一次，因为采集在录制线程、
+绘制在主线程，中间状态会变；单个窗口绘制失败只跳过该窗口并记日志，不再放弃整帧。
+
+> **勘误（§13 复审修正）**：本节原先在第一层后附有"顺带避免其失效边界影响位图尺寸计算"，
+> 这条收益没有依据，且方向相反——跨线程读到 `mAttachInfo` 已置空而 `mView` 尚未置空的中间态时，
+> 该过滤会剔除 Activity 根窗口、只剩悬浮窗，位图缩成悬浮窗尺寸后被 `encodeImages()` 拉伸铺满整帧，
+> 比原来的丢一帧更糟。该判断在 §13 中以 M7 记录。
+>
+> **已被 §13 取代**：采集阶段的 attach 过滤已整体删除。A3 把窗口列表采集、位图尺寸计算与绘制
+> 合并到主线程的同一个 turn，过滤因此不再需要，"三层"现为：整帧采集移入主线程 / 绘制前 attach
+> 复查 / 单窗口失败只跳该窗口。
 
 ### Bug 3 停止录制后文件被清零（`878ed3b4a`，本轮自引入回归）
 
@@ -1593,7 +1608,9 @@ Bug 1 的修复在 `armNextRecording()` 中重新打开调试输出流，而 `Fi
 → **清成 0 字节**。
 
 修复：输出流改为在开始录制时打开，武装下一次会话只重建录制器和恢复按钮，完全不碰文件。
-文件名固定，每次新录制覆盖上一次。
+
+> **已被 §13 取代**：文件名当时是固定的、每次新录制覆盖上一次；§13 的 A2 改为
+> `screen-<时间戳>.h265`，每次会话一个新文件，避免释放超时后仍在运行的旧录制器写进新文件。
 
 ## 12.5 其他提交
 
@@ -1634,3 +1651,414 @@ Bug 1 的修复在 `armNextRecording()` 中重新打开调试输出流，而 `Fi
 `WindowManagerGlobal` 的锁。对话框等窗口增删时这两个列表在锁内一起变更，跨线程分两次读可能
 得到不一致快照，随后按 root 下标取 `params[i]` 会错配 LayoutParams（影响 dim 与偏移）或下标越界。
 越界会被 `takeScreenshotBitmap()` 捕获，表现为偶发丢帧。
+
+> **已在 §13 处理**：该项在独立复审中提级为 A3，并已修复——整次采集移入主线程的同一个 turn，
+> 两个列表的快照不再可能错位。
+
+# 13. 第八轮：独立复审与整改（2026-09-16）
+
+## 13.0 背景与产出
+
+审查 AI 对 §12 的全部改动做了一次不依赖既往结论的独立复审，产出
+`00-documents/2026-09-16-screenshot-recorder-independent-review_cc.md`，共 6 条 HIGH、
+8 条 MEDIUM、3 条项目规则违反，另指出 §12 中两处与源码矛盾的声明。
+
+本节记录这 17 项的整改、对整改本身再做一轮复审时新发现的 7 项（§13.4），以及对上述全部整改
+的第二次复审与修正（§13.8）。
+
+**影响面**：`Screenshot2H26xStrategy`、`Falcon`、`ScreenProcessor`、`OpusFilePlayer`、
+demo 录屏页。其中 B2 与 §12.4 Bug 3 属于 §12 自身修复引入的回归。
+
+## 13.1 HIGH 级缺陷
+
+### A1 配置变更自动开始录制并损坏输出文件
+
+`RecordSingleAppScreenActivity` 的 `toggleBtn` 有 id 且未禁用状态保存。旋转屏幕或切换语言触发
+`recreate()` 时，`CompoundButton` 的 checked 状态被恢复，`setOnCheckedChangeListener` 在恢复过程中
+被触发，启动一次用户从未请求的录制；而上一个实例此刻仍在 flush 同一个固定名输出文件。
+manifest 中该 Activity 也没有 `android:configChanges`。
+
+修复：`binding.toggleBtn.isSaveEnabled = false`。`View.dispatchSaveInstanceState()` 检查
+`SAVE_DISABLED_MASK`，置位后 checked 状态不再参与保存/恢复，监听器不会在重建时被触发。
+
+### A2 释放超时后仍重新武装，被放弃的 recorder 污染下一次录制
+
+`awaitRecorderRelease()` 原先返回 `Unit`，超时只记一条日志；`releaseRecorder()` 无条件调用
+`armNextRecording()`。超时意味着旧 recorder 仍持有 encoder 并可能继续出帧，而它与新会话共用
+同一个 `screenDataListener` 实例，于是旧帧会写进新会话的输出流。
+
+修复三处：
+
+- `awaitRecorderRelease()` 返回 `Boolean`，只有真正释放完成才武装下一次会话；否则 toast
+  提示并让开关保持禁用。
+- 引入 `activeSession: AtomicInteger`，`screenDataListenerFor(session)` 为每个 recorder 生成
+  带会话号的监听器，`onDataUpdate` 与 `onError` 都先比对会话号再处理。释放超时时
+  `activeSession.incrementAndGet()` 直接让旧会话退休。
+- 输出文件名改为 `screen-<时间戳>`，即使旧 recorder 还在写，也写不进新文件。
+
+### A3 `Falcon` 的 `mRoots` / `mParams` 双快照错位
+
+`getRootViews()` 分两次反射读取这两个列表，而 `WindowManagerGlobal` 在自己的锁内同时变更它们。
+跨线程分两次读可能拿到不一致的快照，随后 `params[i]` 错配 LayoutParams 或下标越界；
+`toTypedArray()` 本身也有 `ConcurrentModificationException` 风险。
+
+修复：新增 `captureOnMainThread()`，把窗口列表采集、位图尺寸计算和绘制合并进主线程的同一个
+turn；`captureFromOtherThread()` 只负责把整件事投递到主线程并有界等待。两个列表只在主线程读取，
+与它们的变更方同线程，错位窗口消失。位图也改由主线程那一 turn 创建，等待超时的调用方不会
+拿到一张主线程可能还在往里画的位图。
+
+### B1 `onInit()` 可重入，双初始化泄漏整套原生资源
+
+`beginInit()` 只检查释放状态，没有"是否已初始化"的闩。外部 `onInit()` 叠加 `startRecord()` 的
+惰性初始化会创建两套 encoder / EGL / Surface / 回调线程，第一套被字段覆盖后无人可释放。
+
+修复：新增 `initStarted` 闩与 `InitOutcome` 枚举，第二次初始化返回 `ALREADY_INITIALIZED`。
+`allocateResourcesOnce()` 在 `lifecycleLock` 内先答复已定型的情况，避免把调用方派发到 EGL
+线程上排队。
+
+### B2 inline teardown 在主线程执行无界阻塞拆除（§12.2/§12.3 修复引入）
+
+原 `dispatchInlineRelease()` 把清理 post 到 `eglOwner.handler`，而 `onInit()` 的文档线程就是主线程，
+于是 `MediaCodec.stop()` 与无界的 `screenshotThread.join()` 落在主线程上。
+
+修复：EGL 属主不再是"调用 `onInit()` 的那个线程"，而是录制器自己的单线程 executor
+（`screenshot-h26x-egl`）。`EglOwner` 类删除，改为 `eglThread: AtomicReference<Thread?>` 在
+ThreadFactory 中发布；所有 EGL 调用与拆除都经 `runOnEglThread()` / `recordingExecutor.execute()`
+路由到该线程。`join()` 加 `CALLBACK_THREAD_JOIN_TIMEOUT_MS = 2s` 上限。
+
+### B3 `onInit()` 初始化失败不释放已创建的资源
+
+§12.3 曾声称 `finally` 覆盖了中途失败，实际不成立（见该节勘误）。`build().apply { onInit() }`
+这类写法下调用方连引用都还没拿到，失败时没有任何人能释放已创建的部分。
+
+修复：`allocateOnEglThread()` 新增 `catch (t: Throwable)`，先登记 `initFailure`，再
+`releaseOwnedResources(stopEncoder = false)`，释放过程中的次生异常用 `addSuppressed` 附加到原异常
+上后重新抛出。
+
+> **§13.8 补充**：仅释放 encoder / EGL / 回调线程还不够，失败路径还必须关闭 EGL 执行器并打开
+> 释放屏障，否则空闲的执行器线程会把整个录制器钉在内存里。见 §13.8 B4。
+
+## 13.2 MEDIUM 级缺陷
+
+| 编号 | 问题 | 修复 |
+|------|------|------|
+| M1 | input EOS 之前没有看门狗：生产者"活着但卡住"时 `inputEosSubmitted.await()` 无限期挂起，MediaCodec / AudioTrack / `RandomAccessFile` 全部不释放，且无日志 | 新增 `awaitInputEosWithStallDetection()`。按 `queuedPcmCount + consumedPcmCount` 判断进展而非按时长，长文件正常解码可以等任意久，连续 5 秒无进展才 `requestFailure`。不能退回时长型超时，那会重新引入 §12.1 的 P1 |
+| M2 | MediaCodec 回调无 try/catch，codec 进入 Error 态时 `getOutputBuffer()` 抛出会逃逸到回调线程使进程崩溃；`releaseOutputBuffer` 不在 `finally`，中途抛异常泄漏 buffer index | 回调体拆出 `deliverOutput()`，外层 try/catch 记录失败并停录，`finally` 中 `releaseOutputBuffer`。顺带把录制器内部识别 `BUFFER_FLAG_CODEC_CONFIG` 的 `when (flags)` 精确匹配改为位测试——`flags` 是位掩码，原写法在复合标志下会漏记 `vpsSpsPpsBytes`。传给 listener 的 `flags` 一直是原样透传，对外无变化 |
+| M3 | `latch.await()` 无超时，录制协程卡在等主线程绘制时 `releaseAndJoin()` 的超时无法中断它 | `latch.await(MAIN_THREAD_CAPTURE_TIMEOUT_MS = 1s)`。超时经 `takeScreenshotBitmap()` 的 catch 返回 null，录制循环跳帧继续，不中断录制 |
+| M4 | 自我 join 死锁：在 `onDataUpdate`（运行于 `scr-rec-send`）内调用 `onStop()` 时，清理会在该线程上 join 它自己 | 双重覆盖——拆除统一路由到 EGL 线程，不再落在 `scr-rec-send`；`releaseHandlerAndJoin()` 另加 `Thread.currentThread() === screenshotThread` 判断，命中时 `quit()` 后直接返回 |
+| M5 | `handler.post` 成功但目标 Looper 随后 quit，`completeInlineRelease` 永不执行，屏障永不完成 | 改用 `recordingExecutor.execute()`。`ExecutorCoroutineDispatcher.close()` 走 `shutdown()`，已入队任务仍会执行；执行器已关闭时抛 `RejectedExecutionException`，降级分支就地释放并跳过 encoder drain/stop 这两段长等待 |
+| M6 | 停止 encoder 前没有 `signalEndOfInputStream()`，pipeline 中未输出的帧被丢弃，下游收不到 `BUFFER_FLAG_END_OF_STREAM` | 新增 `drainEncoder()`：detach 之前 signal，然后等 `encoderEos` 闩最多 500ms。顺序正确——EOS buffer 经 `screenshotHandler.post` 投递后才 `quitSafely()`，监听器能收到结束标志 |
+| M7 | 采集阶段的 attach 过滤只有坏处（§12.4 Bug 2 的收益声明无依据） | 该过滤整体删除，由 A3 的主线程合并采集取代 |
+| M8 | init-only 路径上 codec 异步失败被静默丢弃：`onError` 写入 `recordingFailure`，但唯一读取点在录制协程的 `finally` 内 | `mediaCodecCallback.onError` 在没有录制协程时直接 `requestRelease()`；`completeInlineRelease()` 末尾调用 `reportFailureIfAny()`，且放在屏障之后，避免回调方再次进入本录制器时与 `releaseAndJoin()` 死锁 |
+
+## 13.3 项目规则违反
+
+- `Falcon.kt` 的 `getFieldValue("mGlobal", ...)!!` → `checkNotNull` 并附带诊断消息（非 SDK 接口
+  限制时能说清原因）。同文件另外两处 `!!` 一并清除：`writeBitmap` 的参数改为非空类型；
+  `findField` 改为把 null 检查放进循环条件，不再靠 `NullPointerException` 做控制流。
+- `Screenshot2H26xStrategy` 录制协程 `catch (e: CancellationException)` 补 `throw e`。
+- `ScreenProcessor` 接口 KDoc 自相矛盾（`onStop()` 既说可再 `onStart()`，又说一次性策略等价于
+  `onRelease()`）→ 重写为"默认契约 + 实现可收紧"，并说明一次性策略的具体行为。
+- `onInit()` 原先抛 `CancellationException`（非挂起的公开方法用取消异常做信号是危险的类型选择）
+  → 改抛 `IllegalStateException`；`ReleaseRequestedException` 退回为录制协程的内部信号。
+
+## 13.4 对整改的复审修正
+
+整改完成后又做了一轮复审，7 项已全部处理：
+
+| 编号 | 问题 | 处理 |
+|------|------|------|
+| N1 | `inputEosSubmitted.completeExceptionally()` 形同死代码——等待循环用 `isCompleted` 判停，异常完成同样让它为真，生产者的失败从不抛出，反而落进 3 秒 codec EOS 等待后报一条张冠李戴的超时 | 循环后补 `inputEosSubmitted.await()`。循环已保证完成，因此它要么立即返回要么重新抛出。不用 `getCompletionExceptionOrNull()`：那是 `@ExperimentalCoroutinesApi` |
+| N2 | demo 的 `onError` 未做会话门控，而 `completeInlineRelease()` 刻意把 `reportFailureIfAny()` 放在屏障之后，退休 recorder 的报错可能在下一会话武装之后到达，把健康录制关掉 | `onError` 加与 `onDataUpdate` 相同的会话号比对 |
+| N3 | `EglOwner` 类删除后其 KDoc 遗留，与类注释连成两个相邻 KDoc 块，描述一个不存在的类 | 删除 |
+| N4 | `runOnEglThread` 的 `task.get()` 无界且执行器 FIFO：`onInit()` 若输掉与 `startRecord()` 的竞态，会排在录制循环之后，把调用线程阻塞整场录制 | `task.get(EGL_DISPATCH_TIMEOUT_MS = 5s)` 兜底；另在 `onInit()` 入口加 `check(!recordingStarted)`，把"录制已启动后再调 `onInit()`"这条现实路径变成立即抛异常，超时退化为纯防御 |
+| N5 | 初始化失败后 `initStarted` 仍为 true，后续 `startRecord()` 得到 `ALREADY_INITIALIZED`，最终在 `checkNotNull(h26xEncoder)` 报"onInit() must run before starting the encoder"，与事实相反 | 新增 `initFailure` 字段与 `InitOutcome.FAILED`。`onInit()` 与录制协程都改抛带原始 cause 的 `IllegalStateException` |
+| N6 | `Falcon` 采集超时后主线程仍会产出一张全屏位图，无人 recycle | 超时分支向同一 looper 追加 `captured.getAndSet(null)?.recycle()`，排在采集 runnable 之后执行 |
+| N7 | `Falcon.kt` `writeBitmap` 的 `bitmap!!` | 见 §13.3 |
+
+## 13.5 行为变更汇总
+
+| 位置 | 变更 |
+|------|------|
+| `ScreenProcessor.onInit()` | 契约放宽为"除非实现另行说明，否则在主线程调用"；一次性策略明确拒绝二次初始化和对已释放实例的初始化 |
+| `Screenshot2H26xStrategy.onInit()` | 已释放 / 已录制 / 上次初始化失败三种情况改抛 `IllegalStateException`（原为 `CancellationException` 或无检查）；初始化在录制器自己的 EGL 线程上执行，调用方阻塞至完成，最长 5 秒 |
+| `Screenshot2H26xStrategy` 拆除 | 停止前先 `signalEndOfInputStream()` 并最多等 500ms，监听器现在能收到 `BUFFER_FLAG_END_OF_STREAM`；回调线程 join 上限 2 秒 |
+| `Screenshot2H26xStrategy.startRecord()` | 对 `onInit()` 已失败的实例改为立即抛带原始 cause 的 `IllegalStateException`，不再进入录制协程（§13.8 B4） |
+| `Falcon` 截图 | 非主线程调用改为整次投递到主线程并最多等 1 秒；超时返回 null（表现为丢一帧），不再无限期阻塞 |
+| demo 录屏页 | 输出文件名改为 `screen-<时间戳>`；释放超时后不再武装下一次会话，改为提示并保持开关禁用；旋转 / 切换语言不再自动开始录制 |
+
+## 13.6 §12 勘误索引
+
+- §12.3 —— "`onInit()` 的 `finally` 保证中途失败也会释放已创建部分"：原句错误，已删除，对应缺陷见 B3。
+- §12.3 —— `EglOwner`、`onInit()` 抛 `CancellationException`：已被本节取代。
+- §12.4 Bug 2 —— "顺带避免其失效边界影响位图尺寸计算"：收益无依据且方向相反，已删除，判断见 M7。
+- §12.4 Bug 3 —— "文件名固定，每次新录制覆盖上一次"：已被 A2 取代。
+- §12.7 "已知未处理"的 `mRoots`/`mParams` 双快照：已提级为 A3 并修复。
+
+## 13.7 验证状态与待真机验证
+
+**审查环境全程未编译**，本节所有结论来自源码静态核对。已人工核对：改动文件行长均 ≤100、
+大括号配对、新增 import 均有使用、`Looper` import 随 `EglOwner` 一并移除且无残留引用、
+两处 `when (InitOutcome)` 分支穷尽（`onInit()` 与录制协程）、触达文件中已无 `!!`。
+
+**需用户本地执行**：`./gradlew staticCheck --rerun-tasks`。`runOnEglThread` 的
+`catch (e: ExecutionException) { throw e.cause ?: e }` 是否触发 `SwallowedException`，
+已在 §13.8 从规则实现层面确认不会。
+
+**待真机验证**：
+
+- OPUS：播放长于 3 秒的文件不被提前判失败；人为制造 `AudioTrack.write()` 阻塞，确认 5 秒停滞
+  检测生效且日志给出的是停滞原因而非 codec EOS 超时。
+- 录屏停止后，输出文件尾部确实带 `BUFFER_FLAG_END_OF_STREAM`（M6 的实际效果）。
+- 旋转屏幕与切换系统语言，确认不会自动开始录制、上一段录制文件完整可播。
+- "录制、停止、再录制"可循环，每次生成独立的 `screen-<时间戳>` 文件且非空可播放。
+- 只调用 `onInit()` 后直接 `onRelease()`；以及释放请求早于 / 穿插于 `onInit()` 的两条时序。
+- 录制期间反复弹出并关闭对话框，确认 A3 之后不再出现 `params[i]` 错配或偶发丢帧。
+- 主线程人为制造 >1 秒卡顿，确认 Falcon 只丢帧、录制继续，且不出现位图堆积。
+
+## 13.8 第二次复审修正（2026-09-16）
+
+对 §13.1–§13.4 的整改再做一轮复审。§13.4 的 7 项逐条对照源码均成立：N1 的生产者与等待者同属
+`playbackScopeJob`，循环退出即已完成，`await()` 只会立即返回或重抛；N4 超时后 `cancel(false)` 的
+`FutureTask` 即使之后被执行器取到也不会运行；N6 的回收 runnable 与采集 runnable 同队列 FIFO，
+`getAndSet(null)` 保证成功与超时两条路径不会都拿到位图。
+
+§13.7 担心的 detekt `SwallowedException` 已从本地缓存的 detekt 1.23.8 规则实现确认：判定条件是
+throw 表达式内对异常的**全部**引用都是 `e.xxx` 形式的成员访问；`throw e.cause ?: e` 中 `e` 本身
+出现，不会命中。
+
+新发现 8 项，7 项已修，1 项明确未处理。
+
+### B4（HIGH，仓库内不可达，由 §13.1 B2 的修复引入）`onInit()` 失败后 EGL 执行器线程永不关闭，且钉住整个录制器
+
+`recordingExecutor` 的 ThreadFactory lambda 引用了属性 `eglThread`，Kotlin 因此捕获了 `this`。
+空闲 worker 线程持有 `ThreadPoolExecutor`，后者持有 factory，factory 持有录制器，录制器持有
+listener，demo 里 listener 持有 Activity。`Executors.newSingleThreadExecutor` 返回的
+`FinalizableDelegatedExecutorService` 本可在录制器被 GC 后靠终结器 `shutdown()` 兜底，但录制器
+被线程钉住，永远不会被 GC。HEAD（`08b122e6f`）的 factory 不引用任何属性，没有这条链。
+
+B3 的修复只释放了 encoder / EGL / 回调线程，没有关闭执行器，也没打开 `releaseCompleted` 屏障。
+`build().apply { onInit() }` 抛异常后调用方没有引用可以再调 `onRelease()`——这正是 B3 要覆盖的
+场景，仓库内 `MediaProjectionService` 对另一个策略就是这样写的。触发条件是初始化本身抛异常，
+例如消费者选 H265 而设备没有 HEVC 编码器。`startRecord()` 路径不受影响：协程完成时会关闭执行器。
+
+修复三处：
+
+- factory 改为 `eglThread.let { holder -> Executors.newSingleThreadExecutor { ... holder.set(it) } }`，
+  只捕获 `AtomicReference`，恢复终结器兜底。
+- `endInit()` 增加 `failed` 参数：初始化失败且没有录制协程、拆除未被认领、屏障未打开时，由
+  初始化线程认领拆除并执行 `completeInlineRelease()`，关闭执行器、打开屏障。判定条件与
+  `requestRelease()` 的认领条件一致，因此与 `startRecord()` 竞态时已注册的协程仍然拥有拆除权，
+  并通过自己的 `InitOutcome.FAILED` 分支上报。
+- `allocateResourcesOnce()` 与 `beginInit()` 把 `FAILED` 判断提到 `RELEASED` 之前，避免失败实例
+  被报成"已释放"而丢掉 cause；`startRecord()` 入口同步检查 `initFailure`，直接抛带 cause 的
+  `IllegalStateException`，不再让一个注定被拒绝的协程去报"released before it could start"。
+
+### B5（HIGH，既有缺陷，仓库内不可达）注册过的录制协程未运行就被取消时，没有人释放 `onInit()` 已分配的资源
+
+拆除归属的前提是"已注册录制协程则由它的 `finally` 负责拆除"。这个前提对**协程体从未进入**的
+情况不成立：
+
+1. `onInit()` 成功，encoder / EGL / 输入 Surface / `scr-rec-send` 线程均已存在，尚无协程。
+2. `startRecord()` 在锁内注册 `recordingJob = job`，随后 `job.start()`；首次派发进入 EGL 执行器队列。
+3. 派发执行前（或 `onInit()` 仍在 EGL 线程上跑、协程排在它后面时）`onStop()` 到达：
+   `requestRelease()` 看到 `job != null`，**因此不认领拆除**，只调 `job.cancel()`。
+4. LAZY 协程被取消后不再进入 `try`，`finally { releaseOwnedResources(...) }` 从未执行。
+5. `invokeOnCompletion` 完成屏障并关闭 dispatcher，`releaseAndJoin()` 报告"已释放"，而 encoder、
+   EGL 对象和回调线程全部泄漏；EGL 线程已退出，再没有任何线程能 un-current 那个 context。
+
+注册处原有注释称"在此完成屏障也覆盖了 LAZY 协程未运行就被取消"——它覆盖的只是**屏障**，
+不包括**释放**，这正是缺口。仓库内不可达：demo 只调 `startRecord()` 不调 `onInit()`，协程未运行
+即无资源可泄漏（`initStarted` 为 false）。影响使用 `onInit()` + `startRecord()` 文档协议的库消费者。
+
+修复：协程体首句置 `bodyEntered`（`AtomicBoolean`）；`invokeOnCompletion` 在锁内判断
+`!bodyEntered.get() && initStarted && !teardownClaimed`，命中则认领拆除并走
+`dispatchInlineRelease()`，由 `completeInlineRelease()` 在 EGL 线程释放资源、关闭 dispatcher、
+最后才打开屏障；未命中则维持原有的"完成屏障 + 关闭 dispatcher"。屏障和 dispatcher 都不能在
+释放之前提前处理，否则重新引入本缺陷。此路径上 `encoderStarted` 为 false，因此跳过 drain 与
+`stop()`——encoder 已 configure 但从未 start，`stop()` 本会抛异常。
+
+### L4（LOW）并发释放会让 `onInit()` 抛出 `RejectedExecutionException` 而非文档承诺的 `IllegalStateException`
+
+线程 A 通过 `allocateResourcesOnce()` 的已定型检查并释放锁，尚未 `execute`；线程 B 的
+`requestRelease()` 此时 `initInProgress` 为 false，于是认领拆除并在 EGL 线程执行
+`completeInlineRelease()`，其中 `recordingDispatcher.close()` 关闭了执行器；A 恢复后
+`recordingExecutor.execute(task)` 抛 `RejectedExecutionException`，逃出 `onInit()`。
+没有挂起也没有泄漏（当时尚未分配任何资源），只是异常类型与 `@throws` 契约不符。
+
+修复：`execute` 包 try/catch，`RejectedExecutionException` 转为
+`IllegalStateException("Screenshot recorder was already released", cause)`。`beginInit()` 本来
+也会答复 `RELEASED`，语义一致。
+
+### D1（MEDIUM，文档）"`onDataUpdate` 的 `flags` 现按位掩码传递"不是行为变更
+
+HEAD 就是把 `info.flags` 原样传给 listener，这轮只改了录制器内部识别 `BUFFER_FLAG_CODEC_CONFIG`
+的匹配方式。§13.5 与 `CHANGELOG.md` 原先要求消费者改为位测试，会让消费者误以为需要迁移；demo
+自己的 listener 仍是精确匹配（`else` 分支照样写入数据，无害）。已改写 §13.2 M2、删除 §13.5 该行、
+修正 `CHANGELOG.md`。
+
+### D2（LOW，文档）§13.7 "四处 `when (InitOutcome)`"实为两处
+
+另两处 `when` 匹配的是 `encodeType`。已修正。
+
+### L1（LOW）`runOnEglThread` 的 5 秒上限混入了 action 自身的执行时间
+
+`FutureTask.cancel(false)` 分不清"排队中"与"已开始"：对已开始的任务它同样返回 true 并丢弃结果，
+action 照跑，资源建好却无人认领。改为用 `AtomicBoolean claimed` 做一次 CAS 认领：EGL 线程在执行
+action 前认领，调用方超时后认领；谁赢谁决定该请求的命运。调用方赢则 `cancel` 并抛出，输则说明
+action 已在跑，转为无界等待。5 秒因此只约束排队等待。
+
+### L3（LOW）`Falcon.getRootViews()` 在 Activity 已回收时误报"非 SDK 接口限制"
+
+主线程路径上 `weakAct.get()` 为 null 时，原 `checkNotNull` 的消息把原因说成反射被拦。改为先判
+Activity 是否存活，为 null 时抛 `UnableToTakeScreenshotException("Activity is gone ...")`，与
+`captureFromOtherThread()` 一致。
+
+### L2（LOW，项目规则，未处理）`Screenshot2H26xStrategy.kt` 超过 800 行
+
+HEAD 为 741 行，本轮修复后为 1011 行，超过 coding-style 的 800 行上限；detekt `LargeClass`
+阈值为 1300，不会挂检查。EGL 状态被初始化、编码、释放三条路径共享，在无法编译的环境里拆分
+风险高于收益，建议本地构建通过后单独做一次拆分（候选：把 `initEgl()` / `releaseEgl()` /
+`encodeImages()` 与 EGL 字段抽成 `EglEncoderSurface`）。
+
+### 未处理项（明确判定为无需改动）
+
+`completeInlineRelease()` 末尾的 `reportFailureIfAny()` 只读 `recordingFailure`，因此纯
+`onInit()` 失败路径不会回调 `screenDataListener.onError()`。这是刻意的：`onInit()` 的调用方已经
+同步收到该异常，再回调一次等于重复上报。`recordingFailure` 承载的是 codec 异步失败，该注释描述
+的仍然准确。
+
+### 验证状态
+
+**本节修复同样未编译、未跑测试、未真机验证。** 除 §13.7 已列的两处构造外，新增两处建议本地首先
+确认：`eglThread.let { holder -> Executors.newSingleThreadExecutor { ... } }` 的类型推断，以及
+`FutureTask<T> { check(...); action() }` 多语句 lambda 的 SAM 转换。
+
+已静态核对：文件内无直接 `throw IllegalStateException(...)`（两处带 cause 的构造都经由返回异常的
+辅助函数），因此不触发 detekt `UseCheckOrError`；`when (InitOutcome)` 两处分支穷尽；改动后
+`RejectedExecutionException`、`AtomicBoolean` 两个 import 均已存在且有使用；行长均 ≤100。
+
+待真机验证追加两条：
+
+- 让初始化失败（例如在没有 HEVC 编码器的设备上选 H265）后只调 `onInit()` 不调 `onRelease()`，
+  用 Android Studio Profiler 确认 `screenshot-h26x-egl` 线程退出、Activity 可被回收；随后调
+  `startRecord()` 应立即抛带原始 cause 的 `IllegalStateException`。
+- `onInit()` → `startRecord()` → 立刻 `onStop()`（B5 的时序）：确认 `releaseAndJoin()` 返回后
+  `screenshot-h26x-egl` 与 `scr-rec-send` 两个线程都已退出、encoder 已释放，而不是屏障先开、
+  资源仍在。
+
+# 14. 第九轮：对 §13 整改的独立复核与修复（2026-09-16）
+
+## 14.0 背景与方法
+
+§13 的整改完成后，对 5 个改动文件做第四轮独立复核：4 个分域代理（录制器生命周期 /
+`Falcon` / demo 调用侧 / OPUS）并行静态审查，主审人逐条回读源码复核并二次裁定。
+**审查环境按协作约定未运行任何 Gradle 任务**，全部为静态源码分析。
+
+## 14.1 裁定结果
+
+§13 声称的修复共 28 项，复核结论：
+
+| 域 | 声称项 | CONFIRMED | PARTIAL |
+|----|--------|-----------|---------|
+| `Screenshot2H26xStrategy`（B1–B5、M2/M4/M5/M6/M8、L1/L4、规则1、§6.1、N4/N5 等） | 15 | 15 | 0 |
+| `Falcon`（A3、M3、M7、N6、L3、规则2、N7） | 7 | 6 | 1（M3） |
+| demo + `ScreenProcessor`（A1、A2、N2、规则3） | 4 | 0 | 4 |
+| `OpusFilePlayer`（M1、N1） | 2 | 1（N1） | 1（M1） |
+
+**修得最扎实的是拆除认领权状态机**：`onInit` 失败路径、`requestRelease()`、
+`invokeOnCompletion`、协程 `finally` 四方全部在 `lifecycleLock` 下以 `teardownClaimed`
+为唯一 CAS 点，条件严格互补，逐个交错窗口走查未发现重复认领或都不认领的组合。
+B4(a) 的 ThreadFactory lambda 经逐符号核对，确认只捕获 `AtomicReference`、不再捕获 `this`。
+B5 的 `bodyEntered` 方案中屏障与 dispatcher 都在资源释放之后处理，没有重新引入缺陷。
+
+## 14.2 本轮发现并修复的问题
+
+| 编号 | 级别 | 问题 | 修法 |
+|------|------|------|------|
+| **P1** | 阻断 | `Screenshot2H26xStrategy.kt` 的 `allocateOnEglThread()` 在 `finally` 块内 `throw teardownFailure`（嵌在 `.onFailure {}` lambda 内）。detekt `ThrowingExceptionFromFinally` 为 active、`maxIssues: 0`、仓库无 baseline，该规则用 `forEachDescendantOfType<KtThrowExpression>` 全递归遍历 finally 子树，嵌套 lambda 照样命中 ⇒ `./gradlew staticCheck` 必然失败 | 改为：有初始化异常时 `addSuppressed`，无初始化异常时记 ERROR 日志，不再从 `finally` 抛出。该分支运行期本就几乎不可达（`completeInlineRelease` 内部吞掉全部异常），故无行为代价 |
+| **P2** | HIGH | **A2 的核心前提是假的。** `releaseHandlerAndJoin()` 在回调线程 `join(2000ms)` 超时后只打日志就返回，`completeInlineRelease()` 的 `finally` 随后**无条件**完成 `releaseCompleted` ⇒ `releaseAndJoin()` 正常返回 ⇒ demo 认为 `released == true` 并武装下一次会话，而 `scr-rec-send` 线程可能仍活着、队列里还压着 `onDataUpdate`。A2 只挡住了 demo 侧 10 秒外层超时，挡不住策略内部 2 秒放弃回调线程这条更易发生的路径 | 新增 `callbackThreadAbandoned`，join 超时或被中断且线程仍存活时置位；**`releaseAndJoin()` 返回类型由 `Unit` 改为 `Boolean`**，false 表示"屏障已开但回调线程被放弃"。demo 的 `awaitRecorderRelease()` 消费该返回值，两种不干净情形分别记日志并退休会话 |
+| **P3** | HIGH | **demo 会话守卫存在真实 TOCTOU。** `onDataUpdate` 在 `outputLock` **之外**比对会话号，中间隔着若干日志调用；被退休的回调线程可以通过守卫后被调度出去，恢复时新会话已开流，数据写进新文件 | 锁内增加权威性复检。退休会话（`activeSession.incrementAndGet()`）与换流（`openVideoOutput()`）都在主线程按序发生且换流持锁，因此持锁的陈旧写入方只可能看到自己那一代的流。`createRecorder()` 的 KDoc 记明了这条顺序依赖 |
+| **P4** | HIGH | **`Falcon` 把未缓存的反射一起搬上了主线程。** `findField()` 每次调用都走 `Class.getDeclaredFields()`，ART 上每次返回全新分配的 `Field[]`。A3 的修复把 `getRootViews()` 搬到主线程，连带把这份反射也搬了上去：每帧 3 次全局字段查找 + 每个 root 一次 `mView` 查找，`ViewRootImpl` 字段数百量级，30fps 下主线程每秒新增约 2–3 万个 `Field` 对象。§9.4 的取舍评估完全没提这一项 | 新增 `fieldCache: ConcurrentHashMap<String, Field>`，键为 `类名#字段名`。这些是固定的框架字段，一次命中终生有效 |
+| **P5** | HIGH | **`onInit()` 的两个公开 API 误用路径**（仓库内不可达，影响 JitPack 下游）：① `allocateResourcesOnce()` 在初始化**进行中**就返回 `ALREADY_INITIALIZED`，并发调用者的 `onInit()` 在资源尚不存在时正常返回，违反"blocks until it finishes"的承诺；② `startEncoder()` 无幂等闸，按接口文档的 `onInit(); onStart(); startRecord()` 会调两次，`MediaCodec.start()` 打在已 Executing 的 codec 上抛异常 | ① 就绪判断改为 `initStarted && !initInProgress`，让并发调用者排到在飞初始化之后，由 `beginInit()` 在资源就绪后答复；② 新增 `encoderStartRequested` 闩，在 `checkNotNull` **之后**做 CAS，使"未初始化就调 `onStart()`"不会消耗掉唯一的一次启动机会。与 `encoderStarted` 分开：后者必须在 `start()` 真正成功后才置位，拆除只能停真正进入 Executing 的 codec |
+| **P6** | MEDIUM | **OPUS 假成功。** `AudioTrackPlayer.write()` 在 `playState != PLAYING` 时返回 0，消费者的 `check(writtenBytes >= 0)` 对 0 成立，`consumedPcmCount` 照常自增 ⇒ 全程静音、队列被全速抽干、停滞检测认为"一直有进展"，最后走自然结束触发**成功**回调。比挂起更难排查 | 消费循环增加 `check(writtenBytes > 0 || pcmData.isEmpty())`，零字节写入即判失败。拆除期间该异常被 `terminalStarted` 守卫吞掉，不影响正常停止 |
+| **P7** | MEDIUM | **OPUS 停滞看门狗零日志。** M1 原文点名的症状之一就是"也无日志"，而看门狗触发时一行都不打；`requestFailure()` 在 `terminalStarted` 已置位时静默返回，故这可能是唯一一次不留痕迹的失败 | 触发点先记 ERROR，带上 `queued` / `consumed` / `pending` 三个计数 |
+| **P8** | MEDIUM | **M38 的尾巴未收掉。** `ScreenProcessor.onInit()` 的新 KDoc 写"除非实现另行说明，否则在主线程调用"，而 `Screenshot2H26xStrategy.onInit()` 并未 document otherwise——它实际最长阻塞 5 秒，CAS 认领输掉时转无界等待。按接口文档调用会 ANR | `Screenshot2H26xStrategy.onInit()` 的 KDoc 增加"**不要在主线程调用**"及其理由。无界等待机制本身保留：action 已在跑时不能丢下半成品 EGL 上下文 |
+| **P9** | MEDIUM | **§13「规则违反 2」的反射诊断只覆盖了一半。** `Falcon.getRootViews()` 给 `mGlobal` 加了 `checkNotNull` + "可能被非 SDK 接口限制拦截"的提示，但紧接着的 `rootObjects as List<Any>` / `paramsObject as List<LayoutParams>` 仍是裸转换。targetSdk 36 下真正受限的恰恰是 `mRoots` / `mParams`，被拦时抛 `null cannot be cast to non-null type` 这种毫无线索的 NPE，日志里仍只有一句含糊的"Unable to take screenshot"——正是该规则违反想消灭的症状。表现仍是丢一帧、非新增崩溃，故判 MEDIUM | 抽出 `reflectedList()` 辅助函数，用 `as?` + 带字段名和拦截提示的 `UnableToTakeScreenshotException` 取代裸转换，两个字段与 `mGlobal` 诊断口径一致 |
+| **P10** | HIGH（既有缺陷，本轮之前就存在） | **`ScreenRecordMediaCodecStrategy.onRelease()` 的编码器与 VirtualDisplay 从不释放。** 该方法以 `if (!videoEncoderLoop.get()) return` 开头，而调用方（`MediaProjectionService.onReleaseScreenShare()`）先 `stopScreenShare()`（→`onStop()` 把该标志置 false）再 `onRelease()` ⇒ `h26xEncoder.release()` 与 `virtualDisplay.release()` 永远执行不到。与 §13 新改的 `ScreenProcessor.onRelease()` KDoc "Releases every owned resource" 直接矛盾 | 去掉该守卫（`onStop()` 保留自己的守卫），并在释放后把两个字段置空，使重复调用是 no-op 而非 double free。与同文件 `changeOrientation()` 既有的写法一致 |
+
+## 14.3 复核中被推翻或下调的三条代理结论
+
+保留在此，避免后续维护者据错误模型做决策。
+
+1. **`Falcon` 的 `!rootView.isShown` 过滤**被代理算作"M7 未完全消除"——不成立。M7 针对的是
+   §13 新加的 `isAttachedToWindow` 采集阶段过滤，那个确已删除，**M7 判 CONFIRMED**；
+   `isShown` 是 `Falcon` 原有逻辑，属独立的既有风险，单独记账。
+2. **demo TOCTOU 窗口"对 I 帧 hex dump 可达毫秒量级"**——不成立。`toHexString()` 只在
+   `BUFFER_FLAG_CODEC_CONFIG` 分支（配置帧仅几十字节），关键帧分支只打 size。但 P3 的结论不受
+   影响：线程可在守卫与写入之间的任意一点被抢占，窗口长度无需论证。
+3. **`OpusFilePlayer.finishPlayback()` 的 `playbackScopeJob.cancelAndJoin()` 无界等待**——由
+   HIGH 下调为 MEDIUM，**本轮未修**。该调用前刻意按 `cancel()` → `closeInputFile()` →
+   `audioTrackPlayer.stop()` 的顺序唤醒阻塞的 `write()`，常见路由切换场景能正常返回；真正的无界
+   挂起要求 HAL 彻底卡死、连 `pause()/stop()` 也进不去 AudioFlinger 锁。该给这个 join 加界并保证
+   终局回调一定触发，列为后续项。
+
+## 14.4 §9 / §13 勘误索引
+
+- 独立复审文档 §9.4 —— "1080p RGB_565 约 1.6 MB/帧"：算错，实为 1920×1080×2 ≈ **3.96 MiB/帧**
+  （30fps 约 119 MB/s，而非 48 MB/s）。该段还遗漏了同批搬上主线程的 `getDeclaredFields()` 开销，
+  其数量级高于位图分配。取舍结论需按真实值重估，已在原文标注。
+- 独立复审文档 §4.1 A3 第 2 点 —— "`toTypedArray()` 会抛 `ConcurrentModificationException`"：
+  不成立。`ArrayList.toArray()` 走 `Arrays.copyOf`，不经迭代器。真实风险是两次读取之间 size
+  缩小导致尾部 null 或下标错位。修复方向不变，失效机制描述有误，已在原文标注。
+- §13.1 A2 —— "超时后不再武装下一次会话"：只覆盖了 demo 侧 10 秒外层超时，未覆盖策略内部 2 秒
+  放弃回调线程的路径，见 P2。
+- §13.5 —— `releaseAndJoin()` 现返回 `Boolean`（原 `Unit`），见 P2。
+
+## 14.5 行为变更汇总
+
+| 位置 | 变更 |
+|------|------|
+| `Screenshot2H26xStrategy.releaseAndJoin()` | **返回类型 `Unit` → `Boolean`**。false 表示屏障已开但回调线程被放弃（仍可能投递残帧），调用方应退休该录制器的会话而非视为干净释放 |
+| `Screenshot2H26xStrategy.onInit()` | KDoc 明确**不得在主线程调用**（最长阻塞 5 秒，认领竞争失败时无界）。并发调用现在会阻塞到在飞的初始化真正完成，而不是提前返回 |
+| `Screenshot2H26xStrategy.onStart()` | 重复启动编码器变为无操作，`onInit(); onStart(); startRecord()` 序列不再抛 `IllegalStateException` |
+| `ScreenRecordMediaCodecStrategy.onRelease()` | 现在真正释放编码器与 VirtualDisplay（此前因守卫从不执行）；重复调用为 no-op |
+| `OpusFilePlayer` | AudioTrack 接受 0 字节即判定失败并回调 `onFailure`，不再静音播完后报成功；停滞看门狗触发时记录 ERROR 日志 |
+| demo 录屏页 | 释放被判定为不干净（超时或回调线程被放弃）时禁用开关并提示，两种情形日志可区分 |
+
+## 14.6 验证状态
+
+**本轮修复未编译、未跑测试、未真机验证。** 已静态核对：5 个改动文件行长均 ≤100；
+`finally` 块内已无任何 `throw`（脚本扫描确认，P1 的 detekt 阻断已消除）；
+`ConcurrentHashMap` 为 `Falcon.kt` 新增 import 且有使用；`initInProgress`、`encoderStartRequested`、
+`callbackThreadAbandoned` 三个新成员均有读写点；项目未启用 `allWarningsAsErrors`，
+`reflectedList()` 的 unchecked cast 已加 `@Suppress`。
+
+**需用户本地执行**：
+
+```bash
+./gradlew --continue :screencapture:compileDebugKotlin :audio:testDebugUnitTest \
+  :screencapture:detekt :screencapture:ktlintCheck \
+  :audio:detekt :audio:ktlintCheck \
+  :demo:ktlintCheck :demo:compileDevDebugKotlin
+```
+
+**待真机验证**（在 §13.7 基础上追加）：
+
+- 主线程掉帧与 GC 抖动实测：录制期间用 Profiler 观察 `Field` 对象分配是否已随 P4 消失。
+- targetSdk 36 上 `mRoots` / `mParams` 反射是否真被非 SDK 接口限制拦截；若被拦，确认日志给出的是
+  P9 新增的字段名 + 拦截提示，而非裸 NPE。
+- 人为让 `scr-rec-send` 阻塞以命中 2 秒放弃分支：确认 `releaseAndJoin()` 返回 false、开关保持禁用、
+  被放弃的录制器写不进任何文件（P2 + P3）。
+- 屏幕共享（`BY_MEDIA_CODEC`）停止后再启动：确认编码器与 VirtualDisplay 已真正释放，不再累积（P10）。
+- OPUS：人为让 AudioTrack 脱离 PLAYING 状态，确认走失败回调而非静音"成功"（P6）。
+
+## 14.7 已知未处理
+
+- `Screenshot2H26xStrategy.kt` 本轮后约 1030 行，仍超 coding-style 的 800 行上限；类内方法数已达
+  31，detekt `TooManyFunctions.thresholdInClasses` 为 33，**只剩 2 个名额**。下一轮建议以拆分为主、
+  不再叠加逻辑（候选：把生命周期状态机与 `EglThreadDispatcher` 各抽一个类）。
+- `OpusFilePlayer.finishPlayback()` 的 `cancelAndJoin()` 仍无界，见 §14.3 第 3 条。
+- `Falcon` 的 `!rootView.isShown` 过滤仍可能让位图缩成悬浮窗尺寸，下游 `encodeImages()` 按固定尺寸
+  拉伸，表现为一帧全屏失真。属既有风险，建议在 `encodeImages()` 入口加宽高比校验。
+- `Falcon.getRootViews()` 仍是 public 且无线程契约，库使用者可在任意线程调用。

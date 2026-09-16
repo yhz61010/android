@@ -62,6 +62,10 @@ class OpusFilePlayer(
         private const val QUEUE_LOG_INTERVAL_FRAMES = 50L
         private const val INPUT_RETRY_DELAY_MS = 5L
         private const val CODEC_EOS_TIMEOUT_MS = 3_000L
+
+        /** Poll interval and no-progress budget for the pre-input-EOS stall detector. */
+        private const val INPUT_STALL_POLL_MS = 100L
+        private const val INPUT_STALL_TIMEOUT_MS = 5_000L
         private const val PCM_QUEUE_HIGH_WATERMARK = 48
         private const val PCM_QUEUE_LOW_WATERMARK = 32
         const val START_CODE = "|leo|"
@@ -252,8 +256,12 @@ class OpusFilePlayer(
             signalEndOfStreamWithBackpressure(playbackDecoder)
             inputEosSubmitted.complete(Unit)
         } catch (e: CancellationException) {
+            // Let the waiter observe the producer's exit instead of relying on cancellation
+            // reaching it through a different path.
+            inputEosSubmitted.completeExceptionally(e)
             throw e
         } catch (e: Exception) {
+            inputEosSubmitted.completeExceptionally(e)
             if (!terminalStarted.get()) {
                 LogContext.log.e(TAG, "Decode OPUS file failed", e)
                 requestFailure(e)
@@ -294,6 +302,13 @@ class OpusFilePlayer(
                 val pcmData = queue.poll(100, TimeUnit.MILLISECONDS) ?: continue
                 val writtenBytes = audioTrackPlayer.write(pcmData)
                 check(writtenBytes >= 0) { "AudioTrack write failed with code $writtenBytes" }
+                // A zero-length write means the track is not playing or the write was swallowed.
+                // Counting it as consumed would drain the queue at full speed, keep the stall
+                // detector satisfied and end the session through the success callback with
+                // nothing ever played, which is far harder to diagnose than a reported failure.
+                check(writtenBytes > 0 || pcmData.isEmpty()) {
+                    "AudioTrack accepted no data; the track is no longer playing"
+                }
                 consumedPcmCount.incrementAndGet()
                 writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes()).toLong())
             }
@@ -324,9 +339,10 @@ class OpusFilePlayer(
         // The codec EOS timeout must only start once the input EOS has actually been
         // submitted. Measuring it from playback start would abort every file whose audio is
         // longer than CODEC_EOS_TIMEOUT_MS while it is still being read and decoded normally.
-        // Teardown cancels this job, so a producer that dies before submitting EOS cannot
-        // leave this await hanging.
-        inputEosSubmitted.await()
+        // A producer that dies is covered by teardown cancelling this job, but one that is alive
+        // and simply stuck would hang here forever, so the wait is bounded by lack of progress
+        // rather than by elapsed time.
+        awaitInputEosWithStallDetection()
         val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT_MS) {
             codecEos.await()
             true
@@ -371,6 +387,51 @@ class OpusFilePlayer(
         terminalScope.launch {
             finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false)
         }
+    }
+
+    /**
+     * Waits for the producer to submit input EOS, failing the session if it stops making progress.
+     *
+     * Progress is measured by PCM frames queued or consumed rather than by elapsed time, so a
+     * long file decoding normally waits as long as it needs while a wedged pipeline still
+     * terminates. Either end of the pipeline moving counts as progress.
+     */
+    private suspend fun awaitInputEosWithStallDetection() {
+        // Either end of the pipeline making headway counts, so a slow first frame or a silent
+        // stretch is not mistaken for a wedge.
+        var lastProgress = queuedPcmCount.get() + consumedPcmCount.get()
+        var stalledForMs = 0L
+        while (!inputEosSubmitted.isCompleted) {
+            delay(INPUT_STALL_POLL_MS)
+            val progress = queuedPcmCount.get() + consumedPcmCount.get()
+            if (progress != lastProgress) {
+                lastProgress = progress
+                stalledForMs = 0
+                continue
+            }
+            stalledForMs += INPUT_STALL_POLL_MS
+            if (stalledForMs >= INPUT_STALL_TIMEOUT_MS) {
+                // Logged here rather than left to the terminal path: requestFailure() returns
+                // silently once teardown has started, so this can otherwise be the one failure
+                // that ends a session without leaving a trace of why.
+                LogContext.log.e(
+                    TAG,
+                    "OPUS playback stalled: queued=${queuedPcmCount.get()} " +
+                        "consumed=${consumedPcmCount.get()} pending=${queue.size}"
+                )
+                requestFailure(
+                    TimeoutException(
+                        "OPUS playback made no progress for ${INPUT_STALL_TIMEOUT_MS}ms " +
+                            "while waiting for input EOS"
+                    )
+                )
+                throw CancellationException("OPUS playback stalled before input EOS")
+            }
+        }
+        // A producer that failed completes this exceptionally. Surface it now instead of
+        // waiting out the codec EOS budget and reporting a misleading timeout. The loop above
+        // already guarantees completion, so this await() either returns at once or rethrows.
+        inputEosSubmitted.await()
     }
 
     private suspend fun awaitAudioTrackDrain(): Boolean =

@@ -33,20 +33,28 @@ interface ScreenProcessor {
     }
 
     /**
-     * This method must be called on main thread.
+     * Allocates the resources this processor needs. Call it on the main thread unless the
+     * implementation documents otherwise.
+     *
+     * Implementations may tighten this contract; check the concrete strategy. A one-shot
+     * strategy rejects a second initialization and rejects initializing a released instance.
      */
     fun onInit()
     fun onStart()
 
     /**
-     * After `onStop()`, you can do `onStart()` again.
-     * However, once do `onRelease()` you can not start again. Please call `onInit()` then
-     * `onStart()`
+     * Stops producing data.
+     *
+     * By default `onStart()` may follow, and only `onRelease()` is final. **A one-shot
+     * implementation may treat `onStop()` as equivalent to `onRelease()`**; check the concrete
+     * strategy before relying on a restart.
      */
     fun onStop()
 
     /**
-     * Once do `onRelease()` you can not start again. Please call `onInit()` then `onStart()`
+     * Releases every owned resource. A released processor is never restarted. Whether a fresh
+     * `onInit()` can revive this instance is up to the implementation; a one-shot strategy
+     * requires a new instance instead.
      */
     fun onRelease()
 

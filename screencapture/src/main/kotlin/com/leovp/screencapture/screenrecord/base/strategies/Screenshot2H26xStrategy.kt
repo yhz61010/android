@@ -16,7 +16,6 @@ import android.opengl.Matrix
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
-import android.os.Looper
 import android.util.Size
 import android.view.Surface
 import com.leovp.image.compressBitmap
@@ -26,8 +25,15 @@ import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.lang.ref.WeakReference
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
@@ -46,12 +52,8 @@ import kotlinx.coroutines.launch
 private class ReleaseRequestedException :
     CancellationException("Screenshot recorder was released during init")
 
-/**
- * Thread that made the EGL context current, together with a [Handler] for posting back to it.
- * Both are published as a single value so a concurrent teardown can never observe one without
- * the other.
- */
-private class EglOwner(val thread: Thread, val handler: Handler?)
+/** Outcome of an attempt to allocate the recorder's resources. */
+private enum class InitOutcome { INITIALIZED, ALREADY_INITIALIZED, FAILED, RELEASED }
 
 /**
  * Screenshot-based H.26x recording strategy for API 21 and later.
@@ -66,6 +68,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
         // EGL_ANDROID_recordable. The public EGLExt field was added in API 26.
         private const val EGL_RECORDABLE_ANDROID = 0x3142
+
+        /** Bounded waits used during teardown, so a wedged pipeline cannot block it forever. */
+        private const val ENCODER_EOS_TIMEOUT_MS = 500L
+        private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 2_000L
+        private const val EGL_DISPATCH_TIMEOUT_MS = 5_000L
     }
 
     @Volatile
@@ -73,10 +80,29 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private val releaseRequested = AtomicBoolean(false)
     private val recordingFailure = AtomicReference<Throwable?>(null)
     private val releaseCompleted = CompletableDeferred<Unit>()
+
+    /**
+     * Latches when the callback thread outlived its bounded join and was abandoned while still
+     * alive. It can still deliver queued frames to the listener, so the teardown is not clean
+     * even though [releaseCompleted] opens: see [releaseAndJoin].
+     */
+    private val callbackThreadAbandoned = AtomicBoolean(false)
     private val lifecycleLock = Any()
     private val codecCallbackLock = Any()
-    private val recordingExecutor = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "screenshot-h26x-egl")
+    private val eglThread = AtomicReference<Thread?>(null)
+
+    /**
+     * Owns the EGL context for this recorder's whole life. Every EGL call, and the teardown that
+     * destroys them, runs here: a context can only be un-currented on the thread it is current on.
+     *
+     * The factory captures the holder alone, never this recorder. An idle worker thread keeps the
+     * executor and its factory reachable, so a factory holding `this` would pin the recorder, its
+     * listener and everything the listener captures for as long as the thread lived.
+     */
+    private val recordingExecutor = eglThread.let { holder ->
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "screenshot-h26x-egl").also { holder.set(it) }
+        }
     }
     private val recordingDispatcher = recordingExecutor.asCoroutineDispatcher()
     private val recordingExceptionHandler = CoroutineExceptionHandler { _, error ->
@@ -96,13 +122,35 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private val encoderStarted = AtomicBoolean(false)
 
     /**
+     * Latches on the first [startEncoder] attempt. [onStart] and [startRecord] are both public
+     * entry points that start the encoder, so the documented `onInit(); onStart(); startRecord()`
+     * sequence would otherwise call `MediaCodec.start()` on an already executing codec.
+     *
+     * Kept apart from [encoderStarted], which must stay false when the start itself threw:
+     * teardown may only stop a codec that really entered the executing state.
+     */
+    private val encoderStartRequested = AtomicBoolean(false)
+
+    /**
      * Guarded by [lifecycleLock]. Latches when [requestRelease] takes over teardown because no
      * recording job was ever registered. Ownership is claimed here, while [releaseCompleted]
      * is completed only once the resources are actually gone.
      */
     private var teardownClaimed = false
 
-    /** Guarded by [lifecycleLock]. True while [onInit] is still creating resources. */
+    /** Guarded by [lifecycleLock]. Latches on the first initialization attempt. */
+    private var initStarted = false
+
+    /**
+     * Guarded by [lifecycleLock]. The exception that made the first initialization attempt fail.
+     *
+     * [initStarted] latches before the resources exist, so without this a failed attempt would
+     * be indistinguishable from a successful one and the next caller would be told the recorder
+     * was already initialized.
+     */
+    private var initFailure: Throwable? = null
+
+    /** Guarded by [lifecycleLock]. True while resources are still being created. */
     private var initInProgress = false
 
     /**
@@ -111,9 +159,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      */
     private var teardownDeferredToInit = false
 
-    /** Published by [beginInit] before any resource exists. Owns the EGL context. */
-    @Volatile
-    private var eglOwner: EglOwner? = null
     private val mvp = getMvp()
 
     // EGL
@@ -127,7 +172,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     // Init OpenGL, once we have initialized context and surface
     private lateinit var renderer: TextureRenderer
 
-    private var frameCount: Long = 0
+    private val frameCount = AtomicLong(0)
+
+    /** Opened by the encoder's end-of-stream output, so teardown can drain before stopping. */
+    private val encoderEos = CountDownLatch(1)
 
     @SuppressWarnings("unused")
     var vpsSpsPpsBytes: ByteArray? = null
@@ -135,7 +183,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     var h26xEncoder: MediaCodec? = null
         private set
     private lateinit var screenshotThread: HandlerThread
-    private lateinit var screenshotHandler: Handler
+
+    @Volatile
+    private var screenshotHandler: Handler? = null
 
     private val mediaCodecCallback = object : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, inputBufferId: Int) {
@@ -148,48 +198,47 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         ) {
             synchronized(codecCallbackLock) {
                 if (h26xEncoder !== codec) return
-                val outputBuffer = codec.getOutputBuffer(outputBufferId)
-                // outputBuffer is ready to be processed or rendered.
-                outputBuffer?.let {
-                    val encodedBytes = ByteArray(info.size)
-                    it.get(encodedBytes)
-
-                    val flags = info.flags
-                    val presentationTimeUs =
-                        computePresentationTimeUs(++frameCount, builder.fps)
-
-                    when (flags) {
-                        MediaCodec.BUFFER_FLAG_CODEC_CONFIG -> {
-                            vpsSpsPpsBytes = encodedBytes.copyOf()
-                            // LogContext.log.w(TAG, "Found SPS/PPS frame:
-                            // ${spsPpsBytes!!.contentToString()}")
-                        }
-
-                        MediaCodec.BUFFER_FLAG_KEY_FRAME -> {
-                            // LogContext.log.i(TAG, "Found Key Frame[" + info.size + "]")
-                        }
-
-                        MediaCodec.BUFFER_FLAG_END_OF_STREAM -> {
-                            // Do nothing
-                        }
-
-                        MediaCodec.BUFFER_FLAG_PARTIAL_FRAME -> {
-                            // Do nothing
-                        }
-
-                        else -> {
-                            // Do nothing
-                        }
-                    }
-                    screenshotHandler.post {
-                        builder.screenDataListener.onDataUpdate(
-                            encodedBytes,
-                            flags,
-                            presentationTimeUs
-                        )
-                    }
+                try {
+                    deliverOutput(codec, outputBufferId, info)
+                } catch (e: Throwable) {
+                    // This runs on MediaCodec's callback thread, where an escaping exception
+                    // would kill the process instead of reaching the recording coroutine.
+                    LogContext.log.e(TAG, "Output buffer callback failed", e)
+                    recordingFailure.compareAndSet(null, e)
+                    isRecording = false
+                } finally {
+                    runCatching { codec.releaseOutputBuffer(outputBufferId, false) }
+                        .onFailure { LogContext.log.e(TAG, "releaseOutputBuffer failed", it) }
                 }
-                codec.releaseOutputBuffer(outputBufferId, false)
+            }
+        }
+
+        private fun deliverOutput(
+            codec: MediaCodec,
+            outputBufferId: Int,
+            info: MediaCodec.BufferInfo
+        ) {
+            val outputBuffer = codec.getOutputBuffer(outputBufferId)
+            if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) encoderEos.countDown()
+            // outputBuffer is ready to be processed or rendered.
+            outputBuffer?.let {
+                val encodedBytes = ByteArray(info.size)
+                it.get(encodedBytes)
+
+                val flags = info.flags
+                val presentationTimeUs =
+                    computePresentationTimeUs(frameCount.incrementAndGet(), builder.fps)
+
+                if (flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {
+                    vpsSpsPpsBytes = encodedBytes.copyOf()
+                }
+                screenshotHandler?.post {
+                    builder.screenDataListener.onDataUpdate(
+                        encodedBytes,
+                        flags,
+                        presentationTimeUs
+                    )
+                }
             }
         }
 
@@ -205,6 +254,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 recordingFailure.compareAndSet(null, e)
                 isRecording = false
             }
+            // Only the recording coroutine reads recordingFailure. Without one, this failure
+            // would never tear anything down nor reach the listener, so do it here.
+            val hasRecordingJob = synchronized(lifecycleLock) { recordingJob != null }
+            if (!hasRecordingJob) requestRelease()
         }
     }
 
@@ -280,7 +333,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay,
             eglSurface,
-            computePresentationTimeUs(frameCount, builder.fps) * 1000
+            computePresentationTimeUs(frameCount.get(), builder.fps) * 1000
         )
 
         // Feed encoder with next frame produced by OpenGL
@@ -402,45 +455,213 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     /**
-     * Creates the encoder, EGL objects and callback thread. The calling thread becomes the EGL
-     * owner and is from then on the only thread allowed to release them.
+     * Creates the encoder, EGL objects and callback thread. The work runs on this recorder's own
+     * EGL thread, which owns those resources for their whole life; this call blocks until it
+     * finishes.
      *
-     * @throws CancellationException if teardown was already requested or already taken over.
-     * This recorder is one-shot, so a released instance is never initialized again.
+     * Initializing twice is a no-op: this recorder is one-shot and keeps the first set of
+     * resources. [startRecord] initializes on its own, so the two are alternatives, not steps.
+     *
+     * **Do not call this on the main thread.** This implementation tightens the [ScreenProcessor]
+     * default: creating an encoder and an EGL context takes as long as the device needs, so the
+     * caller blocks for up to five seconds waiting for the EGL thread to pick the work up, and
+     * without a bound once that thread has started it — abandoning a half-built EGL context is
+     * not an option. Call it from a background thread and publish the result yourself.
+     *
+     * @throws IllegalStateException if teardown was already requested or already taken over, if
+     * a recording already owns the initialization, or if an earlier attempt failed. A released
+     * instance is never initialized again; build a new one.
      */
     override fun onInit() {
-        beginInit()
+        synchronized(lifecycleLock) {
+            // startRecord() initializes on the EGL thread it then occupies for the rest of the
+            // session. Dispatching this there would queue behind the recording loop and block
+            // the caller until recording ends, which on the documented main-thread caller is an
+            // ANR rather than an error.
+            check(!recordingStarted) {
+                "Screenshot recorder is already recording; startRecord() initializes it"
+            }
+        }
+        when (allocateResourcesOnce()) {
+            InitOutcome.INITIALIZED, InitOutcome.ALREADY_INITIALIZED -> Unit
+            InitOutcome.FAILED -> throw initAlreadyFailed()
+            InitOutcome.RELEASED ->
+                error("Screenshot recorder was already released and cannot be initialized")
+        }
+    }
+
+    /** The terminal error for an instance whose one initialization attempt already failed. */
+    private fun initAlreadyFailed(): IllegalStateException = IllegalStateException(
+        "Screenshot recorder already failed to initialize",
+        synchronized(lifecycleLock) { initFailure }
+    )
+
+    /** True while the calling thread is the one that owns this recorder's EGL context. */
+    private fun isOnEglThread(): Boolean = Thread.currentThread() === eglThread.get()
+
+    /**
+     * Runs [action] on the EGL owner thread, blocking the caller until it finishes.
+     *
+     * Pinning every EGL call to one thread is what makes teardown able to un-current the context;
+     * a context made current on a caller's thread could only be destroyed there.
+     */
+    private fun <T> runOnEglThread(action: () -> T): T {
+        if (isOnEglThread()) return action()
+        // Whoever wins this claim decides the request's fate: the EGL thread by running it, the
+        // caller by giving up on it. FutureTask.cancel() cannot tell a queued task from a running
+        // one, and abandoning an action that already runs would leave what it creates owned by
+        // nobody, so the bound below covers the queue wait only.
+        val claimed = AtomicBoolean(false)
+        val task = FutureTask<T> {
+            check(claimed.compareAndSet(false, true)) { "Caller gave up on this EGL request" }
+            action()
+        }
+        try {
+            recordingExecutor.execute(task)
+        } catch (e: RejectedExecutionException) {
+            // A concurrent teardown shut the EGL thread down between the caller's release
+            // checks and this dispatch. beginInit() would have answered RELEASED anyway, so
+            // report the documented lifecycle error instead of a raw executor failure.
+            throw releasedBeforeDispatch(e)
+        }
+        return try {
+            // Bounded: the EGL thread may be busy capturing a frame, and that capture itself
+            // waits on the main thread, so an unbounded wait here can pin the caller.
+            awaitEglTask(task, EGL_DISPATCH_TIMEOUT_MS)
+        } catch (e: TimeoutException) {
+            if (claimed.compareAndSet(false, true)) {
+                task.cancel(false)
+                error(
+                    "EGL thread did not pick up the request within ${EGL_DISPATCH_TIMEOUT_MS}ms: $e"
+                )
+            }
+            awaitEglTask(task, timeoutMs = null)
+        }
+    }
+
+    /** The terminal error for EGL work requested after the EGL thread was already shut down. */
+    private fun releasedBeforeDispatch(cause: RejectedExecutionException): IllegalStateException =
+        IllegalStateException("Screenshot recorder was already released", cause)
+
+    /** Waits for [task], unbounded when [timeoutMs] is null, unwrapping the action's failure. */
+    private fun <T> awaitEglTask(task: FutureTask<T>, timeoutMs: Long?): T = try {
+        if (timeoutMs == null) task.get() else task.get(timeoutMs, TimeUnit.MILLISECONDS)
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    }
+
+    /**
+     * Allocates the encoder, EGL objects and callback thread exactly once.
+     *
+     * Serialized on the EGL thread, so a caller that uses the public [onInit] and a recording
+     * coroutine that initializes lazily cannot both build a set of resources; the second one
+     * observes [InitOutcome.ALREADY_INITIALIZED] instead of orphaning the first.
+     */
+    private fun allocateResourcesOnce(): InitOutcome {
+        synchronized(lifecycleLock) {
+            // Answer settled cases here rather than on the EGL thread: dispatching would queue
+            // behind the recording loop and block the caller for the whole session only to be
+            // told the attempt was already made. A failed attempt also claimed its own teardown,
+            // so it must be answered before the released checks or the cause would be lost.
+            if (initFailure != null) return InitOutcome.FAILED
+            if (releaseRequested.get() || teardownClaimed || releaseCompleted.isCompleted) {
+                return InitOutcome.RELEASED
+            }
+            // Only a finished attempt can be answered here. An attempt still in flight has
+            // latched initStarted while its resources do not exist yet, so answering
+            // ALREADY_INITIALIZED would break the promise that this call blocks until they do.
+            // Falling through queues this caller behind the in-flight attempt on the EGL thread,
+            // and beginInit() then answers ALREADY_INITIALIZED with the resources really there.
+            if (initStarted && !initInProgress) return InitOutcome.ALREADY_INITIALIZED
+        }
+        return allocateOnEglThread()
+    }
+
+    private fun allocateOnEglThread(): InitOutcome = runOnEglThread {
+        val outcome = beginInit()
+        if (outcome != InitOutcome.INITIALIZED) return@runOnEglThread outcome
+        var failure: Throwable? = null
         try {
             initResources()
+        } catch (t: Throwable) {
+            failure = t
+            // Latch the failure before releasing: initStarted is already set, so every later
+            // caller would otherwise be told the recorder is initialized and go on to use
+            // resources that do not exist.
+            synchronized(lifecycleLock) { initFailure = t }
+            // Nobody else can release what a failed init created: a caller that used
+            // `build().apply { onInit() }` does not even hold a reference yet.
+            runCatching { releaseOwnedResources(stopEncoder = false) }
+                .onFailure(t::addSuppressed)
+            throw t
         } finally {
-            // A teardown requested while this was initializing was deferred to this thread,
-            // the only one that can tear the EGL context down. Run it now that init is over,
-            // so a failed init releases what it did manage to create.
-            if (endInit()) completeInlineRelease(stopEncoder = encoderStarted.get())
+            // Two cases hand the rest of the teardown to this thread, the only one that can tear
+            // the EGL context down: a release requested while init was running, and a failed init
+            // that no recording job will finish. Both must also shut the executor down and open
+            // the barrier, or an idle EGL thread would keep this recorder reachable for good.
+            if (endInit(failed = failure != null)) {
+                runCatching { completeInlineRelease(stopEncoder = encoderStarted.get()) }
+                    .onFailure { teardownFailure ->
+                        // Never rethrown: a teardown failure must not replace the initialization
+                        // failure the caller is about to receive, and throwing out of a finally
+                        // block would discard that cause silently.
+                        val initCause = failure
+                        if (initCause != null) {
+                            initCause.addSuppressed(teardownFailure)
+                        } else {
+                            LogContext.log.e(TAG, "Release after init failed", teardownFailure)
+                        }
+                    }
+            }
         }
+        outcome
     }
 
     /**
      * Enters the initializing state. Refuses to build a recorder whose teardown was already
      * requested, otherwise a teardown that ran first would leave everything created here
-     * orphaned. Publishes the EGL owner as one value, before any resource exists.
+     * orphaned; refuses a second initialization, which would overwrite the first set of
+     * resources with no way left to release it; and refuses to retry after a failed attempt,
+     * because the failure already released whatever it had built.
      */
-    private fun beginInit() {
-        synchronized(lifecycleLock) {
-            if (releaseRequested.get() || teardownClaimed || releaseCompleted.isCompleted) {
-                throw ReleaseRequestedException()
+    private fun beginInit(): InitOutcome = synchronized(lifecycleLock) {
+        when {
+            initFailure != null -> InitOutcome.FAILED
+
+            releaseRequested.get() || teardownClaimed || releaseCompleted.isCompleted ->
+                InitOutcome.RELEASED
+
+            initStarted -> InitOutcome.ALREADY_INITIALIZED
+
+            else -> {
+                initStarted = true
+                initInProgress = true
+                InitOutcome.INITIALIZED
             }
-            initInProgress = true
-            eglOwner = EglOwner(Thread.currentThread(), Looper.myLooper()?.let { Handler(it) })
         }
     }
 
-    /** Leaves the initializing state, reporting whether this thread inherited the teardown. */
-    private fun endInit(): Boolean = synchronized(lifecycleLock) {
+    /**
+     * Leaves the initializing state and reports whether this thread now owns the teardown:
+     * either [requestRelease] deferred it here, or the attempt [failed] and no recording job
+     * exists to finish it. The claim mirrors the one in [requestRelease], so a job registered
+     * meanwhile keeps the teardown and reports the failure through its own path.
+     */
+    private fun endInit(failed: Boolean): Boolean = synchronized(lifecycleLock) {
         initInProgress = false
         val deferred = teardownDeferredToInit
         teardownDeferredToInit = false
-        deferred
+        when {
+            deferred -> true
+
+            !failed || recordingJob != null || teardownClaimed || releaseCompleted.isCompleted ->
+                false
+
+            else -> {
+                teardownClaimed = true
+                true
+            }
+        }
     }
 
     private fun initResources() {
@@ -505,8 +726,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     private fun startEncoder() {
+        val encoder = checkNotNull(h26xEncoder) { "onInit() must run before starting the encoder" }
+        // Claim after the encoder is known to exist: a caller that reached here without an
+        // initialized recorder must not consume the single start this recorder is allowed.
+        if (!encoderStartRequested.compareAndSet(false, true)) return
         isRecording = true
-        h26xEncoder?.start()
+        encoder.start()
         encoderStarted.set(true)
     }
 
@@ -519,20 +744,36 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      * Starts the one-shot recording loop. The recorder cannot be restarted after [onStop] or
      * [onRelease]; build a new instance instead.
      *
-     * @throws IllegalStateException if this recorder was already started.
+     * @throws IllegalStateException if this recorder was already started, or if an earlier
+     * [onInit] failed: that attempt released what it built and shut the EGL thread down, so there
+     * is nothing left to record with.
      */
     fun startRecord(act: Activity) {
         synchronized(lifecycleLock) {
+            // Said here, with the cause, rather than by a job that the registration below would
+            // reject with a misleading "released before it could start".
+            if (initFailure != null) throw initAlreadyFailed()
             check(!recordingStarted) { "Screenshot recorder can only be started once" }
             recordingStarted = true
         }
         // Captured weakly: a coroutine stuck in a native teardown call must not keep the
         // recorded Activity reachable.
         val activityRef = WeakReference(act)
+        // A lazy job cancelled before it is dispatched completes without ever entering its body,
+        // so the finally below never runs. The completion handler cannot tell that apart from a
+        // body that ran and released on its way out unless the body says so itself.
+        val bodyEntered = AtomicBoolean(false)
         val job = recordingScope.launch(start = CoroutineStart.LAZY) {
             try {
+                bodyEntered.set(true)
                 ensureNotReleased()
-                onInit()
+                when (allocateResourcesOnce()) {
+                    InitOutcome.INITIALIZED, InitOutcome.ALREADY_INITIALIZED -> Unit
+                    // A previous onInit() failed and released whatever it had built, so this
+                    // recorder has nothing to record with. Report the original cause.
+                    InitOutcome.FAILED -> throw initAlreadyFailed()
+                    InitOutcome.RELEASED -> throw ReleaseRequestedException()
+                }
                 ensureActive()
                 // A release requested while onInit() was running is an intentional teardown, not
                 // a failure, so it must cancel instead of reaching screenDataListener.onError().
@@ -562,20 +803,15 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                     delay(32.milliseconds)
                 }
             } catch (e: CancellationException) {
-                if (!releaseRequested.get()) recordingFailure.compareAndSet(null, e)
+                // Deliberately not recorded: reportFailureIfAny() filters cancellation out
+                // anyway, and storing it would block a later, real failure from being reported.
+                throw e
             } catch (e: Throwable) {
                 LogContext.log.e(TAG, "Screenshot recording failed", e)
                 recordingFailure.compareAndSet(null, e)
             } finally {
                 releaseOwnedResources(stopEncoder = encoderStarted.get())
-                val failure = recordingFailure.get()
-                if (failure != null && failure !is CancellationException) {
-                    try {
-                        builder.screenDataListener.onError(failure)
-                    } catch (callbackFailure: Throwable) {
-                        LogContext.log.e(TAG, "Screen error callback failed", callbackFailure)
-                    }
-                }
+                reportFailureIfAny()
             }
         }
         // Registering the job and claiming the teardown must be mutually exclusive:
@@ -586,14 +822,31 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 false
             } else {
                 recordingJob = job
-                // Completing the barrier here, not in the body's finally, also covers a lazy job
+                // Handling completion here, not in the body's finally, also covers a lazy job
                 // that is cancelled before it ever runs.
                 job.invokeOnCompletion {
                     // Drop the finished coroutine: its continuation keeps the recording
                     // lambda, and everything that lambda captured, reachable from here.
-                    synchronized(lifecycleLock) { recordingJob = null }
-                    releaseCompleted.complete(Unit)
-                    recordingDispatcher.close()
+                    // Clearing the job and settling the teardown must look atomic, or a
+                    // concurrent requestRelease() would see "no job yet" and claim a
+                    // teardown that has in fact already run.
+                    val orphaned = synchronized(lifecycleLock) {
+                        recordingJob = null
+                        // Registering this job took the teardown away from requestRelease(),
+                        // which then only cancelled it. If the body never ran, its finally
+                        // never released what an earlier onInit() had already allocated, and
+                        // no one else is left to do it.
+                        val abandoned = !bodyEntered.get() && initStarted && !teardownClaimed
+                        if (abandoned) {
+                            teardownClaimed = true
+                        } else {
+                            releaseCompleted.complete(Unit)
+                        }
+                        abandoned
+                    }
+                    // completeInlineRelease() closes the dispatcher and opens the barrier once
+                    // the resources are really gone, so neither may be done early here.
+                    if (orphaned) dispatchInlineRelease() else recordingDispatcher.close()
                 }
                 true
             }
@@ -619,13 +872,44 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         requestRelease()
     }
 
-    /** Requests release and suspends until the EGL owner thread has released every resource. */
-    suspend fun releaseAndJoin() {
+    /**
+     * Requests release and suspends until the EGL owner thread has released every resource.
+     *
+     * @return true when teardown finished cleanly. False means the callback thread outlived its
+     * bounded join and was abandoned while still alive: the barrier opens so the caller is never
+     * stuck, but that thread can still deliver queued frames to the listener. A caller that
+     * reuses the listener or the output it writes to must retire this recorder's session instead
+     * of treating the release as complete.
+     */
+    suspend fun releaseAndJoin(): Boolean {
         requestRelease()
         releaseCompleted.await()
+        return !callbackThreadAbandoned.get()
     }
 
     override fun getVideoSize(): Size = Size(builder.width, builder.height)
+
+    /**
+     * Ends the input stream and waits, bounded, for the encoder to emit its end-of-stream output.
+     *
+     * Without this the listener never sees [MediaCodec.BUFFER_FLAG_END_OF_STREAM] and has to
+     * infer the end of the stream from the transport closing. Must run before the encoder is
+     * detached, otherwise the callback that opens [encoderEos] returns early.
+     */
+    private fun drainEncoder() {
+        val encoder = synchronized(codecCallbackLock) { h26xEncoder } ?: return
+        runCatching { encoder.signalEndOfInputStream() }
+            .onFailure {
+                LogContext.log.w(TAG, "signalEndOfInputStream failed", it)
+                return
+            }
+        val drained = runCatching {
+            encoderEos.await(ENCODER_EOS_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        }.getOrDefault(false)
+        if (!drained) {
+            LogContext.log.w(TAG, "Encoder did not emit EOS within ${ENCODER_EOS_TIMEOUT_MS}ms")
+        }
+    }
 
     private fun initHandler() {
         screenshotThread = HandlerThread("scr-rec-send").apply { start() }
@@ -634,11 +918,27 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     private fun releaseHandlerAndJoin() {
         if (!::screenshotThread.isInitialized) return
+        screenshotHandler = null
+        if (Thread.currentThread() === screenshotThread) {
+            // Teardown was triggered from inside a listener callback. Joining here would wait
+            // for this very thread to die, so drop the backlog and let it unwind instead.
+            screenshotThread.quit()
+            return
+        }
         screenshotThread.quitSafely()
         try {
-            screenshotThread.join()
+            screenshotThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+            if (screenshotThread.isAlive) {
+                callbackThreadAbandoned.set(true)
+                LogContext.log.e(
+                    TAG,
+                    "Screenshot callback thread still running after " +
+                        "${CALLBACK_THREAD_JOIN_TIMEOUT_MS}ms; abandoning it"
+                )
+            }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
+            if (screenshotThread.isAlive) callbackThreadAbandoned.set(true)
             LogContext.log.w(TAG, "Interrupted while joining screenshot callback thread", e)
         }
     }
@@ -656,7 +956,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             val job = recordingJob
             if (job == null && !teardownClaimed && !releaseCompleted.isCompleted) {
                 teardownClaimed = true
-                // onInit() may be creating resources on the EGL owner thread right now.
+                // Resources may be under construction on the EGL thread right now.
                 // Releasing from here would race it and would miss everything it has not
                 // created yet, so hand the teardown to that thread; endInit() runs it.
                 if (initInProgress) teardownDeferredToInit = true else ownsInlineRelease = true
@@ -678,21 +978,35 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      */
     private fun dispatchInlineRelease() {
         val stopEncoder = encoderStarted.get()
-        val owner = eglOwner
-        if (owner == null || owner.thread === Thread.currentThread()) {
+        if (isOnEglThread()) {
             completeInlineRelease(stopEncoder)
             return
         }
-        val handler = owner.handler
-        if (handler != null && handler.post { completeInlineRelease(stopEncoder) }) return
-        // The owner thread has no Looper, or its Looper already quit. Releasing from here is
-        // the best remaining option, but EGL teardown may be incomplete, so say so loudly.
-        LogContext.log.e(
-            TAG,
-            "Cannot reach EGL owner thread ${owner.thread.name}. Releasing on " +
-                Thread.currentThread().name
-        )
-        completeInlineRelease(stopEncoder)
+        try {
+            recordingExecutor.execute { completeInlineRelease(stopEncoder) }
+        } catch (e: RejectedExecutionException) {
+            // The EGL thread is already shut down, so nothing of it can still be current and
+            // there is no owner left to drain through. This can land on the MediaCodec callback
+            // thread, which is the main Looper here, so skip the encoder drain and stop: they
+            // are the long waits. The callback-thread join stays, bounded, below.
+            LogContext.log.e(
+                TAG,
+                "EGL thread is gone. Releasing on ${Thread.currentThread().name}",
+                e
+            )
+            completeInlineRelease(stopEncoder = false)
+        }
+    }
+
+    /** Reports a recorded failure to the listener, isolating an exception thrown by it. */
+    private fun reportFailureIfAny() {
+        val failure = recordingFailure.get()
+        if (failure == null || failure is CancellationException) return
+        try {
+            builder.screenDataListener.onError(failure)
+        } catch (callbackFailure: Throwable) {
+            LogContext.log.e(TAG, "Screen error callback failed", callbackFailure)
+        }
     }
 
     /** Releases the owned resources and only then opens the [releaseAndJoin] barrier. */
@@ -703,16 +1017,21 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             recordingDispatcher.close()
             releaseCompleted.complete(Unit)
         }
+        // No recording coroutine exists on this path, so this is the only place a codec failure
+        // can still reach the listener. It runs after the barrier so a listener that calls back
+        // into this recorder cannot deadlock against releaseAndJoin().
+        reportFailureIfAny()
     }
 
     /**
-     * Releases everything [onInit] created. Must run on the [eglOwner] thread: the recording
-     * thread for a started recorder, or the thread that called [onInit] otherwise. Every step
-     * is null-safe, so a partially or never initialized recorder is handled too.
+     * Releases everything [onInit] created. Must run on the EGL thread, the only one that can
+     * un-current the context it created. Every step is null-safe, so a partially or never
+     * initialized recorder is handled too.
      */
     private fun releaseOwnedResources(stopEncoder: Boolean) {
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same
         // lock makes every later callback return before touching the encoder.
+        if (stopEncoder) drainEncoder()
         val encoder = synchronized(codecCallbackLock) {
             h26xEncoder.also { h26xEncoder = null }
         }

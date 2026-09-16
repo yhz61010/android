@@ -243,13 +243,16 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     }
 
     override fun onRelease() {
-        if (!videoEncoderLoop.get()) {
-            return
-        }
         LogContext.log.i(TAG, "onRelease()")
+        // No videoEncoderLoop guard here. Callers stop before releasing, which clears that flag,
+        // so guarding on it skipped the two releases below entirely and leaked the encoder and
+        // the virtual display for the life of the process. onStop() keeps its own guard, and
+        // nulling the two fields makes a repeated release a no-op instead of a double free.
         onStop()
         h26xEncoder?.release()
+        h26xEncoder = null
         virtualDisplay?.release()
+        virtualDisplay = null
     }
 
     override fun onStop() {

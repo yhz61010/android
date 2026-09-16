@@ -21,6 +21,10 @@
 **审查时要求合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
 H2、H3 及第二轮 H4 已在后续整改代码中闭环，详见 §8。真机发布验证仍待完成。
 
+> **2026-09-16 第五至第七轮复审与真机整改补充**：`e9983b248..6d2088879` 已审查完毕。
+> Codex 连续三轮各发现 1～3 个问题（含 1 个 P1：OPUS 长文件被提前判失败），全部成立并修复；
+> 用户真机实测另外发现 3 个缺陷，其中 1 个是本轮自引入的回归。详见 §12。
+
 > **2026-09-15 第四轮复审补充**：`93c1c3c0f` 已审查完毕。§10.2 的修复声明绝大部分成立；
 > 新发现 **3 个 HIGH（H10～H12）**、6 个 MEDIUM（M34～M39，其中 M37 复核后驳回）和 4 个 LOW，
 > 全部已在同一分支修复并补充回归测试，详见 §11。
@@ -1453,3 +1457,180 @@ job 若在注册后、`start()` 前被取消，协程体的 `finally` 不会执�
   "录制中快速停止"、"初始化期间退出页面"两条路径，确认不再收到 `onError()` 且进程不崩溃。
 - 本轮所有改动**未在审查环境编译**，`:audio` / `:floatview` / `:lib-common-android` /
   `:screencapture` / `:demo` 的 `testDebugUnitTest`、`detekt`、`ktlintCheck` 由用户本地执行。
+
+# 12. 第五至第七轮复审与真机整改（2026-09-15 ~ 2026-09-16）
+
+- 审查范围：`e9983b248..6d2088879`
+- 审查方式：Codex 逐轮静态审查 + 主审人逐条回读源码复核；§12.4 三项来自用户真机实测
+- 本轮首次出现**真机实测发现的缺陷**，其中一项是本轮自引入的回归
+
+## 12.0 结论摘要
+
+| 轮次 | 来源 | 提交 | 发现 | 结论 |
+|------|------|------|------|------|
+| 第五轮 | Codex 静态审查 | `e3a3911d9` | 1 × P1、2 × P2 | 全部成立并修复 |
+| 第六轮 | Codex 静态审查 | `4bf5f4cf3` | 2 × P2 | 全部成立并修复 |
+| 第七轮 | Codex 静态审查 | `f86b2682a` | 1 × P2 | 成立并修复 |
+| 真机实测 | 用户设备 | `ba3424a98`、`a1d04f27f`、`878ed3b4a` | 3 个缺陷 | 全部修复 |
+
+第六、七轮的全部问题均由上一轮的修复引入，`878ed3b4a` 修复的是 `ba3424a98` 引入的回归。
+静态审查在这条链上持续有效，但连续三轮都要等下一轮才暴露，说明
+`Screenshot2H26xStrategy` 的并发生命周期已接近人工逐条审查的上限。
+
+## 12.1 第五轮：OPUS EOS 计时与 Screenshot 释放（`e3a3911d9`）
+
+### P1 OPUS 长文件被提前判失败
+
+`launchPlaybackJobs()` 与喂帧协程同时启动 `awaitNaturalCompletion()`，而
+`awaitDrainedNaturalEnd()` 的第一条语句就是对 `codecEos` 起 `CODEC_EOS_TIMEOUT_MS`（3 秒）超时。
+喂帧受 PCM 队列水位与逐帧 `delay` 约束，速率接近实时，因此**音频长度超过 3 秒的 OPUS 文件必然
+在正常解码途中被 `requestFailure(TimeoutException)` 判失败并清理**。
+
+修复：新增 `inputEosSubmitted: CompletableDeferred<Unit>`，`produceDecoderInput()` 在
+`signalEndOfStreamWithBackpressure()` 返回后完成它；`awaitDrainedNaturalEnd()` 先 `await()` 再起
+超时。终态清理会取消 `playbackScopeJob`，喂帧提前失败时该 `await()` 不会悬挂。
+`AacFilePlayer` 无同构机制，不受影响。CHANGELOG 中"输入 EOS 后等待输出 EOS 最多 3 秒"的描述
+此前与实现不符，已同步修正。
+
+### P2 经公开接口初始化后释放会泄漏
+
+`onInit()` 创建 encoder、EGL display/context/surface、`TextureRenderer` 与 HandlerThread。
+若经公开 `ScreenProcessor` 接口 `onInit()` 后直接 `onRelease()`，`recordingJob` 为 null，
+`requestRelease()` 只完成屏障并关闭 dispatcher，`releaseResourcesOnRecordingThread()` 不会执行，
+上述资源全部泄漏。该路径是接口的常规用法，`MediaProjectionService` 即 `build().apply { onInit(); onStart() }`。
+
+修复：该分支就地释放；函数更名为 `releaseOwnedResources()`（原名已不准确）；释放流程对 null 与
+未初始化状态全程防护，因此 `onInit()` 中途抛异常的部分初始化场景一并覆盖。
+
+### P2 超时不解除 Activity 引用
+
+`RecordSingleAppScreenActivity.awaitRecorderRelease()` 的 10 秒超时只结束等待。协程取消是协作式的，
+卡在 `MediaCodec.stop()`、EGL 释放或 `HandlerThread.join()` 的线程不会被中断，仍能通过
+`builder.screenDataListener`（demo 中是 Activity 的匿名内部类）到达 Activity。
+
+已收窄引用：录制协程改为弱引用持有 Activity，并在其被回收时退出循环；`job.invokeOnCompletion`
+内清空 `recordingJob`，避免已完成的 lazy 协程 continuation 继续钉住捕获对象。
+**未闭环**：彻底解除需让 strategy 能释放 `screenDataListener`，属接口变更，另行评估。
+§11.4 的 M39 状态已改为"部分缓解"。
+
+## 12.2 第六轮：释放屏障与 EGL 线程归属（`4bf5f4cf3`）
+
+### P2 释放屏障早于实际清理完成
+
+`requestRelease()` 用 `releaseCompleted.complete(Unit)` 的返回值同时表达"取得清理所有权"和
+"清理已完成"，而实际清理在其之后执行。单线程调用序列看不出问题，并发下线程 A 正在清理时，
+线程 B 的 `releaseAndJoin()` 立即返回，此时 codec、EGL 与回调线程仍在运行。
+
+修复：拆成两个状态。新增 `inlineReleaseClaimed`（§12.3 后更名 `teardownClaimed`），由
+`lifecycleLock` 保护，仅表示所有权；`releaseCompleted` 移到清理结束后的 `finally` 完成。
+连带修正：`startRecord()` 的准入判断原先只看 `releaseCompleted.isCompleted`，屏障延后完成后
+该判断失效，已扩展为同时检查 claim 标志，两者在同一把锁下读写。
+协程路径本就在任务体 `finally` 跑完清理后才由 `invokeOnCompletion` 开屏障，不受影响。
+
+### P2 直接释放路径未保证 EGL 线程归属
+
+原注释断言"调用方线程即初始化线程"，这是假设而非保证。主线程 `onInit()`、IO 协程
+`releaseAndJoin()` 时，`eglMakeCurrent` 解绑的是 IO 线程的绑定，主线程上的 context 仍 current，
+`eglDestroyContext` 只标记删除，实际销毁被推迟。
+
+修复：`onInit()` 记录 EGL owner 线程及其 `Handler`；释放时若不在 owner 线程则 post 回去，
+屏障由 post 过去的那次执行来开，`releaseAndJoin()` 仍能等到真正结束；owner 无 Looper 或
+Looper 已退出时就地释放，但记 error 说明可能不完整，不静默假装成功。
+
+## 12.3 第七轮：初始化纳入生命周期协议（`f86b2682a`）
+
+### P2 初始化线程信息未原子发布
+
+owner 线程与 `Handler` 分两个 `@Volatile` 字段发布，存在"已写入 thread、尚未写入 handler"的窗口。
+并发释放在该窗口读到 handler 为 null，走降级清理，此时尚无资源可释放，于是立即开屏障；
+随后 `onInit()` 创建的全部资源被孤立，后续释放因屏障已完成而跳过。
+
+复核发现根因比发布窗口更宽：**`onInit()` 完全不参与生命周期协议**。释放请求完全早于 `onInit()`
+到达时，`eglOwner` 为 null，同样什么都没释放就开屏障，这条路径不涉及任何 volatile 读写。
+
+修复：
+
+- 新增不可变的 `EglOwner(thread, handler)`，在 `lifecycleLock` 内、任何资源创建之前一次发布，
+  不存在只观察到一半的状态。
+- `onInit()` 拆为 `beginInit()` / `initResources()` / `endInit()`。`beginInit()` 在锁内检查释放
+  是否已请求或已被接管，是则抛 `ReleaseRequestedException`。该异常继承 `CancellationException`，
+  录制协程按取消处理，不会误报 `onError()`。
+- `requestRelease()` 在锁内发现 `initInProgress` 为真时只标记移交，由 `endInit()` 在初始化线程执行。
+  清理因此既看到完整资源集合，又始终跑在持有 EGL context 的线程上；`onInit()` 的 `finally`
+  保证中途失败也会释放已创建部分。
+
+**行为变更**：对已请求释放的实例调用 `onInit()` 会抛 `CancellationException`，不再静默完成
+初始化并把资源孤立在无人释放的状态。
+
+## 12.4 真机实测发现
+
+### Bug 1 录制按钮停止后永久禁用（`ba3424a98`）
+
+`Screenshot2H26xStrategy` 是一次性策略，但 demo 只在 `onCreate()` 构建一次录制器和一次输出流。
+`releaseRecorder()` 置位 `cleanupStarted` 并禁用开关，两者都没有恢复路径，因此走过一次清理后
+页面报废。手动关闭开关，以及 `onError()` 把 `isChecked` 置 false 触发同一分支，都会命中。
+该行为由 §11 的 `93c1c3c0f` 引入，此前停止录制走 `onRelease()`，按钮不会被禁用。
+
+修复：清理完成后武装下一次会话——重建一次性录制器、复位 latch、恢复按钮可用；
+`onDestroy()` 传 `restartable = false`，页面销毁时不重建。
+
+### Bug 2 Falcon 绘制未 attach 的窗口抛 NPE（`a1d04f27f`）
+
+`viewRootData()` 只过滤 null 与 `!isShown`，而 `isShown` 只看可见性和是否有 parent，
+不保证已 attach。首次 traversal 之前或已 detach 的 root 其 `AttachInfo` 为 null，
+`View.onDrawScrollIndicators()` 直接读 `mAttachInfo.mTmpInvalRect` 抛 `NullPointerException`。
+`takeScreenshotBitmap()` 捕获后返回 null，**整帧丢失**。触发条件是录制期间有窗口正在增删。
+该缺陷为既有问题，`Falcon.kt` 上次修改是 `c5218ffef`。
+
+修复三层：采集时跳过未 attach 的 root（顺带避免其失效边界影响位图尺寸计算）；
+绘制前在主线程再确认一次，因为采集在录制线程、绘制在主线程，中间状态会变；
+单个窗口绘制失败只跳过该窗口并记日志，不再放弃整帧。
+
+### Bug 3 停止录制后文件被清零（`878ed3b4a`，本轮自引入回归）
+
+Bug 1 的修复在 `armNextRecording()` 中重新打开调试输出流，而 `FileOutputStream` 打开即截断。
+顺序为：录制写入 → 停止时清理 flush 并 close（文件此时有内容）→ 武装下一次会话重开同一文件
+→ **清成 0 字节**。
+
+修复：输出流改为在开始录制时打开，武装下一次会话只重建录制器和恢复按钮，完全不碰文件。
+文件名固定，每次新录制覆盖上一次。
+
+## 12.5 其他提交
+
+- `c49d9cf0b` — 用户本地补齐第五轮修复的 ktlint 与 detekt 问题。
+- `6d2088879` — 用户提交。Falcon 的 `null View stored as root...` 日志由 ERROR 降为 INFO；
+  demo 的 `withTimeoutOrNull(RELEASE_TIMEOUT_MS)` 改为 `RELEASE_TIMEOUT_MS.milliseconds`。
+  后者是可读性改进而非缺陷修复：`Long` 重载本就按毫秒解释，超时时长前后一致为 10 秒。
+
+## 12.6 行为变更汇总
+
+| 位置 | 变更 |
+|------|------|
+| `OpusFilePlayer` | codec EOS 超时从输入 EOS 提交后开始计时，不再从播放启动算起 |
+| `Screenshot2H26xStrategy.onInit()` | 对已请求释放的实例抛 `CancellationException` |
+| `Screenshot2H26xStrategy` 直接释放路径 | 真正释放资源，并调度回 EGL 初始化线程 |
+| `Screenshot2H26xStrategy` 释放屏障 | 清理真正结束后才完成，并发 `releaseAndJoin()` 不再提前返回 |
+| `Falcon` | 跳过未 attach 的 root；单窗口绘制失败不再放弃整帧 |
+| demo 录屏页 | 停止后可再次录制；调试文件在开始录制时才打开 |
+
+## 12.7 验证状态与仍未覆盖项
+
+**已完成**（用户本地，`--rerun-tasks`）：65 条单测通过；`:audio`、`:lib-common-android`、
+`:screencapture`、`:demo` 的 `ktlintCheck` 与 `detekt` 通过；`git diff --check` 通过。
+审查环境全程未编译。
+
+**无自动化测试**：第五至第七轮的三条竞态均依赖真实 EGL 与 encoder，JVM 侧无法构造。
+§12.4 的三个缺陷同样只有真机路径。
+
+**待真机验证**：
+
+- OPUS 播放长于 3 秒的文件，确认不再被提前判失败。
+- 只调用 `onInit()` 后直接 `onRelease()`，确认 encoder、EGL 与回调线程真正释放。
+- 释放请求早于 `onInit()`、以及穿插于 `onInit()` 执行期间两条时序。
+- `onInit()` 与 `releaseAndJoin()` 分处不同线程时，清理落在初始化线程上。
+- demo 录屏页"录制、停止、再录制"可循环，且停止后文件非空可播放。
+
+**已知未处理**：`Falcon.getRootViews()` 分两次反射读取 `mRoots` 与 `mParams`，未持有
+`WindowManagerGlobal` 的锁。对话框等窗口增删时这两个列表在锁内一起变更，跨线程分两次读可能
+得到不一致快照，随后按 root 下标取 `params[i]` 会错配 LayoutParams（影响 dim 与偏移）或下标越界。
+越界会被 `takeScreenshotBitmap()` 捕获，表现为偶发丢帧。

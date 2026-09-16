@@ -131,6 +131,11 @@
 
 ### 修复 (Fixed)
 
+- **screencapture 初始化中断与输出失败收尾**：等待 `onInit()` 的线程被中断时，恢复其
+  中断标记并请求 EGL 线程清理；排队中的初始化不再创建资源，进行中的初始化完成后由原线程释放。
+  输出回调异常在归还 buffer、退出回调锁后进入统一释放协议，覆盖仅调用 `onInit()` / `onStart()`
+  而未创建录制协程的路径，并在清理后通知错误。新增三个回归用例；公开方法签名不变。
+
 - **screencapture 截图录制器生命周期与 Falcon 截图**：`Screenshot2H26xStrategy` 的 EGL 属主由
   "调用 `onInit()` 的那个线程"改为录制器自己的单线程 executor，所有 EGL 调用与拆除统一路由到
   该线程，不再把 `MediaCodec.stop()` 和无界的回调线程 join 落到主线程上（回调线程 join 现有

@@ -196,21 +196,26 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             outputBufferId: Int,
             info: MediaCodec.BufferInfo
         ) {
-            synchronized(codecCallbackLock) {
+            val failed = synchronized(codecCallbackLock) {
                 if (h26xEncoder !== codec) return
                 try {
                     deliverOutput(codec, outputBufferId, info)
+                    false
                 } catch (e: Throwable) {
                     // This runs on MediaCodec's callback thread, where an escaping exception
                     // would kill the process instead of reaching the recording coroutine.
                     LogContext.log.e(TAG, "Output buffer callback failed", e)
                     recordingFailure.compareAndSet(null, e)
                     isRecording = false
+                    true
                 } finally {
                     runCatching { codec.releaseOutputBuffer(outputBufferId, false) }
                         .onFailure { LogContext.log.e(TAG, "releaseOutputBuffer failed", it) }
                 }
             }
+            // Release only after returning the buffer and leaving the callback lock. This also
+            // covers public onInit()/onStart() callers that never created a recording job.
+            if (failed) requestRelease()
         }
 
         private fun deliverOutput(
@@ -254,10 +259,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 recordingFailure.compareAndSet(null, e)
                 isRecording = false
             }
-            // Only the recording coroutine reads recordingFailure. Without one, this failure
-            // would never tear anything down nor reach the listener, so do it here.
-            val hasRecordingJob = synchronized(lifecycleLock) { recordingJob != null }
-            if (!hasRecordingJob) requestRelease()
+            requestRelease()
         }
     }
 
@@ -471,6 +473,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      * @throws IllegalStateException if teardown was already requested or already taken over, if
      * a recording already owns the initialization, or if an earlier attempt failed. A released
      * instance is never initialized again; build a new one.
+     * @throws InterruptedException if the waiting caller is interrupted. Its interrupt status is
+     * restored and teardown is requested on the EGL thread, including resources still being
+     * initialized. Teardown may finish after this call throws.
      */
     override fun onInit() {
         synchronized(lifecycleLock) {
@@ -482,11 +487,20 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 "Screenshot recorder is already recording; startRecord() initializes it"
             }
         }
-        when (allocateResourcesOnce()) {
-            InitOutcome.INITIALIZED, InitOutcome.ALREADY_INITIALIZED -> Unit
-            InitOutcome.FAILED -> throw initAlreadyFailed()
-            InitOutcome.RELEASED ->
-                error("Screenshot recorder was already released and cannot be initialized")
+        try {
+            when (allocateResourcesOnce()) {
+                InitOutcome.INITIALIZED, InitOutcome.ALREADY_INITIALIZED -> Unit
+                InitOutcome.FAILED -> throw initAlreadyFailed()
+                InitOutcome.RELEASED ->
+                    error("Screenshot recorder was already released and cannot be initialized")
+            }
+        } catch (error: InterruptedException) {
+            // The Future may still be queued or already building native resources. Leave that
+            // work on its owner thread: beginInit() rejects a queued request, while endInit()
+            // takes over teardown for an in-flight one. Interrupting the owner is unsafe.
+            requestRelease()
+            Thread.currentThread().interrupt()
+            throw error
         }
     }
 

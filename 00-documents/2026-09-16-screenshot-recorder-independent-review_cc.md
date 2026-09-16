@@ -194,7 +194,7 @@ finally { if (endInit()) completeInlineRelease(...) }
 
 | 规则 | 违反点 | 说明 |
 |------|--------|------|
-| `.claude/rules/kotlin/coding-style.md:77`<br>"Never catch `CancellationException` — always rethrow it" | `Screenshot2H26xStrategy.kt:564-565` | 捕获后未重抛，导致 `job.isCancelled` 恒为 false，任何基于 `join()`/`isCancelled` 的后续判定都会被误导；`:565` 写入的 `CancellationException` 又在 `:572` 被过滤掉，是纯死存储。**本批之前就存在** |
+| `.claude/rules/kotlin/coding-style.md:77`<br>"Never catch `CancellationException` — always rethrow it" | `Screenshot2H26xStrategy.kt:564-565` | 捕获后未重抛会隐藏主动抛出的取消信号；若 Job 已被外部 `cancel()`，吞掉异常不会将其 `isCancelled` 恢复为 false。应继续重抛以保留取消语义，不能用 `join()` 返回来证明执行成功；`:565` 写入的 `CancellationException` 又在 `:572` 被过滤掉，是纯死存储。**本批之前就存在** |
 | `.claude/rules/kotlin/coding-style.md:31`<br>"Never use `!!`" | `Falcon.kt:207` | `getFieldValue("mGlobal", ...)!!`。`targetSdk = 36` 下 `WindowManagerImpl.mGlobal` / `WindowManagerGlobal.mRoots` / `mParams` 均受非 SDK 接口限制约束，一旦被拦截，`getFieldValue()` 的 `runCatching` 把失败吞成 null → `!!` 直接 NPE → 每帧都丢，而日志里只有一句含糊的 "Unable to take screenshot to bitmap"，没有任何线索指向反射被拦截 |
 | 接口契约自相矛盾（§11.2 M38 仍未闭环） | `ScreenProcessor.kt:36-38`、`:42-44` vs `Screenshot2H26xStrategy.kt:404-406`、`:535`、`:609-620` | 接口要求 `onInit()` 在主线程，而本类 `:535` 自己在 `screenshot-h26x-egl` 线程调用它，`:404-406` 的新 KDoc 又称"调用线程成为 EGL owner"（暗示任意线程均可）——owner 线程的选择正是 B2 的成因。接口 `:42-44` 仍写着 "once do `onRelease()` ... Please call `onInit()` then `onStart()`"，而新代码对这种调用恰恰抛异常 |
 
@@ -202,11 +202,14 @@ finally { if (endInit()) completeInlineRelease(...) }
 
 **位置**：`Screenshot2H26xStrategy.kt:408`（KDoc 明示）、`:411`、`:430-431`；§12.3 与 §12.6 把它记为有意的行为变更。
 
-`kotlinx.coroutines.CancellationException` 在 JVM 上就是 `java.util.concurrent.CancellationException`。从一个**非挂起的公开方法**抛出它有三个问题：
+`kotlinx.coroutines.CancellationException` 在 JVM 上就是 `java.util.concurrent.CancellationException`。
+这里的风险是把普通生命周期错误编码成协程取消，而不是方法是否挂起、是否运行在主线程：
 
-1. 调用方若在协程里调用 `onInit()`，该异常会被协程机制当作"本协程被取消"，调用方的 job 静默取消并沿结构化并发传播给兄弟协程，而不是拿到一个可处理的错误
-2. 本项目自己就认识到这个坑——`audio` 模块专门写了 `runCatchingPreservingCancellation`，正因为 `runCatching` 会吞掉 `CancellationException`。任何用 `runCatching` 包 `onInit()` 的调用方都会得到错误行为
-3. `ScreenProcessor.onInit()` 的 KDoc 要求在主线程调用，而主线程上没有协程可取消，在那里抛 `CancellationException` 语义上是空的
+1. 子协程中未捕获的 `CancellationException` 通常只取消该子协程及其子任务，**不会自动取消父协程或兄弟协程**。普通非取消异常的传播规则不同，还要区分普通 Job 与 SupervisorJob。
+2. `runCatching` 会捕获 `CancellationException`；需要保留结构化取消的调用链应重抛。项目的 `runCatchingPreservingCancellation` 用于这一目的，但不能据此断言所有同步 `runCatching { onInit() }` 用法都必然错误。
+3. 主线程可以运行协程（例如 `Dispatchers.Main`、`lifecycleScope`），因此“主线程上没有协程可取消”不成立。接口应以错误含义选择异常类型：已释放等生命周期误用适合 `IllegalStateException`，内部录制任务收到释放请求则可以使用取消信号。
+
+依据：[Kotlin 协程异常与取消说明](https://kotlinlang.org/docs/exception-handling.html#cancellation-and-exceptions)。
 
 **建议**：对外改抛 `IllegalStateException`，或定义一个**不继承 `CancellationException`** 的 `RecorderReleasedException`。内部协程路径若需把释放请求按取消处理，另用私有哨兵类型，不要暴露到公开接口上。
 
@@ -321,3 +324,14 @@ finally { if (endInit()) completeInlineRelease(...) }
 `2026-09-02-audio-media-teardown-followup-fixes_cc.md` 的 §13：§13.4 为对 §9 修复的复审修正，
 §13.8 为对整改的第二次复审，其中 B4（`onInit()` 失败后 EGL 执行器线程钉住录制器）由 §9 的 B2
 修复引入并已修正。两份文档如有出入，以主文档 §13 为准。
+
+
+## 9.7 初始化中断与输出失败补充整改（2026-09-16）
+
+后续 Codex 审查在 `6f6313f5d` 上确认两项遗漏：等待初始化的线程中断后，EGL 任务仍可继续分配
+资源；输出回调的 catch 没有处理“未创建录制协程”的释放与错误通知。现已分别补上中断后的释放
+责任移交，以及退出回调锁后的统一释放请求。三个回归用例先在修复前失败，再用于验证修复。
+详细改动、验证命令与真机边界见主文档 §15。
+
+同时更正本篇 §6 与 §6.1 的取消语义：外部取消后的 Job 不会因吞异常而自动恢复；子协程的
+`CancellationException` 通常不取消父协程或兄弟协程；主线程同样可以运行协程。

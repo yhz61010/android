@@ -2062,3 +2062,53 @@ B5 的 `bodyEntered` 方案中屏障与 dispatcher 都在资源释放之后处�
 - `Falcon` 的 `!rootView.isShown` 过滤仍可能让位图缩成悬浮窗尺寸，下游 `encodeImages()` 按固定尺寸
   拉伸，表现为一帧全屏失真。属既有风险，建议在 `encodeImages()` 入口加宽高比校验。
 - `Falcon.getRootViews()` 仍是 public 且无线程契约，库使用者可在任意线程调用。
+
+
+# 15. Codex 复审遗漏修复（2026-09-16）
+
+## 15.1 范围与实现
+
+基线为 `6f6313f5d`。本节只处理随后复审发现的两项代码遗漏及协程文档错误，不代表 §14.7 的
+已知问题已经全部关闭。
+
+- **初始化等待被中断**：`FutureTask.get()` 抛出 `InterruptedException` 不会停止后台任务。
+  `onInit()` 现在捕获该异常，调用现有 `requestRelease()` 并恢复调用线程的中断标记后重抛。
+  尚在排队的初始化由 `beginInit()` 拒绝；已经进入初始化的任务由 `endInit()` 在 EGL 原线程
+  接管释放。调用方收到异常时清理可能仍在进行；若驱动调用永久卡住，仍不能保证释放完成。
+  不对 EGL 工作线程执行 `cancel(true)`，避免中途打断原生资源初始化。
+- **输出回调失败且没有录制协程**：`onOutputBufferAvailable()` 保留首个异常，先在 `finally`
+  尝试归还 output buffer，再退出 `codecCallbackLock` 并请求释放。`onError()` 也直接使用同一
+  释放协议；有录制任务时取消任务并由其 finally 清理，没有任务时由 EGL 执行器负责清理与错误
+  通知。迟到回调仍由 codec 身份检查拦截。
+- **文档勘误**：独立复审文档 §6 / §6.1 已修正 `CancellationException` 对父子与兄弟协程的
+  传播说明、吞异常与 `isCancelled` 的关系，以及“主线程没有协程”的错误前提。
+
+公开方法签名不变；`onInit()` 的 KDoc 补充中断后的行为。测试依赖沿用仓库已有 bundle，未新增
+生产依赖。
+
+## 15.2 回归测试与验证边界
+
+新增 `screencapture/src/test/kotlin/com/leovp/screencapture/screenrecord/base/strategies/`
+下的 `Screenshot2H26xStrategyTest.kt`：
+
+1. 在 codec 初始化进行中中断调用线程，验证中断状态、EGL 执行器退出、编码器清空及在原线程释放。
+2. 在初始化排队时中断调用线程，验证不创建 codec 且执行器退出。
+3. 在 `onInit(); onStart()` 后注入输出 buffer 读取失败，验证自动清理、错误仅通知一次、迟到回调被忽略。
+
+三个用例使用真实录制器生命周期代码、真实线程与 latch，仅模拟 MediaCodec/EGL 等 Android 边界；
+均已在未修复版本上观察到目标断言失败。测试没有执行真实 EGL/Codec 驱动，不能替代真机验证。
+
+本轮验证命令：
+
+```bash
+./gradlew --offline --continue :screencapture:testDebugUnitTest \
+  :screencapture:ktlintCheck :screencapture:detekt \
+  :demo:compileDevDebugKotlin --rerun-tasks
+```
+
+验证结果：Gradle `BUILD SUCCESSFUL`，348 个任务实际执行；新增 3 项单测通过，0 失败、0 跳过；
+`screencapture` 的 ktlint、detekt 及 Demo 集成编译通过，`git diff --check` 通过。构建仍有弃用
+API 与 Gradle 兼容性警告，本轮未扩大范围处理。
+
+待真机验证：API 21～26 与较新设备的录制、停止、重复进入退出、旋转及前后台切换；驱动初始化
+异常和输出异常时的实际资源释放。本轮未执行设备测试。

@@ -22,6 +22,9 @@ dependencies {
     api(libs.kotlin.coroutines.core)
     api(libs.androidx.appcompat)
 
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
+
     implementation(projects.log)
     implementation(projects.libBytes)
     implementation(projects.libImage)

@@ -157,7 +157,7 @@ class BaseMediaCodecSynchronousTest {
             if (outputDequeueCount.getAndIncrement() == 0) {
                 MediaCodec.INFO_TRY_AGAIN_LATER
             } else {
-                throw IllegalStateException("codec died while draining")
+                error("codec died while draining")
             }
         }
         val subject = FailureCodec(mediaCodec, failure, inputPtsUs = -1)

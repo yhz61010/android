@@ -77,6 +77,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private val recordingScope = CoroutineScope(
         SupervisorJob() + recordingDispatcher + recordingExceptionHandler
     )
+
     /** Guarded by [lifecycleLock]. */
     private var recordingJob: Job? = null
 

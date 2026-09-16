@@ -60,7 +60,7 @@ class ShellUtilTest {
         val output = listOf(
             "USER PID PPID VSZ RSS WCHAN ADDR S NAME",
             "   root 1 0 10849520 9540 0 0 S init",
-            "\tshell 123 1 1000 200 futex 0 S sh",
+            "\tshell 123 1 1000 200 futex 0 S sh"
         ).joinToString("\n")
 
         val processes = ShellUtil.parseProcessesList(output)

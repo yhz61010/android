@@ -16,6 +16,7 @@ import android.opengl.Matrix
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.util.Size
 import android.view.Surface
 import com.leovp.image.compressBitmap
@@ -86,6 +87,21 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     /** Latches once the encoder has been started, so teardown knows whether to stop it. */
     private val encoderStarted = AtomicBoolean(false)
+
+    /**
+     * Guarded by [lifecycleLock]. Latches when [requestRelease] takes over teardown because no
+     * recording job was ever registered. Ownership is claimed here, while [releaseCompleted]
+     * is completed only once the resources are actually gone.
+     */
+    private var inlineReleaseClaimed = false
+
+    /** Thread that ran [onInit] and therefore holds the EGL context current. */
+    @Volatile
+    private var eglOwnerThread: Thread? = null
+
+    /** Posts teardown back to [eglOwnerThread]. Null when that thread has no Looper. */
+    @Volatile
+    private var eglOwnerHandler: Handler? = null
     private val mvp = getMvp()
 
     // EGL
@@ -374,6 +390,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     override fun onInit() {
+        // initEgl() makes the context current on this thread, and EGL objects can only be
+        // torn down from the thread they are current on. Record it before anything is
+        // created so even a half-finished init can be released on the right thread.
+        eglOwnerThread = Thread.currentThread()
+        eglOwnerHandler = Looper.myLooper()?.let { Handler(it) }
         val format = MediaFormat.createVideoFormat(
             when (builder.encodeType) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
@@ -508,11 +529,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 }
             }
         }
-        // Registering the job and completing the release barrier must be mutually exclusive:
-        // requestRelease() may already have finished the barrier and closed the dispatcher, in
-        // which case starting the job would dispatch onto a shut-down executor.
+        // Registering the job and claiming the teardown must be mutually exclusive:
+        // requestRelease() may already own the teardown, or a previous job may have finished
+        // it, in which case starting the job would dispatch onto a shut-down executor.
         val accepted = synchronized(lifecycleLock) {
-            if (releaseCompleted.isCompleted) {
+            if (releaseCompleted.isCompleted || inlineReleaseClaimed) {
                 false
             } else {
                 recordingJob = job
@@ -577,12 +598,15 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         releaseRequested.set(true)
         isRecording = false
         // Decide under the same lock startRecord() uses, so a job that is being registered right
-        // now either wins (and owns the barrier) or is rejected before it is ever dispatched.
+        // now either wins (and owns the teardown) or is rejected before it is ever dispatched.
+        // Claiming is deliberately not the same thing as completing releaseCompleted: that
+        // barrier releases every releaseAndJoin() caller, so it may only be completed once the
+        // resources are really gone.
         var ownsInlineRelease = false
         val activeJob = synchronized(lifecycleLock) {
             val job = recordingJob
-            if (job == null && releaseCompleted.complete(Unit)) {
-                recordingDispatcher.close()
+            if (job == null && !inlineReleaseClaimed && !releaseCompleted.isCompleted) {
+                inlineReleaseClaimed = true
                 ownsInlineRelease = true
             }
             job
@@ -591,16 +615,48 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         // onInit() can be called through the public ScreenProcessor API without startRecord()
         // ever registering a recording job. No coroutine will run the teardown in that case,
         // so release here instead of leaking the encoder, the EGL objects, the input Surface
-        // and the callback thread. This runs on the caller's thread, which is the thread
-        // onInit() made the EGL context current on. Every step is null-safe, so a partially
-        // initialized or never-initialized recorder is handled too.
-        if (ownsInlineRelease) releaseOwnedResources(stopEncoder = encoderStarted.get())
+        // and the callback thread.
+        if (ownsInlineRelease) dispatchInlineRelease()
     }
 
     /**
-     * Releases everything [onInit] created. Runs on the thread owning the EGL context: the
-     * recording thread for a started recorder, or the caller's thread when the recorder was
-     * only initialized through the public ScreenProcessor API.
+     * Runs the teardown that no recording coroutine will run, on the thread that owns the EGL
+     * context. Releasing EGL from any other thread cannot un-current the context there, which
+     * leaves the display, context and surface alive until that thread dies.
+     */
+    private fun dispatchInlineRelease() {
+        val stopEncoder = encoderStarted.get()
+        val owner = eglOwnerThread
+        if (owner == null || owner === Thread.currentThread()) {
+            completeInlineRelease(stopEncoder)
+            return
+        }
+        val handler = eglOwnerHandler
+        if (handler != null && handler.post { completeInlineRelease(stopEncoder) }) return
+        // The owner thread has no Looper, or its Looper already quit. Releasing from here is
+        // the best remaining option, but EGL teardown may be incomplete, so say so loudly.
+        LogContext.log.e(
+            TAG,
+            "Cannot reach EGL owner thread ${owner.name}. Releasing on " +
+                Thread.currentThread().name
+        )
+        completeInlineRelease(stopEncoder)
+    }
+
+    /** Releases the owned resources and only then opens the [releaseAndJoin] barrier. */
+    private fun completeInlineRelease(stopEncoder: Boolean) {
+        try {
+            releaseOwnedResources(stopEncoder = stopEncoder)
+        } finally {
+            recordingDispatcher.close()
+            releaseCompleted.complete(Unit)
+        }
+    }
+
+    /**
+     * Releases everything [onInit] created. Must run on [eglOwnerThread]: the recording thread
+     * for a started recorder, or the thread that called [onInit] otherwise. Every step is
+     * null-safe, so a partially initialized or never-initialized recorder is handled too.
      */
     private fun releaseOwnedResources(stopEncoder: Boolean) {
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same

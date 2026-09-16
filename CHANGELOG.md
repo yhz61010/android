@@ -167,6 +167,10 @@
   EGL 清理同时兼容未完整初始化的 null/no-display 状态。`startRecord()` 与释放请求之间的注册竞态
   已用同一把锁消除；初始化期间收到的主动停止按取消处理，不再经 `onError()` 误报为失败。
   `Screenshot2H26xStrategy` 是一次性策略，`onStop()` 与 `onRelease()` 等价，已在 KDoc 标明。
+  只调用 `onInit()` 而从未 `startRecord()` 时（公开 `ScreenProcessor` 接口的常规用法），释放
+  不再只是完成屏障，而是真正释放 encoder、EGL、input Surface 与回调线程；该清理会调度回
+  `onInit()` 所在线程执行，因为 EGL 对象只能在其 current 的线程上销毁。`releaseCompleted`
+  屏障改为在清理真正结束后才完成，并发的 `releaseAndJoin()` 不会在资源仍存活时提前返回。
   Audio Demo 的清理任务带兜底 `CoroutineExceptionHandler`，PCM 输入流在停止时先关闭再中断并等待
   播放线程退出。
 - **ShellUtil toybox `ps` 兼容性**：进程列表解析会跳过 `USER PID ...` 表头及其他 PID/PPID 非数字行，

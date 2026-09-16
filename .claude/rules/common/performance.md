@@ -9,9 +9,10 @@
   and built-in agents), always pass the Agent tool's `model` parameter set to
   the current session model, overriding the `model:` declared in the agent
   definition (`sonnet` / `opus` / `haiku`).
-- The session model is configured in `~/.claude/settings.json` (currently
-  Fable 5.1, i.e. `model: "fable"` for the override). If the session model
-  changes, follow the new session model.
+- Do not hard-code a specific model name here. Determine the current session
+  model at call time (the session environment states it, e.g. "You are powered
+  by the model named ...") and map it to the `model` parameter value
+  (`fable` / `opus` / `sonnet` / `haiku`).
 - `fork` subagents inherit the session model automatically; no override needed.
 - Do not downgrade subagents to smaller models for cost savings in this
   project; consistent quality across the main session and its agents takes

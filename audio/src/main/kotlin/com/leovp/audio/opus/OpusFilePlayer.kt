@@ -93,6 +93,7 @@ class OpusFilePlayer(
     private val terminalCompletion = CompletableDeferred<Unit>()
     private val terminalFailure = AtomicReference<Throwable?>(null)
     private val codecEos = CompletableDeferred<Unit>()
+    private val inputEosSubmitted = CompletableDeferred<Unit>()
     private val queuedPcmCount = AtomicLong(0)
     private val consumedPcmCount = AtomicLong(0)
     private val writtenAudioFrames = AtomicLong(0)
@@ -249,6 +250,7 @@ class OpusFilePlayer(
                 startCodeBeginPos = payload.nextStartCodePosition ?: break
             }
             signalEndOfStreamWithBackpressure(playbackDecoder)
+            inputEosSubmitted.complete(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -319,13 +321,19 @@ class OpusFilePlayer(
     }
 
     private suspend fun awaitDrainedNaturalEnd() {
+        // The codec EOS timeout must only start once the input EOS has actually been
+        // submitted. Measuring it from playback start would abort every file whose audio is
+        // longer than CODEC_EOS_TIMEOUT_MS while it is still being read and decoded normally.
+        // Teardown cancels this job, so a producer that dies before submitting EOS cannot
+        // leave this await hanging.
+        inputEosSubmitted.await()
         val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT_MS) {
             codecEos.await()
             true
         } ?: false
         if (!receivedCodecEos) {
             val message =
-                "Timed out waiting for OPUS codec EOS after ${CODEC_EOS_TIMEOUT_MS}ms"
+                "Timed out waiting for OPUS codec EOS ${CODEC_EOS_TIMEOUT_MS}ms after input EOS"
             requestFailure(
                 TimeoutException(message)
             )

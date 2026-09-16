@@ -147,7 +147,8 @@
   最后释放 AudioTrack；自然结束还会等待软件 PCM 队列和 AudioTrack playback head，避免尾音被 flush。
   AAC/OPUS decoder 的 PTS 改按已接受输入帧递增，不再依赖尚未产生的输出帧数。重复 AAC CSD 会被幂等
   忽略，活动会话中的变更 CSD 会明确拒绝，不再覆盖并泄漏旧 decoder。同步与异步 codec 处理失败
-  统一通知 owner；输入 EOS 后等待输出 EOS 最多 3 秒，超时按失败终态释放而不是伪装成自然完成。
+  统一通知 owner；OPUS 文件播放在**输入 EOS 提交成功后**才开始计时，等待输出 EOS 最多 3 秒，
+  超时按失败终态释放而不是伪装成自然完成；计时不再从播放启动算起，长音频不会被提前判失败。
   OPUS 文件生产者在 PCM 队列高水位暂停喂帧，队列仍溢出时明确失败，不再静默丢弃文件音频。
   AAC/OPUS stream player 在 stop 后拒绝迟到 CSD，避免在已释放 AudioTrack 上重建并泄漏 decoder。
   即使 codec 为带 EOS flag 的 output index 返回 null buffer，也会归还 index 并完成 EOS，不再误报超时。
@@ -161,7 +162,8 @@
   初始化失败时按确定顺序释放部分资源并记录完整异常，再通过 `ScreenDataListener.onError()` 默认错误入口
   上报；失败不会再从裸 IO 协程逃逸为未捕获异常。EGL 创建、逐帧绘制与销毁统一到专用单线程，
   `releaseAndJoin()` 可等待录制循环及 callback handler 完全退出后再关闭输出流，避免 EGL/codec 跨线程释放竞态。
-  Demo 在 Activity 销毁时也会发出停止请求并等待清理（最长 10 秒，超时记录错误后仍关闭输出流）。
+  Demo 在 Activity 销毁时也会发出停止请求并等待清理（最长 10 秒，超时记录错误后仍关闭输出流）；
+  该超时只结束等待，不能中断阻塞中的原生调用，卡住的录制线程仍会持有其捕获的对象。
   EGL 清理同时兼容未完整初始化的 null/no-display 状态。`startRecord()` 与释放请求之间的注册竞态
   已用同一把锁消除；初始化期间收到的主动停止按取消处理，不再经 `onError()` 误报为失败。
   `Screenshot2H26xStrategy` 是一次性策略，`onStop()` 与 `onRelease()` 等价，已在 KDoc 标明。

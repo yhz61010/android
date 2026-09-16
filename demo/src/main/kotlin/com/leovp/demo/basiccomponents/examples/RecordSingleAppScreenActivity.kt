@@ -162,7 +162,12 @@ class RecordSingleAppScreenActivity :
         }
     }
 
-    /** Bounds the wait so a stuck native teardown cannot pin this Activity forever. */
+    /**
+     * Bounds how long teardown blocks this Activity's cleanup. A timeout only abandons the
+     * wait: a recording thread stuck in a native call keeps running and still reaches this
+     * Activity through the screen data listener, so the timeout is reported as an error
+     * rather than treated as a completed release.
+     */
     private suspend fun awaitRecorderRelease() {
         val released = withTimeoutOrNull(RELEASE_TIMEOUT_MS) {
             screenProcessor.releaseAndJoin()

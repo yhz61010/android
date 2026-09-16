@@ -83,6 +83,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
 
     /** Guarded by [lifecycleLock]. Latches on the first [startRecord] call. */
     private var recordingStarted = false
+
+    /** Latches once the encoder has been started, so teardown knows whether to stop it. */
+    private val encoderStarted = AtomicBoolean(false)
     private val mvp = getMvp()
 
     // EGL
@@ -434,6 +437,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private fun startEncoder() {
         isRecording = true
         h26xEncoder?.start()
+        encoderStarted.set(true)
     }
 
     /** Turns a release that raced the recording coroutine into a cancellation, not a failure. */
@@ -452,8 +456,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             check(!recordingStarted) { "Screenshot recorder can only be started once" }
             recordingStarted = true
         }
+        // Captured weakly: a coroutine stuck in a native teardown call must not keep the
+        // recorded Activity reachable.
+        val activityRef = WeakReference(act)
         val job = recordingScope.launch(start = CoroutineStart.LAZY) {
-            var encoderStarted = false
             try {
                 ensureNotReleased()
                 onInit()
@@ -462,12 +468,15 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 // a failure, so it must cancel instead of reaching screenDataListener.onError().
                 ensureNotReleased()
                 startEncoder()
-                encoderStarted = true
                 // requestRelease() also cancels this job, so a start that races the release
                 // request cannot re-arm isRecording and keep the loop alive.
                 while (isRecording && !releaseRequested.get()) {
                     ensureActive()
-                    CaptureUtil.takeScreenshot(WeakReference(act), Bitmap.Config.RGB_565)?.let {
+                    if (activityRef.get() == null) {
+                        LogContext.log.w(TAG, "Recorded activity is gone. Stop recording.")
+                        break
+                    }
+                    CaptureUtil.takeScreenshot(activityRef, Bitmap.Config.RGB_565)?.let {
                         if (builder.sampleSize > 1) {
                             val compressedBitmap = it.compressBitmap(
                                 builder.quality,
@@ -488,7 +497,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 LogContext.log.e(TAG, "Screenshot recording failed", e)
                 recordingFailure.compareAndSet(null, e)
             } finally {
-                releaseResourcesOnRecordingThread(stopEncoder = encoderStarted)
+                releaseOwnedResources(stopEncoder = encoderStarted.get())
                 val failure = recordingFailure.get()
                 if (failure != null && failure !is CancellationException) {
                     try {
@@ -510,6 +519,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 // Completing the barrier here, not in the body's finally, also covers a lazy job
                 // that is cancelled before it ever runs.
                 job.invokeOnCompletion {
+                    // Drop the finished coroutine: its continuation keeps the recording
+                    // lambda, and everything that lambda captured, reachable from here.
+                    synchronized(lifecycleLock) { recordingJob = null }
                     releaseCompleted.complete(Unit)
                     recordingDispatcher.close()
                 }
@@ -566,15 +578,31 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         isRecording = false
         // Decide under the same lock startRecord() uses, so a job that is being registered right
         // now either wins (and owns the barrier) or is rejected before it is ever dispatched.
+        var ownsInlineRelease = false
         val activeJob = synchronized(lifecycleLock) {
             val job = recordingJob
-            if (job == null && releaseCompleted.complete(Unit)) recordingDispatcher.close()
+            if (job == null && releaseCompleted.complete(Unit)) {
+                recordingDispatcher.close()
+                ownsInlineRelease = true
+            }
             job
         }
         activeJob?.cancel()
+        // onInit() can be called through the public ScreenProcessor API without startRecord()
+        // ever registering a recording job. No coroutine will run the teardown in that case,
+        // so release here instead of leaking the encoder, the EGL objects, the input Surface
+        // and the callback thread. This runs on the caller's thread, which is the thread
+        // onInit() made the EGL context current on. Every step is null-safe, so a partially
+        // initialized or never-initialized recorder is handled too.
+        if (ownsInlineRelease) releaseOwnedResources(stopEncoder = encoderStarted.get())
     }
 
-    private fun releaseResourcesOnRecordingThread(stopEncoder: Boolean) {
+    /**
+     * Releases everything [onInit] created. Runs on the thread owning the EGL context: the
+     * recording thread for a started recorder, or the caller's thread when the recorder was
+     * only initialized through the public ScreenProcessor API.
+     */
+    private fun releaseOwnedResources(stopEncoder: Boolean) {
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same
         // lock makes every later callback return before touching the encoder.
         val encoder = synchronized(codecCallbackLock) {

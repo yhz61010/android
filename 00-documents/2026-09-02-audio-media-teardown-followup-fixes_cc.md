@@ -1422,10 +1422,16 @@ job 若在注册后、`start()` 前被取消，协程体的 `finally` 不会执�
 - `OpusFilePlayer.awaitNaturalCompletion()` 拆为外层 `try/catch → requestFailure` 与内层
   `awaitDrainedNaturalEnd()`。
 
-### demo（M39）
+### demo（M39，部分缓解）
 
 - `RecordSingleAppScreenActivity.awaitRecorderRelease()`：`releaseAndJoin()` 以
   `withTimeoutOrNull(10 s)` 包裹，超时记 `LogContext.log.e` 后仍关闭输出流。
+- **未闭环**：超时只结束等待，无法中断阻塞中的原生调用（协程取消是协作式的）。录制线程若卡在
+  `MediaCodec.stop()`、EGL 释放或 `HandlerThread.join()`，仍会持续运行，并通过
+  `builder.screenDataListener`（demo 中是 Activity 的匿名内部类）继续可达该 Activity。
+- 已一并收窄引用：`Screenshot2H26xStrategy` 的录制协程改为弱引用持有 Activity，并在协程结束时
+  清空 `recordingJob`，避免已完成的 lazy 协程 continuation 长期钉住捕获对象。彻底解除需让
+  strategy 能释放 `screenDataListener`，属接口变更，另行评估。
 
 ## 11.5 新增回归测试
 

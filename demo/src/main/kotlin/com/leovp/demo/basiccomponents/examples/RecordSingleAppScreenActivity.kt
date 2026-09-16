@@ -24,6 +24,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -209,7 +210,7 @@ class RecordSingleAppScreenActivity :
      * rather than treated as a completed release.
      */
     private suspend fun awaitRecorderRelease() {
-        val released = withTimeoutOrNull(RELEASE_TIMEOUT_MS) {
+        val released = withTimeoutOrNull(RELEASE_TIMEOUT_MS.milliseconds) {
             screenProcessor.releaseAndJoin()
             true
         } ?: false

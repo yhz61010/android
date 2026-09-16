@@ -235,7 +235,7 @@ object Falcon {
 
             // fixes https://github.com/jraska/Falcon/issues/10
             if (rootView == null) {
-                LogContext.log.e(TAG, "null View stored as root in Global window manager, skipping")
+                LogContext.log.i(TAG, "null View stored as root in Global window manager, skipping")
                 continue
             }
             if (!rootView.isShown) {

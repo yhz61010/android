@@ -47,6 +47,13 @@ private class ReleaseRequestedException :
     CancellationException("Screenshot recorder was released during init")
 
 /**
+ * Thread that made the EGL context current, together with a [Handler] for posting back to it.
+ * Both are published as a single value so a concurrent teardown can never observe one without
+ * the other.
+ */
+private class EglOwner(val thread: Thread, val handler: Handler?)
+
+/**
  * Screenshot-based H.26x recording strategy for API 21 and later.
  *
  * Author: Michael Leo
@@ -93,15 +100,20 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      * recording job was ever registered. Ownership is claimed here, while [releaseCompleted]
      * is completed only once the resources are actually gone.
      */
-    private var inlineReleaseClaimed = false
+    private var teardownClaimed = false
 
-    /** Thread that ran [onInit] and therefore holds the EGL context current. */
-    @Volatile
-    private var eglOwnerThread: Thread? = null
+    /** Guarded by [lifecycleLock]. True while [onInit] is still creating resources. */
+    private var initInProgress = false
 
-    /** Posts teardown back to [eglOwnerThread]. Null when that thread has no Looper. */
+    /**
+     * Guarded by [lifecycleLock]. Set when a claimed teardown was handed over to the thread
+     * running [onInit], because only that thread can release the EGL context it created.
+     */
+    private var teardownDeferredToInit = false
+
+    /** Published by [beginInit] before any resource exists. Owns the EGL context. */
     @Volatile
-    private var eglOwnerHandler: Handler? = null
+    private var eglOwner: EglOwner? = null
     private val mvp = getMvp()
 
     // EGL
@@ -389,12 +401,49 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         eglSurface = EGL14.EGL_NO_SURFACE
     }
 
+    /**
+     * Creates the encoder, EGL objects and callback thread. The calling thread becomes the EGL
+     * owner and is from then on the only thread allowed to release them.
+     *
+     * @throws CancellationException if teardown was already requested or already taken over.
+     * This recorder is one-shot, so a released instance is never initialized again.
+     */
     override fun onInit() {
-        // initEgl() makes the context current on this thread, and EGL objects can only be
-        // torn down from the thread they are current on. Record it before anything is
-        // created so even a half-finished init can be released on the right thread.
-        eglOwnerThread = Thread.currentThread()
-        eglOwnerHandler = Looper.myLooper()?.let { Handler(it) }
+        beginInit()
+        try {
+            initResources()
+        } finally {
+            // A teardown requested while this was initializing was deferred to this thread,
+            // the only one that can tear the EGL context down. Run it now that init is over,
+            // so a failed init releases what it did manage to create.
+            if (endInit()) completeInlineRelease(stopEncoder = encoderStarted.get())
+        }
+    }
+
+    /**
+     * Enters the initializing state. Refuses to build a recorder whose teardown was already
+     * requested, otherwise a teardown that ran first would leave everything created here
+     * orphaned. Publishes the EGL owner as one value, before any resource exists.
+     */
+    private fun beginInit() {
+        synchronized(lifecycleLock) {
+            if (releaseRequested.get() || teardownClaimed || releaseCompleted.isCompleted) {
+                throw ReleaseRequestedException()
+            }
+            initInProgress = true
+            eglOwner = EglOwner(Thread.currentThread(), Looper.myLooper()?.let { Handler(it) })
+        }
+    }
+
+    /** Leaves the initializing state, reporting whether this thread inherited the teardown. */
+    private fun endInit(): Boolean = synchronized(lifecycleLock) {
+        initInProgress = false
+        val deferred = teardownDeferredToInit
+        teardownDeferredToInit = false
+        deferred
+    }
+
+    private fun initResources() {
         val format = MediaFormat.createVideoFormat(
             when (builder.encodeType) {
                 ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
@@ -533,7 +582,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         // requestRelease() may already own the teardown, or a previous job may have finished
         // it, in which case starting the job would dispatch onto a shut-down executor.
         val accepted = synchronized(lifecycleLock) {
-            if (releaseCompleted.isCompleted || inlineReleaseClaimed) {
+            if (releaseCompleted.isCompleted || teardownClaimed) {
                 false
             } else {
                 recordingJob = job
@@ -605,9 +654,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         var ownsInlineRelease = false
         val activeJob = synchronized(lifecycleLock) {
             val job = recordingJob
-            if (job == null && !inlineReleaseClaimed && !releaseCompleted.isCompleted) {
-                inlineReleaseClaimed = true
-                ownsInlineRelease = true
+            if (job == null && !teardownClaimed && !releaseCompleted.isCompleted) {
+                teardownClaimed = true
+                // onInit() may be creating resources on the EGL owner thread right now.
+                // Releasing from here would race it and would miss everything it has not
+                // created yet, so hand the teardown to that thread; endInit() runs it.
+                if (initInProgress) teardownDeferredToInit = true else ownsInlineRelease = true
             }
             job
         }
@@ -626,18 +678,18 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
      */
     private fun dispatchInlineRelease() {
         val stopEncoder = encoderStarted.get()
-        val owner = eglOwnerThread
-        if (owner == null || owner === Thread.currentThread()) {
+        val owner = eglOwner
+        if (owner == null || owner.thread === Thread.currentThread()) {
             completeInlineRelease(stopEncoder)
             return
         }
-        val handler = eglOwnerHandler
+        val handler = owner.handler
         if (handler != null && handler.post { completeInlineRelease(stopEncoder) }) return
         // The owner thread has no Looper, or its Looper already quit. Releasing from here is
         // the best remaining option, but EGL teardown may be incomplete, so say so loudly.
         LogContext.log.e(
             TAG,
-            "Cannot reach EGL owner thread ${owner.name}. Releasing on " +
+            "Cannot reach EGL owner thread ${owner.thread.name}. Releasing on " +
                 Thread.currentThread().name
         )
         completeInlineRelease(stopEncoder)
@@ -654,9 +706,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     /**
-     * Releases everything [onInit] created. Must run on [eglOwnerThread]: the recording thread
-     * for a started recorder, or the thread that called [onInit] otherwise. Every step is
-     * null-safe, so a partially initialized or never-initialized recorder is handled too.
+     * Releases everything [onInit] created. Must run on the [eglOwner] thread: the recording
+     * thread for a started recorder, or the thread that called [onInit] otherwise. Every step
+     * is null-safe, so a partially or never initialized recorder is handled too.
      */
     private fun releaseOwnedResources(stopEncoder: Boolean) {
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same

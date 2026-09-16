@@ -171,6 +171,11 @@
   不再只是完成屏障，而是真正释放 encoder、EGL、input Surface 与回调线程；该清理会调度回
   `onInit()` 所在线程执行，因为 EGL 对象只能在其 current 的线程上销毁。`releaseCompleted`
   屏障改为在清理真正结束后才完成，并发的 `releaseAndJoin()` 不会在资源仍存活时提前返回。
+  `onInit()` 也纳入同一把生命周期锁：EGL owner 线程与其 `Handler` 作为单个不可变值原子发布，
+  初始化期间收到的释放请求会移交给初始化线程在 `onInit()` 结束后执行，避免释放跑在尚未创建完的
+  资源上。
+  - **行为变更**：对已请求释放的实例调用 `onInit()` 会抛 `CancellationException`，不再静默完成
+    初始化并把资源孤立在无人释放的状态。
   Audio Demo 的清理任务带兜底 `CoroutineExceptionHandler`，PCM 输入流在停止时先关闭再中断并等待
   播放线程退出。
 - **ShellUtil toybox `ps` 兼容性**：进程列表解析会跳过 `USER PID ...` 表头及其他 PID/PPID 非数字行，

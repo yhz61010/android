@@ -40,7 +40,10 @@
 - 新增 `FloatViewOwner`，通过系统 `ActivityLifecycleCallbacks` 绑定 Activity，支持
   `ContextWrapper` 包装；销毁时立即移除窗口，也清理只 build、未 show 的实例。
 - Activity 创建的系统悬浮窗同样随 Activity 销毁，以免其 Context、View 和回调遗留。
-- 拒绝为已经 finishing/destroyed 的 Activity 创建实例；显示前再次检查所有者状态。
+- 为已经 finishing/destroyed 的 Activity 调用 `build()`/`show()` 时跳过创建并记录警告，不创建
+  实例、不抛异常（`FloatViewManager.create()` 前置守卫）；显示前再次检查所有者状态。
+  > 2026-09-15 复审修正：最初实现是在 `FloatViewOwner` 构造期 `check()` 抛
+  > `IllegalStateException`，会让公开 API 在异步回调里崩溃，已改为静默跳过。
 - 窗口操作限定主线程，增加公开 API 注解及关键执行入口检查。
 - `FloatViewActivity` 和 `ScreenShareMasterActivity` 在销毁时显式立即移除。
 

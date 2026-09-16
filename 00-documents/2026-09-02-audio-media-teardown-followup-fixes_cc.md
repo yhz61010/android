@@ -21,6 +21,10 @@
 **审查时要求合入前修复：H1、H2、H3。**截至 2026-09-03，H1 已按“一次性 codec 会话”方案修复；
 H2、H3 及第二轮 H4 已在后续整改代码中闭环，详见 §8。真机发布验证仍待完成。
 
+> **2026-09-15 第四轮复审补充**：`93c1c3c0f` 已审查完毕。§10.2 的修复声明绝大部分成立；
+> 新发现 **3 个 HIGH（H10～H12）**、6 个 MEDIUM（M34～M39，其中 M37 复核后驳回）和 4 个 LOW，
+> 全部已在同一分支修复并补充回归测试，详见 §11。
+
 > **2026-09-03 第三轮复审补充**：`d1c87e65e` 已审查完毕。H2、H3、H4、M13 等确认真实闭环。
 > Codex 逐条复核后确认 H6、H8、H9 为 HIGH；H7 的通用异常边界问题成立，但原文给出的
 > `MediaCodec.stop()` 可达链不成立，降为 MEDIUM。后续修复与剩余验证见 §10。
@@ -1199,7 +1203,8 @@ Demo 的开关卡在选中态且不给任何错误提示。
    生命周期状态构成双重保护，也不要求删除任一保护后该测试必须失败。并发 start 测试确实没有形成两个
    调用者同时竞争 `NEW` 的窗口，需强化。
 8. `ScreenDataListener.onError()` 的兼容性结论成立。当前 class 文件同时包含 JVM default method 与
-   `DefaultImpls` 桥接。
+   `DefaultImpls` 桥接。**归属修正（2026-09-15）**：该默认方法在 `d1c87e65e` 就已存在，
+   `93c1c3c0f` 只更新了它的 KDoc；此条针对的是 `d1c87e65e` 引入的接口变更，不是本节所述提交。
 
 ## 10.2 已实施代码修复
 
@@ -1275,3 +1280,170 @@ AudioTrack 的真机时序验证。当前连接的 SUNMI P3H（Android 11 / API 
 随后退出页面，进程仍存活且日志中没有 `FATAL EXCEPTION`。这只证明不支持编码器的失败清理与页面退出不再
 闪退。H.264 成功录制、录制过程中快速停止/直接退出，以及 API 21～25 的 EGL 兼容性仍须使用相应配置或
 设备完成。
+
+---
+
+# 11. 第四轮复审与整改（2026-09-15，提交 `93c1c3c0f`）
+
+- 审查范围：`d1c87e65e..93c1c3c0f`（`fix: complete media teardown and float window cleanup`，
+  34 文件 +1887/-225）
+- 审查方式：5 个并行分域代理（MediaCodec 基类 / AAC+OPUS 播放器 / floatview /
+  screencapture+ShellUtil / Demo+CHANGELOG）独立审查，主审人逐条回读源码复核并对代理结论
+  做二次裁定；按协作约定未在审查环境运行 gradle，全部为静态分析
+- 与 §10 的关系：本节先核验 §10.2 的修复声明是否成立，再列出本轮新发现的缺陷与整改
+
+## 11.0 结论摘要
+
+| 域 | 结论 | CRITICAL | HIGH | MEDIUM | LOW |
+|----|------|---------|------|--------|-----|
+| MediaCodec 基类 | WARN | 0 | 0 | 2（M34、M35） | 0 |
+| AAC / OPUS 播放器 | WARN | 0 | 0 | 1（M36） | 2（L28、L29） |
+| floatview | WARN | 0 | 1（H12） | 0 | 1（L31） |
+| screencapture + ShellUtil | **BLOCK** | 0 | 2（H10、H11） | 2（M38；M37 驳回） | 1（L30） |
+| Demo + CHANGELOG | WARN | 0 | 0 | 1（M39） | 1（文档） |
+
+**合入前修复项：H10、H11、H12。**三项均已在本轮整改（§11.4）。
+
+## 11.1 §10.2 声明核验
+
+成立且有 `file:line` 证据的：`notifyCodecFailure` 提升到基类并在同步路径锁外调用；异步 input
+补偿保留 EOS flag、`getOutputBuffer()` 抛错时 `finally` 归还 index；"EOS flag + null buffer"不再误判；
+同步 3 秒 drain 超时走失败钩子；`releaseAndJoin()` 刻意不设 join 超时；一次性语义与并发 start
+测试；AAC `errorCallback` 与四类终态共用屏障；初始化失败清理切 IO 并保留原始取消；OPUS EOS 3 秒
+上限与 PCM 48/32 水位；两个 stream player 的 `stopped` 闸；`StreamPlayerStopper` 拒绝自等待；
+`Screenshot2H26xStrategy` 专用单线程 dispatcher、job 保存、`releaseAndJoin()`、EGL 销毁前解除
+current；encoder detach 与 callback 同锁、投递前复制 flags/PTS；Demo `onError()`、输出流同锁、
+`NonCancellable` 释放；Audio Demo 根 scope handler 与 PCM 流 close+interrupt+join；`ShellUtil`
+`toIntOrNull()` 跳过表头。
+
+**不成立或有偏差的**：
+
+| 声明 | 实际 | 对应缺陷 |
+|------|------|---------|
+| "主动停止与取消不触发 `ScreenDataListener.onError()`" | `onInit()` 期间的主动停止经 `check()` 抛 `IllegalStateException`，被当作失败上报 | H11 |
+| "异步 callback 异常统一在锁外通知 owner 并隔离" | `MediaCodec.Callback.onError` 分支无隔离，且 `OpusDecoder.onError` 在锁内直接调 `notifyCodecFailure` | M35 |
+| "显式 stop 不触发任一回调"（`playAac`/`playOpus` KDoc） | 清理阶段异常时既 throw 给调用方又调 `errorCallback` | M36 |
+| §10.1 第 8 条把 `ScreenDataListener.onError()` 归到本提交 | 该默认方法在 `d1c87e65e` 已存在，本提交只改 KDoc | 已在 §10.1 标注 |
+
+## 11.2 缺陷清单
+
+### H10（HIGH）`Screenshot2H26xStrategy` 注册 job 与完成释放屏障之间存在 TOCTOU 竞态
+
+`requestRelease()` 在不持 `lifecycleLock` 的情况下读 `recordingJob`，而 `startRecord()` 在锁内写。
+Demo 里两者确实跨线程：`startRecord()` 在主线程，`RecordSingleAppScreenActivity.releaseRecorder()`
+的 `releaseAndJoin()` 跑在 `Dispatchers.IO`。lazy job 已创建但尚未注册时若收到释放请求，
+`requestRelease()` 看到 `null` → 完成 `releaseCompleted` 并 `recordingDispatcher.close()`；随后主线程
+`job.start()` 向已 shutdown 的 executor 派发 → `RejectedExecutionException`，且 `releaseAndJoin()`
+的"全部释放"承诺失效。（`recordingJob` 本身已是 `@Volatile`，这是原子性问题而非可见性问题。）
+
+**自审补充**：修复后的代码复审又发现同类残留窗口——`requestRelease()` 只置 `isRecording = false`
+而不取消 job，若录制协程随后才执行 `onStart()`，会把 `isRecording` 改回 `true`，循环永不退出，
+`releaseCompleted` 永不完成，`releaseAndJoin()` 永久挂起（该竞态在审查基线上就存在）。此外 LAZY
+job 若在注册后、`start()` 前被取消，协程体的 `finally` 不会执行，屏障同样无法完成。
+
+### H11（HIGH）初始化期间的主动停止被误报为失败
+
+`onInit()` 之后 `check(!releaseRequested.get())` 抛出的是 `IllegalStateException`，不是
+`CancellationException`，落入 `catch (e: Throwable)` → `recordingFailure` 非空 → `finally` 调
+`screenDataListener.onError()`。这与本次给 `ScreenDataListener.onError()` 新写的 KDoc
+"Intentional cancellation or an explicit release does not invoke this callback" 直接矛盾，
+且恰是 §10.4 自陈未做真机验证的"录制过程中快速停止/直接退出"场景。
+
+### H12（HIGH）`FloatViewOwner` 构造期 `check(isAlive)` 把公开 API 变成会崩溃
+
+`FloatView.with(activity).build()` 对 finishing/destroyed Activity 现在抛未捕获的
+`IllegalStateException`，`FloatViewManager.create()` 无任何捕获。同一模块的 `show()` 对相同情况是优雅
+处理（`remove(true); return`，`addView` 包在 `runCatching`），`build()` 的 KDoc 也没有 `@throws`。
+从异步回调（权限返回、网络响应、`postDelayed`）创建悬浮窗是常见模式，对 JitPack 发布的库这是
+未文档化的新增崩溃路径。
+
+### MEDIUM
+
+| # | 位置 | 问题 |
+|---|------|------|
+| M34 | `BaseMediaCodecSynchronous` drain 阶段 | drain 循环内部真实失败已由 `process()` 上报一次，外层超时分支未复查 `codecFailed`，再合成一条 "Timed out after 3000ms" 二次上报；诊断被污染，owner 的 `terminalStarted` CAS 吸收了第二次，无功能破坏 |
+| M35 | `BaseMediaCodecAsynchronous.mediaCodecCallback.onError`、`OpusDecoder.onError` | 异步 `onError` 是唯一没有 `runCatchingPreservingCancellation` 隔离的回调；`OpusDecoder.onError` 在锁内直接调 `notifyCodecFailure` → `errorCallback`，违反 `BaseMediaCodec.notifyCodecFailure` KDoc 的"锁外调用"契约。当前 `requestFailure` 只 `launch{}`，靠运气未出事 |
+| M36 | `AacFilePlayer` / `OpusFilePlayer` `finishPlayback` | 显式 `stop()` 若清理阶段抛异常，`terminalFailure` 被设为 `cleanupError`，既调 `errorCallback` 又从 `stop()` 抛出；违反 KDoc。仓库内清理路径几乎都吞异常，可达性窄，故由代理的 HIGH 下调为 MEDIUM |
+| M37 | `releaseResourcesOnRecordingThread` 释放顺序 | **驳回**。代理称"先 encoder 后 EGL 与官方样例相反"；实际 grafika `TextureMovieEncoder.releaseEncoder()` 与 bigflake `EncodeAndMuxTest.releaseEncoder()` 都是先 `stop()/release()` encoder 再释放 input surface / EGL，与当前代码一致。未改动 |
+| M38 | `Screenshot2H26xStrategy.onStop()` vs `ScreenProcessor` KDoc | `onStop()` 现等同 `onRelease()`，但接口 KDoc 写 "After onStop(), you can do onStart() again"；按接口写的调用方会拿到 `IllegalStateException` |
+| M39 | `RecordSingleAppScreenActivity.releaseRecorder()` | `NonCancellable` 内 `releaseAndJoin()` 无超时，上游 `releaseHandlerAndJoin()` 的 `join()` 也无超时；线程卡在原生调用时 Activity 无界不可回收，且无日志 |
+
+### LOW
+
+| # | 位置 | 问题 |
+|---|------|------|
+| L28 | `AacFilePlayer.terminalScope` | 缺 `CoroutineExceptionHandler`，`OpusFilePlayer` 本次加了，防御深度不对称 |
+| L29 | `OpusFilePlayer.awaitNaturalCompletion()` | 缺顶层 `catch → requestFailure`，同文件另两个协程都有 |
+| L30 | `Screenshot2H26xStrategy.startRecord()` | lazy job 在 `check` 之前创建，二次调用时 job 被静默丢弃且调用线程裸抛 |
+| L31 | `FloatViewManager` / `FloatViewImpl` | 主线程检查重复实现 |
+
+## 11.3 主审人对代理结论的裁定
+
+- **驳回 M37**（理由见上表）。
+- **驳回"`recordingJob` 未加 `@Volatile`"**：`Screenshot2H26xStrategy.kt:76` 已有 `@Volatile`；H10 保留，
+  但定性为 TOCTOU 而非可见性。
+- **M36 由 HIGH 下调为 MEDIUM**：`releaseExternalResources()` 只有 `audioTrackPlayer.release()` 未包
+  `runCatching`，其余清理路径都吞异常，当前触发条件窄；文档与实现的矛盾是确定的。
+- **H12 保留 HIGH**：虽然需要调用方在 Activity 结束后创建悬浮窗，但这是库的公开 API 上未文档化的
+  新增崩溃路径，且同模块 `show()` 已示范了优雅路径。
+
+## 11.4 已实施代码修复
+
+### screencapture（H10、H11、M38、L30）
+
+- `startRecord()` 先在 `lifecycleLock` 内以 `recordingStarted` 拒绝二次调用，再创建 lazy job；
+  注册 job 与 `releaseCompleted.isCompleted` 判断在同一锁内原子完成，未被接受的 job 直接 `cancel()`。
+- 屏障完成（`releaseCompleted.complete()` + `recordingDispatcher.close()`）从协程体 `finally`
+  移到注册时挂的 `job.invokeOnCompletion {}`，从而覆盖"注册后、启动前被取消"的 LAZY job。
+- `requestRelease()` 在 `lifecycleLock` 内决定"无 job 则自己完成屏障"，否则 `cancel()` 已注册的
+  job；录制循环条件改为 `isRecording && !releaseRequested.get()`，`onStart()` 竞态无法再把
+  循环拉活。
+- `onInit()` 前后各做一次 `ensureNotReleased()`：已请求释放时抛出 `CancellationException` 子类
+  `ReleaseRequestedException` 而非 `check()`，走取消分支，不再触发 `onError()`；协程体改调私有
+  `startEncoder()`，公开 `onStart()` 的 `check()` 仅用于拦截外部误用。
+- `startRecord()` / `onStop()` / `onRelease()` 的 KDoc 明确本策略是一次性的，`onStop` 与
+  `onRelease` 等价；接口 `ScreenProcessor` 的通用契约未改。
+
+### floatview（H12、L31）
+
+- `FloatViewOwner` 构造不再 `check()`；新增 `FloatViewOwner.isContextAlive(context)`。
+- `FloatViewManager.create()` 对 finishing/destroyed Activity 记 `Log.w` 后直接返回，不创建实例。
+- 主线程检查抽为 `checkFloatViewMainThread()`，`FloatViewManager` 与 `FloatViewImpl` 共用。
+
+### audio（M34、M35、M36、L28、L29）
+
+- `BaseMediaCodecSynchronous`：超时分支增加 `!codecFailed.get()`，drain 内部失败只上报一次。
+- `BaseMediaCodecAsynchronous.mediaCodecCallback.onError`：子类 `onError` 钩子包在
+  `runCatchingPreservingCancellation` 内并在锁内执行；锁外再 `reportCodecFailure(e)`。
+  `OpusDecoder` 删除 `onError` 覆写，仅保留 `notifyCodecFailure` 作为 owner 回调。
+- `AacFilePlayer` / `OpusFilePlayer.finishPlayback`：`reason == ExplicitStop` 时不调用任一回调，
+  清理失败只经 `stop()` 抛给调用方，与 KDoc 一致。
+- `AacFilePlayer.terminalScope` 补 `CoroutineExceptionHandler`。
+- `OpusFilePlayer.awaitNaturalCompletion()` 拆为外层 `try/catch → requestFailure` 与内层
+  `awaitDrainedNaturalEnd()`。
+
+### demo（M39）
+
+- `RecordSingleAppScreenActivity.awaitRecorderRelease()`：`releaseAndJoin()` 以
+  `withTimeoutOrNull(10 s)` 包裹，超时记 `LogContext.log.e` 后仍关闭输出流。
+
+## 11.5 新增回归测试
+
+| 测试 | 证伪对象 |
+|------|---------|
+| `BaseMediaCodecSynchronousTest.failure inside the EOS drain loop is reported exactly once` | M34 |
+| `BaseMediaCodecAsynchronousTest.error callback notifies owner once outside the codec lock` | M35（另起线程探测 `withCodecOperationLock` 可立即获取） |
+| `BaseMediaCodecAsynchronousTest.error hook failure is isolated and still notifies owner` | M35 |
+| `FloatViewLifecycleTest.build on a finishing activity is skipped without throwing` | H12 |
+| `FloatViewLifecycleTest.window already removed by the framework is treated as detached` | §10 遗留：`IllegalArgumentException` 分支无用例 |
+| `ShellUtilTest` 新增 4 条：前导空白、非数字行跳过后继续解析、列数不足、空/空白输入 | §10 遗留覆盖缺口 |
+
+## 11.6 仍未覆盖的验证项
+
+- `AacFilePlayer` / `OpusFilePlayer` 的终态屏障、`errorCallback` 语义、codec EOS 3 秒超时、PCM 水位
+  与"队列满即失败"仍无单测（依赖 `MediaExtractor` / `AudioTrack` / 真实 codec，JVM mock 成本高、
+  可信度低）。M36 的修复目前只靠人工阅读验证。
+- `Screenshot2H26xStrategy` 的 H10 / H11 修复无自动化测试（依赖 EGL 与真实 encoder），需真机验证
+  "录制中快速停止"、"初始化期间退出页面"两条路径，确认不再收到 `onError()` 且进程不崩溃。
+- 本轮所有改动**未在审查环境编译**，`:audio` / `:floatview` / `:lib-common-android` /
+  `:screencapture` / `:demo` 的 `testDebugUnitTest`、`detekt`、`ktlintCheck` 由用户本地执行。

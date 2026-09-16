@@ -134,6 +134,7 @@
 - **floatview 窗口释放**：移除窗口按成功注册状态处理，不再依赖首次 attach 前可能为空的
   `windowToken`；显示失败回滚已添加窗口，清理动画、方向任务与触摸监听器。
   Activity（含包装 Context）创建的窗口在 Activity 销毁时立即释放，包括系统悬浮窗。
+  为 finishing/destroyed Activity 调用 `build()`/`show()` 会记录警告并跳过创建，不抛异常。
   **行为变更**：退场动画期间 tag 保持占用，可用 `remove(true)` 接管释放；相同 tag 须等
   移除完成后再创建。窗口操作限定主线程。跨 Activity 保留的系统悬浮窗应由 Service 管理，
   View 和回调不得保留旧 Activity，并在 Service 结束时显式移除。
@@ -150,14 +151,22 @@
   OPUS 文件生产者在 PCM 队列高水位暂停喂帧，队列仍溢出时明确失败，不再静默丢弃文件音频。
   AAC/OPUS stream player 在 stop 后拒绝迟到 CSD，避免在已释放 AudioTrack 上重建并泄漏 decoder。
   即使 codec 为带 EOS flag 的 output index 返回 null buffer，也会归还 index 并完成 EOS，不再误报超时。
+  同步 codec 在 EOS 排空阶段内部失败时只上报一次，不再叠加一条误导性的超时失败；异步
+  `MediaCodec.Callback.onError` 的子类钩子异常被隔离，owner 通知统一在 codec 锁外进行。
+  `AacFilePlayer`/`OpusFilePlayer` 显式 `stop()` 的清理失败只从 `stop()` 抛出，不再同时触发
+  `errorCallback`；两者的终态协程都带兜底 `CoroutineExceptionHandler`。
   - **行为变更**：空的非 config 输出不再调用 `onOutputData()`；带 payload 的 EOS 会先调用
     `onOutputData()` 再调用 `onEndOfStream()`；`onOutputFormatChanged()` 现在会在同步与异步路径实际触发。
 - **Screenshot H.26x 初始化失败不再崩溃**：EGL config/context/window surface、input Surface 或编码器
   初始化失败时按确定顺序释放部分资源并记录完整异常，再通过 `ScreenDataListener.onError()` 默认错误入口
   上报；失败不会再从裸 IO 协程逃逸为未捕获异常。EGL 创建、逐帧绘制与销毁统一到专用单线程，
   `releaseAndJoin()` 可等待录制循环及 callback handler 完全退出后再关闭输出流，避免 EGL/codec 跨线程释放竞态。
-  Demo 在 Activity 销毁时也会发出停止请求并等待清理。EGL 清理同时兼容未完整初始化的
-  null/no-display 状态。
+  Demo 在 Activity 销毁时也会发出停止请求并等待清理（最长 10 秒，超时记录错误后仍关闭输出流）。
+  EGL 清理同时兼容未完整初始化的 null/no-display 状态。`startRecord()` 与释放请求之间的注册竞态
+  已用同一把锁消除；初始化期间收到的主动停止按取消处理，不再经 `onError()` 误报为失败。
+  `Screenshot2H26xStrategy` 是一次性策略，`onStop()` 与 `onRelease()` 等价，已在 KDoc 标明。
+  Audio Demo 的清理任务带兜底 `CoroutineExceptionHandler`，PCM 输入流在停止时先关闭再中断并等待
+  播放线程退出。
 - **ShellUtil toybox `ps` 兼容性**：进程列表解析会跳过 `USER PID ...` 表头及其他 PID/PPID 非数字行，
   不再因把 `"PID"` 转为整数而抛出 `NumberFormatException`。
 

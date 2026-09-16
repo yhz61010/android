@@ -2113,25 +2113,41 @@ API 与 Gradle 兼容性警告，本轮未扩大范围处理。
 待真机验证：API 21～26 与较新设备的录制、停止、重复进入退出、旋转及前后台切换；驱动初始化
 异常和输出异常时的实际资源释放。本轮未执行设备测试。
 
-### 15.2.1 验证覆盖缺口（重要）
+### 15.2.1 验证覆盖缺口（已补齐并强制重跑确认）
 
-**上面的 `BUILD SUCCESSFUL` 只覆盖 `screencapture` 与 `demo` 的编译，不代表 §14 的改动已全部验证。**
-§14.6 要求的任务集与 §15.2 实际执行的任务集存在差异，以下**至今没有编译或静态检查过**：
+§15.2 的 `BUILD SUCCESSFUL` 只覆盖 `screencapture` 与 `demo` 的编译，比 §14.6 要求的任务集窄，
+以下三组任务当时尚未执行过：
 
-| 未执行的任务 | 涉及的未验证改动 |
-|--------------|------------------|
+| 任务 | 涉及的改动 |
+|------|-----------|
 | `:audio:testDebugUnitTest` | §14.2 P6（`OpusFilePlayer` 零字节写入判失败）、P7（停滞看门狗日志） |
-| `:audio:detekt`、`:audio:ktlintCheck` | 同上；P7 新增的多行日志字符串未过 ktlint |
+| `:audio:detekt`、`:audio:ktlintCheck` | 同上；P7 新增的多行日志字符串 |
 | `:demo:ktlintCheck`、`:demo:detekt` | §14.2 P2/P3 在 `RecordSingleAppScreenActivity` 的改动 |
 
-补齐命令：
+用户于 2026-09-16 在本地执行了这条命令并得到 `BUILD SUCCESSFUL`：
 
 ```bash
 ./gradlew --continue :audio:testDebugUnitTest :audio:detekt :audio:ktlintCheck \
   :demo:ktlintCheck :demo:detekt
 ```
 
-在这三组任务跑通之前，**不应认为本分支已通过 `staticCheck`**。
+该次运行的统计是「120 个任务：1 个执行、8 个取自缓存、111 个 UP-TO-DATE」，主要是复用了此前
+构建的结论。按 CLAUDE.md 的约定，刚修改过的路径不应只依赖 `UP-TO-DATE`，因此又强制重跑了一次：
+
+```bash
+./gradlew --continue --rerun-tasks :audio:testDebugUnitTest :audio:detekt \
+  :audio:ktlintCheck :demo:ktlintCheck :demo:detekt
+```
+
+结果为「120 个任务：全部 120 个执行」，`BUILD SUCCESSFUL`。**至此 §14 与 §15 的全部代码改动
+都已真正完成编译、单元测试与静态检查。**
+
+该次构建有 8 条与本轮改动无关的既有警告：`AudioPlayer`、`AacStreamPlayer`、`OpusStreamPlayer`
+及两个 `EncoderWrapper` 内部仍在调用自身已标注 `@Deprecated` 的非挂起 `stopPlaying()` /
+`release()`，属"AAC/OPUS 播放器改为确定性一次性会话"那轮遗留的欠账，不在 `OpusFilePlayer` 中，
+本轮未处理。
+
+**真机验证仍全部未做**，清单见 §14.6 与 §15.2 末尾——构建通过不等同于真机通过。
 
 ## 15.3 第九轮复核对 §15 的确认与补充
 

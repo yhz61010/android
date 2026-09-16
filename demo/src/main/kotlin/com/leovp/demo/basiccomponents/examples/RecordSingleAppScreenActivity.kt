@@ -105,16 +105,25 @@ class RecordSingleAppScreenActivity :
         // FIXME This does not seem to work. Check below setKeyFrameRate
         recorderSetting.fps = 5f
 
-        openVideoOutput()
         screenProcessor = createRecorder()
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                screenProcessor.startRecord(this)
+                startRecording()
             } else {
                 releaseRecorder(restartable = true)
             }
         }
+    }
+
+    /**
+     * Opens the debug output and starts recording. Opening truncates the file, so it must
+     * happen when a recording starts and never while arming the next session, which would
+     * wipe the recording that just finished.
+     */
+    private fun startRecording() {
+        openVideoOutput()
+        screenProcessor.startRecord(this)
     }
 
     /**
@@ -182,13 +191,12 @@ class RecordSingleAppScreenActivity :
     }
 
     /**
-     * Restores the screen to a recordable state: a fresh output stream over the debug file,
-     * a fresh one-shot recorder and an enabled toggle. Without this the button stays
-     * disabled for the rest of the Activity's life, whether the user stopped the recording
-     * or it failed. Each session overwrites the previous debug capture.
+     * Restores the screen to a recordable state: a fresh one-shot recorder and an enabled
+     * toggle. Without this the button stays disabled for the rest of the Activity's life,
+     * whether the user stopped the recording or it failed. The debug file is left untouched
+     * here and is reopened by [startRecording], which is what truncates it.
      */
     private fun armNextRecording() {
-        openVideoOutput()
         screenProcessor = createRecorder()
         cleanupStarted.set(false)
         binding.toggleBtn.isEnabled = true

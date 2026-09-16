@@ -50,6 +50,7 @@ class RecordSingleAppScreenActivity :
     private val cleanupStarted = AtomicBoolean(false)
     private var videoH26xOsForDebug: BufferedOutputStream? = null
     private lateinit var screenProcessor: Screenshot2H26xStrategy
+    private lateinit var recorderSetting: ScreenShareSetting
 
     private val screenDataListener = object : ScreenDataListener {
         override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
@@ -93,58 +94,75 @@ class RecordSingleAppScreenActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val file = getBaseDirString("output")
-        val dstFile = File(
-            file,
-            "screen" + when (VIDEO_ENCODE_TYPE) {
-                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
-                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
-            }
-        )
-        videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
-        LogContext.log.i(tag, "dstFile=${dstFile.absolutePath}")
-
         val screenInfo = application.screenAvailableResolution
-        val setting = ScreenShareSetting(
+        recorderSetting = ScreenShareSetting(
+            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
             (screenInfo.width * 0.8F / 16).toInt() * 16,
+            // 800 1024 1280
             (screenInfo.height * 0.8F / 16).toInt() * 16,
             densityDpi
         )
         // FIXME This does not seem to work. Check below setKeyFrameRate
-        setting.fps = 5f
+        recorderSetting.fps = 5f
 
-        screenProcessor = ScreenCapture.Builder(
-            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            setting.width,
-            // 800 1024 1280
-            setting.height,
-            setting.dpi,
-            null,
-            ScreenCapture.BY_IMAGE_2_H26X,
-            screenDataListener
-        )
-            .setEncodeType(VIDEO_ENCODE_TYPE)
-            .setFps(setting.fps)
-            .setKeyFrameRate(20)
-            .setQuality(80)
-            .setSampleSize(1)
-            .build() as Screenshot2H26xStrategy
+        openVideoOutput()
+        screenProcessor = createRecorder()
 
         binding.toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 screenProcessor.startRecord(this)
             } else {
-                releaseRecorder()
+                releaseRecorder(restartable = true)
             }
         }
     }
 
+    /**
+     * [Screenshot2H26xStrategy] is one-shot, so every recording session needs its own
+     * recorder. Reusing a released one throws instead of recording.
+     */
+    private fun createRecorder(): Screenshot2H26xStrategy = ScreenCapture.Builder(
+        recorderSetting.width,
+        recorderSetting.height,
+        recorderSetting.dpi,
+        null,
+        ScreenCapture.BY_IMAGE_2_H26X,
+        screenDataListener
+    )
+        .setEncodeType(VIDEO_ENCODE_TYPE)
+        .setFps(recorderSetting.fps)
+        .setKeyFrameRate(20)
+        .setQuality(80)
+        .setSampleSize(1)
+        .build() as Screenshot2H26xStrategy
+
+    private fun openVideoOutput() {
+        val dstFile = File(
+            getBaseDirString("output"),
+            "screen" + when (VIDEO_ENCODE_TYPE) {
+                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
+                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
+            }
+        )
+        LogContext.log.i(tag, "dstFile=${dstFile.absolutePath}")
+        synchronized(outputLock) {
+            videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))
+        }
+    }
+
     override fun onDestroy() {
-        releaseRecorder()
+        releaseRecorder(restartable = false)
         super.onDestroy()
     }
 
-    private fun releaseRecorder() {
+    /**
+     * Tears the current recording session down. The toggle stays disabled until teardown
+     * finishes, because a recorder being released cannot accept a new recording.
+     *
+     * @param restartable true while this screen stays alive, so a fresh session is armed once
+     * teardown completes. False from [onDestroy], where nothing should be rebuilt.
+     */
+    private fun releaseRecorder(restartable: Boolean) {
         if (!cleanupStarted.compareAndSet(false, true)) return
         binding.toggleBtn.isEnabled = false
         lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -159,7 +177,21 @@ class RecordSingleAppScreenActivity :
                     closeVideoOutput()
                 }
             }
+            if (restartable) armNextRecording()
         }
+    }
+
+    /**
+     * Restores the screen to a recordable state: a fresh output stream over the debug file,
+     * a fresh one-shot recorder and an enabled toggle. Without this the button stays
+     * disabled for the rest of the Activity's life, whether the user stopped the recording
+     * or it failed. Each session overwrites the previous debug capture.
+     */
+    private fun armNextRecording() {
+        openVideoOutput()
+        screenProcessor = createRecorder()
+        cleanupStarted.set(false)
+        binding.toggleBtn.isEnabled = true
     }
 
     /**

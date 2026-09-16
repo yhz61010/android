@@ -164,6 +164,10 @@
   `releaseAndJoin()` 可等待录制循环及 callback handler 完全退出后再关闭输出流，避免 EGL/codec 跨线程释放竞态。
   Demo 在 Activity 销毁时也会发出停止请求并等待清理（最长 10 秒，超时记录错误后仍关闭输出流）；
   该超时只结束等待，不能中断阻塞中的原生调用，卡住的录制线程仍会持有其捕获的对象。
+  **修复**：`Record Single App Screen` 停止录制后开关按钮永久禁用。该策略是一次性的，Demo 却
+  只在 `onCreate()` 构建一次录制器和一次输出流，停止（或 `onError()` 自动取消勾选）后没有任何
+  路径恢复可用状态。现在清理完成后会重建录制器与输出流并重新启用按钮，可反复录制；退出页面时
+  不再重建。
   EGL 清理同时兼容未完整初始化的 null/no-display 状态。`startRecord()` 与释放请求之间的注册竞态
   已用同一把锁消除；初始化期间收到的主动停止按取消处理，不再经 `onError()` 误报为失败。
   `Screenshot2H26xStrategy` 是一次性策略，`onStop()` 与 `onRelease()` 等价，已在 KDoc 标明。

@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -52,7 +53,10 @@ class AacFilePlayer(
 ) {
     companion object {
         private const val TAG = "AacFilePlayer"
-        private const val AUDIO_TRACK_DRAIN_TIMEOUT_MS = 3_000L
+        private val AUDIO_TRACK_DRAIN_TIMEOUT = 3.seconds
+
+        /** Poll interval for a drain that has no completion signal of its own. */
+        private val DRAIN_POLL_INTERVAL = 20.milliseconds
     }
 
     private val audioTrackPlayer: AudioTrackPlayer =
@@ -274,9 +278,9 @@ class AacFilePlayer(
     }
 
     private suspend fun awaitAudioTrackDrain() {
-        val drained = withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS.milliseconds) {
+        val drained = withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT) {
             while (unsignedPlaybackHeadPosition() < writtenAudioFrames.get()) {
-                delay(20.milliseconds)
+                delay(DRAIN_POLL_INTERVAL)
             }
             true
         } ?: false

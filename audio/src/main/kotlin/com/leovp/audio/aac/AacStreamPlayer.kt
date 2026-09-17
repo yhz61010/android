@@ -14,7 +14,7 @@ import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,7 +31,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
         private const val AUDIO_DATA_QUEUE_CAPACITY = 10
         private const val RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES = 3
         private const val AUDIO_INIT_LATENCY_IN_MS = 1200
-        private const val REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS: Long = 5000
+        private val REASSIGN_LATENCY_TIME_THRESHOLD = 5.seconds
         private const val AUDIO_ALLOW_LATENCY_LIMIT_IN_MS = 500
     }
 
@@ -139,7 +139,7 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
             csd0 = newCsd0
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
             ioScope.launch {
-                delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS.milliseconds)
+                delay(REASSIGN_LATENCY_TIME_THRESHOLD)
                 synchronized(lock) {
                     if (capturedGeneration == generation) {
                         audioLatencyThresholdInMs = AUDIO_ALLOW_LATENCY_LIMIT_IN_MS

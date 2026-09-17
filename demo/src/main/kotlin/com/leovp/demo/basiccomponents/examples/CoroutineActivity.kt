@@ -65,16 +65,16 @@ class CoroutineActivity :
         }
         cs.launch { fetchTwoDocs() }
         cs.launch {
-            withTimeout(1300L.milliseconds) {
+            withTimeout(1300.milliseconds) {
                 repeat(1000) { i ->
                     LogContext.log.e(ITAG, "I'm sleeping $i ...")
-                    delay(500L.milliseconds)
+                    delay(500.milliseconds)
                 }
             }
         }
         cs.launch {
             val time = measureTimeMillis {
-                delay(987L.milliseconds)
+                delay(987.milliseconds)
             }
             LogContext.log.e(ITAG, "measureTimeMillis cost=$time")
         }

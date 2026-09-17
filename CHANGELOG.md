@@ -57,6 +57,11 @@
 
 ### 变更 (Changed)
 
+- **audio 模块的超时与轮询常量改为 `kotlin.time.Duration`**:`OpusFilePlayer`、`AacFilePlayer`、
+  `AacStreamPlayer`、`OpusStreamPlayer`、`BaseMediaCodecSynchronous` 的内部延时常量由裸 `Long`
+  毫秒改为 `Duration`,单位不再同时编码在常量名与调用点转换里。均为 `private`,对外无影响;
+  `BaseMediaCodecSynchronous.eosDrainTimeoutMs`(`protected open val`)仍为 `Long`,未改动。
+
 - **BaseMediaCodec 改为一次性会话**：同一个 AAC/OPUS encoder/decoder 包装器只能调用一次 `start()`；
   结束后必须创建新实例，不再支持 `stop() -> start()` 复用。基类删除公开 `stop()`，新增
   `NEW -> STARTING -> RUNNING -> RELEASING -> RELEASED` 生命周期，重复启动、释放后启动和启动失败后

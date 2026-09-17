@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         private const val AUDIO_DATA_QUEUE_CAPACITY = 64
         private const val RESYNC_AUDIO_AFTER_DROP_FRAME_TIMES = 3
         private const val AUDIO_INIT_LATENCY_IN_MS = 1200
-        private const val REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS: Long = 5000
+        private val REASSIGN_LATENCY_TIME_THRESHOLD = 5.seconds
         private const val AUDIO_ALLOW_LATENCY_LIMIT_IN_MS = 500
     }
 
@@ -132,7 +132,7 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             playStartTimeInUs = SystemClock.elapsedRealtimeNanos() / 1000
             ioScope.launch { consumeDecodedPcm() }
             ioScope.launch {
-                delay(REASSIGN_LATENCY_TIME_THRESHOLD_IN_MS.milliseconds)
+                delay(REASSIGN_LATENCY_TIME_THRESHOLD)
                 synchronized(lock) {
                     if (capturedGeneration == generation) {
                         audioLatencyThresholdInMs = AUDIO_ALLOW_LATENCY_LIMIT_IN_MS

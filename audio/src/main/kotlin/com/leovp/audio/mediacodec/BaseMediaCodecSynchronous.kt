@@ -28,7 +28,7 @@ abstract class BaseMediaCodecSynchronous(
     companion object {
         private const val TAG = "MediaCodecSync"
         private const val EOS_OUTPUT_TIMEOUT_US = 10_000L
-        private const val EOS_RETRY_DELAY_MS = 1L
+        private val EOS_RETRY_DELAY = 1.milliseconds
         private const val DEFAULT_EOS_DRAIN_TIMEOUT_MS = 3_000L
     }
 
@@ -57,7 +57,7 @@ abstract class BaseMediaCodecSynchronous(
                     while (!outputEosReceived) {
                         ensureActive()
                         if (!process()) return@withTimeoutOrNull outputEosReceived
-                        delay(EOS_RETRY_DELAY_MS.milliseconds)
+                        delay(EOS_RETRY_DELAY)
                     }
                     true
                 } ?: false

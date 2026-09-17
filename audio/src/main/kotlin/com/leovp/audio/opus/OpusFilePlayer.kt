@@ -21,7 +21,9 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
@@ -58,15 +60,18 @@ class OpusFilePlayer(
     companion object {
         private const val TAG = "OpusFilePlayer"
         private const val DECODED_QUEUE_CAPACITY = 64
-        private const val OUTPUT_DRAIN_TIMEOUT_MS = 3_000L
-        private const val AUDIO_TRACK_DRAIN_TIMEOUT_MS = 3_000L
+        private val OUTPUT_DRAIN_TIMEOUT = 3.seconds
+        private val AUDIO_TRACK_DRAIN_TIMEOUT = 3.seconds
         private const val QUEUE_LOG_INTERVAL_FRAMES = 50L
-        private const val INPUT_RETRY_DELAY_MS = 5L
-        private const val CODEC_EOS_TIMEOUT_MS = 3_000L
+        private val INPUT_RETRY_DELAY = 5.milliseconds
+        private val CODEC_EOS_TIMEOUT = 3.seconds
+
+        /** Poll interval for drains that have no completion signal of their own. */
+        private val DRAIN_POLL_INTERVAL = 20.milliseconds
 
         /** Poll interval and no-progress budget for the pre-input-EOS stall detector. */
-        private const val INPUT_STALL_POLL_MS = 100L
-        private const val INPUT_STALL_TIMEOUT_MS = 5_000L
+        private val INPUT_STALL_POLL = 100.milliseconds
+        private val INPUT_STALL_TIMEOUT = 5.seconds
         private const val PCM_QUEUE_HIGH_WATERMARK = 48
         private const val PCM_QUEUE_LOW_WATERMARK = 32
         const val START_CODE = "|leo|"
@@ -276,7 +281,7 @@ class OpusFilePlayer(
         if (queue.size < PCM_QUEUE_HIGH_WATERMARK) return
         while (queue.size > PCM_QUEUE_LOW_WATERMARK) {
             currentCoroutineContext().ensureActive()
-            delay(INPUT_RETRY_DELAY_MS.milliseconds)
+            delay(INPUT_RETRY_DELAY)
         }
     }
 
@@ -284,7 +289,7 @@ class OpusFilePlayer(
         while (!decoder.decode(data)) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder is not accepting input" }
-            delay(INPUT_RETRY_DELAY_MS.milliseconds)
+            delay(INPUT_RETRY_DELAY)
         }
     }
 
@@ -292,7 +297,7 @@ class OpusFilePlayer(
         while (!decoder.signalEndOfStream()) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder stopped before accepting EOS" }
-            delay(INPUT_RETRY_DELAY_MS.milliseconds)
+            delay(INPUT_RETRY_DELAY)
         }
     }
 
@@ -339,28 +344,28 @@ class OpusFilePlayer(
     private suspend fun awaitDrainedNaturalEnd() {
         // The codec EOS timeout must only start once the input EOS has actually been
         // submitted. Measuring it from playback start would abort every file whose audio is
-        // longer than CODEC_EOS_TIMEOUT_MS while it is still being read and decoded normally.
+        // longer than CODEC_EOS_TIMEOUT while it is still being read and decoded normally.
         // A producer that dies is covered by teardown cancelling this job, but one that is alive
         // and simply stuck would hang here forever, so the wait is bounded by lack of progress
         // rather than by elapsed time.
         awaitInputEosWithStallDetection()
-        val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT_MS) {
+        val receivedCodecEos = withTimeoutOrNull(CODEC_EOS_TIMEOUT) {
             codecEos.await()
             true
         } ?: false
         if (!receivedCodecEos) {
             val message =
-                "Timed out waiting for OPUS codec EOS ${CODEC_EOS_TIMEOUT_MS}ms after input EOS"
+                "Timed out waiting for OPUS codec EOS $CODEC_EOS_TIMEOUT after input EOS"
             requestFailure(
                 TimeoutException(message)
             )
             return
         }
-        val softwareDrained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT_MS.milliseconds) {
+        val softwareDrained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT) {
             while (
                 queue.isNotEmpty() || consumedPcmCount.get() < queuedPcmCount.get()
             ) {
-                delay(20.milliseconds)
+                delay(DRAIN_POLL_INTERVAL)
             }
             true
         } ?: false
@@ -401,17 +406,17 @@ class OpusFilePlayer(
         // Either end of the pipeline making headway counts, so a slow first frame or a silent
         // stretch is not mistaken for a wedge.
         var lastProgress = queuedPcmCount.get() + consumedPcmCount.get()
-        var stalledForMs = 0L
+        var stalledFor = Duration.ZERO
         while (!inputEosSubmitted.isCompleted) {
-            delay(INPUT_STALL_POLL_MS.milliseconds)
+            delay(INPUT_STALL_POLL)
             val progress = queuedPcmCount.get() + consumedPcmCount.get()
             if (progress != lastProgress) {
                 lastProgress = progress
-                stalledForMs = 0
+                stalledFor = Duration.ZERO
                 continue
             }
-            stalledForMs += INPUT_STALL_POLL_MS
-            if (stalledForMs >= INPUT_STALL_TIMEOUT_MS) {
+            stalledFor += INPUT_STALL_POLL
+            if (stalledFor >= INPUT_STALL_TIMEOUT) {
                 // Logged here rather than left to the terminal path: requestFailure() returns
                 // silently once teardown has started, so this can otherwise be the one failure
                 // that ends a session without leaving a trace of why.
@@ -422,7 +427,7 @@ class OpusFilePlayer(
                 )
                 requestFailure(
                     TimeoutException(
-                        "OPUS playback made no progress for ${INPUT_STALL_TIMEOUT_MS}ms " +
+                        "OPUS playback made no progress for $INPUT_STALL_TIMEOUT " +
                             "while waiting for input EOS"
                     )
                 )
@@ -436,9 +441,9 @@ class OpusFilePlayer(
     }
 
     private suspend fun awaitAudioTrackDrain(): Boolean =
-        withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS.milliseconds) {
+        withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT) {
             while (unsignedPlaybackHeadPosition() < writtenAudioFrames.get()) {
-                delay(20.milliseconds)
+                delay(DRAIN_POLL_INTERVAL)
             }
             true
         } ?: false

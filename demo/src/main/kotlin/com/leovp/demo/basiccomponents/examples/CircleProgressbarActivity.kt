@@ -13,6 +13,7 @@ import com.leovp.demo.base.BaseDemonstrationActivity
 import com.leovp.demo.databinding.ActivityCircleProgressbarBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -37,7 +38,7 @@ class CircleProgressbarActivity :
             binding.vDownload.setDeterminate()
             lifecycleScope.launch {
                 for (prog in 0..100) {
-                    delay(50)
+                    delay(50.milliseconds)
                     binding.vDownload.currentProgress = prog
                 }
                 binding.vDownload.setFinish()
@@ -50,7 +51,7 @@ class CircleProgressbarActivity :
             binding.vUpload.setDeterminate()
             lifecycleScope.launch {
                 for (prog in 0..100) {
-                    delay(20)
+                    delay(20.milliseconds)
                     binding.vUpload.currentProgress = prog
                 }
                 binding.vUpload.setError()

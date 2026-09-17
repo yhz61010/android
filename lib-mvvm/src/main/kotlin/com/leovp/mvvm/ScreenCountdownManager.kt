@@ -4,6 +4,7 @@ package com.leovp.mvvm
 
 import com.leovp.log.base.i
 import com.leovp.log.base.userOp
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -118,7 +119,7 @@ class ScreenCountdownManager(
             }
 
             while (remaining > 0) {
-                delay(1000)
+                delay(1000.milliseconds)
                 remaining -= 1000
                 // d(tag) { "-----> Screen countdown remaining=${remaining.div(1000)}s" }
 

@@ -7,6 +7,7 @@ import android.media.MediaCodec
 import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -52,11 +53,11 @@ abstract class BaseMediaCodecSynchronous(
                 if (!process()) break
             }
             if (!codecFailed.get() && inputEosQueued && !outputEosReceived) {
-                val receivedEos = withTimeoutOrNull(eosDrainTimeoutMs) {
+                val receivedEos = withTimeoutOrNull(eosDrainTimeoutMs.milliseconds) {
                     while (!outputEosReceived) {
                         ensureActive()
                         if (!process()) return@withTimeoutOrNull outputEosReceived
-                        delay(EOS_RETRY_DELAY_MS)
+                        delay(EOS_RETRY_DELAY_MS.milliseconds)
                     }
                     true
                 } ?: false

@@ -21,6 +21,7 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
@@ -250,7 +251,7 @@ class OpusFilePlayer(
                             "maxFrameSize=$maxFrameSize frame=$frame"
                     )
                 }
-                delay(delayMs)
+                delay(delayMs.milliseconds)
                 startCodeBeginPos = payload.nextStartCodePosition ?: break
             }
             signalEndOfStreamWithBackpressure(playbackDecoder)
@@ -275,7 +276,7 @@ class OpusFilePlayer(
         if (queue.size < PCM_QUEUE_HIGH_WATERMARK) return
         while (queue.size > PCM_QUEUE_LOW_WATERMARK) {
             currentCoroutineContext().ensureActive()
-            delay(INPUT_RETRY_DELAY_MS)
+            delay(INPUT_RETRY_DELAY_MS.milliseconds)
         }
     }
 
@@ -283,7 +284,7 @@ class OpusFilePlayer(
         while (!decoder.decode(data)) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder is not accepting input" }
-            delay(INPUT_RETRY_DELAY_MS)
+            delay(INPUT_RETRY_DELAY_MS.milliseconds)
         }
     }
 
@@ -291,7 +292,7 @@ class OpusFilePlayer(
         while (!decoder.signalEndOfStream()) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder stopped before accepting EOS" }
-            delay(INPUT_RETRY_DELAY_MS)
+            delay(INPUT_RETRY_DELAY_MS.milliseconds)
         }
     }
 
@@ -355,11 +356,11 @@ class OpusFilePlayer(
             )
             return
         }
-        val softwareDrained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT_MS) {
+        val softwareDrained = withTimeoutOrNull(OUTPUT_DRAIN_TIMEOUT_MS.milliseconds) {
             while (
                 queue.isNotEmpty() || consumedPcmCount.get() < queuedPcmCount.get()
             ) {
-                delay(20)
+                delay(20.milliseconds)
             }
             true
         } ?: false
@@ -402,7 +403,7 @@ class OpusFilePlayer(
         var lastProgress = queuedPcmCount.get() + consumedPcmCount.get()
         var stalledForMs = 0L
         while (!inputEosSubmitted.isCompleted) {
-            delay(INPUT_STALL_POLL_MS)
+            delay(INPUT_STALL_POLL_MS.milliseconds)
             val progress = queuedPcmCount.get() + consumedPcmCount.get()
             if (progress != lastProgress) {
                 lastProgress = progress
@@ -435,8 +436,10 @@ class OpusFilePlayer(
     }
 
     private suspend fun awaitAudioTrackDrain(): Boolean =
-        withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS) {
-            while (unsignedPlaybackHeadPosition() < writtenAudioFrames.get()) delay(20)
+        withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS.milliseconds) {
+            while (unsignedPlaybackHeadPosition() < writtenAudioFrames.get()) {
+                delay(20.milliseconds)
+            }
             true
         } ?: false
 

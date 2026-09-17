@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,7 +52,7 @@ fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit
                 isClickable = false
                 currentOnClick()
                 scope.launch {
-                    delay(currentDebounceTime)
+                    delay(currentDebounceTime.milliseconds)
                     isClickable = true
                 }
             }
@@ -128,7 +129,7 @@ fun DebounceButton(
                 isClickable = false
                 onClick()
                 scope.launch {
-                    delay(debounceTime)
+                    delay(debounceTime.milliseconds)
                     isClickable = true
                 }
             }

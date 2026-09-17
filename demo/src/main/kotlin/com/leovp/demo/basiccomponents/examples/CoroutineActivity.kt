@@ -8,6 +8,7 @@ import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
 import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,16 +65,16 @@ class CoroutineActivity :
         }
         cs.launch { fetchTwoDocs() }
         cs.launch {
-            withTimeout(1300L) {
+            withTimeout(1300L.milliseconds) {
                 repeat(1000) { i ->
                     LogContext.log.e(ITAG, "I'm sleeping $i ...")
-                    delay(500L)
+                    delay(500L.milliseconds)
                 }
             }
         }
         cs.launch {
             val time = measureTimeMillis {
-                delay(987L)
+                delay(987L.milliseconds)
             }
             LogContext.log.e(ITAG, "measureTimeMillis cost=$time")
         }
@@ -146,7 +147,7 @@ class CoroutineActivity :
         // 在示例中启动了 10 个协程，且每个都工作了不同的时长
         repeat(10) { i ->
             mainScope.launch {
-                delay((i + 1) * 200L) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
+                delay(((i + 1) * 200L).milliseconds) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
                 LogContext.log.e(ITAG, "Coroutine $i is done|${Thread.currentThread().name}")
             }
         }
@@ -154,12 +155,12 @@ class CoroutineActivity :
 
     private suspend fun coroutineName() = coroutineScope {
         val v1 = async(CoroutineName("v1coroutine")) {
-            delay(500)
+            delay(500.milliseconds)
             LogContext.log.e(ITAG, "Computing v1 | ${Thread.currentThread().name}")
             252
         }
         val v2 = async(CoroutineName("v2coroutine")) {
-            delay(1000)
+            delay(1000.milliseconds)
             LogContext.log.e(ITAG, "Computing v2 | ${Thread.currentThread().name}")
             6
         }
@@ -205,13 +206,13 @@ class CoroutineActivity :
 
     // look at this in the next section
     suspend fun get(url: String) = withContext(Dispatchers.IO) {
-        delay(2000)
+        delay(2000.milliseconds)
         "Model get/BookName[$url]-Thread[${Thread.currentThread().name}]"
     }
 
     // look at this in the next section
     suspend fun post(url: String) = withContext(Dispatchers.IO) {
-        delay(2000)
+        delay(2000.milliseconds)
         "Model post/BookName[$url]-Thread[${Thread.currentThread().name}]"
     }
 }

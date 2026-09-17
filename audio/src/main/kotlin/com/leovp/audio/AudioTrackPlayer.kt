@@ -16,6 +16,7 @@ import android.media.AudioTrack.PLAYSTATE_STOPPED
 import android.media.AudioTrack.STATE_INITIALIZED
 import android.media.AudioTrack.STATE_UNINITIALIZED
 import android.media.AudioTrack.getMinBufferSize
+import android.os.Build
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.bytes.toShortArrayLE
 import com.leovp.log.LogContext
@@ -89,6 +90,25 @@ class AudioTrackPlayer(
         // ctx.useBuildInSpeaker(true)
     }
 
+    // DIAGNOSTIC: earpiece-vs-speaker routing investigation. Remove once settled.
+    private var routeLogged = false
+
+    // DIAGNOSTIC: remove together with routeLogged and its call sites.
+    private fun logRouting(where: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val routed = audioTrack.routedDevice
+        val outputs = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+            .joinToString(",") { it.type.toString() }
+        LogContext.log.w(
+            TAG,
+            "ROUTE[$where] device=${routed?.type} name=${routed?.productName} " +
+                "mode=${audioManager.mode} " +
+                "musicVol=${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/" +
+                "${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)} " +
+                "outputs=[$outputs]"
+        )
+    }
+
     val playState: Int get() = audioTrack.playState
 
     val state: Int get() = audioTrack.state
@@ -99,6 +119,9 @@ class AudioTrackPlayer(
         if (STATE_INITIALIZED == audioTrack.state) {
             LogContext.log.i(TAG, "AudioTrack start playing...")
             audioTrack.play()
+            if (BuildConfig.DEBUG) {
+                logRouting("play")
+            }
         } else {
             LogContext.log.w(TAG, "AudioTrack state is not STATE_INITIALIZED")
         }
@@ -125,6 +148,10 @@ class AudioTrackPlayer(
                 if (wroteSize < 0) {
                     LogContext.log.e(TAG, "AudioTrack.write error=$wroteSize")
                     return@runCatchingPreservingCancellation wroteSize
+                }
+                if (BuildConfig.DEBUG && !routeLogged) {
+                    routeLogged = true
+                    logRouting("first-write")
                 }
                 if (BuildConfig.DEBUG) {
                     LogContext.log.d(TAG, "PCM[${pcmBytes.size}] Play[${wroteSize * 2}]")

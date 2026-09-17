@@ -23,6 +23,7 @@ import com.leovp.demo.basiccomponents.examples.audio.sender.AudioSender
 import com.leovp.demo.databinding.ActivityAudioBinding
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
+import com.leovp.log.base.d
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
@@ -96,6 +97,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        d(TAG) { "pcmFile=$pcmFile" }
+        d(TAG) { "aacFile=$aacFile" }
+        d(TAG) { "opusFile=$opusFile" }
 
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())

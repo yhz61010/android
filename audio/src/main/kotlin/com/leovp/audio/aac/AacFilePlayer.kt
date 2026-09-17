@@ -17,6 +17,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -273,9 +274,9 @@ class AacFilePlayer(
     }
 
     private suspend fun awaitAudioTrackDrain() {
-        val drained = withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS) {
+        val drained = withTimeoutOrNull(AUDIO_TRACK_DRAIN_TIMEOUT_MS.milliseconds) {
             while (unsignedPlaybackHeadPosition() < writtenAudioFrames.get()) {
-                delay(20)
+                delay(20.milliseconds)
             }
             true
         } ?: false

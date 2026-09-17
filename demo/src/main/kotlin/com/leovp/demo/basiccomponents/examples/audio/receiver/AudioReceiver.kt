@@ -14,6 +14,7 @@ import com.leovp.demo.basiccomponents.examples.audio.receiver.base.AudioReceiver
 import com.leovp.log.LogContext
 import io.netty.channel.Channel
 import java.util.concurrent.ArrayBlockingQueue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -139,7 +140,7 @@ class AudioReceiver {
                         recAudioQueue.poll()?.let {
                             receiverHandler?.sendAudioToClient(clientChannel!!, it)
                         }
-                        delay(10)
+                        delay(10.milliseconds)
                     }.onFailure { it.printStackTrace() }
                 }
             }
@@ -151,7 +152,7 @@ class AudioReceiver {
                 while (true) {
                     ensureActive()
                     receiveAudioQueue.poll()?.let { audioPlayer?.play(it) }
-                    delay(10)
+                    delay(10.milliseconds)
                 }
             }
         }

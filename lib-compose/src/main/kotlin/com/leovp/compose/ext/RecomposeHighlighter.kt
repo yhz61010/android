@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.unit.dp
 import java.util.Objects
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -109,7 +110,7 @@ private class RecomposeHighlighterModifier :
 
         timerJob?.cancel()
         timerJob = coroutineScope.launch {
-            delay(3000)
+            delay(3000.milliseconds)
             totalCompositions = 0
             invalidateDraw()
         }

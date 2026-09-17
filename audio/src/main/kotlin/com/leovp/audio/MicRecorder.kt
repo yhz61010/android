@@ -37,6 +37,54 @@ import kotlinx.coroutines.withContext
  * <uses-permission android:name="android.permission.RECORD_AUDIO" />
  * ```
  *
+ * ## Choosing [audioSource] and [enableAdvancedFeatures]
+ *
+ * These two travel together. The effects behind [enableAdvancedFeatures] exist to serve the
+ * platform VoIP capture path; switching them on over a raw microphone session buys nothing and
+ * still removes signal.
+ *
+ * | Scenario | audioSource | enableAdvancedFeatures |
+ * |---|---|---|
+ * | Record now, play back later (file, upload) | `MIC` *(default)* | `false` *(default)* |
+ * | Voice memo, speech recognition, level metering | `MIC` | `false` |
+ * | Two-way live voice: both ends capture **and** play | `VOICE_COMMUNICATION` | `true` |
+ * | One-way live stream, this device never plays the far end | `MIC` | `false` |
+ * | Audio track of a video recording | `CAMCORDER` | `false` |
+ *
+ * ### Why MIC is the default
+ *
+ * [MediaRecorder.AudioSource.MIC] delivers the microphone at its raw level and full dynamic
+ * range, which is what anything stored, encoded or measured needs.
+ *
+ * [MediaRecorder.AudioSource.VOICE_COMMUNICATION] routes through the platform telephony/VoIP
+ * chain instead. That chain earns its keep in a live two-way call - it gives the echo canceller
+ * a reference against this device's own playback - but it is a poor recorder. Measured on a
+ * Xiaomi Mi 10 / Android 13 against a capture made through it:
+ *
+ * - **Level**: peak -18.9 dBFS, RMS -38.1 dBFS, roughly 22 dB below ordinary media. Played back
+ *   with the system media volume at maximum it still sounds obviously quiet.
+ * - **Channels**: mono only. Asking for `CHANNEL_IN_STEREO` yields two bit-identical channels,
+ *   so the encoder spends its whole bitrate coding the same signal twice.
+ * - **Noise floor**: the suppressor gates the background to digital silence.
+ *
+ * ### What enableAdvancedFeatures actually turns on
+ *
+ * `AcousticEchoCanceler`, `AutomaticGainControl` and `NoiseSuppressor`, attached to this
+ * session. They are worth their cost only when the far end's audio leaves this device's speaker
+ * and leaks back into this microphone - that is, in a genuine full-duplex loop. Outside such a
+ * loop they only subtract: AGC flattens dynamics, the suppressor removes anything it judges to
+ * be background, and the canceller has no reference signal to work against.
+ *
+ * Rule of thumb: if the far end can hear its own voice coming back, the fix is
+ * [MediaRecorder.AudioSource.VOICE_COMMUNICATION] together with `enableAdvancedFeatures = true`
+ * here - not a change somewhere downstream.
+ *
+ * @param audioSource Capture source. See the table above. Defaults to
+ *   [MediaRecorder.AudioSource.MIC].
+ * @param enableAdvancedFeatures Whether to attach the acoustic echo canceller, automatic gain
+ *   control and noise suppressor to this capture session. Defaults to `false`; turn it on
+ *   together with [MediaRecorder.AudioSource.VOICE_COMMUNICATION].
+ *
  * Author: Michael Leo
  * Date: 20-8-20 下午3:51
  */
@@ -45,7 +93,8 @@ class MicRecorder(
     encoderInfo: AudioEncoderInfo,
     val callback: RecordCallback,
     type: AudioType = AudioType.PCM,
-    audioSource: Int = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+    audioSource: Int = MediaRecorder.AudioSource.MIC,
+    enableAdvancedFeatures: Boolean = false,
     recordMinBufferRatio: Int = 1,
 ) {
     companion object {
@@ -108,7 +157,6 @@ class MicRecorder(
         // MediaRecorder.AudioSource.MIC
         // MediaRecorder.AudioSource.VOICE_COMMUNICATION
         // MediaRecorder.AudioSource.CAMCORDER
-        // MediaRecorder.AudioSource.VOICE_COMMUNICATION
         audioRecord = AudioRecord(
             audioSource,
             encoderInfo.sampleRate,
@@ -117,7 +165,7 @@ class MicRecorder(
             bufferSizeInBytes
         )
         // https://blog.csdn.net/lavender1626/article/details/80394253
-        initAdvancedFeatures()
+        if (enableAdvancedFeatures) initAdvancedFeatures()
     }
 
     fun startRecord() {

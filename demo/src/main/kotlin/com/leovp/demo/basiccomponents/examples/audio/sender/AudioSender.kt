@@ -2,6 +2,7 @@ package com.leovp.demo.basiccomponents.examples.audio.sender
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.media.MediaRecorder
 import com.leovp.android.exts.toast
 import com.leovp.audio.AudioPlayer
 import com.leovp.audio.MicRecorder
@@ -105,7 +106,12 @@ class AudioSender {
                 override fun onStop(stopResult: Boolean) {
                 }
             },
-            defaultAudioType
+            defaultAudioType,
+            // Two-way voice: keep the VoIP capture chain. The library default
+            // (MIC, no effects) is meant for record-to-file playback, and using it
+            // here would let the far end hear its own echo.
+            audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            enableAdvancedFeatures = true
         ).apply { startRecord() }
     }
 

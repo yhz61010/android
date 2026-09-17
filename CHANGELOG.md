@@ -57,6 +57,18 @@
 
 ### 变更 (Changed)
 
+- **`MicRecorder` 采集默认值改为原始麦克风**:`audioSource` 默认值由
+  `MediaRecorder.AudioSource.VOICE_COMMUNICATION` 改为 `MediaRecorder.AudioSource.MIC`;新增
+  `enableAdvancedFeatures: Boolean = false` 参数,用于控制是否挂载回声消除 / 自动增益 / 降噪。
+  - **破坏性变更**:此前所有调用方都隐式走平台 VoIP 采集链。该链把电平归一到通话语音档位,
+    实测录出的素材峰值 −18.9 dBFS、RMS −38.1 dBFS,比正常媒体低约 22 dB,回放时即使系统媒体
+    音量顶格听感仍明显偏小;并且它只提供单声道,请求立体声时两个声道内容完全相同。改为 MIC
+    后录制电平恢复正常,三个音效不再默认挂载。
+  - **双向语音调用方需显式回切**:实时语音场景(本仓库的 `AudioSender` / `AudioReceiver`)应显式传
+    `audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION` 与 `enableAdvancedFeatures = true`,
+    否则对端会听到自己的回声。
+  - **参数顺序变化**:`enableAdvancedFeatures` 插在 `audioSource` 与 `recordMinBufferRatio` 之间,
+    按位置传入 `recordMinBufferRatio` 的下游代码会编译失败(类型不匹配),需改为具名参数。
 - **audio 模块的超时与轮询常量改为 `kotlin.time.Duration`**:`OpusFilePlayer`、`AacFilePlayer`、
   `AacStreamPlayer`、`OpusStreamPlayer`、`BaseMediaCodecSynchronous` 的内部延时常量由裸 `Long`
   毫秒改为 `Duration`,单位不再同时编码在常量名与调用点转换里。均为 `private`,对外无影响;

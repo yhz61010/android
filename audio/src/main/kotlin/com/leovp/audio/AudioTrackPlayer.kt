@@ -90,10 +90,57 @@ class AudioTrackPlayer(
         // ctx.useBuildInSpeaker(true)
     }
 
-    // DIAGNOSTIC: earpiece-vs-speaker routing investigation. Remove once settled.
+    /** Guards the post-write route snapshot so it is taken once per player instance. */
     private var routeLogged = false
 
-    // DIAGNOSTIC: remove together with routeLogged and its call sites.
+    /**
+     * Debug-only snapshot of what the platform actually did with this track: the output device
+     * it chose, the AudioManager mode and the media volume step.
+     *
+     * Routing is decided by the audio policy, not by us, so none of it can be inferred from the
+     * app side. Without this, a device playing through the earpiece, a device left in
+     * MODE_IN_COMMUNICATION by another app, a media volume sitting at 20%, and a genuine routing
+     * bug all look identical from here.
+     *
+     * `AudioTrack.getRoutedDevice()` returns null until data actually flows, so this is called
+     * both after play() and after the first successful write.
+     *
+     * ### Reading the output
+     *
+     * ```
+     * ROUTE[first-write] device=2 name=Mi 10 mode=0 musicVol=150/150 outputs=[1,2,18]
+     * ```
+     *
+     * `device` is the `AudioDeviceInfo` type the policy actually chose; `outputs` lists every
+     * output the platform currently knows about, in the same encoding. A null `device` means
+     * routing is not established yet. Types seen on phones:
+     *
+     * | Value | AudioDeviceInfo | Meaning |
+     * |---|---|---|
+     * | `1` | `TYPE_BUILTIN_EARPIECE` | Earpiece. For media playback this is a real bug. |
+     * | `2` | `TYPE_BUILTIN_SPEAKER` | Loudspeaker. Covers both transducers on stereo phones. |
+     * | `3` / `4` | `TYPE_WIRED_HEADSET` / `_HEADPHONES` | With and without a microphone. |
+     * | `7` | `TYPE_BLUETOOTH_SCO` | Bluetooth call path: mono, narrow band. |
+     * | `8` | `TYPE_BLUETOOTH_A2DP` | Bluetooth media path. |
+     * | `9` | `TYPE_HDMI` | External display or AV receiver. |
+     * | `11` / `22` | `TYPE_USB_DEVICE` / `TYPE_USB_HEADSET` | USB audio. |
+     * | `18` | `TYPE_TELEPHONY` | Modem voice path. Normal to see listed, never as `device`. |
+     * | `24` | `TYPE_BUILTIN_SPEAKER_SAFE` | Level-limited speaker (API 30+). |
+     *
+     * `mode` is [AudioManager.getMode]. Anything other than `0` means some app has put the
+     * device into a call state, which changes routing for everyone:
+     *
+     * | Value | AudioManager | Meaning |
+     * |---|---|---|
+     * | `0` | `MODE_NORMAL` | Normal. The only expected value for media playback. |
+     * | `1` | `MODE_RINGTONE` | Incoming call ringing. |
+     * | `2` | `MODE_IN_CALL` | Telephony call in progress. |
+     * | `3` | `MODE_IN_COMMUNICATION` | VoIP call. A leaked one sends media to the earpiece. |
+     *
+     * `musicVol` is `current/max` for `STREAM_MUSIC`. **The scale is device specific**: AOSP
+     * usually reports 15 steps, MIUI 150. Compare the two numbers, never the left one alone -
+     * `30/150` is 20% and quiet, not a healthy level.
+     */
     private fun logRouting(where: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         val routed = audioTrack.routedDevice

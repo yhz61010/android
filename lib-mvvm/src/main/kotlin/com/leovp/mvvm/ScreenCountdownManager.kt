@@ -4,6 +4,7 @@ package com.leovp.mvvm
 
 import com.leovp.log.base.i
 import com.leovp.log.base.userOp
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -109,6 +110,23 @@ class ScreenCountdownManager(
         }
     }
 
+    /** Milliseconds of monotonic time since [originNanos]. */
+    private fun elapsedMillisSince(originNanos: Long): Long =
+        (System.nanoTime() - originNanos) / 1_000_000L
+
+    /**
+     * What is left of the countdown, rounded up to a whole tick.
+     *
+     * Rounding up keeps the exposed value stepping 60000, 59000, 58000 the way the old counter
+     * did. Reporting the raw remainder would hand the UI 59997 one tick in, and a caller
+     * dividing by 1000 would show a second less than it should.
+     */
+    private fun remainingMillisAt(startedAtNanos: Long): Long {
+        val tickMillis = TICK_INTERVAL.inWholeMilliseconds
+        val raw = (countdownDurationMillis - elapsedMillisSince(startedAtNanos)).coerceAtLeast(0L)
+        return (raw + tickMillis - 1) / tickMillis * tickMillis
+    }
+
     private fun startCountdown() {
         i(tag) { "=====> startCountdown() <=====" }
         stopCountdown()
@@ -123,19 +141,37 @@ class ScreenCountdownManager(
                 )
             }
 
+            // Both the deadline and the tick boundaries come from a monotonic clock. Subtracting
+            // a flat TICK_INTERVAL from a counter assumed each pass through this loop took
+            // exactly that long, but the state update and the (suspending) effect emit below
+            // cost time on top of the delay, and nothing ever gave it back. The countdown
+            // finished progressively later than its own duration, and the value handed to the
+            // UI drifted away from the wall clock with it.
+            val startedAtNanos = System.nanoTime()
+            val tickMillis = TICK_INTERVAL.inWholeMilliseconds
+            var nextTickAtMillis = 0L
+            var warningEmitted = false
+
             while (remaining > 0) {
-                delay(TICK_INTERVAL)
-                remaining -= TICK_INTERVAL.inWholeMilliseconds
+                nextTickAtMillis += tickMillis
+                val waitMillis = nextTickAtMillis - elapsedMillisSince(startedAtNanos)
+                if (waitMillis > 0) delay(waitMillis.milliseconds)
+                remaining = remainingMillisAt(startedAtNanos)
                 // d(tag) { "-----> Screen countdown remaining=${remaining.div(1000)}s" }
 
                 _countdownState.update {
                     it.copy(remainingTimeMillis = remaining)
                 }
 
-                if (enableWarning && remaining == warningThresholdMillis) {
-                    // d(tag) { "-----> Countdown warning=${remaining.div(1000)}s" }
+                // A crossing, not an equality. `remaining` now comes from a clock, so it lands on
+                // the threshold only by accident; `<=` plus a one-shot flag fires exactly once.
+                // The emitted value is the threshold rather than `remaining`, which is what the
+                // equality used to guarantee and what a caller configured.
+                if (enableWarning && !warningEmitted && remaining <= warningThresholdMillis) {
+                    warningEmitted = true
+                    // d(tag) { "-----> Countdown warning=${warningThresholdMillis / 1000}s" }
                     _countdownEffect.emit(
-                        CountdownEffect.ShowWarning(remaining / 1000)
+                        CountdownEffect.ShowWarning(warningThresholdMillis / 1000)
                     )
                 }
             }

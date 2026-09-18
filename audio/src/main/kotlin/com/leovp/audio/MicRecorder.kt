@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
+import android.media.audiofx.AudioEffect
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import com.leovp.audio.base.AudioEncoderManager
@@ -171,15 +172,54 @@ class MicRecorder(
         // MediaRecorder.AudioSource.MIC
         // MediaRecorder.AudioSource.VOICE_COMMUNICATION
         // MediaRecorder.AudioSource.CAMCORDER
-        audioRecord = AudioRecord(
-            audioSource,
-            encoderInfo.sampleRate,
-            encoderInfo.channelConfig,
-            encoderInfo.audioFormat,
-            bufferSizeInBytes
-        )
+        val record = try {
+            AudioRecord(
+                audioSource,
+                encoderInfo.sampleRate,
+                encoderInfo.channelConfig,
+                encoderInfo.audioFormat,
+                bufferSizeInBytes
+            )
+        } catch (e: Throwable) {
+            rollbackFailedInit(null, e)
+            throw e
+        }
+        audioRecord = record
         // https://blog.csdn.net/lavender1626/article/details/80394253
-        if (enableAdvancedFeatures) initAdvancedFeatures()
+        if (enableAdvancedFeatures) {
+            try {
+                initAdvancedFeatures()
+            } catch (e: Throwable) {
+                rollbackFailedInit(record, e)
+                throw e
+            }
+        }
+    }
+
+    /**
+     * Undoes a partially built recorder while `init` is on its way to rethrowing. The constructor
+     * never returns in that case, so the owner holds no reference and can never call
+     * [stopRecordAndJoin]; without this, the encoder, the AudioRecord and any effect already
+     * attached would stay alive until the collector finalizes them.
+     *
+     * No `onStop` is delivered: the owner does not have the object yet, and the exception being
+     * rethrown is the report. The one-shot guards are burned so that nothing else can run a second
+     * teardown over the same resources.
+     */
+    private fun rollbackFailedInit(record: AudioRecord?, cause: Throwable) {
+        LogContext.log.e(TAG, "MicRecorder init failed; rolling back", cause)
+        stopped.set(true)
+        released.set(true)
+        releaseAdvancedFeatures(true)
+        runCatchingPreservingCancellation { record?.release() }.onFailure {
+            LogContext.log.e(TAG, "rollback: AudioRecord release error", it)
+        }
+        runCatchingPreservingCancellation { encodeWrapper?.release() }.onFailure {
+            LogContext.log.e(TAG, "rollback: encoder release error", it)
+        }
+        encodeWrapper = null
+        ioScope.cancel()
+        releaseCompleted.complete(Unit)
     }
 
     fun startRecord() {
@@ -255,24 +295,59 @@ class MicRecorder(
     }
 
     private fun initAdvancedFeatures() {
+        val sessionId = audioRecord.audioSessionId
         if (AcousticEchoCanceler.isAvailable()) {
-            echoCanceler = AcousticEchoCanceler.create(audioRecord.audioSessionId)?.apply {
-                LogContext.log.w(TAG, "Enable AcousticEchoCanceler")
-                enabled = true
+            echoCanceler = createEnabledEffect("AcousticEchoCanceler") {
+                AcousticEchoCanceler.create(sessionId)
             }
         }
         if (AutomaticGainControl.isAvailable()) {
-            automaticGainControl = AutomaticGainControl.create(audioRecord.audioSessionId)?.apply {
-                LogContext.log.w(TAG, "Enable AutomaticGainControl")
-                enabled = true
+            automaticGainControl = createEnabledEffect("AutomaticGainControl") {
+                AutomaticGainControl.create(sessionId)
             }
         }
         if (NoiseSuppressor.isAvailable()) {
-            noiseSuppressor = NoiseSuppressor.create(audioRecord.audioSessionId)?.apply {
-                LogContext.log.w(TAG, "Enable NoiseSuppressor")
-                enabled = true
+            noiseSuppressor = createEnabledEffect("NoiseSuppressor") {
+                NoiseSuppressor.create(sessionId)
             }
         }
+    }
+
+    /**
+     * Creates one capture effect and hands it back only once the platform confirms it is on.
+     *
+     * [AudioEffect.setEnabled] reports failure through a returned status code, which Kotlin's
+     * `enabled = true` property syntax silently discards. A canceller that failed to enable would
+     * then be indistinguishable from a working one: the call would run with no echo cancellation,
+     * the far end would hear itself, and nothing in the log would say why.
+     *
+     * An effect that cannot be enabled is released here rather than kept in a dead state, so the
+     * field stays `null` and `null` keeps meaning "this effect is not active".
+     *
+     * @param name Effect name, used only for logging.
+     * @param create Factory for the effect; may return `null` when the platform declines.
+     * @return The enabled effect, or `null` if it could not be created or could not be enabled.
+     */
+    private fun <T : AudioEffect> createEnabledEffect(name: String, create: () -> T?): T? {
+        val effect = runCatchingPreservingCancellation { create() }
+            .onFailure { LogContext.log.e(TAG, "$name create failed", it) }
+            .getOrNull()
+        if (effect == null) {
+            LogContext.log.e(TAG, "$name is available but was not created")
+            return null
+        }
+        val status = runCatchingPreservingCancellation { effect.setEnabled(true) }
+            .onFailure { LogContext.log.e(TAG, "$name setEnabled(true) failed", it) }
+            .getOrDefault(AudioEffect.ERROR)
+        if (status != AudioEffect.SUCCESS) {
+            LogContext.log.e(TAG, "$name was not enabled (status=$status); releasing it")
+            runCatchingPreservingCancellation { effect.release() }.onFailure {
+                LogContext.log.e(TAG, "$name release error", it)
+            }
+            return null
+        }
+        LogContext.log.w(TAG, "Enabled $name")
+        return effect
     }
 
     /**
@@ -280,8 +355,9 @@ class MicRecorder(
      * [audioRecord] whose session they are attached to, and they are released here rather than
      * left to the collector so teardown is deterministic.
      *
-     * Reached only through [finishRecorderRelease] / [finishRecorderReleaseAndJoin], both of
-     * which are already behind the one-shot [released] guard, so this runs exactly once.
+     * Reached through [finishRecorderRelease] / [finishRecorderReleaseAndJoin], both of which are
+     * already behind the one-shot [released] guard, and through [rollbackFailedInit], which burns
+     * that guard before calling in. So this runs exactly once either way.
      */
     private fun releaseAdvancedFeatures(currentResult: Boolean): Boolean {
         var ok = currentResult

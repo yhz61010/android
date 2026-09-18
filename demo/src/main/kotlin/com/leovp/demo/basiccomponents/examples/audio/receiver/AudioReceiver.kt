@@ -15,11 +15,9 @@ import com.leovp.demo.basiccomponents.examples.audio.receiver.base.AudioReceiver
 import com.leovp.log.LogContext
 import io.netty.channel.Channel
 import java.util.concurrent.ArrayBlockingQueue
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
@@ -137,28 +135,32 @@ class AudioReceiver {
             }
         }
 
+        /**
+         * Blocks on the queue rather than polling it every 10ms, which is what [AudioSender]
+         * already does with the same queues. Polling capped the drain at about 100 items a
+         * second whatever the arrival rate, so a burst could only be worked off at that speed
+         * and the latency it created was never recovered - and in between, the loop woke 100
+         * times a second to find nothing.
+         */
         private fun sendRecAudioThread() {
             ioScope.launch {
                 while (true) {
                     ensureActive()
                     runCatching {
                         // LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                        recAudioQueue.poll()?.let {
-                            receiverHandler?.sendAudioToClient(clientChannel!!, it)
-                        }
-                        delay(10.milliseconds)
+                        receiverHandler?.sendAudioToClient(clientChannel!!, recAudioQueue.take())
                     }.onFailure { it.printStackTrace() }
                 }
             }
         }
 
+        /** @see sendRecAudioThread for why this blocks instead of polling. */
         private fun startPlayThread() {
             LogContext.log.i(TAG, "Start decodeThread()")
             ioScope.launch {
                 while (true) {
                     ensureActive()
-                    receiveAudioQueue.poll()?.let { audioPlayer?.play(it) }
-                    delay(10.milliseconds)
+                    audioPlayer?.play(receiveAudioQueue.take())
                 }
             }
         }

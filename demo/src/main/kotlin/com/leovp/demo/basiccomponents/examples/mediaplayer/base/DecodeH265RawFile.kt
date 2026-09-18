@@ -14,6 +14,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
@@ -117,6 +119,22 @@ import kotlinx.coroutines.launch
 class DecodeH265RawFile {
     companion object {
         private const val TAG = "DecodeH265RawFile"
+
+        /**
+         * Assumed frame rate of the raw stream. A bare Annex-B file carries no timing, and this
+         * player does not parse it out of the SPS, so feeding has to assume one.
+         */
+        private const val NOMINAL_FRAME_RATE = 24L
+
+        /** One frame's wall-clock share at [NOMINAL_FRAME_RATE]. */
+        private const val FRAME_INTERVAL_MS = 1_000L / NOMINAL_FRAME_RATE
+
+        /**
+         * HEVC reserves `nal_unit_type` 0-31 for VCL units - the ones that carry picture data.
+         * 32 and above are parameter sets, SEI and delimiters, several of which can precede a
+         * single picture.
+         */
+        private const val FIRST_NON_VCL_NALU_TYPE = 32
     }
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
@@ -221,7 +239,8 @@ class DecodeH265RawFile {
         }
     }
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / 24
+    private fun computePresentationTimeUs(frameIndex: Long) =
+        frameIndex * 1_000_000 / NOMINAL_FRAME_RATE
 
     private lateinit var rf: RandomAccessFile
 
@@ -308,6 +327,12 @@ class DecodeH265RawFile {
         // If you use coroutines here, the video will be displayed. I don't know why!!!
         ioScope.launch {
             val startIdx = 4
+            // Paced against a moving deadline instead of sleeping a flat amount after each NAL.
+            // Three things were wrong with that: it blocked the dispatcher thread with
+            // Thread.sleep inside a coroutine; it slept once per NAL, so a picture preceded by
+            // VPS/SPS/PPS/SEI burned several frame periods; and 32ms does not match the 24 fps
+            // this player assumes everywhere else, which is 41ms.
+            var nextFeedAtMs = nowMillis()
             runCatching {
                 while (true) {
                     val bytes = getRawH265() ?: break
@@ -317,14 +342,36 @@ class DecodeH265RawFile {
                         if (findStartCode4(bytes, i)) {
                             val frame = ByteArray(i - previousStart)
                             System.arraycopy(bytes, previousStart, frame, 0, frame.size)
-                            queue.offer(frame)
-                            LogContext.log.w(
-                                TAG,
-                                "offer queue[${queue.size}] content_size=${frame.size}"
-                            ) //  [${bytes.toHexStringLE()}]
+                            // offer(), not put(): blocking here would hang the feeder for good
+                            // if the decoder ever stopped draining. A drop is still a drop, but
+                            // it is no longer a silent one - with the pacing below the queue
+                            // should not fill at all, so a line here means something is wrong.
+                            if (queue.offer(frame)) {
+                                LogContext.log.w(
+                                    TAG,
+                                    "offer queue[${queue.size}] content_size=${frame.size}"
+                                ) //  [${bytes.toHexStringLE()}]
+                            } else {
+                                LogContext.log.e(
+                                    TAG,
+                                    "Decoder queue full; dropped a NAL of ${frame.size} bytes"
+                                )
+                            }
                             previousStart = i
-                            // FIXME We'd better control the FPS by SpeedManager
-                            Thread.sleep(32)
+                            // Only a VCL unit completes a picture, so only it costs a frame's
+                            // worth of time. Parameter sets and SEI belong to the picture that
+                            // follows them and go through without their own wait.
+                            if (isVclNalu(frame)) {
+                                nextFeedAtMs += FRAME_INTERVAL_MS
+                                val waitMs = nextFeedAtMs - nowMillis()
+                                if (waitMs > 0) {
+                                    delay(waitMs.milliseconds)
+                                } else {
+                                    // Fell behind. Drop the backlog rather than race through
+                                    // deadlines that have already passed.
+                                    nextFeedAtMs = nowMillis()
+                                }
+                            }
                         }
                     }
                 }
@@ -333,6 +380,17 @@ class DecodeH265RawFile {
         mediaCodec.start()
     }
 
-    @Suppress("unused")
+    /** Monotonic milliseconds, so a system clock change cannot stall or skip the feed. */
+    private fun nowMillis(): Long = System.nanoTime() / 1_000_000L
+
+    /**
+     * Whether [nalu] carries picture data, read from the `nal_unit_type` of its header. The unit
+     * starts with a 4-byte start code, so the header byte is at index 4.
+     */
+    private fun isVclNalu(nalu: ByteArray): Boolean {
+        if (nalu.size < 5) return false
+        return getNaluType(nalu[4]) < FIRST_NON_VCL_NALU_TYPE
+    }
+
     private fun getNaluType(nalu: Byte): Int = ((nalu.toInt() and 0x07E) shr 1)
 }

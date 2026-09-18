@@ -153,6 +153,22 @@
 
 ### 修复 (Fixed)
 
+- **`camera2live` 编码时间戳改取自单调时钟**：`CameraAvcEncoder` 此前用
+  `frameIndex * 1_000_000 / frameRate` 生成喂给编码器的 PTS。该式假设「请求的每一帧都到达并入队」,
+  而两个前提都不成立——真实摄像头帧率随曝光与负载浮动,且 `BoundedFrameQueue` 在编码器跟不上时
+  丢弃最旧帧,被丢的帧从不推进计数器。于是编码时间轴按缺帧比例压缩真实时间、整体跑快;
+  MediaCodec 的码率控制据此判断时间跨度,会以为自己在产出 `frameRate` fps,把 `KEY_BIT_RATE`
+  分摊到比实际更多的帧上,实际码率低于目标值。
+  - 此前未暴露,是因为仓库内唯一消费者写的是裸 Annex-B 流,不携带时间戳。把同一路流送进 muxer
+    或做音视频同步会立刻看到加速与漂移。
+  - 现改为 `System.nanoTime()` 相对首帧。
+- **`lib-mvvm` 倒计时不再累积漂移**：`ScreenCountdownManager` 此前 `delay(1.seconds)` 后把模型
+  时钟恰好减去 1000ms,但循环体内的状态更新与（可挂起的）effect 发射都要额外耗时,只累加不回收。
+  现改为从单调时钟推导剩余时间,并按移动截止时间安排每次 tick。
+  - **行为变更**：警告 effect 的触发条件由 `remaining == warningThresholdMillis` 精确相等改为
+    一次性的 `<=` 跨越判定——剩余时间现在来自时钟,不再会精确落在阈值上。发射的秒数取自
+    `warningThresholdMillis`,与此前精确相等时的取值一致。
+  - `remainingTimeMillis` 仍按整 tick 向上取整后暴露,调用方除以 1000 得到的秒数与此前一致。
 - **`screencapture` 的 `setFps()` 现在真的控制采集速率，时间戳改取自单调时钟**：
   `Screenshot2H26xStrategy` 的采集循环此前 `delay(32.milliseconds)` 硬编码、完全不读
   `builder.fps`，而 EGL 时间戳与上报给 `ScreenDataListener` 的 PTS 都由 `frameIndex * 1_000_000 / fps`

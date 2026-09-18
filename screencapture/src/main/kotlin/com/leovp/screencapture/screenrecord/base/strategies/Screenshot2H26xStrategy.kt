@@ -56,6 +56,48 @@ private class ReleaseRequestedException :
 private enum class InitOutcome { INITIALIZED, ALREADY_INITIALIZED, FAILED, RELEASED }
 
 /**
+ * "Not latched yet" for the timestamp origin. Not `0`: `System.nanoTime()`'s origin is arbitrary
+ * and a reading of exactly zero is legal, which would silently re-latch the origin every frame.
+ */
+private const val UNSET_TIMESTAMP_ORIGIN = Long.MIN_VALUE
+
+/**
+ * Nanoseconds elapsed since the first frame, latching that first frame as the origin.
+ *
+ * Timestamps have to come from a clock rather than from a frame counter. The counter version
+ * (`frameIndex * 1_000_000 / fps`) assumed the capture loop really produced `fps` frames per
+ * second; when it did not, every frame still advanced the stream by a whole frame period, so the
+ * timeline ran away from real time - measured at 4.95x on a device while `fps` was 5. A raw
+ * elementary stream carries no timestamps and hid this; a container stores them and does not.
+ *
+ * Declared at file scope on purpose: the class is at 29 functions against detekt's
+ * `TooManyFunctions.thresholdInClasses = 33`, while `thresholdInFiles` counts only top-level
+ * functions and this file has none.
+ */
+private fun elapsedNanosSince(origin: AtomicLong): Long {
+    val now = System.nanoTime()
+    origin.compareAndSet(UNSET_TIMESTAMP_ORIGIN, now)
+    return now - origin.get()
+}
+
+/** Fallback cadence when `fps` is not usable: the hardcoded value this loop used to sleep. */
+private const val DEFAULT_CAPTURE_INTERVAL_MS = 32L
+
+/**
+ * The wall-clock gap between two captures for [fps], as a positive millisecond count.
+ *
+ * Guarded against a non-positive `fps` because it reaches here straight from a public builder.
+ */
+private fun captureIntervalMillis(fps: Float): Long =
+    if (fps > 0f) (1_000f / fps).toLong().coerceAtLeast(1L) else DEFAULT_CAPTURE_INTERVAL_MS
+
+/**
+ * Monotonic milliseconds for pacing. `System.nanoTime()` rather than `currentTimeMillis()`, so a
+ * clock adjustment mid-recording cannot stall or fast-forward the capture loop.
+ */
+private fun nowMillis(): Long = System.nanoTime() / 1_000_000L
+
+/**
  * Screenshot-based H.26x recording strategy for API 21 and later.
  *
  * Author: Michael Leo
@@ -172,7 +214,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     // Init OpenGL, once we have initialized context and surface
     private lateinit var renderer: TextureRenderer
 
-    private val frameCount = AtomicLong(0)
+    /**
+     * Monotonic origin for presentation timestamps, latched on the first encoded frame and reset
+     * by nothing: this recorder is one-shot, so one origin covers its whole life.
+     */
+    private val timestampOriginNanos = AtomicLong(UNSET_TIMESTAMP_ORIGIN)
 
     /** Opened by the encoder's end-of-stream output, so teardown can drain before stopping. */
     private val encoderEos = CountDownLatch(1)
@@ -231,8 +277,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 it.get(encodedBytes)
 
                 val flags = info.flags
-                val presentationTimeUs =
-                    computePresentationTimeUs(frameCount.incrementAndGet(), builder.fps)
+                // The encoder's own timestamp, which is the one this recorder handed to the input
+                // surface. Recomputing it here from a frame counter was what let the reported
+                // timeline drift away from the frames it described.
+                val presentationTimeUs = info.presentationTimeUs
 
                 if (flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {
                     vpsSpsPpsBytes = encodedBytes.copyOf()
@@ -273,7 +321,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             ScreenRecordMediaCodecStrategy.EncodeType.H264
             private set
 
-        // FIXME This does not seem to work. Check below setKeyFrameRate
+        /** Capture rate. Drives the capture loop's cadence, the timestamps and `KEY_FRAME_RATE`. */
         var fps = 20F
             private set
         var quality = 100
@@ -284,6 +332,12 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             private set
         var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
             private set
+        /**
+         * No longer reaches the encoder. It used to be wired to `MediaFormat.KEY_FRAME_RATE`,
+         * which is the frame rate and therefore belongs to [fps]; key-frame spacing is
+         * [iFrameInterval].
+         * Kept so existing callers still compile - retiring the setter is a separate API change.
+         */
         var keyFrameRate = 20
             private set
         var iFrameInterval = 1
@@ -335,7 +389,7 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         EGLExt.eglPresentationTimeANDROID(
             eglDisplay,
             eglSurface,
-            computePresentationTimeUs(frameCount.get(), builder.fps) * 1000
+            elapsedNanosSince(timestampOriginNanos)
         )
 
         // Feed encoder with next frame produced by OpenGL
@@ -698,7 +752,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
-            setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
+            // The real capture rate, not builder.keyFrameRate. This key tells the encoder how
+            // many frames a second to budget its bitrate over; feeding it a different number
+            // than the loop actually produces misallocates that budget.
+            setInteger(MediaFormat.KEY_FRAME_RATE, builder.fps.toInt().coerceAtLeast(1))
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -799,6 +856,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 startEncoder()
                 // requestRelease() also cancels this job, so a start that races the release
                 // request cannot re-arm isRecording and keep the loop alive.
+                // Derived from the requested fps instead of the hardcoded 32ms this loop used
+                // to sleep. That constant ignored builder.fps entirely, so setFps() moved the
+                // timestamps without moving the capture rate it was supposed to set.
+                val captureIntervalMs = captureIntervalMillis(builder.fps)
+                var nextCaptureAtMs = nowMillis()
                 while (isRecording && !releaseRequested.get()) {
                     ensureActive()
                     if (activityRef.get() == null) {
@@ -818,7 +880,18 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                         }
                         it.recycle()
                     }
-                    delay(32.milliseconds)
+                    // Paced against a moving deadline, not by sleeping a fixed amount after the
+                    // work: a fixed sleep adds the cost of each capture to every period, which
+                    // puts the real rate permanently below the requested one.
+                    nextCaptureAtMs += captureIntervalMs
+                    val waitMs = nextCaptureAtMs - nowMillis()
+                    if (waitMs > 0L) {
+                        delay(waitMs.milliseconds)
+                    } else {
+                        // A capture overran its period. Drop the backlog instead of spinning
+                        // through deadlines that are already in the past.
+                        nextCaptureAtMs = nowMillis()
+                    }
                 }
             } catch (e: CancellationException) {
                 // Deliberately not recorded: reportFailureIfAny() filters cancellation out

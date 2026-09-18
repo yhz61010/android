@@ -71,6 +71,12 @@ interface ScreenProcessor {
 
     // ==================================================
 
+    @Deprecated(
+        "Frame-index timestamps assume the capture loop really ran at fps. When it did not, a " +
+            "late frame still advanced the stream by a whole frame period and the timeline ran " +
+            "away from real time. Timestamp from a monotonic clock instead.",
+        level = DeprecationLevel.WARNING
+    )
     fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long =
         (frameIndex * 1_000_000 / fps).toLong()
 

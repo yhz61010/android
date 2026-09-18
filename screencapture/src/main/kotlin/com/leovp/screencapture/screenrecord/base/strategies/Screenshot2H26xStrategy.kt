@@ -20,10 +20,12 @@ import android.util.Size
 import android.view.Surface
 import com.leovp.image.compressBitmap
 import com.leovp.log.LogContext
+import com.leovp.screencapture.screenrecord.base.Mp4TrackWriter
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
+import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -223,6 +225,22 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     /** Opened by the encoder's end-of-stream output, so teardown can drain before stopping. */
     private val encoderEos = CountDownLatch(1)
 
+    /**
+     * Guarded by [codecCallbackLock]. Created when the codec first reports its format, so a
+     * recorder that is built and released without ever recording leaves no stray `.mp4` behind.
+     *
+     * Null whenever [Builder.mp4OutputFile] was not set: the MP4 is an addition, never a
+     * replacement, and the raw stream reaching [ScreenDataListener] is unaffected either way.
+     */
+    private var mp4Writer: Mp4TrackWriter? = null
+
+    /**
+     * The encode type actually in use, which is not always the one that was requested: writing an
+     * MP4 forces H.264 on API levels whose muxer cannot carry an HEVC track. Callers that name
+     * their own files after the codec must read it from here rather than from what they asked for.
+     */
+    val encodeType: ScreenRecordMediaCodecStrategy.EncodeType get() = builder.encodeType
+
     @SuppressWarnings("unused")
     var vpsSpsPpsBytes: ByteArray? = null
         private set
@@ -285,6 +303,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
                 if (flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {
                     vpsSpsPpsBytes = encodedBytes.copyOf()
                 }
+                // Written straight from this thread, while the listener is posted to another.
+                // Both see every sample; only the muxer needs them in order.
+                mp4Writer?.write(encodedBytes, flags, presentationTimeUs)
                 screenshotHandler?.post {
                     builder.screenDataListener.onDataUpdate(
                         encodedBytes,
@@ -296,8 +317,18 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            // LogContext.log.d(TAG, "onOutputFormatChanged format=${format.toJsonString()}")
             // Subsequent data will conform to the new format.
+            //
+            // This is where the MP4 track is added, because this format is the only place the
+            // parameter sets arrive already split into the csd-0/csd-1 layout each codec needs.
+            // Taken under the callback lock like every other codec callback, so teardown cannot
+            // close the writer while this opens one.
+            synchronized(codecCallbackLock) {
+                if (h26xEncoder !== codec) return
+                val outputFile = builder.mp4OutputFile ?: return
+                if (mp4Writer == null) mp4Writer = Mp4TrackWriter(outputFile)
+                mp4Writer?.onOutputFormat(format)
+            }
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
@@ -343,6 +374,13 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         var iFrameInterval = 1
             private set
 
+        /**
+         * Where to write an MP4 alongside the stream handed to [ScreenDataListener], or null to
+         * write no MP4 at all. The listener's stream is never replaced or altered by this.
+         */
+        var mp4OutputFile: File? = null
+            private set
+
         fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
             apply { this.encodeType = encodeType }
 
@@ -354,13 +392,42 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
+        /** @see mp4OutputFile */
+        fun setMp4OutputFile(file: File?) = apply { this.mp4OutputFile = file }
+
         fun build(): Screenshot2H26xStrategy {
+            fallBackToAvcIfMuxerCannotCarryHevc()
             LogContext.log.w(
                 TAG,
                 "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps " +
-                    "sampleSize=$sampleSize"
+                    "sampleSize=$sampleSize mp4OutputFile=${mp4OutputFile?.name}"
             )
             return Screenshot2H26xStrategy(this)
+        }
+
+        /**
+         * `MediaMuxer` gained the ability to write an HEVC track into MP4 in API 24. Below that
+         * it accepts the track and then fails, so an HEVC request plus an MP4 request cannot both
+         * be honoured and the encode type is the one that gives way.
+         *
+         * Deliberately scoped to callers that asked for an MP4. Nothing is wrong with an HEVC
+         * elementary stream on API 21-23, and downgrading those callers would be a regression
+         * they never asked for.
+         *
+         * Resolved here, before the encoder exists, so the MP4 and the stream reaching
+         * [ScreenDataListener] are always the same codec.
+         */
+        private fun fallBackToAvcIfMuxerCannotCarryHevc() {
+            if (mp4OutputFile == null) return
+            if (encodeType != ScreenRecordMediaCodecStrategy.EncodeType.H265) return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) return
+            LogContext.log.w(
+                TAG,
+                "MediaMuxer cannot write an HEVC track before API 24 and this device is API " +
+                    "${Build.VERSION.SDK_INT}. Encoding H264 instead so the MP4 and the raw " +
+                    "stream stay the same codec. Drop setMp4OutputFile() to keep H265 here."
+            )
+            encodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
         }
     }
 
@@ -1123,8 +1190,19 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same
         // lock makes every later callback return before touching the encoder.
         if (stopEncoder) drainEncoder()
-        val encoder = synchronized(codecCallbackLock) {
-            h26xEncoder.also { h26xEncoder = null }
+        val encoder: MediaCodec?
+        val writer: Mp4TrackWriter?
+        synchronized(codecCallbackLock) {
+            encoder = h26xEncoder.also { h26xEncoder = null }
+            writer = mp4Writer.also { mp4Writer = null }
+        }
+        // Closed outside the lock: writing the index can take a while, and every later callback
+        // now returns before reaching either of these. The samples are already drained, so
+        // finishing the file before the encoder stops costs nothing.
+        try {
+            writer?.close()
+        } catch (error: Throwable) {
+            LogContext.log.e(TAG, "MP4 close failed", error)
         }
         if (stopEncoder) {
             try {

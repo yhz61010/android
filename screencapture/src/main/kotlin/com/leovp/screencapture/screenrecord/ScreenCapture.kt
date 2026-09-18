@@ -8,6 +8,7 @@ import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordRawBmpStrategy
 import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xStrategy
+import java.io.File
 
 /**
  * Author: Michael Leo
@@ -50,6 +51,7 @@ object ScreenCapture {
         // Screenshot setting
         private var sampleSize = 1
         private var quality = 100
+        private var mp4OutputFile: File? = null
 
         // ==================================================
         // ===== Common For H26x
@@ -78,6 +80,18 @@ object ScreenCapture {
         /** Only used in [BY_IMAGE_2_H26X] mode */
         fun setQuality(quality: Int) = apply { this.quality = quality }
 
+        /**
+         * Also write an MP4 to [file], in addition to the stream delivered to the
+         * [ScreenDataListener]. Null, the default, writes no MP4.
+         *
+         * Only used in [BY_IMAGE_2_H26X] mode. Two things change when it is set:
+         * the file is only playable once the recorder has been released, because that is when the
+         * index is written; and on API 21-23 an H265 request is downgraded to H264, because
+         * `MediaMuxer` cannot carry an HEVC track before API 24. Read the effective codec back
+         * from [Screenshot2H26xStrategy.encodeType].
+         */
+        fun setMp4OutputFile(file: File?) = apply { this.mp4OutputFile = file }
+
         fun build(): ScreenProcessor {
             LogContext.log.i(
                 TAG,
@@ -86,7 +100,7 @@ object ScreenCapture {
                     "fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode " +
                     "keyFrameRate=$keyFrameRate " +
                     "iFrameInterval=$iFrameInterval sampleSize=$sampleSize " +
-                    "useGoogleEncoder=$useGoogleEncoder"
+                    "useGoogleEncoder=$useGoogleEncoder mp4OutputFile=${mp4OutputFile?.name}"
             )
             return when (captureType) {
                 BY_IMAGE_2_H26X -> Screenshot2H26xStrategy.Builder(
@@ -103,6 +117,7 @@ object ScreenCapture {
                     .setIFrameInterval(iFrameInterval)
                     .setQuality(quality)
                     .setSampleSize(sampleSize)
+                    .setMp4OutputFile(mp4OutputFile)
                     .build()
                 BY_MEDIA_CODEC -> ScreenRecordMediaCodecStrategy.Builder(
                     width,

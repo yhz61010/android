@@ -8,4 +8,3 @@
 - [不本地编译](feedback_no_local_compile.md) — 不跑 gradle 编译/构建/测试，用户在本地验证
 - [代理使用与当前会话相同的模型](feedback_agent_model_same_as_session.md) — 调用子代理时传 model 覆盖为当前主会话模型（不硬编码具体模型名）
 - [仓库范围单一](feedback_repo_scope_single_project.md) — 本仓库文档与记忆只覆盖自身，不引入其它项目内容
-- [screencapture fps/PTS 待办](project_screencapture_fps_pts_pending.md) — 已知未修；修完后须删除 CLAUDE.md 与 AGENTS.md 的对应章节并提醒用户

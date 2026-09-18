@@ -60,15 +60,20 @@
 - **`MicRecorder` 采集默认值改为原始麦克风**:`audioSource` 默认值由
   `MediaRecorder.AudioSource.VOICE_COMMUNICATION` 改为 `MediaRecorder.AudioSource.MIC`;新增
   `enableAdvancedFeatures: Boolean = false` 参数,用于控制是否挂载回声消除 / 自动增益 / 降噪。
-  - **破坏性变更**:此前所有调用方都隐式走平台 VoIP 采集链。该链把电平归一到通话语音档位,
-    实测录出的素材峰值 −18.9 dBFS、RMS −38.1 dBFS,比正常媒体低约 22 dB,回放时即使系统媒体
-    音量顶格听感仍明显偏小;并且它只提供单声道,请求立体声时两个声道内容完全相同。改为 MIC
-    后录制电平恢复正常,三个音效不再默认挂载。
+  - **破坏性变更**:此前所有调用方都隐式走平台 VoIP 采集链,该链把电平归一到通话语音档位。
+    在小米 10 / Android 13 上实测:录出的素材峰值 −18.9 dBFS、RMS −38.1 dBFS,比正常媒体低约
+    22 dB,回放时即使系统媒体音量顶格听感仍明显偏小;同机请求立体声时两个声道内容完全相同。
+    以上均为该机型上的观测,不构成对所有设备的平台行为断言。改为 MIC 后该机录制电平恢复正常,
+    三个音效不再默认挂载。
   - **双向语音调用方需显式回切**:实时语音场景(本仓库的 `AudioSender` / `AudioReceiver`)应显式传
     `audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION` 与 `enableAdvancedFeatures = true`,
     否则对端会听到自己的回声。
-  - **参数顺序变化**:`enableAdvancedFeatures` 插在 `audioSource` 与 `recordMinBufferRatio` 之间,
-    按位置传入 `recordMinBufferRatio` 的下游代码会编译失败(类型不匹配),需改为具名参数。
+  - **二进制不兼容,消费端必须随版本升级一并重新编译**:`enableAdvancedFeatures` 插在
+    `audioSource` 与 `recordMinBufferRatio` 之间。源码层面,按位置传入 `recordMinBufferRatio`
+    的下游代码会编译失败(类型不匹配),需改为具名参数。二进制层面,主构造器与 Kotlin 默认参数
+    synthetic 的 descriptor 都已改变,旧入口不复存在:未重新编译就换用新版本的消费端(例如
+    Gradle 依赖冲突把本库版本抬到此版本,而消费方自身仍是旧版本的编译产物)会在运行时抛
+    `NoSuchMethodError`,只使用默认参数的 Kotlin 调用同样会中招。本库不提供 ABI 兼容入口。
 - **audio 模块的超时与轮询常量改为 `kotlin.time.Duration`**:`OpusFilePlayer`、`AacFilePlayer`、
   `AacStreamPlayer`、`OpusStreamPlayer`、`BaseMediaCodecSynchronous` 的内部延时常量由裸 `Long`
   毫秒改为 `Duration`,单位不再同时编码在常量名与调用点转换里。均为 `private`,对外无影响;

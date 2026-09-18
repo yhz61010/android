@@ -53,19 +53,24 @@ import kotlinx.coroutines.withContext
  *
  * ### Why MIC is the default
  *
- * [MediaRecorder.AudioSource.MIC] delivers the microphone at its raw level and full dynamic
- * range, which is what anything stored, encoded or measured needs.
+ * [MediaRecorder.AudioSource.MIC] is the plain microphone source: it carries none of the
+ * telephony/VoIP processing described below, which is what anything stored, encoded or measured
+ * needs. It is not a promise of untouched audio - the source explicitly defined as unprocessed is
+ * [MediaRecorder.AudioSource.UNPROCESSED] (API 24), and even that falls back to another source on
+ * devices that do not support it.
  *
  * [MediaRecorder.AudioSource.VOICE_COMMUNICATION] routes through the platform telephony/VoIP
  * chain instead. That chain earns its keep in a live two-way call - it gives the echo canceller
- * a reference against this device's own playback - but it is a poor recorder. Measured on a
- * Xiaomi Mi 10 / Android 13 against a capture made through it:
+ * a reference against this device's own playback - but it is a poor recorder. Measured on one
+ * device only (Xiaomi Mi 10 / Android 13), against a capture made through it:
  *
  * - **Level**: peak -18.9 dBFS, RMS -38.1 dBFS, roughly 22 dB below ordinary media. Played back
- *   with the system media volume at maximum it still sounds obviously quiet.
- * - **Channels**: mono only. Asking for `CHANNEL_IN_STEREO` yields two bit-identical channels,
- *   so the encoder spends its whole bitrate coding the same signal twice.
- * - **Noise floor**: the suppressor gates the background to digital silence.
+ *   with the system media volume at maximum it still sounded obviously quiet.
+ * - **Channels**: asking for `CHANNEL_IN_STEREO` yielded two bit-identical channels, so the
+ *   encoder spent its whole bitrate coding the same signal twice.
+ *
+ * Both are observations from that one device, not guaranteed platform behaviour. The full
+ * investigation is recorded under `00-documents/` (2026-09-17, audio capture level).
  *
  * ### What enableAdvancedFeatures actually turns on
  *

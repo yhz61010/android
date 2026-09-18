@@ -6,7 +6,7 @@
 - 先核对当前代码、配置和命令结果，再下结论；仍有影响方案的不明确事项时先问用户，不凭历史记录猜测。
 - 仅要求审查、诊断、解释或方案时保持只读；要求修改时实现并验证。未经明确授权不提交、推送、发布或合并。
 - 保留用户已有修改和未跟踪文件，不顺手清理、还原或覆盖无关内容；不要覆盖已有 `gradle.properties`、`local.properties`。
-- Codex 可以在本机执行与任务相关的构建、静态检查、单测和已授权的真机测试。旧 Claude 记忆中的“禁止本地编译”不适用于当前 Codex 工作流；环境不足时报告缺口。
+- Codex 可以在本机执行与任务相关的构建、静态检查、单测和已授权的真机测试。Claude Code 位于远端服务器，无法编译代码或执行任何 Gradle 命令，其开发与审查结论只能视为源码静态分析；旧 Claude 记忆中的“禁止本地编译”不适用于当前 Codex 工作流。交付时区分 Claude Code 静态结论、Codex 本机构建/测试、真机验证和未验证项。
 - 不把密码、令牌、签名私钥或其它秘密写入代码、日志、文档和记忆；不要求用户在对话中粘贴秘密。
 - 本文件是项目共享规则入口；`CLAUDE.md` 和 `.claude/**` 是补充资料。冲突时按系统、开发者、用户当前明确要求及本文件处理，不能用“旧规则更严格”覆盖高优先级或较新的明确要求。
 
@@ -108,6 +108,7 @@
 ## 文档、记忆与 Claude 互操作
 
 - AI 生成文档统一放 `00-documents/`，只维护中文，不创建英文副本或另建 `docs/`；普通文档按日期和主题命名，例如 `2026-09-16-native-review.md`。
+- 当前仓库的文档和项目记忆只收录本仓库相关内容，不引入其它项目的文档、路径、规则或历史。
 - Superpowers 设计放 `00-documents/superpowers/specs/`，计划放 `00-documents/superpowers/plans/`，实施记录放 `00-documents/superpowers/`；均使用中文。不为未启用功能创建空目录或模板。
 - `CLAUDE.md`、`.claude/**` 及 Claude 生成的文件默认保留，只读参考，用户明确要求时才修改；优化本文件不意味着同步修改 Claude 配置。
 - 按任务读取补充材料：工作风格读 `.claude/memory/MEMORY.md` 和存在时的 `.claude/rules/personal-style.md`；Android UI/UX 设计读 `.claude/skills/mobile-android-design/SKILL.md`；技能查找/创建/安装读 `.claude/skills/find-skills/SKILL.md`。路径不存在时说明并使用可用替代，不凭空补文件。

@@ -3,7 +3,8 @@
 本文记录两件事：真机验证音频模块时发现的「播放声音明显偏小」问题的完整排查与修复，以及顺带完成的
 `kotlin.time.Duration` 常量一致性整理。
 
-基线提交：`b5c9d614b`。本文所述改动已提交，对应提交范围 `b5c9d614b..545553bf2`。
+基线提交：`b5c9d614b`。§1–§6 所述改动对应提交范围 `b5c9d614b..545553bf2`；此后针对本文的
+代码评审又带出四个提交，记在 §7。
 
 ## 1. 问题现象
 
@@ -38,11 +39,11 @@ ROUTE[first-write] device=2 name=Mi 10 mode=0 musicVol=150/150 outputs=[1,2,18]
 
 `device=2` 外放、`mode=0` 正常、`musicVol=150/150` 顶格——播放侧全部正常，问题只能在内容本身。
 
-## 3. 根因
+## 3. 根因分析
 
-### 3.1 实测数据
+### 3.1 实测数据（小米 10 / Android 13，单机）
 
-把 demo 录制的 `audio.pcm`（48 kHz / 16 bit / 双声道）拉出来做 `ffmpeg astats`：
+把 demo 录制的 `audio.pcm`（48 kHz / 16 bit / 双声道）拉出来做 `ffmpeg astats`。下面这组数字只来自这一台设备：
 
 | 指标 | 实测 | 正常参考 |
 |------|------|----------|
@@ -54,14 +55,29 @@ ROUTE[first-write] device=2 name=Mi 10 mode=0 musicVol=150/150 outputs=[1,2,18]
 
 RMS 比正常媒体低约 **22 dB**，线性幅度上差十几倍；峰值还空着 18.9 dB 余量完全没用上。
 
-### 3.2 成因
+### 3.2 成因推断
 
 `MicRecorder` 的采集源默认是 `MediaRecorder.AudioSource.VOICE_COMMUNICATION`，并无条件挂载
-`AcousticEchoCanceler` + `AutomaticGainControl` + `NoiseSuppressor`。这条平台 VoIP 采集链：
+`AcousticEchoCanceler` + `AutomaticGainControl` + `NoiseSuppressor`。**当前推断**是这条平台 VoIP
+采集链造成了 §3.1 的两项观测：
 
-- 把电平归一到**通话语音**档位，远低于媒体内容——这是响度缺口的来源；
+- 把电平归一到**通话语音**档位，远低于媒体内容——推断为响度缺口的来源；
 - 只提供**单声道**，请求 `CHANNEL_IN_STEREO` 时把同一份内容复制到两个声道——这解释了两个声道
   逐位相同，也说明 OPUS 在用 128 kbps 编两条完全一样的声道。
+
+**这只是推断，现有证据不足以把它写成平台级行为。** 局限如实记录如下：
+
+- 数据只来自小米 10（Android 13）**一台**设备。`VOICE_COMMUNICATION` 的具体处理链由厂商实现，
+  换一台设备未必是同样的表现。
+- 改前 / 改后不是受控实验：采集源、三个音效、声道配置、录音内容是**同时**变的（§6 的两点说明
+  记录了同一件事）。因此无法把响度差异归到其中任何单一变量头上。两项观测里，声道复制与配置的
+  对应关系最直接；电平归一的因果链最弱，它同样可以由录音内容或嘴离麦距离解释。
+
+要坐实因果，需要的是受控 A/B：固定声源与录音内容，先只切采集源（音效全关），再只切音效（采集源
+固定），并在两台以上不同厂商的设备上复现。**这组实验尚未进行。**
+
+因果是否坐实不影响改动方向：录制回放场景本就不该走 VoIP 采集链（理由见 `MicRecorder` 的 KDoc，
+与本机数据无关），并且改后的电平与听感确有改善（§6）。
 
 排查过程中一度把 §3.1 的 `Noise floor = -inf` 当作降噪器把背景压成数字绝对零的证据。**该归因已被
 后续实测推翻**：换用 `MIC`、三个音效全部关闭后重录，`Noise floor` 仍为 `-inf`。这个指标随录音内容
@@ -177,9 +193,9 @@ track 的听感是音调升高、速度变快。
 1. **`AudioActivity` 的 OPUS 码率仍是 128 kbps**，且是这一组配置里唯一没有抽成常量的字面量。
    改单声道前它名义上编两条声道（实际是同一份内容），现在编一条真正的单声道，128 kbps 对单声道
    OPUS 偏高（语音场景通常 24–64 kbps 即可）。未调整，因为这是 demo、码率不影响正确性。
-2. **`MicRecorder.initAdvancedFeatures()` 的三个 `AudioEffect` 未被持有、从不 `release()`**
-   （`:205` 起）。`audioRecord.release()` 会带走 native 侧的 effect，功能上不出错，但这三个 Java
-   对象要等 GC 终结器才回收，与仓库的确定性释放约定不符。本次未处理。
+2. ~~**`MicRecorder.initAdvancedFeatures()` 的三个 `AudioEffect` 未被持有、从不 `release()`**~~
+   **已在本文写成后处理，见 §7。** 原文还称「`audioRecord.release()` 会带走 native 侧的 effect，
+   功能上不出错」——这句话也是错的，实际风险比原文估计的严重，详见 §7.1。
 3. **公开 API 仍是 `Long` 毫秒**：`BaseMediaCodecSynchronous.eosDrainTimeoutMs`（`protected open val`，
    有子类覆写）、`DebounceExt` 的 `debounceTime`、`ScreenCountdownManager` 的
    `countdownDurationMillis` / `warningThresholdMillis` / `remainingTimeMillis`。这些是下游最容易
@@ -233,3 +249,46 @@ track 的听感是音调升高、速度变快。
   §4.2 显式回切是否奏效的唯一验证手段。
 - `00-documents/2026-09-02-audio-media-teardown-followup-fixes_cc.md` §13.7 / §14.6 / §15.2 的真机清单
   **仍然全部未做**，不受本次改动影响。
+
+## 7. 评审带出的后续提交
+
+`545553bf2` 之后对本文与相关代码做了一轮评审，产生以下四个提交。它们不属于 §4 的原始改动，单列于此。
+
+### 7.1 音效的持有与释放（`87c4cd656`）
+
+§5 第 2 项原写「三个 `AudioEffect` 未被持有、从不 `release()`，`audioRecord.release()` 会带走 native
+侧的 effect，功能上不出错」。后半句是错的：`AudioEffect` 持有一个挂在 `AudioRecord` session 上的
+原生音效，丢掉最后一个强引用后，GC 可以在**录音进行中**跑终结器把那个原生音效拆掉——双向语音会在
+任意时刻静悄悄失去回声消除。这不是「等 GC 回收的整洁性问题」，是功能问题。
+
+改法：三个音效存入字段、持有至会话结束，并在 `releaseAdvancedFeatures()` 中先于 `AudioRecord`
+显式释放，复用既有的一次性 `released` 守卫。
+
+### 7.2 音效启用结果校验与构造回滚（`d69cc79d7`）
+
+`initAdvancedFeatures()` 用 `enabled = true` 开启音效，Kotlin 的属性语法会丢弃
+`AudioEffect.setEnabled()` 的状态码。被平台拒绝开启的音效照样留在字段里、被当作已生效——双向语音
+在没有回声消除的情况下继续跑，日志里没有任何线索。现改为显式判断 `== AudioEffect.SUCCESS`，未能
+开启的立即 `release()`，字段保持 `null`。
+
+同时补上构造失败的回滚：`AudioRecord` 构造或音效挂载抛异常时，调用方拿不到对象引用，也就无从调用
+`stopRecordAndJoin()`，已创建的编码器、`AudioRecord` 与音效只能等 GC 终结器。现由
+`rollbackFailedInit()` 先释放已建成的部分，再把原异常抛出。
+
+### 7.3 结论范围收窄（`d8118b58e` 与本次文档修订）
+
+`MicRecorder` 的 KDoc 与本文 §3 原先把小米 10 的单机观测写成了平台级行为。已改为按「该设备上的
+观测 + 当前推断」表述，并写明所缺的受控 A/B（见 §3.2 末尾）。
+
+### 7.4 demo 录音文件改名（`941a2ff20`）
+
+`AudioActivity` 改单声道后仍写 `audio.pcm` / `audio.aac` / `audio.opus`。旧版本留在
+`externalFilesDir` 的双声道录音会按新的单声道配置打开，裸 PCM 大约以双倍速播放。改名为
+`audio_mono.*`，旧文件自然不再被拾取；不做迁移或格式协商——这是 demo 自己的临时录音。
+
+### 7.5 §7 各项的验证状态
+
+- `:audio:testDebugUnitTest` 45 个用例通过；`audio` / `demo` 的 ktlint、detekt 与
+  `:demo:compileDevDebugKotlin` 通过（评审在 `941a2ff20` 上执行，**不含 `d69cc79d7`**，后者需重跑）。
+- **未做真机验证**：音效是否真的启用成功、`setEnabled` 失败时的新分支、构造回滚路径，以及 §6 仍挂着的
+  双机回声消除，全部只能靠设备确认。

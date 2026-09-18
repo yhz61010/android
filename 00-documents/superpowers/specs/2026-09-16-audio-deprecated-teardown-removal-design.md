@@ -191,10 +191,13 @@ override suspend fun releaseAndJoin() {
 
 ### 4.3 `BaseMediaCodec`
 
-删除整个弃用的 `open fun release()`（当前 `:226-246`）：
+删除整个弃用的 `open fun release()`（当前 `:226-246`，含上方 KDoc）：
 
 ```kotlin
 // 删除
+/**
+ * Release resource.
+ */
 @Deprecated(
     "Non-suspend release cannot guarantee the worker has exited. " +
         "Use releaseAndJoin() for deterministic shutdown.",
@@ -202,6 +205,8 @@ override suspend fun releaseAndJoin() {
 )
 open fun release() {
     if (!markReleasing()) return
+    // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
+    // when it must also wait for the worker to finish.
     codecJob?.cancel()
     codecJob = null
     ioScope.cancel()
@@ -322,9 +327,9 @@ suspend fun releaseAndJoin() {
 结论：`decoderWrapper?.releaseAndJoin()` 与 `audioTrackPlayer.release()` 的相对顺序，和
 `stopPlayingAndJoin()` 之间没有任何交互可言，上面给出的写法直接采用即可，无需 a/b 两案对比。
 
-关于 `AudioReceiver.kt:190-198` 那段 SIGABRT 注释（`releaseBuffer() track ... disabled due to
+关于 `AudioReceiver.kt:202-210` 那段 SIGABRT 注释（`releaseBuffer() track ... disabled due to
 previous underrun`）：它描述的是 `AudioPlayer` **自己那个** track 在历史 PCM 配置下的问题。当前
-`AudioReceiver.defaultAudioType`（`:33`）是 `AudioType.OPUS`，该 track 从不启动，也就不可能
+`AudioReceiver.defaultAudioType`（`:32`）是 `AudioType.OPUS`，该 track 从不启动，也就不可能
 underrun。注释保留作为历史记录即可，措辞上应注明它约束的是 PCM 路径。
 
 ### 4.6 `MicRecorder`
@@ -333,7 +338,7 @@ underrun。注释保留作为历史记录即可，措辞上应注明它约束的
 
 删除非挂起释放路径：
 
-- `fun stopRecord()`（`:411`）→ 删除。调用方只有 `AudioSender:142` 与 `AudioReceiver:200`，
+- `fun stopRecord()`（`:411`）→ 删除。调用方只有 `AudioSender:152` 与 `AudioReceiver:212`，
   两者本就要按 4.7 改为挂起
 - `private fun finishRecorderRelease(stopSucceeded: Boolean)`（`:437`）→ 删除
 
@@ -520,9 +525,19 @@ internal class SuspendTeardownGate {
 
 #### 4.7.3 `AudioSender`：可取消队列与可等待关闭
 
-`sendRecAudioThread()` 和 `startPlayThread()` 现在都会阻塞在 `ArrayBlockingQueue.take()`，
-`ioScope.cancel()` 不会中断这种 Java 阻塞。两个 worker 因此会永久占用 `Dispatchers.IO`
-线程并持有 `AudioSender`。本次必须同步修复，不再将它列为范围外问题。
+`sendRecAudioThread()` 和 `startPlayThread()` 都阻塞在 `ArrayBlockingQueue.take()` 上。
+本文档前几轮复审据此判定：`ioScope.cancel()` 无法中断这种 Java 阻塞，两个 worker 会永久
+占用 `Dispatchers.IO` 线程并持有 `AudioSender`，并把 Channel 改造列为必须的缺陷修复。
+
+**该前提已失效**（第五次复审，2026-09-18）：提交 `5672ecbbd` 已把两处 `queue.take()` 包进
+`runInterruptible { }`，取消时会中断阻塞线程，worker 能够正常退出。同一提交还把
+`AudioReceiver` 的两个 worker 从 `poll()` + `delay(10.milliseconds)` 改成了同样的阻塞取数
+写法，并在 KDoc 中写明为何废弃轮询。**线程泄漏在当前源码中已经不存在。**
+
+Channel 改造仍然建议实施，但理由已变：它给出明确的 `close()` 语义（关闭后迟到回调的
+`trySend()` 直接失败，不在消费者退出后滞留帧），并免去对线程中断的依赖。实施者
+**不得**再把它当成缺陷修复——提交信息不要写成修泄漏，真机验证也不要按"worker 泄漏"
+设计（§6.3 对应项已改为回归确认）。
 
 两个 `ArrayBlockingQueue<ByteArray>` 分别改为容量相同的 `Channel<ByteArray>`；普通回调用
 `trySend()` 保留“队列满时丢当前帧”的既有非阻塞语义，消费协程用 `for (data in channel)`
@@ -546,8 +561,14 @@ internal class SuspendTeardownGate {
 #### 4.7.4 `AudioReceiver`：同一关闭协议
 
 `AudioReceiver.stopServer()` 保持原名，只改为 suspend，并放入自己的
-`teardownGate.run { ... }`。关闭顺序为：先 `micRecorder.stopRecordAndJoin()`，再对可取消的
-poll/delay worker 执行 `cancelAndJoin()`，然后 `audioPlayer.releaseAndJoin()`，最后停止 server。
+`teardownGate.run { ... }`。关闭顺序为：先 `micRecorder.stopRecordAndJoin()`，再对两个 worker
+执行 `cancelAndJoin()`，然后 `audioPlayer.releaseAndJoin()`，最后停止 server。两个 worker 阻塞在
+`runInterruptible { queue.take() }` 上（`5672ecbbd` 起；此前是 `poll()` + `delay`），取消会中断
+该阻塞，因此 join 有界。
+
+**本次不改 `AudioReceiver` 的两个 `ArrayBlockingQueue`**，与 §4.7.3 的 `AudioSender` 有意不对称：
+该文件已 import `io.netty.channel.Channel`，再引入 `kotlinx.coroutines.channels.Channel` 会同名
+冲突，而 `runInterruptible` 已使其可取消，改造收益不足以抵消这处命名代价。
 同样使用嵌套 `try/finally` 保证后续资源总会被尝试。这保证 PCM / COMPRESSED_PCM 路径
 不会在 `AudioTrack.write()` 尚未退出时 release track。
 
@@ -689,7 +710,8 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
   `Audio sender/receiver teardown failed`、进程不崩，且随后 Activity 退出时的第二次关闭会等待
   同一 teardown，不会再次调用 AudioTrack/codec/netty release
 - `AudioSender` 关闭后确认两个 Channel worker 都已退出；重复进出 Activity 后不应累积
-  `DefaultDispatcher-worker-*` 阻塞线程
+  `DefaultDispatcher-worker-*` 阻塞线程。**这是回归确认而非缺陷验证**：`5672ecbbd` 的
+  `runInterruptible` 已消除该泄漏，本项只确认 Channel 改造没有把它带回来
 - `ADPCMActivity` 播放中立即退出，以及连续点击播放：旧 Job 只释放自己的 player，不得释放
   新 Job 创建的 player，且不得出现 write/release 并发
 
@@ -732,7 +754,7 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 | 异步回滚被并发停止取消 | 已由 3.4 的 `launch(NonCancellable)` 解决，需在代码注释中写明原因，避免后续被"优化"掉 |
 | netty 回调无法调用挂起的 `stop()` / `stopServer()` | 4 处非挂起回调使用带 handler 的专用 `cleanupScope`；`SuspendTeardownGate` 保证它们与 Activity 的关闭只执行一次 |
 | 删除 API 导致 `audio` 现有单测编译失败 | 20 处 `subject.release()` / `subject.stop {}` 分布在三个测试文件。已在 6.2 逐条定案（迁移 / 重写 / 删除），且必须与删除 API 同提交。**第二次复审新增** |
-| worker 未退出时释放 AudioTrack | `AudioSender` 两个阻塞队列改 Channel，与 `AudioReceiver` 一样在释放 player 前 `cancelAndJoin()` |
+| worker 未退出时释放 AudioTrack | 两个类的 worker 自 `5672ecbbd` 起均可被取消（`runInterruptible`）；`AudioSender` 进一步改 Channel 以免去线程中断依赖，两者都在释放 player 前 `cancelAndJoin()` |
 | Activity 与 netty 并发重复关闭 | 两个类都通过 `SuspendTeardownGate` 共享一次 teardown 结果，不依赖 AudioTrack check-then-act |
 | 一次性门闩被误用于第二个会话 | KDoc 明确不可重置；`AudioSender` / `AudioReceiver` 是单会话 owner，每次启动必须新建实例 |
 | 共享 teardown 内的某个操作卡住，所有等待者一起卡住 | 门闩不设会破坏确定性的等待超时；要求关闭体内各资源操作自身有界，真机检查 Activity/netty 并发关闭能完成 |
@@ -748,6 +770,10 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 
 ## 10. 复审记录（2026-09-16）
 
+> **§10 至 §14 是历史复审记录。** 其中的行号反映各轮复审当时的源码，之后未逐轮回填，
+> 因此**不要拿它们定位代码**。当前有效的行号只在 §1 至 §9 与计划文档中维护；两者冲突时
+> 以 §1 至 §9 为准，并以实施时的 checkout 复核。
+
 本设计文档经过一次独立复审，逐条核对了它对源码的事实声明。**支点性结论全部成立**，7 处需要修正
 的已就地改入正文。
 
@@ -760,8 +786,8 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
   1.9.0，本项目实际用的是 **1.10.2**，见 `gradle/libs.versions.toml:32`；结论在 1.10.x 未变）：
   `NonCancellable.attachChild()` 返回 `NonDisposableHandle.INSTANCE`，不建立父子链。
   `launch(NonCancellable)` 确实脱离 scope 的 Job，能存活过 `ioScope.cancel()`。
-- §4.7 指出的两个既有 bug 真实存在：`AudioReceiver` 先 `cancel()` 再释放（`:189` vs `:199`）；
-  `AudioSender` 的 `ioScope.launch` 紧跟 `ioScope.cancel()`（`:143-147`）构成竞态。
+- §4.7 指出的两个既有 bug 真实存在：`AudioReceiver` 先 `cancel()` 再释放（`:201` vs `:211`）；
+  `AudioSender` 的 `ioScope.launch` 紧跟 `ioScope.cancel()`（`:153-157`）构成竞态。
 - §8 关于无子类覆写 `BaseMediaCodec.release()` 的结论成立。
 
 ### 10.2 已修正的 7 处
@@ -832,6 +858,8 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
    `AudioReceiver`，让 `AudioSender` 维持 bare cancel。第三次复审证明两个 `take()` worker 都会
    永久阻塞并持有所有者，与确定性关闭目标相冲突；当前方案已改为 Channel +
    `cancelAndJoin()`，见 §4.7。
+   **第五次复审补充**：该"永久阻塞"前提已被提交 `5672ecbbd` 的 `runInterruptible` 消除，
+   Channel 改造因此降级为简化而非缺陷修复，见 §14。
 
 ## 12. 第三次复审修正（2026-09-18）
 
@@ -840,6 +868,8 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
 
 1. `AudioSender` 的录音发送和接收播放 worker 都阻塞在 `ArrayBlockingQueue.take()`，bare
    cancel 无法使它们退出。改为有界 Channel + `cancelAndJoin()`。
+   **本条前提已于第五次复审作废**：提交 `5672ecbbd` 用 `runInterruptible` 修复了取消问题，
+   见 §14。
 2. Activity 和 netty 回调可并发调用关闭，`AudioTrack.state` 的 check-then-act 不是并发保护，
    `runCatching` 也无法阻止 native 重复 release。新增有单测覆盖的 `SuspendTeardownGate`。
 3. `ADPCMActivity` 的裸 thread 和 `onDestroy()` 共享可变 player，可以与正在进行的 write 并发
@@ -868,3 +898,44 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
    门闩；同时记录了共享同一 `Throwable` 和无门闩层超时所带来的等待耦合。
 6. 提交 `f27449db0` / `484d2c3d9` 的 message 过度描述了未实施的代码结果。
    本文已在首部显式更正状态；因提交已在远端，未经用户授权不改写历史。
+
+## 14. 第五次复审修正（2026-09-18）
+
+本轮以当前 checkout（`9eec9807f`）重新核对，修正两类问题。
+
+### 14.1 Channel 改造的事实前提已失效
+
+第三次复审（§12 第 1 条）把"两个 worker 阻塞在 `take()` 上、`ioScope.cancel()` 无法唤醒、
+因此永久占用 `Dispatchers.IO` 线程"作为 Channel 改造的依据。**该缺陷已在提交 `5672ecbbd`
+中由另一种方式修复**：两处 `queue.take()` 被包进 `runInterruptible { }`，取消会中断阻塞线程。
+同一提交还把 `AudioReceiver` 的两个 worker 从 `poll()` + `delay(10.milliseconds)` 改成了相同的
+阻塞取数写法。
+
+影响范围：§4.7.3、§4.7.4、§6.3、§8、§11.3、§12 已就地更正。结论是 Channel 改造由"缺陷修复"
+降级为"简化"，仍建议实施（`close()` 语义更清晰、免去线程中断依赖），但不得据此撰写修复性
+提交信息或缺陷验证项。
+
+同时明确了一处此前未记录的不对称：`AudioReceiver` 的两个队列**不**改 Channel，因为该文件
+已 import `io.netty.channel.Channel`。
+
+### 14.2 demo 侧行号取自过期快照
+
+第四次复审刷新了行号，但 `AudioSender` / `AudioReceiver` 两处取自 `5672ecbbd` 之前的版本，
+`AudioActivity` 与 `audio` 模块则正确。已更正的引用：
+
+| 位置 | 原记 | 当前 |
+|------|------|------|
+| `AudioReceiver` SIGABRT 注释 | `:190-198` | `:202-210` |
+| `AudioReceiver.defaultAudioType` | `:33` | `:32` |
+| `stopRecord()` 调用方 | `AudioSender:142` / `AudioReceiver:200` | `:152` / `:212` |
+| `AudioReceiver` cancel 早于 release | `:189` vs `:199` | `:201` vs `:211` |
+| `AudioSender` launch 紧跟 cancel | `:143-147` | `:153-157` |
+
+计划文档中的对应引用同批更正。**行号只是辅助定位，函数名与调用结构才是权威锚点**；实施前
+应再次以当时的 checkout 核对。
+
+### 14.3 §4.3 代码块补全
+
+`BaseMediaCodec.release()` 的删除范围 `:226-246` 正确，但引用的代码块此前漏掉了上方的
+`/** Release resource. */` KDoc 与函数体内关于 legacy 同步语义的两行注释，已补回，避免实施者
+按不完整的片段比对源码。

@@ -1,15 +1,23 @@
 # audio 模块弃用关闭 API 移除 实施计划
 
-> **实施状态（2026-09-18 复核）：本计划尚未执行。**
+> **实施状态（2026-09-18 第五次复核）：本计划尚未执行。**
 > 历史提交 `f27449db0` 与 `484d2c3d9` 虽然使用了像代码已实施的 message，
 > 实际 diff 只包含这两份 Markdown 文档。实施者必须从 Task 1 开始，不得把该历史
 > 当成源码、测试或真机验证证据；未经明确授权不重写已在远端的历史。
+>
+> **另有一处前提在本计划之外被修掉了**：提交 `5672ecbbd` 已用
+> `runInterruptible { queue.take() }` 让 `AudioSender` / `AudioReceiver` 的 worker 可被取消，
+> 并把 `AudioReceiver` 的轮询循环也改成了阻塞取数。因此 Task 3 的 Channel 改造是**简化，
+> 不是缺陷修复**，相关说明、验证项与提交信息均已据此改写，详见 spec §14。
+>
+> 行号以 `9eec9807f` 为准，仅作辅助定位；**函数名与调用结构才是权威锚点**，实施前请以
+> 当时的 checkout 复核。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 删除 `audio` 模块全部非挂起的弃用关闭 API，调用方一律改用确定性的 suspend 版本，消除 8 条弃用警告且不使用任何 `@Suppress`。
 
-**Architecture:** 分四批落地，**每一批都可编译和审查**：先补齐 suspend 契约，再迁移 `audio` 内部调用，然后以可测试的一次性关闭门闩迁移 demo，最后删除旧 API。关闭路径全程确定性可等待；启动失败回滚在 `NonCancellable` 上异步执行。`AudioSender` 的阻塞队列改为可取消 Channel，两个网络 demo 类的 Activity/netty 并发关闭共享同一 teardown 结果，`ADPCMActivity` 则由播放 Job 拥有和释放 player。
+**Architecture:** 分四批落地，**每一批都可编译和审查**：先补齐 suspend 契约，再迁移 `audio` 内部调用，然后以可测试的一次性关闭门闩迁移 demo，最后删除旧 API。关闭路径全程确定性可等待；启动失败回滚在 `NonCancellable` 上异步执行。`AudioSender` 的阻塞队列改为 Channel（简化而非缺陷修复，见 spec §14），两个网络 demo 类的 Activity/netty 并发关闭共享同一 teardown 结果，`ADPCMActivity` 则由播放 Job 拥有和释放 player。
 
 **Tech Stack:** Kotlin 2.3.10、kotlinx-coroutines、Android SDK 36 / minSdk 21、JUnit 5 + Mockk + Kluent、detekt（`maxIssues = 0`）、ktlint（行长 100）
 
@@ -477,10 +485,10 @@ an exception handler."
 >
 > | 文件 | 回调 | 调用 |
 > |------|------|------|
-> | `AudioSender.kt:72` | `onDisconnected()` | `stop()` |
-> | `AudioSender.kt:78` | `onFailed()` | `stop()` |
-> | `AudioReceiver.kt:98` | `onClientDisconnected()` | `stopServer()` |
-> | `AudioReceiver.kt:104` | `onStartFailed()` | `stopServer()` |
+> | `AudioSender.kt:73` | `onDisconnected()` | `stop()` |
+> | `AudioSender.kt:79` | `onFailed()` | `stop()` |
+> | `AudioReceiver.kt:97` | `onClientDisconnected()` | `stopServer()` |
+> | `AudioReceiver.kt:103` | `onStartFailed()` | `stopServer()` |
 >
 > 不先处理它们，本 Task 结束时会报四条
 > `Suspend function 'stop' should be called only from a coroutine or another suspend function`。
@@ -645,8 +653,8 @@ Activity 的所有等待者一起卡住。需要超时时必须在具体资源�
 
 - [ ] **Step 3: 给 `AudioSender` 与 `AudioReceiver` 各加关闭门闩与 `cleanupScope`**
 
-两个文件都在 `ioScope` 声明之后追加（当前 `AudioSender.kt:36` /
-`AudioReceiver.kt:49` 附近）：
+两个文件都在 `ioScope` 声明之后追加（当前 `AudioSender.kt:37` /
+`AudioReceiver.kt:48` 附近）：
 
 ```kotlin
     /**
@@ -672,10 +680,10 @@ Activity 的所有等待者一起卡住。需要超时时必须在具体资源�
 四处回调随之改写：
 
 ```kotlin
-// AudioSender.kt:72 / :78
+// AudioSender.kt:73 / :79
 cleanupScope.launch { stop() }
 
-// AudioReceiver.kt:98 / :104
+// AudioReceiver.kt:97 / :103
 cleanupScope.launch { stopServer() }
 ```
 
@@ -693,16 +701,21 @@ private val teardownGate = SuspendTeardownGate()
 
 文件 `AudioSender.kt`：
 
-1. 删除 `java.util.concurrent.ArrayBlockingQueue` import，新增
+1. 删除 `java.util.concurrent.ArrayBlockingQueue` import（当前 `:19`），新增
    `kotlinx.coroutines.channels.Channel`、`kotlinx.coroutines.Job` 和
-   `kotlinx.coroutines.cancelAndJoin`。
+   `kotlinx.coroutines.cancelAndJoin`。`AudioSender` 没有 import `io.netty.channel.Channel`，
+   不存在同名冲突；`AudioReceiver` 有，所以它的队列本次不改（spec §4.7.4）。
 2. 两个队列改为 `Channel<ByteArray>(64)`。`onRecording()` / `onReceivedData()` 的
    `offer(data)` 改为 `trySend(data)`，保留队列满时丢当前帧的非阻塞语义。原有
    `recAudioQueue.size` 日志不能原样保留（Channel 无对等公开属性）；改为记录
    `trySend` 的 `isSuccess` / `isFailure`，不为日志引入额外计数器。
-3. `sendRecAudioThread()` 和 `startPlayThread()` 不只是把 `take()` 机械换成 `for`；
-   必须完整改成下面的函数体，保留发送路径原有的逐帧异常隔离，避免一次
-   瞬时网络失败杀死整个 worker：
+3. `sendRecAudioThread()` 和 `startPlayThread()` 不只是把 `take()` 机械换成 `for`。
+   **先对齐现状**：`5672ecbbd` 之后这两个函数是 `while (true) { ensureActive();
+   val d = runInterruptible { queue.take() }; ... }`，`take()` 已被 `runInterruptible`
+   包住因而可取消（见 spec §14.1）。改用 Channel 后，`ensureActive()` 与
+   `runInterruptible` 都不再需要，`for` 的 `receive` 挂起点本身就是取消点。
+   必须完整改成下面的函数体，保留发送路径原有的逐帧异常隔离，避免一次瞬时网络
+   失败杀死整个 worker：
 
 ```kotlin
 private fun sendRecAudioThread() {
@@ -775,14 +788,16 @@ private fun startPlayThread() {
     }
 ```
 
-保留 `kotlinx.coroutines.launch`；删除已无调用的 `kotlinx.coroutines.cancel` 和
-`kotlinx.coroutines.ensureActive`。关闭时先停录音并关闭两个 Channel，使迟到回调的
+保留 `kotlinx.coroutines.launch`；删除已无调用的 `kotlinx.coroutines.cancel`（当前 `:22`）、
+`kotlinx.coroutines.ensureActive`（`:23`）和 **`kotlinx.coroutines.runInterruptible`（`:25`）**。
+最后一个容易漏：它是 `5672ecbbd` 为包住 `take()` 而加的，换成 Channel 后失效，detekt
+零容忍会直接失败。关闭时先停录音并关闭两个 Channel，使迟到回调的
 `trySend()` 失败，再等 worker 退出；因此 `AudioTrack.write()` 不会与 release 并发，
 也不会在无消费者时滞留音频帧或留下阻塞的 IO 线程。
 
 - [ ] **Step 5: `AudioReceiver.stopServer()` 改为可等待的一次关闭**
 
-文件 `AudioReceiver.kt`，`fun stopServer()`（当前 `:186`）改为：
+文件 `AudioReceiver.kt`，`fun stopServer()`（当前 `:198`）改为：
 
 ```kotlin
     suspend fun stopServer() {
@@ -791,7 +806,8 @@ private fun startPlayThread() {
                 micRecorder?.stopRecordAndJoin()
             } finally {
                 try {
-                    // Both loops poll and delay, so this cancellation and join is bounded.
+                    // Both loops block in runInterruptible { queue.take() }, so cancelling
+                    // interrupts the wait and this join is bounded.
                     ioScope.coroutineContext[Job]?.cancelAndJoin()
                 } finally {
                     try {
@@ -817,7 +833,7 @@ private fun startPlayThread() {
    由 `SuspendTeardownGate` 共享给并发等待者，并由调用方或 `cleanupScope` handler 记录。
 
 import 变化：新增 `kotlinx.coroutines.Job`、`kotlinx.coroutines.cancelAndJoin`；
-**删除 `kotlinx.coroutines.cancel`**（当前 `:19`）——`:189` 是全文唯一的 `cancel()` 调用点，替换后
+**删除 `kotlinx.coroutines.cancel`**（当前 `:20`）——`:201` 是全文唯一的 `cancel()` 调用点，替换后
 该 import 失效，detekt 零容忍会直接失败。
 
 - [ ] **Step 6: `AudioActivity` 只换方法名**
@@ -914,9 +930,10 @@ cancelled the suspend teardown before it finished. Cancelling last instead would
 have let the playback loop keep calling AudioPlayer.play() throughout the
 release, so the scope is joined before the release rather than after it.
 
-AudioSender used blocking queues that ignored coroutine cancellation. Both
-workers now consume Channels, so teardown can cancel and join them before
-releasing the player.
+AudioSender's queue waits were already made cancellable by wrapping take() in
+runInterruptible. Moving both workers onto Channels drops that dependency on
+thread interruption and gives teardown a close() to stop accepting late frames
+with, rather than fixing a leak that is still there.
 
 Both classes share concurrent Activity and netty shutdown through a one-shot
 gate. ADPCM playback now owns its player inside one lifecycle job, so playback
@@ -978,9 +995,12 @@ and release cannot race."
 
 - [ ] **Step 3: 删除 `BaseMediaCodec` 的弃用 `release()`**
 
-文件 `BaseMediaCodec.kt`，删除整个（当前 `:226-246`）：
+文件 `BaseMediaCodec.kt`，删除整个（当前 `:226-246`，含上方 KDoc）：
 
 ```kotlin
+    /**
+     * Release resource.
+     */
     @Deprecated(
         "Non-suspend release cannot guarantee the worker has exited. " +
             "Use releaseAndJoin() for deterministic shutdown.",
@@ -988,6 +1008,8 @@ and release cannot race."
     )
     open fun release() {
         if (!markReleasing()) return
+        // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
+        // when it must also wait for the worker to finish.
         codecJob?.cancel()
         codecJob = null
         ioScope.cancel()
@@ -1317,6 +1339,8 @@ Fatal signal 6 (SIGABRT)
   真机上要确认门闩确实让第二个调用等待而非再次进入，不能只信单测推导。
 - **worker 退出**：连续进出 `AudioActivity` 5 次以上，确认 `AudioSender` 的两个 Channel
   worker 都在 stop 返回前退出，不累积阻塞的 `DefaultDispatcher-worker-*` 线程。
+  这是**回归确认**：`5672ecbbd` 的 `runInterruptible` 已消除该泄漏，本项确认 Channel
+  改造没有把它带回来（spec §14.1）。
 - **ADPCM 所有权**：播放中立即退出，再连续点击播放。确认旧 Job 只释放自己的 player，
   不释放新 Job 的 player，不出现 AudioTrack write/release 并发。
 

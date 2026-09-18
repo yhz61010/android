@@ -98,11 +98,24 @@ VCL，32 及以上是参数集、SEI 与分隔符，它们属于其后那张图�
 队列**保留 `offer()` 未换成 `put()`**：阻塞式背压会在解码器停止排空时把投喂线程永久挂住，对
 demo 是更坏的故障模式。改为丢帧时打 error 日志，消除「静默」那一半。
 
-**复核修正（会破坏构建）**：新增的 `import kotlin.time.Duration.Companion.milliseconds` 被插在
-`kotlinx.coroutines.cancel` 与 `.delay` 之间。ktlint 的 `import-ordering` 要求字典序，而
-`kotlin.` 的第 7 个字符是 `.`（0x2E）、`kotlinx` 是 `x`（0x78），因此所有 `kotlin.*` 必须排在
-`kotlinx.*` 之前。`ignoreFailures = false`，这会直接让 `:demo:ktlintCheck` 失败。已上移修正。
-本轮改动的全部 Kotlin 文件已逐一复核 import 顺序，只此一处。
+**复核修正（风格一致性，非构建阻断）**：新增的
+`import kotlin.time.Duration.Companion.milliseconds` 被插在 `kotlinx.coroutines.cancel` 与
+`.delay` 之间。按字典序 `kotlin.` 的第 7 个字符是 `.`（0x2E）、`kotlinx` 是 `x`（0x78），所以
+`kotlin.*` 应排在 `kotlinx.*` 之前——仓库既有写法也是如此（例如
+`RecordSingleAppScreenActivity.kt:30-31`）。已上移修正。本轮改动的全部 Kotlin 文件已逐一复核
+import 顺序，只此一处。
+
+**但它不会让构建失败**，本仓库的两项 import 顺序检查都是关闭的：
+
+| 位置 | 配置 |
+|------|------|
+| `.editorconfig:17` | `ktlint_standard_import-ordering = disabled` |
+| `10-configs/detekt.yml:783` | `ImportOrdering: active: false` |
+
+规则未启用，`ignoreFailures = false` 便无从作用——后者管的是「检查产生失败项时是否中断构建」，
+而这里不会产生失败项。此处一度被记为「会破坏构建」，`5672ecbbd` 的提交信息里也是这个说法；
+改动该留，理由须更正。记在这里，以免后来者据此误判本仓库的 import 约束强度，或在排查真实的
+构建失败时找错方向。
 
 ## 5. 修复四：demo 音频接收端轮询（`cc79699b5`）
 
@@ -175,8 +188,9 @@ null，所以实际不会触发；但这个前提不写在调用点旁边，任�
   `delay` / `milliseconds` 的残留引用均已清零；新增 import 均被使用
 - HIGH 那条（`camera2live`）的代码路径经独立复核，未只凭排查结论采信；`AtomicLong` 已导入、
   `frameRate` 仍被 `KEY_FRAME_RATE` 使用（删除后不会触发 detekt 未用成员）
-- **对本文三个提交做了一轮复核**，发现并修正两处：§4 的 ktlint import 顺序（会破坏构建）、
-  §5.1 的 `take()` 可取消性与安全调用求值顺序
+- **对本文三个提交做了一轮复核**，发现并修正两处：§4 的 import 顺序（风格一致性，不影响构建
+  ——该项检查本仓库未启用）、§5.1 的 `take()` 可取消性与安全调用求值顺序。后者是真缺陷：
+  原改动为与 `AudioSender` 对齐，把它的两处隐患一并复制了过来
 - `lib-mvvm` **没有测试目录**，§8 原先担心的「既有单测断言精确相等会失败」不存在；
   `CountdownEffect.ShowWarning` 在仓库内也没有生产调用方，行为变更只影响库的外部使用者
 

@@ -170,7 +170,9 @@ class RecordSingleAppScreenActivity :
             (screenInfo.height * 0.8F / 16).toInt() * 16,
             densityDpi
         ).apply {
-            // FIXME This does not seem to work. Check setKeyFrameRate in createRecorder()
+            // Drives the capture cadence, the timestamps and the encoder's KEY_FRAME_RATE.
+            // It used to move only the timestamps, which is what the FIXME that stood here
+            // described; that was fixed in the recorder, so this really is 5 frames a second now.
             fps = 5f
         }
     }
@@ -241,18 +243,23 @@ class RecordSingleAppScreenActivity :
      * `outputLock` can only ever find the stream its own session opened.
      */
     private fun createRecorder(): Screenshot2H26xStrategy {
-        sessionBaseName = "screen-${System.currentTimeMillis()}"
+        // The session number joins the timestamp so two recorders built inside the same
+        // millisecond - stop and rotate in quick succession - cannot land on one stem and have
+        // the second recording truncate the first one's file.
+        val session = activeSession.incrementAndGet()
+        sessionBaseName = "screen-${System.currentTimeMillis()}-$session"
         return ScreenCapture.Builder(
             recorderSetting.width,
             recorderSetting.height,
             recorderSetting.dpi,
             null,
             ScreenCapture.BY_IMAGE_2_H26X,
-            screenDataListenerFor(activeSession.incrementAndGet())
+            screenDataListenerFor(session)
         )
             .setEncodeType(VIDEO_ENCODE_TYPE)
             .setFps(recorderSetting.fps)
-            .setKeyFrameRate(20)
+            // setKeyFrameRate() is gone: it no longer reaches the encoder. Key-frame spacing is
+            // setIFrameInterval(), which this recorder leaves at its default.
             .setQuality(80)
             .setSampleSize(1)
             // The MP4 is an addition: the raw stream below still receives every sample. The

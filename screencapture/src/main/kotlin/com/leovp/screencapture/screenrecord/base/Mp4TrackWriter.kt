@@ -24,7 +24,13 @@ import java.nio.ByteBuffer
  *   not match real time still produced a file that looked right. Here the timeline is written
  *   down, and a wrong one plays back at the wrong speed.
  *
- * Not thread safe. Every call must come from the single thread that delivers the codec callbacks.
+ * Not thread safe, and not confined to one thread either. [onOutputFormat] and [write] run on
+ * the codec's callback thread; [close] deliberately does not, because writing the index can take
+ * long enough to be worth keeping off it. What serialises them is the owner's protocol: every
+ * codec callback holds the recorder's callback lock, and teardown detaches this writer under that
+ * same lock before closing it, so no callback can still reach an instance that [close] has begun
+ * on. Move [close] under that lock and the recorder stalls its codec callbacks for the length of
+ * an index write; call any method without it and the protocol is gone.
  */
 internal class Mp4TrackWriter(private val outputFile: File) {
 
@@ -63,9 +69,14 @@ internal class Mp4TrackWriter(private val outputFile: File) {
     }
 
     /**
-     * Adds one encoded sample. Codec-config and end-of-stream buffers are skipped rather than
-     * written: the parameter sets are already in the sample entry via the track format, and the
-     * end-of-stream marker carries no payload.
+     * Adds one encoded sample. Codec-config buffers are skipped: the parameter sets already
+     * reached the sample entry through the track format.
+     *
+     * The end-of-stream flag is stripped rather than used to skip the buffer. That marker usually
+     * arrives on an empty buffer, which the emptiness check drops anyway, but an encoder is free
+     * to set it on the last buffer that still carries a frame - and that frame belongs in the
+     * file. Only the flag has to go, because it describes the buffer's role in the stream and not
+     * the sample's content.
      */
     fun write(encodedBytes: ByteArray, flags: Int, presentationTimeUs: Long) {
         if (broken) return

@@ -114,6 +114,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             private set
         var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
             private set
+        /**
+         * No longer reaches the encoder. It used to be wired to `MediaFormat.KEY_FRAME_RATE`,
+         * which is the frame rate and therefore belongs to [fps]; key-frame spacing is
+         * [iFrameInterval].
+         * Kept so existing callers still compile - retiring the setter is a separate API change.
+         */
         var keyFrameRate = 20
             private set
         var iFrameInterval = 1
@@ -164,7 +170,10 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
-            setInteger(MediaFormat.KEY_FRAME_RATE, builder.keyFrameRate)
+            // The frame rate, not builder.keyFrameRate. This key tells the encoder how many
+            // frames a second to spread KEY_BIT_RATE over; a number the display does not
+            // actually deliver misallocates that budget across the frames it does.
+            setInteger(MediaFormat.KEY_FRAME_RATE, builder.fps.toInt().coerceAtLeast(1))
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
             // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setInteger(MediaFormat.KEY_LATENCY, 0)

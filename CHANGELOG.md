@@ -153,6 +153,24 @@
 
 ### 修复 (Fixed)
 
+- **`screencapture` 的 `setFps()` 现在真的控制采集速率，时间戳改取自单调时钟**：
+  `Screenshot2H26xStrategy` 的采集循环此前 `delay(32.milliseconds)` 硬编码、完全不读
+  `builder.fps`，而 EGL 时间戳与上报给 `ScreenDataListener` 的 PTS 都由 `frameIndex * 1_000_000 / fps`
+  推算。帧计数法假设循环真的跑出了标称帧率，一旦某帧迟到，时间轴照样推进一整个周期,误差只累加
+  不回收。2026-09-18 真机实测：`fps = 5f` 时实际采集约 25 fps,PTS 比真实时间快 **4.95 倍**。
+  - 采集循环改为按 `fps` 推移截止时间（超时则丢弃积压,不追赶）；时间戳改为 `System.nanoTime()`
+    相对首帧；上报改为透传编码器自己的 `info.presentationTimeUs`。
+  - **行为变更**：`setFps()` 的使用者会看到采集速率真的改变。此前请求 5 fps 实得约 25 fps,
+    修正后 CPU 与码率开销显著下降。裸 Annex-B 流不携带 PTS,所以直接写文件的调用方此前看不出
+    问题；受影响的是把同一 strategy 喂给网络或封装的调用方。
+  - `ScreenProcessor.computePresentationTimeUs()` 已标记 `@Deprecated`（仓库内已无调用方）。
+- **`MediaFormat.KEY_FRAME_RATE` 改接 `fps`,两条录屏链路一并修正**：该键的语义是帧率,
+  `Screenshot2H26xStrategy` 与 `ScreenRecordMediaCodecStrategy` 此前都把 `builder.keyFrameRate`
+  接了上去,`fps` 只写进软提示 `KEY_MAX_FPS_TO_ENCODER`。编码器据此按错误的帧数分摊
+  `KEY_BIT_RATE`。MediaProjection 一路影响具体：`ScreenShareSetting` 默认 `fps = 20F`、
+  `keyFrameRate = 8`,等于按 8 fps 分摊码率却按约 20 fps 喂帧。
+  - **行为变更**：`setKeyFrameRate()` 不再抵达编码器,两个 Builder 上均保留以免调用方编译不过。
+    关键帧间隔请改用 `setIFrameInterval()`。
 - **`MicRecorder` 的音效改为持有并显式释放**：`enableAdvancedFeatures = true` 时创建的
   `AcousticEchoCanceler` / `AutomaticGainControl` / `NoiseSuppressor` 此前创建完即丢弃唯一强引用。
   录音期间它们可能被 GC 回收并连带销毁其原生音效——双向语音会在任意时刻失去回声消除——而且没有
@@ -464,6 +482,14 @@
   buffer。
 
 ### 新增 (Added)
+
+- **`ScreenCapture.Builder.setMp4OutputFile(File?)`**：在交给 `ScreenDataListener` 的裸流之外,
+  额外写一份 MP4（仅 `BY_IMAGE_2_H26X` 模式）。默认 `null`,不产生 MP4；监听器收到的内容一字未改,
+  现有调用方不受影响。由 `MediaMuxer` 封装,轨道从编码器报告的 `MediaFormat` 开启。
+  - **文件在录制器释放之后才可播放**——索引（`moov`）是那时才写出的；进程中途被杀则该 MP4 作废,
+    裸流不受影响。
+  - **API 21-23 上请求 MP4 会把 H265 降级为 H264**：`MediaMuxer` 自 API 24 起才能写 HEVC 轨道。
+    仅对设置了本项的调用方生效。实际编码格式可从 `Screenshot2H26xStrategy.encodeType` 读回。
 
 - **HTTP-4 `BaseProgressObserver.cancel()` / `isDisposed`**:暴露取消入口,调用方可在页面销毁时
   终止订阅,避免向已销毁界面回调。

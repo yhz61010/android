@@ -55,9 +55,9 @@ interface AudioDecoderWrapper {
 1. **弃用方法直接删除**，公开面只保留 suspend 版本。对 JitPack 下游是源码 + 二进制双重破坏性
    变更。本仓库已在同一区域做过同类变更（`BaseMediaCodec` 一次性会话、AAC/OPUS 文件播放器挂起
    入口），风格一致。
-2. **`stop()` 一路改为 suspend 推到 Activity**，Activity 侧用
-   `lifecycleScope.launch(NonCancellable) { ... }` 收尾，与本仓库
-   `RecordSingleAppScreenActivity.releaseRecorder()` 的既有做法一致。
+2. **`stop()` 一路改为 suspend 推到资源所有者**。Activity 或非挂起回调必须使用
+   自己管理且带异常处理的 teardown scope；不把 `lifecycleScope.launch(NonCancellable)` 当成
+   通用包裹。仅在已受跟踪的协程内将最终释放段放入 `withContext(NonCancellable)`。
 
 ## 3. 关键技术约束与方案选择
 
@@ -451,22 +451,27 @@ internal class SuspendTeardownGate {
 
 两个 `ArrayBlockingQueue<ByteArray>` 分别改为容量相同的 `Channel<ByteArray>`；普通回调用
 `trySend()` 保留“队列满时丢当前帧”的既有非阻塞语义，消费协程用 `for (data in channel)`
-或 `receive()`。关闭顺序改为：
+或 `receive()`。原 `queue.size` 调试日志改为记录 `trySend` 成功/失败，不引入额外计数器。
+关闭顺序改为：
 
 1. `micRecorder?.stopRecordAndJoin()`，先停止新的录音帧。
-2. `ioScope.coroutineContext[Job]?.cancelAndJoin()`，等两个 Channel worker 退出。
-3. `audioPlayer?.releaseAndJoin()`，此时已无人再调用 `play()`。
-4. 顺序执行 `senderClient.disconnectManually()` 与 `release()`。
+2. 关闭两个 Channel，使网络迟到回调的 `trySend()` 失败，不在消费者退出后滞留帧。
+3. `ioScope.coroutineContext[Job]?.cancelAndJoin()`，等两个 Channel worker 退出。
+4. `audioPlayer?.releaseAndJoin()`，此时已无人再调用 `play()`。
+5. 顺序执行 `senderClient.disconnectManually()` 与 `release()`。
 
 整个顺序放在 `teardownGate.run { ... }` 内。这同时修复旧实现中
 `ioScope.launch { client release }` 紧跟 `ioScope.cancel()` 导致清理尚未开始就被取消的竞态。
+每一步用嵌套 `try/finally` 串联，保证某一资源释放失败时仍会尝试后续资源；最终失败
+仍通过门闩传播给所有等待者。
 
 #### 4.7.4 `AudioReceiver`：同一关闭协议
 
 `AudioReceiver.stopServer()` 保持原名，只改为 suspend，并放入自己的
 `teardownGate.run { ... }`。关闭顺序为：先 `micRecorder.stopRecordAndJoin()`，再对可取消的
 poll/delay worker 执行 `cancelAndJoin()`，然后 `audioPlayer.releaseAndJoin()`，最后停止 server。
-这保证 PCM / COMPRESSED_PCM 路径不会在 `AudioTrack.write()` 尚未退出时 release track。
+同样使用嵌套 `try/finally` 保证后续资源总会被尝试。这保证 PCM / COMPRESSED_PCM 路径
+不会在 `AudioTrack.write()` 尚未退出时 release track。
 
 #### 4.7.5 `AudioActivity`
 
@@ -513,9 +518,10 @@ poll/delay worker 执行 `cancelAndJoin()`，然后 `audioPlayer.releaseAndJoin(
 
 这是**给下游的通用建议，不是仓库内的统一改法**（复审修正）。仓库内已有清理机制的文件应沿用
 自己的机制：`AudioActivity` 用它现成的 `launchCleanup` + `ioScopeJob.complete()`，只换方法名；
-确实没有 scope 的位置（如 `ADPCMActivity.onDestroy()`）才需要上面的包裹；而被**非挂起接口
-回调**调用的位置（`AudioSender` / `AudioReceiver` 的 netty 监听器）需要一个专用的 teardown
-scope。详见 4.7。
+生命周期入口（如 `ADPCMActivity`）让受跟踪的 lifecycle Job 拥有资源，并在自身
+`finally` 里完成最终释放；而被**非挂起接口回调**调用的位置
+（`AudioSender` / `AudioReceiver` 的 netty 监听器）需要一个专用的 teardown scope。
+详见 §4.7。
 
 demo 内部另有两个函数签名变化，不属公开面、不影响 JitPack 下游，但实施时会连带改动：
 `AudioSender.stop()` 与 `AudioReceiver.stopServer()` 均变为 `suspend`。
@@ -609,10 +615,12 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 
 ```bash
 ./gradlew --continue --rerun-tasks :audio:testDebugUnitTest :audio:detekt \
-  :audio:ktlintCheck :demo:ktlintCheck :demo:detekt :demo:compileDevDebugKotlin
+  :audio:ktlintCheck :demo:testDevDebugUnitTest :demo:ktlintCheck :demo:detekt \
+  :demo:compileDevDebugKotlin
 ```
 
-必须带 `--rerun-tasks`：按 CLAUDE.md 约定，刚修改过的路径不得只依赖 `UP-TO-DATE`。
+必须带 `--rerun-tasks`：刚修改过的路径不得只依赖 `UP-TO-DATE`。Codex 在本机
+实施时执行这些命令；Claude Code 只能进行源码静态分析，必须将 Gradle 结果标为未验证。
 
 ## 7. 实施批次
 
@@ -688,8 +696,9 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 
 ### 10.3 未改动的前提
 
-§2 的两个既定前提（弃用方法直接删除、`stop()` 一路改 suspend 推到 Activity）未重新评估，
-按文档声明维持。
+本节当时未重新评估 §2 的两个既定前提（弃用方法直接删除、`stop()` 改为
+suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复审修正，当前以
+§2、§4.7 和 §12 为准。
 
 ## 11. 第二次复审记录（2026-09-16）
 
@@ -708,6 +717,7 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 - §10.2 的 F2 / F4 修正准确：`AudioActivity` 确有 `launchCleanup`（`:378`）与
   `ioScopeJob.complete()`（`:374`），`:345` / `:362` / `:363` 行号全对；`ADPCMActivity` 确实没有
   任何协程 scope，`:115` 在 `kotlin.concurrent.thread` 块内，`:121` 在 `onDestroy()`。
+  这是当时源码事实；实施方案已被 §12 修正为 lifecycle Job 所有权模型。
 - 全仓无 `BaseMediaCodec.release()` 的子类覆写；`audio` / `demo` 之外没有任何调用方。
 - `CHANGELOG.md` 的 `### 变更 (Changed)` 小节确实存在（`:58`）；demo 依赖
   `lifecycle-runtime-ktx`，`lifecycleScope` 可用。
@@ -732,6 +742,24 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
    `cleanupScope.launch { ... }`。备选方案（复用 `ioScope.launch(NonCancellable)`、或保留一个
    非挂起薄包装）均被否决：前者需要在四处重复 §4.6 那套异常包裹，后者等于重新引入一个
    "不确定性关闭"公开入口，与本次目标冲突。
-2. **播放循环竞态的修复程度（H2）**：只修 `AudioReceiver`（改 `cancelAndJoin()`），`AudioSender`
-   维持 bare cancel 并在注释与文档中写明原因。把 `AudioSender` 的 `recAudioQueue.take()` 改成带
-   超时的 `poll()`（可顺带修掉一个既有协程泄漏）被判定为超出本次范围，不做。
+2. **播放循环竞态的修复程度（H2），已被第三次复审推翻**：当时决定只修
+   `AudioReceiver`，让 `AudioSender` 维持 bare cancel。第三次复审证明两个 `take()` worker 都会
+   永久阻塞并持有所有者，与确定性关闭目标相冲突；当前方案已改为 Channel +
+   `cancelAndJoin()`，见 §4.7。
+
+## 12. 第三次复审修正（2026-09-18）
+
+本轮专门核对了确定性关闭的实际 worker 退出、并发重入、Activity 所有权和仓库执行边界，
+修正以下问题：
+
+1. `AudioSender` 的录音发送和接收播放 worker 都阻塞在 `ArrayBlockingQueue.take()`，bare
+   cancel 无法使它们退出。改为有界 Channel + `cancelAndJoin()`。
+2. Activity 和 netty 回调可并发调用关闭，`AudioTrack.state` 的 check-then-act 不是并发保护，
+   `runCatching` 也无法阻止 native 重复 release。新增有单测覆盖的 `SuspendTeardownGate`。
+3. `ADPCMActivity` 的裸 thread 和 `onDestroy()` 共享可变 player，可以与正在进行的 write 并发
+   release，或在连续点击时释放错误实例。改为由 lifecycle Job 构造、使用并在
+   `finally` 释放局部 player。
+4. 不再向下游推荐裸 `lifecycleScope.launch(NonCancellable)`；改用受管理的 teardown scope
+   和明确异常处理。
+5. Codex 在本机实施时执行定向 Gradle 验证；Claude Code 仅提供静态分析。所有提交、
+   推送和发布仍以用户明确授权为前提。

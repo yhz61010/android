@@ -78,9 +78,12 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
     }
     private val ioScope = CoroutineScope(ioScopeJob + Dispatchers.IO + ioExceptionHandler)
 
-    private val pcmFile by lazy { this.createFile("audio.pcm") }
-    private val aacFile by lazy { this.createFile("audio.aac") }
-    private val opusFile by lazy { this.createFile("audio.opus") }
+    // Named for the channel layout on purpose. Recording and playback used to be stereo; a
+    // leftover stereo capture opened with the mono configuration below would play at the wrong
+    // frame width. New names keep the old files from being picked up at all.
+    private val pcmFile by lazy { this.createFile("audio_mono.pcm") }
+    private val aacFile by lazy { this.createFile("audio_mono.aac") }
+    private val opusFile by lazy { this.createFile("audio_mono.opus") }
     private var pcmOs: BufferedOutputStream? = null
     private var aacOs: BufferedOutputStream? = null
     private var opusOs: BufferedOutputStream? = null

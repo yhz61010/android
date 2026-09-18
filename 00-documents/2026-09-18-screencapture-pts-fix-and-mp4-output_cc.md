@@ -222,7 +222,11 @@ private fun fallBackToAvcIfMuxerCannotCarryHevc() {
   只对 PTS 成立。真实调用方 `MediaProjectionService.kt:254-259` 传的 `ScreenShareSetting` 默认
   `fps = 20F`、`keyFrameRate = 8`，等于按 8 fps 分摊码率却按约 20 fps 喂帧。现已一并改为 `fps`。
   该链路由虚拟显示推帧、没有采集循环，所以只需改这一个键，不涉及节奏改造。
-- **§3.6 原先描述的「两次取锁」与代码不符**，已按实际代码改写（见上）。
+- **§3.6 的「两次取锁」**：文档与代码原本是一致的（都取两次），评审认为单个锁块更好——两者原子
+  摘除，不存在「encoder 已摘、writer 未摘」的中间态——并据此改写了文档，但**没有同步改代码**，
+  于是文档一度描述了一份不存在的实现。现已按文档把代码改为单个锁块。
+  当初改成两次取锁是因为不确定 `kotlin.synchronized` 是否带 `EXACTLY_ONCE` 契约；
+  仓库内 `BaseNettyClient.kt:602-604` 早有同样写法且一直编译通过，该顾虑不成立。
 - `Mp4TrackWriter` 的线程契约原写作「所有调用都来自编码器回调线程」，但 `close()` 恰恰是特意
   不在该线程上调用的。已改为陈述真实不变量：由调用方的回调锁加摘除协议串行化。
 - demo 侧三处残留一并清理：过期的 `FIXME`、已成死调用的 `setKeyFrameRate(20)`、以及

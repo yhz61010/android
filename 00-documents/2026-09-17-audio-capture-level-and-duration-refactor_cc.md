@@ -3,7 +3,7 @@
 本文记录两件事：真机验证音频模块时发现的「播放声音明显偏小」问题的完整排查与修复，以及顺带完成的
 `kotlin.time.Duration` 常量一致性整理。
 
-基线提交：`b5c9d614b`。§1–§6 所述改动对应提交范围 `b5c9d614b..545553bf2`；此后针对本文的
+基线提交：`d4b3cbcce`。§1–§6 所述改动对应提交范围 `d4b3cbcce..63217585f`；此后针对本文的
 代码评审又带出四个提交，记在 §7。
 
 ## 1. 问题现象
@@ -123,7 +123,7 @@ enableAdvancedFeatures = true
 
 ### 4.3 超时与轮询常量改为 `Duration`
 
-`b5c9d614b` 已把调用点从 `delay(Long)` 迁到 `delay(Duration)`，但常量仍是裸 `Long` 且保留 `_MS`
+`d4b3cbcce` 已把调用点从 `delay(Long)` 迁到 `delay(Duration)`，但常量仍是裸 `Long` 且保留 `_MS`
 后缀，于是出现 `AUDIO_TRACK_DRAIN_TIMEOUT_MS.milliseconds` 这种单位编码两遍、而声明处没有获得任何
 类型安全的写法。本次把常量本身改成 `Duration`：
 
@@ -136,7 +136,7 @@ enableAdvancedFeatures = true
 | `ScreenCountdownManager` | 新增 `TICK_INTERVAL = 1.seconds`，同时支撑 `delay()` 与毫秒递减 |
 | `CoroutineActivity` | 去掉 `1300L.milliseconds` 等 3 处冗余 `L` 后缀 |
 
-顺带修掉一处遗漏：`OpusFilePlayer` 的 `CODEC_EOS_TIMEOUT_MS` 在 `b5c9d614b` 中**未被迁移**，仍在调用
+顺带修掉一处遗漏：`OpusFilePlayer` 的 `CODEC_EOS_TIMEOUT_MS` 在 `d4b3cbcce` 中**未被迁移**，仍在调用
 `withTimeoutOrNull` 的 `Long` 重载，与同文件其它调用点不一致。本次一并转为 `Duration`。
 
 另外把散落的 `delay(20.milliseconds)` 收敛为具名的 `DRAIN_POLL_INTERVAL`（`OpusFilePlayer` 两处、
@@ -151,7 +151,7 @@ enableAdvancedFeatures = true
 区分开的手段，故保留，注释改为说明其长期价值与调用时机（`routedDevice` 在数据真正流动前返回 null，
 因此 `play()` 后与首次 `write()` 后各打一次）。
 
-### 4.5 采集与播放改为单声道（2026-09-18 追加，`28ea2acdc`）
+### 4.5 采集与播放改为单声道（2026-09-18 追加，`ad8f0256a`）
 
 本文初稿把这一项列为未决事项，等待改用 `MIC` 后重新评估。结论是这个 demo 不需要立体声，
 `AudioActivity` 的两个配置同步改为单声道，并顺带抽出重复的常量、改用具名参数：
@@ -217,7 +217,7 @@ track 的听感是音调升高、速度变快。
     :demo:compileDevDebugKotlin
   ```
 
-  §4.5 的单声道改动（`28ea2acdc`）是之后提交的，**未包含在这次运行中**，需再跑一次。
+  §4.5 的单声道改动（`ad8f0256a`）是之后提交的，**未包含在这次运行中**，需再跑一次。
 
 ### 设备实测：录制与回放（2026-09-18，小米 10 / Android 13）
 
@@ -252,9 +252,9 @@ track 的听感是音调升高、速度变快。
 
 ## 7. 评审带出的后续提交
 
-`545553bf2` 之后对本文与相关代码做了一轮评审，产生以下四个提交。它们不属于 §4 的原始改动，单列于此。
+`63217585f` 之后对本文与相关代码做了一轮评审，产生以下四个提交。它们不属于 §4 的原始改动，单列于此。
 
-### 7.1 音效的持有与释放（`87c4cd656`）
+### 7.1 音效的持有与释放（`2c42c5af4`）
 
 §5 第 2 项原写「三个 `AudioEffect` 未被持有、从不 `release()`，`audioRecord.release()` 会带走 native
 侧的 effect，功能上不出错」。后半句是错的：`AudioEffect` 持有一个挂在 `AudioRecord` session 上的
@@ -264,7 +264,7 @@ track 的听感是音调升高、速度变快。
 改法：三个音效存入字段、持有至会话结束，并在 `releaseAdvancedFeatures()` 中先于 `AudioRecord`
 显式释放，复用既有的一次性 `released` 守卫。
 
-### 7.2 音效启用结果校验与构造回滚（`d69cc79d7`）
+### 7.2 音效启用结果校验与构造回滚（`5a4463096`）
 
 `initAdvancedFeatures()` 用 `enabled = true` 开启音效，Kotlin 的属性语法会丢弃
 `AudioEffect.setEnabled()` 的状态码。被平台拒绝开启的音效照样留在字段里、被当作已生效——双向语音
@@ -275,12 +275,12 @@ track 的听感是音调升高、速度变快。
 `stopRecordAndJoin()`，已创建的编码器、`AudioRecord` 与音效只能等 GC 终结器。现由
 `rollbackFailedInit()` 先释放已建成的部分，再把原异常抛出。
 
-### 7.3 结论范围收窄（`d8118b58e` 与本次文档修订）
+### 7.3 结论范围收窄（`600b6e1bf` 与本次文档修订）
 
 `MicRecorder` 的 KDoc 与本文 §3 原先把小米 10 的单机观测写成了平台级行为。已改为按「该设备上的
 观测 + 当前推断」表述，并写明所缺的受控 A/B（见 §3.2 末尾）。
 
-### 7.4 demo 录音文件改名（`941a2ff20`）
+### 7.4 demo 录音文件改名（`00b8412a1`）
 
 `AudioActivity` 改单声道后仍写 `audio.pcm` / `audio.aac` / `audio.opus`。旧版本留在
 `externalFilesDir` 的双声道录音会按新的单声道配置打开，裸 PCM 大约以双倍速播放。改名为
@@ -289,6 +289,6 @@ track 的听感是音调升高、速度变快。
 ### 7.5 §7 各项的验证状态
 
 - `:audio:testDebugUnitTest` 45 个用例通过；`audio` / `demo` 的 ktlint、detekt 与
-  `:demo:compileDevDebugKotlin` 通过（评审在 `941a2ff20` 上执行，**不含 `d69cc79d7`**，后者需重跑）。
+  `:demo:compileDevDebugKotlin` 通过（评审在 `00b8412a1` 上执行，**不含 `5a4463096`**，后者需重跑）。
 - **未做真机验证**：音效是否真的启用成功、`setEnabled` 失败时的新分支、构造回滚路径，以及 §6 仍挂着的
   双机回声消除，全部只能靠设备确认。

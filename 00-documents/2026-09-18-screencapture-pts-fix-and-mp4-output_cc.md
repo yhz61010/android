@@ -232,6 +232,12 @@ private fun fallBackToAvcIfMuxerCannotCarryHevc() {
 - demo 侧三处残留一并清理：过期的 `FIXME`、已成死调用的 `setKeyFrameRate(20)`、以及
   `sessionBaseName` 仅用毫秒时间戳导致同毫秒内可能撞名。
 
+复审同时触发了一次**全仓排查**，找本文所修的三类缺陷（帧计数时间戳、丢弃
+`info.presentationTimeUs`、硬编码节奏）是否还存在于其它模块。结果另有四处需要修复，其中
+`camera2live` 的编码时间戳是本文缺陷的精确同构体。排查方法、四处修复，以及**核实为合理用法的
+清单**（哪些位置看着像同一个缺陷但其实不是）见
+`00-documents/2026-09-18-frame-timestamp-and-pacing-sweep_cc.md`。
+
 ## 9. 验证状态
 
 ### 已完成

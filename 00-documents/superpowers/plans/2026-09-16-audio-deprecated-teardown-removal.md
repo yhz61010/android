@@ -1,5 +1,10 @@
 # audio 模块弃用关闭 API 移除 实施计划
 
+> **实施状态（2026-09-18 复核）：本计划尚未执行。**
+> 历史提交 `f27449db0` 与 `484d2c3d9` 虽然使用了像代码已实施的 message，
+> 实际 diff 只包含这两份 Markdown 文档。实施者必须从 Task 1 开始，不得把该历史
+> 当成源码、测试或真机验证证据；未经明确授权不重写已在远端的历史。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 删除 `audio` 模块全部非挂起的弃用关闭 API，调用方一律改用确定性的 suspend 版本，消除 8 条弃用警告且不使用任何 `@Suppress`。
@@ -46,7 +51,7 @@
 | `audio/.../opus/OpusStreamPlayer.kt` | 同上 |
 | `audio/.../base/StreamPlayerStopper.kt` | 最终删非挂起的 `stop()` |
 | `audio/.../AudioPlayer.kt` | 加 `suspend releaseAndJoin()`；最终删 `release()` |
-| `audio/.../MicRecorder.kt` | `failRecordStart()` 回滚改异步；最终删 `stopRecord()` 与 `finishRecorderRelease()` |
+| `audio/.../MicRecorder.kt` | `rollbackFailedInit()` 和 `failRecordStart()` 分别迁移异步回滚；最终删 `stopRecord()` 与 `finishRecorderRelease()` |
 | `audio/src/test/.../mediacodec/BaseMediaCodecAsynchronousTest.kt` | 18 处 `subject.release()` 随 API 删除而迁移/重写 |
 | `audio/src/test/.../mediacodec/BaseMediaCodecSynchronousTest.kt` | `:38` `subject.release()` 迁移 |
 | `audio/src/test/.../base/StreamPlayerStopperTest.kt` | 删除只测 `stop()` 的那个用例 |
@@ -192,7 +197,7 @@ The non-suspend release() stays for now; callers move over next."
 **Files:**
 - Modify: `audio/src/main/kotlin/com/leovp/audio/aac/AacStreamPlayer.kt`（回滚路径）
 - Modify: `audio/src/main/kotlin/com/leovp/audio/opus/OpusStreamPlayer.kt`（回滚路径）
-- Modify: `audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt`（`failRecordStart`）
+- Modify: `audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt`（`rollbackFailedInit`、`failRecordStart`）
 - Modify: `audio/src/main/kotlin/com/leovp/audio/AudioPlayer.kt`（新增 `releaseAndJoin()`）
 
 **Interfaces:**
@@ -202,7 +207,7 @@ The non-suspend release() stays for now; callers move over next."
 - [ ] **Step 1: 改造 `AacStreamPlayer` 的初始化失败回滚**
 
 文件 `audio/src/main/kotlin/com/leovp/audio/aac/AacStreamPlayer.kt`，`initDecoderLocked()` 末尾的
-`.onFailure { }` 块（约 `:153-158`），把
+`.onFailure { }` 块（当前 `:154-159`），把
 
 ```kotlin
         }.onFailure {
@@ -258,7 +263,7 @@ The non-suspend release() stays for now; callers move over next."
 - [ ] **Step 3: 对 `OpusStreamPlayer` 做同样改造**
 
 文件 `audio/src/main/kotlin/com/leovp/audio/opus/OpusStreamPlayer.kt`，`.onFailure { }` 块
-（约 `:146-152`）改为：
+（当前 `:147-154`）改为：
 
 ```kotlin
         }.onFailure {
@@ -298,9 +303,51 @@ The non-suspend release() stays for now; callers move over next."
     }
 ```
 
-- [ ] **Step 4: 改造 `MicRecorder.failRecordStart()`**
+- [ ] **Step 4: 单独改造 `MicRecorder.rollbackFailedInit()`**
 
-文件 `audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt`，约 `:187-194`，把
+文件 `audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt`，当前 `:209-223`。这是构造失败
+路径，不能照搬 Step 5：函数已经用 `released.set(true)` 烧掉 one-shot guard，再调
+`finishRecorderReleaseAndJoin()` 会在 `releaseCompleted.await()` 上自锁。
+
+将完整函数改为：
+
+```kotlin
+    private fun rollbackFailedInit(record: AudioRecord?, cause: Throwable) {
+        LogContext.log.e(TAG, "MicRecorder init failed; rolling back", cause)
+        stopped.set(true)
+        released.set(true)
+        releaseAdvancedFeatures(true)
+        runCatchingPreservingCancellation { record?.release() }.onFailure {
+            LogContext.log.e(TAG, "rollback: AudioRecord release error", it)
+        }
+        val failedEncoder = encodeWrapper
+        encodeWrapper = null
+        ioScope.launch(NonCancellable) {
+            try {
+                runCatchingPreservingCancellation { failedEncoder?.releaseAndJoin() }.onFailure {
+                    LogContext.log.e(TAG, "rollback: encoder release error", it)
+                }
+            } finally {
+                releaseCompleted.complete(Unit)
+            }
+        }
+        ioScope.cancel()
+    }
+```
+
+不得把 `releaseCompleted.complete(Unit)` 留在 `launch` 之后；它是
+`finishRecorderReleaseAndJoin()` 中并发等待者观察“释放已真正结束”的屏障，必须位于
+encoder 挂起释放后的 `finally`。协程只访问捕获的局部 `failedEncoder` 和已完成
+初始化的 `releaseCompleted`；构造器会在 `MicRecorder.kt:184` / `:193` 重抛，因此不得
+在协程内访问可能尚未赋值的 `audioRecord`。闭包会保持部分构造的对象直到回滚
+完成，随后可回收。
+
+本步即新增（若尚未存在）`kotlinx.coroutines.NonCancellable` 和
+`kotlinx.coroutines.launch` import。
+
+- [ ] **Step 5: 改造 `MicRecorder.failRecordStart()`**
+
+文件 `audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt`，当前 `:289-295`，把
 
 ```kotlin
     private fun failRecordStart(message: String) {
@@ -334,10 +381,11 @@ The non-suspend release() stays for now; callers move over next."
     }
 ```
 
-新增 import（若尚未存在）：`kotlinx.coroutines.NonCancellable`、`kotlinx.coroutines.launch`。
+复用 Step 4 已新增的 `kotlinx.coroutines.NonCancellable` 与
+`kotlinx.coroutines.launch` import。
 `startRecord()` 维持非挂起，公开面不变。
 
-- [ ] **Step 5: 给 `AudioPlayer` 新增 `releaseAndJoin()`**
+- [ ] **Step 6: 给 `AudioPlayer` 新增 `releaseAndJoin()`**
 
 文件 `audio/src/main/kotlin/com/leovp/audio/AudioPlayer.kt`，在现有 `fun release()`（`:163`）
 **之后**追加新方法（本步**不删** `release()`）：
@@ -360,7 +408,7 @@ The non-suspend release() stays for now; callers move over next."
     }
 ```
 
-- [ ] **Step 6: 验证**
+- [ ] **Step 7: 验证**
 
 ```bash
 ./gradlew --continue --rerun-tasks :audio:compileDebugKotlin :audio:detekt :audio:ktlintCheck
@@ -372,15 +420,25 @@ The non-suspend release() stays for now; callers move over next."
 |------|-----------|
 | `AudioPlayer.kt:168` `aacStreamPlayer?.stopPlaying()` | 本 Task 只**新增** `releaseAndJoin()`，`fun release()` 留到 Task 4 才删，它的函数体仍在调弃用 API |
 | `AudioPlayer.kt:169` `opusStreamPlayer?.stopPlaying()` | 同上 |
-| `AacStreamPlayer.kt:223` `it.release()` | 弃用函数 `stopPlaying()` 自身的实现体 |
-| `OpusStreamPlayer.kt:217` `it.release()` | 同上 |
+| `AacStreamPlayer.kt:224` `it.release()` | 弃用函数 `stopPlaying()` 自身的实现体 |
+| `OpusStreamPlayer.kt:218` `it.release()` | 同上 |
 | `AacEncoderWrapper.kt:45` `encoder.release()` | 非挂起覆写 `release()` 的实现体 |
 | `OpusEncoderWrapper.kt:45` `encoder.release()` | 同上 |
 
 这六处在 Task 4 随函数一起删除。**若警告数不是 6，停下来查清原因再继续。**
 （早期版本此处写的是 4，漏算了 `AudioPlayer.release()` 里那两行——它要到 Task 4 才消失。）
 
-- [ ] **Step 7: 提交（仅用户明确授权时）**
+额外静态检查：
+
+```bash
+rg -n 'encodeWrapper\?\.release\(\)' \
+  audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt
+```
+
+预期只剩 `finishRecorderRelease()` 内的旧调用（当前 `:443`）；
+`rollbackFailedInit()` 中不得再有非挂起 encoder 释放。
+
+- [ ] **Step 8: 提交（仅用户明确授权时）**
 
 ```bash
 git add audio/src/main/kotlin/com/leovp/audio/aac/AacStreamPlayer.kt \
@@ -389,12 +447,12 @@ git add audio/src/main/kotlin/com/leovp/audio/aac/AacStreamPlayer.kt \
         audio/src/main/kotlin/com/leovp/audio/AudioPlayer.kt
 git commit -m "refactor(audio): move internal teardown onto the suspend API
 
-Two rollback paths cannot await a deterministic release: the stream players'
-runs inside the synchronized block that guards their decoder state, and
-MicRecorder's sits behind the non-suspend startRecord() entry point. Both now
-launch it on NonCancellable instead, which survives the ioScope.cancel() that
-follows, and both wrap the body because neither scope has an exception handler
-to catch what NonCancellable's missing parent would otherwise let escape."
+Four rollback paths cannot await a deterministic release: two stream-player
+failures run under synchronized decoder state, while MicRecorder can fail in
+its constructor or behind the non-suspend startRecord() entry point. They now
+launch cleanup on NonCancellable so it survives the ioScope.cancel() that
+follows. Each body contains ordinary failures because none of these scopes has
+an exception handler."
 ```
 
 ---
@@ -419,10 +477,10 @@ to catch what NonCancellable's missing parent would otherwise let escape."
 >
 > | 文件 | 回调 | 调用 |
 > |------|------|------|
-> | `AudioSender.kt:71` | `onDisconnected()` | `stop()` |
-> | `AudioSender.kt:77` | `onFailed()` | `stop()` |
-> | `AudioReceiver.kt:96` | `onClientDisconnected()` | `stopServer()` |
-> | `AudioReceiver.kt:102` | `onStartFailed()` | `stopServer()` |
+> | `AudioSender.kt:72` | `onDisconnected()` | `stop()` |
+> | `AudioSender.kt:78` | `onFailed()` | `stop()` |
+> | `AudioReceiver.kt:98` | `onClientDisconnected()` | `stopServer()` |
+> | `AudioReceiver.kt:104` | `onStartFailed()` | `stopServer()` |
 >
 > 不先处理它们，本 Task 结束时会报四条
 > `Suspend function 'stop' should be called only from a coroutine or another suspend function`。
@@ -541,6 +599,19 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
+/**
+ * One-shot teardown coordination for one owner instance.
+ *
+ * This gate is deliberately not resettable. AudioSender and AudioReceiver are single-session
+ * owners: every new start creates a new owner and therefore a new gate. Reusing either owner for
+ * another start/stop cycle would make later stop calls observe the first result without running
+ * cleanup and is outside this contract.
+ *
+ * Followers await the same completion and receive the same Throwable instance. There is no gate
+ * timeout: timing out here would let a caller proceed while cleanup was still mutating resources.
+ * Every operation inside the block must therefore be bounded itself; a stuck operation stalls all
+ * followers and must be diagnosed at that resource boundary.
+ */
 internal class SuspendTeardownGate {
     private val started = AtomicBoolean(false)
     private val completed = CompletableDeferred<Throwable?>()
@@ -563,11 +634,19 @@ internal class SuspendTeardownGate {
 }
 ```
 
+这个门闩不能重置。实施前再确认 `AudioActivity` 每次启动都新建
+`AudioSender` / `AudioReceiver`；不得在同一 owner 上执行第二轮 start/stop。后续
+调用者会抛出同一个 `Throwable` 实例，且门闩层没有超时：这避免了关闭仍在
+修改资源时调用方已经继续执行，但也意味着任一底层操作卡住都会使 netty 与
+Activity 的所有等待者一起卡住。需要超时时必须在具体资源操作层实现，不得给
+`completed.await()` 加超时后把未完成的关闭留在后台。
+
 重跑 Step 1 的定向测试，预期三个用例全部通过。
 
 - [ ] **Step 3: 给 `AudioSender` 与 `AudioReceiver` 各加关闭门闩与 `cleanupScope`**
 
-两个文件都在 `ioScope` 声明之后追加（`AudioSender.kt:35` / `AudioReceiver.kt:47` 附近）：
+两个文件都在 `ioScope` 声明之后追加（当前 `AudioSender.kt:36` /
+`AudioReceiver.kt:49` 附近）：
 
 ```kotlin
     /**
@@ -593,10 +672,10 @@ internal class SuspendTeardownGate {
 四处回调随之改写：
 
 ```kotlin
-// AudioSender.kt:71 / :77
+// AudioSender.kt:72 / :78
 cleanupScope.launch { stop() }
 
-// AudioReceiver.kt:96 / :102
+// AudioReceiver.kt:98 / :104
 cleanupScope.launch { stopServer() }
 ```
 
@@ -621,8 +700,35 @@ private val teardownGate = SuspendTeardownGate()
    `offer(data)` 改为 `trySend(data)`，保留队列满时丢当前帧的非阻塞语义。原有
    `recAudioQueue.size` 日志不能原样保留（Channel 无对等公开属性）；改为记录
    `trySend` 的 `isSuccess` / `isFailure`，不为日志引入额外计数器。
-3. `sendRecAudioThread()` 和 `startPlayThread()` 分别用 `for (data in recAudioQueue)` /
-   `for (data in receiveAudioQueue)` 消费；不再调用不可取消的 `take()`。
+3. `sendRecAudioThread()` 和 `startPlayThread()` 不只是把 `take()` 机械换成 `for`；
+   必须完整改成下面的函数体，保留发送路径原有的逐帧异常隔离，避免一次
+   瞬时网络失败杀死整个 worker：
+
+```kotlin
+private fun sendRecAudioThread() {
+    ioScope.launch {
+        for (data in recAudioQueue) {
+            runCatching {
+                // LogContext.log.i(ITAG, "PCM[${data.size}] to be sent.")
+                senderHandler?.sendAudioToServer(data)
+            }.onFailure { it.printStackTrace() }
+        }
+    }
+}
+
+private fun startPlayThread() {
+    LogContext.log.i(TAG, "Start decodeThread()")
+    ioScope.launch(Dispatchers.IO) {
+        for (data in receiveAudioQueue) {
+            audioPlayer?.play(data)
+        }
+    }
+}
+```
+
+`for` 的 `receive` 挂起点位于 `runCatching` 之外，所以 scope 取消仍能退出 worker。
+`startPlayThread()` 现状本就没有外层逐帧 `runCatching`，且 `AudioPlayer.play()` 内部已记录
+普通 `Exception`，不在这里新增重复包裹。
 4. 把旧 `stop()`：
 
 ```kotlin
@@ -676,7 +782,7 @@ private val teardownGate = SuspendTeardownGate()
 
 - [ ] **Step 5: `AudioReceiver.stopServer()` 改为可等待的一次关闭**
 
-文件 `AudioReceiver.kt`，`fun stopServer()`（`:179`）改为：
+文件 `AudioReceiver.kt`，`fun stopServer()`（当前 `:186`）改为：
 
 ```kotlin
     suspend fun stopServer() {
@@ -700,7 +806,7 @@ private val teardownGate = SuspendTeardownGate()
     }
 ```
 
-**两个关键点：**
+**三个关键点：**
 
 1. 不能只取消 scope 而不等待；那样 `startPlayThread()` 的 `audioPlayer?.play(it)` 可能仍在
    整个 `releaseAndJoin()` 期间继续跑，PCM 路径下 `write()` 会撞上 `AudioTrack.release()`——正是
@@ -711,20 +817,20 @@ private val teardownGate = SuspendTeardownGate()
    由 `SuspendTeardownGate` 共享给并发等待者，并由调用方或 `cleanupScope` handler 记录。
 
 import 变化：新增 `kotlinx.coroutines.Job`、`kotlinx.coroutines.cancelAndJoin`；
-**删除 `kotlinx.coroutines.cancel`**（`:19`）——`:182` 是全文唯一的 `cancel()` 调用点，替换后
+**删除 `kotlinx.coroutines.cancel`**（当前 `:19`）——`:189` 是全文唯一的 `cancel()` 调用点，替换后
 该 import 失效，detekt 零容忍会直接失败。
 
 - [ ] **Step 6: `AudioActivity` 只换方法名**
 
-文件 `AudioActivity.kt`。该文件已有 `launchCleanup(name) { block }`（`:378`，`block` 是
-`suspend () -> Unit`），跑在带 `SupervisorJob` + `CoroutineExceptionHandler` 的 `ioScope`（`:76`）
-上，`onDestroy()` 用 `ioScopeJob.complete()`（`:374`）而非 `cancel()`，正是为了让清理跑完。
+文件 `AudioActivity.kt`。该文件已有 `launchCleanup(name) { block }`（当前 `:387`，`block` 是
+`suspend () -> Unit`），跑在带 `SupervisorJob` + `CoroutineExceptionHandler` 的 `ioScope`（当前 `:79`）
+上，`onDestroy()` 用 `ioScopeJob.complete()`（当前 `:383`）而非 `cancel()`，正是为了让清理跑完。
 **不要引入 `lifecycleScope.launch(NonCancellable)`**——那会绕开这套机制。
 
-`:343-345` 的 `launchCleanup("Stop PCM playback") { ... }` 块内，把 `player?.release()` 改为
+`:352-355` 的 `launchCleanup("Stop PCM playback") { ... }` 块内，把 `player?.release()` 改为
 `player?.releaseAndJoin()`。
 
-`:362` 与 `:363` 两行**不动**：
+`:371` 与 `:372` 两行**不动**：
 
 ```kotlin
         launchCleanup("Stop audio receiver") { audioReceiver?.stopServer() }
@@ -872,7 +978,7 @@ and release cannot race."
 
 - [ ] **Step 3: 删除 `BaseMediaCodec` 的弃用 `release()`**
 
-文件 `BaseMediaCodec.kt`，删除整个（约 `:229-245`）：
+文件 `BaseMediaCodec.kt`，删除整个（当前 `:226-246`）：
 
 ```kotlin
     @Deprecated(
@@ -898,7 +1004,8 @@ and release cannot race."
 
 - [ ] **Step 4: 删除两个 stream player 的 `stopPlaying()`**
 
-`AacStreamPlayer.kt`（约 `:212-224`）与 `OpusStreamPlayer.kt`（约 `:206-218`）删除整个：
+`AacStreamPlayer.kt`（当前 `:213-225`）与 `OpusStreamPlayer.kt`（当前
+`:207-219`）删除整个：
 
 ```kotlin
     /**
@@ -954,12 +1061,20 @@ Task 2 新增的 `suspend fun releaseAndJoin()` 保留。
 
 - [ ] **Step 7: 删除 `MicRecorder` 的非挂起释放路径**
 
-文件 `MicRecorder.kt`：
+文件 `MicRecorder.kt`。前置检查：先确认 Task 2 已将 `rollbackFailedInit()` 中的
+   `encodeWrapper?.release()` 迁移为局部 encoder 的 `releaseAndJoin()`，且
+   `releaseCompleted.complete(Unit)` 位于同一协程的 `finally`。若仍有旧调用，本步删除
+   `AudioEncoderWrapper.release()` 后会直接编译失败，必须回到 Task 2 Step 4，不得在这里
+   临时抑制或改回非挂起释放。
 
-1. 删除 `fun stopRecord()`（约 `:251-258`）
-2. 删除 `private fun finishRecorderRelease(stopSucceeded: Boolean)`（约 `:277-289`）
-3. `:67` 的 KDoc 把 `Guards [finishRecorderRelease] so ...` 改为
-   `Guards [finishRecorderReleaseAndJoin] so ...`，否则 KDoc 链接指向已删除的函数
+1. 删除 `fun stopRecord()`（当前 `:411-418`）
+2. 删除 `private fun finishRecorderRelease(stopSucceeded: Boolean)`（当前 `:437-450`）
+3. 修正**两处** KDoc，不得只改第一处：
+   - `released` 字段上方（当前 `:122`）把
+     `Guards [finishRecorderRelease] so ...` 改为引用 `finishRecorderReleaseAndJoin`。
+   - `releaseAdvancedFeatures()` 上方（当前 `:358-360`）删除
+     `[finishRecorderRelease] /` 和“`both of which`”，只保留
+     `[finishRecorderReleaseAndJoin]` 与 `[rollbackFailedInit]` 的入口说明。
 
 保留 `suspend fun stopRecordAndJoin()` 与 `private suspend fun finishRecorderReleaseAndJoin()`。
 
@@ -1028,7 +1143,8 @@ Task 2 新增的 `suspend fun releaseAndJoin()` 保留。
   - **破坏性变更**：`AudioEncoderWrapper.releaseAndJoin()` 不再提供默认实现，
     `AudioDecoderWrapper` 新增同名抽象方法。自行实现这两个接口的下游必须补上该方法——此前的
     默认实现会静默退回非确定性关闭。
-  - 初始化失败回滚（两个 stream player 与 `MicRecorder.startRecord()`）改为在
+  - 初始化失败回滚（两个 stream player、`MicRecorder` 构造和
+    `MicRecorder.startRecord()`）改为在
     `NonCancellable` 协程上异步释放，因其调用点位于锁内或非挂起公开入口，无法等待。
     关闭路径不受影响，仍然完全确定性。
 ```
@@ -1060,6 +1176,10 @@ grep -n "fun stop(" audio/src/main/kotlin/com/leovp/audio/base/StreamPlayerStopp
 # 4) `fun release()` 应只剩 AudioTrackPlayer 一处 —— spec §9 明确不动它（它直接包装
 #    AudioTrack，没有 worker 需要 join）。出现第二处就是漏删。
 grep -rn "fun release()" audio/src/main ; echo "(应只有 AudioTrackPlayer.kt 一行)"
+
+# 5) 构造失败回滚不得残留已删的 encoder API，KDoc 也不得引用已删函数。
+rg -n 'encodeWrapper\?\.release\(\)|\[finishRecorderRelease\]' \
+  audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt ; echo "(空=符合要求)"
 ```
 
 **注意**：早期版本这里写的是 `grep -rn '@Suppress("DEPRECATION")' audio/src demo/src` 与
@@ -1132,7 +1252,7 @@ Fatal signal 6 (SIGABRT)
 ```
 
 这是 `AudioReceiver` 那段历史注释真正约束的路径——AAC/OPUS 路径不涉及 `AudioPlayer` 自己的 track。
-若复现，说明 Task 2 Step 5 中 `audioTrackPlayer.release()` 的位置需要调整，回到该步处理。
+若复现，说明 Task 2 Step 6 中 `audioTrackPlayer.release()` 的位置需要调整，回到该步处理。
 
 - [ ] **Step 4: `AudioActivity` 录放组合后退出**
 
@@ -1144,6 +1264,12 @@ Fatal signal 6 (SIGABRT)
 构造解码器初始化失败（例如向 `AacStreamPlayer.startPlayingStream()` 喂入损坏的 csd0）。
 确认：日志出现 `init failed, rolled back`；**不出现** `rollback release failed`；随后正常调用
 停止流程不受影响、不崩溃。
+
+另外在可控测试环境覆盖 `MicRecorder` 的两个构造失败入口（当前
+`:184` 的 `AudioRecord` 构造失败和 `:193` 的高级音频效果初始化失败）。
+确认原异常重抛，encoder 最终完成 `releaseAndJoin()`，且
+`releaseCompleted` 不在 encoder 释放前提前完成。如果当前没有可注入的失败环境，
+将这两个分支记为未验证，不得用普通启停成功代替。
 
 - [ ] **Step 6: 录音启动失败回滚**
 
@@ -1160,6 +1286,9 @@ Fatal signal 6 (SIGABRT)
   `Audio receiver teardown failed`；进程不崩；随后 Activity 退出时 `launchCleanup` 的第二次
   关闭等待同一 teardown，不再次调用 AudioTrack/codec/netty release。
 - 再试一次连接失败的场景（填一个不可达地址），让 `onFailed()` / `onStartFailed()` 走到。
+- 记录 teardown 耗时；四条路径都必须在有限时间内结束。门闩本身无超时，任一 netty
+  或媒体操作卡住都会让 Activity 与回调路径一起卡住；如发生这种情况，应回到
+  具体资源操作层定界，不在 `completed.await()` 外层粗暴超时。
 - **并发交错场景（重点）**：断开对端后**立刻**退出 Activity，让 netty 回调的
   `cleanupScope.launch { stop() }` 与 `launchCleanup { audioSender?.stop() }` 真正同时在飞。
   确认只出现一套实际 release 序列，后续调用等待 `SuspendTeardownGate` 的同一结果。
@@ -1222,6 +1351,9 @@ git commit -m "docs: record device verification for the audio teardown change"
 7. `:audio:testDebugUnitTest` 能编译并通过——Task 4 Step 8 的测试迁移已完成，且与删除 API
    在同一个提交里
 8. `SuspendTeardownGateTest` 覆盖并发只执行一次、等待同一结果、异常传播与
-   调用者取消
-9. 交付报告分开列出 Claude Code 静态分析、Codex 本机单测/构建、真机结果与
+   调用者取消；KDoc 明确单 owner、单会话、不可重置和无门闩层超时的契约
+9. `rollbackFailedInit()` 已无 `encodeWrapper?.release()`；其
+   `releaseCompleted.complete(Unit)` 只在 encoder `releaseAndJoin()` 所在协程的
+   `finally` 中执行；删除 `finishRecorderRelease()` 后无失效 KDoc 引用
+10. 交付报告分开列出 Claude Code 静态分析、Codex 本机单测/构建、真机结果与
    未验证项；未经明确授权没有提交或推送

@@ -1,5 +1,10 @@
 # audio 模块弃用关闭 API 彻底移除设计（2026-09-16）
 
+> **实施状态（2026-09-18 复核）：本文仍是设计，源码尚未实施。**
+> 历史提交 `f27449db0` 与 `484d2c3d9` 的 message 描述了计划中的代码成果，
+> 但它们的 diff 只修改本设计和对应计划文档；不得把这两个提交当成代码、
+> Gradle 或真机验证已完成的证据。未经明确授权不重写已在远端的历史。
+
 ## 1. 背景与目标
 
 `audio` 模块此前一轮"改为确定性一次性会话"的重构，给实现类补上了挂起版本的确定性关闭
@@ -9,12 +14,12 @@
 ```
 AudioPlayer.kt:168:26          aacStreamPlayer?.stopPlaying()
 AudioPlayer.kt:169:27          opusStreamPlayer?.stopPlaying()
-AacStreamPlayer.kt:154:63      audioDecoder?.release()
-AacStreamPlayer.kt:223:39      it.release()
+AacStreamPlayer.kt:155:63      audioDecoder?.release()
+AacStreamPlayer.kt:224:39      it.release()
 AacEncoderWrapper.kt:45:53     encoder.release()
 OpusEncoderWrapper.kt:45:53    encoder.release()
-OpusStreamPlayer.kt:147:63     audioDecoder?.release()
-OpusStreamPlayer.kt:217:39     it.release()
+OpusStreamPlayer.kt:148:63     audioDecoder?.release()
+OpusStreamPlayer.kt:218:39     it.release()
 ```
 
 **目标**：把这些调用全部替换为确定性的挂起版本，并删除弃用 API 本身。
@@ -186,7 +191,7 @@ override suspend fun releaseAndJoin() {
 
 ### 4.3 `BaseMediaCodec`
 
-删除整个弃用的 `open fun release()`（约 `:229-245`）：
+删除整个弃用的 `open fun release()`（当前 `:226-246`）：
 
 ```kotlin
 // 删除
@@ -214,7 +219,8 @@ open fun release() {
 
 ### 4.4 两个 stream player
 
-**删除弃用入口**（`AacStreamPlayer.kt:212-224` / `OpusStreamPlayer.kt:206-218`，含其上方的 KDoc）：
+**删除弃用入口**（当前 `AacStreamPlayer.kt:213-225` /
+`OpusStreamPlayer.kt:207-219`，含其上方的 KDoc）：
 
 ```kotlin
 // 删除
@@ -231,7 +237,8 @@ fun stopPlaying() {
 
 保留 `suspend fun stopPlayingAndJoin()`（已存在）。
 
-**改造初始化失败回滚**（`AacStreamPlayer.kt:153-158` / `OpusStreamPlayer.kt:146-152`）：
+**改造初始化失败回滚**（当前 `AacStreamPlayer.kt:154-159` /
+`OpusStreamPlayer.kt:147-154`）：
 
 ```kotlin
 // 现状
@@ -315,27 +322,70 @@ suspend fun releaseAndJoin() {
 结论：`decoderWrapper?.releaseAndJoin()` 与 `audioTrackPlayer.release()` 的相对顺序，和
 `stopPlayingAndJoin()` 之间没有任何交互可言，上面给出的写法直接采用即可，无需 a/b 两案对比。
 
-关于 `AudioReceiver.kt:183-190` 那段 SIGABRT 注释（`releaseBuffer() track ... disabled due to
+关于 `AudioReceiver.kt:190-198` 那段 SIGABRT 注释（`releaseBuffer() track ... disabled due to
 previous underrun`）：它描述的是 `AudioPlayer` **自己那个** track 在历史 PCM 配置下的问题。当前
-`AudioReceiver.defaultAudioType`（`:31`）是 `AudioType.OPUS`，该 track 从不启动，也就不可能
+`AudioReceiver.defaultAudioType`（`:33`）是 `AudioType.OPUS`，该 track 从不启动，也就不可能
 underrun。注释保留作为历史记录即可，措辞上应注明它约束的是 PCM 路径。
 
 ### 4.6 `MicRecorder`
 
+以下定位基于当前 checkout，实施时以函数名和调用结构为权威锚点，不仅依赖行号。
+
 删除非挂起释放路径：
 
-- `fun stopRecord()`（`:251`）→ 删除。调用方只有 `AudioSender:136` 与 `AudioReceiver:193`，
+- `fun stopRecord()`（`:411`）→ 删除。调用方只有 `AudioSender:142` 与 `AudioReceiver:200`，
   两者本就要按 4.7 改为挂起
-- `private fun finishRecorderRelease(stopSucceeded: Boolean)`（`:277`）→ 删除
+- `private fun finishRecorderRelease(stopSucceeded: Boolean)`（`:437`）→ 删除
 
-保留 `suspend fun stopRecordAndJoin()`（`:220`）与
-`private suspend fun finishRecorderReleaseAndJoin()`（`:291`）。
+保留 `suspend fun stopRecordAndJoin()`（`:380`）与
+`private suspend fun finishRecorderReleaseAndJoin()`（`:452`）。
 
-**`failRecordStart()` 的处理（`:187-194`）**
+**`rollbackFailedInit()` 的处理（`:209-223`）**
 
-`:192` 对 `finishRecorderRelease()` 的调用位于 `private fun failRecordStart(message: String)`，
-而后者由**非挂起的公开入口 `fun startRecord()`（`:123`）**在四处调用（`:126`、`:133`、`:137`、
-`:141`）。把它改成挂起会把 `startRecord()` 一并拖成 suspend，扩大破坏面到启动路径。
+该函数在构造器重抛初始化异常前回滚部分资源，当前 `:217` 调用将被删除的
+`AudioEncoderWrapper.release()`。它不能直接改调 `finishRecorderReleaseAndJoin()`：
+`rollbackFailedInit()` 在 `:212` 已将 `released` 置为 `true`，后者会进入
+`releaseCompleted.await()`，而此时还没有任何人会完成该 deferred，形成自锁。
+
+保留 effect 和 `AudioRecord` 的同步回滚；对 encoder 先捕获局部引用并置空字段，
+再启动不受随后 `ioScope.cancel()` 影响的异步释放。`releaseCompleted` 必须到
+encoder 挂起释放结束后才在 `finally` 中完成：
+
+```kotlin
+private fun rollbackFailedInit(record: AudioRecord?, cause: Throwable) {
+    LogContext.log.e(TAG, "MicRecorder init failed; rolling back", cause)
+    stopped.set(true)
+    released.set(true)
+    releaseAdvancedFeatures(true)
+    runCatchingPreservingCancellation { record?.release() }.onFailure {
+        LogContext.log.e(TAG, "rollback: AudioRecord release error", it)
+    }
+    val failedEncoder = encodeWrapper
+    encodeWrapper = null
+    ioScope.launch(NonCancellable) {
+        try {
+            runCatchingPreservingCancellation { failedEncoder?.releaseAndJoin() }.onFailure {
+                LogContext.log.e(TAG, "rollback: encoder release error", it)
+            }
+        } finally {
+            releaseCompleted.complete(Unit)
+        }
+    }
+    ioScope.cancel()
+}
+```
+
+构造器仍会立即重抛原异常，无法向一个尚未构造成功的对象提供可等待的关闭
+入口；因此这里和 stream player 初始化回滚一样，是“确定性关闭”目标之外的受控
+异步回滚。协程只使用捕获的局部 `failedEncoder` 与已初始化的
+`releaseCompleted`，不得访问可能尚未赋值的 `audioRecord`。该协程会有意保持这个
+未完成构造的对象，直到 encoder 回滚和 deferred 完成，之后即可回收。
+
+**`failRecordStart()` 的处理（`:289-295`）**
+
+`:294` 对 `finishRecorderRelease()` 的调用位于 `private fun failRecordStart(message: String)`，
+而后者由**非挂起的公开入口 `fun startRecord()`（`:225`）**在四处调用（`:228`、`:235`、
+`:239`、`:243`）。把它改成挂起会把 `startRecord()` 一并拖成 suspend，扩大破坏面到启动路径。
 
 按 3.3 已确立的原则处理——**关闭路径必须确定性，启动失败回滚可以异步**。`failRecordStart()` 是
 启动失败回滚，与 `initDecoderLocked()` 的回滚同类，因此适用同一写法：
@@ -372,31 +422,36 @@ private fun failRecordStart(message: String) {
 
 `ioScope.cancel()` 从 `stopAudioRecord()` **之前**挪到了整个函数**之后**（第二次复审修正：
 本文档早期版本称"相对顺序保持不变"，与实际改动不符）。这个换序是安全的：`failRecordStart()`
-的四个调用点（`:126`、`:133`、`:137`、`:141`）全部位于 `recordJob = ioScope.launch { }`
-（`:144`）之前，此刻 `ioScope` 还没有任何子协程，先取消还是后取消没有可观察差别。之所以要挪，
+的四个调用点（`:228`、`:235`、`:239`、`:243`）全部位于 `recordJob = ioScope.launch { }`
+（`:246`）之前，此刻 `ioScope` 还没有任何子协程，先取消还是后取消没有可观察差别。之所以要挪，
 是为了让上面那个 `launch` 确实排进调度——虽然 `NonCancellable` 已经保证它不会被取消，但把
 `cancel()` 放在最后读起来意图更清楚。`startRecord()` 维持非挂起，公开面不变。
 
-**为什么必须包住异常**（复审补充）：`MicRecorder.ioScope`（`:55`）是
+**为什么必须包住异常**（复审补充）：`MicRecorder.ioScope`（`:110`）是
 `CoroutineScope(Dispatchers.IO)`，**没有 `CoroutineExceptionHandler`**。而 3.4 的 `NonCancellable`
 恰恰把父 Job 换掉了，于是逃逸异常既没有父协程可以传播，也没有 handler 可以兜住，直接走平台默认
 处理器 → 进程崩溃。`finishRecorderReleaseAndJoin` 在编码器分支会重抛 `CancellationException`，
 `completeRecorderRelease` 还会回调客户端代码，都可能抛。4.4 的 stream player 回滚片段本来就包了
 `runCatchingPreservingCancellation`，此处必须同样处理。
 
-同一条约束适用于 4.4：`AacStreamPlayer.ioScope`（`:39`）与 `OpusStreamPlayer.ioScope`（`:45`）
+同一条约束适用于 4.4：`AacStreamPlayer.ioScope`（`:40`）与 `OpusStreamPlayer.ioScope`（`:46`）
 都是 `CoroutineScope(Dispatchers.IO + Job())`，同样没有 handler。
 
 **一个容易误判的细节**（第二次复审补充）：`runCatchingPreservingCancellation`
 （`RunCatchingExt.kt:8-9`）会**重抛** `CancellationException`，而
-`finishRecorderReleaseAndJoin` 的编码器分支（`:302-304`）恰好会重抛它——看上去像是上面这层包裹
+`finishRecorderReleaseAndJoin` 的编码器分支（`:462-467`）恰好会重抛它——看上去像是上面这层包裹
 漏了一条逃逸路径。实际不会崩：`launch(NonCancellable)` 的 `parentHandle === NonDisposableHandle`，
 `JobSupport.cancelParent()` 对 `CancellationException` 返回 `true`，不会走到
 `handleJobException()`，异常被静默丢弃。**只有非取消异常才会打到平台默认处理器**，而那些正是
 `.onFailure { }` 捕获的。结论不变，写在这里是为了避免后续维护者误以为此处有洞而"补"出问题。
 
-`:67` 的 KDoc 注释 "Guards [finishRecorderRelease] so ..." 引用了被删除的函数，必须同步改为引用
-`finishRecorderReleaseAndJoin`，否则 KDoc 链接失效。
+删除 `finishRecorderRelease()` 时要同步修正两处 KDoc：
+
+- `released` 字段上方（`:122`）的 `Guards [finishRecorderRelease] ...`，改为引用
+  `finishRecorderReleaseAndJoin`。
+- `releaseAdvancedFeatures()` 上方（`:358-360`）删除
+  `[finishRecorderRelease] /` 和“`both of which`”，仅保留
+  `[finishRecorderReleaseAndJoin]` 与 `[rollbackFailedInit]` 两条入口的说明。
 
 ### 4.7 demo 调用方
 
@@ -409,6 +464,19 @@ private fun failRecordStart(message: String) {
 在 demo 音频包下新增 `SuspendTeardownGate`，两个类各持有一个实例：
 
 ```kotlin
+/**
+ * One-shot teardown coordination for one owner instance.
+ *
+ * This gate is deliberately not resettable. AudioSender and AudioReceiver are single-session
+ * owners: every new start creates a new owner and therefore a new gate. Reusing either owner for
+ * another start/stop cycle would make later stop calls observe the first result without running
+ * cleanup and is outside this contract.
+ *
+ * Followers await the same completion and receive the same Throwable instance. There is no gate
+ * timeout: timing out here would let a caller proceed while cleanup was still mutating resources.
+ * Every operation inside the block must therefore be bounded itself; a stuck operation stalls all
+ * followers and must be diagnosed at that resource boundary.
+ */
 internal class SuspendTeardownGate {
     private val started = AtomicBoolean(false)
     private val completed = CompletableDeferred<Throwable?>()
@@ -432,8 +500,15 @@ internal class SuspendTeardownGate {
 ```
 
 该类的契约是：首个调用者在 `NonCancellable` 中执行完整关闭；后续调用者不再进入
-关闭体，只等待同一个结果；首个调用失败时，所有等待者都观察到同一失败。必须用单元测试
-覆盖“并发调用只执行一次”、“后续调用等待完成”和“失败向等待者传播”。
+关闭体，只等待同一个结果；首个调用失败时，所有等待者都抛出同一个
+`Throwable` 实例。它是**每个 owner 实例仅用一次**的门闩，不支持重置；当前成立的前提是
+`AudioActivity` 每次启动都创建新的 `AudioSender` / `AudioReceiver`。如果未来要重用 owner，
+必须先重设计生命周期，不得仅清空该门闩。
+
+门闩不设超时是有意选择：超时返回会让调用方在关闭仍修改资源时继续执行。代价是某个
+底层操作卡住时，netty 与 Activity 路径的所有等待者都会卡住。因此关闭体内每个外部操作
+必须自身有界；如需超时，应加在具体资源操作层并保留后续释放，不加在门闩等待层。
+必须用单元测试覆盖“并发调用只执行一次”、“后续调用等待完成”和“失败向等待者传播”。
 
 #### 4.7.2 netty 回调的清理 scope
 
@@ -452,6 +527,9 @@ internal class SuspendTeardownGate {
 两个 `ArrayBlockingQueue<ByteArray>` 分别改为容量相同的 `Channel<ByteArray>`；普通回调用
 `trySend()` 保留“队列满时丢当前帧”的既有非阻塞语义，消费协程用 `for (data in channel)`
 或 `receive()`。原 `queue.size` 调试日志改为记录 `trySend` 成功/失败，不引入额外计数器。
+录音发送 worker 必须保留现有的逐帧 `runCatching { sendAudioToServer(data) }`
+与失败记录：Channel 只替代阻塞取数，不应把一次瞬时网络异常放大成 worker
+永久退出。`receive` / `for` 迭代本身放在该 `runCatching` 之外，保留 scope 取消能力。
 关闭顺序改为：
 
 1. `micRecorder?.stopRecordAndJoin()`，先停止新的录音帧。
@@ -601,6 +679,10 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
   `AudioReceiver` 那段历史注释真正约束的路径；AAC/OPUS 路径不涉及 `AudioPlayer` 自己的 track
 - 初始化失败回滚路径：构造一个解码器初始化失败的场景（如喂入损坏的 csd），确认回滚任务完成、
   无解码器泄漏，且随后的停止流程不受影响
+- `MicRecorder` 构造失败回滚：分别覆盖 `AudioRecord` 构造抛异常和高级音频效果
+  初始化抛异常，确认原异常重抛、encoder 最终完成 `releaseAndJoin()`、
+  `releaseCompleted` 不在 encoder 释放前提前完成，且异步任务不访问未初始化的
+  `audioRecord`。如果当前环境无法注入这两种构造失败，必须明确记为未验证
 - **netty 回调触发的关闭**（第二次复审新增）：`cleanupScope` 只在这条路径上生效，Activity 侧
   走不到。从对端断开连接让 `onDisconnected()` / `onClientDisconnected()` 触发关闭，再用不可达
   地址让 `onFailed()` / `onStartFailed()` 触发关闭。确认停止序列正常、不出现
@@ -644,6 +726,7 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 | ~~4.5 的 AudioTrack 释放顺序~~ | **已排除**（复审）：三个 `AudioTrackPlayer` 是独立实例，且 `decoderWrapper` 与 stream player 由 `AudioPlayer.init` 保证互斥，顺序无可争议。不再需要真机裁决 |
 | 异步回滚逃逸异常杀进程 | 三个 `ioScope` 均无 `CoroutineExceptionHandler`，而 `NonCancellable` 换掉了父 Job。回滚 body 必须整体包 `runCatchingPreservingCancellation`，见 4.4 与 4.6 |
 | `MicRecorder.startRecord()` 保持非挂起，其失败回滚异步化 | 已在 4.6 定案：与 3.3 的原则一致（关闭确定性、启动失败回滚可异步）。`startRecord()` 公开面不变，不扩大破坏面 |
+| `MicRecorder.rollbackFailedInit()` 在构造失败后异步释放 encoder | 不复用已被 `released` guard 短路的 `finishRecorderReleaseAndJoin()`；捕获局部 encoder，并且只在同一协程的 `finally` 中完成 `releaseCompleted`。协程不访问可能未赋值的 `audioRecord` |
 | ~~`BaseMediaCodec.release()` 是 `open`，可能有子类覆写~~ | **已排除**：`audio` 模块内 `override fun release()` 共 **4** 处（`AacEncoderWrapper:44`、`OpusEncoderWrapper:44`、`CompressedPcmEncoderWrapper:20`、`CompressedPcmDecoderWrapper:20`），四者实现的都是接口而非本类，无子类覆写，可直接删除。（复审修正：原文误记为 2 处，结论不变） |
 | 删除代码后残留失效 import / 私有成员 | detekt `maxIssues = 0`，零容忍。每批结束跑完整静态检查 |
 | 异步回滚被并发停止取消 | 已由 3.4 的 `launch(NonCancellable)` 解决，需在代码注释中写明原因，避免后续被"优化"掉 |
@@ -651,6 +734,8 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 | 删除 API 导致 `audio` 现有单测编译失败 | 20 处 `subject.release()` / `subject.stop {}` 分布在三个测试文件。已在 6.2 逐条定案（迁移 / 重写 / 删除），且必须与删除 API 同提交。**第二次复审新增** |
 | worker 未退出时释放 AudioTrack | `AudioSender` 两个阻塞队列改 Channel，与 `AudioReceiver` 一样在释放 player 前 `cancelAndJoin()` |
 | Activity 与 netty 并发重复关闭 | 两个类都通过 `SuspendTeardownGate` 共享一次 teardown 结果，不依赖 AudioTrack check-then-act |
+| 一次性门闩被误用于第二个会话 | KDoc 明确不可重置；`AudioSender` / `AudioReceiver` 是单会话 owner，每次启动必须新建实例 |
+| 共享 teardown 内的某个操作卡住，所有等待者一起卡住 | 门闩不设会破坏确定性的等待超时；要求关闭体内各资源操作自身有界，真机检查 Activity/netty 并发关闭能完成 |
 | ADPCM 播放线程与 `onDestroy()` 并发 | 由单个 lifecycle `Job` 拥有局部 player，在自身 `finally` 释放；`onDestroy()` 只取消 Job |
 
 ## 9. 明确不做的事
@@ -675,8 +760,8 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
   1.9.0，本项目实际用的是 **1.10.2**，见 `gradle/libs.versions.toml:32`；结论在 1.10.x 未变）：
   `NonCancellable.attachChild()` 返回 `NonDisposableHandle.INSTANCE`，不建立父子链。
   `launch(NonCancellable)` 确实脱离 scope 的 Job，能存活过 `ioScope.cancel()`。
-- §4.7 指出的两个既有 bug 真实存在：`AudioReceiver` 先 `cancel()` 再释放（`:181` vs `:192`）；
-  `AudioSender` 的 `ioScope.launch` 紧跟 `ioScope.cancel()`（`:137-140`）构成竞态。
+- §4.7 指出的两个既有 bug 真实存在：`AudioReceiver` 先 `cancel()` 再释放（`:189` vs `:199`）；
+  `AudioSender` 的 `ioScope.launch` 紧跟 `ioScope.cancel()`（`:143-147`）构成竞态。
 - §8 关于无子类覆写 `BaseMediaCodec.release()` 的结论成立。
 
 ### 10.2 已修正的 7 处
@@ -714,8 +799,9 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
 - §3.4 的 `NonCancellable` 支点结论正确（版本更正见 §10.1）。
 - §4.5 的"三个 `AudioTrackPlayer` 相互独立 + `decoderWrapper` 与 stream player 互斥"——按
   `AudioPlayer.init`（`:46-84`）与 `play()`（`:86`）逐分支核对，成立。
-- §10.2 的 F2 / F4 修正准确：`AudioActivity` 确有 `launchCleanup`（`:378`）与
-  `ioScopeJob.complete()`（`:374`），`:345` / `:362` / `:363` 行号全对；`ADPCMActivity` 确实没有
+- §10.2 的 F2 / F4 修正准确：`AudioActivity` 确有 `launchCleanup`（当前 `:387`）与
+  `ioScopeJob.complete()`（当前 `:383`），PCM / receiver / sender 入口当前分别在
+  `:354` / `:371` / `:372`；`ADPCMActivity` 确实没有
   任何协程 scope，`:115` 在 `kotlin.concurrent.thread` 块内，`:121` 在 `onDestroy()`。
   这是当时源码事实；实施方案已被 §12 修正为 lifecycle Job 所有权模型。
 - 全仓无 `BaseMediaCodec.release()` 的子类覆写；`audio` / `demo` 之外没有任何调用方。
@@ -763,3 +849,22 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
    和明确异常处理。
 5. Codex 在本机实施时执行定向 Gradle 验证；Claude Code 仅提供静态分析。所有提交、
    推送和发布仍以用户明确授权为前提。
+
+## 13. 第四次复审修正（2026-09-18）
+
+本轮以当前 checkout 重新核对了计划与尚未实施的源码，补齐以下问题：
+
+1. 新增的 `MicRecorder.rollbackFailedInit()` 仍调用将被删除的
+   `AudioEncoderWrapper.release()`。已在 §4.6 单独定案：捕获局部 encoder，
+   在 `NonCancellable` 协程内等待 `releaseAndJoin()`，并且只在同一协程的
+   `finally` 中完成 `releaseCompleted`。
+2. 更新了 MicRecorder、AudioSender、AudioReceiver、两个 stream player 和弃用警告的
+   当前行号，并明确函数名与调用结构才是实施时的权威锚点。
+3. 删除 `finishRecorderRelease()` 时需同步修正两处 KDoc，而非仅修正
+   `released` 字段上的一处。
+4. `AudioSender` 的 Channel worker 重写必须保留原有逐帧发送异常隔离；计划已给出
+   完整函数体，不再只写“换成 `for`”。
+5. `SuspendTeardownGate` 的 KDoc 现在明确它是单 owner、单会话、不可重置的
+   门闩；同时记录了共享同一 `Throwable` 和无门闩层超时所带来的等待耦合。
+6. 提交 `f27449db0` / `484d2c3d9` 的 message 过度描述了未实施的代码结果。
+   本文已在首部显式更正状态；因提交已在远端，未经用户授权不改写历史。

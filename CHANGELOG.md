@@ -153,6 +153,14 @@
 
 ### 修复 (Fixed)
 
+- **`MicRecorder` 的音效改为持有并显式释放**：`enableAdvancedFeatures = true` 时创建的
+  `AcousticEchoCanceler` / `AutomaticGainControl` / `NoiseSuppressor` 此前创建完即丢弃唯一强引用。
+  录音期间它们可能被 GC 回收并连带销毁其原生音效——双向语音会在任意时刻失去回声消除——而且没有
+  任何确定性释放路径。现三者由 `MicRecorder` 持有至会话结束，并在所有终态中先于 `AudioRecord`
+  显式 `release()`，复用既有的一次性 `released` 守卫。
+  该缺陷自音效引入时即存在，与本次采集默认值调整无关；音效改为 opt-in 后，其影响面已从全部
+  调用方收窄到显式开启者。
+
 - **screencapture 初始化中断与输出失败收尾**：等待 `onInit()` 的线程被中断时，恢复其
   中断标记并请求 EGL 线程清理；排队中的初始化不再创建资源，进行中的初始化完成后由原线程释放。
   输出回调异常在归还 buffer、退出回调锁后进入统一释放协议，覆盖仅调用 `onInit()` / `onStart()`

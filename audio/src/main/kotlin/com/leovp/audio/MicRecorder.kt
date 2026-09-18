@@ -129,6 +129,15 @@ class MicRecorder(
      */
     private val releaseCompleted = CompletableDeferred<Unit>()
 
+    // The three effects below are held for their whole capture session on purpose. An
+    // AudioEffect owns a native effect tied to this AudioRecord's session id; dropping the last
+    // strong reference lets the collector run the finalizer and tear that native effect down
+    // mid-recording, so echo cancellation would disappear at an arbitrary point. Holding them
+    // also makes teardown deterministic - see releaseAdvancedFeatures().
+    private var echoCanceler: AcousticEchoCanceler? = null
+    private var automaticGainControl: AutomaticGainControl? = null
+    private var noiseSuppressor: NoiseSuppressor? = null
+
     init {
         require(recordMinBufferRatio > 0) { "recordMinBufferRatio must be positive" }
         val platformMinBufferSize = AudioRecord.getMinBufferSize(
@@ -247,23 +256,45 @@ class MicRecorder(
 
     private fun initAdvancedFeatures() {
         if (AcousticEchoCanceler.isAvailable()) {
-            AcousticEchoCanceler.create(audioRecord.audioSessionId)?.run {
+            echoCanceler = AcousticEchoCanceler.create(audioRecord.audioSessionId)?.apply {
                 LogContext.log.w(TAG, "Enable AcousticEchoCanceler")
                 enabled = true
             }
         }
         if (AutomaticGainControl.isAvailable()) {
-            AutomaticGainControl.create(audioRecord.audioSessionId)?.run {
+            automaticGainControl = AutomaticGainControl.create(audioRecord.audioSessionId)?.apply {
                 LogContext.log.w(TAG, "Enable AutomaticGainControl")
                 enabled = true
             }
         }
         if (NoiseSuppressor.isAvailable()) {
-            NoiseSuppressor.create(audioRecord.audioSessionId)?.run {
+            noiseSuppressor = NoiseSuppressor.create(audioRecord.audioSessionId)?.apply {
                 LogContext.log.w(TAG, "Enable NoiseSuppressor")
                 enabled = true
             }
         }
+    }
+
+    /**
+     * Releases the effects attached by [initAdvancedFeatures]. They must go before the
+     * [audioRecord] whose session they are attached to, and they are released here rather than
+     * left to the collector so teardown is deterministic.
+     *
+     * Reached only through [finishRecorderRelease] / [finishRecorderReleaseAndJoin], both of
+     * which are already behind the one-shot [released] guard, so this runs exactly once.
+     */
+    private fun releaseAdvancedFeatures(currentResult: Boolean): Boolean {
+        var ok = currentResult
+        listOf(echoCanceler, automaticGainControl, noiseSuppressor).forEach { effect ->
+            runCatchingPreservingCancellation { effect?.release() }.onFailure {
+                ok = false
+                LogContext.log.e(TAG, "audio effect release error", it)
+            }
+        }
+        echoCanceler = null
+        automaticGainControl = null
+        noiseSuppressor = null
+        return ok
     }
 
     /**
@@ -331,6 +362,7 @@ class MicRecorder(
         if (!released.compareAndSet(false, true)) return
         var ok = stopSucceeded
         try {
+            ok = releaseAdvancedFeatures(ok)
             ok = releaseAudioRecord(ok)
             runCatchingPreservingCancellation { encodeWrapper?.release() }.onFailure {
                 ok = false
@@ -349,6 +381,7 @@ class MicRecorder(
         withContext(NonCancellable) {
             var ok = stopSucceeded
             try {
+                ok = releaseAdvancedFeatures(ok)
                 ok = releaseAudioRecord(ok)
                 try {
                     encodeWrapper?.releaseAndJoin()

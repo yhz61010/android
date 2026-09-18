@@ -1,5 +1,5 @@
-# Never modify Claude files
+# Claude 文件只读
 
-- The user explicitly instructed: never modify Claude files at any time.
-- Treat Claude-related files as read-only context, including repository `CLAUDE.md`, `.claude/**`, and external Claude memory directories such as `/home/yhz61010/NST/02 Claude For StarPay/01-StarPay/20-DCD/Claude/**`.
-- If a task needs information from Claude files, read and convert the relevant content into Codex-readable memory or documentation without editing the Claude files themselves.
+- 用户明确要求任何时候都不要修改 Claude 文件。
+- `CLAUDE.md`、`.claude/**` 和外部 Claude 记忆目录只作为只读参考。
+- 需要转换或纠偏 Claude 内容时，只写入 Codex 管理的位置。

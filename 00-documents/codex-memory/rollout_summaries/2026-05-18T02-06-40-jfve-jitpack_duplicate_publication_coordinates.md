@@ -1,12 +1,10 @@
 thread_id: 019e38d5-dd9a-7ac0-91b8-45baa0915c94
 updated_at: 2026-05-18T02:08:41+00:00
-rollout_path: /home/yhz61010/.codex/sessions/2026/05/18/rollout-2026-05-18T10-06-40-019e38d5-dd9a-7ac0-91b8-45baa0915c94.jsonl
-cwd: /home/yhz61010/StudioProjects/android
 git_branch: detekt-max-line-length-100
 
 # Gradle JitPack publication failure due to duplicate coordinates
 
-Rollout context: The repo is `/home/yhz61010/StudioProjects/android` (Android multi-module library, JitPack-published). The rollout started from a JitPack build failure after commit `4c06f9517a24da240e83dbccd884c8344a2cf580` (“Update version to 5.15.2”). The build used Gradle 9.4.0 and Java 17.0.12.
+Rollout context: The repo is `当前仓库` (Android multi-module library, JitPack-published). The rollout started from a JitPack build failure after commit `4c06f9517a24da240e83dbccd884c8344a2cf580` (“Update version to 5.15.2”). The build used Gradle 9.4.0 and Java 17.0.12.
 
 ## Task 1: Investigate JitPack publish/build failure
 

@@ -1,12 +1,10 @@
 thread_id: 019e38bf-1136-76c1-9ed4-76ba966f764a
 updated_at: 2026-05-18T01:43:25+00:00
-rollout_path: /home/yhz61010/.codex/sessions/2026/05/18/rollout-2026-05-18T09-41-46-019e38bf-1136-76c1-9ed4-76ba966f764a.jsonl
-cwd: /home/yhz61010/StudioProjects/android
 git_branch: detekt-max-line-length-100
 
 # JitPack build failure analysis for the Android multi-module repo
 
-Rollout context: The user reported a JitPack build failure in `/home/yhz61010/StudioProjects/android` and asked for analysis of the cause. The key failure happened while building the `jpeg` module’s native library on JitPack.
+Rollout context: The user reported a JitPack build failure in `当前仓库` and asked for analysis of the cause. The key failure happened while building the `jpeg` module’s native library on JitPack.
 
 ## Task 1: Investigate JitPack build failure
 

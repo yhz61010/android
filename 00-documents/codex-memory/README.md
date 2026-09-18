@@ -1,43 +1,25 @@
-# Codex Memory Snapshot
+# Codex 项目记忆快照
 
-This directory contains a repository-owned snapshot of the Codex memory files for this Android
-project. It is intended for future agents and contributors who clone the repository and need the
-project's historical working context.
+本目录保存当前 Android 工具库仓库专属的 Codex 共享记忆，供全新 clone 或缺少本机主记忆的协作者恢复必要上下文。这里是经过筛选的项目快照，不是本机主记忆的完整镜像。
 
-## Load Order
+## 读取顺序
 
-When starting from a fresh clone, read these files in order:
+1. 先读取仓库根目录的 `AGENTS.md`，以当前协作、构建和交付规则为准。
+2. 读取 `memory_summary.md`，了解稳定偏好和主题索引。
+3. 按任务关键词查询 `MEMORY.md`。
+4. 只有 `MEMORY.md` 明确引用时，才读取 `rollout_summaries/` 中的历史摘要。
+5. `extensions/ad_hoc/notes/` 保存用户明确要求长期保留的项目事实。
 
-1. `memory_summary.md`
-2. `MEMORY.md`
-3. `extensions/ad_hoc/notes/`
-4. Task-specific files under `rollout_summaries/` when `MEMORY.md` points to them
+## 收录边界
 
-`local-command-execution.md` records the local command execution preference that was part of the
-original Codex memory set.
+- 只收录当前 Android 仓库的稳定规则、可复用工程知识和必要历史证据。
+- 不收录其它项目的记忆。
+- 不把历史分支、提交号、版本、设备、构建结果或本机路径当作当前事实；使用前必须按当前 checkout 重核。
+- 不收录原始 session JSONL、`raw_memories.md`、秘密值或不必要的本机细节。
+- 稳定协作规则优先写入 `AGENTS.md`，本目录不重复维护完整规则副本。
 
-## Included Files
+## 同步规则
 
-- `MEMORY.md`: searchable registry of durable project memories.
-- `memory_summary.md`: compact overview of user preferences and recurring project knowledge.
-- `local-command-execution.md`: local verification preference.
-- `extensions/ad_hoc/`: explicit user-requested memory notes.
-- `rollout_summaries/`: summarized historical sessions referenced by `MEMORY.md`.
+活动中的 Codex 主记忆仍位于本机 Codex 记忆目录。本快照只同步与当前仓库有关的内容，不能把主记忆整目录复制进来。更新时应同时检查索引引用、相对路径、敏感信息和过期事实。
 
-## Excluded Files
-
-The following files are intentionally not mirrored here:
-
-- `.git/`: local Git metadata for the source memory folder.
-- `raw_memories.md`: large raw memory export with more noise and potentially more local detail.
-- Raw session JSONL files: implementation logs are not needed for normal project onboarding.
-
-## Synchronization Rule
-
-The active Codex memory source remains the local `~/.codex/memories` directory. This directory is a
-shareable snapshot for the repository. When the active memory changes and the change should be
-shared with future clones, refresh this directory from `~/.codex/memories` before committing.
-
-Do not modify Claude-owned files while refreshing this snapshot. `CLAUDE.md`, `.claude/**`, and
-external Claude memory directories are read-only references unless the user explicitly requests
-otherwise.
+`CLAUDE.md`、`.claude/**` 及外部 Claude 文件始终只读。Claude Code 位于远端服务器，不能编译代码或执行 Gradle；其结论只能作为静态分析。Codex 的本机构建、测试和真机验证应单独记录。

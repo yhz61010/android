@@ -1,7 +1,5 @@
-When updating the active main Codex memory for `/home/yhz61010/StudioProjects/android`,
-also synchronize the project-owned memory snapshot under
-`00-documents/codex-memory/` before finishing the task.
+# 同步当前项目记忆
 
-The project snapshot is the GitHub-shareable memory mirror for future clones. Keep it aligned with
-`~/.codex/memories` while still excluding local-only files such as `.git/`, `raw_memories.md`, and
-raw session JSONL logs.
+- 更新与当前 Android 仓库有关的本机主 Codex 记忆后，应按需刷新 `00-documents/codex-memory/`。
+- 项目目录是供未来 clone 使用的筛选快照，不是主记忆的完整镜像。
+- 不同步 `.git/`、`raw_memories.md`、原始 session JSONL、其它项目资料、本机临时状态或秘密值。

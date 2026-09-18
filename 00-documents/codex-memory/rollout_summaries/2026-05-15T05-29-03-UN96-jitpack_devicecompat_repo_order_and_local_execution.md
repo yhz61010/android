@@ -1,12 +1,10 @@
 thread_id: 019e2a1c-131d-7272-b80a-5a35699d57a8
 updated_at: 2026-05-15T06:03:08+00:00
-rollout_path: /home/yhz61010/.codex/sessions/2026/05/15/rollout-2026-05-15T13-29-03-019e2a1c-131d-7272-b80a-5a35699d57a8.jsonl
-cwd: /home/yhz61010/StudioProjects/android
 git_branch: master
 
 # JitPack build failure analysis and local-execution preference capture
 
-Rollout context: repository root was `/home/yhz61010/StudioProjects/android`. The user first asked to “wake up memory” and then requested that the same documentation/style rules be added to both `AGENTS.md` and `AGENTS.zh-CN.md`. Later they reported a JitPack build failure and asked whether the updated `settings.gradle.kts` still had issues. Near the end, they explicitly said to add a memory entry for themselves so commands can be executed directly on the local machine rather than being constrained to sandbox execution.
+Rollout context: repository root was `当前仓库`. The user first asked to “wake up memory” and then requested that the same documentation/style rules be added to both `AGENTS.md` and `AGENTS.zh-CN.md`. Later they reported a JitPack build failure and asked whether the updated `settings.gradle.kts` still had issues. Near the end, they explicitly said to add a memory entry for themselves so commands can be executed directly on the local machine rather than being constrained to sandbox execution.
 
 ## Task 1: Update AGENTS / AGENTS.zh-CN with bilingual-doc rule
 
@@ -63,4 +61,4 @@ References:
 - [3] Verified repository order in `settings.gradle.kts:73-87`, with `maven("https://jitpack.io")` before Alibaba/Tencent mirrors.
 - [4] Verified success: `./gradlew :camerax:checkReleaseAarMetadata --refresh-dependencies` -> `BUILD SUCCESSFUL in 1m 41s`.
 - [5] `jitpack.yml` now shows `#before_install:` and `#  - yes | sdkmanager --install "cmake;3.22.1"` commented out.
-- [6] Added local-memory note at `/home/yhz61010/.codex/memories/local-command-execution.md` to capture the user’s preference for direct local command execution when needed.
+- [6] 用户允许在需要时执行本机验证命令；当前执行边界以仓库 `AGENTS.md` 为准，不再依赖单独的本地命令偏好文件。

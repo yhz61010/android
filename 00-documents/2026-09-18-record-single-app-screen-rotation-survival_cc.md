@@ -192,12 +192,55 @@ traversal 都是 main looper 消息，顺序没有保证。
   其中 `LangUtil.kt:167/169` 与 `LocaleUtil.kt:39` 位于 §6.2 调用目标的内部，属该模块既有问题，
   非本次新增调用点引入。
 
-### 待真机验证（尚未进行）
+### 真机实测（2026-09-18，小米设备 / `com.leovp.demo.dev`）
 
-- 录制中旋转屏幕：**不应**出现 `onDestroy` / `onCreate`；应看到 EOS、新的
-  `dstFile=screen-<时间戳>.h265`，以及 `LEO-ScrCap encodeType=H265 width=... height=...` 中
-  **宽高互换**；两个文件均可播放且方向正确
-- **先转到横屏再按开始录制**：这是 §5.2 那个 Application 上下文缺陷的直接复现路径
-- 旋转中途录制器失败：确认不会在 Toast 提示「无法录制」之后自行重新开始（§6.1）
+一次会话内竖屏起录、旋转两次、再手动停止。日志证实：
+
+- **Activity 未被重建**：`onCreate` 仅 `14:56:22.349` 一次，两次旋转（`14:56:27.921`、
+  `14:56:35.099`）只有 `onConfigurationChanged`，全程无 `onDestroy`
+- **每段都干净收尾**：`Get H265 data[0]`（EOS）三次，MediaCodec 依次
+  `STOPPING → RELEASING → UNINITIALIZED`
+- **每段一个新文件**：`screen-1789714583250.h265` → `...588053` → `...595231`
+- **编码器按新几何重建**：`LEO-ScrCap` 依次为 `864×1792` → **`1792×864`** → `864×1792`，
+  对应 MediaCodec `mId:3/4/5` 的 `configure` 宽高一致
+- **§6.1 的修复被直接验证到**：结尾 `14:56:39.038` EOS 后，`14:56:39.055` 重建了录制器，
+  但**没有**随后的 `dstFile=` —— 该次是手动停止（几何未变、无 `onConfigurationChanged`），
+  `armNextRecording()` 读到 `toggleBtn.isChecked == false` 而未续录。旧的 `resumeAfterRebuild`
+  在这里会凭空开始第四段
+- 附带确认：`14:56:39.055` 建录制器时 mId:5 仍在 `RELEASING`，但该时刻**没有**新的
+  `MediaCodec INITIALIZING` —— `build()` 不创建编解码器，两个编码器实例不会真正并存
+
+### 仍待验证（尚未进行）
+
+- **三个 `.h265` 文件的实际播放**：能否播放、方向是否正确。日志只能证明编码器按正确几何
+  配置过，证明不了画面
+- **先转到横屏再按开始录制**：§5.2 那个 Application 上下文缺陷的直接复现路径，本次未覆盖
+  （本次是竖屏起录）
+- 旋转中途录制器失败：确认不会在 Toast 提示「无法录制」之后自行重新开始（§6.2 未被触发）
 - 切换应用内语言后旋转：确认界面语言未回落到设备语言（§6.2）
-- 连续快速旋转两次：应只重建一次，且按最终方向编码
+- 连续快速旋转两次：应只重建一次，且按最终方向编码（本次两次旋转相隔约 7 秒，各自独立处理）
+
+## 9. 实测中发现的既有问题（不在本次范围内）
+
+同一份日志暴露出采集帧率与 PTS 不一致，**与本次改动无关**，此处仅作记录。
+
+每帧 PTS 恒定递增 200000µs（即 5 fps），但帧的实际到达间隔约 39–41ms（约 25 fps）。以第二段
+（横屏）计：首帧 `14:56:28.118` PTS=200000，末帧 `14:56:35.192` PTS=35200000 —— 墙钟 7.074 秒，
+PTS 跨度 35.0 秒，**PTS 比真实时间快 4.95 倍**。
+
+三处互相打架：
+
+| 位置 | 实际行为 |
+|------|----------|
+| `Screenshot2H26xStrategy.kt:821` | `delay(32.milliseconds)` 硬编码，不读 `builder.fps` |
+| `Screenshot2H26xStrategy.kt:701` | `KEY_FRAME_RATE` 取的是 `builder.keyFrameRate`（20），不是 `fps` |
+| `Screenshot2H26xStrategy.kt:708` | `builder.fps`（5）只给了 `KEY_MAX_FPS_TO_ENCODER`，该键是软提示 |
+| `ScreenProcessor.kt:74` | `PTS = frameIndex * 1_000_000 / fps`，用的是 fps=5 |
+
+日志中 `int32_t frame-rate = 20` 与 `float max-fps-to-encoder = 5.000000` 同时出现，正是这一错配。
+也就是说 `setFps(5f)` 只影响 PTS，不影响采集速率 —— `RecordSingleAppScreenActivity`
+`buildRecorderSetting()` 中那条 `FIXME This does not seem to work` 至此有了证据。
+
+影响范围：本 demo 写的是裸 Annex-B `.h265`，不携带 PTS，三个文件的播放速度不受此影响。受影响的是
+把同一 strategy 喂给网络或封装的调用方（`ScreenShareClientActivity` 一路），以及 CPU 与码率成本
+——调用方要 5 fps，实际按约 25 fps 在采。

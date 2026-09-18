@@ -288,7 +288,10 @@ track 的听感是音调升高、速度变快。
 
 ### 7.5 §7 各项的验证状态
 
-- `:audio:testDebugUnitTest` 45 个用例通过；`audio` / `demo` 的 ktlint、detekt 与
-  `:demo:compileDevDebugKotlin` 通过（评审在 `00b8412a1` 上执行，**不含 `5a4463096`**，后者需重跑）。
+- **静态检查已覆盖到 `5a4463096`**（2026-09-18 在含该提交的分支上以 `--rerun-tasks` 重跑）：
+  `:audio:testDebugUnitTest` + `:audio:detekt` + `:audio:ktlintCheck` 110 个任务全部实际执行，
+  加上 `:demo:compileDevDebugKotlin` 后 355 个任务全部实际执行，两次均 BUILD SUCCESSFUL。
+  输出中的 deprecation 警告均为既有的过渡期 API（`stopPlaying()` / `release()` / `stopRecord()`），
+  非本次改动引入。
 - **未做真机验证**：音效是否真的启用成功、`setEnabled` 失败时的新分支、构造回滚路径，以及 §6 仍挂着的
   双机回声消除，全部只能靠设备确认。

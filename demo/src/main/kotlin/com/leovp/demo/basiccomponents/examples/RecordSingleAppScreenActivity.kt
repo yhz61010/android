@@ -66,6 +66,12 @@ class RecordSingleAppScreenActivity :
      * [onConfigurationChanged] and read from the teardown continuation, both of which run there.
      */
     private var resumeAfterRebuild = false
+
+    /**
+     * The last capture geometry seen, in the units [Configuration] reports directly. Used only to
+     * tell a rotation from a configuration change that leaves the window alone.
+     */
+    private var lastConfigGeometry: Pair<Int, Int>? = null
     private lateinit var screenProcessor: Screenshot2H26xStrategy
     private lateinit var recorderSetting: ScreenShareSetting
 
@@ -123,6 +129,7 @@ class RecordSingleAppScreenActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        lastConfigGeometry = resources.configuration.let { it.screenWidthDp to it.screenHeightDp }
         recorderSetting = buildRecorderSetting()
         screenProcessor = createRecorder()
 
@@ -175,17 +182,20 @@ class RecordSingleAppScreenActivity :
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val newSetting = buildRecorderSetting()
-        if (newSetting.width == recorderSetting.width &&
-            newSetting.height == recorderSetting.height
-        ) {
-            // A configuration change that leaves the capture geometry alone - a keyboard or a
-            // locale switch. Splitting the recording for it would cost a file for nothing.
+        // Read from [newConfig] rather than from the window: WindowManager.currentWindowMetrics
+        // is not guaranteed to carry the new bounds until the layout pass that applies them, and
+        // a stale read here would report "nothing moved" and skip the rebuild entirely. The
+        // values [Configuration] carries are already the new ones.
+        val geometry = newConfig.screenWidthDp to newConfig.screenHeightDp
+        if (geometry == lastConfigGeometry) {
+            // A configuration change that leaves the window alone - a keyboard or a locale
+            // switch. Splitting the recording for it would cost a file for nothing.
             return
         }
-        recorderSetting = newSetting
-        // Only resume what the user actually had running. Teardown never clears the toggle, so
-        // it still carries the user's intent at this point.
+        lastConfigGeometry = geometry
+        // Resume only what the user actually had running: teardown never clears the toggle, so it
+        // still carries their intent here. The teardown itself starts now, before another frame
+        // can be captured at the old geometry; the new geometry is measured in [armNextRecording].
         resumeAfterRebuild = binding.toggleBtn.isChecked
         releaseRecorder(restartable = true)
     }
@@ -286,6 +296,10 @@ class RecordSingleAppScreenActivity :
      * here and is reopened by [startRecording], which is what truncates it.
      */
     private fun armNextRecording() {
+        // Measured here, not when the configuration changed. releaseRecorder() starts
+        // UNDISPATCHED and then suspends into Dispatchers.IO for the teardown, so the main thread
+        // has run its queued traversals - including the resize - before this resumes on it.
+        recorderSetting = buildRecorderSetting()
         screenProcessor = createRecorder()
         cleanupStarted.set(false)
         binding.toggleBtn.isEnabled = true

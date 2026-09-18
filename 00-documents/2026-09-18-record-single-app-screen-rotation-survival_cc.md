@@ -179,12 +179,18 @@ traversal 都是 main looper 消息，顺序没有保证。
 - 独立评审一轮（发现并修正 §6.1–§6.4）
 - 静态核查（人工）：行宽无超 100 字符项、无失效引用残留、文件 390 行（限 800）、
   类内函数 19 个（`TooManyFunctions` 阈值 33）
+- **静态检查已覆盖到 `48af308b3`**（2026-09-18 在含该提交的分支上以 `--rerun-tasks` 重跑）：
 
-### 待本地执行（尚未进行）
+  ```bash
+  ./gradlew --continue --rerun-tasks :demo:ktlintCheck :demo:detekt :demo:compileDevDebugKotlin
+  ```
 
-```bash
-./gradlew --continue --rerun-tasks :demo:ktlintCheck :demo:detekt :demo:compileDevDebugKotlin
-```
+  309 个任务全部实际执行，BUILD SUCCESSFUL。输出中的 deprecation 警告共 18 条，全部来自
+  `audio` / `lib-common-android` / `demo` 的既有过渡期 API 与既有平台 API 弃用
+  （`stopPlaying()`、`release()`、`stopRecord()`、`statusBarColor`、`Locale` 构造器、
+  `Resources.updateConfiguration()`），**没有一条指向 `RecordSingleAppScreenActivity.kt`**。
+  其中 `LangUtil.kt:167/169` 与 `LocaleUtil.kt:39` 位于 §6.2 调用目标的内部，属该模块既有问题，
+  非本次新增调用点引入。
 
 ### 待真机验证（尚未进行）
 

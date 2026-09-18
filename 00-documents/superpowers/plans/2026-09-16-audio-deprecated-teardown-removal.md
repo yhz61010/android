@@ -406,15 +406,28 @@ encoder 挂起释放后的 `finally`。协程只访问捕获的局部 `failedEnc
      * and each stream player builds another. AudioPlayer's constructor also gives a session
      * either a decoder wrapper or a stream player, never both, so these calls cannot contend for
      * the same track and their relative order is free.
+     *
+     * The track this player always builds is released in a finally: StreamPlayerStopper rethrows
+     * CancellationException and stopAndJoin() can also fail its own require(), so an exception
+     * from the calls above would otherwise leak the one AudioTrack that exists in every session.
      */
     suspend fun releaseAndJoin() {
         LogContext.log.w(TAG, "releaseAndJoin()")
-        decoderWrapper?.releaseAndJoin()
-        aacStreamPlayer?.stopPlayingAndJoin()
-        opusStreamPlayer?.stopPlayingAndJoin()
-        audioTrackPlayer.release()
+        try {
+            decoderWrapper?.releaseAndJoin()
+            aacStreamPlayer?.stopPlayingAndJoin()
+            opusStreamPlayer?.stopPlayingAndJoin()
+        } finally {
+            audioTrackPlayer.release()
+        }
     }
 ```
+
+**`finally` 不是可选的**（第六次复审新增）。`audioTrackPlayer` 在 `AudioPlayer.kt:43` 无条件创建，
+而 `StreamPlayerStopper.stopAndJoin()`（`:33`）会重抛 `CancellationException`（`:44-45`），
+它的 `require()`（`:36-38`）也会抛 `IllegalArgumentException`。任一前置释放抛出，这个每个会话
+都存在的 AudioTrack 就不会被释放，与本方法 KDoc 承诺的"释放它拥有的全部资源"矛盾。
+§4.5 关于"三个 track 独立、顺序自由"的论证只说明**顺序**无所谓，不代表**异常路径**安全。
 
 - [ ] **Step 7: 验证**
 
@@ -769,7 +782,13 @@ private fun startPlayThread() {
                     receiveAudioQueue.close()
                 } finally {
                     try {
-                        // Both workers receive from coroutine Channels, so cancellation wakes them.
+                        // Stop the track before joining, not after. Cancellation wakes a worker
+                        // parked on Channel.receive(), but a worker already inside
+                        // AudioPlayer.play() is in a blocking AudioTrack.write() that no
+                        // coroutine cancellation can interrupt. stop() flushes and stops the
+                        // track, which is what lets that write return. It releases nothing, so
+                        // releaseAndJoin() below still does the real teardown.
+                        audioPlayer?.stop()
                         ioScope.coroutineContext[Job]?.cancelAndJoin()
                     } finally {
                         try {
@@ -806,8 +825,13 @@ private fun startPlayThread() {
                 micRecorder?.stopRecordAndJoin()
             } finally {
                 try {
-                    // Both loops block in runInterruptible { queue.take() }, so cancelling
-                    // interrupts the wait and this join is bounded.
+                    // Stop the track before joining, not after. Cancelling interrupts a worker
+                    // waiting in runInterruptible { queue.take() }, but one already inside
+                    // AudioPlayer.play() is in a blocking AudioTrack.write() that cancellation
+                    // cannot interrupt. stop() flushes and stops the track, which is what lets
+                    // that write return. It releases nothing, so releaseAndJoin() below still
+                    // does the real teardown.
+                    audioPlayer?.stop()
                     ioScope.coroutineContext[Job]?.cancelAndJoin()
                 } finally {
                     try {
@@ -827,6 +851,17 @@ private fun startPlayThread() {
 1. 不能只取消 scope 而不等待；那样 `startPlayThread()` 的 `audioPlayer?.play(it)` 可能仍在
    整个 `releaseAndJoin()` 期间继续跑，PCM 路径下 `write()` 会撞上 `AudioTrack.release()`——正是
    历史 SIGABRT 注释描述的场景。
+   **但只等待也不够**（第六次复审）：`cancelAndJoin()` 本身可能永不返回。取消只能唤醒挂在
+   `runInterruptible { take() }` / `Channel.receive()` 上的 worker；已经进入
+   `AudioPlayer.play()` 的 worker 正卡在 `AudioTrackPlayer.write()`（`:194`）的阻塞
+   `AudioTrack.write(short[], int, int)` 上，协程取消中断不了它，而唯一能唤醒它的
+   `AudioTrack.stop()` 排在 `releaseAndJoin()` 里、在 join 之后——死等。因此必须在
+   `cancelAndJoin()` **之前**先调用只停不放的 `audioPlayer?.stop()`（`AudioPlayer.kt:158`，
+   仅委托 `audioTrackPlayer.stop()`，不碰 stream player）。
+   这正是 `audio` 模块自己的既有做法：`StreamPlayerStopper.prepareStop()`（`:58-70`）在
+   `stopAndJoin()` 的 `ownerJob.cancelAndJoin()` 之前就调用 `audioTrackPlayer.stop()`，注释写的
+   就是 "Stop first to wake any blocking write"。AAC/OPUS 会话下该 track 从未 `play()` 过，
+   `stop()` 在 `playState == PLAYSTATE_STOPPED` 的守卫处直接返回，无副作用。
 2. 先停录音再 `cancelAndJoin()`，保证没有新帧进入；关闭跑在 `teardownGate` 的
    `NonCancellable` 上，不会被调用方中途取消。
 3. 两个关闭体都用嵌套 `try/finally` 保证前一项失败时仍尝试后续资源；最终异常

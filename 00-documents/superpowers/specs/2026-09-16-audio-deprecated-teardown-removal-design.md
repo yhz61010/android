@@ -304,10 +304,17 @@ suspend fun releaseAndJoin() {
     LogContext.log.w(TAG, "releaseAndJoin()")
     // Stream players own their own AudioTrack teardown through StreamPlayerStopper, so release
     // the decoder wrapper and the players first and let this player's own track go last.
-    decoderWrapper?.releaseAndJoin()
-    aacStreamPlayer?.stopPlayingAndJoin()
-    opusStreamPlayer?.stopPlayingAndJoin()
-    audioTrackPlayer.release()
+    //
+    // finally, not a plain last statement: StreamPlayerStopper rethrows CancellationException
+    // and stopAndJoin() can fail its own require(), and this player's track exists in every
+    // session, so an exception above must not be allowed to skip it.
+    try {
+        decoderWrapper?.releaseAndJoin()
+        aacStreamPlayer?.stopPlayingAndJoin()
+        opusStreamPlayer?.stopPlayingAndJoin()
+    } finally {
+        audioTrackPlayer.release()
+    }
 }
 ```
 
@@ -326,6 +333,11 @@ suspend fun releaseAndJoin() {
 
 结论：`decoderWrapper?.releaseAndJoin()` 与 `audioTrackPlayer.release()` 的相对顺序，和
 `stopPlayingAndJoin()` 之间没有任何交互可言，上面给出的写法直接采用即可，无需 a/b 两案对比。
+
+**但"顺序自由"不等于"异常路径安全"**（第六次复审）：`audioTrackPlayer` 在 `:43` 无条件创建，
+而 `StreamPlayerStopper.stopAndJoin()` 会重抛 `CancellationException`（`:44-45`）、其
+`require()`（`:36-38`）也会抛。若不套 `finally`，任一前置释放抛出就会漏掉这个每个会话都存在的
+AudioTrack，与本方法 KDoc 承诺矛盾。
 
 关于 `AudioReceiver.kt:202-210` 那段 SIGABRT 注释（`releaseBuffer() track ... disabled due to
 previous underrun`）：它描述的是 `AudioPlayer` **自己那个** track 在历史 PCM 配置下的问题。当前
@@ -549,9 +561,11 @@ Channel 改造仍然建议实施，但理由已变：它给出明确的 `close()
 
 1. `micRecorder?.stopRecordAndJoin()`，先停止新的录音帧。
 2. 关闭两个 Channel，使网络迟到回调的 `trySend()` 失败，不在消费者退出后滞留帧。
-3. `ioScope.coroutineContext[Job]?.cancelAndJoin()`，等两个 Channel worker 退出。
-4. `audioPlayer?.releaseAndJoin()`，此时已无人再调用 `play()`。
-5. 顺序执行 `senderClient.disconnectManually()` 与 `release()`。
+3. `audioPlayer?.stop()`，唤醒可能卡在阻塞 `AudioTrack.write()` 里的 worker。只停不放，
+   真正的释放仍由第 5 步完成。
+4. `ioScope.coroutineContext[Job]?.cancelAndJoin()`，等两个 Channel worker 退出。
+5. `audioPlayer?.releaseAndJoin()`，此时已无人再调用 `play()`。
+6. 顺序执行 `senderClient.disconnectManually()` 与 `release()`。
 
 整个顺序放在 `teardownGate.run { ... }` 内。这同时修复旧实现中
 `ioScope.launch { client release }` 紧跟 `ioScope.cancel()` 导致清理尚未开始就被取消的竞态。
@@ -561,10 +575,22 @@ Channel 改造仍然建议实施，但理由已变：它给出明确的 `close()
 #### 4.7.4 `AudioReceiver`：同一关闭协议
 
 `AudioReceiver.stopServer()` 保持原名，只改为 suspend，并放入自己的
-`teardownGate.run { ... }`。关闭顺序为：先 `micRecorder.stopRecordAndJoin()`，再对两个 worker
-执行 `cancelAndJoin()`，然后 `audioPlayer.releaseAndJoin()`，最后停止 server。两个 worker 阻塞在
-`runInterruptible { queue.take() }` 上（`5672ecbbd` 起；此前是 `poll()` + `delay`），取消会中断
-该阻塞，因此 join 有界。
+`teardownGate.run { ... }`。关闭顺序为：先 `micRecorder.stopRecordAndJoin()`，再 `audioPlayer.stop()`，
+然后对两个 worker 执行 `cancelAndJoin()`，再 `audioPlayer.releaseAndJoin()`，最后停止 server。
+
+**`stop()` 这一步不能省**（第六次复审）。两个 worker 阻塞在 `runInterruptible { queue.take() }`
+上（`5672ecbbd` 起；此前是 `poll()` + `delay`），取消确实能中断该阻塞——但那只覆盖"等在队列上"
+这一种状态。worker 若已进入 `AudioPlayer.play()`，PCM 路径会停在
+`AudioTrackPlayer.write()`（`:194`）的阻塞 `AudioTrack.write(short[], int, int)` 上，协程取消
+中断不了这个 native 调用，`cancelAndJoin()` 会无限期等待；而唯一能让它返回的
+`AudioTrack.stop()` 藏在排在 join 之后的 `releaseAndJoin()` 里，形成死等。
+`AudioPlayer.stop()`（`:158`）只委托 `audioTrackPlayer.stop()`，不触碰 stream player，
+`stop()` 内部先 `pause()` + `flush()` 再 `stop()`，正是唤醒阻塞写入所需；AAC/OPUS 会话下该
+track 从未 `play()` 过，`stop()` 在 `playState == PLAYSTATE_STOPPED` 守卫处直接返回。
+
+这与 `audio` 模块自身做法一致：`StreamPlayerStopper.prepareStop()`（`:58-70`）就在
+`stopAndJoin()` 的 `cancelAndJoin()` 之前调用 `audioTrackPlayer.stop()`，注释写明
+"Stop first to wake any blocking write"。
 
 **本次不改 `AudioReceiver` 的两个 `ArrayBlockingQueue`**，与 §4.7.3 的 `AudioSender` 有意不对称：
 该文件已 import `io.netty.channel.Channel`，再引入 `kotlinx.coroutines.channels.Channel` 会同名
@@ -712,6 +738,10 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 - `AudioSender` 关闭后确认两个 Channel worker 都已退出；重复进出 Activity 后不应累积
   `DefaultDispatcher-worker-*` 阻塞线程。**这是回归确认而非缺陷验证**：`5672ecbbd` 的
   `runInterruptible` 已消除该泄漏，本项只确认 Channel 改造没有把它带回来
+- **PCM 写入中触发关闭**（第六次复审新增）：`AudioActivity` 走 PCM 路径持续播放时退出，或在
+  对端断开的同时退出。确认 `stop()` 唤醒了阻塞的 `AudioTrack.write()`、`cancelAndJoin()` 能返回、
+  关闭序列在有限时间内结束。若出现 ANR 或 teardown 不返回，说明 `audioPlayer?.stop()` 的
+  位置不对，回到 §4.7.3 / §4.7.4
 - `ADPCMActivity` 播放中立即退出，以及连续点击播放：旧 Job 只释放自己的 player，不得释放
   新 Job 创建的 player，且不得出现 write/release 并发
 
@@ -755,6 +785,8 @@ codec 本身"，没有核对它们是否调用了即将被删的 API。实际调
 | netty 回调无法调用挂起的 `stop()` / `stopServer()` | 4 处非挂起回调使用带 handler 的专用 `cleanupScope`；`SuspendTeardownGate` 保证它们与 Activity 的关闭只执行一次 |
 | 删除 API 导致 `audio` 现有单测编译失败 | 20 处 `subject.release()` / `subject.stop {}` 分布在三个测试文件。已在 6.2 逐条定案（迁移 / 重写 / 删除），且必须与删除 API 同提交。**第二次复审新增** |
 | worker 未退出时释放 AudioTrack | 两个类的 worker 自 `5672ecbbd` 起均可被取消（`runInterruptible`）；`AudioSender` 进一步改 Channel 以免去线程中断依赖，两者都在释放 player 前 `cancelAndJoin()` |
+| `cancelAndJoin()` 卡在阻塞的 `AudioTrack.write()` 上 | 取消只唤醒等在队列/Channel 上的 worker，唤不醒已进入 `play()` 的阻塞写入。join 之前先调用只停不放的 `audioPlayer?.stop()`，见 §4.7.3、§4.7.4。**第六次复审新增** |
+| `AudioPlayer.releaseAndJoin()` 异常时漏放自身 AudioTrack | `audioTrackPlayer.release()` 放进 `finally`，见 §4.5。**第六次复审新增** |
 | Activity 与 netty 并发重复关闭 | 两个类都通过 `SuspendTeardownGate` 共享一次 teardown 结果，不依赖 AudioTrack check-then-act |
 | 一次性门闩被误用于第二个会话 | KDoc 明确不可重置；`AudioSender` / `AudioReceiver` 是单会话 owner，每次启动必须新建实例 |
 | 共享 teardown 内的某个操作卡住，所有等待者一起卡住 | 门闩不设会破坏确定性的等待超时；要求关闭体内各资源操作自身有界，真机检查 Activity/netty 并发关闭能完成 |
@@ -939,3 +971,34 @@ suspend）。其中关闭入口如何承接的细节已被 §12 的第三次复�
 `BaseMediaCodec.release()` 的删除范围 `:226-246` 正确，但引用的代码块此前漏掉了上方的
 `/** Release resource. */` KDoc 与函数体内关于 legacy 同步语义的两行注释，已补回，避免实施者
 按不完整的片段比对源码。
+
+## 15. 第六次复审修正（2026-09-18）
+
+本轮针对"确定性关闭"是否真的有界做了一次对抗性核对，发现两处此前几轮都漏掉的问题。
+
+### 15.1 HIGH：`cancelAndJoin()` 可能永久等待阻塞的 PCM 写入
+
+前几轮把"取消能唤醒 worker"当成了 join 有界的充分条件。`runInterruptible` 只包住
+`queue.take()`；worker 一旦进入 `AudioPlayer.play()`，PCM 路径就停在
+`AudioTrackPlayer.write()`（`:194`）的阻塞 `AudioTrack.write(short[], int, int)` 上，协程取消
+无法中断该 native 调用。于是形成死等：`cancelAndJoin()` 等 worker，worker 等写入返回，
+而能让写入返回的 `AudioTrack.stop()` 排在尚未执行的 `releaseAndJoin()` 里。
+
+`AudioSender` 改 Channel 不解决这一点——`Channel.receive()` 可取消，不代表已经开始的
+`play()` / `write()` 可取消。
+
+修正：在 `cancelAndJoin()` 之前插入只停不放的 `audioPlayer?.stop()`。已改入 §4.7.3、§4.7.4、
+§8 与 §6.3 真机清单。该做法与 `StreamPlayerStopper.prepareStop()` 的既有顺序一致。
+
+### 15.2 MEDIUM：`AudioPlayer.releaseAndJoin()` 的异常路径会漏放自身 AudioTrack
+
+§4.5 论证了三个 `AudioTrackPlayer` 相互独立、释放顺序自由，但该结论只覆盖顺序，不覆盖
+异常。`StreamPlayerStopper.stopAndJoin()` 会重抛 `CancellationException`，其 `require()` 也会抛；
+任一前置释放抛出，`AudioPlayer` 在 `:43` 无条件创建的那个 track 就不会被释放。
+修正：`audioTrackPlayer.release()` 移入 `finally`。已改入 §4.5 与 §8。
+
+### 15.3 本轮确认无误
+
+`rollbackFailedInit()` 的独立处理与 `releaseCompleted` 屏障位置、两处
+`finishRecorderRelease` KDoc、Channel worker 的逐帧异常隔离、一次性门闩的三条契约、
+§14 对 `5672ecbbd` 的前提作废、以及刷新后的行号与 20 处测试调用点，均与当前源码一致。

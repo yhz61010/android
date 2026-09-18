@@ -71,6 +71,13 @@ class RecordSingleAppScreenActivity :
      * "nothing moved" while the pixel size the encoder is configured for has in fact changed.
      */
     private var lastConfigGeometry: Triple<Int, Int, Int>? = null
+
+    /**
+     * Shared stem for the two files one recording session produces, fixed when the recorder is
+     * built rather than when it starts. The MP4 path has to be known by the builder, and naming
+     * the pair independently would leave a rotation's segments impossible to match up afterwards.
+     */
+    private var sessionBaseName = ""
     private lateinit var screenProcessor: Screenshot2H26xStrategy
     private lateinit var recorderSetting: ScreenShareSetting
 
@@ -233,31 +240,40 @@ class RecordSingleAppScreenActivity :
      * is what makes the guard in [screenDataListenerFor] sound: a stale writer holding
      * `outputLock` can only ever find the stream its own session opened.
      */
-    private fun createRecorder(): Screenshot2H26xStrategy = ScreenCapture.Builder(
-        recorderSetting.width,
-        recorderSetting.height,
-        recorderSetting.dpi,
-        null,
-        ScreenCapture.BY_IMAGE_2_H26X,
-        screenDataListenerFor(activeSession.incrementAndGet())
-    )
-        .setEncodeType(VIDEO_ENCODE_TYPE)
-        .setFps(recorderSetting.fps)
-        .setKeyFrameRate(20)
-        .setQuality(80)
-        .setSampleSize(1)
-        .build() as Screenshot2H26xStrategy
+    private fun createRecorder(): Screenshot2H26xStrategy {
+        sessionBaseName = "screen-${System.currentTimeMillis()}"
+        return ScreenCapture.Builder(
+            recorderSetting.width,
+            recorderSetting.height,
+            recorderSetting.dpi,
+            null,
+            ScreenCapture.BY_IMAGE_2_H26X,
+            screenDataListenerFor(activeSession.incrementAndGet())
+        )
+            .setEncodeType(VIDEO_ENCODE_TYPE)
+            .setFps(recorderSetting.fps)
+            .setKeyFrameRate(20)
+            .setQuality(80)
+            .setSampleSize(1)
+            // The MP4 is an addition: the raw stream below still receives every sample. The
+            // file appears only if this recorder actually records, and is playable only after
+            // it is released, which is when the muxer writes the index.
+            .setMp4OutputFile(File(getBaseDirString("output"), "$sessionBaseName.mp4"))
+            .build() as Screenshot2H26xStrategy
+    }
 
     private fun openVideoOutput() {
         // A unique name per session: a fixed name would let a new recording truncate the previous
         // one, and would let a recorder that outlived its session write into the new file.
-        val dstFile = File(
-            getBaseDirString("output"),
-            "screen-${System.currentTimeMillis()}" + when (VIDEO_ENCODE_TYPE) {
-                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
-                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
-            }
-        )
+        //
+        // Named after the codec the recorder actually settled on, not the one requested:
+        // asking for an MP4 downgrades H265 to H264 on API 21-23, and a .h265 file holding H.264
+        // would be a worse lie than a longer name.
+        val extension = when (screenProcessor.encodeType) {
+            ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
+            ScreenRecordMediaCodecStrategy.EncodeType.H265 -> ".h265"
+        }
+        val dstFile = File(getBaseDirString("output"), sessionBaseName + extension)
         LogContext.log.i(tag, "dstFile=${dstFile.absolutePath}")
         synchronized(outputLock) {
             videoH26xOsForDebug = BufferedOutputStream(FileOutputStream(dstFile))

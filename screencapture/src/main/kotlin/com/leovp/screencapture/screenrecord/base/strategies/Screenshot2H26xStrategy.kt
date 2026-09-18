@@ -1190,12 +1190,10 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         // Acquiring the callback lock waits for an in-flight callback. Detaching under the same
         // lock makes every later callback return before touching the encoder.
         if (stopEncoder) drainEncoder()
-        val encoder: MediaCodec?
-        val writer: Mp4TrackWriter?
-        synchronized(codecCallbackLock) {
-            encoder = h26xEncoder.also { h26xEncoder = null }
-            writer = mp4Writer.also { mp4Writer = null }
-        }
+        val encoder = synchronized(codecCallbackLock) { h26xEncoder.also { h26xEncoder = null } }
+        // A second acquisition rather than one block: a callback slipping in between finds
+        // h26xEncoder already null and returns before it could reach the writer.
+        val writer = synchronized(codecCallbackLock) { mp4Writer.also { mp4Writer = null } }
         // Closed outside the lock: writing the index can take a while, and every later callback
         // now returns before reaching either of these. The samples are already drained, so
         // finishing the file before the encoder stops costs nothing.

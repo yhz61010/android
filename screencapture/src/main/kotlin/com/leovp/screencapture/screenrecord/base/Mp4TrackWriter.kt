@@ -159,7 +159,7 @@ internal class Mp4TrackWriter(private val outputFile: File) {
          * Passing those through would tell the muxer a sample is a parameter set or a stream
          * terminator.
          */
-        private const val SAMPLE_FLAG_MASK =
+        private val SAMPLE_FLAG_MASK =
             (MediaCodec.BUFFER_FLAG_CODEC_CONFIG or MediaCodec.BUFFER_FLAG_END_OF_STREAM).inv()
     }
 }

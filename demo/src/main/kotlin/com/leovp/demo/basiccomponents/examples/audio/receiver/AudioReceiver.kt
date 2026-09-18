@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 
 /**
  * Author: Michael Leo
@@ -146,9 +147,14 @@ class AudioReceiver {
             ioScope.launch {
                 while (true) {
                     ensureActive()
+                    // take() outside runCatching, and through runInterruptible: the call blocks
+                    // uninterruptibly, so a plain take() would keep this coroutine parked on a
+                    // Dispatchers.IO thread after ioScope.cancel() until another item happened to
+                    // arrive - which, after stopServer(), never comes.
+                    val pcmData = runInterruptible { recAudioQueue.take() }
                     runCatching {
                         // LogContext.log.i(TAG, "Rec pcm[${pcmData.size}]")
-                        receiverHandler?.sendAudioToClient(clientChannel!!, recAudioQueue.take())
+                        receiverHandler?.sendAudioToClient(clientChannel!!, pcmData)
                     }.onFailure { it.printStackTrace() }
                 }
             }
@@ -160,7 +166,11 @@ class AudioReceiver {
             ioScope.launch {
                 while (true) {
                     ensureActive()
-                    audioPlayer?.play(receiveAudioQueue.take())
+                    // Read before the safe call, not inside it: `audioPlayer?.play(queue.take())`
+                    // never evaluates take() when audioPlayer is null, which would turn this into
+                    // a tight loop on a dispatcher thread instead of a wait.
+                    val audioData = runInterruptible { receiveAudioQueue.take() }
+                    audioPlayer?.play(audioData)
                 }
             }
         }

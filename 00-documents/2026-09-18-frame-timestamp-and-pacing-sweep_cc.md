@@ -4,7 +4,7 @@
 排查方法、四处修复，以及**核实为合理用法的清单**——后者的价值不低于前者：它标明哪些位置**看起来**
 像同一个缺陷但其实不是，下次不必再查一遍。
 
-基线提交：`fd1ac70ce`。本文对应 `15e8bcd25`、`233d5dd13`、`cc79699b5` 三个提交。
+基线提交：`fd1ac70ce`。本文对应 `15e8bcd25`、`233d5dd13`、`cc79699b5` 三个提交，以及复核后追加的修正提交（见 §4、§5 末尾）。
 
 起因见 `00-documents/2026-09-18-screencapture-pts-fix-and-mp4-output_cc.md`。那份文档修的是
 `Screenshot2H26xStrategy`；本文回答的是「同样的毛病还在哪里」。
@@ -98,6 +98,12 @@ VCL，32 及以上是参数集、SEI 与分隔符，它们属于其后那张图�
 队列**保留 `offer()` 未换成 `put()`**：阻塞式背压会在解码器停止排空时把投喂线程永久挂住，对
 demo 是更坏的故障模式。改为丢帧时打 error 日志，消除「静默」那一半。
 
+**复核修正（会破坏构建）**：新增的 `import kotlin.time.Duration.Companion.milliseconds` 被插在
+`kotlinx.coroutines.cancel` 与 `.delay` 之间。ktlint 的 `import-ordering` 要求字典序，而
+`kotlin.` 的第 7 个字符是 `.`（0x2E）、`kotlinx` 是 `x`（0x78），因此所有 `kotlin.*` 必须排在
+`kotlinx.*` 之前。`ignoreFailures = false`，这会直接让 `:demo:ktlintCheck` 失败。已上移修正。
+本轮改动的全部 Kotlin 文件已逐一复核 import 顺序，只此一处。
+
 ## 5. 修复四：demo 音频接收端轮询（`cc79699b5`）
 
 `AudioReceiver` 的两个循环都是 `queue.poll()` + 硬编码 `delay(10.milliseconds)`：非阻塞轮询加
@@ -106,6 +112,26 @@ demo 是更坏的故障模式。改为丢帧时打 error 日志，消除「静�
 
 **对照组就在隔壁**：`AudioSender.kt:124` 与 `:135` 做同一件事，用的是阻塞 `take()`。接收端现与
 之对齐。`delay` 与 `milliseconds` 两个 import 随之失效，已删（detekt 零容忍）。
+
+### 5.1 复核修正：`take()` 必须可取消，且不能藏在安全调用里
+
+对齐 `AudioSender` 的同时，也把它的两处潜在缺陷一并带了过来。两处都已在**两个文件里**修正，
+以免它们再次分叉。
+
+**一、`ArrayBlockingQueue.take()` 不可取消。** `stopServer()` 先 `ioScope.cancel()`，但协程若此刻
+正阻塞在 `take()` 里，取消**不会**让它返回——它会一直占着一个 `Dispatchers.IO` 线程，直到又有元素
+入队；而停止之后不会再有。原先的 `poll()` + `delay(10ms)` 虽然限速，`delay` 却是可取消的，
+10ms 内必定退出。现改为 `runInterruptible { queue.take() }`：取消被映射为线程中断，
+`take()` 抛 `InterruptedException`，协程正常结束。
+
+`take()` 同时移出了 `runCatching` 之外——否则 `runCatching` 会吞掉 `CancellationException`，
+要等下一轮 `ensureActive()` 才退出。
+
+**二、`audioPlayer?.play(receiveAudioQueue.take())` 的求值顺序。** Kotlin 的安全调用在接收者为
+null 时**不会**对实参求值，所以 `audioPlayer` 一旦为 null，`take()` 根本不执行，`while(true)`
+就变成一个满转的死循环，而不是等待。当前生命周期下 `audioPlayer` 在线程启动前已赋值且从不置
+null，所以实际不会触发；但这个前提不写在调用点旁边，任何一次重构都可能打破它。已改为先读队列、
+再做安全调用。
 
 ## 6. 已核实为合理用法（不必再查）
 
@@ -147,7 +173,12 @@ demo 是更坏的故障模式。改为丢帧时打 error 日志，消除「静�
 
 - 人工静态核查：改动行行宽均未超 100 字符；`mFrameCount`、`computePresentationTimeUs`、
   `delay` / `milliseconds` 的残留引用均已清零；新增 import 均被使用
-- HIGH 那条（`camera2live`）的代码路径经独立复核，未只凭排查结论采信
+- HIGH 那条（`camera2live`）的代码路径经独立复核，未只凭排查结论采信；`AtomicLong` 已导入、
+  `frameRate` 仍被 `KEY_FRAME_RATE` 使用（删除后不会触发 detekt 未用成员）
+- **对本文三个提交做了一轮复核**，发现并修正两处：§4 的 ktlint import 顺序（会破坏构建）、
+  §5.1 的 `take()` 可取消性与安全调用求值顺序
+- `lib-mvvm` **没有测试目录**，§8 原先担心的「既有单测断言精确相等会失败」不存在；
+  `CountdownEffect.ShowWarning` 在仓库内也没有生产调用方，行为变更只影响库的外部使用者
 
 ### 待本地执行（尚未进行）
 
@@ -158,8 +189,8 @@ demo 是更坏的故障模式。改为丢帧时打 error 日志，消除「静�
   :demo:compileDevDebugKotlin :demo:ktlintCheck :demo:detekt
 ```
 
-`:lib-mvvm:testDebugUnitTest` 需要特别关注：若既有单测断言了警告 effect 的**精确相等**触发条件，
-该用例会失败，应改为断言「只触发一次」。本次未改动测试。
+`:lib-mvvm:testDebugUnitTest` 已确认**没有**相关用例（该模块无 `src/test` 目录），不会因警告判定
+由精确相等改为跨越而失败。是否补测另议。
 
 ### 待真机验证（尚未进行）
 

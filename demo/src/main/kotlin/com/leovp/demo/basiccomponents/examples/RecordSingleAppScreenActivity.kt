@@ -1,5 +1,6 @@
 package com.leovp.demo.basiccomponents.examples
 
+import android.content.res.Configuration
 import android.media.MediaCodec
 import android.os.Bundle
 import android.view.View
@@ -58,6 +59,13 @@ class RecordSingleAppScreenActivity :
      */
     private val activeSession = AtomicInteger(0)
     private var videoH26xOsForDebug: BufferedOutputStream? = null
+
+    /**
+     * Set while a geometry-driven teardown is in flight so [armNextRecording] resumes the
+     * recording the user never stopped. Main thread only: written from
+     * [onConfigurationChanged] and read from the teardown continuation, both of which run there.
+     */
+    private var resumeAfterRebuild = false
     private lateinit var screenProcessor: Screenshot2H26xStrategy
     private lateinit var recorderSetting: ScreenShareSetting
 
@@ -115,17 +123,7 @@ class RecordSingleAppScreenActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val screenInfo = application.screenAvailableResolution
-        recorderSetting = ScreenShareSetting(
-            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            (screenInfo.width * 0.8F / 16).toInt() * 16,
-            // 800 1024 1280
-            (screenInfo.height * 0.8F / 16).toInt() * 16,
-            densityDpi
-        )
-        // FIXME This does not seem to work. Check below setKeyFrameRate
-        recorderSetting.fps = 5f
-
+        recorderSetting = buildRecorderSetting()
         screenProcessor = createRecorder()
 
         // Without this the checked state survives a configuration change and the listener below
@@ -139,6 +137,57 @@ class RecordSingleAppScreenActivity :
                 releaseRecorder(restartable = true)
             }
         }
+    }
+
+    /**
+     * The capture geometry for the screen as it is oriented right now.
+     *
+     * `this`, not `application`: [screenAvailableResolution] reads
+     * `WindowManager.currentWindowMetrics`, which only follows the current rotation for a UI
+     * context. Through the Application context it keeps reporting the portrait bounds, so a
+     * recording started in landscape would be encoded at portrait width and height with every
+     * captured frame stretched to fit.
+     */
+    private fun buildRecorderSetting(): ScreenShareSetting {
+        val screenInfo = screenAvailableResolution
+        return ScreenShareSetting(
+            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
+            (screenInfo.width * 0.8F / 16).toInt() * 16,
+            // 800 1024 1280
+            (screenInfo.height * 0.8F / 16).toInt() * 16,
+            densityDpi
+        ).apply {
+            // FIXME This does not seem to work. Check setKeyFrameRate in createRecorder()
+            fps = 5f
+        }
+    }
+
+    /**
+     * Rebuilds the recorder for the new screen geometry, resuming the recording if one was
+     * running.
+     *
+     * The encoder is configured once, at a fixed width and height, and every captured frame is
+     * drawn at that size ([Screenshot2H26xStrategy] draws with `builder.width`/`builder.height`).
+     * MediaCodec cannot be reconfigured mid-stream, so a rotated capture would be stretched into
+     * the old frame for the rest of the recording - and because H.26x carries that frame forward
+     * through references, the distortion would stay visible. Ending the stream and starting a new
+     * one is the only way to keep the picture true.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val newSetting = buildRecorderSetting()
+        if (newSetting.width == recorderSetting.width &&
+            newSetting.height == recorderSetting.height
+        ) {
+            // A configuration change that leaves the capture geometry alone - a keyboard or a
+            // locale switch. Splitting the recording for it would cost a file for nothing.
+            return
+        }
+        recorderSetting = newSetting
+        // Only resume what the user actually had running. Teardown never clears the toggle, so
+        // it still carries the user's intent at this point.
+        resumeAfterRebuild = binding.toggleBtn.isChecked
+        releaseRecorder(restartable = true)
     }
 
     /**
@@ -224,6 +273,7 @@ class RecordSingleAppScreenActivity :
             } else {
                 // The abandoned recorder still owns the encoder and may still emit frames.
                 // Arming another session would let it corrupt the next recording.
+                resumeAfterRebuild = false
                 toast("Recorder did not release. Screen recording is disabled.")
             }
         }
@@ -239,6 +289,13 @@ class RecordSingleAppScreenActivity :
         screenProcessor = createRecorder()
         cleanupStarted.set(false)
         binding.toggleBtn.isEnabled = true
+        if (resumeAfterRebuild) {
+            resumeAfterRebuild = false
+            // A new output file per segment, so each one holds a single resolution and stays
+            // playable on its own. Appending to the old file would instead demand a decoder that
+            // follows a mid-stream geometry change.
+            startRecording()
+        }
     }
 
     /**

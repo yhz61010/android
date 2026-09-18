@@ -59,10 +59,13 @@ RMS 比正常媒体低约 **22 dB**，线性幅度上差十几倍；峰值还空
 `MicRecorder` 的采集源默认是 `MediaRecorder.AudioSource.VOICE_COMMUNICATION`，并无条件挂载
 `AcousticEchoCanceler` + `AutomaticGainControl` + `NoiseSuppressor`。这条平台 VoIP 采集链：
 
-- 把电平归一到**通话语音**档位，远低于媒体内容——这是 22 dB 缺口的来源；
+- 把电平归一到**通话语音**档位，远低于媒体内容——这是响度缺口的来源；
 - 只提供**单声道**，请求 `CHANNEL_IN_STEREO` 时把同一份内容复制到两个声道——这解释了两个声道
-  逐位相同，也说明 OPUS 在用 128 kbps 编两条完全一样的声道；
-- 降噪器把背景压成数字绝对零，即日志中 `Noise floor = -inf` 的来历。
+  逐位相同，也说明 OPUS 在用 128 kbps 编两条完全一样的声道。
+
+排查过程中一度把 §3.1 的 `Noise floor = -inf` 当作降噪器把背景压成数字绝对零的证据。**该归因已被
+后续实测推翻**：换用 `MIC`、三个音效全部关闭后重录，`Noise floor` 仍为 `-inf`。这个指标随录音内容
+变化，两种配置下都会出现，不能用来判断音效链是否生效。真正与配置强相关、且与内容无关的是声道数。
 
 **「听筒比外放响」这一条没有找到 App 侧的成因。** 既然两个声道内容完全相同，送给上下两个扬声器的
 就是同一个信号，差异只能来自设备本身（小米 10 上下扬声器的调音差异，或手掌挡住底部出声孔）。
@@ -132,17 +135,48 @@ enableAdvancedFeatures = true
 区分开的手段，故保留，注释改为说明其长期价值与调用时机（`routedDevice` 在数据真正流动前返回 null，
 因此 `play()` 后与首次 `write()` 后各打一次）。
 
-### 4.5 CHANGELOG
+### 4.5 采集与播放改为单声道（2026-09-18 追加，`28ea2acdc`）
+
+本文初稿把这一项列为未决事项，等待改用 `MIC` 后重新评估。结论是这个 demo 不需要立体声，
+`AudioActivity` 的两个配置同步改为单声道，并顺带抽出重复的常量、改用具名参数：
+
+```kotlin
+private const val SAMPLE_RATE = 48000
+private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+
+val audioEncoderInfo = AudioEncoderInfo(
+    sampleRate = SAMPLE_RATE,
+    bitrate = 128000,
+    channelConfig = AudioFormat.CHANNEL_IN_MONO,    // 原 CHANNEL_IN_STEREO
+    audioFormat = AUDIO_FORMAT
+)
+val audioDecoderInfo = AudioDecoderInfo(
+    sampleRate = SAMPLE_RATE,
+    channelConfig = AudioFormat.CHANNEL_OUT_MONO,   // 原 CHANNEL_OUT_STEREO
+    audioFormat = AUDIO_FORMAT
+)
+```
+
+**两处必须成对改。** 两个 `channelConfig` 各自推导出自己的 `channelCount`
+（`AudioEncoderInfo.kt:33-36`、`AudioDecoderInfo.kt:29-32`），编码器与 `AudioTrack` 分别取用。只改
+编码侧会让 OPUS 按单声道编码、而播放侧仍按双声道配置 `AudioTrack` 与解码器，单声道 PCM 喂进立体声
+track 的听感是音调升高、速度变快。
+
+这两个 `info` 是 `AudioActivity` 的 companion 常量，`AudioSender`（`:53`、`:94`）与 `AudioReceiver`
+（`:109`、`:171`）都直接引用，因此三条通路自动保持一致，无需改动别处。已确认 `audio` 与 `demo`
+模块中不存在其它硬编码的双声道假设；`ADPCMActivity.kt:82` 的 `CHANNEL_OUT_STEREO` 属独立通路，
+不受本次影响。OPUS 配置帧的 83 字节判定（`OpusStreamPlayer.kt:99`）由固定偏移构成，与声道数无关。
+
+### 4.6 CHANGELOG
 
 `CHANGELOG.md` 的 `### 变更 (Changed)` 新增两条：`MicRecorder` 默认值破坏性变更（含回切指引与参数
 顺序说明）、audio 模块内部常量 Duration 化。
 
 ## 5. 未决事项
 
-1. **`AudioActivity.kt:51` 的 `CHANNEL_IN_STEREO`**（以及 `:56` 的 `CHANNEL_OUT_STEREO`）未改动。
-   VoIP 链下它确定是浪费（两声道逐位相同），但改用 `MIC` 后部分机型支持真立体声采集，是否仍为浪费
-   需要**在真机上重新量一次两个声道**再决定：若仍逐位相同则应改为 `CHANNEL_IN_MONO` /
-   `CHANNEL_OUT_MONO`，若出现差异则应保留立体声。
+1. **`AudioActivity` 的 OPUS 码率仍是 128 kbps**，且是这一组配置里唯一没有抽成常量的字面量。
+   改单声道前它名义上编两条声道（实际是同一份内容），现在编一条真正的单声道，128 kbps 对单声道
+   OPUS 偏高（语音场景通常 24–64 kbps 即可）。未调整，因为这是 demo、码率不影响正确性。
 2. **`MicRecorder.initAdvancedFeatures()` 的三个 `AudioEffect` 未被持有、从不 `release()`**
    （`:205` 起）。`audioRecord.release()` 会带走 native 侧的 effect，功能上不出错，但这三个 Java
    对象要等 GC 终结器才回收，与仓库的确定性释放约定不符。本次未处理。
@@ -155,20 +189,47 @@ enableAdvancedFeatures = true
 
 ## 6. 验证状态
 
-**本次改动未编译、未跑测试、未真机验证。** 已静态核对：全部改动文件字符长度均 ≤100（注意按字符而非
-字节计数）；新增 import 均有使用；被替换的常量无残留引用；`MicRecorder` 的三个调用点参数位置正确。
+### 已完成
 
-需在本地执行：
+- **静态核对**：全部改动文件字符长度均 ≤100（按字符而非字节计数）；新增 import 均有使用；被替换的
+  常量无残留引用；`MicRecorder` 的三个调用点参数位置正确。
+- **本地构建与静态检查通过**（用户于 2026-09-17 执行并反馈通过）：
 
-```bash
-./gradlew --continue --rerun-tasks :audio:testDebugUnitTest :audio:detekt :audio:ktlintCheck \
-  :lib-mvvm:detekt :lib-mvvm:ktlintCheck :demo:ktlintCheck :demo:detekt :demo:compileDevDebugKotlin
-```
+  ```bash
+  ./gradlew --continue --rerun-tasks :audio:testDebugUnitTest :audio:detekt :audio:ktlintCheck \
+    :lib-mvvm:detekt :lib-mvvm:ktlintCheck :demo:ktlintCheck :demo:detekt \
+    :demo:compileDevDebugKotlin
+  ```
 
-待真机验证：
+  §4.5 的单声道改动（`28ea2acdc`）是之后提交的，**未包含在这次运行中**，需再跑一次。
 
-- 用 `AudioActivity` 重录一段并回放，确认响度恢复正常；再拉出 PCM 跑一次 `astats`，确认 Peak 与 RMS
-  回到正常区间，并据此决定 §5.1 的立体声取舍。
-- `AudioSender` / `AudioReceiver` 双机通话，确认回声消除仍然生效（对端听不到自己的回声）。
+### 设备实测：录制与回放（2026-09-18，小米 10 / Android 13）
+
+用 `AudioActivity` 重录后拉出 `audio.pcm` 跑 `astats`（单声道文件必须用 `-ac 1`，否则 ffmpeg 会把
+它按左右交错拆成两路，得到两组「几乎相同但不全等」的假声道）：
+
+| 指标 | 改前 | 改后 | 变化 |
+|------|------|------|------|
+| Peak level | −18.88 dBFS | **−14.57 dBFS** | +4.32 dB |
+| RMS level | −38.09 dBFS | **−30.85 dBFS** | +7.24 dB |
+| Max level | 3726 | 6125 | ×1.64 |
+| Bit depth | 12/16 | 13/16 | +1 位 |
+| Crest factor | 9.12 | 6.52 | 更平 |
+| 声道 | 2（逐位相同） | **1** | 见 §4.5 |
+
+**听感确认：系统媒体音量顶格时，响度较改前明显改善。** 这是本次修复的验收标准，数字本身无法替代
+它——`MIC` 没有 AGC，电平完全由声源决定。
+
+两点如实记录，避免日后误读这组数字：
+
+- 改前改后是**两次不同的录音**，内容、音量、嘴离麦距离都不同。+7.24 dB 说明改后电平更高，
+  **但不能当作本次修复的增益值**。§3.1 预估的约 22 dB 缺口未被这组数据直接证实。
+- RMS −30.85 dBFS 仍比成品音乐低十几 dB。这是无 AGC 的原始采集的正常状态，不是缺陷；若某个场景
+  需要更高响度，杠杆是软件增益或采集距离，不是采集源类型。
+
+### 待真机验证（尚未执行）
+
+- `AudioSender` / `AudioReceiver` 双机通话，确认回声消除仍然生效（对端听不到自己的回声）——这是
+  §4.2 显式回切是否奏效的唯一验证手段。
 - `00-documents/2026-09-02-audio-media-teardown-followup-fixes_cc.md` §13.7 / §14.6 / §15.2 的真机清单
   **仍然全部未做**，不受本次改动影响。

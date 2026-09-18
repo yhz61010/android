@@ -169,6 +169,15 @@ class AudioPlayer(
         opusStreamPlayer?.stopPlaying()
     }
 
+    @Deprecated(
+        "The arithmetic is only right when frameIndex is a cumulative count of PCM frames " +
+            "actually handed over, and nothing here says so or enforces it - a callback or " +
+            "packet counter yields a timeline that drifts from the audio silently. This is a " +
+            "player, which feeds no encoder; the clock it can speak for is the hardware one. " +
+            "Use getAudioTimeUs() for playback position, or derive an encoder timestamp from " +
+            "the PCM byte count at the point the bytes are written.",
+        level = DeprecationLevel.WARNING
+    )
     fun computePresentationTimeUs(frameIndex: Long) =
         frameIndex * 1_000_000 / audioDecoderInfo.sampleRate
 

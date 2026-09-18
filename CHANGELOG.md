@@ -57,6 +57,13 @@
 
 ### 变更 (Changed)
 
+- **`AudioPlayer.computePresentationTimeUs(frameIndex)` 标记为 `@Deprecated`**：该式
+  （`frameIndex * 1_000_000 / sampleRate`）只有在 `frameIndex` 是**实际交付的 PCM 帧累计数**时才
+  成立，而签名既未说明这一点也无从约束——传入回调次数或包序号会得到一条静默偏离音频的时间轴。
+  且它挂在播放器上，播放器并不喂编码器：播放位置请用 `getAudioTimeUs()`（读
+  `AudioTrack.playbackHeadPosition`，即硬件真实播放时钟），要给编码器打时间戳则应在写入 PCM 的
+  那一处按字节数推导。仓库内无调用方，仅为发布库的公开 API 保留。
+  与 `ScreenProcessor.computePresentationTimeUs()` 同批处理。
 - **`MicRecorder` 采集默认值改为原始麦克风**:`audioSource` 默认值由
   `MediaRecorder.AudioSource.VOICE_COMMUNICATION` 改为 `MediaRecorder.AudioSource.MIC`;新增
   `enableAdvancedFeatures: Boolean = false` 参数,用于控制是否挂载回声消除 / 自动增益 / 降噪。

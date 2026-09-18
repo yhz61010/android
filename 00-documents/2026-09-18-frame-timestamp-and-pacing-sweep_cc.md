@@ -166,9 +166,16 @@ null，所以实际不会触发；但这个前提不写在调用点旁边，任�
 透传 `info.presentationTimeUs`，要么根本不碰时间戳。唯一做变换的
 `ScreenRecordMediaCodecStrategy` 只是相对首帧重基准，保留真实间隔，正确。
 
-**一处死代码，未处理**：`audio/.../AudioPlayer.kt` 的 `computePresentationTimeUs(frameIndex)` 是
-帧计数公式，全仓无调用方，却是发布库上的公开 API——留着是个「诱人的陷阱」，与已被 `@Deprecated`
-的 `ScreenProcessor.computePresentationTimeUs` 同类。是否一并弃用需单独决定。
+**一处死代码，已处理**：`audio/.../AudioPlayer.kt` 的 `computePresentationTimeUs(frameIndex)`
+全仓无调用方，却是发布库上的公开 API。经确认后已标记 `@Deprecated`，与
+`ScreenProcessor.computePresentationTimeUs` 同批。
+
+这里要把理由说准，它和模式 A **不完全同类**：`frameIndex * 1_000_000 / sampleRate` 这个式子本身
+是对的——只要 `frameIndex` 真的是**已交付的 PCM 帧累计数**。音频按采样计数推导 PTS 正是本节上表
+里 `OpusEncoder` / `AacEncoder` 被判定为合理用法的原因。问题在于**签名对此既无说明也无约束**：
+传进来的若是回调次数或包序号，就会得到一条静默偏离音频的时间轴。加之它挂在播放器上，而播放器
+并不喂编码器——播放位置应当用紧挨着它的 `getAudioTimeUs()`（读 `AudioTrack.playbackHeadPosition`，
+硬件真实播放时钟）。弃用不产生新警告：无调用方。
 
 ## 7. 顺带完成的两件事
 

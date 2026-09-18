@@ -315,7 +315,9 @@ finally { if (endInit()) completeInlineRelease(...) }
 
 - `onInit()` 在主线程调用时不再卡顿，且 EGL 资源确实在内部线程创建与销毁
 - 停止录制时下游能收到 `BUFFER_FLAG_END_OF_STREAM`
-- 录制中旋转屏幕：不应自动开始录制，上一段文件应完整可播放
+- ~~录制中旋转屏幕：不应自动开始录制，上一段文件应完整可播放~~ —— 已于 2026-09-18 在真机上
+  确认这两条**均已满足**；但同一次验证暴露出录制会因 Activity 重建而中断，处理过程见
+  `2026-09-18-record-single-app-screen-rotation-survival_cc.md`
 - 录制中反复增删窗口（Dialog、悬浮窗），确认丢帧率下降且无画面错位
 
 ## 9.6 后续

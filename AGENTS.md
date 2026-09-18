@@ -110,6 +110,7 @@
 - 证据与完整分析见 `00-documents/2026-09-18-record-single-app-screen-rotation-survival_cc.md` §9。
 - **尚未修复，且不要顺手修**：改动会改变 `screencapture` 的 builder 语义并波及现有调用方，
   须单独立项并经用户确认后再动。改动此区域时不要把该现象当成新引入的回归。
+- **修复完成后**：本节即失效，须从 `AGENTS.md` 与 `CLAUDE.md` 中一并删除，并提醒用户确认。
 
 ## Git 与交付
 

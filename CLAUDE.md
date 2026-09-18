@@ -128,6 +128,8 @@ PTS 比真实时间快 **4.95 倍**。裸 Annex-B 流不携带 PTS，所以 demo
 **尚未修复，且不要顺手修**：改动会改变 `screencapture` 的 builder 语义并波及现有调用方，
 须单独立项并经用户确认后再动。
 
+**修复完成后**：本节即失效，须从 `CLAUDE.md` 与 `AGENTS.md` 中一并删除，并提醒用户确认。
+
 ## 签名
 
 签名由各应用模块独立配置。当前 `demo` 的 release 签名配置已注释，以避免 JitPack 环境因缺少 keystore 而构建失败；V1–V4 签名当前启用于其 debug 签名。`aidl-client` 也只将现有签名配置绑定到 debug 构建。若重新启用 release 签名，应使用本地 `gradle.properties` 或 CI/CD 环境变量提供凭据，不要提交真实 keystore 或密码。

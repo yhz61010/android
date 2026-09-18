@@ -42,20 +42,22 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
     companion object {
         private const val TAG = "AudioActivity"
+        private const val SAMPLE_RATE = 48000
+        private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
 
         // https://developers.weixin.qq.com/miniprogram/dev/api/media/recorder/RecorderManager.start
         // .html
         // Check comments in OpusEncoder.kt file.
         val audioEncoderInfo = AudioEncoderInfo(
-            48000,
-            128000,
-            AudioFormat.CHANNEL_IN_STEREO,
-            AudioFormat.ENCODING_PCM_16BIT
+            sampleRate = SAMPLE_RATE,
+            bitrate = 128000,
+            channelConfig = AudioFormat.CHANNEL_IN_MONO,
+            audioFormat = AUDIO_FORMAT
         )
         val audioDecoderInfo = AudioDecoderInfo(
-            48000,
-            AudioFormat.CHANNEL_OUT_STEREO,
-            AudioFormat.ENCODING_PCM_16BIT
+            sampleRate = SAMPLE_RATE,
+            channelConfig = AudioFormat.CHANNEL_OUT_MONO,
+            audioFormat = AUDIO_FORMAT
         )
 
         // AudioAttributes.USAGE_VOICE_COMMUNICATION

@@ -95,6 +95,22 @@
 - 所有 Android 库需提供模块根目录的 `consumer-rules.pro`（可为空），根构建会统一引用。发布或混淆规则变更验证 release 合并及必要的消费端行为。
 - 新增/替换 `.so`、`.a`、媒体或源码压缩包前检查 `.gitattributes` 和 Git LFS 指南，确认不是指针文件被误作真实输入；签名、Native 二进制和发布配置变更在交付中显式说明。
 
+## 已知问题（待处理）
+
+- **`screencapture` 的 `fps` 只影响时间戳，不影响采集速率。** `ScreenCapture.Builder.setFps()`
+  当前不控制采集节奏，四处配置互相矛盾：`Screenshot2H26xStrategy.kt:821` 的采集循环
+  `delay(32.milliseconds)` 硬编码、不读 `builder.fps`；`:701` 把 `MediaFormat.KEY_FRAME_RATE`
+  接到 `builder.keyFrameRate`（默认 20）而不是 `fps`；`:708` 只把 `fps` 写进
+  `KEY_MAX_FPS_TO_ENCODER`（软提示，厂商可忽略）；而 `ScreenProcessor.kt:74` 的
+  `PTS = frameIndex * 1_000_000 / fps` 用的是 `fps`。
+- 后果：传 `fps = 5f` 时实际采集约 25 fps、PTS 仍按 5 fps 递增，2026-09-18 真机实测 PTS 比真实
+  时间快 4.95 倍。裸 Annex-B 流不带 PTS，demo 直接写文件看不出来；受影响的是把同一 strategy
+  喂给网络或封装的调用方（`ScreenShareClientActivity` 一路）与 CPU/码率成本。字段命名亦有误导：
+  `keyFrameRate` 喂的是帧率键而非关键帧间隔。
+- 证据与完整分析见 `00-documents/2026-09-18-record-single-app-screen-rotation-survival_cc.md` §9。
+- **尚未修复，且不要顺手修**：改动会改变 `screencapture` 的 builder 语义并波及现有调用方，
+  须单独立项并经用户确认后再动。改动此区域时不要把该现象当成新引入的回归。
+
 ## Git 与交付
 
 - 开始工作先检查 `git status --short --branch`、当前分支及上游；分开报告未提交修改、未推送提交与 ahead/behind。

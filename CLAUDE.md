@@ -103,6 +103,31 @@ Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是�
 
 零容忍（`maxIssues=0`）意味着：删除/重构代码后，务必一并清理**随之失效的 import 与私有成员**（未用即 detekt 失败）。
 
+## 已知问题（待处理）
+
+### `screencapture` 的 `fps` 只影响时间戳，不影响采集速率
+
+`ScreenCapture.Builder.setFps()` 当前不控制采集节奏，四处配置互相矛盾：
+
+| 位置 | 实际行为 |
+|------|----------|
+| `Screenshot2H26xStrategy.kt:821` | 采集循环 `delay(32.milliseconds)` 硬编码，不读 `builder.fps` |
+| `Screenshot2H26xStrategy.kt:701` | `MediaFormat.KEY_FRAME_RATE` 取的是 `builder.keyFrameRate`（默认 20），不是 `fps` |
+| `Screenshot2H26xStrategy.kt:708` | `builder.fps` 只写入 `KEY_MAX_FPS_TO_ENCODER`，该键是软提示，厂商可忽略 |
+| `ScreenProcessor.kt:74` | `PTS = frameIndex * 1_000_000 / fps`，用的是 `fps` |
+
+结果：调用方传 `fps = 5f` 时实际采集约 25 fps，而 PTS 仍按 5 fps 递增。2026-09-18 真机实测
+PTS 比真实时间快 **4.95 倍**。裸 Annex-B 流不携带 PTS，所以 demo 直接写文件的场景看不出来；
+真正受影响的是把同一 strategy 喂给网络或封装的调用方（`ScreenShareClientActivity` 一路），
+以及 CPU 与码率成本——调用方要 5 fps，设备按约 25 fps 在采。
+
+字段命名本身也有误导：`keyFrameRate` 喂的是帧率键，而不是关键帧间隔。
+
+证据与完整分析见 `00-documents/2026-09-18-record-single-app-screen-rotation-survival_cc.md` §9。
+
+**尚未修复，且不要顺手修**：改动会改变 `screencapture` 的 builder 语义并波及现有调用方，
+须单独立项并经用户确认后再动。
+
 ## 签名
 
 签名由各应用模块独立配置。当前 `demo` 的 release 签名配置已注释，以避免 JitPack 环境因缺少 keystore 而构建失败；V1–V4 签名当前启用于其 debug 签名。`aidl-client` 也只将现有签名配置绑定到 debug 构建。若重新启用 release 签名，应使用本地 `gradle.properties` 或 CI/CD 环境变量提供凭据，不要提交真实 keystore 或密码。

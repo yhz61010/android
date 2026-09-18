@@ -10,6 +10,7 @@ import com.leovp.android.exts.densityDpi
 import com.leovp.android.exts.getBaseDirString
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.android.exts.toast
+import com.leovp.android.utils.LangUtil
 import com.leovp.bytes.toHexString
 import com.leovp.demo.R
 import com.leovp.demo.base.BaseDemonstrationActivity
@@ -61,17 +62,15 @@ class RecordSingleAppScreenActivity :
     private var videoH26xOsForDebug: BufferedOutputStream? = null
 
     /**
-     * Set while a geometry-driven teardown is in flight so [armNextRecording] resumes the
-     * recording the user never stopped. Main thread only: written from
-     * [onConfigurationChanged] and read from the teardown continuation, both of which run there.
+     * The last capture geometry seen, in the units [Configuration] reports directly, plus the
+     * density the encoder was sized against. Used only to tell a real geometry change from a
+     * configuration change that leaves the capture alone.
+     *
+     * Density belongs here because the manifest now keeps this Activity alive across a density
+     * change too: `screenWidthDp`/`screenHeightDp` are density-independent and would report
+     * "nothing moved" while the pixel size the encoder is configured for has in fact changed.
      */
-    private var resumeAfterRebuild = false
-
-    /**
-     * The last capture geometry seen, in the units [Configuration] reports directly. Used only to
-     * tell a rotation from a configuration change that leaves the window alone.
-     */
-    private var lastConfigGeometry: Pair<Int, Int>? = null
+    private var lastConfigGeometry: Triple<Int, Int, Int>? = null
     private lateinit var screenProcessor: Screenshot2H26xStrategy
     private lateinit var recorderSetting: ScreenShareSetting
 
@@ -129,7 +128,7 @@ class RecordSingleAppScreenActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lastConfigGeometry = resources.configuration.let { it.screenWidthDp to it.screenHeightDp }
+        lastConfigGeometry = resources.configuration.toCaptureGeometry()
         recorderSetting = buildRecorderSetting()
         screenProcessor = createRecorder()
 
@@ -182,23 +181,39 @@ class RecordSingleAppScreenActivity :
      */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        // The app language rides on the Activity's own resources, applied in
+        // BaseDemonstrationActivity.attachBaseContext. That ran once, at creation; this Activity
+        // now survives the configuration changes listed in the manifest instead of being
+        // recreated, so nothing would re-apply it and the UI would fall back to the device locale
+        // - on API 21-24 especially, where LangUtil takes the Resources.updateConfiguration path
+        // that the framework overwrites when it delivers the new configuration.
+        LangUtil.getInstance(this).setAppLanguage(this)
         // Read from [newConfig] rather than from the window: WindowManager.currentWindowMetrics
         // is not guaranteed to carry the new bounds until the layout pass that applies them, and
         // a stale read here would report "nothing moved" and skip the rebuild entirely. The
         // values [Configuration] carries are already the new ones.
-        val geometry = newConfig.screenWidthDp to newConfig.screenHeightDp
+        val geometry = newConfig.toCaptureGeometry()
         if (geometry == lastConfigGeometry) {
-            // A configuration change that leaves the window alone - a keyboard or a locale
+            // A configuration change that leaves the capture alone - a keyboard or a locale
             // switch. Splitting the recording for it would cost a file for nothing.
             return
         }
         lastConfigGeometry = geometry
-        // Resume only what the user actually had running: teardown never clears the toggle, so it
-        // still carries their intent here. The teardown itself starts now, before another frame
-        // can be captured at the old geometry; the new geometry is measured in [armNextRecording].
-        resumeAfterRebuild = binding.toggleBtn.isChecked
+        // The teardown starts now, before another frame can be captured at the old geometry; the
+        // new geometry is measured in [armNextRecording], which also decides whether to resume.
         releaseRecorder(restartable = true)
     }
+
+    /**
+     * The parts of a [Configuration] that decide how the encoder must be sized: the window in dp,
+     * and the density that turns those dp into the pixels it is configured with.
+     *
+     * `this.densityDpi` is qualified on purpose. This file also imports the `Context.densityDpi`
+     * extension, and while the [Configuration] member wins here, spelling it out keeps the two
+     * apart for anyone editing this later.
+     */
+    private fun Configuration.toCaptureGeometry() =
+        Triple(screenWidthDp, screenHeightDp, this.densityDpi)
 
     /**
      * Opens the debug output and starts recording. Opening truncates the file, so it must
@@ -282,8 +297,8 @@ class RecordSingleAppScreenActivity :
                 armNextRecording()
             } else {
                 // The abandoned recorder still owns the encoder and may still emit frames.
-                // Arming another session would let it corrupt the next recording.
-                resumeAfterRebuild = false
+                // Arming another session would let it corrupt the next recording, so
+                // [armNextRecording] - and with it any resume - is skipped entirely.
                 toast("Recorder did not release. Screen recording is disabled.")
             }
         }
@@ -296,15 +311,21 @@ class RecordSingleAppScreenActivity :
      * here and is reopened by [startRecording], which is what truncates it.
      */
     private fun armNextRecording() {
-        // Measured here, not when the configuration changed. releaseRecorder() starts
-        // UNDISPATCHED and then suspends into Dispatchers.IO for the teardown, so the main thread
-        // has run its queued traversals - including the resize - before this resumes on it.
+        // Measured here rather than carried over from onConfigurationChanged. What makes the
+        // reading current is not the hop through Dispatchers.IO - a coroutine resume and a
+        // Choreographer traversal are both main-looper messages, in no guaranteed order - but
+        // that the Activity's resources configuration, and so currentWindowMetrics, is already
+        // updated before onConfigurationChanged is dispatched at all.
         recorderSetting = buildRecorderSetting()
         screenProcessor = createRecorder()
         cleanupStarted.set(false)
         binding.toggleBtn.isEnabled = true
-        if (resumeAfterRebuild) {
-            resumeAfterRebuild = false
+        // The toggle is the intent, read at the moment of resuming rather than remembered from
+        // when teardown began. A recorder failing mid-teardown clears the toggle through
+        // onError, and its listener call finds cleanupStarted already set and returns without
+        // doing anything - a remembered flag would still say "resume" and put the screen back
+        // into recording right after telling the user it had stopped.
+        if (binding.toggleBtn.isChecked) {
             // A new output file per segment, so each one holds a single resolution and stays
             // playable on its own. Appending to the old file would instead demand a decoder that
             // follows a mid-stream geometry change.

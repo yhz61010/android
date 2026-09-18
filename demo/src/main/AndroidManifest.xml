@@ -265,7 +265,7 @@
         <activity android:name=".basiccomponents.examples.socket.SocketClientActivity" />
         <activity
             android:name=".basiccomponents.examples.RecordSingleAppScreenActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="density|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" />
         <activity android:name=".basiccomponents.examples.TakeScreenshotActivity" />
         <activity android:name=".basiccomponents.examples.CoroutineActivity" />
         <activity android:name=".basiccomponents.examples.audio.AudioActivity" />

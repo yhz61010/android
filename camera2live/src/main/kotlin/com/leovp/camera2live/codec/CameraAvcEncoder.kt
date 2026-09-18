@@ -53,7 +53,13 @@ class CameraAvcEncoder @JvmOverloads constructor(
     @SuppressWarnings("unused")
     var csd: ByteArray? = null
         private set
-    private var mFrameCount: Long = 0
+
+    /**
+     * Monotonic origin for presentation timestamps, latched on the first frame handed to the
+     * encoder. Sentinel is `Long.MIN_VALUE` rather than `0`: `System.nanoTime()`'s origin is
+     * arbitrary and a reading of exactly zero is legal, which would re-latch it every frame.
+     */
+    private val timestampOriginNanos = AtomicLong(UNSET_TIMESTAMP_ORIGIN)
 
     @SuppressLint("InlinedApi")
     private fun initEncoder() {
@@ -239,15 +245,13 @@ class CameraAvcEncoder @JvmOverloads constructor(
                         "MediaCodec returned a null input buffer for id=$inputBufferId"
                     }
                     inputBuffer.putEncoderFrame(data)
-                    val frameIndex = mFrameCount + 1
                     codec.queueInputBuffer(
                         inputBufferId,
                         0,
                         data.size,
-                        computePresentationTimeUs(frameIndex),
+                        elapsedMicrosSinceFirstFrame(),
                         0
                     )
-                    mFrameCount = frameIndex
                 },
                 onFailure = { e ->
                     if (e is MediaCodec.CodecException || e is IllegalStateException) {
@@ -278,7 +282,29 @@ class CameraAvcEncoder @JvmOverloads constructor(
         dataUpdateCallback = callback
     }
 
-    private fun computePresentationTimeUs(frameIndex: Long) = frameIndex * 1_000_000 / frameRate
+    /**
+     * Microseconds elapsed since the first frame reached the encoder.
+     *
+     * Deliberately not `frameIndex * 1_000_000 / frameRate`. That assumed every frame the camera
+     * was asked for actually arrived and was queued, and neither holds: a real camera's rate
+     * moves with exposure and load, and [BoundedFrameQueue] discards the oldest frames whenever
+     * the encoder falls behind - those never advanced the counter. The timeline therefore
+     * compressed real time, running fast by whatever fraction went missing, and it only stayed
+     * invisible because the one consumer writes a raw Annex-B stream, which stores no timestamps
+     * at all. Feed the same stream to a muxer or to A/V sync and the drift is immediate.
+     *
+     * The bitrate suffers either way: MediaCodec's rate control reads this timeline to judge how
+     * much wall clock a run of frames covers, so a compressed one had it spreading KEY_BIT_RATE
+     * over more frames per second than it was actually being given.
+     *
+     * Called only from [drainInputBuffers], which holds [inputBufferLock]; the atomic keeps the
+     * latch correct regardless.
+     */
+    private fun elapsedMicrosSinceFirstFrame(): Long {
+        val now = System.nanoTime()
+        timestampOriginNanos.compareAndSet(UNSET_TIMESTAMP_ORIGIN, now)
+        return (now - timestampOriginNanos.get()) / 1_000L
+    }
 
     @SuppressWarnings("unused")
     fun stop() {
@@ -328,6 +354,9 @@ class CameraAvcEncoder @JvmOverloads constructor(
 
     companion object {
         private const val TAG = "CameraEncoder"
+
+        /** "Not latched yet" for [timestampOriginNanos]. */
+        private const val UNSET_TIMESTAMP_ORIGIN = Long.MIN_VALUE
         private const val MAX_PENDING_FRAMES = 5
         private const val DROPPED_FRAME_LOG_INTERVAL = 30L
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L

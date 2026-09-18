@@ -134,15 +134,24 @@ MP4 侧的任何异常都在 `Mp4TrackWriter` 内部被捕获，`broken` 标志�
 `onOutputFormatChanged` 原先没有取 `codecCallbackLock`、也没有校验 `h26xEncoder !== codec`，
 现已补上：否则拆除流程可能在它开轨的同时把 writer 关掉。
 
-释放时分两次取锁，而不是一个块里同时摘下 encoder 与 writer：
+释放时在**同一个**锁块里同时摘下 encoder 与 writer：
 
 ```kotlin
-val encoder = synchronized(codecCallbackLock) { h26xEncoder.also { h26xEncoder = null } }
-val writer = synchronized(codecCallbackLock) { mp4Writer.also { mp4Writer = null } }
+val encoder: MediaCodec?
+val writer: Mp4TrackWriter?
+synchronized(codecCallbackLock) {
+    encoder = h26xEncoder.also { h26xEncoder = null }
+    writer = mp4Writer.also { mp4Writer = null }
+}
 ```
 
-两次之间挤进来的回调会发现 `h26xEncoder` 已为 null 而提前返回，够不到 writer。写索引耗时较长，
-因此 `close()` 放在锁外执行。
+一个块即可：两者一起消失，不存在「encoder 已摘、writer 未摘」的中间态。给外层 `val` 在
+`synchronized` 块内赋值是合法的——`kotlin.synchronized` 声明了 `EXACTLY_ONCE` 契约，确定赋值
+分析认得它。
+
+`close()` 放在锁外执行：写索引耗时较长，而回调侧一旦发现 `h26xEncoder` 已为 null 就提前返回，
+够不到这个 writer，所以锁外关闭是安全的。反过来把 `close()` 挪进锁内，会让编码器回调停等一整个
+索引写入。
 
 ### 3.7 API 21–23 退回 H.264
 
@@ -204,13 +213,27 @@ private fun fallBackToAvcIfMuxerCannotCarryHevc() {
 **下一次给这个类加方法之前必须先拆分。** 该问题在
 `2026-09-02-audio-media-teardown-followup-fixes_cc.md` §14.7 已列为已知未处理项，现在余量更小了。
 
-## 8. 验证状态
+## 8. 复审补记（2026-09-18）
+
+本次改动交付后做过一轮复审，结论与随之而来的修正：
+
+- **`ScreenRecordMediaCodecStrategy` 并非全身而退。** §2.4 修的 `KEY_FRAME_RATE` 错配在
+  `ScreenRecordMediaCodecStrategy.kt:167` 逐字相同、当时未修。提交说明里那句「从来没有这个缺陷」
+  只对 PTS 成立。真实调用方 `MediaProjectionService.kt:254-259` 传的 `ScreenShareSetting` 默认
+  `fps = 20F`、`keyFrameRate = 8`，等于按 8 fps 分摊码率却按约 20 fps 喂帧。现已一并改为 `fps`。
+  该链路由虚拟显示推帧、没有采集循环，所以只需改这一个键，不涉及节奏改造。
+- **§3.6 原先描述的「两次取锁」与代码不符**，已按实际代码改写（见上）。
+- `Mp4TrackWriter` 的线程契约原写作「所有调用都来自编码器回调线程」，但 `close()` 恰恰是特意
+  不在该线程上调用的。已改为陈述真实不变量：由调用方的回调锁加摘除协议串行化。
+- demo 侧三处残留一并清理：过期的 `FIXME`、已成死调用的 `setKeyFrameRate(20)`、以及
+  `sessionBaseName` 仅用毫秒时间戳导致同毫秒内可能撞名。
+
+## 9. 验证状态
 
 ### 已完成
 
 - 人工静态核查：三处改动文件行宽均无超 100 字符项；`frameCount` 无残留引用
-- 编译风险自查并修正两处：`const val` 不允许函数调用（`or`/`inv`），已改为 `private val`；
-  不依赖 `synchronized` 的 `EXACTLY_ONCE` 契约给外层 `val` 赋值，已改为两次取锁
+- 编译风险自查并修正一处：`const val` 不允许函数调用（`or`/`inv`），已改为 `private val`
 
 ### 待本地执行（尚未进行）
 

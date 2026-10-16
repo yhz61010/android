@@ -16,12 +16,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 
 class BaseMediaCodecSynchronousTest {
-    @Suppress("DEPRECATION")
     @Test
-    fun `legacy release waits for the active codec iteration`() {
+    fun `release waits for the active codec iteration`() {
         val enteredInput = CountDownLatch(1)
         val continueInput = CountDownLatch(1)
         val mediaCodec = mockk<MediaCodec>(relaxed = true)
@@ -35,10 +35,14 @@ class BaseMediaCodecSynchronousTest {
             subject.start()
             assertTrue(enteredInput.await(2, TimeUnit.SECONDS), "Worker did not enter onInputData")
 
-            val releaseFuture = releaseExecutor.submit { subject.release() }
+            val releaseFuture =
+                releaseExecutor.submit { runBlocking { subject.releaseAndJoin() } }
 
             assertFailsWith<TimeoutException> { releaseFuture.get(100, TimeUnit.MILLISECONDS) }
-            assertFalse(releaseFuture.isDone, "release() must wait for the active codec iteration")
+            assertFalse(
+                releaseFuture.isDone,
+                "releaseAndJoin() must wait for the active codec iteration"
+            )
             verify(exactly = 0) { mediaCodec.release() }
 
             continueInput.countDown()

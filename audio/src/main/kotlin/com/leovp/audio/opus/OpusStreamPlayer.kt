@@ -6,6 +6,7 @@ import android.content.Context
 import android.media.AudioTrack
 import android.os.SystemClock
 import com.leovp.audio.AudioTrackPlayer
+import com.leovp.audio.BuildConfig
 import com.leovp.audio.base.StreamPlayerStopper
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
@@ -21,6 +22,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -81,7 +83,12 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             csd2,
             object : IDecodeCallback {
                 override fun onDecoded(pcmData: ByteArray) {
-                    LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
+                    // Gated: this fires once per decoded frame, and the message is built before
+                    // the log level is ever consulted. Same treatment AudioTrackPlayer and
+                    // AudioPlayer already give their per-frame logs.
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.i(TAG, "onDecoded PCM[${pcmData.size}]")
+                    }
                     if (pcmData.isNotEmpty() && !decodedPcmQueue.offer(pcmData)) {
                         LogContext.log.w(TAG, "Drop decoded PCM: playback queue is full")
                     }
@@ -145,12 +152,35 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
             }
             LogContext.log.w(TAG, "Play audio at: $playStartTimeInUs")
         }.onFailure {
-            runCatchingPreservingCancellation { audioDecoder?.release() }
+            // Detach before releasing: the rollback below runs asynchronously, so nothing may
+            // still reach this half-built decoder through the player's state.
+            val failedDecoder = audioDecoder
             audioDecoder = null
             csd0 = null
             csd1 = null
             csd2 = null
+            releaseDecoderAsync(failedDecoder)
             LogContext.log.e(TAG, "init failed, rolled back. msg=${it.message}", it)
+        }
+    }
+
+    /**
+     * Releases a decoder that failed to initialize, off the caller's thread.
+     *
+     * The caller holds [lock] and is not suspending, so the deterministic release cannot be
+     * awaited here. NonCancellable rather than a plain ioScope child: StreamPlayerStopper
+     * cancels ioScope while stopping, and a concurrent stop would otherwise kill this rollback
+     * and leak a decoder it has already detached and can no longer reach.
+     *
+     * The body must not throw. NonCancellable replaces the parent job and this scope carries no
+     * CoroutineExceptionHandler, so an escaping throwable would reach the platform default
+     * handler and kill the process.
+     */
+    private fun releaseDecoderAsync(decoder: OpusDecoder?) {
+        val failed = decoder ?: return
+        ioScope.launch(NonCancellable) {
+            runCatchingPreservingCancellation { failed.releaseAndJoin() }
+                .onFailure { LogContext.log.e(TAG, "rollback release failed", it) }
         }
     }
 
@@ -159,12 +189,17 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
         var shouldResync = false
         val elapsedUs = SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs
         val latencyInMs = elapsedUs / 1000 - getAudioTimeUs() / 1000
-        LogContext.log.d(
-            TAG,
-            "st=$playStartTimeInUs\t " +
-                "cal=${(SystemClock.elapsedRealtimeNanos() / 1000 - playStartTimeInUs) / 1000}\t " +
-                "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
-        )
+        // Gated: one call per incoming frame, concatenating four values - including a second
+        // getAudioTimeUs(), which reads AudioTrack.playbackHeadPosition through a native call.
+        // `cal` reuses elapsedUs instead of re-reading the clock, so the logged value is the one
+        // latencyInMs was derived from.
+        if (BuildConfig.DEBUG) {
+            LogContext.log.d(
+                TAG,
+                "st=$playStartTimeInUs\t cal=${elapsedUs / 1000}\t " +
+                    "play=${getAudioTimeUs() / 1000}\t latency=$latencyInMs"
+            )
+        }
         if (decoder.queueSize >= AUDIO_DATA_QUEUE_CAPACITY ||
             abs(latencyInMs) > audioLatencyThresholdInMs
         ) {
@@ -198,24 +233,15 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
     /**
      * Deterministic teardown. Detaches decoder/CSD and advances the generation under the lock,
      * then awaits the old decoder OUTSIDE the lock to avoid suspension or callback re-entry.
+     *
+     * Replaces the removed non-suspend stopPlaying(). Migration: await this from a coroutine the
+     * owner controls; it returns only once the decoder worker has exited and the track is
+     * released, where stopPlaying() released the track synchronously but returned without
+     * waiting for the decoder worker to exit.
      */
     suspend fun stopPlayingAndJoin() {
         stopped.set(true)
         streamPlayerStopper.stopAndJoin { it.releaseAndJoin() }
-    }
-
-    /**
-     * Legacy non-suspend entry point. It preserves synchronous resource release, but cannot wait
-     * for the decoder worker to finish; use [stopPlayingAndJoin] when completion matters.
-     */
-    @Deprecated(
-        "Non-suspend stop cannot guarantee the decoder has been released. " +
-            "Use stopPlayingAndJoin() for deterministic shutdown.",
-        ReplaceWith("stopPlayingAndJoin()")
-    )
-    fun stopPlaying() {
-        stopped.set(true)
-        streamPlayerStopper.stop { it.release() }
     }
 
     private fun detachDecoderForStop(): OpusDecoder? = synchronized(lock) {
@@ -239,7 +265,9 @@ class OpusStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderI
                 val pcmData = decodedPcmQueue.poll(100, TimeUnit.MILLISECONDS) ?: continue
                 if (AudioTrack.STATE_UNINITIALIZED == audioTrackPlayer.state) continue
                 if (AudioTrack.PLAYSTATE_PLAYING == audioTrackPlayer.playState) {
-                    LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.i(TAG, "Play PCM[${pcmData.size}]")
+                    }
                     audioTrackPlayer.write(pcmData)
                 }
             }

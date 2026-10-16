@@ -4,6 +4,7 @@ import android.media.AudioFormat
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import androidx.lifecycle.lifecycleScope
 import com.leovp.android.exts.createFile
 import com.leovp.android.exts.toast
 import com.leovp.audio.AudioPlayer
@@ -21,6 +22,13 @@ import java.io.BufferedOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.activity_a_d_p_c_m) {
     override fun getTagName(): String = ITAG
@@ -35,7 +43,7 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
     override fun getViewBinding(savedInstanceState: Bundle?): ActivityADPCMBinding =
         ActivityADPCMBinding.inflate(layoutInflater)
 
-    private var player: AudioPlayer? = null
+    private var playbackJob: Job? = null
 
     fun onEncodeToADPCMClick(@Suppress("unused") view: View) {
         val inputStream = resources.openRawResource(R.raw.raw_pcm_44100_2ch_s16le)
@@ -85,40 +93,63 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
                 },
                 AudioFormat.ENCODING_PCM_16BIT
             )
-        player = AudioPlayer(this, decoderInfo, AudioType.PCM)
 
-        thread {
-            runCatching {
-                AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount).use { decoder ->
-                    // val inputStream = resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
-                    val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
-                    val musicBytes = FileInputStream(inFile).use { it.readBytes() }
-                    val chunkSize = decoder.chunkSize()
-                    require(musicBytes.size % chunkSize == 0) {
-                        "ADPCM file contains an incomplete trailing chunk."
-                    }
-                    for (i in musicBytes.indices step chunkSize) {
-                        val chunk = musicBytes.copyOfRange(i, i + chunkSize)
-                        val st = SystemClock.elapsedRealtimeNanos()
-                        val pcmBytes = decoder.decode(chunk)
-                        LogContext.log.i(
-                            ITAG,
-                            "PCM[${pcmBytes.size}] " +
-                                "cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
-                        )
-                        player?.play(pcmBytes)
-                    }
+        // cancel() does not wait, so capture the old job and join it inside the new one.
+        val previousJob = playbackJob?.also { it.cancel() }
+        playbackJob = lifecycleScope.launch(Dispatchers.IO) {
+            // Join the previous job before building a new player: the old job's finally still has
+            // a NonCancellable releaseAndJoin() to run, and without this wait rapid clicks stack
+            // several live AudioTracks. Joining here, not on the click thread, keeps the UI
+            // thread free. The join itself is NonCancellable so that a third click, which cancels
+            // this job while it waits, cannot let the chain skip a link: this job still outlives
+            // the previous one, and the next job waits on this one. ensureActive() then honours
+            // the cancellation before anything is built.
+            withContext(NonCancellable) { previousJob?.join() }
+            ensureActive()
+            // Inside the job body, never outside it: a job cancelled before its first dispatch
+            // never reaches this finally, so a player built on the click thread would leak.
+            val currentPlayer = AudioPlayer(this@ADPCMActivity, decoderInfo, AudioType.PCM)
+            try {
+                try {
+                    AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)
+                        .use { decoder ->
+                            // val inputStream =
+                            //     resources.openRawResource(R.raw.out_adpcm_44100_2ch_64kbps)
+                            val inFile = createFile(OUTPUT_IMA_FILE_NAME).absolutePath
+                            val musicBytes = FileInputStream(inFile).use { it.readBytes() }
+                            val chunkSize = decoder.chunkSize()
+                            require(musicBytes.size % chunkSize == 0) {
+                                "ADPCM file contains an incomplete trailing chunk."
+                            }
+                            for (i in musicBytes.indices step chunkSize) {
+                                ensureActive()
+                                val chunk = musicBytes.copyOfRange(i, i + chunkSize)
+                                val st = SystemClock.elapsedRealtimeNanos()
+                                val pcmBytes = decoder.decode(chunk)
+                                LogContext.log.i(
+                                    ITAG,
+                                    "PCM[${pcmBytes.size}] " +
+                                        "cost=${(SystemClock.elapsedRealtimeNanos() - st) / 1000}us"
+                                )
+                                currentPlayer.play(pcmBytes)
+                            }
+                        }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(ITAG, "Unable to decode ADPCM audio.", e)
                 }
-            }.onFailure {
-                LogContext.log.e(ITAG, "Unable to decode ADPCM audio.", it)
-            }.also {
-                player?.release()
+            } finally {
+                withContext(NonCancellable) { currentPlayer.releaseAndJoin() }
             }
         }
     }
 
     override fun onDestroy() {
-        player?.release()
+        // Cancel only. The playback job owns its player and releases it in its own finally, so
+        // releasing here would race the loop that may still be calling play().
+        playbackJob?.cancel()
+        playbackJob = null
         super.onDestroy()
     }
 }

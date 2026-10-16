@@ -156,6 +156,10 @@ abstract class BaseMediaCodec(
      * This MUST be called by an external owner, never by the codec worker itself, otherwise the
      * worker would join on itself and deadlock. If a worker needs to request teardown, it should
      * expose a separate `requestRelease()` returning a [Job] instead of calling this.
+     *
+     * Replaces the removed non-suspend release(). Migration: await this from a coroutine the
+     * owner controls; subclasses that overrode release() put that work in [onCodecReleased]
+     * instead, as this method is not open.
      */
     suspend fun releaseAndJoin() {
         require(codecJob !== currentCoroutineContext()[Job]) {
@@ -221,28 +225,6 @@ abstract class BaseMediaCodec(
     protected fun reportCodecFailure(error: Throwable) {
         runCatchingPreservingCancellation { notifyCodecFailure(error) }
             .onFailure { LogContext.log.e(TAG, "Codec failure callback failed", it) }
-    }
-
-    /**
-     * Release resource.
-     */
-    @Deprecated(
-        "Non-suspend release cannot guarantee the worker has exited. " +
-            "Use releaseAndJoin() for deterministic shutdown.",
-        ReplaceWith("releaseAndJoin()")
-    )
-    open fun release() {
-        if (!markReleasing()) return
-        // Preserve the legacy synchronous return semantics. New code should use releaseAndJoin()
-        // when it must also wait for the worker to finish.
-        codecJob?.cancel()
-        codecJob = null
-        ioScope.cancel()
-        try {
-            releaseCodecOnce()
-        } finally {
-            lifecycleState.set(LifecycleState.RELEASED)
-        }
     }
 
     open fun flush() {

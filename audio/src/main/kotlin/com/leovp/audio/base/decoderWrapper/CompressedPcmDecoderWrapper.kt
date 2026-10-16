@@ -17,6 +17,8 @@ class CompressedPcmDecoderWrapper(
         outputCallback.output(input.decompress(), isConfig = false, isKeyFrame = false)
     }
 
-    override fun release() {
+    override suspend fun releaseAndJoin() {
+        // Nothing to release: decompression runs synchronously on the caller's thread, so there
+        // is no worker to wait for.
     }
 }

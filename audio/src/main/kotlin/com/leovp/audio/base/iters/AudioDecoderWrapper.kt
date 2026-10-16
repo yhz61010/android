@@ -6,5 +6,12 @@ package com.leovp.audio.base.iters
  */
 interface AudioDecoderWrapper {
     fun decode(input: ByteArray)
-    fun release()
+
+    /**
+     * Waits until any asynchronous decoder worker has stopped and its resources are released.
+     *
+     * Replaces the removed non-suspend release(). Migration: implementations move the whole
+     * release into this method and callers await it from a coroutine they own.
+     */
+    suspend fun releaseAndJoin()
 }

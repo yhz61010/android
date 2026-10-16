@@ -1,13 +1,10 @@
 package com.leovp.audio.base.encoderWrapper
 
-import com.leovp.audio.base.runCatchingPreservingCancellation
-
 import com.leovp.audio.base.bean.AudioEncoderInfo
 import com.leovp.audio.base.iters.AudioEncoderWrapper
 import com.leovp.audio.base.iters.IEncodeCallback
 import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.opus.OpusEncoder
-import com.leovp.log.LogContext
 
 /**
  * Author: Michael Leo
@@ -17,10 +14,6 @@ class OpusEncoderWrapper(
     encoderInfo: AudioEncoderInfo,
     private val outputCallback: OutputCallback,
 ) : AudioEncoderWrapper {
-    companion object {
-        private const val TAG = "OpusEncoderWrapper"
-    }
-
     private val encoder = OpusEncoder(
         sampleRate = encoderInfo.sampleRate,
         channelCount = encoderInfo.channelCount,
@@ -39,11 +32,6 @@ class OpusEncoderWrapper(
 
     override fun encode(input: ByteArray) {
         encoder.encode(input)
-    }
-
-    override fun release() {
-        runCatchingPreservingCancellation { encoder.release() }
-            .onFailure { LogContext.log.e(TAG, "Opus encoder release failed", it) }
     }
 
     override suspend fun releaseAndJoin() {

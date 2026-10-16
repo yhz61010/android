@@ -160,13 +160,41 @@ class AudioPlayer(
         audioTrackPlayer.stop()
     }
 
-    fun release() {
-        LogContext.log.w(TAG, "release()")
-        audioTrackPlayer.release()
-
-        decoderWrapper?.release()
-        aacStreamPlayer?.stopPlaying()
-        opusStreamPlayer?.stopPlaying()
+    /**
+     * Releases every resource this player owns and waits for the workers to exit.
+     *
+     * The three AudioTrackPlayer instances involved are independent: this player builds its own,
+     * and each stream player builds another. AudioPlayer's constructor also gives a session
+     * either a decoder wrapper or a stream player, never both, so these calls cannot contend for
+     * the same track and their relative order is free.
+     *
+     * The track this player always builds is released in a finally: StreamPlayerStopper rethrows
+     * CancellationException and stopAndJoin() can also fail its own require(), so an exception
+     * from the calls above would otherwise leak the one AudioTrack that exists in every session.
+     *
+     * Releasing that track last is also safe on the PCM path, where it is the one being written:
+     * with AudioType.PCM there is no wrapper and no stream player, so nothing before the finally
+     * touches it, and callers join their writer before calling this (AudioActivity's PCM
+     * playback does exactly that). With COMPRESSED_PCM the wrapper's releaseAndJoin() is a no-op.
+     *
+     * One worker is deliberately not awaited: a stream player's init-failure rollback is
+     * fire-and-forget by design, see AacStreamPlayer.releaseDecoderAsync().
+     *
+     * Replaces the removed non-suspend release(). Migration: await this from a coroutine the
+     * owner controls instead of calling release() synchronously. Two things changed on the way:
+     * the decoder wrapper and the stream players are now awaited rather than signalled, and this
+     * player's own track is released last, in the finally, where release() used to release it
+     * first.
+     */
+    suspend fun releaseAndJoin() {
+        LogContext.log.w(TAG, "releaseAndJoin()")
+        try {
+            decoderWrapper?.releaseAndJoin()
+            aacStreamPlayer?.stopPlayingAndJoin()
+            opusStreamPlayer?.stopPlayingAndJoin()
+        } finally {
+            audioTrackPlayer.release()
+        }
     }
 
     @Deprecated(

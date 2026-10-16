@@ -119,7 +119,7 @@ class MicRecorder(
     /** Guards [stopRecordAndJoin] re-entry. */
     private val stopped = AtomicBoolean(false)
 
-    /** Guards [finishRecorderRelease] so AudioRecord/encoder release runs exactly once. */
+    /** Guards [finishRecorderReleaseAndJoin] so AudioRecord/encoder release runs once. */
     private val released = AtomicBoolean(false)
 
     /** Guards [callback].onStop so it is delivered exactly once. */
@@ -214,12 +214,18 @@ class MicRecorder(
         runCatchingPreservingCancellation { record?.release() }.onFailure {
             LogContext.log.e(TAG, "rollback: AudioRecord release error", it)
         }
-        runCatchingPreservingCancellation { encodeWrapper?.release() }.onFailure {
-            LogContext.log.e(TAG, "rollback: encoder release error", it)
-        }
+        val failedEncoder = encodeWrapper
         encodeWrapper = null
+        ioScope.launch(NonCancellable) {
+            try {
+                runCatchingPreservingCancellation { failedEncoder?.releaseAndJoin() }.onFailure {
+                    LogContext.log.e(TAG, "rollback: encoder release error", it)
+                }
+            } finally {
+                releaseCompleted.complete(Unit)
+            }
+        }
         ioScope.cancel()
-        releaseCompleted.complete(Unit)
     }
 
     fun startRecord() {
@@ -289,9 +295,19 @@ class MicRecorder(
     private fun failRecordStart(message: String) {
         LogContext.log.e(TAG, message)
         stopped.set(true)
-        ioScope.cancel()
         stopAudioRecord()
-        finishRecorderRelease(stopSucceeded = false)
+        // startRecord() is a non-suspend public entry point, so the deterministic release cannot
+        // be awaited here. NonCancellable so the rollback survives the ioScope.cancel() below.
+        //
+        // The body must not throw: NonCancellable replaces the parent job, this scope carries no
+        // CoroutineExceptionHandler, and both finishRecorderReleaseAndJoin() and the client
+        // callback it invokes can throw. An escaping throwable would kill the process.
+        ioScope.launch(NonCancellable) {
+            runCatchingPreservingCancellation {
+                finishRecorderReleaseAndJoin(stopSucceeded = false)
+            }.onFailure { LogContext.log.e(TAG, "start rollback release failed", it) }
+        }
+        ioScope.cancel()
     }
 
     private fun initAdvancedFeatures() {
@@ -355,9 +371,9 @@ class MicRecorder(
      * [audioRecord] whose session they are attached to, and they are released here rather than
      * left to the collector so teardown is deterministic.
      *
-     * Reached through [finishRecorderRelease] / [finishRecorderReleaseAndJoin], both of which are
-     * already behind the one-shot [released] guard, and through [rollbackFailedInit], which burns
-     * that guard before calling in. So this runs exactly once either way.
+     * Reached through [finishRecorderReleaseAndJoin], which is already behind the one-shot
+     * [released] guard, and through [rollbackFailedInit], which burns that guard before calling
+     * in. So this runs exactly once either way.
      */
     private fun releaseAdvancedFeatures(currentResult: Boolean): Boolean {
         var ok = currentResult
@@ -376,6 +392,11 @@ class MicRecorder(
     /**
      * Deterministic teardown: stop the AudioRecord first (so the native read returns), then join
      * the record job and release resources. This API must be called by an external owner.
+     *
+     * Replaces the removed non-suspend stopRecord(). Migration: await this from a coroutine the
+     * owner controls; it returns only once the record job and the encoder worker have exited and
+     * the AudioRecord is released, where stopRecord() released the AudioRecord synchronously but
+     * returned without waiting for either worker to exit.
      */
     suspend fun stopRecordAndJoin() {
         // Guard BEFORE any side effect: a self-call (from the record job's own context) must fail
@@ -399,28 +420,7 @@ class MicRecorder(
         finishRecorderReleaseAndJoin(ok)
     }
 
-    /**
-     * Legacy non-suspend entry point. It keeps the historical synchronous release semantics but
-     * cannot wait for the worker to finish; use [stopRecordAndJoin] when completion matters.
-     */
-    @Deprecated(
-        "Non-suspend stop cannot guarantee the record job has exited. " +
-            "Use stopRecordAndJoin() for deterministic shutdown.",
-        ReplaceWith("stopRecordAndJoin()")
-    )
-    fun stopRecord() {
-        if (!stopped.compareAndSet(false, true)) return
-        val ok = stopAudioRecord()
-        recordJob?.cancel()
-        recordJob = null
-        ioScope.cancel()
-        finishRecorderRelease(ok)
-    }
-
-    /**
-     * Idempotent resource release: releases AudioRecord and encoder, and delivers onStop exactly
-     * once. Safe to call from either the record job's error path or the teardown flow.
-     */
+    /** Stops the AudioRecord so a blocked read() returns. Releases nothing. */
     private fun stopAudioRecord(): Boolean {
         var ok = true
         runCatchingPreservingCancellation {
@@ -434,21 +434,11 @@ class MicRecorder(
         return ok
     }
 
-    private fun finishRecorderRelease(stopSucceeded: Boolean) {
-        if (!released.compareAndSet(false, true)) return
-        var ok = stopSucceeded
-        try {
-            ok = releaseAdvancedFeatures(ok)
-            ok = releaseAudioRecord(ok)
-            runCatchingPreservingCancellation { encodeWrapper?.release() }.onFailure {
-                ok = false
-                LogContext.log.e(TAG, "encoder release error", it)
-            }
-        } finally {
-            completeRecorderRelease(ok)
-        }
-    }
-
+    /**
+     * Idempotent resource release: releases AudioRecord and encoder, and delivers onStop exactly
+     * once. Safe to call from either the record job's error path or the teardown flow; a second
+     * caller waits for the first one's release to complete.
+     */
     private suspend fun finishRecorderReleaseAndJoin(stopSucceeded: Boolean) {
         if (!released.compareAndSet(false, true)) {
             releaseCompleted.await()

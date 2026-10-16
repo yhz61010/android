@@ -19,38 +19,6 @@ import kotlinx.coroutines.test.runTest
 
 class StreamPlayerStopperTest {
     @Test
-    fun `legacy stop releases resources in teardown order`() {
-        val events = mutableListOf<String>()
-        val scope = CoroutineScope(Job())
-        val audioTrackPlayer = mockk<AudioTrackPlayer>()
-        val decoder = Any()
-        every { audioTrackPlayer.stop() } answers { events += "stop-audio-track" }
-        every { audioTrackPlayer.release() } answers { events += "audio-track" }
-        val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
-            events += "detach-decoder"
-            decoder
-        }
-
-        subject.stop {
-            assertEquals(decoder, it)
-            events += "release-decoder"
-        }
-
-        assertEquals(
-            listOf(
-                "detach-decoder",
-                "stop-audio-track",
-                "release-decoder",
-                "audio-track"
-            ),
-            events
-        )
-        assertFalse(scope.isActive)
-        verify(exactly = 1) { audioTrackPlayer.stop() }
-        verify(exactly = 1) { audioTrackPlayer.release() }
-    }
-
-    @Test
     fun `suspending stop propagates cancellation after common cleanup`() = runTest {
         val events = mutableListOf<String>()
         val scope = CoroutineScope(Job())

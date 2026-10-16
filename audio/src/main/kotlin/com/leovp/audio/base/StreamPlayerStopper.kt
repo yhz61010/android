@@ -19,17 +19,6 @@ internal class StreamPlayerStopper<Decoder>(
     private val audioTrackPlayer: AudioTrackPlayer,
     private val detachDecoder: () -> Decoder?,
 ) {
-    fun stop(releaseDecoder: (Decoder) -> Unit) {
-        val decoder = prepareStop()
-        try {
-            runCatchingPreservingCancellation { decoder?.let(releaseDecoder) }
-                .onFailure { LogContext.log.e(tag, "audioDecoder release error", it) }
-        } finally {
-            releaseAudioTrack()
-        }
-        LogContext.log.w(tag, "stopPlaying() done")
-    }
-
     suspend fun stopAndJoin(releaseDecoderAndJoin: suspend (Decoder) -> Unit) {
         val ownerJob = ioScope.coroutineContext[Job]
         val callerJob = currentCoroutineContext()[Job]
@@ -49,7 +38,7 @@ internal class StreamPlayerStopper<Decoder>(
                 releaseAudioTrack()
             }
         }
-        LogContext.log.w(tag, "stopPlaying() done")
+        LogContext.log.w(tag, "stopAndJoin() done")
     }
 
     private fun Job.containsJob(target: Job): Boolean =

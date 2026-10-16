@@ -139,6 +139,7 @@ Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是�
 | 路径 | 用途 |
 |------|------|
 | `00-documents/superpowers/` | superpowers 插件产物（specs/、plans/） |
+| `00-documents/YYYY-MM-DD-<主题>_cc.md` | 按日期命名的审查记录、修复记录、方案提案（Claude Code 产出）；`-zh.md` 后缀为早期命名，不再新增 |
 
 ## AI 交互规则
 

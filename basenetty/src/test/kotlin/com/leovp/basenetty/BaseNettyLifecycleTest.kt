@@ -1,6 +1,8 @@
 package com.leovp.basenetty
 
 import com.leovp.basenetty.framework.base.ClientConnectStatus
+import com.leovp.basenetty.framework.base.ServerConnectStatus
+import com.leovp.basenetty.framework.base.awaitCompletion
 import com.leovp.basenetty.framework.client.BaseClientChannelInboundHandler
 import com.leovp.basenetty.framework.client.BaseNettyClient
 import com.leovp.basenetty.framework.client.ClientConnectListener
@@ -17,14 +19,20 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.DefaultChannelPromise
 import io.netty.channel.embedded.EmbeddedChannel
+import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
+import io.netty.util.concurrent.DefaultPromise
+import io.netty.util.concurrent.GlobalEventExecutor
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -56,7 +64,11 @@ class BaseNettyLifecycleTest {
         assertEquals(ClientConnectStatus.FAILED, status)
         assertEquals(ClientConnectStatus.FAILED, client.connectStatus.get())
         assertTrue(listener.failedCodes.isNotEmpty())
-        client.release()
+
+        // The rewritten release path end to end: no channel to close, so it goes straight to
+        // shutting down the worker group and must land on UNINITIALIZED within its own budget.
+        assertTrue(client.release())
+        assertEquals(ClientConnectStatus.UNINITIALIZED, client.connectStatus.get())
     }
 
     @Test
@@ -436,10 +448,137 @@ class BaseNettyLifecycleTest {
         }
     }
 
+    @Test
+    fun `stop before start releases the event loops and refuses a later start`(): Unit =
+        runBlocking {
+            val listener = RecordingServerListener()
+            val server = TestServer(listener)
+            server.initHandler(TestServerHandler(server))
+
+            assertFalse(server.stopServer())
+            assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+            assertEquals(0, listener.stoppedCount.get())
+
+            // Refused by state before any bind, so it can neither bring up a server nothing will
+            // stop nor hang on a listener a dead event loop will never notify. The state stays
+            // STOPPED: a later stop must not run the teardown again.
+            server.startServer()
+
+            assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+            assertFalse(server.stopServer())
+            assertEquals(0, listener.stoppedCount.get())
+            assertEquals(
+                listOf(ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED),
+                listener.startFailedCodes.toList()
+            )
+        }
+
+    @Test
+    fun `awaitCompletion does not hang on a failed future whose executor is terminated`(): Unit =
+        runBlocking {
+            val loop = NioEventLoopGroup(1)
+            loop.shutdownGracefully(0, 1, TimeUnit.SECONDS).awaitCompletion()
+            // A done promise on a dead executor: addListener() would hand the notification to
+            // that executor, which only logs the rejection, so without the isDone fast path this
+            // await never returns.
+            val promise = DefaultPromise<Unit>(loop.next())
+            promise.setFailure(IllegalStateException("boom"))
+
+            val thrown = runCatching { promise.awaitCompletion() }.exceptionOrNull()
+
+            assertEquals("boom", thrown?.message)
+        }
+
+    @Test
+    fun `awaitCompletion reports a cancelled netty future as a plain failure`(): Unit =
+        runBlocking {
+            val promise = DefaultPromise<Unit>(GlobalEventExecutor.INSTANCE)
+            promise.cancel(false)
+
+            val thrown = runCatching { promise.awaitCompletion() }.exceptionOrNull()
+
+            assertTrue(thrown is IllegalStateException)
+            assertEquals("Netty future was cancelled", thrown?.message)
+        }
+
+    @Test
+    fun `second stop on a stopped server is a no-op and onStopped fires once`(): Unit =
+        runBlocking {
+            val listener = RecordingServerListener()
+            val server = TestServer(listener)
+            server.initHandler(TestServerHandler(server))
+            server.startServer()
+            assertEquals(ServerConnectStatus.STARTED, server.connectState.get())
+
+            assertTrue(server.stopServer())
+            assertFalse(server.stopServer())
+
+            assertEquals(1, listener.stoppedCount.get())
+            assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+        }
+
+    @Test
+    fun `cancelling the stopServer caller still lands on STOPPED with one onStopped`(): Unit =
+        runBlocking {
+            val listener = RecordingServerListener()
+            val server = TestServer(listener)
+            server.initHandler(TestServerHandler(server))
+            server.startServer()
+            assertEquals(ServerConnectStatus.STARTED, server.connectState.get())
+
+            // UNDISPATCHED runs the body up to its first suspension, which is inside the
+            // NonCancellable block (awaiting the channel close or the loop termination). The
+            // cancel that follows therefore hits a teardown already past the state guard.
+            val stop = launch(start = CoroutineStart.UNDISPATCHED) { server.stopServer() }
+            stop.cancel()
+            stop.join()
+
+            assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+            assertEquals(1, listener.stoppedCount.get())
+            assertFalse(server.stopServer())
+            assertEquals(1, listener.stoppedCount.get())
+        }
+
+    @Test
+    fun `stop after a failed start releases the event loops and refuses a later start`(): Unit =
+        runBlocking {
+            ServerSocket(0).use { occupied ->
+                val listener = RecordingServerListener()
+                val server = TestServer(listener, port = occupied.localPort)
+                server.initHandler(TestServerHandler(server))
+
+                server.startServer()
+
+                assertEquals(ServerConnectStatus.FAILED, server.connectState.get())
+                assertEquals(
+                    listOf(ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR),
+                    listener.startFailedCodes.toList()
+                )
+
+                // serverChannel was never assigned, so this takes the unstarted-release path:
+                // both groups are shut down, no onStopped(), and the state refuses a restart.
+                assertFalse(server.stopServer())
+                assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+                assertEquals(0, listener.stoppedCount.get())
+
+                server.startServer()
+
+                assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
+                assertEquals(
+                    listOf(
+                        ServerConnectListener.CONNECTION_ERROR_SERVER_START_ERROR,
+                        ServerConnectListener.CONNECTION_ERROR_ALREADY_RELEASED
+                    ),
+                    listener.startFailedCodes.toList()
+                )
+            }
+        }
+
     private class TestServer(
         listener: ServerConnectListener<BaseNettyServer> = RecordingServerListener(),
+        port: Int = 0,
     ) : BaseNettyServer(
-        port = 0,
+        port = port,
         connectionListener = listener
     ) {
         override fun getTagName(): String = "BaseNettyServerLifecycleTest"
@@ -469,9 +608,12 @@ class BaseNettyLifecycleTest {
     private class RecordingServerListener : ServerConnectListener<BaseNettyServer> {
         val startFailedCodes = CopyOnWriteArrayList<Int>()
         val disconnectedCount = AtomicInteger(0)
+        val stoppedCount = AtomicInteger(0)
 
         override fun onStarted(netty: BaseNettyServer) = Unit
-        override fun onStopped() = Unit
+        override fun onStopped() {
+            stoppedCount.incrementAndGet()
+        }
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             startFailedCodes.add(code)
         }

@@ -86,8 +86,17 @@ class EventBusBridgeClientActivity :
     }
 
     override fun onDestroy() {
-        ioScope.launch { webSocket?.release() }
-        ioScope.cancel()
+        // The scope is cancelled from inside its last coroutine, once release() has returned. A
+        // cancel() issued right here instead could land before this coroutine is first dispatched,
+        // which skips the whole body and release() never runs. Cancelling afterwards still cancels
+        // a connect() that is in flight, and release() is bounded by its own timeout.
+        ioScope.launch {
+            try {
+                webSocket?.release()
+            } finally {
+                ioScope.cancel()
+            }
+        }
         super.onDestroy()
     }
 

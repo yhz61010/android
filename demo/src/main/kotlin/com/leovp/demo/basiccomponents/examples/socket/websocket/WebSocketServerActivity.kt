@@ -165,8 +165,8 @@ class WebSocketServerActivity :
         webSocketServer = server
         webSocketServerHandler = handler
         binding.btnStartServer.isEnabled = false
-        // startServer() blocks at closeFuture().sync() for the server's whole lifetime,
-        // so it must run off the main thread.
+        // startServer() is suspend: it binds the port and returns. It no longer parks here for the
+        // server's whole lifetime, but it still has to be called from a coroutine.
         cs.launch { server.startServer() }
     }
 

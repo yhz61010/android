@@ -4,6 +4,7 @@ package com.leovp.basenetty.framework.client
 
 import com.leovp.basenetty.framework.base.BaseNetty
 import com.leovp.basenetty.framework.base.ClientConnectStatus
+import com.leovp.basenetty.framework.base.awaitCompletion
 import com.leovp.basenetty.framework.client.retrystrategy.ConstantRetry
 import com.leovp.basenetty.framework.client.retrystrategy.base.RetryStrategy
 import com.leovp.bytes.toHexString
@@ -44,21 +45,25 @@ import java.net.ConnectException
 import java.net.URI
 import java.nio.ByteOrder
 import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -99,6 +104,20 @@ abstract class BaseNettyClient protected constructor(
         private const val CONNECTION_TIMEOUT_IN_MILLS = 30_000
         private const val DISCONNECT_TIMEOUT_IN_MILLS = 5_000L
         private const val WEBSOCKET_HANDSHAKE_TIMEOUT_IN_MILLS = 30_000L
+
+        /**
+         * Hard limit the event loop group gets to drain. The quiet period is passed as 0, so this
+         * is the only wait that remains.
+         */
+        private const val SHUTDOWN_TIMEOUT_IN_SECONDS = 2L
+
+        /**
+         * Upper bound for the whole netty release. See [release].
+         *
+         * Budgeted above [SHUTDOWN_TIMEOUT_IN_SECONDS] on purpose: the remainder is headroom for
+         * closing the channel first.
+         */
+        private const val NETTY_RELEASE_TIMEOUT_IN_MILLS = 3_000L
     }
 
     internal constructor(
@@ -593,6 +612,10 @@ abstract class BaseNettyClient protected constructor(
      * any exception will be ignored.
      *
      * **Remember**, If you call this method, it will not trigger retry process.
+     *
+     * Past the state guard this runs under [NonCancellable]: a caller cancelled half way would
+     * otherwise leave the state on DISCONNECTING, where [release] refuses to run and the event
+     * loop group is never shut down. The disconnect itself stays bounded by its own timeout.
      */
     suspend fun disconnectManually(): ClientConnectStatus {
         LogContext.log.w(
@@ -623,9 +646,18 @@ abstract class BaseNettyClient protected constructor(
             connectStatus.set(ClientConnectStatus.DISCONNECTING)
             disconnectManually = true
         }
+        return withContext(NonCancellable) { disconnectNow(wasConnecting) }
+    }
 
+    private suspend fun disconnectNow(wasConnecting: Boolean): ClientConnectStatus {
         stopRetryHandler()
-        defaultInboundHandler?.release()
+        // Guarded like in releaseNow(): subclass code throwing here would strand the state on
+        // DISCONNECTING, the very thing the NonCancellable wrapper above exists to rule out.
+        try {
+            defaultInboundHandler?.release()
+        } catch (e: Exception) {
+            LogContext.log.e(tag, "Release inbound handler error.", e)
+        }
 
         if (wasConnecting) {
             val targetChannel = if (::channel.isInitialized) {
@@ -800,9 +832,8 @@ abstract class BaseNettyClient protected constructor(
     open fun retryProcess() = false
 
     /**
-     * Release netty client using **syncUninterruptibly** method.(Full release will cost almost
-     * 2200ms.)
-     * So you'd better NOT call this method in main thread.
+     * Releases the netty client: closes the channel and shuts the event loop group down,
+     * suspending instead of blocking the caller's thread.
      *
      * Once you call [release], you can not reconnect it again by calling [connect] simply,
      * you must recreate netty client again.
@@ -810,8 +841,16 @@ abstract class BaseNettyClient protected constructor(
      *
      * If current connect state is [ClientConnectStatus.FAILED], this method will also be run and
      * any exception will be ignored.
+     *
+     * The netty part is bounded by [NETTY_RELEASE_TIMEOUT_IN_MILLS] and returns false if that
+     * bound is hit. It suspends rather than blocking, so it must be called from a coroutine -
+     * it already had to be, but it used to park a dispatcher thread while it waited.
+     *
+     * Past the state guard this runs under [NonCancellable], for the same reason as
+     * [BaseNettyServer.stopServer]: cancelling the caller cannot shorten a release, only strand
+     * it on RELEASING with the event loop group alive for good. The timeout still applies.
      */
-    suspend fun release(): Boolean = suspendCancellableCoroutine { cont ->
+    suspend fun release(): Boolean {
         LogContext.log.w(
             tag,
             "===== release() current state=${connectStatus.get().name} ====="
@@ -825,11 +864,14 @@ abstract class BaseNettyClient protected constructor(
                     tag,
                     "Releasing now or already released or disconnecting or not initialized"
                 )
-                cont.resume(false)
-                return@suspendCancellableCoroutine
+                return false
             }
             connectStatus.set(ClientConnectStatus.RELEASING)
         }
+        return withContext(NonCancellable) { releaseNow() }
+    }
+
+    private suspend fun releaseNow(): Boolean {
         released = true
         disconnectManually = true
         LogContext.log.w(tag, "Releasing retry handler...")
@@ -838,41 +880,72 @@ abstract class BaseNettyClient protected constructor(
         retryScope.cancel()
         //        retryThread.quitSafely()
 
+        // Guarded like every other step: this hands control to subclass code, and letting it
+        // throw here would skip the channel and the event loop group entirely.
         LogContext.log.w(tag, "Releasing default socket handler first...")
-        defaultInboundHandler?.release()
+        try {
+            defaultInboundHandler?.release()
+        } catch (e: Exception) {
+            LogContext.log.e(tag, "Release inbound handler error.", e)
+        }
         defaultInboundHandler = null
         channelInitializer = null
 
-        if (::channel.isInitialized) {
-            channel.run {
-                LogContext.log.w(tag, "Closing channel...")
-                runCatching {
-                    pipeline().removeAll { true }
-                    // closeFuture().syncUninterruptibly()
-                    // syncUninterruptibly() will get stuck here.
-                    // Why???
-                    //         closeFuture()
-                    close().syncUninterruptibly()
-                }.onFailure { LogContext.log.e(tag, "Close channel error.", it) }
-            }
+        // Bounded here, at the resource boundary, for the same reason BaseNettyServer.stopServer()
+        // is: callers chain this into a teardown sequence that deliberately carries no timeout of
+        // its own, so a release that cannot finish must not hold that sequence forever.
+        val nettyReleased = withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }
+        if (nettyReleased == null) {
+            LogContext.log.e(
+                tag,
+                "Netty release did not finish within ${NETTY_RELEASE_TIMEOUT_IN_MILLS}ms. " +
+                    "Check whether closing the channel, not the event loop, used up the budget."
+            )
+            return false
         }
+        return nettyReleased
+    }
 
-        runCatching {
+    private suspend fun releaseNetty(): Boolean {
+        try {
+            closeChannelAndAwait()
+        } finally {
+            // Reached on the timeout too, as the cancellation it carries passes through here. The
+            // request does not suspend, so a close that used up the whole budget still leaves the
+            // group shutting down instead of alive for good - same shape as
+            // BaseNettyServer.shutdownNetty().
+            //
+            // Quiet period 0: it exists to let in-flight work settle before the loop dies, which
+            // buys nothing for a client whose channel is already closed.
             LogContext.log.w(tag, "Releasing socket...")
-            workerGroup.shutdownGracefully() // syncUninterruptibly() will not get stuck here.
-                .addListener { f ->
-                    if (f.isSuccess) {
-                        connectStatus.set(ClientConnectStatus.UNINITIALIZED)
-                        LogContext.log.w(tag, "=====> Socket released <=====")
-                        cont.resume(true)
-                    } else {
-                        LogContext.log.w(tag, "Release socket failed!!!")
-                        cont.resume(false)
-                    }
-                }
-        }.onFailure {
-            LogContext.log.e(tag, "Release socket error.", it)
-            cont.resume(false)
+            workerGroup.shutdownGracefully(0, SHUTDOWN_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        }
+        return try {
+            workerGroup.terminationFuture().awaitCompletion()
+            connectStatus.set(ClientConnectStatus.UNINITIALIZED)
+            LogContext.log.w(tag, "=====> Socket released <=====")
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            LogContext.log.e(tag, "Release socket error.", e)
+            false
+        }
+    }
+
+    private suspend fun closeChannelAndAwait() {
+        if (!::channel.isInitialized) return
+        LogContext.log.w(tag, "Closing channel...")
+        // close(), not closeFuture(): closeFuture() completes only once the channel is actually
+        // closed, so awaiting it before anyone has asked for a close waits forever. That is what
+        // the old "Why??? syncUninterruptibly() will get stuck here" note was looking at. The
+        // future close() returns is the one that tracks this close.
+        try {
+            channel.close().awaitCompletion()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            LogContext.log.e(tag, "Close channel error.", e)
         }
     }
 

@@ -107,8 +107,24 @@ class WebSocketClientActivity :
     }
 
     override fun onDestroy() {
-        cs.launch { webSocketClient?.release() }
-        cs.cancel()
+        // The scope is cancelled from inside its last coroutine, once release() has returned. A
+        // cancel() issued right here instead could land before this coroutine is first
+        // dispatched, which skips the whole body and release() never runs. Cancelling afterwards
+        // still cancels a connect() that is in flight - its invokeOnCancellation cleans up - and
+        // release() itself is bounded by its own timeout, so the cancel cannot cut it short.
+        //
+        // If onConnectClick's coroutine has been dispatched but has not assigned webSocketClient
+        // yet, release() no-ops on the null, and the connect it then runs builds a client nothing
+        // will release. Narrow, and no cancel timing closes it: a cancel that lands before the
+        // first dispatch skips that coroutine entirely, one that lands after it is already past
+        // the assignment.
+        cs.launch {
+            try {
+                webSocketClient?.release()
+            } finally {
+                cs.cancel()
+            }
+        }
         super.onDestroy()
     }
 

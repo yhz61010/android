@@ -57,6 +57,68 @@
 
 ### 变更 (Changed)
 
+- **audio 关闭 API 统一为挂起**：删除全部非挂起的关闭入口，调用方必须在协程中等待关闭完成。
+  - **破坏性变更**：以下 API 已删除，无兼容垫片——`AudioEncoderWrapper.release()`、
+    `AudioDecoderWrapper.release()`、`BaseMediaCodec.release()`、`AacStreamPlayer.stopPlaying()`、
+    `OpusStreamPlayer.stopPlaying()`、`AudioPlayer.release()`、`MicRecorder.stopRecord()`。
+    迁移方式：`X.release()` → `X.releaseAndJoin()`，`X.stopXxx()` → `X.stopXxxAndJoin()`。
+    调用方必须在自己管理的协程中等待关闭完成；不要盲目使用
+    `lifecycleScope.launch(NonCancellable)`，应复用已有 teardown scope，或使用带
+    `SupervisorJob` 与 `CoroutineExceptionHandler` 的专用 scope。仅把必要的最终释放段
+    放入 `withContext(NonCancellable)`。
+  - **破坏性变更**：`AudioEncoderWrapper.releaseAndJoin()` 不再提供默认实现，
+    `AudioDecoderWrapper` 新增同名抽象方法。自行实现这两个接口的下游必须补上该方法——此前的
+    默认实现会静默退回非确定性关闭。
+  - 初始化失败回滚（两个 stream player、`MicRecorder` 构造和
+    `MicRecorder.startRecord()`）改为在
+    `NonCancellable` 协程上异步释放，因其调用点位于锁内或非挂起公开入口，无法等待。
+    关闭路径不受影响，仍然完全确定性。
+  - **行为变更（签名不变）**：受上一条影响，`MicRecorder.startRecord()` 启动失败时
+    `RecordCallback.onStop(false)` **不再保证在 `startRecord()` 返回之前送达**，而是稍后
+    从 `Dispatchers.IO` 线程到达。`startRecord()` 本身仍是非挂起、签名不变，因此编译期
+    不会提示；依赖"`startRecord()` 返回即已收到 onStop"的下游需要自行调整。
+    另请注意：**多次录音复用同一个 `RecordCallback` 实例已不安全**。失败那次的 `onStop(false)`
+    可能在下一次录音已经开始之后才到达，若回调里关闭的是共享的输出流，会关掉新一次录音正在
+    写入的那个流。请为每次录音创建各自的回调，只释放它自己持有的资源
+    （本仓库 demo 的 `AudioActivity` 已按此调整）。
+  - **行为变更**：`AudioPlayer.releaseAndJoin()` 把自身 AudioTrack 的释放挪到最后、放在 `finally`
+    中（此前 `release()` 最先释放它）：stream player 或 decoder wrapper 关闭抛异常时，每个会话都
+    存在的那个 AudioTrack 不再泄漏。
+  - demo 音频侧配套重构：`AudioSender` / `AudioReceiver` 的关闭改为一次性 `SuspendTeardownGate`
+    串行化、`teardownSteps()` 扁平步骤、`stopping` 标志加 `@Volatile` 字段与发布后 re-check，
+    在"点完开始立刻退出"时由补偿协程在 `cleanupScope` 上等待 teardown 结束后释放竞态期间建出的
+    AudioTrack / AudioRecord / 端口；`AudioSender` 的录音与接收缓冲由阻塞队列改为协程 `Channel`
+    （`AudioReceiver` 因与 `io.netty.channel.Channel` 同名冲突保留阻塞队列）。
+    `ADPCMActivity` 的三连点改为 Job 链：新播放先 `NonCancellable` 地 join 上一个 Job 再建播放器。
+- **basenetty 生命周期改为挂起、非阻塞**：`BaseNettyServer.startServer()` / `stopServer()`
+  由阻塞方法改为 `suspend fun`；`BaseNettyClient.release()` 签名不变，内部不再阻塞线程。
+  - **破坏性变更**：`startServer()` 不再阻塞到服务器关闭，绑定成功即返回；依赖"返回即已停止"的
+    下游改用 `ServerConnectListener.onStopped()`。`stopServer()` 并行关闭两个 EventLoopGroup 且
+    quiet period 为 0，关闭耗时由约 4 秒降到数百毫秒以内；netty 部分带 3 秒资源层超时，超时后
+    仍完成状态迁移与 `onStopped()` 回调。
+  - 对已停止实例重复调用 `stopServer()` 直接返回 `false`，`onStopped()` 只回调一次。
+  - 对**尚未启动**（含启动失败）的实例调用 `stopServer()` 会关闭两个 EventLoopGroup（此前会一直
+    泄漏），仍返回 `false` 且不回调 `onStopped()`；随后的 `startServer()` 不再启动服务器，而是经
+    `onStartFailed` 报告 `CONNECTION_ERROR_ALREADY_RELEASED`。调用方先停后启的竞态因此由库侧收口。
+  - 关闭超时落在关 channel 阶段时，服务端两个 EventLoopGroup 与客户端的 workerGroup 仍会被要求
+    关闭，不再随超时一起泄漏。
+  - `BaseNettyServer.stopServer()`、`BaseNettyClient.release()` / `disconnectManually()` 过了状态
+    守卫后在 `NonCancellable` 下运行：调用方协程被取消不再把实例留在"正在关闭"态，关闭仍受各自
+    的超时约束。
+  - demo 的 `WebSocketClientActivity` / `EventBusBridgeClientActivity` 不再在 `onDestroy()` 中
+    `launch { release() }` 后立刻取消同一 scope（取消若先于首次调度，`release()` 根本不会执行），
+    改为在 `release()` 返回后、同一协程的 `finally` 中取消。
+  - `BaseNettyClient.release()` 新增 3 秒资源层超时，超时返回 `false`（此前只在状态守卫、
+    `shutdownGracefully` 失败或抛异常时返回 `false`）。
+  - 新增内部桥接 `Future.awaitCompletion()`。已完成的 future 走快速路径而不经 listener，
+    避免在 event loop 已终止时（如 `stopServer()` 之后再 `startServer()`）永久挂起。
+  - `startServer()` 的 bind 新增 3 秒上界，超时则关闭 channel、状态置 `FAILED`，并经
+    `onStartFailed(CONNECTION_ERROR_SERVER_START_ERROR)` 报告。此前该等待无上界，而它持有
+    生命周期锁，`stopServer()` 会被一同拖住。bind 是本地 socket 操作，正常路径远不到 3 秒；
+    `onStartFailed` 的触发条件因此多了一种。
+  - `stopServer()` 的状态迁移与 `onStopped()` 回调移入 `finally`：此前若 `close()` 或
+    `shutdownGracefully()` 自己抛出（而非 fail promise），实例会永久停在"正在关闭"态，
+    后续每次 `stopServer()` 都返回 `false` 且 `onStopped()` 永不送达。异常仍向调用方传播。
 - **`AudioPlayer.computePresentationTimeUs(frameIndex)` 标记为 `@Deprecated`**：该式
   （`frameIndex * 1_000_000 / sampleRate`）只有在 `frameIndex` 是**实际交付的 PCM 帧累计数**时才
   成立，而签名既未说明这一点也无从约束——传入回调次数或包序号会得到一条静默偏离音频的时间轴。

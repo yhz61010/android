@@ -12,6 +12,7 @@
 - **环境要求**：JDK 17、Android SDK 36、NDK 29.0.14206865、CMake 3.22.1
 - **当前构建版本**：Gradle 9.4.0、AGP 9.0.1、Kotlin 2.3.10、库发布版本 5.15.8
 - **初始化**：将 `gradle.properties.template` 复制为 `gradle.properties`，并按本地环境调整配置；应用签名由各应用模块分别配置
+- **Claude Code 运行在远端服务器，无法执行任何 Gradle 命令**；下列命令由用户或 Codex 本机执行，Claude 的结论只是源码静态分析，输出中把未执行的验证一律标注为「未验证」
 
 ### 常用命令
 
@@ -95,7 +96,13 @@ Koin 当前主要用于 `demo` 中的依赖注入示例，不是所有模块必�
 - 测试并行运行：`maxParallelForks = availableProcessors / 2`
 - 全局设置 `unitTests.isReturnDefaultValues = true` 和 `isIncludeAndroidResources = true`
 
-高风险或刚修改过的路径不要只依赖 `UP-TO-DATE`，应通过 `--rerun-tasks` 强制重跑对应任务。Camera、Camera2、音频、MediaCodec、MediaProjection、OpenGL、NFC、蓝牙和 JNI/Native 相关修改还必须补充真机验证；若当前没有可用设备，应明确记录未完成的验证项，不要将构建通过等同于真机通过。
+高风险或刚修改过的路径不要只依赖 `UP-TO-DATE`，应通过 `--rerun-tasks` 强制重跑对应任务，例如只验证改动过的模块：
+
+```bash
+./gradlew --continue --rerun-tasks :audio:testDebugUnitTest :basenetty:testDebugUnitTest detekt ktlintCheck
+```
+
+Camera、Camera2、音频、MediaCodec、MediaProjection、OpenGL、NFC、蓝牙和 JNI/Native 相关修改还必须补充真机验证；若当前没有可用设备，应明确记录未完成的验证项，不要将构建通过等同于真机通过。
 
 ## 代码质量
 
@@ -121,10 +128,17 @@ Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是�
 - `@Deprecated` 只作为**过渡标记**（给出 `ReplaceWith` 并在 KDoc 说明迁移方式），不是长期兼容层；迁移完成后删除。
 - 本条不豁免两件事：`minSdk` 约束（见「SDK 约束」）仍需遵守；破坏性变更仍需记入 `CHANGELOG.md`。
 
+## 生命周期与释放约定
+
+- 涉及线程、协程、`AudioRecord`/`AudioTrack`、`MediaCodec` 或 Netty 事件循环的释放 API 统一为**挂起函数**（如 `releaseAndJoin()`、`stopRecordAndJoin()`、`stopServer()`、`release()`），返回时资源已真正释放、工作协程已退出；不要新增阻塞式 `release()`。
+- 释放体放在 `withContext(NonCancellable)` 内，状态守卫与互斥锁等待放在其外；每一步内部自带超时，不要在 `NonCancellable` 外再包 `withTimeout`。
+- 调用方从自己拥有的协程作用域中 `await`；需要取消该作用域时，在 `release()` 返回后的 `finally` 中取消，不要在发起释放的同一时刻取消。
+
 ## 语言约定
 
 - Git commit message 和代码注释统一使用**英文**。
 - 在 `00-documents/` 下生成的所有文档只需要中文，无需创建或维护英文版。
+- `CHANGELOG.md` 为中文，遵循 Keep a Changelog；所有未发布改动写入唯一的 `## [Unreleased]`，按「性能 / 安全 / 变更 / 修复 / 新增」分节，破坏性变更放在「变更」并以加粗标题起头。
 
 ## 日志约定
 
@@ -140,14 +154,23 @@ Detekt 和 Ktlint 应用于**所有项目**（包括根项目）。两者都是�
 |------|------|
 | `00-documents/superpowers/` | superpowers 插件产物（specs/、plans/） |
 | `00-documents/YYYY-MM-DD-<主题>_cc.md` | 按日期命名的审查记录、修复记录、方案提案（Claude Code 产出）；`-zh.md` 后缀为早期命名，不再新增 |
+| `00-documents/framework/` | 项目框架与编码规范（中英双语为历史遗留，不再维护英文版） |
+| `00-documents/codex-memory/` | Codex 记忆的共享历史快照，不是当前代码、分支或测试结果的事实来源；仅用户要求时更新 |
+| `00-documents/*.md`（无日期前缀） | 长期有效的操作指南，如 keystore 安全、Git LFS；新增此类文件前先确认是否已有同主题文档 |
+
+审查记录写成后若代码再改动，同步更新文档中引用的代码块与行号，并在文档内注明同步日期，不要只改代码。
 
 ## AI 交互规则
 
 - 若有不明白或不明确的地方，一定要先问我。不要自己幻想或无中生有。
+- 仅要求审查、诊断、解释或方案时保持只读；用户要求修改时，对目标明确且不存在歧义或待确认事项的问题直接实现并验证，无需重复确认。
+- 未经明确授权不提交、推送、发布或合并。
 - 用户偏好使用中文对话。
 
 ## 项目记忆
 
 项目级记忆（偏好、约定、反馈）存储在 `.claude/memory/` 目录中，包含跨会话的协作约定和工作流偏好。
+
+通用与 Kotlin 专属的编码、测试、安全、代理调用规则位于 `.claude/rules/common/` 和 `.claude/rules/kotlin/`，会随会话自动加载；新的工程约定优先补到对应规则文件，本文件只保留项目事实与少量全局约定。
 
 新会话开始时，请先读取 `.claude/memory/MEMORY.md` 了解已有的记忆内容。

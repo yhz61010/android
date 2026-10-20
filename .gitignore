@@ -97,3 +97,6 @@ gradle.properties
 *.p12
 *.pfx
 **/.cxx/
+
+# Claude Code personal notes
+CLAUDE.local.md

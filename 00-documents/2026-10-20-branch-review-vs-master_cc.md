@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；本轮更正已经直接并入 §10–§14，不代表代码已实施。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；本轮更正已经直接并入 §10–§14，不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核：采纳其推翻 G10 与「超长行」的结论及 H1 机理订正，订正了 F10 的 `Error` 重抛、F2 缺失常量与测试破坏、G4 的 `@RequiresApi`、G9 的窗口描述、G3 的重试 token，均以「第四轮」字样标出。
 
 ## 0. 范围与方法
 
@@ -31,7 +31,7 @@
 ### H1. 录屏：`KEY_MAX_FPS_TO_ENCODER` 与真实时钟 PTS 叠加可能间歇丢帧
 
 - 位置：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/strategies/Screenshot2H26xStrategy.kt:832`，另见 `:459`
-- 缺陷：本分支把每帧 PTS 从 `frameCount / fps` 的精确网格改为截屏完成后的单调时钟值，但 `MediaFormat` 仍设置 `KEY_MAX_FPS_TO_ENCODER = fps`。编码器侧 GraphicBufferSource 的 FrameDropper 会丢弃「与上一保留帧间隔小于 1/fps − 2 ms」的帧。
+- 缺陷：本分支把每帧 PTS 从 `frameCount / fps` 的精确网格改为截屏完成后的单调时钟值，但 `MediaFormat` 仍设置 `KEY_MAX_FPS_TO_ENCODER = fps`。编码器侧 GraphicBufferSource 的 FrameDropper 以首帧 PTS 为锚、按 1/fps 递增生成目标点序列，保留帧不重同步，实际 PTS 比目标点早 2 ms 以上即丢弃。
 - 触发：截屏在主线程绘制，耗时抖动使相邻帧间隔经常略短于 1/fps（fps=5 时为 198 ms），于是间歇丢帧。旧代码网格 PTS 从不触发，属本次新引入的回归。
 - 建议：去掉该 key（采集节奏已由 `nextCaptureAtMs` 循环控制），或用采集 deadline 而非完成时刻打 PTS。
 - 验证：需真机录制并对比 MP4 实际帧数（未验证）。
@@ -148,7 +148,7 @@
 
 | 第一轮编号 | 裁决 | 证据与修正 |
 |---|---|---|
-| H1 录屏丢帧 | **确认，触发条件修正** | 机制成立：Surface 输入（`createInputSurface` :467、`eglSwapBuffers` :463），`eglPresentationTimeANDROID` 写入的正是 FrameDropper 比较的时间戳。AOSP `FrameDropper` 以首帧时间戳加 `1/fps` 作为下一目标点，仅当后续帧早于目标点超过 2 ms 时丢弃；因此不是「首帧后必丢 1 帧」或稳定「fps/2」，而是采集完成耗时相对上一帧缩短超过 2 ms 时零星丢帧。缺陷与修法不变 |
+| H1 录屏丢帧 | **确认，触发条件修正** | 机制成立：Surface 输入（`createInputSurface` :467、`eglSwapBuffers` :463），`eglPresentationTimeANDROID` 写入的正是 FrameDropper 比较的时间戳。AOSP `FrameDropper.cpp`：`drop iff timeUs < mDesiredMinTimeUs - 2000`，保留后 `mDesiredMinTimeUs += interval`，目标点序列锚定首帧 PTS、不重同步。本实现第 k 帧 PTS = 网格时刻 + 本帧采集耗时 `dur_k`，故当 `dur_k < dur_1 − 2 ms` 时被丢：首帧采集偏慢时后续零星丢帧，不是「首帧后必丢 1 帧」，也不是稳定「fps/2」。缺陷与修法不变（第四轮按 AOSP 源码再次订正） |
 | H2 倒计时跳秒 | **确认，降为 MEDIUM** | 以 T0=5000.7 ms 重算：tick1 在 uptime 6000 唤醒 → elapsed 999 → ceil 回 60000；`_countdownState` 是 `MutableStateFlow`（:62），重复值被合并，UI 看到 60000 停留约 2 s；tick2 wait 1001 → 58000，59000 永不出现。早醒依据：`MessageQueue` 按截断的 `uptimeMillis` 比较，kotlinx `HandlerContext` 恢复后不再对 `nanoTime` 复核（推断，高置信）。影响局限于显示节拍，不破坏资源或数据，第二轮降为 MEDIUM |
 | M2 `isH265` 转私有 | **确认** | 全仓无外部调用方；属公开 getter 移除，需 CHANGELOG「变更」一条 |
 | M3 `AbsPref` 保留旧值 | **确认，已定方案 A** | 基线 `else -> put(key, v.toJsonString())` 失败写 `""`；现跳过写入。分支新增的 `AbsPrefTest.kt:8-14` 测试名即 `failed object serialization does not overwrite stored value`，说明「保留旧值」是作者有意为之。见 §11.3 N1 |
@@ -172,7 +172,7 @@
 #### F1 [HIGH] 删除 `KEY_MAX_FPS_TO_ENCODER`
 
 - 位置：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/strategies/Screenshot2H26xStrategy.kt:829-833`
-- 缺陷：采集循环已按 `captureIntervalMillis(fps)` 定步（:967-975），再设该键等于让抖动的真实时间戳接受第二层限流。AOSP `FrameDropper` 保存“下一期望时间戳”，当实际帧早于该时间戳超过 2 ms 时丢弃；本实现相邻 PTS 约为 `周期 + 本帧采集耗时 - 上帧采集耗时`，所以只要本帧比上帧快 2 ms 以上就可能被误判为过密。基线用 `frameIndex/fps` 等距时间戳，不会因采集耗时抖动触发，属本分支引入的回归。
+- 缺陷：采集循环已按 `captureIntervalMillis(fps)` 定步（:967-975），再设该键等于让抖动的真实时间戳接受第二层限流。AOSP `FrameDropper` 的目标点序列锚定在首帧 PTS 上按 `1/fps` 递增、保留帧不重同步，实际 PTS 早于目标点 2 ms 以上才丢；本实现 PTS = 网格时刻 + 本帧采集耗时，故第 k 帧在 `dur_k < dur_1 − 2 ms` 时被丢，首帧采集偏慢时后续会零星丢帧。基线用 `frameIndex/fps` 等距时间戳，不会因采集耗时抖动触发，属本分支引入的回归。
 - 修复：整块删除，含 `@Suppress("unchecked", "InlinedApi")`。`Build` 在 :834/:840 仍被引用，不会产生未用 import。`ScreenRecordMediaCodecStrategy.kt:187` 的同名设置应保留，VirtualDisplay 以刷新率推帧，需要限流。
 
 ```kotlin
@@ -246,6 +246,7 @@ val encoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
 ```
 
+- 第四轮补充：`CALLBACK_SETUP_TIMEOUT_MS` 目前不存在（companion 只有 :117-119 三个常量），需新增，建议 2000 ms。纯 JVM 测试 `Screenshot2H26xStrategyTest.kt:43-44` 在 `SDK_INT=0` 下会走 API<23 分支，存根 `Handler.post()` 返回 `false` 使 `check` 抛出，现有打桩会失败，须同步 mock `HandlerThread`/`Handler.post` 或改走 Robolectric。
 - 相机与播放器修复：`CameraAvcEncoder` 和 `LeoTextureView.initDecoder()` 的 API 21–22 分支复用同一套“在各自 callback HandlerThread 创建 codec + 单参 `setCallback` + 有界交接所有权”的模式；API 23+ 保留双参数 overload，但必须继续保证 callback 在 `configure()` 前设置。不要只把 `setCallback` post 到 HandlerThread，也不要让 `configure()` 早于创建任务完成。各自现有的 `stopCodecCallbackThread()` / `stopDecoderCallbackThread()` 继续负责 `quitSafely + join`，初始化失败也必须走到这里。
 - teardown：在 codec 已从所有者字段 detach 并 release 后，先 `quitSafely()`；若当前线程不是 callback thread，则最多 `join(1_000)` 并在仍存活时记录 warning。只有清理恰好运行在 callback thread 时跳过 join，避免自等待；不能一概不 join，否则 release 返回时线程仍可能存活。
 - 复核要点：`post()` 失败、创建超时、创建/`setCallback`/`configure` 异常均必须进入现有初始化失败清理；API 21–22 超时任务即使迟到也会看到 `abandoned` 或由 `created.getAndSet(null)` 释放，所有权只能交接一次。录屏监听器仍经 `screenshotHandler.post` :309 投递。`Screenshot2H26xStrategy.kt` 当前已经导入 `AtomicReference`、`FutureTask`、`TimeUnit`，实现时复用并在完成后清理未使用 import，再核对 detekt/ktlint。
@@ -405,7 +406,7 @@ synchronized(projectionCallbackLock) {
 - :75 注释写 29 个函数，实际 31（detekt `thresholdInClasses: 33`，`ignorePrivate/ignoreOverridden: false`），F2 方案刻意不新增函数。
 - 文件 1232 行，超项目 800 行上限。建议把 `Builder`（:347-432）与 EGL 初始化/释放（:466-603）拆到独立文件。
 
-#### F10 [MEDIUM，Codex 复核新增] `Mp4TrackWriter` 失败清理不完整且吞掉 `Error`
+#### F10 [MEDIUM，Codex 复核新增] `Mp4TrackWriter` 失败清理不完整
 
 - 位置：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/Mp4TrackWriter.kt:53-68`、`:124-140`
 - 缺陷 1：`onOutputFormat()` 先把新建的 `MediaMuxer` 保存在局部变量 `created`，调用 `addTrack()`、`start()` 成功后才赋给字段 `muxer`。若 `addTrack()` 或 `start()` 抛异常，`fail()` 读取到的字段仍为 `null`，只能删输出文件，无法释放已创建的 native muxer/文件描述符。
@@ -426,7 +427,6 @@ fun onOutputFormat(format: MediaFormat) {
         LogContext.log.i(TAG, "MP4 track opened. dstFile=${outputFile.absolutePath}")
     } catch (error: Throwable) {
         fail("Could not open ${outputFile.absolutePath}", error)
-        if (error is Error) throw error
     }
 }
 
@@ -446,7 +446,6 @@ fun close() {
         }
     } catch (error: Throwable) {
         LogContext.log.e(TAG, "MP4 stop failed; ${outputFile.name} is incomplete", error)
-        if (error is Error) throw error
     } finally {
         try {
             target.release()
@@ -458,7 +457,7 @@ fun close() {
 }
 ```
 
-- 复核要点：`onOutputFormat()` 与 `write()` 仍由所有者的 `codecCallbackLock` 串行化，提前发布字段不会让半初始化 muxer 被并发使用；`close()` 无样本、`stop()` 失败两种情况均删除文件，只有成功写完索引才保留。当前 `onOutputFormat()`、`write()`、`close()` 的 `catch (Throwable)` 会吞掉 `OutOfMemoryError`/`LinkageError`；保留 `Throwable` 仅用于先清理时，清理后必须如上重抛 `Error`。`write()` 也做同样修改；`fail()`、`discardOutputFile()` 内的 `runCatching` 改为只捕获 `Exception`，避免清理辅助函数再次吞掉 `Error`。
+- 复核要点：`onOutputFormat()` 与 `write()` 仍由所有者的 `codecCallbackLock` 串行化，提前发布字段不会让半初始化 muxer 被并发使用；`close()` 无样本、`stop()` 失败两种情况均删除文件，只有成功写完索引才保留。第四轮订正：Codex 原方案还要求清理后重抛 `Error` 并让 `fail()`/`discardOutputFile()` 只捕 `Exception`，**不采用**。`Mp4TrackWriter` 的 `catch (Throwable)` 与所有者的设计一致：`Screenshot2H26xStrategy.kt:263-270` 刻意阻止回调逃逸，:1205-1228 的 teardown 逐步吞错。`close()` 重抛会被 :1207 立即吞掉，无效；`onOutputFormat()` 重抛则经 `onOutputFormatChanged`（:322-330，无 try）逃逸到 MediaCodec 回调线程直接杀进程。`Error` 透传模式目前只见于 `lib-network`（`generic/ResultExt.kt:62`、`net/ResultExt.kt:54`），要在录屏侧引入须先改所有者，超出本条范围。
 - 验证：为 `MediaMuxer` 增加可注入工厂/窄包装，分别模拟 `addTrack()`、`start()`、`stop()` 抛异常，断言 `release()` 恰好调用一次且输出文件被删除；另让上述操作抛测试用 `Error`，断言清理完成后同一实例继续向上传播。
 
 ### 11.2 悬浮窗、Toast、网络监控
@@ -581,6 +580,7 @@ private const val MAX_DESTROYED_OWNER_DETACH_RETRIES = 3
 private const val DESTROYED_OWNER_RETRY_DELAY_MS = 100L
 ```
 
+- 第四轮补充：重试 Runnable 投递在实例 `mainHandler`（:79）上，而 `remove()` :679 → `unregisterListeners()` :658 会 `removeCallbacksAndMessages(null)`，调用方在重试期间再次 `remove()` 会清掉重试并让窗口再次卡死。应改为 `HandlerCompat.postDelayed(mainHandler, destroyedOwnerDetachRetry, retryToken, delay)` 并在 :658 只移除非重试消息，或在 `unregisterListeners()` 后重新投递。
 - 安全性与边界：重试窗口最多约 300 ms，之后 `owner.release()` 与 `onRemoved(this)` 必须执行，避免 `windowMap` 和 lifecycle callback 永久持有 Activity。若 WindowManager 在全部重试中持续抛非 `IllegalArgumentException`，只能保证**库引用释放**，不能宣称实际窗口已摘除；错误日志必须保留这一差异。内部兜底，无需 KDoc/CHANGELOG。
 - 验证：`FloatViewLifecycleTest` 增加两例：第一次失败、下一次成功时最终 `exist()==false`；持续抛 `IllegalStateException` 时推进主 Looper 超过重试窗口，断言调用次数有界、`exist()==false`，且 `registeredActivityLifecycleCallbacks` 为空。真机再覆盖 Activity 销毁 + 普通应用窗口 / `systemWindow` 两种类型，确认没有残留可见窗口。
 
@@ -590,6 +590,7 @@ private const val DESTROYED_OWNER_RETRY_DELAY_MS = 100L
 - 第三轮纠错：不能在注销失败后把 caller callback 永久留在静态 `IdentityHashMap` 里“等待重试”。platform callback 强持有 lambda，而 lambda 可经 `NetworkMonitor.callback` 回到 Activity；一次失败就会形成进程级泄漏。正确做法是把 framework wrapper 做成可脱钩对象，先移除映射并清空业务 listener，再调用平台注销。即使平台仍持有失败的 wrapper，它也只剩 application context 和空 listener。
 
 ```kotlin
+@RequiresApi(Build.VERSION_CODES.S)
 private class WifiSignalNetworkCallback(
     context: Context,
     callback: (WifiSignal) -> Unit,
@@ -613,6 +614,7 @@ private class WifiSignalNetworkCallback(
 }
 ```
 
+- 第四轮补充：该类脱离了 `SDK_INT >= S` 分支却使用 `NetworkCapabilities.transportInfo`（API 29），必须标 `@RequiresApi(Build.VERSION_CODES.S)`，否则 lint `NewApi` 会让 `staticCheck` 失败。
 - `wifiNetworkCallbacks` 的 value 改为 `WifiSignalNetworkCallback`。替换/注销时先从 map `remove(callback)` 并 `detachListener()`，再调用 `unregisterNetworkCallback`；平台异常记录后返回 `false`，但不把映射塞回去。注册异常也捕获 `Exception`，先对尚未成功注册的 wrapper 调用 `detachListener()`，再记录并返回 `false`。SDK < 31 时两个方法都是无需工作的幂等成功，返回 `true`。保持现有 `wifiNetworkCallbackLock` 覆盖“移除旧项—注销旧 wrapper—注册并写入新项”的完整替换事务，避免两个线程对同一 callback 同时注册出两个 framework wrapper；不要为了缩短锁区间而留下这个竞态。
 - `getWifiNetworkStatsAboveAndroidS()` 与 `unregisterWifiNetworkStatsAboveAndroidS()` 均改为 `Boolean`；忽略返回值的 Kotlin/Java 源码调用仍可编译，但公开签名和失败语义改变，KDoc 与 CHANGELOG 追加迁移说明。`NetworkStatsCallbackTest.kt` 增加：SDK < 31 返回 true；注册异常返回 false 且无映射；注销失败返回 false、映射已移除、迟到 platform 事件不再调用业务 listener；重复注册替换失败时旧 wrapper 已脱钩且新注册未进行。
 
@@ -707,7 +709,7 @@ try {
 #### G9 [MEDIUM，Codex 复核新增] `NetworkMonitor` 的旧 Wi-Fi 回调可污染新会话
 
 - 位置：`androidbase/.../NetworkMonitor.kt:56-58`、`:177-192`、`:203-218`；`lib-common-android/.../NetworkUtil.kt:282-314`
-- 缺陷：轮询任务用 `generation + scheduler` 隔离 stop/restart，但 Wi-Fi 监听始终复用同一个 `wifiSignalCallback`，回调本身没有会话标识。框架已经排队的旧 `onCapabilitiesChanged()`/`onLost()` 可在新会话注册后迟到，并覆盖新会话的 `globalWifiSignal`；注销失败时旧回调继续存活，使该窗口更大。现有测试只验证 restart 时立即清空旧信号，没有模拟旧框架 callback wrapper 的迟到事件。
+- 缺陷：轮询任务用 `generation + scheduler` 隔离 stop/restart，但 Wi-Fi 监听始终复用同一个 `wifiSignalCallback`，回调本身没有会话标识。真实窗口有两种（第四轮按 AOSP `ConnectivityManager.CallbackHandler` 收窄，推断）：注销瞬间**正在执行中**的旧 `onCapabilitiesChanged()`/`onLost()`，以及注销失败后仍存活的旧 wrapper；二者都会在新会话注册后写入 `globalWifiSignal`。已成功注销的 request，其排队消息会因查不到 callback 而被框架丢弃，不构成窗口。现有测试只验证 restart 时立即清空旧信号，没有模拟旧框架 callback wrapper 的迟到事件。
 - 修复：每次 start 创建捕获 `generation` 与 `scheduler` 的独立回调；回调在 `monitorLifecycleLock` 内完成“仍是当前会话”检查和赋值，避免 check 与 stop 清空之间的竞态。配合 G4，注销时先从 `NetworkMonitor` 字段 detach，再让 `NetworkUtil` 清空 wrapper listener；**不**保留失败 callback 集合，避免把 Activity 回调变成新的泄漏根。
 
 ```kotlin

@@ -213,12 +213,14 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
             val headers = response.headers
             var hasInlineFile = false
             for (i in 0 until headers.size) {
+                val headerName = headers.name(i)
+                val headerValue = headers.value(i)
                 logger.log(
-                    msg = "${headers.name(i)}: ${redactHeaderValue(headers.name(i), headers.value(i))}",
+                    msg = "$headerName: ${redactHeaderValue(headerName, headerValue)}",
                     logType = LogOutType.FRAMEWORK_HTTP_HEADER
                 )
-                if ("Content-Disposition".contentEquals(headers.name(i)) &&
-                    headers.value(i).startsWith("inline; filename")
+                if ("Content-Disposition".contentEquals(headerName) &&
+                    headerValue.startsWith("inline; filename")
                 ) {
                     hasInlineFile = true
                 }

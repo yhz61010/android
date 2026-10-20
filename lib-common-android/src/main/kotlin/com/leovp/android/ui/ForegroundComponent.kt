@@ -5,7 +5,7 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import android.os.Handler
-import android.os.HandlerThread
+import android.os.Looper
 import android.util.Log
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -57,6 +57,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY) :
     ActivityLifecycleCallbacks {
     @Suppress("WeakerAccess")
+    @Volatile
     var isForeground = false
         private set
 
@@ -65,8 +66,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
         get() = !isForeground
 
     private var paused = true
-    private val handlerThread = HandlerThread("fg").apply { start() }
-    private val handler = Handler(handlerThread.looper)
+    private val handler = Handler(Looper.getMainLooper())
     private val listeners: MutableList<AppStateListener> = CopyOnWriteArrayList()
     private var checkRunnable: Runnable? = null
 
@@ -104,9 +104,8 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             for (listener in listeners) {
                 try {
                     listener.onBecameForeground()
-                } catch (_: Exception) {
-                    // LogContext.log.e(TAG, "onBecameForeground threw exception! msg=${e.message}")
-                    Log.e(TAG, "onActivityResumed() exception")
+                } catch (e: Exception) {
+                    Log.e(TAG, "onActivityResumed() exception", e)
                 }
             }
         }
@@ -188,8 +187,9 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
             if (instance == null) {
                 synchronized(ForegroundComponent::class.java) {
                     if (instance == null) {
-                        instance = ForegroundComponent(becameBackgroundDelay)
-                        application.registerActivityLifecycleCallbacks(instance)
+                        val newInstance = ForegroundComponent(becameBackgroundDelay)
+                        application.registerActivityLifecycleCallbacks(newInstance)
+                        instance = newInstance
                     }
                 }
             }

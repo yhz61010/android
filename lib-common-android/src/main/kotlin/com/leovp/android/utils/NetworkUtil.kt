@@ -12,6 +12,7 @@ import android.net.NetworkRequest
 import android.net.wifi.WifiInfo
 import android.os.Build
 import android.telephony.TelephonyManager
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.annotation.WorkerThread
 import com.leovp.android.exts.connectivityManager
@@ -24,6 +25,7 @@ import java.net.NetworkInterface
 import java.net.Proxy
 import java.net.Socket
 import java.net.SocketAddress
+import java.util.IdentityHashMap
 import java.util.Locale
 
 /**
@@ -51,6 +53,9 @@ object NetworkUtil {
 
     private const val MIN_RSSI = -100
     private const val MAX_RSSI = -55
+    private val wifiNetworkCallbackLock = Any()
+    private val wifiNetworkCallbacks =
+        IdentityHashMap<(WifiSignal) -> Unit, ConnectivityManager.NetworkCallback>()
 
     data class ProxyInfo(val type: Proxy.Type, val url: String, val port: Int)
 
@@ -262,16 +267,13 @@ object NetworkUtil {
     /**
      * **Need following permission:**
      * ```xml
-     * <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
      * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      * ```
+     *
+     * Every successful registration must be paired with
+     * [unregisterWifiNetworkStatsAboveAndroidS] using the same [callback] instance.
      */
-    @RequiresPermission(
-        allOf = [
-            Manifest.permission.CHANGE_NETWORK_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE
-        ]
-    )
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val request = NetworkRequest.Builder()
@@ -295,11 +297,54 @@ object NetworkUtil {
                     callback(WifiSignal(-1, -1, -1, -1))
                 }
             }
-            // For request
-            connectivityManager.requestNetwork(request, networkCallback)
-            // For listen
-            connectivityManager.registerNetworkCallback(request, networkCallback)
+            synchronized(wifiNetworkCallbackLock) {
+                wifiNetworkCallbacks[callback]?.let { previousCallback ->
+                    if (!unregisterWifiNetworkCallback(
+                            connectivityManager,
+                            previousCallback,
+                            "previous"
+                        )
+                    ) {
+                        return
+                    }
+                    wifiNetworkCallbacks.remove(callback)
+                }
+                connectivityManager.registerNetworkCallback(request, networkCallback)
+                wifiNetworkCallbacks[callback] = networkCallback
+            }
         }
+    }
+
+    /**
+     * Stops the listener registered by [getWifiNetworkStatsAboveAndroidS]. The same [callback]
+     * instance used for registration must be supplied.
+     */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    fun unregisterWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        synchronized(wifiNetworkCallbackLock) {
+            val networkCallback = wifiNetworkCallbacks[callback] ?: return
+            val unregistered = unregisterWifiNetworkCallback(
+                ctx.connectivityManager,
+                networkCallback,
+                "current"
+            )
+            if (unregistered) {
+                wifiNetworkCallbacks.remove(callback)
+            }
+        }
+    }
+
+    private fun unregisterWifiNetworkCallback(
+        connectivityManager: ConnectivityManager,
+        networkCallback: ConnectivityManager.NetworkCallback,
+        callbackLabel: String,
+    ): Boolean = try {
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to unregister the $callbackLabel Wi-Fi network callback", e)
+        false
     }
 
     /**

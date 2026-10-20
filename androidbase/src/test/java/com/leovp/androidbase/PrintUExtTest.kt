@@ -1,19 +1,13 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.leovp.androidbase.exts.kotlin.TreeElement
 import com.leovp.androidbase.exts.kotlin.printTree
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
 
 /**
  * Author: Michael Leo
  * Date: 2021/8/2 14:07
  */
-@RunWith(PowerMockRunner::class)
-@PrepareForTest(Log::class)
 class PrintUExtTest {
 
     @Test

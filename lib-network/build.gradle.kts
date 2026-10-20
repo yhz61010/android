@@ -31,6 +31,9 @@ dependencies {
     // SSL/hostname-verifier tests need OkHttp on the test classpath (compileOnly above is not visible to tests).
     testImplementation(libs.square.okhttp)
     testImplementation(libs.kotlin.coroutines.android)
+    testImplementation(libs.serialization.json)
+    testImplementation(libs.net)
+    testImplementation(projects.log)
 }
 
 /** When use it: sourceJar.get() */

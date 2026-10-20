@@ -78,13 +78,34 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
 
     /**
      * Create float view but don't add it to the window manager.
+     *
+     * @throws IllegalStateException when another float view already uses the same tag. Callers
+     * must remove that view first or choose a different tag.
      */
     fun build(): Unit = FloatViewManager.create(context, config)
 
     /**
      * **Create** a float view with specific tag and show it on screen.
+     *
+     * @throws IllegalStateException when another float view already uses the same tag. This
+     * replaces the legacy `IllegalAccessError`; callers that handled the old error should migrate
+     * to state validation or [tryShow].
      */
     fun show() = createAndShowFloatView()
+
+    /**
+     * Creates and shows the float view while reporting whether it was attached successfully.
+     * Unlike [show], this method converts creation and attachment failures into
+     * [FloatViewShowResult]. A duplicate tag returns [FloatViewShowResult.FAILED_AND_DETACHED]
+     * for the new view and leaves the existing view unchanged.
+     */
+    fun tryShow(): FloatViewShowResult = try {
+        build()
+        FloatViewManager.show(config.tag)
+    } catch (_: Exception) {
+        FloatViewManager.duplicateShowResult(config.tag)
+            ?: FloatViewShowResult.FAILED_AND_DETACHED
+    }
 
     private fun createAndShowFloatView() {
         build()

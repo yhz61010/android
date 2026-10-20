@@ -44,6 +44,8 @@ dependencies {
 
     // JVM unit tests for extracted pure logic (e.g. debounce/auto-pager coroutine behavior).
     testImplementation(libs.bundles.test)
+    testImplementation(libs.compose.ui.test.junit4)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

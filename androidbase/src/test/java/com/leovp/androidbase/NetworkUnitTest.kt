@@ -1,6 +1,5 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.log.LLog
 import com.leovp.log.LogContext
@@ -8,15 +7,8 @@ import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLog
 
-@RunWith(RobolectricTestRunner::class)
-@PrepareForTest(Log::class)
-@Config(sdk = [32], shadows = [ShadowLog::class])
 class NetworkUnitTest {
 
     @BeforeEach

@@ -2,12 +2,12 @@
 
 package com.leovp.network.http.generic
 
-import com.leovp.log.base.e
 import com.leovp.network.exception.ApiException
 import com.leovp.network.exception.ApiResponseException
 import com.leovp.network.exception.ApiSerializationException
 import com.leovp.network.exception.ApiServerException
 import com.leovp.network.http.Result
+import com.leovp.network.http.payloadOperationOrNull
 import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.ResultResponseException
@@ -59,6 +59,7 @@ suspend inline fun <reified R> result(
     }.getOrElse { err ->
         // Cancellation must propagate so the caller's coroutine actually cancels (remediation H6).
         if (err is CancellationException) throw err
+        if (err is Error) throw err
 
         // err can be one of the following exception:
         // - ApiResponseException (400~499)
@@ -74,7 +75,7 @@ suspend inline fun <reified R> result(
                         statusCode = err.statusCode,
                         code = err.code,
                         message = err.message,
-                        cause = err.cause,
+                        cause = err,
                         tag = err.tag
                     )
                 )
@@ -85,7 +86,7 @@ suspend inline fun <reified R> result(
                 Result.Failure(
                     ResultConvertException(
                         message = err.message,
-                        cause = err.cause,
+                        cause = err,
                         responseBodyString = err.responseBodyString,
                         tag = err.tag
                     )
@@ -96,15 +97,10 @@ suspend inline fun <reified R> result(
             is ApiResponseException -> {
                 val bodyString = err.responseBodyString
                 val errorData: R? = bodyString?.let {
-                    runCatching {
+                    payloadOperationOrNull("Error while converting body string.") {
                         SerializationConverter.defaultJson.decodeFromString<R>(it)
                         // - SerializationException
                         // - IllegalArgumentException
-                    }.getOrElse { err ->
-                        e("ResultExt", err) {
-                            "Error while converting body string."
-                        }
-                        null
                     }
                 }
 
@@ -115,10 +111,19 @@ suspend inline fun <reified R> result(
                         message = err.message,
                         cause = err,
                         responseBodyString = err.responseBodyString,
-                        tag = errorData
-                    )
+                        tag = err.tag
+                    ).apply { attachErrorData(errorData) }
                 )
             }
+
+            is ApiException -> Result.Failure(
+                ResultException(
+                    code = err.code,
+                    message = err.message,
+                    cause = err,
+                    tag = err.tag
+                )
+            )
 
             else -> Result.Failure(ResultException(message = err.message, cause = err))
         }

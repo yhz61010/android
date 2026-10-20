@@ -232,12 +232,7 @@ abstract class BaseActivity<B : ViewBinding>(
         networkMonitor = null
     }
 
-    @RequiresPermission(
-        allOf = [
-            Manifest.permission.CHANGE_NETWORK_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE
-        ]
-    )
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun startTrafficNetwork(
         domain: String,
         callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null

@@ -40,9 +40,9 @@ dependencies {
     api(libs.androidx.fragment)
 
     androidTestImplementation(libs.bundles.android.test)
-    testImplementation(libs.bundles.powermock)
     testImplementation(libs.bundles.test)
     testImplementation(libs.gson)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 
     api(projects.log)
     api(projects.libJson)

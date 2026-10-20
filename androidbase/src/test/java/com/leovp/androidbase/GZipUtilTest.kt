@@ -1,21 +1,15 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.leovp.androidbase.exts.kotlin.hexToByteArray
 import com.leovp.androidbase.utils.cipher.GZipUtil
 import com.leovp.bytes.toHexString
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
 
 /**
  * Author: Michael Leo
  * Date: 20-8-3 上午11:37
  */
-@RunWith(PowerMockRunner::class)
-@PrepareForTest(Log::class)
 class GZipUtilTest {
 
     // private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')

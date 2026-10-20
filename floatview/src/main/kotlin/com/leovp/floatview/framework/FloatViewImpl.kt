@@ -24,6 +24,7 @@ import androidx.annotation.MainThread
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.children
+import com.leovp.floatview.FloatViewShowResult
 import com.leovp.floatview.entities.DefaultConfig
 import com.leovp.floatview.entities.DockEdge
 import com.leovp.floatview.entities.StickyEdge
@@ -57,7 +58,10 @@ internal class FloatViewImpl(
     private lateinit var layoutParams: WindowManager.LayoutParams
     private var windowAdded = false
     private var removing = false
+    private var removalFailed = false
     private var released = false
+    internal val hasFailedRemoval: Boolean
+        get() = removalFailed && windowAdded
     private var listenersRegistered = false
     private var alphaAnimator: ObjectAnimator? = null
     private var dockAnimator: ValueAnimator? = null
@@ -358,16 +362,24 @@ internal class FloatViewImpl(
 
     fun updateFloatViewGravity(gravity: Int) {
         checkFloatViewMainThread()
+        if (released) return
+        config.gravity = gravity
         if (!windowAdded || removing || released) return
         config.customView?.let { v ->
-            config.gravity = gravity
             layoutParams.gravity = gravity
-            windowManager.updateViewLayout(v, layoutParams)
+            try {
+                windowManager.updateViewLayout(v, layoutParams)
+            } catch (e: Exception) {
+                Log.e(TAG, "updateFloatViewGravity failed", e)
+            }
         }
     }
 
     fun updateFloatViewPosition(x: Int?, y: Int?, accumulateY: Boolean = false) {
         checkFloatViewMainThread()
+        if (released) return
+        x?.let { config.x = it }
+        y?.let { config.y = it }
         if (!windowAdded || removing || released) return
         config.customView?.let { v ->
             try {
@@ -389,6 +401,7 @@ internal class FloatViewImpl(
     }
 
     fun getFloatViewPosition(): Point {
+        if (!windowAdded) return Point(config.x, config.y)
         config.x = adjustPosX(layoutParams.x, config.edgeMargin)
         config.y = adjustPosY(layoutParams.y, config.edgeMargin)
         return Point(config.x, config.y)
@@ -489,8 +502,7 @@ internal class FloatViewImpl(
                         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     else -> {
                         @Suppress("DEPRECATION")
-                        WindowManager.LayoutParams.TYPE_TOAST or
-                            WindowManager.LayoutParams.TYPE_PHONE
+                        WindowManager.LayoutParams.TYPE_PHONE
                     }
                 }
             }
@@ -545,12 +557,13 @@ internal class FloatViewImpl(
     @MainThread
     fun updateScreenOrientation(orientation: Int) {
         checkFloatViewMainThread()
-        if (!windowAdded || removing || released) return
+        if (released) return
         val oldScreenSize = screenOrientSz
         lastScrOri = orientation
         config.screenOrientation = orientation
         refreshScreenCache()
         screenOrientSz = getScreenOrientationSize(orientation)
+        if (!windowAdded || removing) return
 
         // Scale position proportionally to maintain relative position after orientation change
         if (oldScreenSize.width > 0 && oldScreenSize.width != screenOrientSz.width) {
@@ -575,14 +588,21 @@ internal class FloatViewImpl(
     private fun getResourceEntryName(@IdRes id: Int): String =
         runCatching { context.resources.getResourceEntryName(id) }.getOrDefault("")
 
-    fun show() {
+    fun show(): FloatViewShowResult {
         checkFloatViewMainThread()
-        if (released || removing) return
+        fun failureResult(): FloatViewShowResult = if (windowAdded) {
+            FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN
+        } else {
+            FloatViewShowResult.FAILED_AND_DETACHED
+        }
+
+        if (released) return FloatViewShowResult.FAILED_AND_DETACHED
+        if (removing) return failureResult()
         if (!owner.isAlive) {
             remove(true)
-            return
+            return failureResult()
         }
-        runCatching {
+        return try {
             if (config.systemWindow && !context.canDrawOverlays) {
                 Log.w(
                     TAG,
@@ -593,7 +613,10 @@ internal class FloatViewImpl(
 
             unregisterListeners()
             cancelAnimations()
-            if (!detachWindow()) return
+            if (!detachWindow()) {
+                hideAfterFailure()
+                return FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN
+            }
             init()
             windowManager.addView(config.customView!!, layoutParams)
             windowAdded = true
@@ -601,9 +624,25 @@ internal class FloatViewImpl(
             visible(true)
             updateAutoDock(config.dockEdge)
             updateStickyEdge(config.stickyEdge)
-        }.onFailure { e ->
-            remove(true)
-            Log.e(TAG, "show() failed", e)
+            FloatViewShowResult.SHOWN
+        } catch (e: Exception) {
+            hideAfterFailure()
+            try {
+                remove(true)
+            } catch (cleanupError: Exception) {
+                Log.e(TAG, "show() cleanup failed", cleanupError)
+            }
+            val result = failureResult()
+            Log.e(TAG, "show() failed; result=$result", e)
+            result
+        }
+    }
+
+    private fun hideAfterFailure() {
+        try {
+            config.customView?.let(::hideCustomView)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to hide float view after show failure", e)
         }
     }
 
@@ -618,8 +657,16 @@ internal class FloatViewImpl(
     private fun unregisterListeners() {
         mainHandler.removeCallbacksAndMessages(null)
         if (listenersRegistered) {
-            displayManager.unregisterDisplayListener(displayListener)
-            orientationEventListener.disable()
+            try {
+                displayManager.unregisterDisplayListener(displayListener)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to unregister display listener", e)
+            }
+            try {
+                orientationEventListener.disable()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to disable orientation listener", e)
+            }
             listenersRegistered = false
         }
     }
@@ -628,6 +675,7 @@ internal class FloatViewImpl(
         checkFloatViewMainThread()
         if (released || (removing && !immediately)) return
         removing = true
+        removalFailed = false
         unregisterListeners()
         cancelAnimations()
         if (immediately || !windowAdded || !owner.isAlive || !config.enableAlphaAnimation) {
@@ -699,24 +747,32 @@ internal class FloatViewImpl(
     }
 
     private fun detachWindow(): Boolean {
-        if (!windowAdded) return true
+        if (!windowAdded) {
+            removalFailed = false
+            return true
+        }
         try {
             // Registration precedes View attachment; a null windowToken does not mean absent.
             windowManager.removeViewImmediate(config.customView)
         } catch (_: IllegalArgumentException) {
             // The framework may have already removed the window during Activity teardown.
         } catch (e: Exception) {
+            removalFailed = true
             Log.e(TAG, "Window removal failed; retaining ownership for retry", e)
             return false
         }
         windowAdded = false
+        removalFailed = false
         return true
     }
 
     private fun finishRemoval() {
         if (released) return
         cancelAnimations()
-        if (!detachWindow()) return
+        if (!detachWindow()) {
+            hideAfterFailure()
+            return
+        }
         released = true
         config.isDisplaying = false
         touchViews.forEach { it.setOnTouchListener(null) }

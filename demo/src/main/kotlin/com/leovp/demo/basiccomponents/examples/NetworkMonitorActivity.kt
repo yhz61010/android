@@ -37,12 +37,7 @@ class NetworkMonitorActivity :
 
     private var networkMonitor: NetworkMonitor? = null
 
-    @RequiresPermission(
-        allOf = [
-            Manifest.permission.CHANGE_NETWORK_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE
-        ]
-    )
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

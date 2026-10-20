@@ -5,6 +5,7 @@ package com.leovp.android.exts
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.DisplayCutout
 import android.view.LayoutInflater
@@ -174,19 +175,20 @@ fun View.removeOnSingleClickListener() {
 
 internal class OnSingleClickListener(
     private val interval: Long = INTERVAL_TIME,
-    private val action: (view: View) -> Unit
+    private val action: (view: View) -> Unit,
+    private val timeSource: () -> Long = SystemClock::elapsedRealtime,
 ) {
     companion object {
         const val INTERVAL_TIME: Long = 500
     }
 
-    private var lastClickTime = 0L
+    private var lastClickTime: Long? = null
 
     @Synchronized
     private fun isDuplicatedClick(): Boolean {
-        val time = System.currentTimeMillis()
-        val delta = time - lastClickTime
-        if (delta < interval) {
+        val time = timeSource()
+        val lastTime = lastClickTime
+        if (lastTime != null && time - lastTime < interval) {
             return true
         }
         lastClickTime = time

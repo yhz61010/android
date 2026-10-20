@@ -5,8 +5,8 @@ package com.leovp.network.http.net
 import com.drake.net.exception.ConvertException
 import com.drake.net.exception.RequestParamsException
 import com.drake.net.exception.ServerResponseException
-import com.leovp.log.base.e
 import com.leovp.network.http.Result
+import com.leovp.network.http.payloadOperationOrNull
 import com.leovp.network.http.exception.ResultConvertException
 import com.leovp.network.http.exception.ResultException
 import com.leovp.network.http.exception.ResultResponseException
@@ -51,6 +51,7 @@ suspend inline fun <reified R> result(
     }.getOrElse { err ->
         // Cancellation must propagate so the caller's coroutine actually cancels (remediation H6).
         if (err is CancellationException) throw err
+        if (err is Error) throw err
 
         // err can be one of the following exception:
         // - RequestParamsException (400~499)
@@ -61,26 +62,18 @@ suspend inline fun <reified R> result(
         when (err) {
             // 400~499
             is RequestParamsException -> {
-                val bodyString = runCatching {
+                val bodyString = payloadOperationOrNull("Error while getting body string.") {
                     err.response.body.string()
-                }.getOrElse { err ->
-                    e("ResultExt", err) {
-                        "Error while getting body string."
-                    }
-                    null
                 }
-                val errorData: R? = runCatching {
+                val errorData: R? = payloadOperationOrNull(
+                    "Error while converting body string."
+                ) {
                     val bodyStringRef = bodyString ?: error("bodyString is null")
                     SerializationConverter
                         .defaultJson
                         .decodeFromString<R>(bodyStringRef)
                     // - SerializationException
                     // - IllegalArgumentException
-                }.getOrElse { err ->
-                    e("ResultExt", err) {
-                        "Error while converting body string."
-                    }
-                    null
                 }
 
                 Result.Failure(
@@ -90,8 +83,8 @@ suspend inline fun <reified R> result(
                         message = err.message,
                         cause = err,
                         responseBodyString = bodyString,
-                        tag = errorData
-                    )
+                        tag = err.tag
+                    ).apply { attachErrorData(errorData) }
                 )
             }
 
@@ -116,13 +109,8 @@ suspend inline fun <reified R> result(
 
             // JSON convert exception
             is ConvertException -> {
-                val bodyString = runCatching {
+                val bodyString = payloadOperationOrNull("Error while getting body string.") {
                     err.response.body.string()
-                }.getOrElse { err ->
-                    e("ResultExt", err) {
-                        "Error while getting body string."
-                    }
-                    null
                 }
                 Result.Failure(
                     ResultConvertException(

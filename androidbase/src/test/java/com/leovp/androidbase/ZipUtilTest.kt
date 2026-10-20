@@ -1,6 +1,5 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.leovp.androidbase.utils.cipher.ZipUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -16,17 +15,12 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.TestInstance
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
 
 /**
  * Author: Michael Leo
  * Date: 2025/4/1 13:47
  */
 
-@RunWith(PowerMockRunner::class)
-@PrepareForTest(Log::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ZipUtilTest {
 

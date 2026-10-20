@@ -32,7 +32,10 @@ abstract class AbsPref :
                 "Use putSet(key: String, v: Set<String>?) instead."
             )
 
-            else -> put(key, v.toJsonString())
+            else -> {
+                val json = v.toJsonString()
+                if (json.isNotEmpty()) put(key, json)
+            }
         }
     }
 
@@ -61,7 +64,10 @@ abstract class AbsPref :
                 "Use putSet(key: String, v: Set<String>?) instead."
             )
 
-            else -> put(key, v.toJsonString())
+            else -> {
+                val json = v.toJsonString()
+                if (json.isNotEmpty()) put(key, json)
+            }
         }
     }
 

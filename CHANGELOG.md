@@ -119,6 +119,16 @@
   - `stopServer()` 的状态迁移与 `onStopped()` 回调移入 `finally`：此前若 `close()` 或
     `shutdownGracefully()` 自己抛出（而非 fail promise），实例会永久停在"正在关闭"态，
     后续每次 `stopServer()` 都返回 `false` 且 `onStopped()` 永不送达。异常仍向调用方传播。
+- **`floatview` 重复 tag 异常语义调整**：`FloatViewCreator.build()` / `show()` 遇到重复 tag 时改为抛出
+  `IllegalStateException`，不再抛出 `IllegalAccessError`。调用方应改用状态校验或 `tryShow()`；后者会保留
+  已存在窗口，并通过 `FloatViewShowResult` 返回新窗口的展示结果。
+- **网络监听生命周期收敛**：Android 12+ Wi-Fi 信号监听改为单次 `registerNetworkCallback()` 并提供配对注销；
+  注销失败时保留回调句柄以便重试。`NetworkMonitor` 支持 `stopMonitor()` 后重新启动，并在单次可恢复异常后
+  继续后续采样。
+- **`lib-network` 4xx 错误数据与请求标签分离**：`ResultResponseException.tag` 现在始终保留调用方传入的
+  请求标签，解码后的响应错误体改由 `errorData` 提供。这是运行时行为兼容性变更：既有代码仍可编译，
+  但如果此前把 `tag` 强转为错误体类型，升级后必须改为读取 `errorData`；需要请求上下文时继续读取
+  `tag`。错误体读取或解码只降级普通 `Exception`，`CancellationException` 与 `Error` 会继续向上传播。
 - **`AudioPlayer.computePresentationTimeUs(frameIndex)` 标记为 `@Deprecated`**：该式
   （`frameIndex * 1_000_000 / sampleRate`）只有在 `frameIndex` 是**实际交付的 PCM 帧累计数**时才
   成立，而签名既未说明这一点也无从约束——传入回调次数或包序号会得到一条静默偏离音频的时间轴。

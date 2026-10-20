@@ -2,6 +2,7 @@
 
 package com.leovp.compose.ext
 
+import android.os.SystemClock
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
@@ -149,12 +150,20 @@ fun DebounceButton(
 /**
  * All buttons share a single timestamp (_lastClickTime_), affecting each other.
  */
-class DebounceHandler(private val defaultDebounceTime: Long = 1000L) {
-    private var lastClickTime = 0L
+class DebounceHandler internal constructor(
+    private val defaultDebounceTime: Long,
+    private val timeSource: () -> Long,
+) {
+    @JvmOverloads
+    constructor(defaultDebounceTime: Long = 1000L) :
+        this(defaultDebounceTime, SystemClock::elapsedRealtime)
+
+    private var lastClickTime: Long? = null
 
     fun handle(debounceTime: Long = defaultDebounceTime, action: () -> Unit) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime > debounceTime) {
+        val currentTime = timeSource()
+        val lastTime = lastClickTime
+        if (lastTime == null || currentTime - lastTime > debounceTime) {
             lastClickTime = currentTime
             action()
         }
@@ -165,14 +174,16 @@ class DebounceHandler(private val defaultDebounceTime: Long = 1000L) {
  * Advanced version of DebounceHandler.
  * Allow to set different _debounceTime_ for different buttons.
  */
-class MultiDebounceHandler {
+class MultiDebounceHandler internal constructor(private val timeSource: () -> Long) {
+    constructor() : this(SystemClock::elapsedRealtime)
+
     private val debounceMap = mutableMapOf<String, Long>()
 
     fun handle(key: String, debounceTime: Long = 1000L, action: () -> Unit) {
-        val currentTime = System.currentTimeMillis()
-        val lastTime = debounceMap[key] ?: 0L
+        val currentTime = timeSource()
+        val lastTime = debounceMap[key]
 
-        if (currentTime - lastTime > debounceTime) {
+        if (lastTime == null || currentTime - lastTime > debounceTime) {
             debounceMap[key] = currentTime
             action()
         }

@@ -20,6 +20,8 @@ abstract class AbsLog(
     val enableLog: Boolean = true,
 ) : ILog {
 
+    fun isLoggable(level: LogLevel): Boolean = enableLog && level >= logLevel
+
     private fun getTagName(tag: String): String = "$tagPrefix${separator}$tag".take(20)
 
     // @Deprecated(
@@ -37,7 +39,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.VERB >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.VERB)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.VERB,
@@ -66,7 +68,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.DEBUG >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.DEBUG)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.DEBUG,
@@ -95,7 +97,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.INFO >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.INFO)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.INFO,
@@ -124,7 +126,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.WARN >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.WARN)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.WARN,
@@ -153,7 +155,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.ERROR >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.ERROR)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.ERROR,
@@ -182,7 +184,7 @@ abstract class AbsLog(
         fullOutput: Boolean = false,
         outputType: LogOutType = LogOutType.COMMON,
     ) {
-        if (LogLevel.FATAL >= logLevel && enableLog) {
+        if (isLoggable(LogLevel.FATAL)) {
             if (fullOutput) {
                 splitOutputMessage(
                     LogLevel.FATAL,

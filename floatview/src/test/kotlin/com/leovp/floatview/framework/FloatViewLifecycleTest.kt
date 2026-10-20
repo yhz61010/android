@@ -3,15 +3,20 @@ package com.leovp.floatview.framework
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.graphics.Point
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import com.leovp.floatview.FloatView
+import com.leovp.floatview.FloatViewShowResult
+import com.leovp.floatview.entities.DefaultConfig
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Duration
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -32,6 +37,7 @@ class FloatViewLifecycleTest {
     private val windowManager = mockk<WindowManager>(relaxed = true)
     private lateinit var context: Context
     private lateinit var view: View
+    private var addedLayoutParams: WindowManager.LayoutParams? = null
 
     @Before
     fun setUp() {
@@ -44,6 +50,7 @@ class FloatViewLifecycleTest {
         view = View(context)
         // Model registration before the first traversal attaches the view.
         every { windowManager.addView(any(), any()) } answers {
+            addedLayoutParams = secondArg()
             check(windows.add(firstArg()))
         }
         every { windowManager.removeViewImmediate(any()) } answers {
@@ -125,6 +132,28 @@ class FloatViewLifecycleTest {
     }
 
     @Test
+    fun `tryShow preserves attached state when the previous window cannot be removed`() {
+        create()
+        every { windowManager.removeViewImmediate(view) } throws
+            IllegalStateException("transient removal failure")
+        FloatView.default().remove(true)
+
+        try {
+            val result = FloatView.with(context).layout(View(context)).tryShow()
+
+            assertEquals(FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN, result)
+            assertTrue(FloatView.default().exist())
+            assertTrue(windows.contains(view))
+            assertEquals(View.GONE, view.visibility)
+        } finally {
+            every { windowManager.removeViewImmediate(view) } answers {
+                check(windows.remove(view))
+            }
+            FloatView.default().remove(true)
+        }
+    }
+
+    @Test
     fun `immediate takeover cancels callbacks before reusing the same view`() {
         create(animated = true)
         FloatView.default().remove()
@@ -158,6 +187,129 @@ class FloatViewLifecycleTest {
         FloatView.with(context).layout(view).build()
         assertFalse(FloatView.default().exist())
         assertTrue(windows.isEmpty())
+    }
+
+    @Test
+    fun `attributes set after build are retained until first show`() {
+        FloatView.with(context).layout(view).build()
+
+        FloatView.default().gravity = Gravity.TOP or Gravity.START
+        FloatView.default().position = Point(120, 160)
+
+        assertEquals(Gravity.TOP or Gravity.START, FloatView.default().gravity)
+        assertEquals(Point(120, 160), FloatView.default().position)
+
+        FloatView.default().show()
+
+        assertEquals(Gravity.TOP or Gravity.START, addedLayoutParams?.gravity)
+    }
+
+    @Test
+    fun `tryShow reports a failed window attachment`() {
+        every { windowManager.addView(any(), any()) } throws
+            IllegalStateException("window rejected")
+
+        val result = FloatView.with(context).layout(view).tryShow()
+
+        assertEquals(FloatViewShowResult.FAILED_AND_DETACHED, result)
+        assertFalse(FloatView.default().exist())
+    }
+
+    @Test
+    fun `show failure keeps a hidden registration when window detachment fails`() {
+        val failingView = object : View(context) {
+            override fun setVisibility(visibility: Int) {
+                if (visibility == VISIBLE) error("show failure")
+                super.setVisibility(visibility)
+            }
+        }
+        every { windowManager.removeViewImmediate(failingView) } throws
+            IllegalStateException("transient removal failure")
+
+        val result = FloatView.with(context).layout(failingView).tryShow()
+
+        assertEquals(FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN, result)
+        assertTrue(FloatView.default().exist())
+        assertEquals(View.GONE, failingView.visibility)
+
+        every { windowManager.removeViewImmediate(failingView) } answers {
+            check(windows.remove(failingView))
+        }
+        FloatView.default().remove(true)
+    }
+
+    @Test
+    fun `repeated show hides the old window when detachment fails`() {
+        create()
+        every { windowManager.removeViewImmediate(view) } throws
+            IllegalStateException("transient removal failure")
+
+        val result = FloatViewManager.show(DefaultConfig.DEFAULT_FLOAT_VIEW_TAG)
+
+        assertEquals(FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN, result)
+        assertTrue(FloatView.default().exist())
+        assertEquals(View.GONE, view.visibility)
+
+        every { windowManager.removeViewImmediate(view) } answers {
+            check(windows.remove(view))
+        }
+        FloatView.default().remove(true)
+    }
+
+    @Test
+    fun `tryShow does not convert fatal errors into ordinary failures`() {
+        every { windowManager.addView(any(), any()) } throws AssertionError("fatal")
+
+        val error = runCatching {
+            FloatView.with(context).layout(view).tryShow()
+        }.exceptionOrNull()
+
+        assertTrue(error is AssertionError)
+    }
+
+    @Test
+    fun `tryShow reports a successful window attachment`() {
+        val result = FloatView.with(context).layout(view).tryShow()
+
+        assertEquals(FloatViewShowResult.SHOWN, result)
+        assertTrue(FloatView.default().exist())
+    }
+
+    @Test
+    fun `duplicate tags are rejected as state errors`() {
+        FloatView.with(context).layout(view).build()
+
+        val error = runCatching {
+            FloatView.with(context).layout(View(context)).build()
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+    }
+
+    @Test
+    fun `duplicate tryShow does not hide the existing healthy window`() {
+        create()
+
+        val result = FloatView.with(context).layout(View(context)).tryShow()
+
+        assertEquals(FloatViewShowResult.FAILED_AND_DETACHED, result)
+        assertTrue(FloatView.default().exist())
+        assertTrue(windows.contains(view))
+        assertEquals(View.VISIBLE, view.visibility)
+    }
+
+    @Test
+    fun `duplicate tryShow does not report an animated removal as failed`() {
+        create(animated = true)
+        FloatView.default().remove()
+
+        val result = FloatView.with(context).layout(View(context)).tryShow()
+
+        assertEquals(FloatViewShowResult.FAILED_AND_DETACHED, result)
+        assertTrue(FloatView.default().exist())
+        assertTrue(windows.contains(view))
+        assertEquals(View.VISIBLE, view.visibility)
+        FloatView.default().remove(true)
     }
 
     @Test

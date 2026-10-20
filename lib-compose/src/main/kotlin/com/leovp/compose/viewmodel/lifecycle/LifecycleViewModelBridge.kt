@@ -31,7 +31,7 @@ fun <VM> LifecycleViewModelBridge(
     viewModel: VM,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
 ) where VM : ViewModel, VM : LifecycleAware {
-    DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner, viewModel) {
         val observer = object : DefaultLifecycleObserver {
             override fun onResume(owner: LifecycleOwner) = viewModel.onResume()
             override fun onPause(owner: LifecycleOwner) = viewModel.onPause()

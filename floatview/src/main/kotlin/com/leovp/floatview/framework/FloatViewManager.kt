@@ -3,6 +3,7 @@ package com.leovp.floatview.framework
 import android.content.Context
 import android.os.Looper
 import android.util.Log
+import com.leovp.floatview.FloatViewShowResult
 import com.leovp.floatview.entities.DefaultConfig
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,9 +40,7 @@ internal object FloatViewManager {
                 if (windowMap[tag] === removed) windowMap.remove(tag)
             }
         } else {
-            throw IllegalAccessError(
-                "Float view tag[${config.tag}] has already exist. Can't recreate it!"
-            )
+            error("Float view tag[${config.tag}] has already exist. Can't recreate it!")
         }
     }
 
@@ -49,7 +48,22 @@ internal object FloatViewManager {
 
     fun allFloatViewTags(): List<String> = windowMap.map { it.key }
 
-    fun show(tag: String) = windowMap[tag]?.show()
+    fun show(tag: String): FloatViewShowResult {
+        val instance = windowMap[tag] ?: return FloatViewShowResult.FAILED_AND_DETACHED
+        val result = instance.show()
+        if (result == FloatViewShowResult.FAILED_AND_DETACHED) {
+            windowMap.remove(tag, instance)
+        }
+        return result
+    }
+
+    fun duplicateShowResult(tag: String): FloatViewShowResult? = windowMap[tag]?.let { existing ->
+        if (existing.hasFailedRemoval) {
+            FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN
+        } else {
+            FloatViewShowResult.FAILED_AND_DETACHED
+        }
+    }
 
     fun remove(tag: String, immediately: Boolean = false) {
         windowMap[tag]?.remove(immediately)

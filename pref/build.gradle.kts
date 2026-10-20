@@ -19,6 +19,11 @@ dependencies {
     compileOnly(libs.androidx.core.ktx)
     compileOnly(libs.gson)
     compileOnly(projects.libJson)
+
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.gson)
+    testImplementation(projects.libJson)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

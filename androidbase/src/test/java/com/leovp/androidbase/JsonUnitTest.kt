@@ -1,6 +1,5 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.google.gson.reflect.TypeToken
 import com.leovp.json.Exclude
 import com.leovp.json.ExcludeDeserialize
@@ -10,16 +9,11 @@ import com.leovp.json.toObject
 import java.lang.reflect.Type
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
 
 /**
  * Author: Michael Leo
  * Date: 2021/8/4 11:22
  */
-@RunWith(PowerMockRunner::class)
-@PrepareForTest(Log::class)
 class JsonUnitTest {
     @Test
     fun jsonTest() {

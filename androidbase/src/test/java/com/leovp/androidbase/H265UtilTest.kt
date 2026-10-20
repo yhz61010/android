@@ -1,6 +1,5 @@
 package com.leovp.androidbase
 
-import android.util.Log
 import com.leovp.androidbase.utils.media.H265Util
 import com.leovp.bytes.toHexString
 import kotlin.system.measureNanoTime
@@ -8,16 +7,11 @@ import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
-import org.powermock.core.classloader.annotations.PrepareForTest
-import org.powermock.modules.junit4.PowerMockRunner
 
 /**
  * Author: Michael Leo
  * Date: 2021/5/13 3:43 PM
  */
-@RunWith(PowerMockRunner::class)
-@PrepareForTest(Log::class)
 class H265UtilTest {
 
     @Test

@@ -26,6 +26,7 @@ import com.leovp.android.R
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
 import com.leovp.floatview.FloatView
+import com.leovp.floatview.FloatViewShowResult
 import com.leovp.kotlin.utils.SingletonHolder
 
 /**
@@ -199,6 +200,10 @@ const val TOAST_NORMAL_TEXT_COLOR_WHITE = "#FFFFFFFF"
 private var toast: Toast? = null
 private const val FLOAT_VIEW_TAG = "leo-enhanced-custom-toast"
 
+private fun showSystemToast(ctx: Context, message: String, duration: Int) {
+    Toast.makeText(ctx, message, duration).show()
+}
+
 /**
  * @param origin `true` to show Android original toast. `false` to show custom toast.
  *               On Android 11+(Android R+), this parameter will be ignored.
@@ -227,17 +232,17 @@ private fun showToast(
     val isLongDuration = longDuration ?: (toastCfg.duration == Toast.LENGTH_LONG)
     val duration = if (isLongDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
-    runCatching {
+    try {
         when {
-            origin || ctx is Application -> Toast.makeText(ctx, message, duration).show()
+            origin || ctx is Application -> showSystemToast(ctx, message, duration)
             API.ABOVE_R -> {
-                runCatching {
+                try {
                     if (ForegroundComponent.get().isBackground && !ctx.canDrawOverlays) {
-                        Toast.makeText(ctx, message, duration).show()
+                        showSystemToast(ctx, message, duration)
                         return
                     }
-                }.onFailure {
-                    Toast.makeText(ctx, message, duration).show()
+                } catch (_: Exception) {
+                    showSystemToast(ctx, message, duration)
                     return
                 }
                 // if (error || bgColor != null) {
@@ -250,7 +255,7 @@ private fun showToast(
                 // }
                 mainHandler.removeCallbacksAndMessages(null)
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
-                FloatView.with(ctx)
+                val showResult = FloatView.with(ctx)
                     .layout(toastCfg.layout) { v ->
                         decorateToast(
                             ctx = ctx,
@@ -274,7 +279,11 @@ private fun showToast(
                         // x = toastPos.x
                         // y = toastPos.y
                     }
-                    .show()
+                    .tryShow()
+                if (showResult != FloatViewShowResult.SHOWN) {
+                    showSystemToast(ctx, message, duration)
+                    return
+                }
                 mainHandler.postDelayed(
                     { FloatView.with(FLOAT_VIEW_TAG).remove() },
                     if (isLongDuration) {
@@ -318,9 +327,14 @@ private fun showToast(
                 }
             }
         }
-    }.onFailure {
+    } catch (error: Exception) {
         // Surface the failure instead of swallowing it; no project log dependency here (M-A1).
-        Log.e("ToastExt", "show toast failed", it)
+        Log.e("ToastExt", "show toast failed", error)
+        try {
+            showSystemToast(ctx, message, duration)
+        } catch (fallbackError: Exception) {
+            Log.e("ToastExt", "system toast fallback failed", fallbackError)
+        }
     }
 }
 
@@ -328,8 +342,17 @@ private fun showToast(
  * This method also works in thread.
  */
 fun cancelToast() {
-    toast?.cancel()
-    FloatView.with(FLOAT_VIEW_TAG).remove()
+    val cancelAction = {
+        mainHandler.removeCallbacksAndMessages(null)
+        toast?.cancel()
+        toast = null
+        FloatView.with(FLOAT_VIEW_TAG).remove()
+    }
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+        cancelAction()
+    } else {
+        mainHandler.post(cancelAction)
+    }
 }
 
 private fun setDrawableIcon(ctx: Context, tv: TextView) {

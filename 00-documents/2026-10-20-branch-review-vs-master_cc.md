@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；本轮更正已经直接并入 §10–§14，不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核：采纳其推翻 G10 与「超长行」的结论及 H1 机理订正，订正了 F10 的 `Error` 重抛、F2 缺失常量与测试破坏、G4 的 `@RequiresApi`、G9 的窗口描述、G3 的重试 token，均以「第四轮」字样标出。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；本轮更正已经直接并入 §10–§14，不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。
 
 ## 0. 范围与方法
 
@@ -31,8 +31,8 @@
 ### H1. 录屏：`KEY_MAX_FPS_TO_ENCODER` 与真实时钟 PTS 叠加可能间歇丢帧
 
 - 位置：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/strategies/Screenshot2H26xStrategy.kt:832`，另见 `:459`
-- 缺陷：本分支把每帧 PTS 从 `frameCount / fps` 的精确网格改为截屏完成后的单调时钟值，但 `MediaFormat` 仍设置 `KEY_MAX_FPS_TO_ENCODER = fps`。编码器侧 GraphicBufferSource 的 FrameDropper 以首帧 PTS 为锚、按 1/fps 递增生成目标点序列，保留帧不重同步，实际 PTS 比目标点早 2 ms 以上即丢弃。
-- 触发：截屏在主线程绘制，耗时抖动使相邻帧间隔经常略短于 1/fps（fps=5 时为 198 ms），于是间歇丢帧。旧代码网格 PTS 从不触发，属本次新引入的回归。
+- 缺陷：本分支把每帧 PTS 从 `frameCount / fps` 的精确网格改为截屏完成后的单调时钟值，但 `MediaFormat` 仍设置 `KEY_MAX_FPS_TO_ENCODER = fps`。编码器侧 GraphicBufferSource 的 FrameDropper 把首帧 PTS 加一个周期设为首个目标点；候选帧比当前目标点早 2 ms 以上就丢弃。保留帧后按其 lateness 计算 `n`，把目标点推进 `(n + 1)` 个周期；丢弃帧不推进目标点。因此目标网格以首帧为锚，但会跳过已经错过的槽位，并非每次保留后固定只加一个周期。
+- 触发：在没有越过多个目标槽位的稳态段，PTS 约等于“采集 deadline + 本帧采集耗时”；若首帧或上一目标相位对应的采集较慢，后续较快帧可能比当前目标点早 2 ms 以上而被丢弃。超时帧会让 FrameDropper 跳过一个或多个槽位，不能简化成“任意相邻间隔小于 `1/fps − 2 ms` 就丢”。旧代码网格 PTS 不受采集耗时抖动影响，属本次新引入的回归。
 - 建议：去掉该 key（采集节奏已由 `nextCaptureAtMs` 循环控制），或用采集 deadline 而非完成时刻打 PTS。
 - 验证：需真机录制并对比 MP4 实际帧数（未验证）。
 
@@ -148,7 +148,7 @@
 
 | 第一轮编号 | 裁决 | 证据与修正 |
 |---|---|---|
-| H1 录屏丢帧 | **确认，触发条件修正** | 机制成立：Surface 输入（`createInputSurface` :467、`eglSwapBuffers` :463），`eglPresentationTimeANDROID` 写入的正是 FrameDropper 比较的时间戳。AOSP `FrameDropper.cpp`：`drop iff timeUs < mDesiredMinTimeUs - 2000`，保留后 `mDesiredMinTimeUs += interval`，目标点序列锚定首帧 PTS、不重同步。本实现第 k 帧 PTS = 网格时刻 + 本帧采集耗时 `dur_k`，故当 `dur_k < dur_1 − 2 ms` 时被丢：首帧采集偏慢时后续零星丢帧，不是「首帧后必丢 1 帧」，也不是稳定「fps/2」。缺陷与修法不变（第四轮按 AOSP 源码再次订正） |
+| H1 录屏丢帧 | **确认，触发条件修正** | 机制成立：Surface 输入（`createInputSurface` :467、`eglSwapBuffers` :463），`eglPresentationTimeANDROID` 写入的正是 FrameDropper 比较的时间戳。AOSP `FrameDropper.cpp`：首帧设置 `desired = timeUs + interval`；`timeUs < desired − 2000` 时丢弃且不推进；保留时计算 `n = (timeUs − desired + 2000) / interval`，再推进 `(n + 1) * interval`。因此网格锚定首帧但会跳过错过的槽位。仅在尚未跳槽的稳态段，才可近似为后续采集耗时比锚相位早 2 ms 以上会丢；第四轮写成“每次保留固定 `+ interval`”及无条件 `dur_k < dur_1 − 2 ms` 过度简化。缺陷与删除该 key 的修法不变（第五轮按 AOSP 源码订正） |
 | H2 倒计时跳秒 | **确认，降为 MEDIUM** | 以 T0=5000.7 ms 重算：tick1 在 uptime 6000 唤醒 → elapsed 999 → ceil 回 60000；`_countdownState` 是 `MutableStateFlow`（:62），重复值被合并，UI 看到 60000 停留约 2 s；tick2 wait 1001 → 58000，59000 永不出现。早醒依据：`MessageQueue` 按截断的 `uptimeMillis` 比较，kotlinx `HandlerContext` 恢复后不再对 `nanoTime` 复核（推断，高置信）。影响局限于显示节拍，不破坏资源或数据，第二轮降为 MEDIUM |
 | M2 `isH265` 转私有 | **确认** | 全仓无外部调用方；属公开 getter 移除，需 CHANGELOG「变更」一条 |
 | M3 `AbsPref` 保留旧值 | **确认，已定方案 A** | 基线 `else -> put(key, v.toJsonString())` 失败写 `""`；现跳过写入。分支新增的 `AbsPrefTest.kt:8-14` 测试名即 `failed object serialization does not overwrite stored value`，说明「保留旧值」是作者有意为之。见 §11.3 N1 |
@@ -172,7 +172,7 @@
 #### F1 [HIGH] 删除 `KEY_MAX_FPS_TO_ENCODER`
 
 - 位置：`screencapture/src/main/kotlin/com/leovp/screencapture/screenrecord/base/strategies/Screenshot2H26xStrategy.kt:829-833`
-- 缺陷：采集循环已按 `captureIntervalMillis(fps)` 定步（:967-975），再设该键等于让抖动的真实时间戳接受第二层限流。AOSP `FrameDropper` 的目标点序列锚定在首帧 PTS 上按 `1/fps` 递增、保留帧不重同步，实际 PTS 早于目标点 2 ms 以上才丢；本实现 PTS = 网格时刻 + 本帧采集耗时，故第 k 帧在 `dur_k < dur_1 − 2 ms` 时被丢，首帧采集偏慢时后续会零星丢帧。基线用 `frameIndex/fps` 等距时间戳，不会因采集耗时抖动触发，属本分支引入的回归。
+- 缺陷：采集循环已按 `captureIntervalMillis(fps)` 定步（:967-975），再设该键等于让抖动的真实时间戳接受第二层限流。AOSP `FrameDropper` 的目标网格以首帧 PTS 为锚：过早 2 ms 以上的候选帧被丢且目标不动；保留帧则根据 lateness 一次推进一个或多个周期。本实现 PTS 约等于“采集 deadline + 本帧采集耗时”，所以在未跳槽的稳态段，较慢的锚相位会让后续较快帧被判定为过早；发生 overrun 时目标网格会跳过错过的槽位。基线用 `frameIndex/fps` 等距时间戳，不会因采集耗时抖动触发，属本分支引入的回归。
 - 修复：整块删除，含 `@Suppress("unchecked", "InlinedApi")`。`Build` 在 :834/:840 仍被引用，不会产生未用 import。`ScreenRecordMediaCodecStrategy.kt:187` 的同名设置应保留，VirtualDisplay 以刷新率推帧，需要限流。
 
 ```kotlin
@@ -458,7 +458,7 @@ fun close() {
 ```
 
 - 复核要点：`onOutputFormat()` 与 `write()` 仍由所有者的 `codecCallbackLock` 串行化，提前发布字段不会让半初始化 muxer 被并发使用；`close()` 无样本、`stop()` 失败两种情况均删除文件，只有成功写完索引才保留。第四轮订正：Codex 原方案还要求清理后重抛 `Error` 并让 `fail()`/`discardOutputFile()` 只捕 `Exception`，**不采用**。`Mp4TrackWriter` 的 `catch (Throwable)` 与所有者的设计一致：`Screenshot2H26xStrategy.kt:263-270` 刻意阻止回调逃逸，:1205-1228 的 teardown 逐步吞错。`close()` 重抛会被 :1207 立即吞掉，无效；`onOutputFormat()` 重抛则经 `onOutputFormatChanged`（:322-330，无 try）逃逸到 MediaCodec 回调线程直接杀进程。`Error` 透传模式目前只见于 `lib-network`（`generic/ResultExt.kt:62`、`net/ResultExt.kt:54`），要在录屏侧引入须先改所有者，超出本条范围。
-- 验证：为 `MediaMuxer` 增加可注入工厂/窄包装，分别模拟 `addTrack()`、`start()`、`stop()` 抛异常，断言 `release()` 恰好调用一次且输出文件被删除；另让上述操作抛测试用 `Error`，断言清理完成后同一实例继续向上传播。
+- 验证：为 `MediaMuxer` 增加可注入工厂/窄包装，分别模拟 `addTrack()`、`start()`、`stop()` 抛 `Exception`，断言 `release()` 恰好调用一次且输出文件被删除。再让这三步分别抛测试用 `Error`，断言仍完成同样清理且不从 `Mp4TrackWriter` 逃逸，以固化本条选择的 callback 隔离语义；若未来决定统一改为透传 `Error`，必须连同 `onOutputFormatChanged` 与 `releaseOwnedResources` 的所有者边界一起另案修改。
 
 ### 11.2 悬浮窗、Toast、网络监控
 
@@ -580,7 +580,7 @@ private const val MAX_DESTROYED_OWNER_DETACH_RETRIES = 3
 private const val DESTROYED_OWNER_RETRY_DELAY_MS = 100L
 ```
 
-- 第四轮补充：重试 Runnable 投递在实例 `mainHandler`（:79）上，而 `remove()` :679 → `unregisterListeners()` :658 会 `removeCallbacksAndMessages(null)`，调用方在重试期间再次 `remove()` 会清掉重试并让窗口再次卡死。应改为 `HandlerCompat.postDelayed(mainHandler, destroyedOwnerDetachRetry, retryToken, delay)` 并在 :658 只移除非重试消息，或在 `unregisterListeners()` 后重新投递。
+- 第五轮推翻第四轮的 token 补充：当前 `remove()` :676 在 `removing && !immediately` 时直接返回，不会调用 `unregisterListeners()`；再次 `remove(true)` 虽会在 :679 清掉旧重试，但紧接着在 :682 重新执行 `finishRemoval()`，失败时会重新投递并继续累计有界次数。`show()` 也会在 :600 因 `removing` 提前返回。因此不存在“只清掉重试而不补投”的路径，不需要 retry token；测试应增加“等待重试期间再次 `remove(false)`/`remove(true)`”两例来锁定这个结论。
 - 安全性与边界：重试窗口最多约 300 ms，之后 `owner.release()` 与 `onRemoved(this)` 必须执行，避免 `windowMap` 和 lifecycle callback 永久持有 Activity。若 WindowManager 在全部重试中持续抛非 `IllegalArgumentException`，只能保证**库引用释放**，不能宣称实际窗口已摘除；错误日志必须保留这一差异。内部兜底，无需 KDoc/CHANGELOG。
 - 验证：`FloatViewLifecycleTest` 增加两例：第一次失败、下一次成功时最终 `exist()==false`；持续抛 `IllegalStateException` 时推进主 Looper 超过重试窗口，断言调用次数有界、`exist()==false`，且 `registeredActivityLifecycleCallbacks` 为空。真机再覆盖 Activity 销毁 + 普通应用窗口 / `systemWindow` 两种类型，确认没有残留可见窗口。
 
@@ -614,7 +614,7 @@ private class WifiSignalNetworkCallback(
 }
 ```
 
-- 第四轮补充：该类脱离了 `SDK_INT >= S` 分支却使用 `NetworkCapabilities.transportInfo`（API 29），必须标 `@RequiresApi(Build.VERSION_CODES.S)`，否则 lint `NewApi` 会让 `staticCheck` 失败。
+- 第四轮补充：该类脱离了 `SDK_INT >= S` 分支却使用 `NetworkCapabilities.transportInfo`（API 29），必须标 `@RequiresApi(Build.VERSION_CODES.S)`，并同步新增 `import androidx.annotation.RequiresApi`，否则 lint `NewApi` 会让 `staticCheck` 失败。
 - `wifiNetworkCallbacks` 的 value 改为 `WifiSignalNetworkCallback`。替换/注销时先从 map `remove(callback)` 并 `detachListener()`，再调用 `unregisterNetworkCallback`；平台异常记录后返回 `false`，但不把映射塞回去。注册异常也捕获 `Exception`，先对尚未成功注册的 wrapper 调用 `detachListener()`，再记录并返回 `false`。SDK < 31 时两个方法都是无需工作的幂等成功，返回 `true`。保持现有 `wifiNetworkCallbackLock` 覆盖“移除旧项—注销旧 wrapper—注册并写入新项”的完整替换事务，避免两个线程对同一 callback 同时注册出两个 framework wrapper；不要为了缩短锁区间而留下这个竞态。
 - `getWifiNetworkStatsAboveAndroidS()` 与 `unregisterWifiNetworkStatsAboveAndroidS()` 均改为 `Boolean`；忽略返回值的 Kotlin/Java 源码调用仍可编译，但公开签名和失败语义改变，KDoc 与 CHANGELOG 追加迁移说明。`NetworkStatsCallbackTest.kt` 增加：SDK < 31 返回 true；注册异常返回 false 且无映射；注销失败返回 false、映射已移除、迟到 platform 事件不再调用业务 listener；重复注册替换失败时旧 wrapper 已脱钩且新注册未进行。
 
@@ -922,7 +922,7 @@ Codex 已在同一代码 HEAD `e57608f70f84c9e52a795d2f2b44fc0300117cc3` 上执�
 
 结果为 `BUILD SUCCESSFUL in 7m 36s`，`1425 actionable tasks: 1425 executed`。这只能说明**当前代码**通过仓库聚合的静态检查、单测/lint 与仪器测试 APK 构建；它不验证本文尚未落地的修复方案，也不等于真机测试。
 
-第三轮只修订本文，没有再次取得 Gradle 通过结果。曾尝试执行窄范围 `:screencapture:detekt :floatview:detekt --rerun-tasks`，但在任务启动前即因沙箱无法写入 Gradle wrapper lock 文件而失败，因此不计作验证证据。文档本身已复核：当前 HEAD/合并基/差异统计重新取值；关键源码位置逐项对照；Kotlin 代码围栏成对；无行尾空白。历史 `staticCheck` 与本轮文档检查必须分开解读。
+第三至第五轮只修订本文，没有再次取得 Gradle 通过结果。第三轮曾尝试执行窄范围 `:screencapture:detekt :floatview:detekt --rerun-tasks`，但在任务启动前即因沙箱无法写入 Gradle wrapper lock 文件而失败，因此不计作验证证据。第五轮重新对照 AOSP `FrameDropper.cpp`、`ConnectivityManager.CallbackHandler` 与当前 FloatView 控制流，并完成文档级检查：关键源码位置逐项对照；Kotlin 代码围栏成对；无行尾空白。历史 `staticCheck` 与本轮文档检查必须分开解读。
 
 实现本文修复后仍需按受影响范围重新执行：
 

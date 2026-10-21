@@ -13,7 +13,6 @@ import android.util.Size
 import com.leovp.image.compressBitmap
 import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.Mp4TrackWriter
-import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenshot.CaptureUtil
 import java.lang.ref.WeakReference
@@ -105,10 +104,6 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
         private const val CALLBACK_SETUP_TIMEOUT_MS = 2_000L
         private const val EGL_DISPATCH_TIMEOUT_MS = 5_000L
     }
-
-    /** Public API wrapper; implementation lives in [Screenshot2H26xBuilder]. */
-    class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataListener) :
-        Screenshot2H26xBuilder(width, height, dpi, screenDataListener)
 
     @Volatile
     private var isRecording = false

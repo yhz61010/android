@@ -7,6 +7,7 @@ import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordRawBmpStrategy
+import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xBuilder
 import com.leovp.screencapture.screenrecord.base.strategies.Screenshot2H26xStrategy
 import java.io.File
 
@@ -101,7 +102,7 @@ object ScreenCapture {
                     "useGoogleEncoder=$useGoogleEncoder mp4OutputFile=${mp4OutputFile?.name}"
             )
             return when (captureType) {
-                BY_IMAGE_2_H26X -> Screenshot2H26xStrategy.Builder(
+                BY_IMAGE_2_H26X -> Screenshot2H26xBuilder(
                     width,
                     height,
                     dpi,

@@ -70,7 +70,7 @@ class Screenshot2H26xStrategyTest {
         every { EGL14.eglCreateWindowSurface(any(), any(), any(), any(), any()) } returns
             mockk<EGLSurface>()
         every { EGL14.eglMakeCurrent(any(), any(), any(), any()) } returns true
-        subject = Screenshot2H26xStrategy.Builder(320, 240, 160, listener).build()
+        subject = Screenshot2H26xBuilder(320, 240, 160, listener).build()
     }
 
     @After
@@ -224,7 +224,7 @@ class Screenshot2H26xStrategyApi22CallbackThreadTest {
         every { EGL14.eglCreateWindowSurface(any(), any(), any(), any(), any()) } returns
             mockk<EGLSurface>()
         every { EGL14.eglMakeCurrent(any(), any(), any(), any()) } returns true
-        subject = Screenshot2H26xStrategy.Builder(
+        subject = Screenshot2H26xBuilder(
             320,
             240,
             160,

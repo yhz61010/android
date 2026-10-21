@@ -203,13 +203,7 @@ class NetworkMonitor internal constructor(
     /**
      * Stops future results and releases monitoring resources. An already running callback finishes
      * before this method returns. This instance can subsequently be started again.
-     *
-     * Need following permission:
-     * ```xml
-     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-     * ```
      */
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun stopMonitor() {
         synchronized(monitorLifecycleLock) {
             LogContext.log.i(TAG, "stopMonitor()")
@@ -239,7 +233,6 @@ class NetworkMonitor internal constructor(
         }
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun unregisterWifiSignalCallback() {
         val callback = wifiSignalCallback ?: return
         wifiSignalCallback = null

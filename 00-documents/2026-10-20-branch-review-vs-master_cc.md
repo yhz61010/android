@@ -971,3 +971,32 @@ Compose 参数变化、Result 原始 body，以及 HTTP 日志的有界请求/�
 F8、G1、G3、N7 等涉及真实编码器、MediaProjection、窗口、OpenGL 或平台调度的行为仍须按本文对应
 条目的设备矩阵执行。原“真机项”中的 F3 已增加 JVM 可控时钟回归测试，但主线程真实调度表现仍未
 在设备上观察。
+
+### 14.2 2026-10-21 公开 API 复核修正
+
+实施后再次复核公开 API，补充两项修正：
+
+- 删除 `Screenshot2H26xStrategy.Builder` 空壳子类，统一使用顶层
+  `Screenshot2H26xBuilder`。原空壳无法保持 setter 的静态返回类型，既不能完整兼容旧调用方式，又会
+  形成两个并存入口；公开 KDoc 与 CHANGELOG 已记录替换方式。
+- 撤销注销链路上错误的 `ACCESS_NETWORK_STATE` 权限契约，包括
+  `NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS()`、`NetworkMonitor.stopMonitor()` 和
+  `BaseActivity.stopTrafficMonitor()`。Android 平台的 `unregisterNetworkCallback()` 不要求该权限；
+  注册与启动入口仍保留权限声明，`BaseActivity.onDestroy()` 不再需要 `MissingPermission` 抑制。
+
+修正后重新执行：
+
+```bash
+./gradlew \
+  :screencapture:testDebugUnitTest :screencapture:ktlintCheck \
+  :screencapture:detekt :screencapture:lintDebug \
+  :lib-common-android:testDebugUnitTest :lib-common-android:ktlintCheck \
+  :lib-common-android:detekt :lib-common-android:lintDebug \
+  :androidbase:testDebugUnitTest :androidbase:ktlintCheck \
+  :androidbase:detekt :androidbase:lintDebug \
+  :demo:compileDevDebugKotlin \
+  --rerun-tasks --max-workers=1 --console=plain
+```
+
+结果为 `BUILD SUCCESSFUL in 3m 12s`，`631 actionable tasks: 631 executed`；另通过
+`git diff --check`。本轮未执行真机测试，这两项修正不改变编码、网络注册或平台回调的运行逻辑。

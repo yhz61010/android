@@ -61,17 +61,19 @@
   检查或修改队列，应通过丢帧 warning 观察编码过载。
 - **`FloatViewCreator.build()` 返回创建结果**：返回类型由 `Unit` 改为 `Boolean`；宿主 Activity
   正在 finishing 或已销毁时返回 `false`，忽略返回值的既有源码调用无需调整。
-- **录屏 Builder 移除无效的 `setKeyFrameRate()`**：`Screenshot2H26xStrategy.Builder`、
+- **录屏 Builder 移除无效的 `setKeyFrameRate()`**：`Screenshot2H26xBuilder`、
   `ScreenRecordMediaCodecStrategy.Builder` 与 `ScreenCapture.Builder` 不再保留未接入编码器的
   `keyFrameRate` 参数；帧率使用 `setFps()`，关键帧间隔使用 `setIFrameInterval()`。同时删除无调用方的
   `ScreenProcessor.computePresentationTimeUs(frameIndex, fps)`。
+- **截图式录屏 Builder 改为顶层 API**：移除 `Screenshot2H26xStrategy.Builder`；调用方升级后改用
+  `Screenshot2H26xBuilder(...)`。其配置方法和 `build()` 用法保持不变。
 - **`pref` 对象序列化失败不再清空键**：`AbsPref.put`/`put4Java` 失败时保留旧值；此前会写入空串。
   依赖“失败即清空”语义的调用方需在写入前显式清除该键。
 - **`android-restricted` 的 `DeviceUtil` 重命名为 `DeviceUtilRestricted`**：替换 import，并将
   `DeviceUtil.getInstance(context)` 改为 `DeviceUtilRestricted.getInstance(context)`。
 - **Wi-Fi 信号监听入口返回执行结果**：`NetworkUtil.getWifiNetworkStatsAboveAndroidS()` 与
   `unregisterWifiNetworkStatsAboveAndroidS()` 现在返回 `Boolean`；`false` 表示平台注册或注销失败。
-  两者只需 `ACCESS_NETWORK_STATE`，不再要求 `CHANGE_NETWORK_STATE`。
+  注册需要 `ACCESS_NETWORK_STATE`，注销不要求权限；两者均不要求 `CHANGE_NETWORK_STATE`。
 - **前后台监听回调改在主线程执行**：`ForegroundComponent.AppStateListener` 的两个回调均在主线程
   调用；耗时工作必须转交后台线程。
 - **`LeoTextureView` 不再公开 `isH265`**：调用 `initDecoder(vps, sps, pps, screenInfo)`，VPS 非空时

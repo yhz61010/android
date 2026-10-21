@@ -319,17 +319,10 @@ object NetworkUtil {
     /**
      * Stops the listener registered by [getWifiNetworkStatsAboveAndroidS]. The same [callback]
      * instance used for registration must be supplied.
-     *
-     * Need following permission:
-     * ```xml
-     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-     * ```
-     *
      * @return `true` when the callback is absent, successfully removed, or unnecessary below
      * Android 12; `false` when framework unregistration fails. The business listener is detached
      * before framework teardown, so late platform events are ignored either way.
      */
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun unregisterWifiNetworkStatsAboveAndroidS(
         ctx: Context,
         callback: (WifiSignal) -> Unit,

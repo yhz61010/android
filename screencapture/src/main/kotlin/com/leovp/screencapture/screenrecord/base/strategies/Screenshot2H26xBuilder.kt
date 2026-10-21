@@ -6,8 +6,12 @@ import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import java.io.File
 
-/** Configures and creates a [Screenshot2H26xStrategy]. */
-open class Screenshot2H26xBuilder(
+/**
+ * Configures and creates a [Screenshot2H26xStrategy].
+ *
+ * Replace `Screenshot2H26xStrategy.Builder(...)` with this top-level builder when upgrading.
+ */
+class Screenshot2H26xBuilder(
     val width: Int,
     val height: Int,
     val dpi: Int,

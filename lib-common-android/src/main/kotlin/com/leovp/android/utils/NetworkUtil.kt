@@ -14,6 +14,7 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import com.leovp.android.exts.connectivityManager
 import com.leovp.android.exts.telephonyManager
@@ -31,7 +32,6 @@ import java.util.Locale
 /**
  * Author: Michael Leo
  * Date: 20-6-12 上午11:37
- *
  */
 object NetworkUtil {
     private const val TAG = "LEO-NetworkUtil"
@@ -55,7 +55,7 @@ object NetworkUtil {
     private const val MAX_RSSI = -55
     private val wifiNetworkCallbackLock = Any()
     private val wifiNetworkCallbacks =
-        IdentityHashMap<(WifiSignal) -> Unit, ConnectivityManager.NetworkCallback>()
+        IdentityHashMap<(WifiSignal) -> Unit, WifiSignalNetworkCallback>()
 
     data class ProxyInfo(val type: Proxy.Type, val url: String, val port: Int)
 
@@ -173,6 +173,11 @@ object NetworkUtil {
      * System will issue NUMBER_OF_PACKTETS ICMP Echo Request packet each having size of 56 bytes
      * every second, and returns the avg latency of them.
      *
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     *
      * @return Return the latency which getting from ping command. Return -2 which indicates network
      * is offline.
      * Return -1 indicates get ping error.
@@ -272,66 +277,98 @@ object NetworkUtil {
      *
      * Every successful registration must be paired with
      * [unregisterWifiNetworkStatsAboveAndroidS] using the same [callback] instance.
+     *
+     * @return `true` when registration succeeds or is unnecessary below Android 12; `false` when
+     * replacing or registering the framework callback fails. Failed callbacks are detached and
+     * cannot deliver further business events.
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun getWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit) {
+    fun getWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val request = NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .build()
             val connectivityManager = ctx.connectivityManager
-            val networkCallback = object : ConnectivityManager.NetworkCallback() {
-                @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities
-                ) {
-                    val wifiInfo: WifiInfo =
-                        networkCapabilities.transportInfo as? WifiInfo ?: return
-                    if (isWifiActive(ctx)) {
-                        callback(generateWifiSignal(wifiInfo))
-                    }
-                }
-
-                override fun onLost(network: Network) {
-                    callback(WifiSignal(-1, -1, -1, -1))
-                }
-            }
+            val networkCallback = WifiSignalNetworkCallback(ctx, callback)
             synchronized(wifiNetworkCallbackLock) {
                 wifiNetworkCallbacks[callback]?.let { previousCallback ->
+                    wifiNetworkCallbacks.remove(callback)
+                    previousCallback.detachListener()
                     if (!unregisterWifiNetworkCallback(
                             connectivityManager,
                             previousCallback,
                             "previous"
                         )
                     ) {
-                        return
+                        return false
                     }
-                    wifiNetworkCallbacks.remove(callback)
                 }
-                connectivityManager.registerNetworkCallback(request, networkCallback)
+                try {
+                    connectivityManager.registerNetworkCallback(request, networkCallback)
+                } catch (error: Exception) {
+                    networkCallback.detachListener()
+                    Log.e(TAG, "Failed to register the Wi-Fi network callback", error)
+                    return false
+                }
                 wifiNetworkCallbacks[callback] = networkCallback
             }
         }
+        return true
     }
 
     /**
      * Stops the listener registered by [getWifiNetworkStatsAboveAndroidS]. The same [callback]
      * instance used for registration must be supplied.
+     *
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
+     *
+     * @return `true` when the callback is absent, successfully removed, or unnecessary below
+     * Android 12; `false` when framework unregistration fails. The business listener is detached
+     * before framework teardown, so late platform events are ignored either way.
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    fun unregisterWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    fun unregisterWifiNetworkStatsAboveAndroidS(
+        ctx: Context,
+        callback: (WifiSignal) -> Unit,
+    ): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         synchronized(wifiNetworkCallbackLock) {
-            val networkCallback = wifiNetworkCallbacks[callback] ?: return
-            val unregistered = unregisterWifiNetworkCallback(
+            val networkCallback = wifiNetworkCallbacks.remove(callback) ?: return true
+            networkCallback.detachListener()
+            return unregisterWifiNetworkCallback(
                 ctx.connectivityManager,
                 networkCallback,
                 "current"
             )
-            if (unregistered) {
-                wifiNetworkCallbacks.remove(callback)
-            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private class WifiSignalNetworkCallback(context: Context, callback: (WifiSignal) -> Unit) :
+        ConnectivityManager.NetworkCallback() {
+        private val appContext = context.applicationContext ?: context
+
+        @Volatile
+        private var listener: ((WifiSignal) -> Unit)? = callback
+
+        fun detachListener() {
+            listener = null
+        }
+
+        @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities,
+        ) {
+            val wifiInfo = networkCapabilities.transportInfo as? WifiInfo ?: return
+            if (isWifiActive(appContext)) listener?.invoke(generateWifiSignal(wifiInfo))
+        }
+
+        override fun onLost(network: Network) {
+            listener?.invoke(WifiSignal(-1, -1, -1, -1))
         }
     }
 

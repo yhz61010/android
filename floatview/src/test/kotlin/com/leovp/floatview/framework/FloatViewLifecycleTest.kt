@@ -190,6 +190,92 @@ class FloatViewLifecycleTest {
     }
 
     @Test
+    fun `finishing activity tryShow does not reuse an existing tag`() {
+        create()
+        controller.get().finish()
+
+        val result = FloatView.with(context).layout(View(context)).tryShow()
+
+        assertEquals(FloatViewShowResult.FAILED_AND_DETACHED, result)
+        assertTrue(FloatView.default().exist())
+        assertTrue(windows.contains(view))
+    }
+
+    @Test
+    fun `destroy retries a failed detach and releases ownership after success`() {
+        create()
+        var attempts = 0
+        every { windowManager.removeViewImmediate(view) } answers {
+            attempts++
+            if (attempts == 1) error("transient removal failure")
+            check(windows.remove(view))
+        }
+
+        controller.pause().stop().destroy()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(150))
+
+        assertEquals(2, attempts)
+        assertFalse(FloatView.default().exist())
+    }
+
+    @Test
+    fun `non immediate remove does not cancel a destroyed owner retry`() {
+        create()
+        var attempts = 0
+        every { windowManager.removeViewImmediate(view) } answers {
+            attempts++
+            if (attempts == 1) error("transient removal failure")
+            check(windows.remove(view))
+        }
+
+        controller.pause().stop().destroy()
+        FloatView.default().remove(false)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(150))
+
+        assertEquals(2, attempts)
+        assertFalse(FloatView.default().exist())
+    }
+
+    @Test
+    fun `immediate remove replaces a destroyed owner retry without losing future retries`() {
+        create()
+        var attempts = 0
+        every { windowManager.removeViewImmediate(view) } answers {
+            attempts++
+            if (attempts <= 2) error("transient removal failure")
+            check(windows.remove(view))
+        }
+
+        controller.pause().stop().destroy()
+        FloatView.default().remove(true)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(150))
+
+        assertEquals(3, attempts)
+        assertFalse(FloatView.default().exist())
+    }
+
+    @Test
+    fun `destroy bounds repeated detach failures and releases library ownership`() {
+        create()
+        var attempts = 0
+        every { windowManager.removeViewImmediate(view) } answers {
+            attempts++
+            error("persistent removal failure")
+        }
+
+        try {
+            controller.pause().stop().destroy()
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+
+            assertEquals(4, attempts)
+            assertFalse(FloatView.default().exist())
+        } finally {
+            every { windowManager.removeViewImmediate(view) } answers { windows.remove(view) }
+            FloatView.default().remove(true)
+        }
+    }
+
+    @Test
     fun `attributes set after build are retained until first show`() {
         FloatView.with(context).layout(view).build()
 

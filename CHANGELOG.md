@@ -57,6 +57,29 @@
 
 ### 变更 (Changed)
 
+- **`CameraAvcEncoder.queue` 不再公开**：内部队列深度不再属于公开契约；调用方不能再直接
+  检查或修改队列，应通过丢帧 warning 观察编码过载。
+- **`FloatViewCreator.build()` 返回创建结果**：返回类型由 `Unit` 改为 `Boolean`；宿主 Activity
+  正在 finishing 或已销毁时返回 `false`，忽略返回值的既有源码调用无需调整。
+- **录屏 Builder 移除无效的 `setKeyFrameRate()`**：`Screenshot2H26xStrategy.Builder`、
+  `ScreenRecordMediaCodecStrategy.Builder` 与 `ScreenCapture.Builder` 不再保留未接入编码器的
+  `keyFrameRate` 参数；帧率使用 `setFps()`，关键帧间隔使用 `setIFrameInterval()`。同时删除无调用方的
+  `ScreenProcessor.computePresentationTimeUs(frameIndex, fps)`。
+- **`pref` 对象序列化失败不再清空键**：`AbsPref.put`/`put4Java` 失败时保留旧值；此前会写入空串。
+  依赖“失败即清空”语义的调用方需在写入前显式清除该键。
+- **`android-restricted` 的 `DeviceUtil` 重命名为 `DeviceUtilRestricted`**：替换 import，并将
+  `DeviceUtil.getInstance(context)` 改为 `DeviceUtilRestricted.getInstance(context)`。
+- **Wi-Fi 信号监听入口返回执行结果**：`NetworkUtil.getWifiNetworkStatsAboveAndroidS()` 与
+  `unregisterWifiNetworkStatsAboveAndroidS()` 现在返回 `Boolean`；`false` 表示平台注册或注销失败。
+  两者只需 `ACCESS_NETWORK_STATE`，不再要求 `CHANGE_NETWORK_STATE`。
+- **前后台监听回调改在主线程执行**：`ForegroundComponent.AppStateListener` 的两个回调均在主线程
+  调用；耗时工作必须转交后台线程。
+- **`LeoTextureView` 不再公开 `isH265`**：调用 `initDecoder(vps, sps, pps, screenInfo)`，VPS 非空时
+  自动使用 HEVC，否则使用 AVC。
+- **generic `result` 保留原始异常链**：`ResultServerException`、`ResultConvertException` 与
+  `ResultException` 的 `cause` 现在是原始 `Api*Exception`，底层根因改从 `cause?.cause` 读取；普通
+  `ApiException` 的 `code`/`tag` 也会保留。
+
 - **audio 关闭 API 统一为挂起**：删除全部非挂起的关闭入口，调用方必须在协程中等待关闭完成。
   - **破坏性变更**：以下 API 已删除，无兼容垫片——`AudioEncoderWrapper.release()`、
     `AudioDecoderWrapper.release()`、`BaseMediaCodec.release()`、`AacStreamPlayer.stopPlaying()`、
@@ -123,8 +146,8 @@
   `IllegalStateException`，不再抛出 `IllegalAccessError`。调用方应改用状态校验或 `tryShow()`；后者会保留
   已存在窗口，并通过 `FloatViewShowResult` 返回新窗口的展示结果。
 - **网络监听生命周期收敛**：Android 12+ Wi-Fi 信号监听改为单次 `registerNetworkCallback()` 并提供配对注销；
-  注销失败时保留回调句柄以便重试。`NetworkMonitor` 支持 `stopMonitor()` 后重新启动，并在单次可恢复异常后
-  继续后续采样。
+  注销前先脱钩业务 listener，即使平台注销失败也不会继续持有或回调业务对象。`NetworkMonitor` 支持
+  `stopMonitor()` 后重新启动，并在单次可恢复异常后继续后续采样。
 - **`lib-network` 4xx 错误数据与请求标签分离**：`ResultResponseException.tag` 现在始终保留调用方传入的
   请求标签，解码后的响应错误体改由 `errorData` 提供。这是运行时行为兼容性变更：既有代码仍可编译，
   但如果此前把 `tag` 强转为错误体类型，升级后必须改为读取 `errorData`；需要请求上下文时继续读取
@@ -135,7 +158,6 @@
   且它挂在播放器上，播放器并不喂编码器：播放位置请用 `getAudioTimeUs()`（读
   `AudioTrack.playbackHeadPosition`，即硬件真实播放时钟），要给编码器打时间戳则应在写入 PCM 的
   那一处按字节数推导。仓库内无调用方，仅为发布库的公开 API 保留。
-  与 `ScreenProcessor.computePresentationTimeUs()` 同批处理。
 - **`MicRecorder` 采集默认值改为原始麦克风**:`audioSource` 默认值由
   `MediaRecorder.AudioSource.VOICE_COMMUNICATION` 改为 `MediaRecorder.AudioSource.MIC`;新增
   `enableAdvancedFeatures: Boolean = false` 参数,用于控制是否挂载回声消除 / 自动增益 / 降噪。
@@ -232,7 +254,34 @@
 
 ### 修复 (Fixed)
 
-- **`camera2live` 编码时间戳改取自单调时钟**：`CameraAvcEncoder` 此前用
+- **MediaCodec 异步回调不再落到主线程**：录屏、相机编码和 `LeoTextureView` 解码均使用可释放的
+  专用 HandlerThread；API 21–22 在该线程创建 codec 并注册单参数 callback，API 23+ 显式传入
+  Handler，且全部在 `configure()` 前完成注册。初始化失败与释放路径会有界等待线程退出。
+- **截图式录屏取消编码器二次限帧**：删除 `Screenshot2H26xStrategy` 的
+  `KEY_MAX_FPS_TO_ENCODER`，避免按采集 deadline 生成的真实时间戳再次被 FrameDropper 丢帧。
+- **录屏资源释放补齐**：`ScreenRecordMediaCodecStrategy` 即使尚未开始录制也会释放 `scr-rec-send`
+  线程，并配对注销 `MediaProjection.Callback`；HEVC 格式不再写入 AVC profile/level。
+- **MP4 失败清理完整化**：`Mp4TrackWriter` 在 `addTrack()`/`start()`/`stop()` 抛出时仍释放 muxer；
+  只有 stop 成功写完索引才保留输出文件，否则删除不完整文件，`Error` 也不会绕过资源清理。
+- **FloatView 生命周期竞态收敛**：宿主正在 finishing 时不会误展示同 tag 的旧窗口；销毁宿主 detach
+  失败会进行有限次重试并最终释放库内所有权。API 21–25 的窗口类型改为合法的 `TYPE_PHONE`。
+- **Toast 任务和上下文隔离**：toast 请求与自动隐藏任务使用不同的 Handler token，显示新 toast
+  不再误删其它线程已投递的请求，显式取消仍会清理两类任务；未初始化访问被异常边界覆盖，单例只持有
+  application context。
+- **网络监听不再泄漏 Activity 或串会话**：`NetworkMonitor` 与 `TrafficStatHelper` 只持有
+  application context；每次启动创建独立 Wi-Fi listener，旧会话迟到事件不会覆盖新会话状态。
+- **Android 12+ Wi-Fi callback 失败可观测且安全脱钩**：注册/注销异常返回 `false` 并记录日志；
+  注销前移除映射并清空业务 listener，失败的 framework callback 不再保留 Activity 链路。
+- **`rememberDebounceHandler` 响应参数变化**：`debounceTime` 变化会创建采用新间隔的 handler。
+- **OpenGL surface 状态同步**：`GLRenderer.onSurfaceChanged()` 与视频尺寸更新、帧输入使用同一监视器，
+  不再锁外读写共享尺寸和可见状态。
+- **点击去抖使用单调时钟**：`ViewExt` 改用 `elapsedRealtime()`，系统时间调整不再破坏间隔判断。
+- **`lib-network` 解析失败保留原始响应体**：2xx 转换异常直接复用已消费 body 的保存值，不再二次读取
+  已关闭响应；`ResultConvertException.responseBodyString` 可用于诊断原始内容。
+- **`lib-network` 请求与响应日志也限制为 256 KiB**：同步有限 sink、one-shot/duplex/未知长度跳过
+  与响应有界预取策略，日志不再整体缓冲大 body，业务读取内容不受影响。
+
+- **`camera2live` 编码时间戳在帧到达时取自单调时钟**：`CameraAvcEncoder` 此前用
   `frameIndex * 1_000_000 / frameRate` 生成喂给编码器的 PTS。该式假设「请求的每一帧都到达并入队」,
   而两个前提都不成立——真实摄像头帧率随曝光与负载浮动,且 `BoundedFrameQueue` 在编码器跟不上时
   丢弃最旧帧,被丢的帧从不推进计数器。于是编码时间轴按缺帧比例压缩真实时间、整体跑快;
@@ -240,14 +289,14 @@
   分摊到比实际更多的帧上,实际码率低于目标值。
   - 此前未暴露,是因为仓库内唯一消费者写的是裸 Annex-B 流,不携带时间戳。把同一路流送进 muxer
     或做音视频同步会立刻看到加速与漂移。
-  - 现改为 `System.nanoTime()` 相对首帧。
+  - 现改为帧到达队列时记录 `System.nanoTime()` 相对首帧的 PTS；编码器批量 drain 时仍保留真实到达间隔。
 - **`lib-mvvm` 倒计时不再累积漂移**：`ScreenCountdownManager` 此前 `delay(1.seconds)` 后把模型
   时钟恰好减去 1000ms,但循环体内的状态更新与（可挂起的）effect 发射都要额外耗时,只累加不回收。
-  现改为从单调时钟推导剩余时间,并按移动截止时间安排每次 tick。
+  现以可注入的单调时钟按移动截止时间安排 tick，对外值严格由已到期 tick 推导。
   - **行为变更**：警告 effect 的触发条件由 `remaining == warningThresholdMillis` 精确相等改为
     一次性的 `<=` 跨越判定——剩余时间现在来自时钟,不再会精确落在阈值上。发射的秒数取自
     `warningThresholdMillis`,与此前精确相等时的取值一致。
-  - `remainingTimeMillis` 仍按整 tick 向上取整后暴露,调用方除以 1000 得到的秒数与此前一致。
+  - `remainingTimeMillis` 始终输出 `duration, duration-1000, …, 0`，不会因恢复时刻早于一毫秒而重复值。
 - **`screencapture` 的 `setFps()` 现在真的控制采集速率，时间戳改取自单调时钟**：
   `Screenshot2H26xStrategy` 的采集循环此前 `delay(32.milliseconds)` 硬编码、完全不读
   `builder.fps`，而 EGL 时间戳与上报给 `ScreenDataListener` 的 PTS 都由 `frameIndex * 1_000_000 / fps`
@@ -258,14 +307,13 @@
   - **行为变更**：`setFps()` 的使用者会看到采集速率真的改变。此前请求 5 fps 实得约 25 fps,
     修正后 CPU 与码率开销显著下降。裸 Annex-B 流不携带 PTS,所以直接写文件的调用方此前看不出
     问题；受影响的是把同一 strategy 喂给网络或封装的调用方。
-  - `ScreenProcessor.computePresentationTimeUs()` 已标记 `@Deprecated`（仓库内已无调用方）。
 - **`MediaFormat.KEY_FRAME_RATE` 改接 `fps`,两条录屏链路一并修正**：该键的语义是帧率,
   `Screenshot2H26xStrategy` 与 `ScreenRecordMediaCodecStrategy` 此前都把 `builder.keyFrameRate`
   接了上去,`fps` 只写进软提示 `KEY_MAX_FPS_TO_ENCODER`。编码器据此按错误的帧数分摊
   `KEY_BIT_RATE`。MediaProjection 一路影响具体：`ScreenShareSetting` 默认 `fps = 20F`、
   `keyFrameRate = 8`,等于按 8 fps 分摊码率却按约 20 fps 喂帧。
-  - **行为变更**：`setKeyFrameRate()` 不再抵达编码器,两个 Builder 上均保留以免调用方编译不过。
-    关键帧间隔请改用 `setIFrameInterval()`。
+  - **行为变更**：无效的 `setKeyFrameRate()` 已从两个 Builder 删除。帧率使用 `setFps()`，关键帧间隔
+    使用 `setIFrameInterval()`。
 - **`MicRecorder` 的音效改为持有并显式释放**：`enableAdvancedFeatures = true` 时创建的
   `AcousticEchoCanceler` / `AutomaticGainControl` / `NoiseSuppressor` 此前创建完即丢弃唯一强引用。
   录音期间它们可能被 GC 回收并连带销毁其原生音效——双向语音会在任意时刻失去回声消除——而且没有
@@ -557,10 +605,10 @@
   计算期望尺寸,修复 `wrap_content` 退化为 0×0 不可见。
 - **CAM2-4/5 相机错误与方向回退**:`openCamera`/`switchCamera` 捕获并上报权限及 CameraAccess 错误;
   JPEG 方向在 display 或 sensor orientation 缺失时使用安全默认值,不再因 `-1`/null 崩溃。
-- **CAM2-9/10 编码回调与背压**:`CameraAvcEncoder` 在 configure 前注册 callback,API 23+ 使用专用
-  HandlerThread 并在释放时退出;输入队列最多保留 5 帧,拥塞时丢弃最旧帧。公开 queue getter 类型不变。
+- **CAM2-9/10 编码回调与背压**:`CameraAvcEncoder` 在 configure 前注册 callback,API 21+ 使用专用
+  HandlerThread 并在释放时退出;输入队列最多保留 5 帧,拥塞时丢弃最旧帧。队列现为私有实现细节。
 - **ABN-2/3/4 androidbase 健壮性**:`LeoTextureView` 的 MediaCodec callback 在 configure 前注册并在
-  API 23+ 使用可释放的专用线程;Watermark 对空文本、非正字号和零间距安全返回/钳位;`WifiUtil` 仅
+  API 21+ 使用可释放的专用线程;Watermark 对空文本、非正字号和零间距安全返回/钳位;`WifiUtil` 仅
   持有 application context。
 - **AR-2/3/4/5/6/8 android-restricted 修复**:vivo 刘海设备使用正确实现并按 density 计算 dp;
   `ApplicationManager` 延迟获取 Application,反射失败保留 cause 并给出初始化提示;读取 build.prop

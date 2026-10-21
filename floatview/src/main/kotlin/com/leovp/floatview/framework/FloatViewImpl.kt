@@ -52,6 +52,8 @@ internal class FloatViewImpl(
         private const val TAG = "FVI"
         private const val ANIMATION_DURATION_START = 350L
         private const val ANIMATION_DURATION_END = 500L
+        private const val MAX_DESTROYED_OWNER_DETACH_RETRIES = 3
+        private const val DESTROYED_OWNER_RETRY_DELAY_MS = 100L
     }
 
     private val windowManager = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
@@ -63,6 +65,8 @@ internal class FloatViewImpl(
     internal val hasFailedRemoval: Boolean
         get() = removalFailed && windowAdded
     private var listenersRegistered = false
+    private var destroyedOwnerDetachRetries = 0
+    private val destroyedOwnerDetachRetry = Runnable { finishRemoval() }
     private var alphaAnimator: ObjectAnimator? = null
     private var dockAnimator: ValueAnimator? = null
     private val touchViews = mutableSetOf<View>()
@@ -771,7 +775,21 @@ internal class FloatViewImpl(
         cancelAnimations()
         if (!detachWindow()) {
             hideAfterFailure()
-            return
+            if (owner.isAlive) return
+            if (destroyedOwnerDetachRetries++ < MAX_DESTROYED_OWNER_DETACH_RETRIES) {
+                mainHandler.postDelayed(
+                    destroyedOwnerDetachRetry,
+                    DESTROYED_OWNER_RETRY_DELAY_MS
+                )
+                return
+            }
+            Log.e(
+                TAG,
+                "Owner destroyed; detach retries exhausted for tag=${config.tag}. " +
+                    "Releasing library ownership without asserting physical detachment."
+            )
+            windowAdded = false
+            removalFailed = false
         }
         released = true
         config.isDisplaying = false

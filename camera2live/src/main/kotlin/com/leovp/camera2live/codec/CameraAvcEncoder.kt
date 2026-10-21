@@ -14,12 +14,19 @@ import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Author: Michael Leo
  * Date: 20-3-24 下午5:35
+ *
+ * Migration: the mutable encoder [queue] is no longer public. Queue depth is an implementation
+ * detail; overload is reported through the encoder's dropped-frame warnings instead of direct
+ * queue inspection or mutation.
  */
 class CameraAvcEncoder @JvmOverloads constructor(
     private val width: Int,
@@ -30,7 +37,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
     private val bitrateMode: Int = DEFAULT_BITRATE_MODE,
 ) {
     private val droppedFrameCount = AtomicLong(0)
-    val queue: ConcurrentLinkedQueue<ByteArray> =
+    private val queue: ConcurrentLinkedQueue<EncoderFrame> =
         BoundedFrameQueue(MAX_PENDING_FRAMES, ::onEncoderFrameDropped)
     private var dataUpdateCallback: CallbackListener? = null
     lateinit var h264Encoder: MediaCodec
@@ -200,25 +207,52 @@ class CameraAvcEncoder @JvmOverloads constructor(
         }
 
         //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        val encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+        val callbackThread = HandlerThread("$TAG-callback").apply { start() }
+        codecCallbackThread = callbackThread
+        val callbackHandler = Handler(callbackThread.looper)
+        codecCallbackHandler = callbackHandler
+        var encoder: MediaCodec? = null
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val callbackThread = HandlerThread("$TAG-callback").apply { start() }
-                codecCallbackThread = callbackThread
-                val callbackHandler = Handler(callbackThread.looper)
-                codecCallbackHandler = callbackHandler
+                encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
                 encoder.setCallback(mediaCodecCallback, callbackHandler)
             } else {
-                encoder.setCallback(mediaCodecCallback)
+                val abandoned = AtomicBoolean(false)
+                val created = AtomicReference<MediaCodec?>(null)
+                val task = FutureTask {
+                    val codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                    created.set(codec)
+                    try {
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec.setCallback(mediaCodecCallback)
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec
+                    } catch (error: Throwable) {
+                        if (created.compareAndSet(codec, null)) codec.release()
+                        throw error
+                    }
+                }
+                check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
+                try {
+                    encoder = task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
+                        check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
+                    }
+                } catch (error: Throwable) {
+                    abandoned.set(true)
+                    task.cancel(true)
+                    created.getAndSet(null)?.release()
+                    throw (error.cause ?: error)
+                }
             }
             val encodedDataThread = HandlerThread("$TAG-data-callback").apply { start() }
             dataCallbackThread = encodedDataThread
             dataCallbackHandler = Handler(encodedDataThread.looper)
-            encoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            encoder.start()
-            h264Encoder = encoder
-        } catch (e: Exception) {
-            runCatching { encoder.release() }
+            val ownedEncoder = checkNotNull(encoder)
+            ownedEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            ownedEncoder.start()
+            h264Encoder = ownedEncoder
+        } catch (e: Throwable) {
+            runCatching { encoder?.release() }
             stopCodecCallbackThread()
             stopDataCallbackThread()
             throw e
@@ -228,7 +262,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
     fun offerDataIntoQueue(data: ByteArray) {
         synchronized(inputBufferLock) {
             if (!acceptingFrames.get()) return
-            queue.offer(data)
+            queue.offer(EncoderFrame(data, elapsedMicrosSinceFirstFrame()))
         }
         if (!acceptingFrames.get()) return
         val encoder = if (::h264Encoder.isInitialized) h264Encoder else return
@@ -240,16 +274,16 @@ class CameraAvcEncoder @JvmOverloads constructor(
             if (!acceptingFrames.get()) return
             pendingInputBuffers.drain(
                 nextFrame = queue::poll,
-                submit = { inputBufferId, data ->
+                submit = { inputBufferId, frame ->
                     val inputBuffer = checkNotNull(codec.getInputBuffer(inputBufferId)) {
                         "MediaCodec returned a null input buffer for id=$inputBufferId"
                     }
-                    inputBuffer.putEncoderFrame(data)
+                    inputBuffer.putEncoderFrame(frame.data)
                     codec.queueInputBuffer(
                         inputBufferId,
                         0,
-                        data.size,
-                        elapsedMicrosSinceFirstFrame(),
+                        frame.data.size,
+                        frame.presentationTimeUs,
                         0
                     )
                 },
@@ -297,8 +331,8 @@ class CameraAvcEncoder @JvmOverloads constructor(
      * much wall clock a run of frames covers, so a compressed one had it spreading KEY_BIT_RATE
      * over more frames per second than it was actually being given.
      *
-     * Called only from [drainInputBuffers], which holds [inputBufferLock]; the atomic keeps the
-     * latch correct regardless.
+     * Called when a frame reaches [offerDataIntoQueue], while [inputBufferLock] is held. Stamping
+     * before queueing preserves arrival spacing when the encoder drains several delayed frames.
      */
     private fun elapsedMicrosSinceFirstFrame(): Long {
         val now = System.nanoTime()
@@ -336,7 +370,15 @@ class CameraAvcEncoder @JvmOverloads constructor(
         val callbackThread = codecCallbackThread
         callbackThread?.quitSafely()
         if (callbackThread != null && Thread.currentThread() !== callbackThread) {
-            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+            try {
+                callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+                if (callbackThread.isAlive) {
+                    LogContext.log.w(TAG, "Codec callback thread did not stop within timeout")
+                }
+            } catch (error: InterruptedException) {
+                Thread.currentThread().interrupt()
+                LogContext.log.e(TAG, "Interrupted while stopping codec callback thread", error)
+            }
         }
         codecCallbackThread = null
         codecCallbackHandler = null
@@ -346,7 +388,15 @@ class CameraAvcEncoder @JvmOverloads constructor(
         val callbackThread = dataCallbackThread
         callbackThread?.quitSafely()
         if (callbackThread != null && Thread.currentThread() !== callbackThread) {
-            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+            try {
+                callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+                if (callbackThread.isAlive) {
+                    LogContext.log.w(TAG, "Data callback thread did not stop within timeout")
+                }
+            } catch (error: InterruptedException) {
+                Thread.currentThread().interrupt()
+                LogContext.log.e(TAG, "Interrupted while stopping data callback thread", error)
+            }
         }
         dataCallbackThread = null
         dataCallbackHandler = null
@@ -360,6 +410,7 @@ class CameraAvcEncoder @JvmOverloads constructor(
         private const val MAX_PENDING_FRAMES = 5
         private const val DROPPED_FRAME_LOG_INTERVAL = 30L
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
+        private const val CALLBACK_SETUP_TIMEOUT_MS = 2_000L
         const val DEFAULT_KEY_I_FRAME_INTERVAL = 5
         const val DEFAULT_BITRATE_MODE = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
     }
@@ -372,6 +423,8 @@ internal fun ByteBuffer.putEncoderFrame(data: ByteArray) {
     }
     put(data)
 }
+
+internal class EncoderFrame(val data: ByteArray, val presentationTimeUs: Long)
 
 internal class PendingInputBuffers {
     private val bufferIds = ArrayDeque<Int>()
@@ -386,9 +439,9 @@ internal class PendingInputBuffers {
         bufferIds.clear()
     }
 
-    fun drain(
-        nextFrame: () -> ByteArray?,
-        submit: (bufferId: Int, data: ByteArray) -> Unit,
+    fun <T> drain(
+        nextFrame: () -> T?,
+        submit: (bufferId: Int, data: T) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         while (bufferIds.isNotEmpty()) {
@@ -405,15 +458,15 @@ internal class PendingInputBuffers {
     }
 }
 
-internal class BoundedFrameQueue(
+internal class BoundedFrameQueue<T>(
     private val capacity: Int,
     private val onElementDropped: () -> Unit = {}
-) : ConcurrentLinkedQueue<ByteArray>() {
+) : ConcurrentLinkedQueue<T>() {
     init {
         require(capacity > 0) { "capacity must be positive" }
     }
 
-    override fun offer(element: ByteArray): Boolean {
+    override fun offer(element: T): Boolean {
         var droppedCount = 0
         val offered = synchronized(this) {
             while (size >= capacity) {
@@ -426,7 +479,7 @@ internal class BoundedFrameQueue(
         return offered
     }
 
-    override fun addAll(elements: Collection<ByteArray>): Boolean {
+    override fun addAll(elements: Collection<T>): Boolean {
         var changed = false
         elements.forEach { changed = offer(it) || changed }
         return changed

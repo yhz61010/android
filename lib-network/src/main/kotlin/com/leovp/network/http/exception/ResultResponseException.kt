@@ -9,6 +9,11 @@ open class ResultResponseException(
     code: String? = null,
     message: String? = null,
     cause: Throwable? = null,
+    /**
+     * Raw response body when the upstream implementation makes it available. For Net conversion
+     * failures on successful HTTP responses, this is recovered from `ConvertException.message`
+     * because the converter has already consumed the response stream.
+     */
     val responseBodyString: String? = null,
     tag: Any? = null,
 ) : ResultException(

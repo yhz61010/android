@@ -79,10 +79,11 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     /**
      * Create float view but don't add it to the window manager.
      *
+     * @return `false` when creation was skipped for a finishing or destroyed Activity.
      * @throws IllegalStateException when another float view already uses the same tag. Callers
      * must remove that view first or choose a different tag.
      */
-    fun build(): Unit = FloatViewManager.create(context, config)
+    fun build(): Boolean = FloatViewManager.create(context, config)
 
     /**
      * **Create** a float view with specific tag and show it on screen.
@@ -100,16 +101,18 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
      * for the new view and leaves the existing view unchanged.
      */
     fun tryShow(): FloatViewShowResult = try {
-        build()
-        FloatViewManager.show(config.tag)
+        if (build()) {
+            FloatViewManager.show(config.tag)
+        } else {
+            FloatViewShowResult.FAILED_AND_DETACHED
+        }
     } catch (_: Exception) {
         FloatViewManager.duplicateShowResult(config.tag)
             ?: FloatViewShowResult.FAILED_AND_DETACHED
     }
 
     private fun createAndShowFloatView() {
-        build()
-        FloatViewManager.show(config.tag)
+        if (build()) FloatViewManager.show(config.tag)
     }
 
     //    /**

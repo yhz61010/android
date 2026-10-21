@@ -9,6 +9,9 @@ import android.util.Size
 /**
  * Author: Michael Leo
  * Date: 20-5-15 下午2:10
+ *
+ * Implementations that need presentation timestamps must derive them from the input source's
+ * monotonic timeline; the removed frame-index helper could not represent dropped or delayed input.
  */
 interface ScreenProcessor {
 
@@ -70,15 +73,6 @@ interface ScreenProcessor {
     fun getVideoSize(): Size
 
     // ==================================================
-
-    @Deprecated(
-        "Frame-index timestamps assume the capture loop really ran at fps. When it did not, a " +
-            "late frame still advanced the stream by a whole frame period and the timeline ran " +
-            "away from real time. Timestamp from a monotonic clock instead.",
-        level = DeprecationLevel.WARNING
-    )
-    fun computePresentationTimeUs(frameIndex: Long, fps: Float): Long =
-        (frameIndex * 1_000_000 / fps).toLong()
 
     // MediaCodecList.ALL_CODECS
     fun getCodecListByMimeType(mimeType: String, encoder: Boolean = true): List<MediaCodecInfo> =

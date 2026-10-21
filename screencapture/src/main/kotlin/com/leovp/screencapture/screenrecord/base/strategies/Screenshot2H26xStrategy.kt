@@ -5,27 +5,17 @@ import android.graphics.Bitmap
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import android.opengl.EGL14
-import android.opengl.EGLConfig
-import android.opengl.EGLContext
-import android.opengl.EGLDisplay
-import android.opengl.EGLExt
-import android.opengl.EGLSurface
-import android.opengl.GLUtils
 import android.opengl.Matrix
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
-import android.view.Surface
 import com.leovp.image.compressBitmap
 import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.Mp4TrackWriter
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
-import com.leovp.screencapture.screenrecord.base.TextureRenderer
 import com.leovp.screencapture.screenshot.CaptureUtil
-import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -72,9 +62,7 @@ private const val UNSET_TIMESTAMP_ORIGIN = Long.MIN_VALUE
  * timeline ran away from real time - measured at 4.95x on a device while `fps` was 5. A raw
  * elementary stream carries no timestamps and hid this; a container stores them and does not.
  *
- * Declared at file scope on purpose: the class is at 29 functions against detekt's
- * `TooManyFunctions.thresholdInClasses = 33`, while `thresholdInFiles` counts only top-level
- * functions and this file has none.
+ * Kept at file scope because timestamp math is independent of recorder lifecycle state.
  */
 private fun elapsedNanosSince(origin: AtomicLong): Long {
     val now = System.nanoTime()
@@ -105,19 +93,22 @@ private fun nowMillis(): Long = System.nanoTime() / 1_000_000L
  * Author: Michael Leo
  * Date: 20-5-15 下午1:53
  */
-class Screenshot2H26xStrategy private constructor(private val builder: Builder) : ScreenProcessor {
+class Screenshot2H26xStrategy internal constructor(private val builder: Screenshot2H26xBuilder) :
+    ScreenProcessor {
 
     companion object {
         private const val TAG = "ScrShotRec"
 
-        // EGL_ANDROID_recordable. The public EGLExt field was added in API 26.
-        private const val EGL_RECORDABLE_ANDROID = 0x3142
-
         /** Bounded waits used during teardown, so a wedged pipeline cannot block it forever. */
         private const val ENCODER_EOS_TIMEOUT_MS = 500L
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 2_000L
+        private const val CALLBACK_SETUP_TIMEOUT_MS = 2_000L
         private const val EGL_DISPATCH_TIMEOUT_MS = 5_000L
     }
+
+    /** Public API wrapper; implementation lives in [Screenshot2H26xBuilder]. */
+    class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataListener) :
+        Screenshot2H26xBuilder(width, height, dpi, screenDataListener)
 
     @Volatile
     private var isRecording = false
@@ -133,7 +124,9 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private val callbackThreadAbandoned = AtomicBoolean(false)
     private val lifecycleLock = Any()
     private val codecCallbackLock = Any()
+    private var codecCallbackThread: HandlerThread? = null
     private val eglThread = AtomicReference<Thread?>(null)
+    private val eglSession = ScreenshotEglSession(builder.width, builder.height)
 
     /**
      * Owns the EGL context for this recorder's whole life. Every EGL call, and the teardown that
@@ -204,17 +197,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     private var teardownDeferredToInit = false
 
     private val mvp = getMvp()
-
-    // EGL
-    private var eglDisplay: EGLDisplay? = null
-    private var eglContext: EGLContext? = null
-    private var eglSurface: EGLSurface? = null
-
-    // Surface provided by MediaCodec and used to get data produced by OpenGL
-    private var surface: Surface? = null
-
-    // Init OpenGL, once we have initialized context and surface
-    private lateinit var renderer: TextureRenderer
 
     /**
      * Monotonic origin for presentation timestamps, latched on the first encoded frame and reset
@@ -342,95 +324,6 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         }
     }
 
-    class Builder(
-        val width: Int,
-        val height: Int,
-        val dpi: Int,
-        val screenDataListener: ScreenDataListener,
-    ) {
-        var encodeType: ScreenRecordMediaCodecStrategy.EncodeType =
-            ScreenRecordMediaCodecStrategy.EncodeType.H264
-            private set
-
-        /** Capture rate. Drives the capture loop's cadence, the timestamps and `KEY_FRAME_RATE`. */
-        var fps = 20F
-            private set
-        var quality = 100
-            private set
-        var sampleSize = 1
-            private set
-        var bitrate = width * height
-            private set
-        var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-            private set
-        /**
-         * No longer reaches the encoder. It used to be wired to `MediaFormat.KEY_FRAME_RATE`,
-         * which is the frame rate and therefore belongs to [fps]; key-frame spacing is
-         * [iFrameInterval].
-         * Kept so existing callers still compile - retiring the setter is a separate API change.
-         */
-        var keyFrameRate = 20
-            private set
-        var iFrameInterval = 1
-            private set
-
-        /**
-         * Where to write an MP4 alongside the stream handed to [ScreenDataListener], or null to
-         * write no MP4 at all. The listener's stream is never replaced or altered by this.
-         */
-        var mp4OutputFile: File? = null
-            private set
-
-        fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
-            apply { this.encodeType = encodeType }
-
-        fun setFps(fps: Float) = apply { this.fps = fps }
-        fun setQuality(quality: Int) = apply { this.quality = quality }
-        fun setSampleSize(sample: Int) = apply { this.sampleSize = sample }
-        fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
-        fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
-        fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
-        fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
-
-        /** @see mp4OutputFile */
-        fun setMp4OutputFile(file: File?) = apply { this.mp4OutputFile = file }
-
-        fun build(): Screenshot2H26xStrategy {
-            fallBackToAvcIfMuxerCannotCarryHevc()
-            LogContext.log.w(
-                TAG,
-                "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps " +
-                    "sampleSize=$sampleSize mp4OutputFile=${mp4OutputFile?.name}"
-            )
-            return Screenshot2H26xStrategy(this)
-        }
-
-        /**
-         * `MediaMuxer` gained the ability to write an HEVC track into MP4 in API 24. Below that
-         * it accepts the track and then fails, so an HEVC request plus an MP4 request cannot both
-         * be honoured and the encode type is the one that gives way.
-         *
-         * Deliberately scoped to callers that asked for an MP4. Nothing is wrong with an HEVC
-         * elementary stream on API 21-23, and downgrading those callers would be a regression
-         * they never asked for.
-         *
-         * Resolved here, before the encoder exists, so the MP4 and the stream reaching
-         * [ScreenDataListener] are always the same codec.
-         */
-        private fun fallBackToAvcIfMuxerCannotCarryHevc() {
-            if (mp4OutputFile == null) return
-            if (encodeType != ScreenRecordMediaCodecStrategy.EncodeType.H265) return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) return
-            LogContext.log.w(
-                TAG,
-                "MediaMuxer cannot write an HEVC track before API 24 and this device is API " +
-                    "${Build.VERSION.SDK_INT}. Encoding H264 instead so the MP4 and the raw " +
-                    "stream stay the same codec. Drop setMp4OutputFile() to keep H265 here."
-            )
-            encodeType = ScreenRecordMediaCodecStrategy.EncodeType.H264
-        }
-    }
-
     private fun getMvp(): FloatArray {
         val mvp = FloatArray(16)
         Matrix.setIdentityM(mvp, 0)
@@ -439,142 +332,11 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
     }
 
     private fun encodeImages(bitmap: Bitmap) {
-        //        LogContext.log.d(TAG, "encodeImages")
-
-        // val supportSize =
-        // h264Encoder!!.codecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapab
-        // ilities.isSizeSupported(
-        //            bitmap.width,
-        //            bitmap.height
-        //        )
-        // LogContext.log.e(TAG, "isSupportSize[${bitmap.width}x${bitmap.height}]=$supportSize")
-
-        // Render the bitmap/texture here
-        //            val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-        renderer.draw(builder.width, builder.height, bitmap, mvp)
-
-        EGLExt.eglPresentationTimeANDROID(
-            eglDisplay,
-            eglSurface,
+        eglSession.render(
+            bitmap,
+            mvp,
             elapsedNanosSince(timestampOriginNanos)
         )
-
-        // Feed encoder with next frame produced by OpenGL
-        EGL14.eglSwapBuffers(eglDisplay, eglSurface)
-    }
-
-    private fun initEgl() {
-        surface = h26xEncoder?.createInputSurface()
-        eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-        if (eglDisplay == EGL14.EGL_NO_DISPLAY) {
-            throw RuntimeException(
-                "eglDisplay == EGL14.EGL_NO_DISPLAY: " +
-                    "${GLUtils.getEGLErrorString(EGL14.eglGetError())}"
-            )
-        }
-
-        val version = IntArray(2)
-        if (!EGL14.eglInitialize(eglDisplay, version, 0, version, 1)) {
-            throw RuntimeException(
-                "eglInitialize(): " + GLUtils.getEGLErrorString(EGL14.eglGetError())
-            )
-        }
-
-        val attribList = intArrayOf(
-            EGL14.EGL_RED_SIZE, 8,
-            EGL14.EGL_GREEN_SIZE, 8,
-            EGL14.EGL_BLUE_SIZE, 8,
-            EGL14.EGL_ALPHA_SIZE, 8,
-            EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
-            EGL_RECORDABLE_ANDROID, 1,
-            EGL14.EGL_NONE
-        )
-        val configs = arrayOfNulls<EGLConfig>(1)
-        val nConfigs = IntArray(1)
-        val configChosen = EGL14.eglChooseConfig(
-            eglDisplay,
-            attribList,
-            0,
-            configs,
-            0,
-            configs.size,
-            nConfigs,
-            0
-        )
-        val chooseConfigError = EGL14.eglGetError()
-        if (
-            !configChosen ||
-            chooseConfigError != EGL14.EGL_SUCCESS ||
-            nConfigs[0] <= 0 ||
-            configs[0] == null
-        ) {
-            throw RuntimeException(
-                "eglChooseConfig(): success=$configChosen count=${nConfigs[0]} " +
-                    "error=${GLUtils.getEGLErrorString(chooseConfigError)}"
-            )
-        }
-
-        val ctxAttribs = intArrayOf(
-            EGL14.EGL_CONTEXT_CLIENT_VERSION,
-            2,
-            EGL14.EGL_NONE
-        )
-        eglContext = EGL14.eglCreateContext(
-            eglDisplay,
-            configs[0],
-            EGL14.EGL_NO_CONTEXT,
-            ctxAttribs,
-            0
-        )
-
-        var err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
-
-        val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
-        eglSurface = EGL14.eglCreateWindowSurface(
-            eglDisplay,
-            configs[0],
-            surface,
-            surfaceAttribs,
-            0
-        )
-        err = EGL14.eglGetError()
-        if (err != EGL14.EGL_SUCCESS) throw RuntimeException(GLUtils.getEGLErrorString(err))
-
-        if (!EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
-            throw RuntimeException(
-                "eglMakeCurrent(): " + GLUtils.getEGLErrorString(EGL14.eglGetError())
-            )
-        }
-    }
-
-    private fun releaseEgl() {
-        val display = eglDisplay
-        val context = eglContext
-        val windowSurface = eglSurface
-        if (display != null && display != EGL14.EGL_NO_DISPLAY) {
-            EGL14.eglMakeCurrent(
-                display,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_CONTEXT
-            )
-            if (windowSurface != null && windowSurface != EGL14.EGL_NO_SURFACE) {
-                EGL14.eglDestroySurface(display, windowSurface)
-            }
-            if (context != null && context != EGL14.EGL_NO_CONTEXT) {
-                EGL14.eglDestroyContext(display, context)
-            }
-            EGL14.eglReleaseThread()
-            EGL14.eglTerminate(display)
-        }
-
-        surface?.release()
-        surface = null
-
-        eglDisplay = EGL14.EGL_NO_DISPLAY
-        eglContext = EGL14.EGL_NO_CONTEXT
-        eglSurface = EGL14.EGL_NO_SURFACE
     }
 
     /**
@@ -606,8 +368,8 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
         synchronized(lifecycleLock) {
             // startRecord() initializes on the EGL thread it then occupies for the rest of the
             // session. Dispatching this there would queue behind the recording loop and block
-            // the caller until recording ends, which on the documented main-thread caller is an
-            // ANR rather than an error.
+            // the caller until recording ends, which is an ANR for a caller that ignores the
+            // documented restriction rather than a useful error.
             check(!recordingStarted) {
                 "Screenshot recorder is already recording; startRecord() initializes it"
             }
@@ -819,45 +581,69 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
-            // The real capture rate, not builder.keyFrameRate. This key tells the encoder how
+            // The real capture rate tells the encoder how
             // many frames a second to budget its bitrate over; feeding it a different number
             // than the loop actually produces misallocates that budget.
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.fps.toInt().coerceAtLeast(1))
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, builder.iFrameInterval)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4 * 1024 * 1024)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // Actually, this key has been used in Android 6.0+ although it just has been opened
-                // as of Android 10.
-                @Suppress("unchecked", "InlinedApi")
-                setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, builder.fps)
-            }
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                setInteger(
-                    MediaFormat.KEY_PROFILE,
-                    MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
-                )
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // You must specify KEY_LEVEL on Android 6.0+
-                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+            if (builder.encodeType == ScreenRecordMediaCodecStrategy.EncodeType.H264) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                    setInteger(
+                        MediaFormat.KEY_PROFILE,
+                        MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+                    )
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel51)
+                }
             }
         }
         //        h264Encoder = MediaCodec.createByCodecName("OMX.google.h264.encoder")
-        val encoder = MediaCodec.createEncoderByType(
-            when (builder.encodeType) {
-                ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
-                ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+        val mime = when (builder.encodeType) {
+            ScreenRecordMediaCodecStrategy.EncodeType.H264 -> MediaFormat.MIMETYPE_VIDEO_AVC
+            ScreenRecordMediaCodecStrategy.EncodeType.H265 -> MediaFormat.MIMETYPE_VIDEO_HEVC
+        }
+        val callbackThread = HandlerThread("scr-rec-codec").apply { start() }
+        codecCallbackThread = callbackThread
+        val callbackHandler = Handler(callbackThread.looper)
+        val encoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            MediaCodec.createEncoderByType(mime).also {
+                h26xEncoder = it
+                it.setCallback(mediaCodecCallback, callbackHandler)
             }
-        )
-        // Publish ownership immediately so a configure/setCallback failure can release this
-        // partially initialized codec through the common failure path.
-        h26xEncoder = encoder
+        } else {
+            val abandoned = AtomicBoolean(false)
+            val created = AtomicReference<MediaCodec?>(null)
+            val task = FutureTask {
+                val codec = MediaCodec.createEncoderByType(mime)
+                created.set(codec)
+                try {
+                    check(!abandoned.get()) { "Codec creation was abandoned" }
+                    codec.setCallback(mediaCodecCallback)
+                    check(!abandoned.get()) { "Codec creation was abandoned" }
+                    codec
+                } catch (error: Throwable) {
+                    if (created.compareAndSet(codec, null)) codec.release()
+                    throw error
+                }
+            }
+            check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
+            try {
+                task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
+                    check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
+                    h26xEncoder = it
+                }
+            } catch (error: Throwable) {
+                abandoned.set(true)
+                task.cancel(true)
+                created.getAndSet(null)?.release()
+                throw (error.cause ?: error)
+            }
+        }
         encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        encoder.setCallback(mediaCodecCallback)
 
-        initEgl()
-
-        renderer = TextureRenderer()
+        eglSession.initialize(encoder)
 
         initHandler()
     }
@@ -1222,11 +1008,25 @@ class Screenshot2H26xStrategy private constructor(private val builder: Builder) 
             }
         }
         try {
-            releaseEgl()
+            eglSession.release()
         } catch (error: Throwable) {
             LogContext.log.e(TAG, "EGL release failed", error)
         } finally {
             releaseHandlerAndJoin()
+            val callbackThread = codecCallbackThread
+            codecCallbackThread = null
+            callbackThread?.quitSafely()
+            if (callbackThread != null && Thread.currentThread() !== callbackThread) {
+                try {
+                    callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+                    if (callbackThread.isAlive) {
+                        LogContext.log.w(TAG, "Codec callback thread did not stop within timeout")
+                    }
+                } catch (error: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    LogContext.log.e(TAG, "Interrupted while stopping codec callback thread", error)
+                }
+            }
         }
     }
 }

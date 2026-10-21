@@ -29,6 +29,9 @@ dependencies {
     compileOnly(projects.libNetwork)
     compileOnly(libs.androidx.navigation.compose)
     api(libs.kotlin.reflect)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
 }
 
 /** When use it: sourceJar.get() */

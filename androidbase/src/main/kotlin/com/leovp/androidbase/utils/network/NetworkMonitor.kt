@@ -17,6 +17,11 @@ import java.util.concurrent.TimeUnit
  *
  * Monitor the speed, ping and Wi-Fi signal.
  *
+ * Need following permission:
+ * ```xml
+ * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+ * ```
+ *
  * Usage:
  * ```kotlin
  * val networkMonitor = NetworkMonitor(ctx, ip) { networkMonitorResult -> }
@@ -25,12 +30,13 @@ import java.util.concurrent.TimeUnit
  * ```
  */
 class NetworkMonitor internal constructor(
-    private val ctx: Context,
+    ctx: Context,
     private val ip: String,
     private val callback: (NetworkMonitorResult) -> Unit,
     private val schedulerFactory: () -> NetworkMonitorScheduler,
     private val beforeResultDispatch: () -> Unit = {},
 ) {
+    private val ctx: Context = ctx.applicationContext ?: ctx
     constructor(
         ctx: Context,
         ip: String,
@@ -53,9 +59,7 @@ class NetworkMonitor internal constructor(
     @Volatile
     private var monitorGeneration = 0L
 
-    private val wifiSignalCallback: (NetworkUtil.WifiSignal) -> Unit = { wifiSignal ->
-        globalWifiSignal = wifiSignal
-    }
+    private var wifiSignalCallback: ((NetworkUtil.WifiSignal) -> Unit)? = null
 
     private fun createPingRunnable(
         generation: Long,
@@ -177,6 +181,7 @@ class NetworkMonitor internal constructor(
             monitorGeneration++
             val generation = monitorGeneration
             monitorStopped = true
+            unregisterWifiSignalCallback()
             releaseMonitorScheduler()
             globalWifiSignal = null
             val interval: Int = if (freq < 1) 1 else freq
@@ -185,10 +190,8 @@ class NetworkMonitor internal constructor(
                 val trafficStat = TrafficStatHelper.getInstance(ctx)
                 val scheduler = schedulerFactory()
                 monitorScheduler = scheduler
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    NetworkUtil.getWifiNetworkStatsAboveAndroidS(ctx, wifiSignalCallback)
-                }
                 monitorStopped = false
+                registerWifiSignalCallback(generation, scheduler)
                 scheduler.post(createPingRunnable(generation, scheduler, interval, trafficStat))
                 started = true
             } finally {
@@ -200,20 +203,48 @@ class NetworkMonitor internal constructor(
     /**
      * Stops future results and releases monitoring resources. An already running callback finishes
      * before this method returns. This instance can subsequently be started again.
+     *
+     * Need following permission:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * ```
      */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun stopMonitor() {
         synchronized(monitorLifecycleLock) {
             LogContext.log.i(TAG, "stopMonitor()")
             monitorStopped = true
             monitorGeneration++
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(ctx, wifiSignalCallback)
-                }
+                unregisterWifiSignalCallback()
             } finally {
                 releaseMonitorScheduler()
                 globalWifiSignal = null
             }
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    private fun registerWifiSignalCallback(generation: Long, scheduler: NetworkMonitorScheduler) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val sessionCallback: (NetworkUtil.WifiSignal) -> Unit = { signal ->
+            synchronized(monitorLifecycleLock) {
+                if (isCurrentMonitor(generation, scheduler)) globalWifiSignal = signal
+            }
+        }
+        if (NetworkUtil.getWifiNetworkStatsAboveAndroidS(ctx, sessionCallback)) {
+            wifiSignalCallback = sessionCallback
+        } else {
+            LogContext.log.w(TAG, "Wi-Fi signal callback registration failed")
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    private fun unregisterWifiSignalCallback() {
+        val callback = wifiSignalCallback ?: return
+        wifiSignalCallback = null
+        if (!NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(ctx, callback)) {
+            LogContext.log.w(TAG, "Wi-Fi signal callback unregistration failed")
         }
     }
 

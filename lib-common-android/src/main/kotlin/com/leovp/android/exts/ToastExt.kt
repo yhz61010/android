@@ -22,6 +22,7 @@ import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.toColorInt
+import androidx.core.os.HandlerCompat
 import com.leovp.android.R
 import com.leovp.android.ui.ForegroundComponent
 import com.leovp.android.utils.API
@@ -35,6 +36,8 @@ import com.leovp.kotlin.utils.SingletonHolder
  */
 
 private val mainHandler = Handler(Looper.getMainLooper())
+private val toastRequestToken = Any()
+private val dismissToken = Any()
 
 /**
  * Initialize `LeoToast` in your custom `Application` or somewhere as earlier as possible.
@@ -48,7 +51,8 @@ private val mainHandler = Handler(Looper.getMainLooper())
  * )
  * ```
  */
-class LeoToast private constructor(private val ctx: Context) {
+class LeoToast private constructor(context: Context) {
+    private val ctx: Context = context.applicationContext ?: context
     companion object : SingletonHolder<LeoToast, Context>(::LeoToast) {
         /** Unit: sp */
         const val DEF_FONT_SIZE = 14f
@@ -56,6 +60,8 @@ class LeoToast private constructor(private val ctx: Context) {
 
     lateinit var config: ToastConfig
         private set
+    internal val isInitialized: Boolean
+        get() = ::config.isInitialized
 
     fun init(config: ToastConfig = ToastConfig()) {
         // Log.e("LEO-toast", "=====> registerToastRotationWatcher() <=====")
@@ -177,18 +183,23 @@ fun Context.toast(
         )
     } else {
         // Be sure toast can be shown in thread
-        mainHandler.post {
-            showToast(
-                ctx = this,
-                msg = msg,
-                longDuration = longDuration,
-                origin = origin,
-                debug = debug,
-                textColor = textColor,
-                bgColor = bgColor,
-                error = error
-            )
-        }
+        HandlerCompat.postDelayed(
+            mainHandler,
+            {
+                showToast(
+                    ctx = this,
+                    msg = msg,
+                    longDuration = longDuration,
+                    origin = origin,
+                    debug = debug,
+                    textColor = textColor,
+                    bgColor = bgColor,
+                    error = error
+                )
+            },
+            toastRequestToken,
+            0L
+        )
     }
 }
 
@@ -222,17 +233,22 @@ private fun showToast(
     bgColor: String?,
     error: Boolean,
 ) {
-    val toastCfg = LeoToast.getInstance(ctx).config
-
-    if ((debug && !toastCfg.buildConfigInDebug)) {
-        // Debug log only be shown in DEBUG flavor
-        return
-    }
-
-    val isLongDuration = longDuration ?: (toastCfg.duration == Toast.LENGTH_LONG)
-    val duration = if (isLongDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     val message: String = if (debug) "DEBUG: $msg" else (msg ?: "null")
+    var duration = if (longDuration == true) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
     try {
+        val leoToast = LeoToast.getInstance(ctx)
+        if (!leoToast.isInitialized) {
+            if (debug) {
+                Log.w("ToastExt", "Ignore debug toast before LeoToast.init().")
+                return
+            }
+            showSystemToast(ctx, message, duration)
+            return
+        }
+        val toastCfg = leoToast.config
+        if (debug && !toastCfg.buildConfigInDebug) return
+        val isLongDuration = longDuration ?: (toastCfg.duration == Toast.LENGTH_LONG)
+        duration = if (isLongDuration) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
         when {
             origin || ctx is Application -> showSystemToast(ctx, message, duration)
             API.ABOVE_R -> {
@@ -253,7 +269,7 @@ private fun showToast(
                 // } else {
                 //     Toast.makeText(ctx, message, duration).show()
                 // }
-                mainHandler.removeCallbacksAndMessages(null)
+                mainHandler.removeCallbacksAndMessages(dismissToken)
                 FloatView.with(FLOAT_VIEW_TAG).remove(true)
                 val showResult = FloatView.with(ctx)
                     .layout(toastCfg.layout) { v ->
@@ -284,8 +300,10 @@ private fun showToast(
                     showSystemToast(ctx, message, duration)
                     return
                 }
-                mainHandler.postDelayed(
+                HandlerCompat.postDelayed(
+                    mainHandler,
                     { FloatView.with(FLOAT_VIEW_TAG).remove() },
+                    dismissToken,
                     if (isLongDuration) {
                         toastCfg.durationLongMs
                     } else {
@@ -343,7 +361,8 @@ private fun showToast(
  */
 fun cancelToast() {
     val cancelAction = {
-        mainHandler.removeCallbacksAndMessages(null)
+        mainHandler.removeCallbacksAndMessages(toastRequestToken)
+        mainHandler.removeCallbacksAndMessages(dismissToken)
         toast?.cancel()
         toast = null
         FloatView.with(FLOAT_VIEW_TAG).remove()

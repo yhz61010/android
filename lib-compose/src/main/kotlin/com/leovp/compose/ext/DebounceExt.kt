@@ -62,7 +62,8 @@ fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit
 }
 
 /**
- * All buttons share a single timestamp (_lastClickTime_), affecting each other.
+ * All buttons share a single timestamp (_lastClickTime_), affecting each other. Changing
+ * [debounceTime] creates a new handler and resets its timestamp.
  *
  * Usage:
  * ```
@@ -76,7 +77,7 @@ fun rememberDebounceClickHandler(debounceTime: Long = 1000L, onClick: () -> Unit
  */
 @Composable
 fun rememberDebounceHandler(debounceTime: Long = 1000L): DebounceHandler =
-    remember { DebounceHandler(debounceTime) }
+    remember(debounceTime) { DebounceHandler(debounceTime) }
 
 /**
  * Advanced version of _rememberDebounceHandler_.

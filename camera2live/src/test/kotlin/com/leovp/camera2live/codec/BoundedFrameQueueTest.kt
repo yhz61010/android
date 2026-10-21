@@ -10,7 +10,7 @@ class BoundedFrameQueueTest {
     @Test
     fun `offer drops oldest frame and reports the drop`() {
         var droppedFrames = 0
-        val queue = BoundedFrameQueue(2) { droppedFrames++ }
+        val queue = BoundedFrameQueue<ByteArray>(2) { droppedFrames++ }
 
         assertTrue(queue.offer(byteArrayOf(1)))
         assertTrue(queue.offer(byteArrayOf(2)))
@@ -24,7 +24,7 @@ class BoundedFrameQueueTest {
     @Test
     fun `addAll applies the same bounded drop policy`() {
         var droppedFrames = 0
-        val queue = BoundedFrameQueue(2) { droppedFrames++ }
+        val queue = BoundedFrameQueue<ByteArray>(2) { droppedFrames++ }
 
         assertTrue(queue.addAll(listOf(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3))))
 
@@ -36,6 +36,6 @@ class BoundedFrameQueueTest {
 
     @Test
     fun `capacity must be positive`() {
-        assertFailsWith<IllegalArgumentException> { BoundedFrameQueue(0) }
+        assertFailsWith<IllegalArgumentException> { BoundedFrameQueue<ByteArray>(0) }
     }
 }

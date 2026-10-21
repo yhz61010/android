@@ -70,6 +70,7 @@ class ForegroundComponent(private var becameBackgroundDelay: Long = CHECK_DELAY)
     private val listeners: MutableList<AppStateListener> = CopyOnWriteArrayList()
     private var checkRunnable: Runnable? = null
 
+    /** Receives foreground/background transitions on the main thread. */
     interface AppStateListener {
         fun onBecameForeground()
         fun onBecameBackground()

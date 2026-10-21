@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlin.concurrent.thread
+import java.time.Duration
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -82,6 +83,21 @@ class ToastExtTest {
         shadowOf(activity.mainLooper).idle()
 
         assertFalse(FloatView.with(tag).exist())
+    }
+
+    @Test
+    fun `concurrent toast requests do not remove each other from the main queue`() {
+        val windowManager = createWindowManager()
+        val context = createVisualContext(windowManager)
+        ShadowSettings.setCanDrawOverlays(true)
+
+        val first = thread { context.toast("first") }
+        val second = thread { context.toast("second") }
+        first.join()
+        second.join()
+        shadowOf(activity.mainLooper).idleFor(Duration.ZERO)
+
+        verify(exactly = 2) { windowManager.addView(any(), any()) }
     }
 
     private fun createWindowManager(): WindowManager {

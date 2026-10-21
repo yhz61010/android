@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；本轮更正已经直接并入 §10–§14，不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Codex，2026-10-21）已实施 §11 的全部 26 项，当前验证状态见 §14.1。
 
 ## 0. 范围与方法
 
@@ -165,7 +165,9 @@
 
 ## 11. 确认的问题与代码级修复方案
 
-所有方案均为提案，未改代码。「验证」项全部未执行。
+截至 2026-10-21，本文 §11 的 26 项确认问题均已按方案落地；本节保留原始问题、方案与验证要求，
+便于逐项追溯。JVM/Robolectric、静态检查和 Demo 编译的实际结果见 §14；依赖真实 Codec、GLES、
+MediaProjection、WindowManager 或设备时序的真机项仍未执行，不能由单测结果替代。
 
 ### 11.1 录屏、相机与倒计时
 
@@ -935,3 +937,37 @@ Codex 已在同一代码 HEAD `e57608f70f84c9e52a795d2f2b44fc0300117cc3` 上执�
 ```
 
 真机项：F1 丢帧比例、F2 回调线程名与 StrictMode、F3 主线程 tick 序列、F7 HEVC + MP4 configure、G1 并发 toast、G3 的 `onActivityDestroyed` 时序（可用 Robolectric 补测替代）。
+
+### 14.1 2026-10-21 实施后的验证
+
+§11 的 26 项修改完成后，Codex 对受影响范围重新执行了以下测试与 Demo 集成编译：
+
+```bash
+./gradlew \
+  :screencapture:testDebugUnitTest :camera2live:testDebugUnitTest \
+  :androidbase:testDebugUnitTest :floatview:testDebugUnitTest \
+  :lib-common-android:testDebugUnitTest :lib-compose:testDebugUnitTest \
+  :lib-mvvm:testDebugUnitTest :lib-network:testDebugUnitTest \
+  :opengl:testDebugUnitTest :pref:testDebugUnitTest \
+  :android-restricted:testDebugUnitTest :demo:compileDevDebugKotlin \
+  --rerun-tasks --max-workers=1 --console=plain
+```
+
+结果为 `BUILD SUCCESSFUL in 2m 45s`，`584 actionable tasks: 584 executed`。其中
+`opengl:testDebugUnitTest` 与 `android-restricted:testDebugUnitTest` 为 `NO-SOURCE`，只能证明对应模块
+编译进入该验证链路，不能表述为存在回归测试并通过。新增或扩展的测试覆盖：API 23+ 与模拟 API 21–22
+的 MediaCodec callback 线程选择、倒计时完整 60 秒序列与早醒、相机入队时间戳、MP4 三阶段失败清理、
+FloatView 有界 detach 重试、Toast 并发投递、NetworkMonitor 会话隔离、网络 callback 失败脱钩、
+Compose 参数变化、Result 原始 body，以及 HTTP 日志的有界请求/响应读取。
+
+所有改动库模块的 `ktlintCheck` 与 `detekt` 均以 `--rerun-tasks` 重新执行并通过；
+`:demo:detekt --rerun-tasks` 通过。`:demo:ktlintCheck --rerun-tasks` 被未修改文件
+`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/receiver/AudioReceiver.kt:165` 的既有
+`function-expression-body` 规则问题阻断，本轮未越界修改该文件；本轮改动的两个 Demo 文件只删除了
+已经移除的参数调用，并已由 `:demo:compileDevDebugKotlin` 验证。补丁还通过 `git diff --check`。
+
+尚未执行真机验证。尤其 API 21–22 分支目前只在 Robolectric 的缓存 API 28 环境中临时覆盖
+`Build.VERSION.SDK_INT` 进行控制流测试，未验证老设备上 MediaCodec 的真实 Looper 绑定；F1、F2、F7、
+F8、G1、G3、N7 等涉及真实编码器、MediaProjection、窗口、OpenGL 或平台调度的行为仍须按本文对应
+条目的设备矩阵执行。原“真机项”中的 F3 已增加 JVM 可控时钟回归测试，但主线程真实调度表现仍未
+在设备上观察。

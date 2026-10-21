@@ -109,13 +109,19 @@ suspend inline fun <reified R> result(
 
             // JSON convert exception
             is ConvertException -> {
-                val bodyString = payloadOperationOrNull("Error while getting body string.") {
-                    err.response.body.string()
+                // SerializationConverter consumes successful bodies before it reports a parsing
+                // failure and preserves the raw body in ConvertException.message.
+                val bodyString = if (err.response.code in 200..299) {
+                    err.message
+                } else {
+                    payloadOperationOrNull("Error while getting body string.") {
+                        err.response.body.string()
+                    }
                 }
                 Result.Failure(
                     ResultConvertException(
                         statusCode = err.response.code,
-                        message = err.cause?.message,
+                        message = err.cause?.message ?: err.message,
                         cause = err,
                         responseBodyString = bodyString,
                         tag = err.tag

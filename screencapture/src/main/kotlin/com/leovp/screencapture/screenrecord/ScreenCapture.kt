@@ -44,7 +44,6 @@ object ScreenCapture {
             ScreenRecordMediaCodecStrategy.EncodeType.H264
         private var bitrate = width * height
         private var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        private var keyFrameRate = 20
         private var iFrameInterval = 1
         private var useGoogleEncoder = false
 
@@ -59,10 +58,10 @@ object ScreenCapture {
         fun setEncodeType(encodeType: ScreenRecordMediaCodecStrategy.EncodeType) =
             apply { this.encodeType = encodeType }
 
+        /** Controls capture and encoder frame rate; the removed `setKeyFrameRate()` was ignored. */
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
-        fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
 
         // ==================================================
@@ -98,7 +97,6 @@ object ScreenCapture {
                 "encodeType=$encodeType width=$width height=$height dpi=$dpi " +
                     "captureType=$captureType " +
                     "fps=$fps bitrate=$bitrate bitrateMode=$bitrateMode " +
-                    "keyFrameRate=$keyFrameRate " +
                     "iFrameInterval=$iFrameInterval sampleSize=$sampleSize " +
                     "useGoogleEncoder=$useGoogleEncoder mp4OutputFile=${mp4OutputFile?.name}"
             )
@@ -113,7 +111,6 @@ object ScreenCapture {
                     .setFps(fps)
                     .setBitrate(bitrate)
                     .setBitrateMode(bitrateMode)
-                    .setKeyFrameRate(keyFrameRate)
                     .setIFrameInterval(iFrameInterval)
                     .setQuality(quality)
                     .setSampleSize(sampleSize)
@@ -130,7 +127,6 @@ object ScreenCapture {
                     .setFps(fps)
                     .setBitrate(bitrate)
                     .setBitrateMode(bitrateMode)
-                    .setKeyFrameRate(keyFrameRate)
                     .setIFrameInterval(iFrameInterval)
                     .setGoogleEncoder(useGoogleEncoder)
                     .build()

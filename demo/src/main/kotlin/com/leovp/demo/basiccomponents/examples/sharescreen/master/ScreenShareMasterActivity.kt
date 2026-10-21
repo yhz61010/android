@@ -173,7 +173,6 @@ class ScreenShareMasterActivity :
                     // In XiaoMi 10(Android 10), If you set BITRATE_MODE_CQ, the MediaCodec
                     // configure will be crashed.
                     // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-                    // setting.keyFrameRate = 2
                     // setting.iFrameInterval = 3
                     mediaProjectService?.startScreenShare(setting)
                 } else {
@@ -527,7 +526,6 @@ data class ScreenShareSetting(val width: Int, val height: Int, val dpi: Int) {
     var fps: Float = 20F
     var bitrate = (width * height * 1.8f).toInt()
     var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-    var keyFrameRate = 8
     var iFrameInterval = 4
 
     /** Only used in `ScreenCapture.BY_IMAGE_2_H26X` mode */

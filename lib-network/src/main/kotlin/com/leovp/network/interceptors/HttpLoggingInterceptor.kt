@@ -10,9 +10,13 @@ import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.internal.http.promisesBody
 import okio.Buffer
+import okio.ForwardingSink
+import okio.buffer
 
 /**
  * Author: Michael Leo
@@ -159,36 +163,7 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                     )
                 }
             }
-            if (!logBody || !hasRequestBody) {
-                logger.log("--> END ${request.method}")
-            } else if (bodyEncoded(request.headers)) {
-                logger.log("--> END ${request.method} (encoded body omitted)")
-            } else if (hasBoundary) {
-                logger.log(
-                    "--> END ${request.method} (Found boundary " +
-                        "${requestBody.contentLength()}-byte body omitted)"
-                )
-            } else {
-                val buffer = Buffer()
-                requestBody.writeTo(buffer)
-                var charset = DEFAULT_CHARSET
-                requestBody.contentType()?.also {
-                    charset = it.charset(DEFAULT_CHARSET)!!
-                }
-                logger.log("")
-                if (isPlaintext(buffer)) {
-                    val content = buffer.readString(charset)
-                    logger.log(content)
-                    logger.log(
-                        "--> END ${request.method} (${requestBody.contentLength()}-byte body)"
-                    )
-                } else {
-                    logger.log(
-                        "--> END ${request.method} (binary ${requestBody.contentLength()}-byte " +
-                            "body omitted)"
-                    )
-                }
-            }
+            logRequestEnd(request, requestBody, logBody, hasBoundary)
             logger.log(DIVIDER)
         }
         val startNs = System.nanoTime()
@@ -233,22 +208,23 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
                 logger.log("<-- END HTTP (inline file omitted)")
             } else {
                 val source = responseBody.source()
-                source.request(Long.MAX_VALUE)
-                // Buffer the entire body.
+                source.request(MAX_LOGGABLE_BODY_BYTES + 1)
                 val buffer = source.buffer
-                var charset = DEFAULT_CHARSET
-                val contentType = responseBody.contentType()
-                if (contentType != null) {
-                    charset = contentType.charset(DEFAULT_CHARSET)!!
-                }
+                val charset =
+                    responseBody.contentType()?.charset(DEFAULT_CHARSET)
+                        ?: DEFAULT_CHARSET
                 if (!isPlaintext(buffer)) {
                     logger.log(" \n<-- END HTTP (binary ${buffer.size}-byte body omitted)")
-                    return response
+                } else {
+                    if (contentLength != 0L) {
+                        val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+                        logger.log(" \n${buffer.clone().readString(logged, charset)}")
+                        if (buffer.size > logged) {
+                            logger.log("<-- (body truncated to $logged bytes for logging)")
+                        }
+                    }
+                    logger.log("<-- END HTTP (${buffer.size}-byte buffered for logging)")
                 }
-                if (contentLength != 0L) {
-                    logger.log(" \n${buffer.clone().readString(charset)}")
-                }
-                logger.log("<-- END HTTP (${buffer.size}-byte body)")
             }
         }
         logger.log(DIVIDER)
@@ -260,11 +236,112 @@ class HttpLoggingInterceptor(private val logger: Logger = Logger.DEFAULT) : Inte
         return contentEncoding != null && !contentEncoding.equals("identity", ignoreCase = true)
     }
 
+    private fun logRequestEnd(
+        request: Request,
+        requestBody: RequestBody?,
+        logBody: Boolean,
+        hasBoundary: Boolean,
+    ) {
+        if (!logBody || requestBody == null) {
+            logger.log("--> END ${request.method}")
+        } else if (bodyEncoded(request.headers)) {
+            logger.log("--> END ${request.method} (encoded body omitted)")
+        } else if (hasBoundary) {
+            logger.log(
+                "--> END ${request.method} (Found boundary " +
+                    "${requestBody.contentLength()}-byte body omitted)"
+            )
+        } else if (requestBody.isDuplex() || requestBody.isOneShot()) {
+            logger.log("--> END ${request.method} (duplex/one-shot body omitted)")
+        } else if (requestBody.contentLength() !in 0..MAX_LOGGABLE_BODY_BYTES) {
+            logger.log(
+                "--> END ${request.method} " +
+                    "(${requestBody.contentLength()}-byte body omitted, exceeds log limit)"
+            )
+        } else {
+            logCapturedRequestBody(request, requestBody)
+        }
+    }
+
+    private fun logCapturedRequestBody(request: Request, requestBody: RequestBody) {
+        val capturedBody = captureRequestBodyForLogging(requestBody)
+        val buffer = capturedBody.buffer
+        val charset = requestBody.contentType()?.charset(DEFAULT_CHARSET) ?: DEFAULT_CHARSET
+        logger.log("")
+        if (isPlaintext(buffer)) {
+            val logged = minOf(buffer.size, MAX_LOGGABLE_BODY_BYTES)
+            logger.log(buffer.clone().readString(logged, charset))
+            val suffix = if (capturedBody.truncated) {
+                " (truncated to $logged bytes for logging)"
+            } else {
+                ""
+            }
+            logger.log(
+                "--> END ${request.method} (${requestBody.contentLength()}-byte body$suffix)"
+            )
+        } else {
+            logger.log(
+                "--> END ${request.method} (binary ${requestBody.contentLength()}-byte " +
+                    "body omitted)"
+            )
+        }
+    }
+
     companion object {
         private const val DIVIDER = "─────────────────────────────────────────────────────────"
 
         private val DEFAULT_CHARSET = Charsets.UTF_8
         private const val TAG = "HTTP"
+        private const val MAX_LOGGABLE_BODY_BYTES = 256L * 1024
+
+        internal data class CapturedRequestBody(val buffer: Buffer, val truncated: Boolean)
+
+        internal fun captureRequestBodyForLogging(requestBody: RequestBody): CapturedRequestBody {
+            val output = Buffer()
+            val cap = MAX_LOGGABLE_BODY_BYTES + 1
+            var truncated = false
+            val limitedSink = object : ForwardingSink(output) {
+                override fun write(source: Buffer, byteCount: Long) {
+                    val remaining = cap - output.size
+                    when {
+                        remaining <= 0 -> {
+                            source.skip(byteCount)
+                            truncated = true
+                            throw RequestBodyLimitExceededException()
+                        }
+                        byteCount > remaining -> {
+                            super.write(source, remaining)
+                            source.skip(byteCount - remaining)
+                            truncated = true
+                            throw RequestBodyLimitExceededException()
+                        }
+                        else -> {
+                            super.write(source, byteCount)
+                            if (output.size > MAX_LOGGABLE_BODY_BYTES) {
+                                truncated = true
+                                throw RequestBodyLimitExceededException()
+                            }
+                        }
+                    }
+                }
+            }.buffer()
+            try {
+                requestBody.writeTo(limitedSink)
+                limitedSink.flush()
+            } catch (_: RequestBodyLimitExceededException) {
+                // The bounded sink has already recorded truncation.
+            }
+            return CapturedRequestBody(output, truncated)
+        }
+
+        private class RequestBodyLimitExceededException : IOException() {
+            override fun fillInStackTrace(): Throwable = this
+
+            private companion object {
+                @Suppress("unused")
+                private const val serialVersionUID = 1L
+            }
+        }
 
         /**
          * Header names (lower-case) whose values are masked in logs so credentials/session tokens

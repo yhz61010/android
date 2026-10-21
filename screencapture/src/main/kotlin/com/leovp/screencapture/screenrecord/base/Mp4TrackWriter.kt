@@ -32,9 +32,12 @@ import java.nio.ByteBuffer
  * on. Move [close] under that lock and the recorder stalls its codec callbacks for the length of
  * an index write; call any method without it and the protocol is gone.
  */
-internal class Mp4TrackWriter(private val outputFile: File) {
+internal class Mp4TrackWriter(
+    private val outputFile: File,
+    private val muxerFactory: (File) -> Mp4Muxer = { AndroidMp4Muxer(it) },
+) {
 
-    private var muxer: MediaMuxer? = null
+    private var muxer: Mp4Muxer? = null
     private var trackIndex = NO_TRACK
     private var samplesWritten = 0L
     private var samplesDroppedBeforeTrack = 0L
@@ -53,13 +56,10 @@ internal class Mp4TrackWriter(private val outputFile: File) {
     fun onOutputFormat(format: MediaFormat) {
         if (broken || muxer != null) return
         try {
-            val created = MediaMuxer(
-                outputFile.absolutePath,
-                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
-            )
+            val created = muxerFactory(outputFile)
+            muxer = created
             trackIndex = created.addTrack(format)
             created.start()
-            muxer = created
             LogContext.log.i(TAG, "MP4 track opened. dstFile=${outputFile.absolutePath}")
         } catch (error: Throwable) {
             // Thrown here by an unsupported track format - notably an HEVC track before API 24,
@@ -121,9 +121,11 @@ internal class Mp4TrackWriter(private val outputFile: File) {
             // Either the track never opened or fail() already tore it down. Nothing to finish.
             return
         }
+        var completed = false
         try {
             if (samplesWritten > 0) {
                 target.stop()
+                completed = true
                 LogContext.log.i(
                     TAG,
                     "MP4 closed with $samplesWritten sample(s). dstFile=${outputFile.absolutePath}"
@@ -136,7 +138,7 @@ internal class Mp4TrackWriter(private val outputFile: File) {
         } finally {
             runCatching { target.release() }
                 .onFailure { LogContext.log.e(TAG, "MP4 release failed", it) }
-            if (samplesWritten == 0L) discardOutputFile()
+            if (!completed) discardOutputFile()
         }
     }
 
@@ -173,4 +175,29 @@ internal class Mp4TrackWriter(private val outputFile: File) {
         private val SAMPLE_FLAG_MASK =
             (MediaCodec.BUFFER_FLAG_CODEC_CONFIG or MediaCodec.BUFFER_FLAG_END_OF_STREAM).inv()
     }
+}
+
+internal interface Mp4Muxer {
+    fun addTrack(format: MediaFormat): Int
+    fun start()
+    fun writeSampleData(trackIndex: Int, byteBuffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo)
+    fun stop()
+    fun release()
+}
+
+private class AndroidMp4Muxer(outputFile: File) : Mp4Muxer {
+    private val delegate = MediaMuxer(
+        outputFile.absolutePath,
+        MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
+    )
+
+    override fun addTrack(format: MediaFormat): Int = delegate.addTrack(format)
+    override fun start() = delegate.start()
+    override fun writeSampleData(
+        trackIndex: Int,
+        byteBuffer: ByteBuffer,
+        bufferInfo: MediaCodec.BufferInfo,
+    ) = delegate.writeSampleData(trackIndex, byteBuffer, bufferInfo)
+    override fun stop() = delegate.stop()
+    override fun release() = delegate.release()
 }

@@ -50,4 +50,25 @@ class PendingInputBuffersTest {
         assertEquals(0, pendingInputBuffers.size)
         assertEquals(0, frames.size)
     }
+
+    @Test
+    fun `queued frames retain their arrival timestamps when drained together`() {
+        val pendingInputBuffers = PendingInputBuffers().apply {
+            add(7)
+            add(8)
+        }
+        val frames = ArrayDeque<EncoderFrame>().apply {
+            add(EncoderFrame(byteArrayOf(1), 10_000L))
+            add(EncoderFrame(byteArrayOf(2), 25_000L))
+        }
+        val submittedTimestamps = mutableListOf<Long>()
+
+        pendingInputBuffers.drain(
+            nextFrame = frames::poll,
+            submit = { _, frame -> submittedTimestamps += frame.presentationTimeUs },
+            onFailure = { throw it }
+        )
+
+        assertEquals(listOf(10_000L, 25_000L), submittedTimestamps)
+    }
 }

@@ -21,7 +21,10 @@ import com.leovp.log.LogContext
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import com.leovp.screencapture.screenrecord.base.ScreenProcessor
 import java.nio.ByteBuffer
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Author: Michael Leo
@@ -37,6 +40,10 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     private var videoEncoderLoop = AtomicBoolean(false)
     private var videoDataSendThread: HandlerThread? = null
     private var videoDataSendHandler: Handler? = null
+    private var codecCallbackThread: HandlerThread? = null
+    private val projectionCallback = object : MediaProjection.Callback() {}
+    private val projectionCallbackLock = Any()
+    private var projectionCallbackRegistered = false
 
     @Suppress("WeakerAccess")
     var vpsSpsPpsBuf: ByteArray? = null
@@ -114,24 +121,22 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             private set
         var bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
             private set
+
         /**
-         * No longer reaches the encoder. It used to be wired to `MediaFormat.KEY_FRAME_RATE`,
-         * which is the frame rate and therefore belongs to [fps]; key-frame spacing is
-         * [iFrameInterval].
-         * Kept so existing callers still compile - retiring the setter is a separate API change.
+         * Key-frame interval in seconds. Encoder frame rate is configured separately through
+         * [setFps].
          */
-        var keyFrameRate = 20
-            private set
         var iFrameInterval = 1
             private set
         var useGoogleEncoder = false
             private set
 
         fun setEncodeType(encodeType: EncodeType) = apply { this.encodeType = encodeType }
+
+        /** Controls encoder frame rate; the removed `setKeyFrameRate()` was ignored. */
         fun setFps(fps: Float) = apply { this.fps = fps }
         fun setBitrate(bitrate: Int) = apply { this.bitrate = bitrate }
         fun setBitrateMode(bitrateMode: Int) = apply { this.bitrateMode = bitrateMode }
-        fun setKeyFrameRate(keyFrameRate: Int) = apply { this.keyFrameRate = keyFrameRate }
         fun setIFrameInterval(iFrameInterval: Int) = apply { this.iFrameInterval = iFrameInterval }
         fun setGoogleEncoder(useGoogleEncoder: Boolean) =
             apply { this.useGoogleEncoder = useGoogleEncoder }
@@ -140,7 +145,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             LogContext.log.i(
                 TAG,
                 "encodeType=$encodeType width=$width height=$height dpi=$dpi fps=$fps " +
-                    "bitrate=$bitrate bitrateMode=$bitrateMode keyFrameRate=$keyFrameRate " +
+                    "bitrate=$bitrate bitrateMode=$bitrateMode " +
                     "iFrameInterval=$iFrameInterval"
             )
             return ScreenRecordMediaCodecStrategy(this)
@@ -170,7 +175,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             )
             setInteger(MediaFormat.KEY_BIT_RATE, builder.bitrate)
             setInteger(MediaFormat.KEY_BITRATE_MODE, builder.bitrateMode)
-            // The frame rate, not builder.keyFrameRate. This key tells the encoder how many
+            // The frame rate tells the encoder how many
             // frames a second to spread KEY_BIT_RATE over; a number the display does not
             // actually deliver misallocates that budget across the frames it does.
             setInteger(MediaFormat.KEY_FRAME_RATE, builder.fps.toInt().coerceAtLeast(1))
@@ -217,49 +222,107 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             // setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
             //            }
         }
-        h26xEncoder = if (builder.useGoogleEncoder) {
-            when (builder.encodeType) {
-                EncodeType.H264 -> MediaCodec.createByCodecName("OMX.google.h264.encoder")
-                EncodeType.H265 -> {
-                    val hevcEncoderName = getHevcCodec(encoder = true)[0].name
-                    LogContext.log.i(TAG, "hevcEncoderName=$hevcEncoderName")
-                    MediaCodec.createByCodecName(hevcEncoderName)
-                } // "c2.android.hevc.encoder"
-            }
-        } else {
-            when (builder.encodeType) {
-                EncodeType.H264 -> MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-                EncodeType.H265 -> MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+        val createCodec = {
+            if (builder.useGoogleEncoder) {
+                when (builder.encodeType) {
+                    EncodeType.H264 -> MediaCodec.createByCodecName("OMX.google.h264.encoder")
+                    EncodeType.H265 -> {
+                        val hevcEncoderName = getHevcCodec(encoder = true)[0].name
+                        LogContext.log.i(TAG, "hevcEncoderName=$hevcEncoderName")
+                        MediaCodec.createByCodecName(hevcEncoderName)
+                    } // "c2.android.hevc.encoder"
+                }
+            } else {
+                when (builder.encodeType) {
+                    EncodeType.H264 ->
+                        MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+                    EncodeType.H265 ->
+                        MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+                }
             }
         }
-        h26xEncoder?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        outputFormat = h26xEncoder?.outputFormat // option B
-        h26xEncoder?.setCallback(mediaCodecCallback)
-        val surface = h26xEncoder!!.createInputSurface()
-        registerCallbackAboveAndroid14()
-        virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
-            "screen-record",
-            builder.width,
-            builder.height,
-            builder.dpi,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
-            surface,
-            null,
-            null
-        )
-
-        initHandler()
+        val callbackThread = HandlerThread("scr-rec-codec").apply { start() }
+        codecCallbackThread = callbackThread
+        val callbackHandler = Handler(callbackThread.looper)
+        try {
+            val encoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                createCodec().also {
+                    h26xEncoder = it
+                    it.setCallback(mediaCodecCallback, callbackHandler)
+                }
+            } else {
+                val abandoned = AtomicBoolean(false)
+                val created = AtomicReference<MediaCodec?>(null)
+                val task = FutureTask {
+                    val codec = createCodec()
+                    created.set(codec)
+                    try {
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec.setCallback(mediaCodecCallback)
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec
+                    } catch (error: Throwable) {
+                        if (created.compareAndSet(codec, null)) codec.release()
+                        throw error
+                    }
+                }
+                check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
+                try {
+                    task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
+                        check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
+                    }
+                } catch (error: Throwable) {
+                    abandoned.set(true)
+                    task.cancel(true)
+                    created.getAndSet(null)?.release()
+                    throw (error.cause ?: error)
+                }
+            }
+            h26xEncoder = encoder
+            encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            outputFormat = encoder.outputFormat
+            val surface = encoder.createInputSurface()
+            registerCallbackAboveAndroid14()
+            virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
+                "screen-record",
+                builder.width,
+                builder.height,
+                builder.dpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
+                surface,
+                null,
+                null
+            )
+            initHandler()
+        } catch (error: Throwable) {
+            runCatching { h26xEncoder?.release() }
+            h26xEncoder = null
+            releaseCodecCallbackThread()
+            throw error
+        }
     }
 
     override fun onRelease() {
         LogContext.log.i(TAG, "onRelease()")
+        synchronized(projectionCallbackLock) {
+            if (projectionCallbackRegistered) {
+                projectionCallbackRegistered = false
+                try {
+                    builder.mediaProjection?.unregisterCallback(projectionCallback)
+                } catch (error: Exception) {
+                    LogContext.log.e(TAG, "Unable to unregister projection callback.", error)
+                }
+            }
+        }
         // No videoEncoderLoop guard here. Callers stop before releasing, which clears that flag,
         // so guarding on it skipped the two releases below entirely and leaked the encoder and
         // the virtual display for the life of the process. onStop() keeps its own guard, and
         // nulling the two fields makes a repeated release a no-op instead of a double free.
         onStop()
+        releaseHandler()
         h26xEncoder?.release()
         h26xEncoder = null
+        releaseCodecCallbackThread()
         virtualDisplay?.release()
         virtualDisplay = null
     }
@@ -297,6 +360,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         virtualDisplay = null
         runCatching { h26xEncoder?.release() }.onFailure { it.printStackTrace() }
         h26xEncoder = null
+        releaseCodecCallbackThread()
         //        mediaCodecCallback = null
         runCatching { releaseHandler() }.onFailure { it.printStackTrace() }
 
@@ -322,6 +386,23 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendHandler = null
         videoDataSendThread?.quitSafely()
         videoDataSendThread = null
+    }
+
+    private fun releaseCodecCallbackThread() {
+        val callbackThread = codecCallbackThread
+        codecCallbackThread = null
+        callbackThread?.quitSafely()
+        if (callbackThread != null && Thread.currentThread() !== callbackThread) {
+            try {
+                callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+                if (callbackThread.isAlive) {
+                    LogContext.log.w(TAG, "Codec callback thread did not stop within timeout")
+                }
+            } catch (error: InterruptedException) {
+                Thread.currentThread().interrupt()
+                LogContext.log.e(TAG, "Interrupted while stopping codec callback thread", error)
+            }
+        }
     }
 
     private fun onSendAvcFrame(
@@ -423,7 +504,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     private fun registerCallbackAboveAndroid14() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            builder.mediaProjection!!.registerCallback(object : MediaProjection.Callback() {}, null)
+            synchronized(projectionCallbackLock) {
+                if (projectionCallbackRegistered) return
+                builder.mediaProjection!!.registerCallback(projectionCallback, null)
+                projectionCallbackRegistered = true
+            }
         }
     }
 
@@ -434,5 +519,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
 
     companion object {
         private const val TAG = "ScrRec"
+        private const val CALLBACK_SETUP_TIMEOUT_MS = 2_000L
+        private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
     }
 }

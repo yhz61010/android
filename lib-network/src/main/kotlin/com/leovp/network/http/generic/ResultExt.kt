@@ -48,6 +48,11 @@ import kotlinx.coroutines.withContext
  * - For JSON serialize exception, it is the [ResultConvertException] instance.
  * - For unexpected exception, it is the [ResultException] instance.
  *
+ * Migration: [ResultServerException], [ResultConvertException], and [ResultException] now retain
+ * the original `Api*Exception` as their `cause`, rather than that exception's nullable cause.
+ * Inspect `cause?.cause` for the underlying root cause. A plain [ApiException] also preserves its
+ * `code` and `tag`.
+ *
  * @param dispatcher The dispatcher for suspend [block] function. [Dispatchers.IO] by default.
  */
 suspend inline fun <reified R> result(

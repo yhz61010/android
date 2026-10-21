@@ -256,7 +256,6 @@ class MediaProjectionService : Service() {
             .setBitrate(setting.bitrate)
             // For H26x
             .setBitrateMode(setting.bitrateMode)
-            .setKeyFrameRate(setting.keyFrameRate)
             // 20
             .setIFrameInterval(setting.iFrameInterval)
             // For bitmap

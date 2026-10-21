@@ -108,32 +108,25 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
     // Called if the geometry of the view changes, for example when the device's screen orientation
     // changes.
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
+        val videoSize = synchronized(this) {
+            super.onSurfaceChanged(gl, width, height)
+            if (videoWidth > 0 && videoHeight > 0) {
+                pointCoord = createCustomFloatBuffer(
+                    videoWidth,
+                    videoHeight,
+                    keepRatio,
+                    outputWidth,
+                    outputHeight
+                )
+            }
+            hasVisibility = true
+            videoWidth to videoHeight
+        }
         LogContext.log.w(
             tag,
-            "=====> GLRenderer onSurfaceChanged()=$width x $height videoWidth=$videoWidth x " +
-                "$videoHeight",
+            "onSurfaceChanged=$width x $height video=${videoSize.first} x ${videoSize.second}",
             outputType = LogOutType.FRAMEWORK
         )
-        super.onSurfaceChanged(gl, width, height)
-
-        // val ratio: Float = width.toFloat() / height.toFloat()
-
-        // this projection matrix is applied to object coordinates
-        // in the onDrawFrame() method
-        // Attention: "-ratio, ratio, -1f, 1f" means keep screen ratio. Width is fixed.
-        // Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
-
-        if (videoWidth > 0 && videoHeight > 0) {
-            pointCoord = createCustomFloatBuffer(
-                videoWidth,
-                videoHeight,
-                keepRatio,
-                outputWidth,
-                outputHeight
-            )
-        }
-        hasVisibility = true
-        LogContext.log.d(tag, "onSurfaceChanged: $width*$height", outputType = LogOutType.FRAMEWORK)
     }
 
     //  Called for each redraw of the view.

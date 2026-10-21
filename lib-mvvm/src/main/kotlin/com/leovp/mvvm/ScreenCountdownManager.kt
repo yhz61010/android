@@ -28,14 +28,32 @@ import kotlinx.coroutines.launch
  * Author: Michael Leo
  * Date: 2025/11/18 11:01
  */
-class ScreenCountdownManager(
+class ScreenCountdownManager internal constructor(
     private val scope: CoroutineScope,
     private val tag: String,
     val countdownDurationMillis: Long,
     val warningThresholdMillis: Long,
     private val enableAutoReset: Boolean = true,
     private val enableWarning: Boolean = false,
+    private val nowNanos: () -> Long,
 ) {
+    constructor(
+        scope: CoroutineScope,
+        tag: String,
+        countdownDurationMillis: Long,
+        warningThresholdMillis: Long,
+        enableAutoReset: Boolean = true,
+        enableWarning: Boolean = false,
+    ) : this(
+        scope,
+        tag,
+        countdownDurationMillis,
+        warningThresholdMillis,
+        enableAutoReset,
+        enableWarning,
+        System::nanoTime
+    )
+
     data class CountdownParam(
         val countdownDurationMillis: Long,
         val warningThresholdMillis: Long,
@@ -112,20 +130,7 @@ class ScreenCountdownManager(
 
     /** Milliseconds of monotonic time since [originNanos]. */
     private fun elapsedMillisSince(originNanos: Long): Long =
-        (System.nanoTime() - originNanos) / 1_000_000L
-
-    /**
-     * What is left of the countdown, rounded up to a whole tick.
-     *
-     * Rounding up keeps the exposed value stepping 60000, 59000, 58000 the way the old counter
-     * did. Reporting the raw remainder would hand the UI 59997 one tick in, and a caller
-     * dividing by 1000 would show a second less than it should.
-     */
-    private fun remainingMillisAt(startedAtNanos: Long): Long {
-        val tickMillis = TICK_INTERVAL.inWholeMilliseconds
-        val raw = (countdownDurationMillis - elapsedMillisSince(startedAtNanos)).coerceAtLeast(0L)
-        return (raw + tickMillis - 1) / tickMillis * tickMillis
-    }
+        (nowNanos() - originNanos) / 1_000_000L
 
     private fun startCountdown() {
         i(tag) { "=====> startCountdown() <=====" }
@@ -141,13 +146,10 @@ class ScreenCountdownManager(
                 )
             }
 
-            // Both the deadline and the tick boundaries come from a monotonic clock. Subtracting
-            // a flat TICK_INTERVAL from a counter assumed each pass through this loop took
-            // exactly that long, but the state update and the (suspending) effect emit below
-            // cost time on top of the delay, and nothing ever gave it back. The countdown
-            // finished progressively later than its own duration, and the value handed to the
-            // UI drifted away from the wall clock with it.
-            val startedAtNanos = System.nanoTime()
+            // The monotonic clock schedules logical tick deadlines, so work performed in the
+            // loop cannot accumulate delay. Published values come from the tick index itself:
+            // an early clock reading may delay the next tick, but cannot repeat the prior value.
+            val startedAtNanos = nowNanos()
             val tickMillis = TICK_INTERVAL.inWholeMilliseconds
             var nextTickAtMillis = 0L
             var warningEmitted = false
@@ -156,17 +158,15 @@ class ScreenCountdownManager(
                 nextTickAtMillis += tickMillis
                 val waitMillis = nextTickAtMillis - elapsedMillisSince(startedAtNanos)
                 if (waitMillis > 0) delay(waitMillis.milliseconds)
-                remaining = remainingMillisAt(startedAtNanos)
+                remaining = (countdownDurationMillis - nextTickAtMillis).coerceAtLeast(0L)
                 // d(tag) { "-----> Screen countdown remaining=${remaining.div(1000)}s" }
 
                 _countdownState.update {
                     it.copy(remainingTimeMillis = remaining)
                 }
 
-                // A crossing, not an equality. `remaining` now comes from a clock, so it lands on
-                // the threshold only by accident; `<=` plus a one-shot flag fires exactly once.
-                // The emitted value is the threshold rather than `remaining`, which is what the
-                // equality used to guarantee and what a caller configured.
+                // A crossing, not an equality, supports thresholds that are not exact tick
+                // multiples. The one-shot flag guarantees a single warning.
                 if (enableWarning && !warningEmitted && remaining <= warningThresholdMillis) {
                     warningEmitted = true
                     // d(tag) { "-----> Countdown warning=${warningThresholdMillis / 1000}s" }

@@ -23,10 +23,17 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Author: Michael Leo
  * Date: 2021/4/28 10:30 AM
+ *
+ * Migration: callers no longer select H.265 by assigning `isH265`. Pass VPS to
+ * [initDecoder] for HEVC, or pass `null` VPS for AVC; the decoder type is selected automatically.
  */
 class LeoTextureView @JvmOverloads constructor(
     context: Context,
@@ -37,6 +44,7 @@ class LeoTextureView @JvmOverloads constructor(
     companion object {
         private const val TAG = "LTV"
         private const val CALLBACK_THREAD_JOIN_TIMEOUT_MS = 1_000L
+        private const val CALLBACK_SETUP_TIMEOUT_MS = 2_000L
     }
 
     private var isH265 = false
@@ -145,7 +153,8 @@ class LeoTextureView @JvmOverloads constructor(
             screenInfo.width,
             screenInfo.height
         )
-        val decoder = if (isH265) {
+        val mime = if (isH265) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC
+        if (isH265) {
             val csd0 = vps!! + sps + pps
             format.setByteBuffer("csd-0", ByteBuffer.wrap(csd0))
             // avcDecoder = MediaCodec.createByCodecName("OMX.google.hevc.decoder")
@@ -155,7 +164,6 @@ class LeoTextureView @JvmOverloads constructor(
             // } else {
             //     MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
             // }
-            MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
         } else {
             format.setByteBuffer("csd-0", ByteBuffer.wrap(sps))
             format.setByteBuffer("csd-1", ByteBuffer.wrap(pps))
@@ -166,22 +174,50 @@ class LeoTextureView @JvmOverloads constructor(
             //                } else {
             //                    MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
             //                }
-            MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         }
 
+        val callbackThread = HandlerThread("$TAG-decoder-callback").apply { start() }
+        decoderCallbackThread = callbackThread
+        val callbackHandler = Handler(callbackThread.looper)
+        var decoder: MediaCodec? = null
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val callbackThread = HandlerThread("$TAG-decoder-callback").apply { start() }
-                decoderCallbackThread = callbackThread
-                decoder.setCallback(mediaCodecCallback, Handler(callbackThread.looper))
+                decoder = MediaCodec.createDecoderByType(mime)
+                decoder.setCallback(mediaCodecCallback, callbackHandler)
             } else {
-                decoder.setCallback(mediaCodecCallback)
+                val abandoned = AtomicBoolean(false)
+                val created = AtomicReference<MediaCodec?>(null)
+                val task = FutureTask {
+                    val codec = MediaCodec.createDecoderByType(mime)
+                    created.set(codec)
+                    try {
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec.setCallback(mediaCodecCallback)
+                        check(!abandoned.get()) { "Codec creation was abandoned" }
+                        codec
+                    } catch (error: Throwable) {
+                        if (created.compareAndSet(codec, null)) codec.release()
+                        throw error
+                    }
+                }
+                check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
+                try {
+                    decoder = task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
+                        check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
+                    }
+                } catch (error: Throwable) {
+                    abandoned.set(true)
+                    task.cancel(true)
+                    created.getAndSet(null)?.release()
+                    throw (error.cause ?: error)
+                }
             }
-            decoder.configure(format, this.surface, null, 0)
-            decoder.start()
-            videoDecoder = decoder
-        } catch (e: Exception) {
-            runCatching { decoder.release() }
+            val ownedDecoder = checkNotNull(decoder)
+            ownedDecoder.configure(format, this.surface, null, 0)
+            ownedDecoder.start()
+            videoDecoder = ownedDecoder
+        } catch (e: Throwable) {
+            runCatching { decoder?.release() }
             stopDecoderCallbackThread()
             throw e
         }
@@ -213,7 +249,15 @@ class LeoTextureView @JvmOverloads constructor(
         val callbackThread = decoderCallbackThread
         callbackThread?.quitSafely()
         if (callbackThread != null && Thread.currentThread() !== callbackThread) {
-            runCatching { callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS) }
+            try {
+                callbackThread.join(CALLBACK_THREAD_JOIN_TIMEOUT_MS)
+                if (callbackThread.isAlive) {
+                    LogContext.log.w(TAG, "Decoder callback thread did not stop within timeout")
+                }
+            } catch (error: InterruptedException) {
+                Thread.currentThread().interrupt()
+                LogContext.log.e(TAG, "Interrupted while stopping decoder callback thread", error)
+            }
         }
         decoderCallbackThread = null
     }

@@ -25,7 +25,12 @@ import java.io.RandomAccessFile
  * Author: Michael Leo
  * Date: 19-8-30 下午1:38
  */
-class TrafficStatHelper private constructor(val ctx: Context) {
+class TrafficStatHelper private constructor(context: Context) {
+    /**
+     * Application context retained by this process-wide singleton. Callers that compared this
+     * property with the object passed to [getInstance] should compare application contexts.
+     */
+    val ctx: Context = context.applicationContext ?: context
     private val uid =
         (
             ctx.applicationContext as Application

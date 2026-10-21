@@ -20,6 +20,10 @@ abstract class AbsPref :
      * - Float
      * - String
      * - Object except Set
+     *
+     * Migration: object values are serialized with [toJsonString]. If serialization fails, the
+     * existing value is left untouched. Earlier versions wrote an empty string; callers that
+     * require "failure clears the key" must clear the key explicitly before calling this method.
      */
     inline fun <reified T : Any> put(key: String, v: T) {
         when (v) {
@@ -52,6 +56,10 @@ abstract class AbsPref :
      * - Float
      * - String
      * - Object except Set
+     *
+     * Migration: object values are serialized with [toJsonString]. If serialization fails, the
+     * existing value is left untouched. Earlier versions wrote an empty string; callers that
+     * require "failure clears the key" must clear the key explicitly before calling this method.
      */
     fun <T> put4Java(key: String, v: T?, clazz: Class<T>) {
         when (clazz) {

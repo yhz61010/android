@@ -28,17 +28,18 @@ internal object FloatViewManager {
      * belongs to a finishing or destroyed Activity: the window could never be shown, and callers
      * commonly reach this from asynchronous callbacks after the user has already left the screen.
      */
-    fun create(context: Context, config: DefaultConfig) {
+    fun create(context: Context, config: DefaultConfig): Boolean {
         checkFloatViewMainThread()
         if (!FloatViewOwner.isContextAlive(context)) {
             Log.w(TAG, "Skip float view tag[${config.tag}]: Activity is finishing or destroyed")
-            return
+            return false
         }
         if (!windowMap.containsKey(config.tag)) {
             val tag = config.tag
             windowMap[tag] = FloatViewImpl(context, config) { removed ->
                 if (windowMap[tag] === removed) windowMap.remove(tag)
             }
+            return true
         } else {
             error("Float view tag[${config.tag}] has already exist. Can't recreate it!")
         }

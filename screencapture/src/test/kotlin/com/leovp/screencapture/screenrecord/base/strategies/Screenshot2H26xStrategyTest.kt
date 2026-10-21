@@ -7,6 +7,7 @@ import android.opengl.EGLConfig
 import android.opengl.EGLContext
 import android.opengl.EGLDisplay
 import android.opengl.EGLSurface
+import android.os.Build
 import com.leovp.screencapture.screenrecord.base.ScreenDataListener
 import io.mockk.every
 import io.mockk.mockk
@@ -15,33 +16,43 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
 import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.util.ReflectionHelpers
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28])
 class Screenshot2H26xStrategyTest {
     private val codec = mockk<MediaCodec>(relaxed = true)
     private val callback = slot<MediaCodec.Callback>()
     private val listener = mockk<ScreenDataListener>(relaxed = true)
     private lateinit var subject: Screenshot2H26xStrategy
 
-    @BeforeTest
+    @Before
     fun setUp() {
+        Class.forName(EGL14::class.java.name, true, EGL14::class.java.classLoader)
         mockkStatic(MediaCodec::class, MediaFormat::class, EGL14::class)
         every { MediaFormat.createVideoFormat(any(), any(), any()) } returns mockk(relaxed = true)
         every { MediaCodec.createEncoderByType(any()) } returns codec
         every { codec.setCallback(capture(callback)) } returns Unit
+        every { codec.setCallback(capture(callback), any()) } returns Unit
         val display = mockk<EGLDisplay>()
         val config = mockk<EGLConfig>()
         every { EGL14.eglGetDisplay(any()) } returns display
@@ -62,10 +73,12 @@ class Screenshot2H26xStrategyTest {
         subject = Screenshot2H26xStrategy.Builder(320, 240, 160, listener).build()
     }
 
-    @AfterTest
+    @After
     fun tearDown() {
         try {
-            runBlocking { withTimeout(3_000) { subject.releaseAndJoin() } }
+            if (::subject.isInitialized) {
+                runBlocking { withTimeout(3_000) { subject.releaseAndJoin() } }
+            }
         } finally {
             unmockkAll()
         }
@@ -167,4 +180,80 @@ class Screenshot2H26xStrategyTest {
         .getDeclaredField("recordingExecutor")
         .apply { isAccessible = true }
         .get(subject) as ExecutorService
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28])
+class Screenshot2H26xStrategyApi22CallbackThreadTest {
+    private val codec = mockk<MediaCodec>(relaxed = true)
+    private val callbackThreads = CopyOnWriteArrayList<String>()
+    private val events = CopyOnWriteArrayList<String>()
+    private lateinit var subject: Screenshot2H26xStrategy
+
+    @Before
+    fun setUp() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        Class.forName(EGL14::class.java.name, true, EGL14::class.java.classLoader)
+        mockkStatic(MediaCodec::class, MediaFormat::class, EGL14::class)
+        every { MediaFormat.createVideoFormat(any(), any(), any()) } returns mockk(relaxed = true)
+        every { MediaCodec.createEncoderByType(any()) } answers {
+            callbackThreads += "create:${Thread.currentThread().name}"
+            codec
+        }
+        every { codec.setCallback(any()) } answers {
+            events += "callback"
+            callbackThreads += "callback:${Thread.currentThread().name}"
+        }
+        every { codec.configure(any(), null, null, MediaCodec.CONFIGURE_FLAG_ENCODE) } answers {
+            events += "configure"
+        }
+        val display = mockk<EGLDisplay>()
+        val config = mockk<EGLConfig>()
+        every { EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY) } returns display
+        every { EGL14.eglInitialize(any(), any(), any(), any(), any()) } returns true
+        every {
+            EGL14.eglChooseConfig(any(), any(), any(), any(), any(), any(), any(), any())
+        } answers {
+            arg<Array<EGLConfig?>>(3)[0] = config
+            arg<IntArray>(6)[0] = 1
+            true
+        }
+        every { EGL14.eglGetError() } returns EGL14.EGL_SUCCESS
+        every { EGL14.eglCreateContext(any(), any(), any(), any(), any()) } returns
+            mockk<EGLContext>()
+        every { EGL14.eglCreateWindowSurface(any(), any(), any(), any(), any()) } returns
+            mockk<EGLSurface>()
+        every { EGL14.eglMakeCurrent(any(), any(), any(), any()) } returns true
+        subject = Screenshot2H26xStrategy.Builder(
+            320,
+            240,
+            160,
+            mockk<ScreenDataListener>(relaxed = true)
+        ).build()
+    }
+
+    @After
+    fun tearDown() {
+        try {
+            if (::subject.isInitialized) {
+                runBlocking { withTimeout(3_000) { subject.releaseAndJoin() } }
+            }
+        } finally {
+            unmockkAll()
+        }
+    }
+
+    @Test
+    fun `codec creation and default callback share the dedicated thread before configure`() {
+        subject.onInit()
+
+        assertEquals(listOf("callback", "configure"), events)
+        val createThread = callbackThreads.single { it.startsWith("create:") }.substringAfter(':')
+        val callbackThread = callbackThreads.single {
+            it.startsWith("callback:")
+        }.substringAfter(':')
+        assertEquals(createThread, callbackThread)
+        assertTrue(createThread.contains("scr-rec-codec"))
+        verify(exactly = 1) { codec.setCallback(any()) }
+    }
 }

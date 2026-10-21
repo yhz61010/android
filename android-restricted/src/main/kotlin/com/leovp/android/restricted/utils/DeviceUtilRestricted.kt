@@ -8,10 +8,15 @@ import android.os.Build
 import com.leovp.kotlin.utils.SingletonHolder
 
 /**
+ * Battery-capacity helpers that require restricted platform access.
+ *
+ * Migration: this class was renamed from `DeviceUtil` to avoid clashing with
+ * `com.leovp.android.utils.DeviceUtil`. Replace the import and
+ * `DeviceUtil.getInstance(context)` with `DeviceUtilRestricted.getInstance(context)`.
+ *
  * Author: Michael Leo
  * Date: 2026/7/16 14:50
  */
-
 @Suppress("WeakerAccess", "unused", "UNUSED_PARAMETER")
 class DeviceUtilRestricted private constructor(context: Context) {
     private val ctx = context.applicationContext ?: context

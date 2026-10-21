@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 的三项待取舍事项已于同日全部落地：Builder 空壳删除与注销路径权限撤销由 Codex 在 `ba6ea5ed7` 实施（见 §14.2），`CLAUDE.md` 旧名按作者授权修正；该次提交静默引入的两处 KDoc 坏链接已一并修复，详见 §15.4.1。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第九轮（Claude，2026-10-21）实施了 G11 与 G13，经两轮对抗性审查修正后见 §16。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 的三项待取舍事项已于同日全部落地：Builder 空壳删除与注销路径权限撤销由 Codex 在 `ba6ea5ed7` 实施（见 §14.2），`CLAUDE.md` 旧名按作者授权修正；该次提交静默引入的两处 KDoc 坏链接已一并修复，详见 §15.4.1。
 
 ## 0. 范围与方法
 
@@ -170,8 +170,8 @@
 Demo 编译的实际结果见 §14；依赖真实 Codec、GLES、MediaProjection、WindowManager 或设备时序的
 真机项仍未执行，不能由单测结果替代。
 
-第六轮新增的三项中，**G12 已随 2026-10-21 的实施落地**（`eaaa49e62`）；**G11 与 G13 仍未实施**，
-两条的方案与行号均已按实施后的代码重新核对。
+第六轮新增的三项**均已落地**：G12 随 `eaaa49e62`（KDoc 部分仍缺），G11 与 G13 随 `b0c417d95` + `f6cbb985e`，
+实施与审查记录见 §16。各条保留原始问题与方案以便追溯。
 
 ### 11.1 录屏、相机与倒计时
 
@@ -1484,3 +1484,106 @@ API 21–22 上的 callback 线程归属 —— 现有三个 `*CallbackThreadTes
 解析模式下运行，该规则不触发（此为推断，本机无法执行 detekt 验证）。实际效果是：项目的「禁用 `!!`」
 目前只由 `.claude/rules/kotlin/coding-style.md` 的约定约束，detekt 并未真正拦截。是否给 Detekt 任务补
 `classpath` 使该规则生效，为独立决定。
+
+## 16. 第九轮：G11 与 G13 的实施（Claude，2026-10-21）
+
+### 16.1 范围
+
+实施 §11.2 的 G11（流量监控跨线程发布缺可见性保证 + 检查后动作竞态）与 G13（回调在持锁状态下派发
+导致的死锁）。提交 `b0c417d95`（实施）、`f6cbb985e`（第一轮审查修正）及后续 LOW 修正。
+**未执行任何 Gradle 命令**，编译、detekt、ktlint、单测、真机一律未验证。
+
+### 16.2 相对方案的偏离：G13 多引入一把派发锁
+
+方案是「锁内算结果、出锁后直接 `if (isCurrentMonitor(...)) callback.invoke(result)`」。实施时额外引入
+实例级的 `resultDispatchLock` 包住派发。
+
+原因是方案只计了「可能收到一个尾随回调」这一项代价，漏算了并发：
+`HandlerThreadNetworkMonitorScheduler.close()` 只 `quitSafely()` 不 `join()`，旧会话的迭代可能存活到新
+会话开始。改之前 `monitorLifecycleLock` 顺带把回调派发与会话替换串行化了，使用方回调永不被两个线程
+同时进入；按方案直接出锁派发会丢掉这个保证，等于把线程安全负担推给每个使用方。
+
+对抗性审查确认该并发场景真实可达，并给出了两条比上述更强的保留理由：
+
+1. 没有这把锁，`stopMonitor()` 返回后可能飞 **2 个甚至更多**回调，新写的 KDoc「最多一个尾随结果」
+   就是假命题。
+2. 没有这把锁，旧会话回调与新会话回调之间**没有 happens-before 边**，使用方在回调里改普通字段会读到
+   脏值；有锁才使「调用方无需自己加锁」成立。
+
+同时确认「把 `close()` 改成 join」不是替代方案：`releaseMonitorScheduler()` 在 `monitorLifecycleLock`
+内被调用，join 一个正在跑阻塞回调的线程，等于把被修的那个 ANR 原样搬回 `stopMonitor()`。故
+「加第二把锁 or 放弃不重叠保证」是真二选一。
+
+锁序：仅在未持 `monitorLifecycleLock` 时获取 `resultDispatchLock`。反向边只存在于「同步执行任务的
+scheduler」这一假设实现上（`startMonitor` 持生命周期锁时调 `scheduler.post`），该要求已写入
+`NetworkMonitorScheduler.post` 的 KDoc；生产实现与测试替身均为异步，当前不可达。
+
+### 16.3 两轮审查修正的问题
+
+第一轮（两个独立审查者，分别审 G11 与 G13）判 DEFECTIVE，核心并发逻辑未找到反例，修正项：
+
+| 级别 | 问题 | 处理 |
+|------|------|------|
+| MEDIUM | `BaseActivity` 的回调未守卫 teardown：`runOnUiThread` 是投递不是执行，尾随结果可在 `onDestroy` 之后到达主线程，子类触 View 即崩 | 加 `if (!isDestroyed && !isFinishing)` 守卫（在 lambda 内、主线程求值） |
+| MEDIUM | 「先发布后启动」使 `startMonitor()` 抛异常时字段永久卡在已死实例上（旧码 `.also{}` 先于赋值求值，抛了字段保持 `null`）；且 `InternetUtil.getIpsByHost(host, callback)` 是裸 `thread{}`、**无 try/catch**，异常会成为未捕获异常杀进程 | `try/catch (Exception)`，失败时记 error、释放槽位、停实例，不重抛 |
+| MEDIUM | `startMonitor` KDoc 写「blocking ... only delays **this session's** subsequent results」，与新引入的实例级派发锁自相矛盾（该句写于加锁之前） | 改为「会拖住本实例之后的每个结果，包括后续 `startMonitor()` 创建的会话」 |
+| MEDIUM | CHANGELOG 缺条目 | 「变更」加 `stopMonitor()` 契约削弱（破坏性、加粗），「修复」加死锁与漏停/泄漏两条 |
+| MEDIUM | 新契约零测试覆盖 | 新增 3 条 `NetworkMonitor` 用例 |
+| LOW | `!published` 是唯一无日志的早退路径 | 补 `log.w`，并区分「teardown 作废」与「另一个 start 占了槽位」，带上 generation |
+| LOW | 注释「Creating a NetworkMonitor (which starts a HandlerThread) now would leak it」与事实相反 | 改为 "starts no thread"；补偿路径正依赖「构造不起线程」这一相反事实 |
+| LOW | `stopMonitor` KDoc 遗漏：串行化只在实例内成立；未说明尾随回调跑在已退休线程上 | 两处均补 |
+| LOW | 派发处注释 because 从句因果错位 | 拆句 |
+| LOW | R→L 锁序不变量仅靠注释 | 写入 `NetworkMonitorScheduler.post` 的 KDoc |
+
+第二轮复核判 10/11 真修好、**无新引入的正确性缺陷**，并验证三条新测试**均非空通过**、在旧码上确实
+会红。其余 LOW 已全部处理：`InterruptedException` 恢复中断位；补偿分支补专属日志；测试 3 的
+`Thread.yield()` 忙等改 `Thread.sleep(1)`；测试 2 改名（原名 `at most one` 言过其实）；CHANGELOG 的
+「相互有序」降级为「互斥 + 前次写对后次可见」（派发锁是非公平 monitor，不保证 FIFO），并补记
+`onStop` 泄漏警告的删除。
+
+**一条审查结论未被接受**：第二轮称测试 3 的注释「两个线程同时在回调内」因果错误。该注释的反事实
+对象是「去掉这把派发锁」（派发已移出生命周期锁、只是不串行化），那种情况下主线程的 `startMonitor()`
+不被阻塞，第二个线程确实会立刻进回调。审查者分析的是 G13 修复**前**的旧码，那里主线程卡在生命周期
+锁上，`maxInFlight == 2` 才是「第一个线程在 decrement 前抛错死掉」的假象。注释无误，但措辞易误读，
+已把两个反事实都写明。
+
+**F-1（liveness）决定不改**：DNS1 读到旧 generation 后被抢占、占住槽位又自行释放，期间一个合法的
+`onResume` 重启请求会 CAS 失败被丢弃。窗口要求 pause/resume 恰好夹在 generation 读与 CAS 之间、且第二
+次查找恰好落在释放窗口内，量级个位数毫秒；后果良性自愈（两个 monitor 最终都被停、无泄漏无崩溃，
+下次 `startTrafficNetwork()` 必成功），丢的只是一轮诊断浮层。结构性修复需引入带 generation 的 holder
+加重试循环，或在主线程发布占位符——后者会破坏 `networkMonitor.get() != null` 这个被公开入口与
+`stopTrafficMonitor()` 共同依赖的「已存在」守卫。净负收益。已补日志使其在 bug report 中可见。
+
+### 16.4 新增测试
+
+`androidbase/src/test/.../network/NetworkMonitorLifecycleTest.kt` 新增 3 条（已验证在旧码上会红）：
+
+| 用例 | 旧码失败点 |
+|------|-----------|
+| `stopMonitor returns while a consumer callback is blocked` | 旧码 `stopper` 阻塞在生命周期锁上 → `join` 超时 → `assertFalse(isAlive)` 红 |
+| `an in-flight result completes after stop and nothing follows it` | 旧码回调 `await` 超时抛 `AssertionError` → `failures` 非空 → 红 |
+| `callbacks of one instance never overlap across sessions` | 旧码第二线程非 `BLOCKED`（主线程被锁住、它跑完变 `TERMINATED`）→ 红 |
+
+`androidbase/src/test/.../framework/BaseActivityTrafficMonitorTest.kt` 为新文件，5 条用例覆盖 G11 侧。
+关键手法：用 mockk 捕获 `InternetUtil.getIpsByHost` 的回调**而不执行它**，使 DNS 时序完全由测试驱动、
+不依赖真实线程竞争；`NetworkMonitor` 用 `mockkConstructor` 拦截，断言 `startMonitor`/`stopMonitor` 的
+调用次数。其中第 1 条是**反向对照**（存活时必须真的发布并启动），没有它，另外几条在「永不发布」的
+坏实现下也会全绿。
+
+5 条中 3 条用 `buildActivity(...).get()` 绕过 `onCreate`，只有涉及 `onDestroy` 的 2 条走完整生命周期；
+后者需要 AppCompat 主题，已在测试 Activity 的 `onCreateBeginning()`（基类在 `super.onCreate()` 之前
+调用）里 `setTheme(Theme_AppCompat)` 解决。
+
+**这 5 条用例未执行过**。静态核对已完成：行宽 ≤100 字符、大括号与圆括号配平、无失效 import、无 `!!`、
+被测 API 签名逐一比对源码、`capture` 为 `every{}` 接收者成员故无需 import、同文件多顶层类有三处既有
+先例（ktlint filename 规则不适用）、该目录在 `src/test/java` 下不属 detekt 扫描范围、AGP 的
+`checkTestSources` 未开启故 lint 不分析测试源。运行期风险集中在 Robolectric 对未在 manifest 声明的
+Activity 的处理与 `mockkConstructor`，须由能执行 Gradle 的一方验证。
+
+### 16.5 §15.2.2 的严重度下调
+
+§15.2.2（G9 的会话回调把 `monitorLifecycleLock` 暴露给 ConnectivityManager 回调线程）原定 MEDIUM，
+理由是与 G13 叠加会让 `ConnectivityThread` 第三条线程一并冻死。G13 实施后生命周期锁内只剩结果计算
+（`TrafficStats` 计数器读取，有界），不再包含使用方回调，该叠加路径已不存在。**降为 LOW**：会话回调
+仍取该锁，在锁被短暂持有期间会让 `ConnectivityThread` 等待，仅此而已。方案（改为无锁的会话校验）
+仍有效，优先级降低。

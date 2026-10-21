@@ -262,7 +262,7 @@ abstract class BaseActivity<B : ViewBinding>(
                 return@getIpsByHost
             }
             // The DNS lookup above is async; the Activity may already be gone by the time it
-            // returns. Constructing a NetworkMonitor allocates nothing -- startMonitor() is what
+            // returns. Constructing a NetworkMonitor starts no thread -- startMonitor() is what
             // creates the HandlerThread -- so this is only an early-out, not the leak guard. The
             // generation re-check below is what actually makes a late lookup safe.
             if (isDestroyed || isFinishing) {
@@ -309,10 +309,11 @@ abstract class BaseActivity<B : ViewBinding>(
             }
             // Publish, then re-check: stopTrafficMonitor() may have run on the main thread while
             // the lookup was in flight, in which case it found an empty slot and stopped nothing.
-            val published = trafficMonitorGeneration.get() == generation &&
-                networkMonitor.compareAndSet(null, monitor)
+            val stale = trafficMonitorGeneration.get() != generation
+            val published = !stale && networkMonitor.compareAndSet(null, monitor)
             if (!published) {
-                LogContext.log.w(tag, "Traffic monitor lookup is stale or lost the slot. Skip it.")
+                val reason = if (stale) "a teardown invalidated it" else "another start owns it"
+                LogContext.log.w(tag, "Discard monitor lookup gen=$generation: $reason.")
                 monitor.stopMonitor()
                 return@getIpsByHost
             }
@@ -324,12 +325,16 @@ abstract class BaseActivity<B : ViewBinding>(
                 monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
             } catch (error: Exception) {
                 startFailed = true
-                LogContext.log.e(tag, "Failed to start networkMonitor.", error)
+                // Nothing here waits, but swallowing an interrupt would strand the flag on a
+                // thread that keeps running.
+                if (error is InterruptedException) Thread.currentThread().interrupt()
+                LogContext.log.e(tag, "Failed to start networkMonitor for gen=$generation.", error)
             }
             if (startFailed || trafficMonitorGeneration.get() != generation) {
                 // Either the start failed, or a teardown ran at some point after this lookup read
                 // the generation. Release the slot so a later start is not refused by the guard
                 // above, and stop whatever was already built.
+                LogContext.log.w(tag, "Release monitor gen=$generation. startFailed=$startFailed")
                 networkMonitor.compareAndSet(monitor, null)
                 monitor.stopMonitor()
             }

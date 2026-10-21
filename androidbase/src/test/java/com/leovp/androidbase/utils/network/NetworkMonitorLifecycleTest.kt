@@ -383,7 +383,7 @@ class NetworkMonitorLifecycleTest {
     }
 
     @Test
-    fun `at most one result reaches the consumer after stop`() {
+    fun `an in-flight result completes after stop and nothing follows it`() {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
@@ -481,12 +481,16 @@ class NetworkMonitorLifecycleTest {
             val second = Thread { secondScheduler.runNext() }
             second.start()
 
-            // Parked, not merely unstarted: BLOCKED is what waiting on the dispatch monitor looks
-            // like. Without that lock the new session would enter the callback right away and be
-            // TERMINATED by now, with two threads having been inside it at once.
+            // Parked, not merely unstarted: BLOCKED is what contending for the dispatch monitor
+            // looks like. Were the dispatch left unserialised -- still outside the lifecycle lock,
+            // just without this second lock -- the new session would walk straight into the
+            // consumer callback and be TERMINATED by now, two threads having been inside it at
+            // once. (Before the dispatch moved out of the lifecycle lock the failure looked
+            // different: this thread would not even have been started yet, because startMonitor()
+            // above would still be waiting on the blocked callback.)
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
             while (second.state != Thread.State.BLOCKED && System.nanoTime() < deadline) {
-                Thread.yield()
+                Thread.sleep(1)
             }
             assertEquals(Thread.State.BLOCKED, second.state)
             assertEquals(1, maxInFlight.get())

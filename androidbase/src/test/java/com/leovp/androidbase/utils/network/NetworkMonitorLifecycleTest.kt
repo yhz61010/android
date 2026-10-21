@@ -11,6 +11,7 @@ import io.mockk.unmockkObject
 import java.util.ArrayDeque
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -332,6 +333,172 @@ class NetworkMonitorLifecycleTest {
             assertEquals(1, emissions.get())
         } finally {
             releaseProbe.countDown()
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
+    fun `stopMonitor returns while a consumer callback is blocked`() {
+        mockkObject(NetworkUtil)
+        every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+
+        val callbackEntered = CountDownLatch(1)
+        val releaseCallback = CountDownLatch(1)
+        val scheduler = FakeScheduler()
+        val context = RuntimeEnvironment.getApplication() as Application
+        val monitor = NetworkMonitor(
+            context,
+            "127.0.0.1",
+            {
+                callbackEntered.countDown()
+                assertTrue(releaseCallback.await(5, TimeUnit.SECONDS))
+            },
+            schedulerFactory = { scheduler }
+        )
+
+        try {
+            monitor.startMonitor()
+            val iteration = Thread { scheduler.runNext() }
+            iteration.start()
+            assertTrue(callbackEntered.await(3, TimeUnit.SECONDS))
+
+            // The callback used to be dispatched while holding the lifecycle lock, so this thread
+            // could never acquire it and stayed alive for as long as the callback blocked.
+            val stopper = Thread { monitor.stopMonitor() }
+            stopper.start()
+            stopper.join(3_000)
+            assertFalse(stopper.isAlive)
+
+            releaseCallback.countDown()
+            iteration.join(3_000)
+            assertFalse(iteration.isAlive)
+        } finally {
+            releaseCallback.countDown()
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
+    fun `at most one result reaches the consumer after stop`() {
+        mockkObject(NetworkUtil)
+        every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+
+        val callbackEntered = CountDownLatch(1)
+        val releaseCallback = CountDownLatch(1)
+        val emissions = AtomicInteger()
+        val stopReturned = AtomicBoolean(false)
+        val sawStopAlreadyReturned = AtomicBoolean(false)
+        val scheduler = FakeScheduler()
+        val context = RuntimeEnvironment.getApplication() as Application
+        val monitor = NetworkMonitor(
+            context,
+            "127.0.0.1",
+            {
+                emissions.incrementAndGet()
+                callbackEntered.countDown()
+                assertTrue(releaseCallback.await(5, TimeUnit.SECONDS))
+                sawStopAlreadyReturned.set(stopReturned.get())
+            },
+            schedulerFactory = { scheduler }
+        )
+
+        try {
+            monitor.startMonitor()
+            // Under the old implementation this thread dies on the callback's await timeout,
+            // because stopMonitor() cannot return until the callback releases the lifecycle lock
+            // while the callback waits for a latch that only a returned stopMonitor() counts down.
+            val failures = mutableListOf<Throwable>()
+            val iteration = Thread { scheduler.runNext() }
+            iteration.setUncaughtExceptionHandler { _, error -> failures += error }
+            iteration.start()
+            assertTrue(callbackEntered.await(3, TimeUnit.SECONDS))
+
+            monitor.stopMonitor()
+            stopReturned.set(true)
+            releaseCallback.countDown()
+            iteration.join(3_000)
+            assertFalse(iteration.isAlive)
+            assertTrue(failures.isEmpty())
+
+            // The lifecycle no longer fences a callback already in flight: it completed after
+            // stopMonitor() had returned. Exactly one result is allowed through, and the stopped
+            // session must not schedule another iteration.
+            assertTrue(sawStopAlreadyReturned.get())
+            assertEquals(1, emissions.get())
+            assertFalse(scheduler.hasTasks())
+        } finally {
+            releaseCallback.countDown()
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
+    fun `callbacks of one instance never overlap across sessions`() {
+        mockkObject(NetworkUtil)
+        every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+
+        val firstEntered = CountDownLatch(1)
+        val releaseFirst = CountDownLatch(1)
+        val inFlight = AtomicInteger()
+        val maxInFlight = AtomicInteger()
+        val schedulers = mutableListOf<FakeScheduler>()
+        val context = RuntimeEnvironment.getApplication() as Application
+        val monitor = NetworkMonitor(
+            context,
+            "127.0.0.1",
+            {
+                val current = inFlight.incrementAndGet()
+                maxInFlight.getAndUpdate { seen -> if (current > seen) current else seen }
+                if (firstEntered.count > 0) {
+                    firstEntered.countDown()
+                    assertTrue(releaseFirst.await(5, TimeUnit.SECONDS))
+                }
+                inFlight.decrementAndGet()
+            },
+            schedulerFactory = { FakeScheduler().also(schedulers::add) }
+        )
+
+        try {
+            monitor.startMonitor()
+            val firstScheduler = schedulers.single()
+            val first = Thread { firstScheduler.runNext() }
+            first.start()
+            assertTrue(firstEntered.await(3, TimeUnit.SECONDS))
+
+            // Replacing the session leaves the retired thread inside the consumer callback:
+            // close() only asks that thread to quit and never joins it.
+            monitor.startMonitor()
+            val secondScheduler = schedulers.last()
+            val second = Thread { secondScheduler.runNext() }
+            second.start()
+
+            // Parked, not merely unstarted: BLOCKED is what waiting on the dispatch monitor looks
+            // like. Without that lock the new session would enter the callback right away and be
+            // TERMINATED by now, with two threads having been inside it at once.
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+            while (second.state != Thread.State.BLOCKED && System.nanoTime() < deadline) {
+                Thread.yield()
+            }
+            assertEquals(Thread.State.BLOCKED, second.state)
+            assertEquals(1, maxInFlight.get())
+
+            releaseFirst.countDown()
+            first.join(3_000)
+            second.join(3_000)
+            assertFalse(first.isAlive)
+            assertFalse(second.isAlive)
+            assertEquals(1, maxInFlight.get())
+        } finally {
+            releaseFirst.countDown()
             monitor.stopMonitor()
             unmockkObject(NetworkUtil)
         }

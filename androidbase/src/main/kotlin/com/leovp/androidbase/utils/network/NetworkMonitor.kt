@@ -54,7 +54,12 @@ class NetworkMonitor internal constructor(
     /**
      * Serialises consumer callbacks without ever being held by [startMonitor] or [stopMonitor],
      * so a callback that blocks cannot stall the lifecycle while callbacks still never overlap.
-     * Never acquired while holding [monitorLifecycleLock].
+     *
+     * Only ever acquired without [monitorLifecycleLock] held, which is what keeps the two from
+     * forming a cycle: a consumer callback may call [stopMonitor] and so takes this lock before
+     * the lifecycle one. [startMonitor] holds the lifecycle lock while it posts the first
+     * iteration, so a scheduler that ran tasks inline would close that cycle -- which is why
+     * [NetworkMonitorScheduler.post] is required to dispatch asynchronously.
      */
     private val resultDispatchLock = Any()
     @Volatile
@@ -155,10 +160,11 @@ class NetworkMonitor internal constructor(
                 }
                 // Dispatched outside monitorLifecycleLock on purpose: a consumer callback that
                 // blocks on another thread must not be able to stall startMonitor() or
-                // stopMonitor(). resultDispatchLock keeps callbacks serialised anyway, because
-                // close() only quitSafely()s the old thread and does not join it, so a trailing
-                // iteration can outlive the session that scheduled it. The re-check narrows, but
-                // cannot eliminate, a trailing result racing with a stop.
+                // stopMonitor(). Serialising is still needed, because close() only quitSafely()s
+                // the retired thread without joining it, so a trailing iteration can outlive the
+                // session that scheduled it and overlap the next one. resultDispatchLock provides
+                // that without handing the lifecycle back to consumer code. The re-check narrows,
+                // but cannot eliminate, a trailing result racing with a stop.
                 synchronized(resultDispatchLock) {
                     if (isCurrentMonitor(generation, scheduler)) callback.invoke(result)
                 }
@@ -181,7 +187,8 @@ class NetworkMonitor internal constructor(
      *
      * Repeated calls replace the current session. Callbacks run on the monitor thread and never
      * hold the lifecycle lock, so blocking inside one cannot stall [startMonitor] or
-     * [stopMonitor]; it only delays this session's subsequent results.
+     * [stopMonitor]. It does hold up every later result of this instance, the sessions a later
+     * [startMonitor] creates included, because callbacks are dispatched one at a time.
      *
      * Migration: earlier versions dispatched the callback while holding the lifecycle lock and
      * therefore forbade waiting inside a callback for a thread that calls [startMonitor] or
@@ -227,8 +234,12 @@ class NetworkMonitor internal constructor(
      * this method returned, because the callback was dispatched while holding the lifecycle lock.
      * The callback is now dispatched outside that lock, so a callback already in flight may
      * complete after this method returns. Consumers must tolerate one trailing result and guard
-     * their own teardown state instead of relying on this method to fence it. Callbacks are still
-     * never invoked concurrently, so a consumer needs no locking of its own.
+     * their own teardown state instead of relying on this method to fence it. A trailing callback
+     * runs on the retired monitor thread, which has already been asked to quit.
+     *
+     * Callbacks of one instance are still never invoked concurrently and are ordered against each
+     * other, so a consumer needs no locking of its own. That holds per instance: a lambda handed
+     * to two [NetworkMonitor]s is serialised within each but not between them.
      */
     fun stopMonitor() {
         synchronized(monitorLifecycleLock) {
@@ -297,6 +308,10 @@ class NetworkMonitor internal constructor(
 }
 
 internal interface NetworkMonitorScheduler {
+    /**
+     * Must hand [task] to another thread rather than running it inline: the caller may hold the
+     * monitor's lifecycle lock, while a dispatched task takes the result-dispatch lock.
+     */
     fun post(task: Runnable)
 
     fun postDelayed(task: Runnable, delayMillis: Long)

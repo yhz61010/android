@@ -81,6 +81,11 @@
 - **generic `result` 保留原始异常链**：`ResultServerException`、`ResultConvertException` 与
   `ResultException` 的 `cause` 现在是原始 `Api*Exception`，底层根因改从 `cause?.cause` 读取；普通
   `ApiException` 的 `code`/`tag` 也会保留。
+- **`NetworkMonitor.stopMonitor()` 不再栅栏在飞的回调**：回调改为在生命周期锁之外派发，因此
+  `stopMonitor()` 返回后最多还可能有一个尾随结果抵达，运行在已被要求退出的旧监控线程上。调用方
+  需容忍这一个尾随结果并自行守卫销毁状态，不能再依赖本方法做栅栏。同一实例的回调仍然串行且相互
+  有序，调用方无需自己加锁。换来的是：在回调里等待另一个调用 `startMonitor()`/`stopMonitor()` 的
+  线程不再死锁，该限制随之取消。
 
 - **audio 关闭 API 统一为挂起**：删除全部非挂起的关闭入口，调用方必须在协程中等待关闭完成。
   - **破坏性变更**：以下 API 已删除，无兼容垫片——`AudioEncoderWrapper.release()`、
@@ -256,6 +261,16 @@
 
 ### 修复 (Fixed)
 
+- **网络监控回调不再与生命周期死锁**：轮询任务此前在持有 `monitorLifecycleLock` 时同步执行调用方
+  回调，而 `startMonitor()`/`stopMonitor()` 取同一把锁；调用方若在回调里等待主线程，而主线程正在
+  `onDestroy` 调 `stopMonitor()`，两者直接死锁。现在锁内只计算结果，派发移到锁外，并由一把生命周期
+  永不持有的派发锁保证回调不并发。
+- **`BaseActivity` 流量监控不再漏停或泄漏**：持有监控的字段此前是无 `@Volatile` 的 `var`，在 DNS
+  线程写入、主线程 `onDestroy` 读取，`AtomicReference` 只保证所存引用原子、不为字段本身建立可见性；
+  且 DNS 回调通过存活检查之后、写入之前，`onDestroy` 可以整段跑完并什么也没停，随后监控与其
+  `HandlerThread` 无人释放。字段改为 final，并用世代计数作废在途的 DNS 查找；回调改为先发布再复查、
+  必要时自行补偿。`startMonitor()` 失败不再把字段卡死在已死实例上，也不再让异常逃进无处理器的后台
+  线程。
 - **MediaCodec 异步回调不再落到主线程**：录屏、相机编码和 `LeoTextureView` 解码均使用可释放的
   专用 HandlerThread；API 21–22 在该线程创建 codec 并注册单参数 callback，API 23+ 显式传入
   Handler，且全部在 `configure()` 前完成注册。初始化失败与释放路径会有界等待线程退出。

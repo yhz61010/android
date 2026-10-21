@@ -262,13 +262,17 @@ abstract class BaseActivity<B : ViewBinding>(
                 return@getIpsByHost
             }
             // The DNS lookup above is async; the Activity may already be gone by the time it
-            // returns. Creating a NetworkMonitor (which starts a HandlerThread) now would leak it.
+            // returns. Constructing a NetworkMonitor allocates nothing -- startMonitor() is what
+            // creates the HandlerThread -- so this is only an early-out, not the leak guard. The
+            // generation re-check below is what actually makes a late lookup safe.
             if (isDestroyed || isFinishing) {
                 LogContext.log.w(tag, "Activity is destroyed/finishing. Skip NetworkMonitor.")
                 return@getIpsByHost
             }
             val monitor = NetworkMonitor(this@BaseActivity, socketIp) { info ->
-                callback?.let { runOnUiThread { it(info) } }
+                // stopMonitor() no longer fences a callback already in flight, and runOnUiThread
+                // posts rather than runs, so a result can reach the main thread after onDestroy.
+                callback?.let { runOnUiThread { if (!isDestroyed && !isFinishing) it(info) } }
 
                 if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) {
                     return@NetworkMonitor
@@ -308,12 +312,24 @@ abstract class BaseActivity<B : ViewBinding>(
             val published = trafficMonitorGeneration.get() == generation &&
                 networkMonitor.compareAndSet(null, monitor)
             if (!published) {
+                LogContext.log.w(tag, "Traffic monitor lookup is stale or lost the slot. Skip it.")
                 monitor.stopMonitor()
                 return@getIpsByHost
             }
-            monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
-            if (trafficMonitorGeneration.get() != generation) {
-                // A stop landed between the publish and the start; compensate for it here.
+            // startMonitor() can throw (TrafficStatHelper init, HandlerThread.start()), and this
+            // lambda runs on a bare thread with no handler, so letting it escape would take the
+            // process down over a diagnostics feature.
+            var startFailed = false
+            try {
+                monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+            } catch (error: Exception) {
+                startFailed = true
+                LogContext.log.e(tag, "Failed to start networkMonitor.", error)
+            }
+            if (startFailed || trafficMonitorGeneration.get() != generation) {
+                // Either the start failed, or a teardown ran at some point after this lookup read
+                // the generation. Release the slot so a later start is not refused by the guard
+                // above, and stop whatever was already built.
                 networkMonitor.compareAndSet(monitor, null)
                 monitor.stopMonitor()
             }

@@ -206,8 +206,9 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
      * Guarded by [codecCallbackLock]. Created when the codec first reports its format, so a
      * recorder that is built and released without ever recording leaves no stray `.mp4` behind.
      *
-     * Null whenever [Builder.mp4OutputFile] was not set: the MP4 is an addition, never a
-     * replacement, and the raw stream reaching [ScreenDataListener] is unaffected either way.
+     * Null whenever [Screenshot2H26xBuilder.mp4OutputFile] was not set: the MP4 is an
+     * addition, never a replacement, and the raw stream reaching
+     * [com.leovp.screencapture.screenrecord.base.ScreenDataListener] is unaffected either way.
      */
     private var mp4Writer: Mp4TrackWriter? = null
 

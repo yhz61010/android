@@ -73,7 +73,7 @@
 - **lib-mvvm** — MVVM 架构组件（BaseViewModel、BaseState、BaseAction、UiEventManager）
 - **lib-compose** — Jetpack Compose 扩展和组合式组件
 - **androidbase** — 核心 Android 工具，依赖多个 lib-* 模块
-- **android-restricted** — 隔离需要**受限/敏感权限**的工具（命名空间 `com.leovp.android.restricted`）：刘海屏(notch) `DisplayCutout` 实现、`DeviceProp`、`ApplicationManager`、`DeviceUtil`（电池容量、序列号，需 `READ_PHONE_STATE`）、`ActivityExt`/`AppExt`。这些工具自 `androidbase` 迁出，使敏感权限依赖与核心库解耦
+- **android-restricted** — 隔离需要**受限/敏感权限**的工具（命名空间 `com.leovp.android.restricted`）：刘海屏(notch) `DisplayCutout` 实现、`DeviceProp`、`ApplicationManager`、`DeviceUtilRestricted`（电池容量、序列号，需 `READ_PHONE_STATE`）、`ActivityExt`/`AppExt`。这些工具自 `androidbase` 迁出，使敏感权限依赖与核心库解耦
 - **媒体与编解码模块** — `audio`、`ffmpeg-javacpp`、`adpcm-ima-qt-codec`、`h264-hevc-decoder`、`adpcm-ima-qt-codec-h264-hevc-decoder`、`yuv`、`jpeg`
 - **设备、图形与功能模块** — `camerax`、`camera2live`、`screencapture`、`draw-on-screen`、`floatview`、`opengl`、`nfc`、`basenetty`、`aidl-client`、`dex`、`circle-progressbar`
 

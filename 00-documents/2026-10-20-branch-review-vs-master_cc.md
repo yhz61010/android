@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 列出待取舍事项，其中 `CLAUDE.md` 旧名已按作者授权修正。
 
 ## 0. 范围与方法
 
@@ -1147,3 +1147,315 @@ F8、G1、G3、N7 等涉及真实编码器、MediaProjection、窗口、OpenGL �
 
 结果为 `BUILD SUCCESSFUL in 3m 12s`，`631 actionable tasks: 631 executed`；另通过
 `git diff --check`。本轮未执行真机测试，这两项修正不改变编码、网络注册或平台回调的运行逻辑。
+
+## 15. 第八轮：实施后核查（Claude，2026-10-21）
+
+### 15.0 范围与方法
+
+对第七轮（Codex，提交 `dd08a87c7` + `eaaa49e62`）的实施逐条核查：§11 的 26 项是否落地、落地是否与方案
+一致、以及本轮是否引入新问题。基线取实施前的 `e4ca2e9dd`，diff 为 45 个文件、+2029/−620。
+
+方法：按模块分四路并行核查（录屏 F1/F4/F6–F10；相机与倒计时 F2/F3/F5；悬浮窗、Toast、网络监控
+G1–G9；网络库、Compose、OpenGL、重命名 N1–N4/N6–N8），每条结论要求给出实施后的文件:行号与代码
+证据；其后对结论中影响判断的关键断言逐条回源码复核。全部结论为源码静态分析，**未执行任何 Gradle
+命令**。
+
+### 15.1 26 项落地结论
+
+**26 项全部落地，无一项完全未实施。** 21 项与方案一致；5 项做法不同，其中 F8、N8 优于原方案。
+
+| 条目 | 结论 | 要点 |
+|------|------|------|
+| F1 | 一致 | `Screenshot2H26xStrategy` 的 `KEY_MAX_FPS_TO_ENCODER` 整段删除；方案要求保留的 `ScreenRecordMediaCodecStrategy.kt:192` 确实保留 |
+| F2 | 一致 | API 23+ 双参 `setCallback` 在 `configure()` 前；API 21–22 用 `FutureTask` 把 `createEncoderByType` 本身搬到 HandlerThread，不是只搬 `setCallback`。三处同构，失败/超时的所有权交接无双重 release |
+| F3 | 一致 | 对外值只由 `nextTickAtMillis` 递减决定、完全不读时钟，早醒问题被结构性消除而非绕过；60 秒序列 61 个值不漏不重 |
+| F4 | 一致 | `releaseHandler()` 先于 `h26xEncoder.release()`；未 `onStart()` 时 `onStop()` 提前返回但线程仍被 `quitSafely()` |
+| F5 | 一致 | 采用泛型 `BoundedFrameQueue<T>` / `drain<T>`，避开 `EXPOSED_PROPERTY_TYPE`；`drain` 不再硬编码 `ByteArray` |
+| F6 | 做法不同 | 删除清单 7 项完成 6 项；Builder 被提升为独立 `Screenshot2H26xBuilder`，带出方案未声明的 API 形状变化（见 §15.4.1） |
+| F7 | 一致 | `EncodeType.H264` 守卫包住 profile/level；`fallBackToAvcIfMuxerCannotCarryHevc()` 在 `build()` 开头执行，读取时机正确 |
+| F8 | 做法不同（更好） | 注册幂等化消除了重复注册缺陷，故保留 `takeScreenshot()` 里的注册调用比按方案删掉更正确；`builder.mediaProjection?.` 替代方案中的 `!!` |
+| F9 | 做法不同 | 注释两点达标；`Screenshot2H26xStrategy.kt` 1232 → 1032 行，仍超 800 行上限 |
+| F10 | 一致 | 所有权在可抛步骤前发布；`catch (Throwable)` 不重抛，`Error` 也走完清理；只有 `stop()` 成功才保留文件 |
+| G1 | 一致 | `toastRequestToken` / `dismissToken` 分离，`removeCallbacksAndMessages(null)` 已彻底消失 |
+| G2 | 一致 | `build(): Boolean`，`tryShow()` / `createAndShowFloatView()` 都按返回值短路 |
+| G3 | 一致 | 首次 + 3 次重试；耗尽后 `owner.release()` 与 `onRemoved(this)` 无条件执行。第五轮被推翻的判断由两个测试分别锁住「不清重试」与「清了即补投」 |
+| G4 | 一致 | 锁顺序 `monitorLifecycleLock → wifiNetworkCallbackLock` 单向，反向路径不存在；`@RequiresApi(S)` 类只在 SDK 分支内实例化 |
+| G5 | 一致 | `NetworkMonitor` 构造处与 `TrafficStatHelper` 构造器两层都做了 `applicationContext` 兜底，没有只改一处 |
+| G6 | 一致 | 与配置无关的计算留在 `try` 外，`config` 访问全部移入 `try`；`LeoToast` 只持 app context |
+| G7 | 做法不同 | 六处行为变更完成 5 处，第 6 处 `cancelToast` 未落地（见 §15.3） |
+| G8 | 一致 | `join(3_000)` + `assertFalse(isAlive)`，超时即 fail，不是加 sleep |
+| G9 | 一致 | 会话级 lambda 替代固定 lambda，`unregisterWifiSignalCallback()` 先脱钩再注销。但引入新问题，见 §15.2.2 |
+| N1 | 一致 | 语义为作者选定的「A 保留旧值」；两处 `if (json.isNotEmpty())` 守卫 + 两处 KDoc + CHANGELOG |
+| N2 | 一致 | KDoc 迁移说明 + CHANGELOG 加粗条目；`CLAUDE.md:76` 按方案仍列为待授权项（见 §15.4.3） |
+| N3 | 一致 | 2xx 复用转换器已读的 `err.message`，非 2xx 才读 body；不新增内存副本。但引入新问题，见 §15.2.1 |
+| N4 | 一致 | 响应侧 `source.request(MAX + 1)` + `buffer.clone()` 只读，不破坏下游 `body.string()`；请求侧有限 sink 三分支都先记截断再抛无栈 sentinel |
+| N6 | 一致 | `remember(debounceTime)`；KDoc 注明重置语义 |
+| N7 | 一致 | 日志改用锁内快照，锁外不再读共享字段；加锁范围覆盖全部四个字段，`hasVisibility` 因此不需要 `@Volatile` |
+| N8 | 做法不同（更好） | CHANGELOG 落点改为「变更」节独立加粗条目，比塞进原条目清楚。但条目文本有一处事实错误，见 §15.3 |
+
+### 15.2 本轮新引入的问题（MEDIUM）
+
+#### 15.2.1 [MEDIUM] 2xx 转换失败时整份响应体被灌入异常 message
+
+- 位置：`lib-network/src/main/kotlin/com/leovp/network/http/net/ResultExt.kt:124`
+- 对比基线：`e4ca2e9dd` 为 `message = err.cause?.message`，本轮改为 `message = err.cause?.message ?: err.message`。
+- 缺陷：同函数 `:112-113` 的注释已写明，2xx 路径下 `ConvertException.message` **按设计就是原始 body**
+  （`net/converters/SerializationConverter.kt:59-71` 先 `response.body.string()` 再 `throw ConvertException(response, message = bodyString, cause = parseErr)`）。当解析器抛出的异常自身
+  `message == null`（裸 `NullPointerException()`、`IllegalStateException()` 等），fallback 取到整份 body；
+  再经 `exception/ResultException.kt:12` 的 `Exception("$code:$message", cause)` 固化进异常字符串，随
+  `toString()`、堆栈与崩溃上报外泄。基线此场景下 `message` 为 `null`。
+- 失败场景：2xx 响应体为 10 MB 含 PII 的 JSON + 解析器抛 `IllegalStateException()` → 该 10 MB 全文进入
+  `ResultConvertException.message` 与崩溃上报。
+- 修复：原始 body 已由 `responseBodyString` 承载，`message` 不应再装一遍。
+
+```kotlin
+// lib-network/.../net/ResultExt.kt，companion 或文件级常量
+private const val MAX_CONVERT_FAILURE_MESSAGE_LENGTH = 512
+
+// :121-128
+Result.Failure(
+    ResultConvertException(
+        statusCode = err.response.code,
+        // Do not fall back to err.message: on a 2xx the converter puts the whole raw body
+        // there, and ResultException folds message into its own Exception message, which
+        // would carry the payload into logs and crash reports. The body stays in
+        // responseBodyString, which callers read deliberately.
+        message = err.cause?.message?.take(MAX_CONVERT_FAILURE_MESSAGE_LENGTH)
+            ?: "Response body conversion failed.",
+        cause = err,
+        responseBodyString = bodyString,
+        tag = err.tag
+    )
+)
+```
+
+- 配套：`ResultExtTest.kt` 增一例 —— 2xx + 解析器抛 `IllegalStateException()`（无 message），断言
+  `message` 不含 body 片段且 `responseBodyString` 仍完整。CHANGELOG「安全」一条。
+- 验证：JVM 单测可完全覆盖。未验证。
+
+#### 15.2.2 [MEDIUM] G9 的会话回调把 `monitorLifecycleLock` 暴露给 ConnectivityManager 回调线程
+
+- 位置：`androidbase/.../utils/network/NetworkMonitor.kt:230-234`（会话 lambda）、
+  `lib-common-android/.../utils/NetworkUtil.kt:307`（注册未传 Handler/Executor）、`:361-372`（framework
+  wrapper 调用点）
+- 对比基线：修复前该回调只做一次 `@Volatile` 写，不取任何锁。
+- 缺陷：`sessionCallback` 体整体包在 `synchronized(monitorLifecycleLock)` 内，而它由
+  `WifiSignalNetworkCallback.onCapabilitiesChanged` / `onLost` 调用；`registerNetworkCallback(request,
+  networkCallback)` 没有 Handler/Executor 重载参数，故派发在 AOSP 的进程内单例 `ConnectivityThread`
+  上。于此同时同一把锁在监控线程上被持有整个结果派发块（`:127-150`，含 G13 指出的 `callback.invoke`）。
+- 失败场景：使用方在 `callback` 里对主线程同步等待（G13 已确认的死锁模式），主线程同时在
+  `onDestroy → stopMonitor()` 等锁。原本冻结主线程与监控线程两条；现在 `ConnectivityThread` 第三条
+  一并冻死，**整个进程**收不到任何 `NetworkCallback`（含应用其它网络监听）。
+- 修复：会话校验不需要锁 —— `isCurrentMonitor` 读的三个字段（`:54`、`:57`、`:60`）都是 `@Volatile`。
+  与 G13 合并处理：把派发移出锁后，这里也一并去锁。
+
+```kotlin
+// NetworkMonitor.kt:230-234 修改后
+val sessionCallback: (NetworkUtil.WifiSignal) -> Unit = { signal ->
+    // Invoked on ConnectivityManager's process-wide callback thread: never take
+    // monitorLifecycleLock here, or a stalled monitor callback would block every
+    // NetworkCallback in the process. The volatile session fields are enough.
+    if (isCurrentMonitor(generation, scheduler)) globalWifiSignal = signal
+}
+```
+
+- 复核要点：去锁后唯一放宽的是「校验与赋值之间会话被换掉」这一窗口，后果是一次陈旧的 Wi-Fi 信号写入
+  `globalWifiSignal`，而 `stopMonitor()`（`:220`）在 `finally` 中把它置 `null`、`startMonitor()` 也会重设，
+  故至多影响一次采样，不会跨会话污染 —— G9 要防的是**旧会话 lambda 持续投递**，已由 `detachListener()`
+  与 generation 校验共同覆盖，不依赖这把锁。
+- 影响：无 API 变化。CHANGELOG「修复」一条，可与 G13 合并。
+- 验证：沿用 `NetworkMonitorLifecycleTest` 的会话 lambda 捕获方式，新增一例：在监控线程持锁期间从另一
+  线程调用捕获到的 session lambda，断言其在有界时间内返回。未验证。
+
+#### 15.2.3 [MEDIUM] F5 的核心行为零测试覆盖，新增用例为空通过
+
+- 位置：`camera2live/src/test/kotlin/com/leovp/camera2live/codec/PendingInputBuffersTest.kt:54-72`
+- 缺陷：用例把时间戳硬编码进 `EncoderFrame(byteArrayOf(1), 10_000L)` / `(byteArrayOf(2), 25_000L)`，
+  只断言 `drain` 原样透传。F5 的核心是 `offerDataIntoQueue` **入队即打戳**（`CameraAvcEncoder.kt:265`），
+  把打戳挪回 submit 时刻，该用例依然全绿。方案原本要求「注入慢 `submit`，断言两帧 PTS 差约等于入队
+  间隔而非约 0」，未落地。
+- 修复：`elapsedMicrosSinceFirstFrame()` 当前直接调 `System.nanoTime()`（`:338`），不可注入。按 F3 已
+  采用的同一手法补一个 `internal` 构造参数：
+
+```kotlin
+// CameraAvcEncoder.kt:31-38 —— 追加 internal 时钟参数；公开构造签名不变
+class CameraAvcEncoder internal constructor(
+    private val width: Int,
+    private val height: Int,
+    private val bitrate: Int,
+    private val frameRate: Int,
+    private val iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
+    private val bitrateMode: Int = DEFAULT_BITRATE_MODE,
+    private val nowNanos: () -> Long = System::nanoTime,
+) {
+    @JvmOverloads
+    constructor(
+        width: Int,
+        height: Int,
+        bitrate: Int,
+        frameRate: Int,
+        iFrameInterval: Int = DEFAULT_KEY_I_FRAME_INTERVAL,
+        bitrateMode: Int = DEFAULT_BITRATE_MODE,
+    ) : this(width, height, bitrate, frameRate, iFrameInterval, bitrateMode, System::nanoTime)
+
+// :337-341
+private fun elapsedMicrosSinceFirstFrame(): Long {
+    val now = nowNanos()
+    timestampOriginNanos.compareAndSet(UNSET_TIMESTAMP_ORIGIN, now)
+    return (now - timestampOriginNanos.get()) / 1_000L
+}
+```
+
+  新增用例：用可控 `nowNanos` 连续两次 `offerDataIntoQueue`，时钟推进 15 ms，断言队列中两帧的
+  `presentationTimeUs` 为 `0` 与 `15_000`；再构造「两帧快速入队、submit 被延迟」的时序，断言 PTS 差仍
+  约等于**入队**间隔而非约 0。该用例在打戳挪回 submit 时刻后必然失败。
+- 风险：`init { initEncoder() }`（`:56-58`）在构造期就建编码器，单测需 `mockkStatic(MediaCodec::class)`，
+  与现有 `CameraAvcEncoderCallbackThreadTest` 同一套桩可复用。
+- 影响：公开构造签名不变（`@JvmOverloads` 保留在公开 secondary 上），无 KDoc 迁移说明需求。
+- 验证：JVM/Robolectric。未验证。
+
+#### 15.2.4 [MEDIUM] `timestampOriginNanos` 的 KDoc 与实际行为矛盾
+
+- 位置：`camera2live/.../CameraAvcEncoder.kt:64-68`
+- 缺陷：KDoc 仍写 `latched on the first frame handed to the encoder`，而 F5 之后原点是在帧**到达队列**时
+  锁存（`:265` → `:337-341`）。同一文件 `:334-335` 的新 KDoc 写的是 `Called when a frame reaches
+  [offerDataIntoQueue]`，两处自相矛盾。差别有实际后果：被 `BoundedFrameQueue`（容量 5）挤掉的首帧也会
+  锁存原点，因此首个真正送进编码器的 PTS 会大于 0 —— 这正是 F5 预判的现象，读错 KDoc 的人会把它当 bug。
+- 修复：
+
+```kotlin
+/**
+ * Monotonic origin for presentation timestamps, latched when the first frame reaches
+ * [offerDataIntoQueue] — not when a frame first reaches the encoder. A frame dropped by the
+ * bounded queue still latches the origin, so the first timestamp actually submitted may be
+ * greater than zero. Sentinel is `Long.MIN_VALUE` rather than `0`: `System.nanoTime()`'s
+ * origin is arbitrary and a reading of exactly zero is legal, which would re-latch it every
+ * frame.
+ */
+```
+
+- 影响：仅注释。无 CHANGELOG 需求。
+
+#### 15.2.5 [MEDIUM，可维护性] `http` 与 `lib-network` 两份有界日志实现完全重复
+
+- 位置：`http/src/main/kotlin/com/leovp/http/okhttp/HttpLoggingInterceptor.kt` 与
+  `lib-network/src/main/kotlin/com/leovp/network/interceptors/HttpLoggingInterceptor.kt`
+- 缺陷：`MAX_LOGGABLE_BODY_BYTES`、`CapturedRequestBody`、`captureRequestBodyForLogging`、
+  `RequestBodyLimitExceededException`、`isPlaintext`、`logRequestEnd`、`logCapturedRequestBody` 各约 120 行
+  在两个模块各存一份，且已出现漂移（`hasReadableBody()` vs `promisesBody`、DIVIDER 宽度、日志文案）。
+  后续「一侧改了上限另一侧没改」的复现风险高。
+- 修复方向：`http/build.gradle.kts:19` 已 `implementation(projects.libNetwork)`，把上述共用件抽到
+  `lib-network` 的 `api` 可见工具中，`http` 侧只保留自己的差异部分。
+- 影响：模块间 API 新增，需 CHANGELOG「变更」。**本条改动面较大且非正确性问题，是否本轮一并做由作者
+  决定**；若暂不做，建议在两份文件头部互相注明「与 X 保持同步」。
+
+### 15.3 本轮新引入的问题（LOW）
+
+| # | 位置 | 问题与修复 |
+|---|------|-----------|
+| L1 | `lib-common-android/.../exts/ToastExt.kt:359-361` | **G7 第 6 处未落地**。KDoc 仍为 master 原文 `This method also works in thread.`，但 `:362-375` 现在对非主线程调用改为 `mainHandler.post(cancelAction)`，后台线程调用返回时 toast 尚未取消。`grep cancelToast CHANGELOG.md` 零命中。修复：KDoc 改为「Safe to call from any thread. A call from a background thread is posted to the main thread, so the toast is not yet gone when this returns.」并补 CHANGELOG「变更」 |
+| L2 | `lib-network/.../generic/ResultExt.kt:51-52`、`CHANGELOG.md:79-80` | **N8 文本有事实错误**。两处把 `ResultException` 并列进「cause 此前为其 cause」。核对 master：`generic/ResultExt.kt:77`、`:88` 两处确为 `cause = err.cause`，但 `:123` 的 `else -> ResultException(message = err.message, cause = err)` 本来就是 `err`，从未变更。照现文档调用方会去找不存在的一层 `cause?.cause`。修复：把 `ResultException` 从该句移出，单列「新增 `is ApiException` 分支保留 `code` 与 `tag`」 |
+| L3 | `screencapture/src/test/.../Mp4TrackWriterTest.kt` | **F10 测试缺反向对照**。三个用例全部断言「文件被删」，没有「成功 `close()` 必须保留文件」的用例。`completed` 退化为恒 `false` 时三条全绿，而真实后果是正常录屏的 MP4 被静默删掉 —— 恰为 F10 要防问题的镜像。修复：补一例「写入样本后正常 `close()`，断言 `output.exists()` 且 `verify(exactly = 1) { muxer.stop() }`」。方案原列 6 例只实现 3 例，另缺 `start()` 抛 Exception、`addTrack()`/`stop()` 抛 Error |
+| L4 | `lib-network/src/test/.../HttpLoggingInterceptorTest.kt:22-34` | **N4 的核心性质无回归保护**。两个大 body 用例都用 `String.toResponseBody()`（body 本就整份在内存），只验证了日志片段有界；把 `source.request(MAX + 1)` 改回 `Long.MAX_VALUE` 测试仍通过。修复：自定义 `ResponseBody`，其 `source()` 返回按需产生字节的 `Source` 并记录已读字节数，断言 ≈ 256 KiB |
+| L5 | `screencapture/.../ScreenRecordMediaCodecStrategy.kt:478` + `:307-316` | **F8 残留时序缺口**。`onRelease()` 之后再调 `takeScreenshot()` 会在 API 34+ 重新注册 callback，此后无任何注销点。方案未覆盖此路径。修复：`takeScreenshot()` 在自身返回前注销它本次新注册的 callback，或在 `onRelease()` 后把实例标记为终态并拒绝 `takeScreenshot()` |
+| L6 | `screencapture/.../ScreenRecordMediaCodecStrategy.kt:285` → `:296-298` | `onInit()` 中 `registerCallbackAboveAndroid14()` 在 `createVirtualDisplay` 之前；后者抛异常时 catch 只释放 encoder 与 callback thread，不注销已注册的 callback，`projectionCallbackRegistered` 留 `true`。调用方若在 `onInit()` 失败后直接放弃（不调 `onRelease()`），callback 悬挂。可辩护（为重试保留注册状态），但方案未讨论，建议在 catch 中显式注销或在 KDoc 写明「`onInit()` 失败后仍须调用 `onRelease()`」 |
+| L7 | `screencapture/.../Screenshot2H26xBuilder.kt:46` | F6 要求「三个 Builder 的 `setFps()` KDoc 追加同一句迁移说明」，这一个漏了（另两个已写于 `ScreenCapture.kt:61`、`ScreenRecordMediaCodecStrategy.kt:136`）。该 Builder 正是 `BY_IMAGE_2_H26X` 与 demo 使用的链路 |
+| L8 | `screencapture/.../Screenshot2H26xStrategy.kt` | F9 第 3 点未达标：1232 → 1032 行，仍超 `coding-style.md` 的 800 行上限（detekt 不卡此项）。F2 的 API 21–22 `FutureTask` 分支同轮又加回约 30 行 |
+| L9 | `LeoTextureView.kt:207-212`、`CameraAvcEncoder.kt:239-244`、`Screenshot2H26xStrategy.kt:636-641` | 三处同构：`task.cancel(true)` 会中断正在执行原生 codec 创建的 callback 线程，中断位残留在这条继续 loop 的线程上；`catch (Throwable)` 转抛 `InterruptedException` 时未 `Thread.currentThread().interrupt()` 恢复状态。不致错，属健壮性瑕疵 |
+| L10 | `lib-mvvm/.../ScreenCountdownManager.kt:152-162` | F3 在 duration 非整秒时最后一跳语义变了：`duration = 2500` 新序列为 `2500, 1500, 500, 0`（旧为 `…, 1000, 0`），总时长不变。文档「相邻差恒为 −1000」只在整秒 duration 下成立，建议在 KDoc 写明 |
+| L11 | `CHANGELOG.md` 约 `:82`、`:280`、`:283` | 新增块与既有条目之间各插入一个空行，把「变更」「修复」两节的紧凑列表切成松散列表，渲染间距不一致。四路核查独立报出同样位置。修复：删除这三处空行 |
+| L12 | `CHANGELOG.md:615`、`demo/.../examples/log/LogActivity.kt:21` | N2 的旧名残留两处：前者 AR 系列条目仍用 `DeviceUtil` 指代被改名的 android-restricted 类，与同一 `## [Unreleased]` 内 `:70` 的重命名条目自相矛盾；后者 KDoc 引用并不存在的 `DeviceUtilRestricted.getDeviceInfo(this)`（该方法在 `lib-common-android` 的 `DeviceUtil` 上，为 `ffb2c798f` 全量改名时的误伤，非本轮引入） |
+
+### 15.4 待作者决定的事项
+
+本节原列三条涉及取舍或配置文件授权的事项。作者已于 2026-10-21 作出处理：§15.4.3 授权修改并
+**已完成**；§15.4.1 与 §15.4.2 由 Codex 实施，两者的取舍仍待其在实施时确定，本文保留选项与依据。
+
+#### 15.4.1 `Screenshot2H26xStrategy.Builder` 的空壳子类留不留
+
+F9 拆文件时把 `Builder` 实现提升为独立的 `open class Screenshot2H26xBuilder`，原嵌套类变成空壳子类：
+
+```kotlin
+// Screenshot2H26xStrategy.kt:109-111
+/** Public API wrapper; implementation lives in [Screenshot2H26xBuilder]. */
+class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataListener) :
+    Screenshot2H26xBuilder(width, height, dpi, screenDataListener)
+```
+
+带来三点方案未声明的公开 API 变化：setter 声明在父类上并用 `apply` 返回接收者，故
+`Builder(...).setFps(20f)` 的静态类型由 `Builder` 变为 `Screenshot2H26xBuilder`；
+`Screenshot2H26xStrategy` 主构造器收为 `internal`（`:96`）；新增公开类 `Screenshot2H26xBuilder`。
+链式 `…setFps(x).build()` 仍编译（`ScreenCapture.kt:104-118` 已验证），但
+`val b: Screenshot2H26xStrategy.Builder = Screenshot2H26xStrategy.Builder(…).setFps(20f)` 这类把中间
+结果声明为子类型的调用方会编译失败。CHANGELOG 无条目，`Builder` 的 KDoc 也只写「Public API wrapper」。
+
+两个选项：
+
+- **保留空壳**：须补 CHANGELOG「变更」加粗条目说明 setter 返回类型变化，并在 `Builder` KDoc 写迁移说明。
+- **删除空壳**：调用方直接改用 `Screenshot2H26xBuilder`。更符合本项目「API 演进约定」——该空壳本身就是
+  只为旧写法存在的兼容入口，而约定明确「不保留只为旧版本存在的重载、参数、分支或兼容开关」。同样须记
+  CHANGELOG「变更」。
+
+#### 15.4.2 注销路径上的 `@RequiresPermission` 要不要撤
+
+`NetworkMonitor.kt:212` 给 `stopMonitor()` 加了 `@RequiresPermission(ACCESS_NETWORK_STATE)`，
+`NetworkUtil.kt:332` 的 `unregisterWifiNetworkStatsAboveAndroidS` 同样；而该路径最终只调
+`connectivityManager.unregisterNetworkCallback()`（`NetworkUtil.kt:380`），AOSP 对此方法无权限要求。
+
+连带后果：`BaseActivity.stopTrafficMonitor()`（`:227`）也必须标注，`onDestroy()`（`:151`）必须加
+`@SuppressLint("MissingPermission")` 才能过 lint。那个 `@SuppressLint` 本身即为注解加错的信号。
+这是**公开基类的 API 契约变更**，所有继承 `BaseActivity` 并调用 `stopTrafficMonitor()` 的外部使用者都被
+迫声明该权限或自行抑制，而 CHANGELOG 无对应条目。
+
+两个选项：
+
+- **撤销**（倾向）：去掉 `stopMonitor()`、`unregisterWifiNetworkStatsAboveAndroidS`、
+  `stopTrafficMonitor()` 三处 `@RequiresPermission`，并删掉 `onDestroy()` 的 `@SuppressLint`。
+- **保留**：须记入 CHANGELOG「变更」并加粗标为破坏性契约变更。
+
+#### 15.4.3 `CLAUDE.md:76` 的旧名 `DeviceUtil` 是否同步（2026-10-21 已完成）
+
+该行描述 `android-restricted` 模块时仍列 `DeviceUtil`，而该类已改名为 `DeviceUtilRestricted`
+（`ffb2c798f`）。因 `DeviceUtil` 仍是 `lib-common-android` 中真实存在的类，这一行不是单纯过时，而是会
+把读者导向错误模块。改动仅一个词。按 N2 原方案与 `AGENTS.md`，`CLAUDE.md` 默认只读、需作者明确授权
+才修改。**作者已于 2026-10-21 明确授权，`CLAUDE.md:76` 的 `DeviceUtil` 已改为 `DeviceUtilRestricted`**；
+该文件中已无其它旧名引用。§15.3 L12 的另两处旧名残留（`CHANGELOG.md:615`、
+`demo/.../examples/log/LogActivity.kt:21`）不属该文件，仍待实施。
+
+### 15.5 验证状态
+
+| 项 | 状态 |
+|----|------|
+| 26 项落地与一致性 | 源码静态核查完成 |
+| 关键断言回源码复核 | 完成（含三处对核查结论本身的纠正，见下） |
+| 编译 / detekt / ktlint / 单测 | **未验证**（Claude 运行在远端，无法执行 Gradle） |
+| 真机 | **未验证** |
+
+两项特别需要本机确认：`:camera2live:compileDebugKotlin`（`drain<T>` 的类型推断能否通过）；F2 在真机
+API 21–22 上的 callback 线程归属 —— 现有三个 `*CallbackThreadTest` 是 Robolectric 下
+`ReflectionHelpers.setStaticField(Build.VERSION, "SDK_INT", 22)` 的控制流测试，codec 被完全 mock，
+证明不了真实 MediaCodec 的 Looper 绑定。§14.1 对此已如实声明，不属过度声明。
+
+本轮核查中纠正的三处结论：
+
+1. 「锁内有 `getSpeed()` 的阻塞 `/proc` I/O」**不成立**。`getSpeed()`（`TrafficStatHelper.kt:56`）走
+   `downloadSpeed`/`uploadSpeed` → `TrafficStats.getTotalRxBytes()`/`getTotalTxBytes()`；`/proc/uid_stat/`
+   的 `RandomAccessFile` 在 `sendTraffic`/`receiveTraffic`，只喂构造期一次性求值的 `totalTraffic`
+   （标了 `@Suppress("unused")`）。§11.2 G13 中「只读计数器」的措辞准确，无需修改。
+2. 「本轮引入/保留两处 `!!`」**不准确**。`ScreenRecordMediaCodecStrategy.kt` 的 `!!` 由基线 5 处减至
+   4 处（`h26xEncoder!!.createInputSurface()` 已消除），剩余 4 处均为基线原有、仅因改动位移。
+3. `camera2live/.../CameraAvcEncoder.kt:146` 的 `KEY_MAX_FPS_TO_ENCODER` **不属 F1 残留**。该类为
+   ByteBuffer 输入编码器（`configure(fmt, null, null, ENCODE)` + `COLOR_FormatYUV420Flexible` +
+   `queueInputBuffer`），该键只对 Surface 输入编码器生效，故为无效配置而非 F1 缺陷；且基线即存在
+   （追溯至 `2d9b920cf`），非本轮引入。
+
+附带发现（与本轮无关，备查）：`TrafficStatHelper` 的 `totalTraffic` 读取 `/proc/uid_stat/$uid/tcp_snd`
+与 `tcp_rcv`，该路径自 Android 8 起已被移除，两次 `RandomAccessFile` 恒落入 `runCatching` 的
+`getOrDefault(0)`，属死代码。
+
+另：`10-configs/detekt.yml:482` 的 `UnsafeCallOnNullableType` 为 `active: true`，配合 `maxIssues: 0`，
+按理应拦下主源码中的 `!!`；但仓库无 detekt baseline 文件、相关文件也无 `@Suppress`，而基线那 5 处一直
+通过。推断原因是 `build.gradle.kts:413` 的 `tasks.withType<Detekt>` 未配置 `classpath`，detekt 在无类型
+解析模式下运行，该规则不触发（此为推断，本机无法执行 detekt 验证）。实际效果是：项目的「禁用 `!!`」
+目前只由 `.claude/rules/kotlin/coding-style.md` 的约定约束，detekt 并未真正拦截。是否给 Detekt 任务补
+`classpath` 使该规则生效，为独立决定。

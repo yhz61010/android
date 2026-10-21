@@ -27,6 +27,7 @@ import com.leovp.kotlin.exts.humanReadableByteCount
 import com.leovp.log.LogContext
 import com.leovp.log.base.LogOutType
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -73,7 +74,15 @@ abstract class BaseActivity<B : ViewBinding>(
     @Suppress("WeakerAccess")
     protected lateinit var simpleActivityLauncher: BetterActivityResult<Intent, ActivityResult>
 
-    private var networkMonitor: AtomicReference<NetworkMonitor>? = null
+    /**
+     * Written from the DNS lookup thread and read from the main thread, so the holder itself is a
+     * final field: an AtomicReference parked in a plain `var` would publish the reference without
+     * publishing the field.
+     */
+    private val networkMonitor = AtomicReference<NetworkMonitor?>(null)
+
+    /** Invalidates a DNS lookup still in flight when the monitor is torn down. */
+    private val trafficMonitorGeneration = AtomicLong(0)
 
     open fun onCreateBeginning() {
     }
@@ -221,8 +230,9 @@ abstract class BaseActivity<B : ViewBinding>(
     // ==============================
 
     fun stopTrafficMonitor() {
-        networkMonitor?.get()?.stopMonitor()
-        networkMonitor = null
+        // Invalidate any DNS lookup still in flight before tearing the current monitor down.
+        trafficMonitorGeneration.incrementAndGet()
+        networkMonitor.getAndSet(null)?.stopMonitor()
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -230,11 +240,14 @@ abstract class BaseActivity<B : ViewBinding>(
         domain: String,
         callback: ((NetworkMonitor.NetworkMonitorResult) -> Unit)? = null
     ) {
-        if (networkMonitor?.get() != null) {
+        if (networkMonitor.get() != null) {
             LogContext.log.w(tag, "networkMonitor had already existed! Do NOT create it again!")
             return
         }
+        val generation = trafficMonitorGeneration.get()
         LogContext.log.i(tag, "Monitor domain=$domain")
+        // This callback runs on a plain background thread started by InternetUtil, so everything
+        // below races with the main thread's onDestroy().
         InternetUtil.getIpsByHost(domain) { socketIps ->
             if (socketIps.isEmpty()) {
                 LogContext.log.e(tag, "Can not get ip by host[$domain].")
@@ -244,7 +257,7 @@ abstract class BaseActivity<B : ViewBinding>(
             val socketIp = socketIps[0]
             LogContext.log.i(tag, "socketIp=$socketIp")
 
-            if (networkMonitor?.get() != null) {
+            if (networkMonitor.get() != null) {
                 LogContext.log.e(tag, "networkMonitor had already existed! Do NOT create it again!")
                 return@getIpsByHost
             }
@@ -254,45 +267,55 @@ abstract class BaseActivity<B : ViewBinding>(
                 LogContext.log.w(tag, "Activity is destroyed/finishing. Skip NetworkMonitor.")
                 return@getIpsByHost
             }
-            networkMonitor = AtomicReference(
-                NetworkMonitor(this@BaseActivity, socketIp) { info ->
-                    callback?.let { runOnUiThread { it(info) } }
+            val monitor = NetworkMonitor(this@BaseActivity, socketIp) { info ->
+                callback?.let { runOnUiThread { it(info) } }
 
-                    if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) {
-                        return@NetworkMonitor
-                    }
-
-                    val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
-                    val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
-
-                    val latencyStatus = when (info.showPingTips) {
-                        NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
-                        NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
-                        else -> null
-                    }
-
-                    val wifiSignalStatus = when (info.showWifiSig) {
-                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
-                        NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
-                        else -> null
-                    }
-                    val infoStr = String.format(
-                        Locale.ENGLISH,
-                        "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
-                        downloadSpeedStr, uploadSpeedStr,
-                        if (latencyStatus.isNullOrBlank()) {
-                            "${info.ping}ms"
-                        } else {
-                            "${info.ping}ms($latencyStatus)"
-                        },
-                        info.linkSpeed,
-                        info.rssi, info.wifiScoreIn5, info.wifiScore,
-                        if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
-                    )
-                    LogContext.log.i(tag, infoStr)
+                if (!defaultConfig.trafficConfig.allowToOutputDefaultWifiTrafficInfo) {
+                    return@NetworkMonitor
                 }
-            ).also {
-                it.get().startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+
+                val downloadSpeedStr = info.downloadSpeed.humanReadableByteCount()
+                val uploadSpeedStr = info.uploadSpeed.humanReadableByteCount()
+
+                val latencyStatus = when (info.showPingTips) {
+                    NetworkUtil.NETWORK_PING_DELAY_HIGH -> "Latency High"
+                    NetworkUtil.NETWORK_PING_DELAY_VERY_HIGH -> "Latency Very High"
+                    else -> null
+                }
+
+                val wifiSignalStatus = when (info.showWifiSig) {
+                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_BAD -> "Signal Bad"
+                    NetworkUtil.NETWORK_SIGNAL_STRENGTH_VERY_BAD -> "Signal Very Bad"
+                    else -> null
+                }
+                val infoStr = String.format(
+                    Locale.ENGLISH,
+                    "↓%s\t↑%s\t%s\t%dMbps\tR:%d %d %d%s",
+                    downloadSpeedStr, uploadSpeedStr,
+                    if (latencyStatus.isNullOrBlank()) {
+                        "${info.ping}ms"
+                    } else {
+                        "${info.ping}ms($latencyStatus)"
+                    },
+                    info.linkSpeed,
+                    info.rssi, info.wifiScoreIn5, info.wifiScore,
+                    if (wifiSignalStatus.isNullOrBlank()) "" else " ($wifiSignalStatus)"
+                )
+                LogContext.log.i(tag, infoStr)
+            }
+            // Publish, then re-check: stopTrafficMonitor() may have run on the main thread while
+            // the lookup was in flight, in which case it found an empty slot and stopped nothing.
+            val published = trafficMonitorGeneration.get() == generation &&
+                networkMonitor.compareAndSet(null, monitor)
+            if (!published) {
+                monitor.stopMonitor()
+                return@getIpsByHost
+            }
+            monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+            if (trafficMonitorGeneration.get() != generation) {
+                // A stop landed between the publish and the start; compensate for it here.
+                networkMonitor.compareAndSet(monitor, null)
+                monitor.stopMonitor()
             }
         }
     }

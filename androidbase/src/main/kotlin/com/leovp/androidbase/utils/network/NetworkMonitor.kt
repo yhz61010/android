@@ -50,6 +50,13 @@ class NetworkMonitor internal constructor(
     @Volatile
     private var globalWifiSignal: NetworkUtil.WifiSignal? = null
     private val monitorLifecycleLock = Any()
+
+    /**
+     * Serialises consumer callbacks without ever being held by [startMonitor] or [stopMonitor],
+     * so a callback that blocks cannot stall the lifecycle while callbacks still never overlap.
+     * Never acquired while holding [monitorLifecycleLock].
+     */
+    private val resultDispatchLock = Any()
     @Volatile
     private var monitorScheduler: NetworkMonitorScheduler? = null
 
@@ -124,7 +131,7 @@ class NetworkMonitor internal constructor(
                     }
                 }
                 beforeResultDispatch()
-                synchronized(monitorLifecycleLock) {
+                val result = synchronized(monitorLifecycleLock) {
                     if (!isCurrentMonitor(generation, scheduler)) return
                     var downloadSpeed: Long = 0
                     var uploadSpeed: Long = 0
@@ -134,19 +141,26 @@ class NetworkMonitor internal constructor(
                             uploadSpeed = upload / interval
                         }
                     }
-                    callback.invoke(
-                        NetworkMonitorResult(
-                            downloadSpeed,
-                            uploadSpeed,
-                            ping,
-                            showPingLatencyStatus,
-                            wifiSignal?.linkSpeed ?: -1,
-                            wifiSignal?.rssi ?: -1,
-                            wifiSignal?.scoreIn5 ?: -1,
-                            wifiSignal?.score ?: -1,
-                            showWifiSignalStatus
-                        )
+                    NetworkMonitorResult(
+                        downloadSpeed,
+                        uploadSpeed,
+                        ping,
+                        showPingLatencyStatus,
+                        wifiSignal?.linkSpeed ?: -1,
+                        wifiSignal?.rssi ?: -1,
+                        wifiSignal?.scoreIn5 ?: -1,
+                        wifiSignal?.score ?: -1,
+                        showWifiSignalStatus
                     )
+                }
+                // Dispatched outside monitorLifecycleLock on purpose: a consumer callback that
+                // blocks on another thread must not be able to stall startMonitor() or
+                // stopMonitor(). resultDispatchLock keeps callbacks serialised anyway, because
+                // close() only quitSafely()s the old thread and does not join it, so a trailing
+                // iteration can outlive the session that scheduled it. The re-check narrows, but
+                // cannot eliminate, a trailing result racing with a stop.
+                synchronized(resultDispatchLock) {
+                    if (isCurrentMonitor(generation, scheduler)) callback.invoke(result)
                 }
             } catch (error: Exception) {
                 LogContext.log.e(TAG, "Network monitor iteration failed", error)
@@ -165,9 +179,14 @@ class NetworkMonitor internal constructor(
     /**
      * The data will be sent in every *freq* second(s)
      *
-     * Repeated calls replace the current session. Callbacks run on the monitor thread and must
-     * remain short: lifecycle changes wait for a running callback to finish. Do not wait inside
-     * a callback for another thread that calls [startMonitor] or [stopMonitor].
+     * Repeated calls replace the current session. Callbacks run on the monitor thread and never
+     * hold the lifecycle lock, so blocking inside one cannot stall [startMonitor] or
+     * [stopMonitor]; it only delays this session's subsequent results.
+     *
+     * Migration: earlier versions dispatched the callback while holding the lifecycle lock and
+     * therefore forbade waiting inside a callback for a thread that calls [startMonitor] or
+     * [stopMonitor]. That restriction is gone, and with it the guarantee that a running callback
+     * has finished once [stopMonitor] returns -- see [stopMonitor].
      *
      * Need following permission:**
      * ```xml
@@ -201,8 +220,15 @@ class NetworkMonitor internal constructor(
     }
 
     /**
-     * Stops future results and releases monitoring resources. An already running callback finishes
-     * before this method returns. This instance can subsequently be started again.
+     * Stops future results and releases monitoring resources. This instance can subsequently be
+     * started again.
+     *
+     * Migration: earlier versions guaranteed that an already running callback had finished before
+     * this method returned, because the callback was dispatched while holding the lifecycle lock.
+     * The callback is now dispatched outside that lock, so a callback already in flight may
+     * complete after this method returns. Consumers must tolerate one trailing result and guard
+     * their own teardown state instead of relying on this method to fence it. Callbacks are still
+     * never invoked concurrently, so a consumer needs no locking of its own.
      */
     fun stopMonitor() {
         synchronized(monitorLifecycleLock) {

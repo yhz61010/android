@@ -146,17 +146,14 @@ abstract class BaseActivity<B : ViewBinding>(
     override fun onStop() {
         LogContext.log.w(tag, "=====> onStop <=====", outputType = LogOutType.FRAMEWORK)
         super.onStop()
-        if (networkMonitor != null) {
-            LogContext.log.w(
-                tag,
-                "Are you leaking networkMonitor? " +
-                    "Don't forget to call stopTrafficMonitor() if you don't need it anymore."
-            )
-        }
     }
 
+    @SuppressLint("MissingPermission")
     override fun onDestroy() {
         LogContext.log.w(tag, "=====> onDestroy <=====", outputType = LogOutType.FRAMEWORK)
+        // A monitor can only be created through startTrafficNetwork(), whose permission contract
+        // already requires ACCESS_NETWORK_STATE. Keep the framework lifecycle callback itself
+        // free of a permission contract while still releasing an existing monitor automatically.
         stopTrafficMonitor()
         // EventBus.getDefault().unregister(this)
         super.onDestroy()
@@ -227,6 +224,7 @@ abstract class BaseActivity<B : ViewBinding>(
 
     // ==============================
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun stopTrafficMonitor() {
         networkMonitor?.get()?.stopMonitor()
         networkMonitor = null

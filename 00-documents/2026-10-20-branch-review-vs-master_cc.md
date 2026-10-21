@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 列出待取舍事项，其中 `CLAUDE.md` 旧名已按作者授权修正。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 的三项待取舍事项已于同日全部落地：Builder 空壳删除与注销路径权限撤销由 Codex 在 `ba6ea5ed7` 实施（见 §14.2），`CLAUDE.md` 旧名按作者授权修正；该次提交静默引入的两处 KDoc 坏链接已一并修复，详见 §15.4.1。
 
 ## 0. 范围与方法
 
@@ -1368,10 +1368,11 @@ private fun elapsedMicrosSinceFirstFrame(): Long {
 
 ### 15.4 待作者决定的事项
 
-本节原列三条涉及取舍或配置文件授权的事项。作者已于 2026-10-21 作出处理：§15.4.3 授权修改并
-**已完成**；§15.4.1 与 §15.4.2 由 Codex 实施，两者的取舍仍待其在实施时确定，本文保留选项与依据。
+本节原列三条涉及取舍或配置文件授权的事项，**均已于 2026-10-21 处理完毕**：§15.4.1 与 §15.4.2 由
+Codex 在提交 `ba6ea5ed7` 中实施（两处都选了与本文倾向一致的方案），§15.4.3 经作者授权后修改。
+本节保留原选项与依据以备追溯，各条末尾记录实际落点。
 
-#### 15.4.1 `Screenshot2H26xStrategy.Builder` 的空壳子类留不留
+#### 15.4.1 `Screenshot2H26xStrategy.Builder` 的空壳子类留不留（2026-10-21 已实施：删除）
 
 F9 拆文件时把 `Builder` 实现提升为独立的 `open class Screenshot2H26xBuilder`，原嵌套类变成空壳子类：
 
@@ -1396,7 +1397,20 @@ class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataL
   只为旧写法存在的兼容入口，而约定明确「不保留只为旧版本存在的重载、参数、分支或兼容开关」。同样须记
   CHANGELOG「变更」。
 
-#### 15.4.2 注销路径上的 `@RequiresPermission` 要不要撤
+**实施结果（`ba6ea5ed7`）**：选了删除。空壳类移除；`Screenshot2H26xBuilder` 由 `open class` 收回
+`class`（已无子类）；`ScreenCapture.kt:105` 与两处测试调用点切至 `Screenshot2H26xBuilder`；
+`Screenshot2H26xBuilder` 的 KDoc 补了替换说明；CHANGELOG「变更」新增加粗条目「**截图式录屏 Builder
+改为顶层 API**」。代码内零残留引用，测试与 Builder 同包故无需 import。
+
+**该次提交引入并已修正的回归**：删除空壳时同时删掉了 `Screenshot2H26xStrategy.kt` 的
+`import ...base.ScreenDataListener`（空壳构造参数是它在该文件唯一的代码使用点），但
+`mp4Writer` 的 KDoc 仍引用 `[Builder.mp4OutputFile]` 与 `[ScreenDataListener]` —— 前者指向已删除的
+类，后者因 import 移除而无法解析。两处均为 KDoc 链接，kotlinc 不校验，故编译、detekt、ktlint 全部
+通过，属静默文档回归。已于同日修正为 `[Screenshot2H26xBuilder.mp4OutputFile]` 与全限定的
+`[com.leovp.screencapture.screenrecord.base.ScreenDataListener]`（用全限定名而非加回 import，避免
+引入只为 KDoc 存在的 import 触发 detekt 未用 import 判定）。
+
+#### 15.4.2 注销路径上的 `@RequiresPermission` 要不要撤（2026-10-21 已实施：撤销）
 
 `NetworkMonitor.kt:212` 给 `stopMonitor()` 加了 `@RequiresPermission(ACCESS_NETWORK_STATE)`，
 `NetworkUtil.kt:332` 的 `unregisterWifiNetworkStatsAboveAndroidS` 同样；而该路径最终只调
@@ -1412,6 +1426,17 @@ class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataL
 - **撤销**（倾向）：去掉 `stopMonitor()`、`unregisterWifiNetworkStatsAboveAndroidS`、
   `stopTrafficMonitor()` 三处 `@RequiresPermission`，并删掉 `onDestroy()` 的 `@SuppressLint`。
 - **保留**：须记入 CHANGELOG「变更」并加粗标为破坏性契约变更。
+
+**实施结果（`ba6ea5ed7`）**：选了撤销，范围准确且比本文所列多覆盖一处。移除的注解为
+`NetworkMonitor.stopMonitor()`、`NetworkMonitor.unregisterWifiSignalCallback()`（本文未列，同属注销
+链路，撤销正确）、`NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS()`、
+`BaseActivity.stopTrafficMonitor()`；`BaseActivity.onDestroy()` 的 `@SuppressLint("MissingPermission")`
+与相应解释注释一并删除。注册路径的 `@RequiresPermission` 全部保留（`registerNetworkCallback` 确需
+该权限）。CHANGELOG 对应条目由「两者只需 `ACCESS_NETWORK_STATE`」更正为「注册需要
+`ACCESS_NETWORK_STATE`，注销不要求权限」。
+
+复核过删注解最易引发的失效 import：三个文件的 `SuppressLint`、`RequiresPermission`、`Manifest`、
+`RequiresApi` 在正文中均仍有使用点，无孤儿 import（detekt `maxIssues=0` 不会因此失败）。
 
 #### 15.4.3 `CLAUDE.md:76` 的旧名 `DeviceUtil` 是否同步（2026-10-21 已完成）
 

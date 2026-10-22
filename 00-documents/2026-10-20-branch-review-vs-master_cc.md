@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）因作者就 `BaseActivity` 的流量监控提问而新增 G11、G12、G13 三条，其中 G13 由 §5 的待核实项转为确认项，并把「不可见期间继续轮询」与「回调死锁须结构性修掉」记入 §13 的决定表。第九轮（Claude，2026-10-21）实施了 G11 与 G13，经两轮对抗性审查修正后见 §16。第七轮（Codex，2026-10-21）已按本文实施第六轮之前确认的 26 项，当前验证状态见 §14.1；G12 已随该轮落地，G11 与 G13 仍未实施。第八轮（Claude，2026-10-21）对该次实施逐条核查，结论见 §15：26 项全部落地（21 项与方案一致、5 项做法不同），另发现 5 条本轮新引入的 MEDIUM 问题与 12 条 LOW，均附代码级修复方案；§15.4 的三项待取舍事项已于同日全部落地：Builder 空壳删除与注销路径权限撤销由 Codex 在 `ba6ea5ed7` 实施（见 §14.2），`CLAUDE.md` 旧名按作者授权修正；该次提交静默引入的两处 KDoc 坏链接已一并修复，详见 §15.4.1。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）新增 G11、G12、G13。第七轮（Codex，2026-10-21）对此前确认的 26 项做了实现改动，其中 F6、F9、G7 仅部分落地。第八轮（Claude，2026-10-21）的复核与后续公开 API 修正见 §15 和 §14.2。G11/G13 随 `b0c417d95`、`f6cbb985e` 和 `fec53929a` 落地后，远端记录见 §16；Codex 后续复核确认 G13 已正确落地，但 G11 仍存在 `stopTrafficMonitor()` 返回后才启动监控的剩余竞态。第十轮（Codex，2026-10-22）已使最终发布/启动与停止串行化，并以新增竞态用例验证停止栅栏，见 §17。
 
 ## 0. 范围与方法
 
@@ -166,12 +166,14 @@
 ## 11. 确认的问题与代码级修复方案
 
 截至 2026-10-21，本节第六轮之前确认的 26 项（F1–F10、G1–G9、N1–N8，不含 N5、G10 两项已推翻）
-均已按方案落地；本节保留原始问题、方案与验证要求，便于逐项追溯。JVM/Robolectric、静态检查和
-Demo 编译的实际结果见 §14；依赖真实 Codec、GLES、MediaProjection、WindowManager 或设备时序的
-真机项仍未执行，不能由单测结果替代。
+均已有实现改动；其中 F6、F9、G7 仍有部分要求未落地，详见 §15.1 与 §15.3。本节保留原始问题、方案与
+验证要求，便于逐项追溯。JVM/Robolectric、静态检查和 Demo 编译的实际结果见 §14；依赖真实 Codec、
+GLES、MediaProjection、WindowManager 或设备时序的真机项仍未执行，不能由单测结果替代。
 
-第六轮新增的三项**均已落地**：G12 随 `eaaa49e62`（KDoc 部分仍缺），G11 与 G13 随 `b0c417d95` + `f6cbb985e`，
-实施与审查记录见 §16。各条保留原始问题与方案以便追溯。
+第六轮新增的三项中，**G12 已随 2026-10-21 的实施落地**（`eaaa49e62`）；
+**G13 已由 `b0c417d95`/`f6cbb985e` 完整落地，G11 在 2026-10-22 的第十轮修复后完整落地**。
+远端实施记录见 §16；Codex 复核发现的剩余停止栅栏竞态、最终修复与本机验证见 G11 条目、
+§15.5 及 §17。
 
 ### 11.1 录屏、相机与倒计时
 
@@ -750,13 +752,16 @@ private fun unregisterWifiSignalCallback() {
 - 调用顺序：`startMonitor()` 进入锁后先推进 generation、置 stopped、注销并清空旧 session callback，再创建并发布 scheduler；随后置 `monitorStopped=false`、注册新 callback、post 首次任务。这样即使注册 API 同步回调，当前 session 也已有效；若首次 post 抛异常，现有 `finally -> stopMonitor()` 仍会推进 generation 并注销刚注册的 callback。`stopMonitor()` 先推进 generation，再 detach/注销 callback，最后释放 scheduler 并清空信号。注册失败时仍可继续 ping/流量监控。
 - 验证：在 `NetworkMonitorLifecycleTest` 捕获每次传给 mock `NetworkUtil` 的**session lambda**；restart 后先让新 lambda 上报新信号，再触发旧 lambda 的 `onLost()`，断言结果仍使用新信号。framework wrapper 的脱钩行为属于 `NetworkStatsCallbackTest`：模拟注销抛异常后直接调用旧 wrapper，业务 callback 不得再执行。不要把两层对象混称为同一个 wrapper。
 
-#### G11 [MEDIUM，第六轮新增] 流量监控跨线程发布缺可见性保证，且与 `onDestroy` 存在检查后动作竞态
+#### G11 [MEDIUM，第六轮新增，2026-10-22 完整实施] 流量监控跨线程发布缺可见性保证，且与 `onDestroy` 存在检查后动作竞态
 
-- 位置：`androidbase/src/main/kotlin/com/leovp/androidbase/framework/BaseActivity.kt:76`（字段）、:151-160（`onDestroy`，:157 调 `stopTrafficMonitor()`）、:227-231（`stopTrafficMonitor()`）、:233-303（`startTrafficNetwork()`，其中 :258 为存活检查、:262 为赋值、:300 为 `startMonitor()`）；`androidbase/.../utils/network/InternetUtil.kt:26-28`。**行号与代码片段已按 2026-10-21 实施后的 HEAD 重新核对；本条仍未实施。**
+- 实施状态：`b0c417d95`/`f6cbb985e` 先解决了可见性与永久泄漏，但仍按「CAS 发布 → `startMonitor()` → generation 复查」执行，因而不具备严格的停止栅栏。`fec53929a` 增加了基础握手测试，但没有覆盖「已发布、正在启动」时 stop 返回的交错。第十轮新增 `trafficMonitorLock`，将最终 generation/存活检查、发布、`startMonitor()` 及失败回滚与 `stopTrafficMonitor()` 的作废、取走和停止串行化。若 start 先获锁，stop 等待启动结束并在返回前停止；若 stop 先获锁，迟到 DNS 回调因 generation 失效而不再启动。
 - 缺陷 1（可见性）：`InternetUtil.getIpsByHost(host, callback)` 的实现是 `thread { callback(getIpsByHost(host)) }`，因此 `networkMonitor` 在 DNS 后台线程写入、在主线程的 `onDestroy` 读取，而该字段是普通 `var`，没有 `@Volatile`。外层的 `AtomicReference` 只保证所存引用的原子性，不为字段本身建立 happens-before 边。主线程可能读到 `null`，于是 `stopTrafficMonitor()` 漏掉一个已经创建好的监控。
 - 缺陷 2（检查后动作）：DNS 线程在 :258 通过 `isDestroyed || isFinishing` 检查之后、在 :262 赋值之前，主线程可以跑完整个 `onDestroy`（:157 的 `stopTrafficMonitor()` 此时把字段置 `null`，什么也没停）。随后 DNS 线程把新建的监控写入字段并在 :300 启动它，监控与其 `HandlerThread` 从此无人释放。:256-257 的注释说明作者已意识到顺序问题，但只补了前半截。
-- 后果：按 G5，泄漏的不只是 `HandlerThread`，`TrafficStatHelper` 的进程级单例与 `NetworkUtil` 的静态回调表还会一并长期持有该 Activity。demo `MainActivity.kt:222`（`onResume` 启动）与 :278（`onPause` 停止）的用法会频繁进入这个窗口。
-- 修复：沿用本仓库在 demo 音频侧已验证的「先发布、再复查、必要时补偿」模式，并用 generation 同时覆盖「销毁」与「子类主动提前停止」两种作废情形。
+- 后果（实施前）：泄漏的是 `HandlerThread`、NetworkMonitor 持有的回调与 `NetworkUtil` 的静态回调表。G5 已使 `NetworkMonitor` 与 `TrafficStatHelper` 都只保留 application context，因此不应再声称 `TrafficStatHelper` 单例长期持有 Activity。demo `MainActivity.kt:222`（`onResume` 启动）与 :278（`onPause` 停止）的用法会频繁进入这个窗口。
+- 最终修复：不再依赖启动后补偿。增加一把 `trafficMonitorLock`，让 DNS 线程的「最终 generation/存活检查 → 发布 → `startMonitor()` → 失败回滚」与 `stopTrafficMonitor()` 的「generation 作废 → 取走 → `stopMonitor()`」在同一锁下串行化。
+
+<details>
+<summary>第六轮原方案（已实施，但第九轮确认启动后补偿不足以提供 stop 栅栏）</summary>
 
 ```kotlin
 // 字段：引用持有者本身改为 val，获得 CAS 与可见性；generation 用于作废在途的 start
@@ -805,14 +810,46 @@ fun startTrafficNetwork(
 }
 ```
 
+</details>
+
+剩余修复的关键临界区应改为（原回调体省略）：
+
+```kotlin
+private val trafficMonitorLock = Any()
+
+fun stopTrafficMonitor() = synchronized(trafficMonitorLock) {
+    trafficMonitorGeneration.incrementAndGet()
+    networkMonitor.getAndSet(null)?.stopMonitor()
+}
+
+// DNS callback: construction may stay outside the lock; publication/start must be serialised.
+synchronized(trafficMonitorLock) {
+    if (trafficMonitorGeneration.get() != generation ||
+        networkMonitor.get() != null ||
+        isDestroyed || isFinishing
+    ) {
+        monitor.stopMonitor()
+        return@getIpsByHost
+    }
+    networkMonitor.set(monitor)
+    try {
+        monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+    } catch (error: Exception) {
+        networkMonitor.compareAndSet(monitor, null)
+        monitor.stopMonitor()
+        LogContext.log.e(tag, "Failed to start networkMonitor.", error)
+    }
+}
+```
+
 - 配套：新增 `import java.util.concurrent.atomic.AtomicLong`；:238、:252 的重复存在性检查从 `networkMonitor?.get()` 改为 `networkMonitor.get()`（字段由可空 `var` 变为非空 `val`）。`onStop` 原先那处读取已随 G12 删除，无需再改。`networkMonitor` 为私有字段，公开签名不变，无需 KDoc 迁移说明；CHANGELOG 记「修复」一条。
 - 复核要点：`NetworkMonitor.stopMonitor()` 对从未 `startMonitor()` 的实例是安全的（置 `monitorStopped`、推进 generation、注销 Wi-Fi 回调、释放 scheduler 均为空安全），因此补偿路径上的 `stopMonitor()` 可以直接调用。`stopTrafficMonitor()` 仍可重复调用并允许后续重新 `startTrafficNetwork()`，demo 的 `onPause`/`onResume` 用法不受影响。
-- 验证：Robolectric 下用可控的 `InternetUtil` 替身，分别构造「DNS 回调晚于 `onDestroy` 返回」与「DNS 回调晚于一次 `stopTrafficMonitor()` 返回」两例，断言最终 `networkMonitor.get()` 为 `null` 且该实例的 `stopMonitor()` 被调用过。未验证。
+- 验证：`BaseActivityTrafficMonitorTest` 现有 6 个用例。新增用例将 mock `startMonitor()` 阻塞在「已发布、启动未返回」位置，再从另一线程调用 `stopTrafficMonitor()`；旧实现上 stopper 变为 `TERMINATED` 并使用例失败，新实现上 stopper 阻塞于 `trafficMonitorLock`，释放启动后才完成停止。红绿过程与完整模块验证见 §17。
 
 #### G12 [LOW，第六轮新增，2026-10-21 部分实施] `onStop` 的泄漏警告与设计意图相矛盾
 
 - 位置（实施前）：`androidbase/.../framework/BaseActivity.kt:149-155`
-- **实施状态**：`eaaa49e62` 已删除该判断块，`onStop()`（现 :146-149）只保留框架日志与 `super.onStop()`，与下述方案一致。同时该提交把 `stopTrafficMonitor()`（现 :227-231）标注了 `@RequiresPermission(ACCESS_NETWORK_STATE)`，并在 `onDestroy()`（现 :151-160）加 `@SuppressLint("MissingPermission")` 与说明注释 —— 这部分超出本条方案，属合理补充。**下述 KDoc 所有权契约尚未写入**：`startTrafficNetwork()`（:233-303）与 `stopTrafficMonitor()`（:227-231）目前都没有 KDoc，仍需补上，否则后来者可能把警告加回去。
+- **实施状态**：`eaaa49e62` 已删除该判断块，`onStop()` 只保留框架日志与 `super.onStop()`，与下述方案一致。该提交一度给注销路径增加 `ACCESS_NETWORK_STATE` 权限契约，后经复核确认平台注销 API 不要求该权限，已由 `ba6ea5ed7` 撤销 `stopTrafficMonitor()`/`stopMonitor()` 等注销入口的 `@RequiresPermission`，并删除 `onDestroy()` 的 `@SuppressLint("MissingPermission")`。**下述 KDoc 所有权契约尚未写入**：`startTrafficNetwork()` 与 `stopTrafficMonitor()` 目前都没有 KDoc，仍需补上，否则后来者可能把警告加回去。
 - 缺陷：`onStop()` 在 `networkMonitor != null` 时打印「Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor()」。但 `onStop` 不是生命周期终点，按 home 键、锁屏、跳转到其他页面都会触发，随后经 `onRestart`/`onStart` 还会回来；而 `onDestroy`（实施后为 :157）已经无条件调用 `stopTrafficMonitor()` 兜底。于是这条警告既与基类自己的释放逻辑矛盾，也与「监控在 Activity 不可见期间继续轮询」这一期望行为（见 §13）矛盾：恰恰在按预期工作时反复误报。
 - 修复：删除 :149-155 整个判断块，`onStop()` 只保留原有的框架日志与 `super.onStop()`（**已实施**）。同时把所有权契约写进 KDoc，避免后来者再加回类似警告（**未实施**）。
 
@@ -834,9 +871,9 @@ override fun onStop() {
 - 影响：仅删除一条日志，无 API 变化。CHANGELOG 可并入 G11 的「修复」条目。
 - 验证：无需测试；`:androidbase:compileDebugKotlin` 通过即可。已删除部分随 §14.1 的 `:androidbase:testDebugUnitTest` 一并编译通过；剩余 KDoc 补充不影响验证。
 
-#### G13 [MEDIUM，第六轮新增] 回调在持锁状态下派发，KDoc 的死锁警告描述的是真实可达路径
+#### G13 [MEDIUM，第六轮新增，2026-10-21 已实施] 回调在持锁状态下派发，KDoc 的死锁警告描述的是真实可达路径
 
-- 位置：`androidbase/src/main/kotlin/com/leovp/androidbase/utils/network/NetworkMonitor.kt:127`（轮询任务进入 `synchronized(monitorLifecycleLock)`）、:137（在锁内 `callback.invoke(...)`）、:179 与 :214（`startMonitor()`/`stopMonitor()` 取同一把锁）、:168-170（`startMonitor` KDoc 的警告）、:204-205（`stopMonitor` KDoc 的承诺）。**行号已按 2026-10-21 实施后的 HEAD 重新核对；该轮未触及本条，缺陷与方案原样成立。**
+- 实施状态：`b0c417d95` 已把结果计算留在 `monitorLifecycleLock` 内、把使用方回调移到锁外，并用一把不与生命周期锁嵌套的 `resultDispatchLock` 保证同一实例的回调不并发。`f6cbb985e` 进一步修正 KDoc，在 `BaseActivity` 主线程投递处过滤 Activity 销毁后的尾随结果，并新增「回调阻塞时 stop 仍可返回」、「stop 后最多一个尾随结果」、「跨 session 回调不重叠」三个用例。本机已对远程最终树重跑 `:androidbase:testDebugUnitTest`/`ktlintCheck`/`detekt --rerun-tasks`，162 个任务实际执行并全部通过。
 - 缺陷：`startMonitor` 的 KDoc 写「Do not wait inside a callback for another thread that calls [startMonitor] or [stopMonitor]」，这不是保守措辞，而是真实可达的两方死锁：监控线程在 :127 持锁、于 :137 同步执行使用方回调；主线程此时进入 `stopMonitor()`（:214）等待同一把锁。若回调内对主线程做同步等待（`runBlocking(Dispatchers.Main)`、`Handler(mainLooper).post {}` 配 `latch.await()`、或任何等待主线程完成的 future），监控线程等主线程、主线程等锁，直接 ANR。`stopMonitor` KDoc :204-205 承诺的「An already running callback finishes before this method returns」正是这条死锁边的来源。
 - 触发：使用方写出 `startTrafficNetwork("host") { info -> runBlocking(Dispatchers.Main) { render(info) } }`，随后退出页面触发 `onDestroy → stopTrafficMonitor() → stopMonitor()`。本库自身的回调（`BaseActivity.kt:264` 的 `runOnUiThread { it(info) }`）是异步投递、不等待，因此不会触发；风险全在使用方，且仅靠文档约束。
 - 决定（2026-10-20，作者确认）：不止于文档约束，后续要改成结构上无法死锁，以防使用不当。
@@ -886,8 +923,8 @@ if (isCurrentMonitor(generation, scheduler)) callback.invoke(result)
 - 代价与必须同步修改的 KDoc：出锁派发后，`stopMonitor()` 返回时可能仍有一个回调在执行，:204-205 的承诺不再成立。两处 KDoc 都要改写，把约束从「使用方不得阻塞」换成「可能收到一个尾随回调」：
   - `startMonitor`（:168-170）：删除「Do not wait inside a callback…」一句，改为「Callbacks run on the monitor thread and never hold the lifecycle lock, so blocking inside one cannot stall [startMonitor] or [stopMonitor]; it only delays subsequent results.」
   - `stopMonitor`（:204-205）：把「An already running callback finishes before this method returns」改为「A callback already in flight may still complete after this method returns; consumers must tolerate one trailing result and guard their own teardown state.」
-- 影响：公开签名不变，但可观察行为变更（尾随回调），按「API 演进约定」在上述两处 KDoc 写明迁移说明，CHANGELOG 记「变更」一条。`BaseActivity` 侧无需改动，其回调本就异步投递；对 G11 的 generation 方案也无影响。
-- 验证：新增单测，用注入的 `beforeResultDispatch` 在回调中模拟「等待另一线程调用 `stopMonitor()`」的时序，断言不发生死锁且 `stopMonitor()` 能在有界时间内返回；另一例断言停止后最多再收到一个结果。真机可用 demo 写一个阻塞回调验证不再 ANR。均未验证。
+- 影响：公开签名不变，但可观察行为变更（尾随回调），按「API 演进约定」在上述两处 KDoc 写明迁移说明，CHANGELOG 记「变更」一条。`BaseActivity` 原本虽异步投递回调，但尾随投递仍可在 `onDestroy()` 后执行；`f6cbb985e` 已在主线程执行前复查 `isDestroyed || isFinishing`。
+- 验证：已新增三个并发回归测试，覆盖「回调阻塞时 stop 返回」、「stop 后最多一个尾随结果」和「跨 session 回调不重叠」；本机重跑均通过。真机可用 demo 写一个阻塞回调验证不再 ANR，本轮未执行真机验证。
 
 ### 11.3 网络、Compose、OpenGL 与重命名
 
@@ -1085,9 +1122,10 @@ Codex 已在同一代码 HEAD `e57608f70f84c9e52a795d2f2b44fc0300117cc3` 上执�
 
 ### 14.1 2026-10-21 实施后的验证
 
-本节只覆盖第六轮之前确认的 26 项。第六轮新增的三项中，G12 的删除部分随 `eaaa49e62` 一并落地并编译通过，其 KDoc 补充未做；**G11、G13 完全未实施**，两条的方案与行号已按本轮实施后的代码重新核对，其缺陷在当前 HEAD 上依然成立。
+本节只记录第六轮之前确认的 26 项在 `e57608f70` 时的验证状态。当时 G12 的删除部分已随 `eaaa49e62` 落地，G11/G13 尚未实施；后续 `b0c417d95`/`f6cbb985e` 已改变该状态，最新结论以 §11.2 各条实施状态与 §15.5 为准。
 
-§11 的 26 项修改完成后，Codex 对受影响范围重新执行了以下测试与 Demo 集成编译：
+§11 中第六轮之前 26 项的本轮实现完成后，Codex 对受影响范围重新执行了以下测试与 Demo 集成编译；
+该结果不代表 §15.1 列出的部分落地项已经补齐：
 
 ```bash
 ./gradlew \
@@ -1160,9 +1198,10 @@ G1–G9；网络库、Compose、OpenGL、重命名 N1–N4/N6–N8），每条�
 证据；其后对结论中影响判断的关键断言逐条回源码复核。全部结论为源码静态分析，**未执行任何 Gradle
 命令**。
 
-### 15.1 26 项落地结论
+### 15.1 26 项实施结论
 
-**26 项全部落地，无一项完全未实施。** 21 项与方案一致；5 项做法不同，其中 F8、N8 优于原方案。
+**26 项均有实施改动，但并非全部完整落地。** 21 项与方案一致；F8、N8 采用不同但完整的实现；
+F6、F9、G7 仅部分落地，剩余项见本表及 §15.3。
 
 | 条目 | 结论 | 要点 |
 |------|------|------|
@@ -1171,10 +1210,10 @@ G1–G9；网络库、Compose、OpenGL、重命名 N1–N4/N6–N8），每条�
 | F3 | 一致 | 对外值只由 `nextTickAtMillis` 递减决定、完全不读时钟，早醒问题被结构性消除而非绕过；60 秒序列 61 个值不漏不重 |
 | F4 | 一致 | `releaseHandler()` 先于 `h26xEncoder.release()`；未 `onStart()` 时 `onStop()` 提前返回但线程仍被 `quitSafely()` |
 | F5 | 一致 | 采用泛型 `BoundedFrameQueue<T>` / `drain<T>`，避开 `EXPOSED_PROPERTY_TYPE`；`drain` 不再硬编码 `ByteArray` |
-| F6 | 做法不同 | 删除清单 7 项完成 6 项；Builder 被提升为独立 `Screenshot2H26xBuilder`，带出方案未声明的 API 形状变化（见 §15.4.1） |
+| F6 | 部分落地 | 删除清单 7 项完成 6 项；Builder 被提升为独立 `Screenshot2H26xBuilder`，带出方案未声明的 API 形状变化（见 §15.4.1） |
 | F7 | 一致 | `EncodeType.H264` 守卫包住 profile/level；`fallBackToAvcIfMuxerCannotCarryHevc()` 在 `build()` 开头执行，读取时机正确 |
 | F8 | 做法不同（更好） | 注册幂等化消除了重复注册缺陷，故保留 `takeScreenshot()` 里的注册调用比按方案删掉更正确；`builder.mediaProjection?.` 替代方案中的 `!!` |
-| F9 | 做法不同 | 注释两点达标；`Screenshot2H26xStrategy.kt` 1232 → 1032 行，仍超 800 行上限 |
+| F9 | 部分落地 | 注释两点达标；`Screenshot2H26xStrategy.kt` 1232 → 1032 行，仍超 800 行上限 |
 | F10 | 一致 | 所有权在可抛步骤前发布；`catch (Throwable)` 不重抛，`Error` 也走完清理；只有 `stop()` 成功才保留文件 |
 | G1 | 一致 | `toastRequestToken` / `dismissToken` 分离，`removeCallbacksAndMessages(null)` 已彻底消失 |
 | G2 | 一致 | `build(): Boolean`，`tryShow()` / `createAndShowFloatView()` 都按返回值短路 |
@@ -1182,9 +1221,9 @@ G1–G9；网络库、Compose、OpenGL、重命名 N1–N4/N6–N8），每条�
 | G4 | 一致 | 锁顺序 `monitorLifecycleLock → wifiNetworkCallbackLock` 单向，反向路径不存在；`@RequiresApi(S)` 类只在 SDK 分支内实例化 |
 | G5 | 一致 | `NetworkMonitor` 构造处与 `TrafficStatHelper` 构造器两层都做了 `applicationContext` 兜底，没有只改一处 |
 | G6 | 一致 | 与配置无关的计算留在 `try` 外，`config` 访问全部移入 `try`；`LeoToast` 只持 app context |
-| G7 | 做法不同 | 六处行为变更完成 5 处，第 6 处 `cancelToast` 未落地（见 §15.3） |
+| G7 | 部分落地 | 六处行为变更完成 5 处，第 6 处 `cancelToast` 未落地（见 §15.3） |
 | G8 | 一致 | `join(3_000)` + `assertFalse(isAlive)`，超时即 fail，不是加 sleep |
-| G9 | 一致 | 会话级 lambda 替代固定 lambda，`unregisterWifiSignalCallback()` 先脱钩再注销。但引入新问题，见 §15.2.2 |
+| G9 | 一致 | 会话级 lambda 替代固定 lambda，`unregisterWifiSignalCallback()` 先脱钩再注销。§15.2.2 的后续顾虑已随 G13 解决，且保留短锁可避免陈旧信号覆盖 |
 | N1 | 一致 | 语义为作者选定的「A 保留旧值」；两处 `if (json.isNotEmpty())` 守卫 + 两处 KDoc + CHANGELOG |
 | N2 | 一致 | KDoc 迁移说明 + CHANGELOG 加粗条目；`CLAUDE.md:76` 按方案仍列为待授权项（见 §15.4.3） |
 | N3 | 一致 | 2xx 复用转换器已读的 `err.message`，非 2xx 才读 body；不新增内存副本。但引入新问题，见 §15.2.1 |
@@ -1233,7 +1272,7 @@ Result.Failure(
   `message` 不含 body 片段且 `responseBodyString` 仍完整。CHANGELOG「安全」一条。
 - 验证：JVM 单测可完全覆盖。未验证。
 
-#### 15.2.2 [MEDIUM] G9 的会话回调把 `monitorLifecycleLock` 暴露给 ConnectivityManager 回调线程
+#### 15.2.2 [MEDIUM，2026-10-21 已随 G13 解决] G9 的会话回调把 `monitorLifecycleLock` 暴露给 ConnectivityManager 回调线程
 
 - 位置：`androidbase/.../utils/network/NetworkMonitor.kt:230-234`（会话 lambda）、
   `lib-common-android/.../utils/NetworkUtil.kt:307`（注册未传 Handler/Executor）、`:361-372`（framework
@@ -1246,26 +1285,18 @@ Result.Failure(
 - 失败场景：使用方在 `callback` 里对主线程同步等待（G13 已确认的死锁模式），主线程同时在
   `onDestroy → stopMonitor()` 等锁。原本冻结主线程与监控线程两条；现在 `ConnectivityThread` 第三条
   一并冻死，**整个进程**收不到任何 `NetworkCallback`（含应用其它网络监听）。
-- 修复：会话校验不需要锁 —— `isCurrentMonitor` 读的三个字段（`:54`、`:57`、`:60`）都是 `@Volatile`。
-  与 G13 合并处理：把派发移出锁后，这里也一并去锁。
+- 最终处理：不采用下述「会话回调去锁」方案。G13 已把使用方回调移出 `monitorLifecycleLock`，ConnectivityManager 回调现在只会等待 start/stop 或结果快照的短临界区，不再会被阻塞的使用方回调拖住，原死锁链已断开。保留这把短锁还避免了「旧 session 通过 generation 校验 → stop/start 清空并写入新信号 → 旧 session 再覆盖 `globalWifiSignal`」的检查后写入竞态。
 
 ```kotlin
-// NetworkMonitor.kt:230-234 修改后
+// 最终实现：校验与写入仍在同一个短临界区内。
 val sessionCallback: (NetworkUtil.WifiSignal) -> Unit = { signal ->
-    // Invoked on ConnectivityManager's process-wide callback thread: never take
-    // monitorLifecycleLock here, or a stalled monitor callback would block every
-    // NetworkCallback in the process. The volatile session fields are enough.
-    if (isCurrentMonitor(generation, scheduler)) globalWifiSignal = signal
+    synchronized(monitorLifecycleLock) {
+        if (isCurrentMonitor(generation, scheduler)) globalWifiSignal = signal
+    }
 }
 ```
 
-- 复核要点：去锁后唯一放宽的是「校验与赋值之间会话被换掉」这一窗口，后果是一次陈旧的 Wi-Fi 信号写入
-  `globalWifiSignal`，而 `stopMonitor()`（`:220`）在 `finally` 中把它置 `null`、`startMonitor()` 也会重设，
-  故至多影响一次采样，不会跨会话污染 —— G9 要防的是**旧会话 lambda 持续投递**，已由 `detachListener()`
-  与 generation 校验共同覆盖，不依赖这把锁。
-- 影响：无 API 变化。CHANGELOG「修复」一条，可与 G13 合并。
-- 验证：沿用 `NetworkMonitorLifecycleTest` 的会话 lambda 捕获方式，新增一例：在监控线程持锁期间从另一
-  线程调用捕获到的 session lambda，断言其在有界时间内返回。未验证。
+- 复核结论：原建议的去锁方案会把 generation 校验与 `globalWifiSignal` 写入拆成非原子的检查后动作，不应实施；「stop/start 会清空」不能阻止已经通过校验的旧回调在清空之后再写回。最终代码保留锁是正确选择；现有 `late Wi-Fi callback from an old session cannot overwrite the current signal` 用例与本次重跑结果均通过。
 
 #### 15.2.3 [MEDIUM] F5 的核心行为零测试覆盖，新增用例为空通过
 
@@ -1451,9 +1482,11 @@ class Builder(width: Int, height: Int, dpi: Int, screenDataListener: ScreenDataL
 
 | 项 | 状态 |
 |----|------|
-| 26 项落地与一致性 | 源码静态核查完成 |
+| 26 项实施范围与一致性 | 源码静态核查完成；F6、F9、G7 为部分落地 |
 | 关键断言回源码复核 | 完成（含三处对核查结论本身的纠正，见下） |
 | 编译 / detekt / ktlint / 单测 | **未验证**（Claude 运行在远端，无法执行 Gradle） |
+| G11/G13 后续提交的 Codex 本机验证 | 在 `origin/review/native-modules@f6cbb985e` 的独立临时副本执行 `:androidbase:testDebugUnitTest :androidbase:ktlintCheck :androidbase:detekt --rerun-tasks`；**BUILD SUCCESSFUL**，162 个任务实际执行 |
+| G11 停止栅栏最终修复 | 2026-10-22 在当前工作树执行同一组 androidbase 单测、ktlint、detekt；**BUILD SUCCESSFUL in 32s**，162 个任务实际执行；详见 §17 |
 | 真机 | **未验证** |
 
 两项特别需要本机确认：`:camera2live:compileDebugKotlin`（`drain<T>` 的类型推断能否通过）；F2 在真机
@@ -1587,3 +1620,41 @@ Activity 的处理与 `mockkConstructor`，须由能执行 Gradle 的一方验�
 （`TrafficStats` 计数器读取，有界），不再包含使用方回调，该叠加路径已不存在。**降为 LOW**：会话回调
 仍取该锁，在锁被短暂持有期间会让 `ConnectivityThread` 等待，仅此而已。方案（改为无锁的会话校验）
 仍有效，优先级降低。
+
+## 17. 第十轮：G11 停止栅栏补齐（Codex，2026-10-22）
+
+### 17.1 复核结论与修复
+
+`fec53929a` 在 `BaseActivityTrafficMonitorTest` 中新增了 5 个用例，覆盖存活时启动、明确 stop 后的
+迟到 DNS 回调、启动异常回滚、`onDestroy` 前后的基础握手，但没有把线程停在「引用已发布、
+`startMonitor()` 正在执行」这个关键窗口。生产代码仍允许 `stopTrafficMonitor()` 先取走并停止尚未启动
+完成的实例、然后返回；DNS 线程随后继续启动资源，只能依赖启动后的 generation 复查再停一次。
+
+最终修复在 `BaseActivity` 增加 `trafficMonitorLock`：
+
+- `stopTrafficMonitor()` 在锁内推进 generation、取走引用并调用 `stopMonitor()`。
+- DNS 回调的最终 generation/存活/占位检查、引用发布、`startMonitor()` 和失败回滚均在同一锁内。
+- 构造 `NetworkMonitor` 与 DNS 查询仍在锁外，不扩大慢操作临界区。
+- `InterruptedException` 单独捕获并恢复中断位；其他启动异常继续清空持有者、停止实例并记录日志。
+
+这使 `stopTrafficMonitor()` 成为严格的启动停止栅栏：start 先进入临界区时，stop 等待并在返回前完成停止；
+stop 先进入时，迟到 DNS 回调不会再调用 `startMonitor()`。
+
+### 17.2 测试与验证
+
+新增 `stop waits for an in-progress monitor start before returning` 用例：mock `startMonitor()` 进入后用 latch 暂停，
+另一线程调用 `stopTrafficMonitor()`。在修复前，stopper 提前结束，用例于第 150 行按预期失败；修复后，
+stopper 稳定处于 `BLOCKED`，只在释放启动线程后才停止实例并返回。
+
+`fec53929a` 的新测试首次本机编译还暴露了两个机械问题：错误导入不存在的顶层 `io.mockk.anyConstructed`，以及
+`getViewBinding()` 表达式体不符合 ktlint/detekt 共同缩进要求；两处已修正。
+
+最终执行：
+
+```bash
+./gradlew :androidbase:testDebugUnitTest :androidbase:ktlintCheck :androidbase:detekt \
+  --rerun-tasks --console=plain
+```
+
+结果：`BUILD SUCCESSFUL in 32s`，`162 actionable tasks: 162 executed`。现有 5 个基础握手用例与新增停止栅栏用例均
+实际执行。本轮未执行真机验证；该竞态通过可控 Robolectric/MockK 线程交错回归覆盖。

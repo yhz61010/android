@@ -84,6 +84,9 @@ abstract class BaseActivity<B : ViewBinding>(
     /** Invalidates a DNS lookup still in flight when the monitor is torn down. */
     private val trafficMonitorGeneration = AtomicLong(0)
 
+    /** Serializes the final monitor publication/start handshake with teardown. */
+    private val trafficMonitorLock = Any()
+
     open fun onCreateBeginning() {
     }
 
@@ -230,9 +233,11 @@ abstract class BaseActivity<B : ViewBinding>(
     // ==============================
 
     fun stopTrafficMonitor() {
-        // Invalidate any DNS lookup still in flight before tearing the current monitor down.
-        trafficMonitorGeneration.incrementAndGet()
-        networkMonitor.getAndSet(null)?.stopMonitor()
+        synchronized(trafficMonitorLock) {
+            // Invalidate any DNS lookup still in flight before tearing the current monitor down.
+            trafficMonitorGeneration.incrementAndGet()
+            networkMonitor.getAndSet(null)?.stopMonitor()
+        }
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
@@ -307,36 +312,45 @@ abstract class BaseActivity<B : ViewBinding>(
                 )
                 LogContext.log.i(tag, infoStr)
             }
-            // Publish, then re-check: stopTrafficMonitor() may have run on the main thread while
-            // the lookup was in flight, in which case it found an empty slot and stopped nothing.
-            val stale = trafficMonitorGeneration.get() != generation
-            val published = !stale && networkMonitor.compareAndSet(null, monitor)
-            if (!published) {
-                val reason = if (stale) "a teardown invalidated it" else "another start owns it"
-                LogContext.log.w(tag, "Discard monitor lookup gen=$generation: $reason.")
-                monitor.stopMonitor()
-                return@getIpsByHost
-            }
-            // startMonitor() can throw (TrafficStatHelper init, HandlerThread.start()), and this
-            // lambda runs on a bare thread with no handler, so letting it escape would take the
-            // process down over a diagnostics feature.
-            var startFailed = false
-            try {
-                monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
-            } catch (error: Exception) {
-                startFailed = true
-                // Nothing here waits, but swallowing an interrupt would strand the flag on a
-                // thread that keeps running.
-                if (error is InterruptedException) Thread.currentThread().interrupt()
-                LogContext.log.e(tag, "Failed to start networkMonitor for gen=$generation.", error)
-            }
-            if (startFailed || trafficMonitorGeneration.get() != generation) {
-                // Either the start failed, or a teardown ran at some point after this lookup read
-                // the generation. Release the slot so a later start is not refused by the guard
-                // above, and stop whatever was already built.
-                LogContext.log.w(tag, "Release monitor gen=$generation. startFailed=$startFailed")
-                networkMonitor.compareAndSet(monitor, null)
-                monitor.stopMonitor()
+            synchronized(trafficMonitorLock) {
+                val stale = trafficMonitorGeneration.get() != generation
+                val activityGone = isDestroyed || isFinishing
+                val slotOccupied = networkMonitor.get() != null
+                if (stale || activityGone || slotOccupied) {
+                    val reason = when {
+                        stale -> "a teardown invalidated it"
+                        activityGone -> "the Activity is destroyed or finishing"
+                        else -> "another start owns it"
+                    }
+                    LogContext.log.w(tag, "Discard monitor lookup gen=$generation: $reason.")
+                    monitor.stopMonitor()
+                    return@getIpsByHost
+                }
+
+                networkMonitor.set(monitor)
+                // Keep publication and start in the same critical section as teardown. If start
+                // wins, stopTrafficMonitor() waits and stops the started monitor before returning;
+                // if teardown wins, the stale lookup is rejected above and never starts.
+                try {
+                    monitor.startMonitor(defaultConfig.trafficConfig.frequencyInSecond)
+                } catch (error: InterruptedException) {
+                    networkMonitor.compareAndSet(monitor, null)
+                    monitor.stopMonitor()
+                    Thread.currentThread().interrupt()
+                    LogContext.log.e(
+                        tag,
+                        "Failed to start networkMonitor for gen=$generation.",
+                        error
+                    )
+                } catch (error: Exception) {
+                    networkMonitor.compareAndSet(monitor, null)
+                    monitor.stopMonitor()
+                    LogContext.log.e(
+                        tag,
+                        "Failed to start networkMonitor for gen=$generation.",
+                        error
+                    )
+                }
             }
         }
     }

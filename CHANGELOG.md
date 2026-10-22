@@ -271,9 +271,9 @@
 - **`BaseActivity` 流量监控不再漏停或泄漏**：持有监控的字段此前是无 `@Volatile` 的 `var`，在 DNS
   线程写入、主线程 `onDestroy` 读取，`AtomicReference` 只保证所存引用原子、不为字段本身建立可见性；
   且 DNS 回调通过存活检查之后、写入之前，`onDestroy` 可以整段跑完并什么也没停，随后监控与其
-  `HandlerThread` 无人释放。字段改为 final，并用世代计数作废在途的 DNS 查找；回调改为先发布再复查、
-  必要时自行补偿。`startMonitor()` 失败不再把字段卡死在已死实例上，也不再让异常逃进无处理器的后台
-  线程。
+  `HandlerThread` 无人释放。字段改为 final，并用世代计数作废在途的 DNS 查找；最终的存活检查、
+  发布与启动现在和停止使用同一把锁，因此 `stopTrafficMonitor()` 返回后不会再由迟到回调启动监控。
+  `startMonitor()` 失败不再把字段卡死在已死实例上，也不再让异常逃进无处理器的后台线程。
 - **MediaCodec 异步回调不再落到主线程**：录屏、相机编码和 `LeoTextureView` 解码均使用可释放的
   专用 HandlerThread；API 21–22 在该线程创建 codec 并注册单参数 callback，API 23+ 显式传入
   Handler，且全部在 `configure()` 前完成注册。初始化失败与释放路径会有界等待线程退出。

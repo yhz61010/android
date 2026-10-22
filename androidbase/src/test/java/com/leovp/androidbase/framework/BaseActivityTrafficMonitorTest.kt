@@ -7,7 +7,6 @@ import androidx.viewbinding.ViewBinding
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import io.mockk.Runs
-import io.mockk.anyConstructed
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
@@ -16,7 +15,11 @@ import io.mockk.slot
 import io.mockk.unmockkConstructor
 import io.mockk.unmockkObject
 import io.mockk.verify
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -120,6 +123,51 @@ class BaseActivityTrafficMonitorTest {
         verify(exactly = 1) { anyConstructed<NetworkMonitor>().stopMonitor() }
     }
 
+    @Test
+    fun `stop waits for an in-progress monitor start before returning`() {
+        val startEntered = CountDownLatch(1)
+        val releaseStart = CountDownLatch(1)
+        val stopReturned = CountDownLatch(1)
+        every { anyConstructed<NetworkMonitor>().startMonitor(any()) } answers {
+            startEntered.countDown()
+            assertTrue(releaseStart.await(5, TimeUnit.SECONDS))
+        }
+        val activity = Robolectric.buildActivity(TrafficMonitorTestActivity::class.java).get()
+        activity.startTrafficNetwork(DOMAIN)
+        val lookup = Thread { lookupCallback.captured.invoke(listOf(SOCKET_IP)) }
+        val stopper = Thread {
+            activity.stopTrafficMonitor()
+            stopReturned.countDown()
+        }
+
+        try {
+            lookup.start()
+            assertTrue(startEntered.await(3, TimeUnit.SECONDS))
+            stopper.start()
+
+            // stopTrafficMonitor() is a teardown fence: it must not return while the published
+            // monitor is still inside startMonitor(), or that start can create resources later.
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+            while ((stopper.state == Thread.State.NEW || stopper.state == Thread.State.RUNNABLE) &&
+                System.nanoTime() < deadline
+            ) {
+                Thread.sleep(1)
+            }
+            assertFalse(stopper.state == Thread.State.NEW)
+            assertTrue(stopper.isAlive)
+            assertFalse(stopReturned.await(0, TimeUnit.MILLISECONDS))
+        } finally {
+            releaseStart.countDown()
+            lookup.join(3_000)
+            stopper.join(3_000)
+        }
+
+        assertFalse(lookup.isAlive)
+        assertFalse(stopper.isAlive)
+        assertTrue(stopReturned.await(0, TimeUnit.MILLISECONDS))
+        verify(exactly = 1) { anyConstructed<NetworkMonitor>().stopMonitor() }
+    }
+
     private companion object {
         const val DOMAIN = "leovp.com"
         const val SOCKET_IP = "127.0.0.1"
@@ -142,8 +190,7 @@ internal class TrafficMonitorTestActivity : BaseActivity<ViewBinding>() {
         setTheme(androidx.appcompat.R.style.Theme_AppCompat)
     }
 
-    override fun getViewBinding(savedInstanceState: Bundle?): ViewBinding =
-        object : ViewBinding {
-            override fun getRoot(): View = rootView
-        }
+    override fun getViewBinding(savedInstanceState: Bundle?): ViewBinding = object : ViewBinding {
+        override fun getRoot(): View = rootView
+    }
 }

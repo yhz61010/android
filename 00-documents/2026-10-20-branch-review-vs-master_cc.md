@@ -844,14 +844,25 @@ synchronized(trafficMonitorLock) {
 
 - 配套：新增 `import java.util.concurrent.atomic.AtomicLong`；:238、:252 的重复存在性检查从 `networkMonitor?.get()` 改为 `networkMonitor.get()`（字段由可空 `var` 变为非空 `val`）。`onStop` 原先那处读取已随 G12 删除，无需再改。`networkMonitor` 为私有字段，公开签名不变，无需 KDoc 迁移说明；CHANGELOG 记「修复」一条。
 - 复核要点：`NetworkMonitor.stopMonitor()` 对从未 `startMonitor()` 的实例是安全的（置 `monitorStopped`、推进 generation、注销 Wi-Fi 回调、释放 scheduler 均为空安全），因此补偿路径上的 `stopMonitor()` 可以直接调用。`stopTrafficMonitor()` 仍可重复调用并允许后续重新 `startTrafficNetwork()`，demo 的 `onPause`/`onResume` 用法不受影响。
-- 验证：`BaseActivityTrafficMonitorTest` 现有 6 个用例。新增用例将 mock `startMonitor()` 阻塞在「已发布、启动未返回」位置，再从另一线程调用 `stopTrafficMonitor()`；旧实现上 stopper 变为 `TERMINATED` 并使用例失败，新实现上 stopper 阻塞于 `trafficMonitorLock`，释放启动后才完成停止。红绿过程与完整模块验证见 §17。
+- 验证：`BaseActivityTrafficMonitorTest` 在第十轮有 6 个用例。停止栅栏用例将 mock
+  `startMonitor()` 阻塞在「已发布、启动未返回」位置，再从另一线程调用
+  `stopTrafficMonitor()`，验证 stopper 会阻塞于 `trafficMonitorLock`，释放启动后才完成停止。
+  该用例不是旧缺陷的确定性复现，原因见 §17.2；不能再把 stub 下的旧码失败写成生产交错证据。
 
-#### G12 [LOW，第六轮新增，2026-10-21 部分实施] `onStop` 的泄漏警告与设计意图相矛盾
+#### G12 [LOW，第六轮新增，2026-10-22 已实施] `onStop` 的泄漏警告与设计意图相矛盾
 
 - 位置（实施前）：`androidbase/.../framework/BaseActivity.kt:149-155`
-- **实施状态**：`eaaa49e62` 已删除该判断块，`onStop()` 只保留框架日志与 `super.onStop()`，与下述方案一致。该提交一度给注销路径增加 `ACCESS_NETWORK_STATE` 权限契约，后经复核确认平台注销 API 不要求该权限，已由 `ba6ea5ed7` 撤销 `stopTrafficMonitor()`/`stopMonitor()` 等注销入口的 `@RequiresPermission`，并删除 `onDestroy()` 的 `@SuppressLint("MissingPermission")`。**下述 KDoc 所有权契约尚未写入**：`startTrafficNetwork()` 与 `stopTrafficMonitor()` 目前都没有 KDoc，仍需补上，否则后来者可能把警告加回去。
+- **实施状态**：`eaaa49e62` 已删除该判断块，`onStop()` 只保留框架日志与
+  `super.onStop()`，与下述方案一致。该提交一度给注销路径增加 `ACCESS_NETWORK_STATE`
+  权限契约，后经复核确认平台注销 API 不要求该权限，已由 `ba6ea5ed7` 撤销
+  `stopTrafficMonitor()`/`stopMonitor()` 等注销入口的 `@RequiresPermission`，并删除
+  `onDestroy()` 的 `@SuppressLint("MissingPermission")`。`eefaae161` 已为
+  `startTrafficNetwork()` 与 `stopTrafficMonitor()` 补齐所有权、线程、阻塞与迁移 KDoc，防止后来者
+  把泄漏警告加回去。
 - 缺陷：`onStop()` 在 `networkMonitor != null` 时打印「Are you leaking networkMonitor? Don't forget to call stopTrafficMonitor()」。但 `onStop` 不是生命周期终点，按 home 键、锁屏、跳转到其他页面都会触发，随后经 `onRestart`/`onStart` 还会回来；而 `onDestroy`（实施后为 :157）已经无条件调用 `stopTrafficMonitor()` 兜底。于是这条警告既与基类自己的释放逻辑矛盾，也与「监控在 Activity 不可见期间继续轮询」这一期望行为（见 §13）矛盾：恰恰在按预期工作时反复误报。
-- 修复：删除 :149-155 整个判断块，`onStop()` 只保留原有的框架日志与 `super.onStop()`（**已实施**）。同时把所有权契约写进 KDoc，避免后来者再加回类似警告（**未实施**）。
+- 修复：删除 :149-155 整个判断块，`onStop()` 只保留原有的框架日志与
+  `super.onStop()`（**已实施**）。同时把所有权契约写进 KDoc，避免后来者再加回类似警告
+  （**已实施**）。
 
 ```kotlin
 override fun onStop() {
@@ -869,7 +880,8 @@ override fun onStop() {
 ```
 
 - 影响：仅删除一条日志，无 API 变化。CHANGELOG 可并入 G11 的「修复」条目。
-- 验证：无需测试；`:androidbase:compileDebugKotlin` 通过即可。已删除部分随 §14.1 的 `:androidbase:testDebugUnitTest` 一并编译通过；剩余 KDoc 补充不影响验证。
+- 验证：无需行为测试；删除部分随 §14.1 的 `:androidbase:testDebugUnitTest` 一并编译通过，KDoc
+  补充随第十一轮的 androidbase 编译与质量检查复核，见 §19。
 
 #### G13 [MEDIUM，第六轮新增，2026-10-21 已实施] 回调在持锁状态下派发，KDoc 的死锁警告描述的是真实可达路径
 
@@ -1730,3 +1742,52 @@ stopper 稳定阻塞，只在释放启动线程后才停止实例并返回。
   而 `maxIssues = 0` 不允许分批落地；detekt 还会因此依赖编译产物而明显变慢。baseline 文件较大，
   且会改动每个模块的报告产物，故**不要**混进审查分支。
 - 验证：`./gradlew detekt --rerun-tasks` 在加 `classpath` 前后对比报告条目数。未验证。
+
+## 19. 第十一轮：拉取 `eefaae161` 后复核与迟到失败回调修复（Codex，2026-10-22）
+
+### 19.1 复核范围与结论
+
+本轮逐项复核 `6efc3dd47..eefaae161` 的 5 个文件，并对照 `NetworkMonitor`、`InternetUtil`、
+Toast 实现与 Gradle 配置。`BaseActivity` 新 KDoc、停止栅栏实现、测试说明修正和 §18 的 Detekt
+结论总体成立；通过临时只读诊断 action 实测 `:androidbase:detekt` 的 `classpath` 文件数确为 0。
+
+发现并修复两类明确问题：
+
+- G11 主条目仍声称停止栅栏用例能在旧生产交错上确定性变红，G12 又仍标为「KDoc 未实施」，均与
+  §17.2 和 `eefaae161` 的当前源码矛盾；已在原条目就地纠正。
+- `BaseActivity` 与 demo `NetworkMonitorActivity` 都先处理空 DNS 结果、再检查 generation 与
+  Activity 存活状态。于是 DNS 失败若晚于 `onDestroy()` 返回，虽然不会启动监控，仍会从已销毁页面
+  显示迟到 Toast。第一版修复只把失效检查移到 `toast()` 调用之前；本轮再次复核 `ToastExt` 后确认，
+  后台线程调用 `toast()` 还会把真正的显示动作投递到主线程，因此检查与 UI 副作用之间仍有窗口。
+  最终让空结果分支把处理整体投递到主线程，并在同一个主线程任务内检查 generation 与 Activity
+  生命周期后才调用 `toast()`，使它与 `onDestroy()` 串行。锁内最终复查继续负责监控发布/启动竞态。
+
+### 19.2 TDD 与验证
+
+初版新增两个 Robolectric 竞态用例，分别钉住 `BaseActivity` 与 demo。它们只覆盖“先销毁 Activity、再交付
+空 DNS 结果”，能证明明显的迟到回调被丢弃，但没有覆盖 Toast 扩展的主线程二次投递。复审后用例改为
+暂停主 Looper，从工作线程交付空结果，等 DNS 回调返回后销毁 Activity，最后再清空主队列；这能稳定
+复现“后台检查通过、Toast 尚未真正执行”窗口。修复前两个用例分别在
+`BaseActivityTrafficMonitorTest.kt:150` 与 `NetworkMonitorActivityTest.kt:68` 的
+`verify(exactly = 0)` 按预期失败；把生命周期最终检查移进主线程任务后转绿。复审又为两处各补一条
+“Activity 存活时仍显示 Toast”的正向控制，避免直接删除错误提示也让负向测试假绿；Demo 测试同时在
+`tearDown()` 停止全局 Koin，保证两个 Activity 用例可连续隔离执行。定向重跑 10 条用例全部通过。
+
+最终工作树执行：
+
+```bash
+./gradlew :androidbase:testDebugUnitTest :androidbase:ktlintCheck :androidbase:detekt \
+  :demo:testDevDebugUnitTest :demo:detekt :demo:ktlintTestSourceSetCheck \
+  :demo:assembleDevDebug --rerun-tasks --console=plain
+```
+
+复审修正后的最终结果：`BUILD SUCCESSFUL in 1m 32s`，`635 actionable tasks: 635 executed`。其中
+`BaseActivityTrafficMonitorTest` 8 条、`NetworkMonitorActivityTest` 2 条，均为 0 failure / 0 error。
+`androidbase` 的完整 ktlint/detekt、demo detekt、demo 测试源 ktlint、两模块 JVM 单测及
+`assembleDevDebug` 均通过。
+
+Demo 主源码 ktlint 另行重跑后仍只报告
+`demo/.../examples/audio/receiver/AudioReceiver.kt:165:54` 的既有
+`function-expression-body` 违规；该文件由 `1b4f225627` 引入，本次 Claude 提交
+`6efc3dd47..eefaae161` 未触及，因此不混入本轮修复。测试编译还保留
+`SuspendTeardownGateTest` 的既有 `ExperimentalCoroutinesApi` opt-in 警告。本轮未执行真机验证。

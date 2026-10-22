@@ -277,7 +277,8 @@ abstract class BaseActivity<B : ViewBinding>(
      * while the Activity is invisible, so do not stop it from [onStop] -- see [stopTrafficMonitor].
      *
      * Returns before anything is started: the lookup runs on a plain background thread, so a
-     * failure to resolve [domain] surfaces only in the log and a debug toast.
+     * failure to resolve [domain] surfaces only in the log and a debug toast while the Activity is
+     * still alive. A result arriving after teardown is discarded without UI side effects.
      *
      * [callback] is posted to the main thread, never run inline on the monitor thread, so blocking
      * inside it can neither stall the monitor nor deadlock against [stopTrafficMonitor]'s lock. It
@@ -312,8 +313,25 @@ abstract class BaseActivity<B : ViewBinding>(
         // below races with the main thread's onDestroy().
         InternetUtil.getIpsByHost(domain) { socketIps ->
             if (socketIps.isEmpty()) {
-                LogContext.log.e(tag, "Can not get ip by host[$domain].")
-                toast("Can't get ip by host[$domain].", debug = true)
+                runOnUiThread {
+                    val stale = trafficMonitorGeneration.get() != generation
+                    val activityGone = isDestroyed || isFinishing
+                    if (stale || activityGone) {
+                        val reason =
+                            if (stale) {
+                                "a teardown invalidated it"
+                            } else {
+                                "the Activity is destroyed or finishing"
+                            }
+                        LogContext.log.w(
+                            tag,
+                            "Discard DNS result for $domain: $reason."
+                        )
+                    } else {
+                        LogContext.log.e(tag, "Can not get ip by host[$domain].")
+                        toast("Can't get ip by host[$domain].", debug = true)
+                    }
+                }
                 return@getIpsByHost
             }
             val socketIp = socketIps[0]

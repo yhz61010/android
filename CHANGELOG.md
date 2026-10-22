@@ -274,6 +274,7 @@
   `HandlerThread` 无人释放。字段改为 final，并用世代计数作废在途的 DNS 查找；最终的存活检查、
   发布与启动现在和停止使用同一把锁，因此 `stopTrafficMonitor()` 返回后不会再由迟到回调启动监控。
   `startMonitor()` 失败不再把字段卡死在已死实例上，也不再让异常逃进无处理器的后台线程。
+  DNS 失败结果若晚于 Activity 销毁返回，也会直接丢弃，不再显示迟到 Toast。
   `startTrafficNetwork()` 与 `stopTrafficMonitor()` 补上所有权契约 KDoc：监控归该 Activity 所有、
   同时只允许一个、`onDestroy` 无条件释放因而无需在 `onStop` 配对停止，以及 `stopTrafficMonitor()`
   会阻塞到在途 `startMonitor()` 结束。
@@ -281,7 +282,7 @@
   `@Volatile` 的 `var` 里（DNS 线程写、主线程 `onDestroy` 读），且回调中没有任何世代或存活检查，
   因此 DNS 查找晚于 `onDestroy` 返回时会启动一个无人释放的监控；视图更新也未按新契约防护尾随回调。
   现按 `BaseActivity` 同一形状改为 final `AtomicReference` + 世代计数 + 发布/启动/停止共用一把锁，
-  视图更新加销毁守卫，启动异常不再逃进裸线程。
+  视图更新加销毁守卫，迟到的 DNS 失败结果不再显示 Toast，启动异常不再逃进裸线程。
 - **MediaCodec 异步回调不再落到主线程**：录屏、相机编码和 `LeoTextureView` 解码均使用可释放的
   专用 HandlerThread；API 21–22 在该线程创建 codec 并注册单参数 callback，API 23+ 显式传入
   Handler，且全部在 `configure()` 前完成注册。初始化失败与释放路径会有界等待线程退出。

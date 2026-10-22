@@ -1,9 +1,12 @@
 package com.leovp.androidbase.framework
 
+import android.content.Context
 import android.os.Bundle
+import android.os.Looper
 import android.view.View
 import android.widget.FrameLayout
 import androidx.viewbinding.ViewBinding
+import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import com.leovp.androidbase.utils.network.NetworkMonitor
 import io.mockk.Runs
@@ -11,9 +14,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkConstructor
 import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -25,7 +30,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 /**
  * Covers the publication handshake between the DNS lookup thread and the main thread in
@@ -50,10 +57,23 @@ class BaseActivityTrafficMonitorTest {
         mockkConstructor(NetworkMonitor::class)
         every { anyConstructed<NetworkMonitor>().startMonitor(any()) } just Runs
         every { anyConstructed<NetworkMonitor>().stopMonitor() } just Runs
+        mockkStatic("com.leovp.android.exts.ToastExtKt")
+        every {
+            any<Context>().toast(
+                msg = any<String>(),
+                longDuration = any(),
+                origin = any(),
+                debug = any(),
+                textColor = any(),
+                bgColor = any(),
+                error = any()
+            )
+        } just Runs
     }
 
     @After
     fun tearDown() {
+        unmockkStatic("com.leovp.android.exts.ToastExtKt")
         unmockkConstructor(NetworkMonitor::class)
         unmockkObject(InternetUtil)
     }
@@ -111,6 +131,61 @@ class BaseActivityTrafficMonitorTest {
         lookupCallback.captured.invoke(listOf(SOCKET_IP))
 
         verify(exactly = 0) { anyConstructed<NetworkMonitor>().startMonitor(any()) }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `a failed lookup queued before onDestroy does not show a late toast`() {
+        val controller =
+            Robolectric.buildActivity(TrafficMonitorTestActivity::class.java).setup()
+        controller.get().startTrafficNetwork(DOMAIN)
+        val lookup = Thread { lookupCallback.captured.invoke(emptyList()) }
+        lookup.start()
+        lookup.join(3_000)
+        assertFalse(lookup.isAlive)
+
+        controller.pause().stop().destroy()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify(exactly = 0) {
+            any<Context>().toast(
+                msg = any<String>(),
+                longDuration = any(),
+                origin = any(),
+                debug = any(),
+                textColor = any(),
+                bgColor = any(),
+                error = any()
+            )
+        }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `a failed lookup while the Activity is alive shows a toast`() {
+        val controller =
+            Robolectric.buildActivity(TrafficMonitorTestActivity::class.java).setup()
+        controller.get().startTrafficNetwork(DOMAIN)
+        val lookup = Thread { lookupCallback.captured.invoke(emptyList()) }
+        lookup.start()
+        lookup.join(3_000)
+        assertFalse(lookup.isAlive)
+
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify(exactly = 1) {
+            any<Context>().toast(
+                msg = "Can't get ip by host[$DOMAIN].",
+                longDuration = any(),
+                origin = any(),
+                debug = true,
+                textColor = any(),
+                bgColor = any(),
+                error = any()
+            )
+        }
+
+        controller.pause().stop().destroy()
     }
 
     @Test

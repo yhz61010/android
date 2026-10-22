@@ -78,17 +78,39 @@ class NetworkMonitorActivity :
         InternetUtil.getIpsByHost("leovp.com") { ipList ->
             LogContext.log.i(ITAG, "ipList=${ipList.toJsonString()}")
             if (ipList.isEmpty()) {
-                toast("Can't get IP from host.")
+                runOnUiThread {
+                    val stale = monitorGeneration.get() != generation
+                    val activityGone = isDestroyed || isFinishing
+                    if (stale || activityGone) {
+                        val reason =
+                            if (stale) {
+                                "a teardown invalidated it"
+                            } else {
+                                "the Activity is destroyed or finishing"
+                            }
+                        LogContext.log.w(
+                            ITAG,
+                            "Discard DNS result: $reason."
+                        )
+                    } else {
+                        toast("Can't get IP from host.")
+                    }
+                }
                 return@getIpsByHost
             }
             // Constructing a NetworkMonitor starts no thread -- startMonitor() creates the
             // HandlerThread -- so building it outside the lock costs nothing to discard.
             val monitor = NetworkMonitor(application, ipList[0], ::render)
             synchronized(monitorLock) {
-                val stale = monitorGeneration.get() != generation
+                val staleAfterConstruction = monitorGeneration.get() != generation
                 val activityGone = isDestroyed || isFinishing
-                if (stale || activityGone) {
-                    val reason = if (stale) "a teardown invalidated it" else "the Activity is gone"
+                if (staleAfterConstruction || activityGone) {
+                    val reason =
+                        if (staleAfterConstruction) {
+                            "a teardown invalidated it"
+                        } else {
+                            "the Activity is gone"
+                        }
                     LogContext.log.w(ITAG, "Discard monitor lookup gen=$generation: $reason.")
                     monitor.stopMonitor()
                     return@getIpsByHost

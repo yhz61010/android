@@ -34,6 +34,9 @@ import org.robolectric.annotation.Config
  * The lookup callback is captured instead of being run, so the interleavings these tests care
  * about are driven explicitly rather than raced for: `InternetUtil.getIpsByHost` normally hands
  * its callback to a bare thread, which would make the ordering unobservable.
+ *
+ * The last case is the exception: it runs the captured callback on a thread of its own so that it
+ * can contend `trafficMonitorLock`, and is therefore timing-based rather than driven.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -145,8 +148,12 @@ class BaseActivityTrafficMonitorTest {
             assertTrue(startEntered.await(3, TimeUnit.SECONDS))
             stopper.start()
 
-            // stopTrafficMonitor() is a teardown fence: it must not return while the published
-            // monitor is still inside startMonitor(), or that start can create resources later.
+            // Pins that trafficMonitorLock serialises a teardown against the publish/start
+            // handshake. It is deliberately NOT a reproduction of the defect that lock fixed:
+            // that window sat between publication and the startMonitor() call, and the code
+            // without the lock already blocked at this exact point, because stopMonitor() takes
+            // the same NetworkMonitor lifecycle lock that startMonitor() holds throughout. This
+            // case can only go red there because stopMonitor() is stubbed and takes no lock.
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
             while ((stopper.state == Thread.State.NEW || stopper.state == Thread.State.RUNNABLE) &&
                 System.nanoTime() < deadline

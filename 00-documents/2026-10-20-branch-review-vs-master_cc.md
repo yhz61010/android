@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）新增 G11、G12、G13。第七轮（Codex，2026-10-21）对此前确认的 26 项做了实现改动，其中 F6、F9、G7 仅部分落地。第八轮（Claude，2026-10-21）的复核与后续公开 API 修正见 §15 和 §14.2。G11/G13 随 `b0c417d95`、`f6cbb985e` 和 `fec53929a` 落地后，远端记录见 §16；Codex 后续复核确认 G13 已正确落地，但 G11 仍存在 `stopTrafficMonitor()` 返回后才启动监控的剩余竞态。第十轮（Codex，2026-10-22）已使最终发布/启动与停止串行化，并以新增竞态用例验证停止栅栏，见 §17。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）新增 G11、G12、G13。第七轮（Codex，2026-10-21）对此前确认的 26 项做了实现改动，其中 F6、F9、G7 仅部分落地。第八轮（Claude，2026-10-21）的复核与后续公开 API 修正见 §15 和 §14.2。G11/G13 随 `b0c417d95`、`f6cbb985e` 和 `fec53929a` 落地后，远端记录见 §16；Codex 后续复核确认 G13 已正确落地，但 G11 仍存在 `stopTrafficMonitor()` 返回后才启动监控的剩余竞态。第十轮（Codex，2026-10-22）已使最终发布/启动与停止串行化，并以新增竞态用例验证停止栅栏，见 §17。另有一条跨分支待办（Detekt 任务未设 `classpath`，导致 `!!` 等需类型解析的规则实际失效）记于 §18，不在本分支修复。
 
 ## 0. 范围与方法
 
@@ -1626,9 +1626,9 @@ Activity 的处理与 `mockkConstructor`，须由能执行 Gradle 的一方验�
 ### 17.1 复核结论与修复
 
 `fec53929a` 在 `BaseActivityTrafficMonitorTest` 中新增了 5 个用例，覆盖存活时启动、明确 stop 后的
-迟到 DNS 回调、启动异常回滚、`onDestroy` 前后的基础握手，但没有把线程停在「引用已发布、
-`startMonitor()` 正在执行」这个关键窗口。生产代码仍允许 `stopTrafficMonitor()` 先取走并停止尚未启动
-完成的实例、然后返回；DNS 线程随后继续启动资源，只能依赖启动后的 generation 复查再停一次。
+迟到 DNS 回调、启动异常回滚、`onDestroy` 前后的基础握手，但没有覆盖「引用已发布、`startMonitor()`
+尚未进入」这个关键窗口。生产代码仍允许 `stopTrafficMonitor()` 先取走并停止尚未启动完成的实例、
+然后返回；DNS 线程随后继续启动资源，只能依赖启动后的 generation 复查再停一次。
 
 最终修复在 `BaseActivity` 增加 `trafficMonitorLock`：
 
@@ -1642,12 +1642,28 @@ stop 先进入时，迟到 DNS 回调不会再调用 `startMonitor()`。
 
 ### 17.2 测试与验证
 
-新增 `stop waits for an in-progress monitor start before returning` 用例：mock `startMonitor()` 进入后用 latch 暂停，
-另一线程调用 `stopTrafficMonitor()`。在修复前，stopper 提前结束，用例于第 150 行按预期失败；修复后，
-stopper 稳定处于 `BLOCKED`，只在释放启动线程后才停止实例并返回。
+新增 `stop waits for an in-progress monitor start before returning` 用例：mock `startMonitor()`
+进入后用 latch 暂停，另一线程调用 `stopTrafficMonitor()`，断言它在启动被释放前不返回；修复后
+stopper 稳定阻塞，只在释放启动线程后才停止实例并返回。
 
-`fec53929a` 的新测试首次本机编译还暴露了两个机械问题：错误导入不存在的顶层 `io.mockk.anyConstructed`，以及
-`getViewBinding()` 表达式体不符合 ktlint/detekt 共同缩进要求；两处已修正。
+**该用例钉住的是 `trafficMonitorLock` 把拆除与「发布 + 启动」握手串行化，而不是复现修复前的缺陷。**
+修复前的代码在这个位置本来就会阻塞：发布早于 `startMonitor()`，而 `stopMonitor()` 取的
+`monitorLifecycleLock` 正是 `startMonitor()` 全程持有的那一把。用例之所以能在旧代码上变红，是因为
+`stopMonitor()` 被 stub 成 `just Runs` 而不取任何锁 —— 红来自 stub，不来自缺陷。真正的缺陷窗口在
+「已发布、尚未进入 `startMonitor()`」那几条指令上，而 `BaseActivity` 在发布（修复前是
+`compareAndSet(null, monitor)`）与
+`startMonitor()` 之间没有可注入的测试缝（`NetworkMonitor` 的 `beforeResultDispatch` 在此无对应物），
+无法确定性复现。经作者裁定（2026-10-22）：不为此往生产代码加测试缝，也不加非确定性的竞态用例；
+本轮修复的正当性依据 §17.1 的交错论证，不依据一个红测试。用例注释已同步说明这一点。
+
+`fec53929a` 的新测试首次本机编译暴露了两个机械问题，均已修正：一是错误导入不存在的顶层
+`io.mockk.anyConstructed`（它只是 `MockKMatcherScope` 的成员，顶层无此函数，属**编译错误**而非风格
+问题）；二是 `getViewBinding()` 的表达式体换行违反 ktlint 的 `function-signature` 规则
+（`functionBodyExpressionWrapping` 为 `default`，单行形式 98 列 ≤ `max_line_length = 100`，故必须与
+签名同行）。该文件位于 `src/test/java`，不在 detekt 的 `source.from` 五项（`buildSrc`、根
+`build.gradle.kts`、`settings.gradle.kts`、`src/main/kotlin`、`src/test/kotlin`）范围内，detekt
+未参与这两处判定；`.editorconfig` 的 `ktlint_standard_indent` 为
+`disabled`，故与缩进规则无关。
 
 最终执行：
 
@@ -1658,3 +1674,59 @@ stopper 稳定处于 `BLOCKED`，只在释放启动线程后才停止实例并�
 
 结果：`BUILD SUCCESSFUL in 32s`，`162 actionable tasks: 162 executed`。现有 5 个基础握手用例与新增停止栅栏用例均
 实际执行。本轮未执行真机验证；该竞态通过可控 Robolectric/MockK 线程交错回归覆盖。
+
+## 18. 跨分支待办：Detekt 未启用类型解析（记录于 2026-10-22）
+
+**本条不在本分支修复，日后另起分支单独处理。** 记录在此以免再次被当成「已被门禁覆盖」。
+
+- 位置：`build.gradle.kts:413-429`（`tasks.withType<Detekt>().configureEach { }`）。
+- 缺陷：该块只设 `jvmTarget`（上一行注释还写着「It is used for type resolution」）与 `reports`，
+  **从未设置 `classpath`**。detekt 1.23.8 的类型解析需要 source 与 `classpath` 两者齐备；
+  `detekt-core` 的 `BindingContextKt.generateBindingContext` 在 `classpath.isEmpty()` 时直接
+  `return BindingContext.EMPTY`（字节码 offset 25/30/33）。随后 `Analyzer` 把标注
+  `@RequiresTypeResolution` 的规则**整条跳过**（offset 91 的 `instanceof RequiresTypeResolution`），
+  提示只走 `warnAboutEnabledRequiresTypeResolutionRules()` 内部的 `ProcessingSettings.debug{}`，
+  默认看不见。仓库无 baseline 文件，`maxIssues = 0`（`detekt.yml:2`），detekt 的 `ignoreFailures`
+  走默认值 `false`（仓库未显式配置；`build.gradle.kts:158` 那处 `ignoreFailures.set(false)`
+  属 ktlint 块）。门禁看上去极严，实际一整类规则是哑的 —— 这比一个诚实的小规则集更危险，
+  因为 `detekt.yml` 高估了真正被执行的范围。
+- 注意**两种**失效方式，不要一概而论：
+  - 标注了 `@RequiresTypeResolution` 的规则被整条跳过 —— **静默失效**。
+  - 未标注却自行查询 binding context 的规则**仍会执行**，其行为取决于自己怎么处理取不到类型的
+    情形：可能静默失效，也可能**失败开放**而照常上报。
+- 已确认的受害者（静默失效）：
+  - `UnsafeCallOnNullableType`（`10-configs/detekt.yml:482-484`，`active: true`）—— 即 `!!` 禁令，
+    未被执行：类上带 `@RequiresTypeResolution`，被 `Analyzer` 跳过；即便执行，其
+    `visitPostfixExpression` 在类型取不到时也走失败关闭分支（`40: ifnull 49` -> `50: aconst_null`
+    -> `54: if_acmpne 95`，直接返回不上报）。这解释了 `!!` 为何能长期留在仓库中而不使构建失败：
+    全仓 `src/main` 下有 56 个 `.kt` 文件出现 `!!` 字面，其中 12 个只出现在注释里，**实际使用该运算
+    符的是 44 个**，例如 `ScreenRecordMediaCodecStrategy.kt` 的 4 处
+    （:286/:381/:480/:509，见 §15.5）。
+    另注意该规则只在 `!!` 作用于**可空类型**时上报，故并非每一处 `!!` 都由它负责。
+    `Screenshot2H26xStrategy.kt` 不可用作例子：它在 master 上的 2 处 `!!` 都位于**被注释掉的代码**
+    （`:96`、`:196`），规则本就不会上报，且该文件现为 0 处。
+- 已确认的反例（失败开放，与直觉相反）：
+  - `InstanceOfCheckForException`（`10-configs/detekt.yml:242-244`，`active: true`）**不是**受害者。
+    反汇编 `detekt-rules-exceptions-1.23.8.jar`：类的 `RuntimeVisibleAnnotations` 只有
+    `kotlin.Metadata`，**没有** `@RequiresTypeResolution`（上游只有源码级的
+    `@Suppress("ViolatesTypeResolutionRequirements")`），故 `Analyzer` 不跳过它。取 binding context
+    的是 `isCheckForSubTypeOf`（**不是** `visitCatchSection`，后者字节码只到 offset 78）：
+    offset 150/172 调 `getBindingContext()`、153/175 取 `BindingContext.TYPE`，而两个类型任一为 null
+    即 `197/202 ifnull -> 215 iconst_1`，**返回 `true`**；`visitCatchSection$lambda$0` 的
+    `12: ifeq 58` 只在 false 时跳过上报。即**无类型解析时失败开放、照常报错**。
+    因此 `catch (error: Exception) { ... if (error is InterruptedException) ... }` 在**当前配置下就
+    已经违规**，`maxIssues: 0` 会使构建失败。该合并写法由 `fec53929a` 引入（`f6cbb985e` 及更早都
+    没有），`6efc3dd47` 把它拆成 `catch (error: InterruptedException)` + `catch (error: Exception)`
+    —— 最可能的因果就是被这条规则逼出来的（因果本身未验证：远端无法跑 Gradle，`6efc3dd47` 的提交
+    正文为空，只有 subject）。补上 `classpath` 后仍然违规（`InterruptedException` 是
+    `Exception` 的子类型），
+    故现有拆分形式**必须保留**；若要消除重复，只能抽一个两个 catch 共用的私有 helper，不能合并。
+  - 推论：`detekt.yml` 里需类型解析的其余规则必须逐条按上述两种方式判定，不能假定一律哑掉。
+    本轮只验证了上述两条。
+- 建议做法（中间路线）：同时加上 `classpath` 并生成 baseline，把既有违规祖父条款化，只让**新增**
+  违规失败。这样一次提交即可落地，门禁从此真正工作。（Android 模块下生成 baseline 的任务按
+  variant 分裂，具体任务名需本机 `./gradlew tasks` 确认。未验证。）
+- 代价：开启后必然在 36 个模块里涌出一批新违规（以那 44 个文件里作用于可空类型的 `!!` 为主），
+  而 `maxIssues = 0` 不允许分批落地；detekt 还会因此依赖编译产物而明显变慢。baseline 文件较大，
+  且会改动每个模块的报告产物，故**不要**混进审查分支。
+- 验证：`./gradlew detekt --rerun-tasks` 在加 `classpath` 前后对比报告条目数。未验证。

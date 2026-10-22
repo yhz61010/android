@@ -232,6 +232,35 @@ abstract class BaseActivity<B : ViewBinding>(
 
     // ==============================
 
+    /**
+     * Stops the traffic monitor this Activity owns, if any, and invalidates a DNS lookup still in
+     * flight so a late one cannot start a monitor nobody would release. Idempotent;
+     * [startTrafficNetwork] may be called again afterwards.
+     *
+     * [onDestroy] calls this unconditionally, so subclasses need not pair it with
+     * [startTrafficNetwork] in [onStop]. The monitor is meant to keep polling while the Activity
+     * is invisible, which is why [onStop] carries no "are you leaking it?" warning: such a warning
+     * would fire precisely when things work as designed.
+     *
+     * Blocks the caller while a [NetworkMonitor.startMonitor] this Activity triggered is still
+     * running on the DNS lookup thread, because publication and start share this method's lock.
+     * That start creates a [android.os.HandlerThread], builds a process-wide traffic helper on
+     * first use and, on Android 12 (API 31) and above, registers a Wi-Fi network callback, so the
+     * wait can span a binder round trip -- [onDestroy] pays it on the main thread.
+     *
+     * In exchange, once this returns no lookup whose generation snapshot predates this call can
+     * start a monitor. A [startTrafficNetwork] that has already entered but not yet taken that
+     * snapshot is not fenced, so drive both from one thread -- normally the main thread.
+     *
+     * A result already in flight may still reach [startTrafficNetwork]'s callback afterwards, see
+     * [NetworkMonitor.stopMonitor]. This class drops such a result only once the Activity is
+     * destroyed or finishing; after an explicit stop on a live Activity one trailing result can
+     * still be delivered.
+     *
+     * Migration: earlier versions neither locked nor invalidated an in-flight lookup, so a lookup
+     * returning after this method could publish and start a monitor nothing ever released. The
+     * signature is unchanged; callers gain the fence and the blocking described above.
+     */
     fun stopTrafficMonitor() {
         synchronized(trafficMonitorLock) {
             // Invalidate any DNS lookup still in flight before tearing the current monitor down.
@@ -240,6 +269,34 @@ abstract class BaseActivity<B : ViewBinding>(
         }
     }
 
+    /**
+     * Resolves [domain] and starts a monitor reporting device-wide traffic throughput and Wi-Fi
+     * signal, plus the ping latency to the first IP it returns. The monitor belongs to this
+     * Activity: at most one runs at a time, a second call while one is live is refused with a log
+     * message, and [onDestroy] releases it unconditionally. Monitoring deliberately continues
+     * while the Activity is invisible, so do not stop it from [onStop] -- see [stopTrafficMonitor].
+     *
+     * Returns before anything is started: the lookup runs on a plain background thread, so a
+     * failure to resolve [domain] surfaces only in the log and a debug toast.
+     *
+     * [callback] is posted to the main thread, never run inline on the monitor thread, so blocking
+     * inside it can neither stall the monitor nor deadlock against [stopTrafficMonitor]'s lock. It
+     * does occupy the main thread, where [onDestroy] runs, so still do not block in it. It is
+     * skipped once this Activity is destroyed or finishing, so a trailing result is dropped rather
+     * than merely delayed.
+     *
+     * Migration: this no longer requires `CHANGE_NETWORK_STATE`; nothing on the monitor path
+     * mutates network state. The "are you leaking networkMonitor?" warning earlier versions
+     * logged from [onStop] is gone, because keeping the monitor alive while invisible is the
+     * intended contract -- see [stopTrafficMonitor].
+     *
+     * Needs the following permissions:
+     * ```xml
+     * <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     * <!-- Below Android 12 (API 31) only: the Wi-Fi signal is read through WifiManager. -->
+     * <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+     * ```
+     */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun startTrafficNetwork(
         domain: String,
@@ -269,7 +326,8 @@ abstract class BaseActivity<B : ViewBinding>(
             // The DNS lookup above is async; the Activity may already be gone by the time it
             // returns. Constructing a NetworkMonitor starts no thread -- startMonitor() is what
             // creates the HandlerThread -- so this is only an early-out, not the leak guard. The
-            // generation re-check below is what actually makes a late lookup safe.
+            // critical section below is what actually makes a late lookup safe: it re-checks the
+            // generation and publishes under the same lock stopTrafficMonitor() takes.
             if (isDestroyed || isFinishing) {
                 LogContext.log.w(tag, "Activity is destroyed/finishing. Skip NetworkMonitor.")
                 return@getIpsByHost

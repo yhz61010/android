@@ -12,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -36,6 +37,12 @@ class ScreenRecordMediaCodecStrategyTest {
     private val virtualDisplay = mockk<VirtualDisplay>(relaxed = true)
     private val listener = mockk<ScreenDataListener>(relaxed = true)
 
+    /**
+     * Every strategy [createStrategy] hands out, so [tearDown] can release them. Concurrent
+     * because the interrupt case builds one on a thread of its own.
+     */
+    private val strategies = CopyOnWriteArrayList<ScreenRecordMediaCodecStrategy>()
+
     @Before
     fun setUp() {
         Class.forName(MediaCodec::class.java.name, true, MediaCodec::class.java.classLoader)
@@ -47,7 +54,17 @@ class ScreenRecordMediaCodecStrategyTest {
     }
 
     @After
-    fun tearDown() = unmockkAll()
+    fun tearDown() {
+        // The case that needs this is `changeOrientation ...`: it ends with the strategy holding
+        // a complete session -- encoder, input surface, VirtualDisplay and two HandlerThreads --
+        // and has no release point of its own. Failed-init and interrupted-caller cases already
+        // roll themselves back through releaseCodecCallbackThread(), which nulls the field, so
+        // for them this hook is an idempotent no-op. Released before unmockkAll(), which the
+        // release path still needs; each one is wrapped because a stub may be left throwing.
+        strategies.forEach { runCatching { it.onRelease() } }
+        strategies.clear()
+        unmockkAll()
+    }
 
     @Test
     fun `virtual display failure rolls back every acquired resource`() {
@@ -107,19 +124,28 @@ class ScreenRecordMediaCodecStrategyTest {
             assertTrue(creationStarted.await(2, TimeUnit.SECONDS))
             caller.interrupt()
             caller.join(2_000)
+            // Asserted inside the try on purpose. The finally only needs to unwedge the worker;
+            // interrupting the caller a second time there would set the very flag this case
+            // asserts, for a reason unrelated to the production code, and a lost interrupt
+            // restoration would then report green.
+            assertFalse(caller.isAlive)
         } finally {
             allowCreation.countDown()
-            caller.interrupt()
             caller.join(2_000)
         }
 
-        assertTrue(!caller.isAlive)
         assertTrue(failure.get() is InterruptedException)
         assertTrue(interrupted.get())
     }
 
     @Test
-    fun `worker interruption does not interrupt the caller`() {
+    fun `a worker-side InterruptedException is unwrapped without touching the caller flag`() {
+        // Boundary guard, not a red-before-green regression test: the stub throws on the
+        // scr-rec-codec thread, so the caller sees ExecutionException and takes the pre-existing
+        // catch (Throwable) branch, which already unwrapped the cause. It therefore passes
+        // against the code before the InterruptedException branch existed. Its job is to keep
+        // that branch from being widened to worker-side failures, which would set the caller's
+        // interrupt flag for an interrupt that never targeted the caller.
         ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
         every { MediaCodec.createEncoderByType(any()) } throws
             InterruptedException("worker interrupted")
@@ -194,11 +220,58 @@ class ScreenRecordMediaCodecStrategyTest {
         verify(exactly = 2) { projection.unregisterCallback(any()) }
     }
 
+    @Test
+    fun `release aggregates a second cleanup failure as suppressed`() {
+        every {
+            projection.createVirtualDisplay(
+                any(), any(), any(), any(), any(), any(), any(), any()
+            )
+        } returns virtualDisplay
+        val strategy = createStrategy()
+        strategy.onInit()
+        strategy.onStart()
+        val stopFailure = IllegalStateException("stop failed")
+        val displayFailure = IllegalStateException("display release failed")
+        every { codec.stop() } throws stopFailure
+        every { virtualDisplay.release() } throws displayFailure
+
+        val failure = runCatching { strategy.onRelease() }.exceptionOrNull()
+
+        // onStop() rethrows its own first failure into onRelease()'s collector, so the earlier
+        // failure wins and the later one is attached instead of lost. This is also the only case
+        // that exercises the identity guard in collectCleanupFailure: without it, re-collecting
+        // the same instance would raise "Self-suppression not permitted".
+        assertSame(stopFailure, failure)
+        assertSame(displayFailure, failure?.suppressed?.single())
+        verify(exactly = 1) { surface.release() }
+        verify(exactly = 1) { codec.release() }
+    }
+
+    @Test
+    fun `changeOrientation releases the input surface of the previous session`() {
+        every {
+            projection.createVirtualDisplay(
+                any(), any(), any(), any(), any(), any(), any(), any()
+            )
+        } returns virtualDisplay
+        val strategy = createStrategy()
+        strategy.onInit()
+
+        strategy.changeOrientation()
+
+        // The per-rotation half of the input-surface leak: changeOrientation() rebuilds the
+        // encoder, so it has to release the surface the retired encoder handed out. The count is
+        // one because the session it builds afterwards is not released here -- this stub hands
+        // back the same mock on re-init, so a count of two would mean a double release.
+        verify(exactly = 1) { surface.release() }
+        verify(exactly = 1) { virtualDisplay.release() }
+    }
+
     private fun createStrategy() = ScreenRecordMediaCodecStrategy.Builder(
         width = 320,
         height = 240,
         dpi = 160,
         mediaProjection = projection,
         screenDataListener = listener
-    ).build()
+    ).build().also { strategies += it }
 }

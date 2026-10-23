@@ -144,6 +144,13 @@ class BaseActivityTrafficMonitorTest {
         lookup.join(3_000)
         assertFalse(lookup.isAlive)
 
+        // The interleaving this case is about only exists while the posted runnable is still
+        // queued. Assert that rather than trust it: if a Robolectric upgrade ever idles the main
+        // looper during a lifecycle transition, the toast would fire before onDestroy and this
+        // case would report a harness change as a production regression. It proves only that
+        // something is queued, and against the code that toasted inline from the lookup thread
+        // this is what goes red first -- "looper was idle" then means "the toast already fired".
+        assertFalse(shadowOf(Looper.getMainLooper()).isIdle)
         controller.pause().stop().destroy()
         shadowOf(Looper.getMainLooper()).idle()
 
@@ -160,6 +167,43 @@ class BaseActivityTrafficMonitorTest {
         }
     }
 
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `a failed lookup queued before an explicit stop does not show a late toast`() {
+        val controller =
+            Robolectric.buildActivity(TrafficMonitorTestActivity::class.java).setup()
+        controller.get().startTrafficNetwork(DOMAIN)
+        val lookup = Thread { lookupCallback.captured.invoke(emptyList()) }
+        lookup.start()
+        lookup.join(3_000)
+        assertFalse(lookup.isAlive)
+        assertFalse(shadowOf(Looper.getMainLooper()).isIdle)
+
+        // The Activity stays alive here, so `isDestroyed || isFinishing` cannot reject this
+        // result and only the generation counter can. Without the `stale` half of the guard the
+        // toast would reach a live screen for a lookup whose owner already gave it up.
+        controller.get().stopTrafficMonitor()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify(exactly = 0) {
+            any<Context>().toast(
+                msg = any<String>(),
+                longDuration = any(),
+                origin = any(),
+                debug = any(),
+                textColor = any(),
+                bgColor = any(),
+                error = any()
+            )
+        }
+
+        controller.pause().stop().destroy()
+    }
+
+    /**
+     * The reverse control for the two discard cases above: without it a `mockkStatic` that failed
+     * to intercept would make both of their `verify(exactly = 0)` blocks vacuously green.
+     */
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `a failed lookup while the Activity is alive shows a toast`() {

@@ -236,7 +236,7 @@ class MediaProjectionService : Service() {
         requireNotNull(mediaProjectionRef) { "MediaProjection can't be null" }
         mediaProjection = mediaProjectionRef
 
-        screenProcessor = ScreenCapture.Builder(
+        val processor = ScreenCapture.Builder(
             // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
             setting.width,
             // 800 1024 1280
@@ -260,10 +260,25 @@ class MediaProjectionService : Service() {
             .setIFrameInterval(setting.iFrameInterval)
             // For bitmap
             //          .setSampleSize(2)
-            .build().apply {
-                onInit()
-                onStart()
-            }
+            .build()
+        // Publish before driving the lifecycle. With `build().apply { onInit(); onStart() }` the
+        // assignment only happened on normal completion, so an onStart() failure left a fully
+        // initialized processor that onReleaseScreenShare() could no longer reach. onStart() has
+        // no rollback of its own, hence the explicit release here. The failure is still rethrown
+        // because that is what this path already did -- closing the orphan is the whole change,
+        // and swallowing here would hide a screen share that silently never started. Contrast
+        // the two serviceHandler.post sites, which must swallow: an escaping throwable there
+        // kills service-thread's Looper during teardown, after the work is already done.
+        screenProcessor = processor
+        try {
+            processor.onInit()
+            processor.onStart()
+        } catch (error: Throwable) {
+            LogContext.log.e(TAG, "startScreenShare() failed; releasing the processor.", error)
+            runCatching { processor.onRelease() }
+            screenProcessor = null
+            throw error
+        }
     }
 
     fun stopScreenShare() {
@@ -279,7 +294,14 @@ class MediaProjectionService : Service() {
 
         serviceHandler.post {
             LogContext.log.w(TAG, "screenProcessor onStop()")
-            screenProcessor?.onStop()
+            // onStop() reports a cleanup failure by throwing, and this body runs on
+            // service-thread's Looper, where an escaping throwable kills the process. A screen
+            // share that cannot be torn down cleanly is not worth a crash.
+            try {
+                screenProcessor?.onStop()
+            } catch (error: Throwable) {
+                LogContext.log.e(TAG, "screenProcessor onStop() failed.", error)
+            }
         }
     }
 
@@ -288,7 +310,14 @@ class MediaProjectionService : Service() {
         stopScreenShare()
         serviceHandler.post {
             LogContext.log.w(TAG, "onReleaseScreenShare onRelease()")
-            screenProcessor?.onRelease()
+            // Same reasoning as onStop() above: onRelease() rethrows the first cleanup failure
+            // with the rest attached as suppressed, and by then it has already released every
+            // resource it could, so logging here loses nothing but the crash.
+            try {
+                screenProcessor?.onRelease()
+            } catch (error: Throwable) {
+                LogContext.log.e(TAG, "screenProcessor onRelease() failed.", error)
+            }
         }
     }
 

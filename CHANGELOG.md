@@ -57,6 +57,12 @@
 
 ### 变更 (Changed)
 
+- **`ScreenProcessor.onStop()` / `onRelease()` 现在会抛出清理失败**：两者改为尝试每一个释放步骤，
+  然后抛出首个失败、其余以 `addSuppressed` 附加，而不再让第一个异常中断后续释放。抛出应读作「已
+  尽可能释放，并附上出错原因」，而非「什么都没释放」；重复调用是空操作而非 double free。此前被
+  `log.e` 吞掉的 `MediaProjection.Callback` 注销失败现在也会外传。从 `Handler` runnable 等「未捕获
+  异常即杀进程」的上下文调用时须自行捕获 —— demo 的 `MediaProjectionService` 已照此加固。契约已
+  写入 `ScreenProcessor` 的 KDoc。
 - **`CameraAvcEncoder.queue` 不再公开**：内部队列深度不再属于公开契约；调用方不能再直接
   检查或修改队列，应通过丢帧 warning 观察编码过载。
 - **`FloatViewCreator.build()` 返回创建结果**：返回类型由 `Unit` 改为 `Boolean`；宿主 Activity
@@ -290,6 +296,24 @@
   `KEY_MAX_FPS_TO_ENCODER`，避免按采集 deadline 生成的真实时间戳再次被 FrameDropper 丢帧。
 - **录屏资源释放补齐**：`ScreenRecordMediaCodecStrategy` 即使尚未开始录制也会释放 `scr-rec-send`
   线程，并配对注销 `MediaProjection.Callback`；HEVC 格式不再写入 AVC profile/level。
+- **录屏不再泄漏编码器输入 Surface**：`MediaCodec.createInputSurface()` 返回的 Surface 由调用方
+  负责释放，此前它只是 `onInit()` 里的局部变量、用完即弃，于是每次初始化和每次
+  `changeOrientation()` 都泄漏一个 Surface。现提为字段，在 `onRelease()`、`changeOrientation()`
+  与初始化失败回滚中释放。
+- **`ScreenProcessor` 释放路径不再半途而废**：`onStop()`/`onRelease()` 此前任一步抛出就会跳过其后
+  的释放（例如编码器释放失败会连带漏掉 VirtualDisplay）。现在每一步都会尝试，首个失败在全部步骤
+  结束后抛出、其余以 `addSuppressed` 附加；`onStop()` 的循环标志改为 `getAndSet(false)`，两个调用
+  方不再可能同时通过守卫；注销 `MediaProjection.Callback` 的标志改为成功后才置位，失败可重试。
+  初始化失败新增完整回滚，且只注销本次初始化自己注册的回调。抛出契约见「变更」一节。
+- **中断状态不再在编解码器初始化中丢失**：`LeoTextureView`、`CameraAvcEncoder`、
+  `ScreenRecordMediaCodecStrategy` 与 `Screenshot2H26xStrategy` 等待 codec 回调线程建码器时，
+  若调用方被中断，`FutureTask` 会清除中断标志；现单独捕获 `InterruptedException`、完成回滚并恢复
+  标志后重抛。`Screenshot2H26xStrategy.onInit()` 据此区分「调用方被中断（EGL 线程仍在跑，须请求
+  释放）」与「EGL 线程自身抛出（它已自行拆除，不应再请求）」。
+- **`tryShow()` 与 Wi-Fi 回调注销的 KDoc 过强断言修正**：`FloatViewCreator.tryShow()` 对重复 tag
+  并非总返回 `FAILED_AND_DETACHED`，既有视图此前移除失败时返回 `FAILED_BUT_ATTACHED_HIDDEN`；
+  `NetworkUtil` 的注册/注销不能承诺「失败回调不再投递任何业务事件」，已读取过 listener 的那一次
+  调用仍可能并发完成。
 - **MP4 失败清理完整化**：`Mp4TrackWriter` 在 `addTrack()`/`start()`/`stop()` 抛出时仍释放 muxer；
   只有 stop 成功写完索引才保留输出文件，否则删除不完整文件，`Error` 也不会绕过资源清理。
 - **FloatView 生命周期竞态收敛**：宿主正在 finishing 时不会误展示同 tag 的旧窗口；销毁宿主 detach

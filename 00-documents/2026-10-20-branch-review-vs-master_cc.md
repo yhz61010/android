@@ -885,6 +885,16 @@ override fun onStop() {
 
 #### G13 [MEDIUM，第六轮新增，2026-10-21 已实施] 回调在持锁状态下派发，KDoc 的死锁警告描述的是真实可达路径
 
+> **行号说明（2026-10-23）**：本条「缺陷」「修复」「代价」各段内的 `NetworkMonitor.kt` 行号均为
+> **实施前某一旧树**的行号（已无法与某个具体提交对上：`e57608f70` 上四个 `@Volatile` 位于
+> `:44/:47/:50/:53`），仅用于追溯原始问题，**不要**按当前 HEAD 解读。几处最易误读的对应关系：
+> 锁内派发 `:127`→现 `:139`；锁内 `callback.invoke` `:137`→现 `:169`（且已移出生命周期锁、位于
+> `resultDispatchLock` 内）；`stopMonitor()` `:214`→现 `:244`；`isCurrentMonitor()` `:160-163`→现
+> `:180-183`，它读的仍是**三个** `@Volatile` 字段（`monitorStopped`/`monitorGeneration`/
+> `monitorScheduler`），现位于 `:69/:72/:66`（文件内另有 `globalWifiSignal` `:51`，共四个）；
+> 使用方回调的 `BaseActivity.kt:264` `runOnUiThread`→现 `:356`。尤其注意 `:204-205` 当前是
+> `fun startMonitor`，其所引述的 `stopMonitor` KDoc 原句已在实施中改写、不再存在。
+
 - 实施状态：`b0c417d95` 已把结果计算留在 `monitorLifecycleLock` 内、把使用方回调移到锁外，并用一把不与生命周期锁嵌套的 `resultDispatchLock` 保证同一实例的回调不并发。`f6cbb985e` 进一步修正 KDoc，在 `BaseActivity` 主线程投递处过滤 Activity 销毁后的尾随结果，并新增「回调阻塞时 stop 仍可返回」、「stop 后最多一个尾随结果」、「跨 session 回调不重叠」三个用例。本机已对远程最终树重跑 `:androidbase:testDebugUnitTest`/`ktlintCheck`/`detekt --rerun-tasks`，162 个任务实际执行并全部通过。
 - 缺陷：`startMonitor` 的 KDoc 写「Do not wait inside a callback for another thread that calls [startMonitor] or [stopMonitor]」，这不是保守措辞，而是真实可达的两方死锁：监控线程在 :127 持锁、于 :137 同步执行使用方回调；主线程此时进入 `stopMonitor()`（:214）等待同一把锁。若回调内对主线程做同步等待（`runBlocking(Dispatchers.Main)`、`Handler(mainLooper).post {}` 配 `latch.await()`、或任何等待主线程完成的 future），监控线程等主线程、主线程等锁，直接 ANR。`stopMonitor` KDoc :204-205 承诺的「An already running callback finishes before this method returns」正是这条死锁边的来源。
 - 触发：使用方写出 `startTrafficNetwork("host") { info -> runBlocking(Dispatchers.Main) { render(info) } }`，随后退出页面触发 `onDestroy → stopTrafficMonitor() → stopMonitor()`。本库自身的回调（`BaseActivity.kt:264` 的 `runOnUiThread { it(info) }`）是异步投递、不等待，因此不会触发；风险全在使用方，且仅靠文档约束。
@@ -1225,7 +1235,7 @@ F6、F9、G7 仅部分落地，剩余项见本表及 §15.3。
 | F6 | 部分落地 | 删除清单 7 项完成 6 项；Builder 被提升为独立 `Screenshot2H26xBuilder`，带出方案未声明的 API 形状变化（见 §15.4.1） |
 | F7 | 一致 | `EncodeType.H264` 守卫包住 profile/level；`fallBackToAvcIfMuxerCannotCarryHevc()` 在 `build()` 开头执行，读取时机正确 |
 | F8 | 做法不同（更好） | 注册幂等化消除了重复注册缺陷，故保留 `takeScreenshot()` 里的注册调用比按方案删掉更正确；`builder.mediaProjection?.` 替代方案中的 `!!` |
-| F9 | 部分落地 | 注释两点达标；`Screenshot2H26xStrategy.kt` 1232 → 1032 行，仍超 800 行上限 |
+| F9 | 部分落地 | 注释两点达标；`Screenshot2H26xStrategy.kt` 1232 → 1038 行（随后续提交浮动），仍超 800 行上限 |
 | F10 | 一致 | 所有权在可抛步骤前发布；`catch (Throwable)` 不重抛，`Error` 也走完清理；只有 `stop()` 成功才保留文件 |
 | G1 | 一致 | `toastRequestToken` / `dismissToken` 分离，`removeCallbacksAndMessages(null)` 已彻底消失 |
 | G2 | 一致 | `build(): Boolean`，`tryShow()` / `createAndShowFloatView()` 都按返回值短路 |
@@ -1403,7 +1413,7 @@ private fun elapsedMicrosSinceFirstFrame(): Long {
 | L5 | `screencapture/.../ScreenRecordMediaCodecStrategy.kt:478` + `:307-316` | **F8 残留时序缺口**。`onRelease()` 之后再调 `takeScreenshot()` 会在 API 34+ 重新注册 callback，此后无任何注销点。方案未覆盖此路径。修复：`takeScreenshot()` 在自身返回前注销它本次新注册的 callback，或在 `onRelease()` 后把实例标记为终态并拒绝 `takeScreenshot()` |
 | L6 | `screencapture/.../ScreenRecordMediaCodecStrategy.kt:285` → `:296-298` | `onInit()` 中 `registerCallbackAboveAndroid14()` 在 `createVirtualDisplay` 之前；后者抛异常时 catch 只释放 encoder 与 callback thread，不注销已注册的 callback，`projectionCallbackRegistered` 留 `true`。调用方若在 `onInit()` 失败后直接放弃（不调 `onRelease()`），callback 悬挂。可辩护（为重试保留注册状态），但方案未讨论，建议在 catch 中显式注销或在 KDoc 写明「`onInit()` 失败后仍须调用 `onRelease()`」 |
 | L7 | `screencapture/.../Screenshot2H26xBuilder.kt:46` | F6 要求「三个 Builder 的 `setFps()` KDoc 追加同一句迁移说明」，这一个漏了（另两个已写于 `ScreenCapture.kt:61`、`ScreenRecordMediaCodecStrategy.kt:136`）。该 Builder 正是 `BY_IMAGE_2_H26X` 与 demo 使用的链路 |
-| L8 | `screencapture/.../Screenshot2H26xStrategy.kt` | F9 第 3 点未达标：1232 → 1032 行，仍超 `coding-style.md` 的 800 行上限（detekt 不卡此项）。F2 的 API 21–22 `FutureTask` 分支同轮又加回约 30 行 |
+| L8 | `screencapture/.../Screenshot2H26xStrategy.kt` | F9 第 3 点未达标：1232 → 1038 行（2026-10-23 实测；行数随后续提交浮动），仍超 `coding-style.md` 的 800 行上限（detekt 不卡此项）。F2 的 API 21–22 `FutureTask` 分支同轮又加回约 30 行 |
 | L9 | `LeoTextureView.kt:207-212`、`CameraAvcEncoder.kt:239-244`、`Screenshot2H26xStrategy.kt:636-641` | 三处同构：`task.cancel(true)` 会中断正在执行原生 codec 创建的 callback 线程，中断位残留在这条继续 loop 的线程上；`catch (Throwable)` 转抛 `InterruptedException` 时未 `Thread.currentThread().interrupt()` 恢复状态。不致错，属健壮性瑕疵 |
 | L10 | `lib-mvvm/.../ScreenCountdownManager.kt:152-162` | F3 在 duration 非整秒时最后一跳语义变了：`duration = 2500` 新序列为 `2500, 1500, 500, 0`（旧为 `…, 1000, 0`），总时长不变。文档「相邻差恒为 −1000」只在整秒 duration 下成立，建议在 KDoc 写明 |
 | L11 | `CHANGELOG.md` 约 `:82`、`:280`、`:283` | 新增块与既有条目之间各插入一个空行，把「变更」「修复」两节的紧凑列表切成松散列表，渲染间距不一致。四路核查独立报出同样位置。修复：删除这三处空行 |
@@ -1619,7 +1629,7 @@ scheduler」这一假设实现上（`startMonitor` 持生命周期锁时调 `sch
 后者需要 AppCompat 主题，已在测试 Activity 的 `onCreateBeginning()`（基类在 `super.onCreate()` 之前
 调用）里 `setTheme(Theme_AppCompat)` 解决。
 
-**这 5 条用例未执行过**。静态核对已完成：行宽 ≤100 字符、大括号与圆括号配平、无失效 import、无 `!!`、
+**这 5 条用例在第九轮未执行过**（2026-10-22/23 已由 Codex 两次本机执行并通过，见 §17.2、§19.2）。静态核对已完成：行宽 ≤100 字符、大括号与圆括号配平、无失效 import、无 `!!`、
 被测 API 签名逐一比对源码、`capture` 为 `every{}` 接收者成员故无需 import、同文件多顶层类有三处既有
 先例（ktlint filename 规则不适用）、该目录在 `src/test/java` 下不属 detekt 扫描范围、AGP 的
 `checkTestSources` 未开启故 lint 不分析测试源。运行期风险集中在 Robolectric 对未在 manifest 声明的
@@ -1791,3 +1801,92 @@ Demo 主源码 ktlint 另行重跑后仍只报告
 `function-expression-body` 违规；该文件由 `1b4f225627` 引入，本次 Claude 提交
 `6efc3dd47..eefaae161` 未触及，因此不混入本轮修复。测试编译还保留
 `SuspendTeardownGateTest` 的既有 `ExperimentalCoroutinesApi` opt-in 警告。本轮未执行真机验证。
+
+## 20. 第十二轮：拉取 `27271dd48`/`0fcbab4b6` 后的复核与修复（Claude，2026-10-23）
+
+### 20.1 复核结论
+
+两个提交的方向都正确。`27271dd48` 把 DNS 空结果分支**整体投递到主线程**、在同一主线程任务内做
+generation 与存活检查后才 `toast()`，比「只把检查移到 `toast()` 之前」彻底：§19.1 记录的二次复核
+发现后台线程调 `toast()` 还会再投递一次，检查与 UI 副作用之间仍有窗口。
+
+`0fcbab4b6` 的主体是一个**真实资源泄漏修复**：`MediaCodec.createInputSurface()` 返回的 Surface 由
+调用方负责释放，旧代码只把它放在 `onInit()` 的局部 `val surface` 里、用完即弃，每次初始化与每次
+`changeOrientation()` 都泄漏一个。另外 `onStop()` 改用 `getAndSet(false)` 关掉了两个调用方同时通过
+守卫的竞态；`onRelease()` 的聚合修掉了「编码器释放抛出就跳过 VirtualDisplay 释放」的泄漏；
+`unregisterProjectionCallback()` 把标志改为成功后才置位；`registerCallbackAboveAndroid14()` 返回
+Boolean 使回滚只注销本次注册的那一个。`FloatViewCreator.tryShow()` 与 `NetworkUtil` 两处 KDoc 过强
+断言的修正均已对照源码确认（`FloatViewManager.kt:61-67` 确实按 `hasFailedRemoval` 二分）。
+
+**一处我先怀疑后推翻的判断**：`Screenshot2H26xStrategy.onInit()` 把无条件的 `requestRelease()` 改成
+`if (Thread.currentThread().isInterrupted)` 守卫，初看是死代码 —— `FutureTask.awaitDone` 用的是
+`Thread.interrupted()`，抛 `InterruptedException` 时标志已被清除。追调用链后不成立：
+`onInit` → `allocateResourcesOnce` → `allocateOnEglThread` → `runOnEglThread` → `awaitEglTask`，而
+`awaitEglTask` 新增的 `catch (e: InterruptedException) { interrupt(); throw e }` 在最底层
+恢复了标志。
+该守卫因此精确区分两种情形：**调用方**被中断（EGL 线程仍会继续，必须 `requestRelease()`）vs.
+**EGL 线程**自身抛出 `InterruptedException`（经 `endInit(failed=true)` → `completeInlineRelease` 已
+自行拆除，不应再请求）。后者经 `ExecutionException` 解包后到达调用方，而调用方从未被中断。
+
+### 20.2 本轮发现并修复的问题
+
+| # | 问题 | 处理 |
+|---|------|------|
+| 1 | `onRelease()`/`onStop()` 新的抛出语义落进无保护的 Handler runnable：新开始外传的是此前被 `log.e` 吞掉的 `unregisterCallback` 失败，而 `MediaProjectionService.kt` 在 `serviceHandler.post { }`（`HandlerThread("service-thread")`）里裸调这两个方法，未捕获异常会杀进程 | 两个调用点加 try/catch 记日志；抛出契约写入 `ScreenProcessor.onStop()`/`onRelease()` 的 KDoc |
+| 2 | `0fcbab4b6` 的 10 个文件里既无 `CHANGELOG.md` 也无本文档记录，而它含用户可见的泄漏修复与行为变更 | 补 CHANGELOG 四条、本节 |
+| 3 | 三处 `worker interruption does not interrupt the caller` 是**空通过**：存根在 worker 线程抛出，调用方收到的是 `ExecutionException`，新增的 `catch (InterruptedException)` 不会被选中，旧码的 `catch (Throwable)` 的 `throw (error.cause ?: error)` 已满足两个断言 | 改名为 `a worker-side InterruptedException is unwrapped without touching the caller flag`，并在注释中写明它是**边界守卫**而非红转绿回归测试，作用是防止该分支被放宽到 worker 侧失败 |
+| 4 | 三处 `interrupted codec setup preserves the caller interrupt status` 的 `finally` 里有第二次 `caller.interrupt()`，而存活断言在 `finally` 之外：首次 `join(2_000)` 超时就会为无关原因置上标志，使「丢失中断恢复」假绿 | 删除第二次 `interrupt()`，存活断言移入 `try` |
+| 5 | `BaseActivity` 的 `stale`-only 分支零覆盖：既有用例用 `destroy()` 同时置上两个标志，删掉 `stale` 半边仍全绿 | 新增 `a failed lookup queued before an explicit stop does not show a late toast`：Activity 保持存活，只靠世代计数拒绝 |
+| 6 | `collectCleanupFailure` 的 `addSuppressed` 聚合与自抑制身份守卫零覆盖（每个用例只注入一个失败） | 新增 `release aggregates a second cleanup failure as suppressed`，同时让 `codec.stop()` 与 `virtualDisplay.release()` 抛出，断言 `assertSame(stopFailure, failure)` 与 `suppressed.single()` |
+| 7 | `changeOrientation()` 的输入 Surface 释放零覆盖，而这正是泄漏按旋转复发的那一半 | 新增 `changeOrientation releases the input surface of the previous session` |
+| 8 | `ScreenRecordMediaCodecStrategyTest` 无 `@After` 释放策略。真正需要兜底的是新增的 `changeOrientation` 用例：它结束时策略仍持有完整资源（encoder、input surface、VirtualDisplay、两个 HandlerThread），用例内没有任何释放点。失败初始化与中断用例其实已由 `rollbackFailedInit()` → `releaseCodecCallbackThread()` 自行回滚并把 `codecCallbackThread` 置空，对它们该钩子是幂等空操作 | `createStrategy()` 登记到 `CopyOnWriteArrayList`，`tearDown()` 在 `unmockkAll()` **之前**逐个 `runCatching { onRelease() }` |
+| 9 | 两处迟到 Toast 用例依赖「Robolectric 生命周期切换不排空主 Looper」这一未断言前提，且负向断言在「runnable 被整体丢弃」时也会通过 | 在 `controller.pause()` 前加 `assertFalse(shadowOf(Looper.getMainLooper()).isIdle)`，并给正向用例补「反向对照」KDoc |
+
+### 20.3 未采纳与未处理
+
+- **已驳回**：有一条审查意见担心 `NetworkMonitorActivityTest` 作为 demo 模块唯一的 Robolectric
+  测试跑不起来（`CustomApplication` 里的 FreeReflection `Reflection.unseal`、Koin、EventBus 引导）。
+  §19.2 记录 Codex 本机已实跑该用例并通过，前提被现有证据推翻，不改。
+- **记录不改**：detekt 的 `source.from` 只含 `src/main/kotlin` + `src/test/kotlin`，而 `androidbase`
+  的 18 个测试文件全在 `src/test/java` 下，因此 `BaseActivityTrafficMonitorTest` 与
+  `LeoTextureViewCodecThreadTest` 在 `maxIssues: 0` 的策略下零静态分析。修法是把 `"src/test/java"`
+  加进 `source.from`，但它与 §18 的 `classpath` 同属构建门禁改动、会一次性涌出存量违规，**应与
+  §18 合并到同一个独立分支处理**，不混进本分支。
+- **未覆盖**：`onStop()` 的 `getAndSet(false)` 原子性 —— 其价值在于抵御并发二次 `onStop()`，单线程
+  用例下与 `get()`+`set(false)` 不可区分，没有确定性的单测写法。
+- **仍开放**：`Screenshot2H26xStrategy.kt:637-642` 新增的 codec 建码 `InterruptedException` 分支在
+  该文件全部用例中不可达（worker 侧失败一律以 `ExecutionException` 到达）。
+
+### 20.4 收敛轮的二次修正
+
+第一轮修复后的复核判为「NOT CONVERGED，但全部是文档问题」—— 7 个改动文件在编译层面干净（复核方用
+真实 `kotlinc 2.3.10` 探针验了 `CopyOnWriteArrayList` 的 `+=`、`Throwable?.suppressed?.single()` 与
+`@After` 块体三处，并用 javap 确认 `ShadowLooper.isIdle()` 在 Robolectric 4.16.1 上存在）。据其结论
+又修了六处，其中前两处是我自己写错的事实：
+
+- G13 行号锚注：`BaseActivity.kt:264` 的使用方回调 `runOnUiThread` 应对应现 **`:356`**，我写成了
+  `:338`（那里是 `log.i(tag, "socketIp=...")`）。
+- 同一锚注里「三个 `@Volatile` 字段→现为四个」是把两个不同集合混为一谈：`isCurrentMonitor()` 读的
+  仍是**三个**（`monitorStopped`/`monitorGeneration`/`monitorScheduler`，现 `:69/:72/:66`），文件内
+  共四个只是因为另有 `globalWifiSignal`（`:51`）；原枚举还把 `:65` 与 `monitorScheduler` 重复计了
+  一次。该锚注同时去掉了对 `e57608f70` 的归属 —— 复核方指出该提交上四个 `@Volatile` 位于
+  `:44/:47/:50/:53`，与旧行号对不上，来源已无法确定。
+- `tearDown()` 钩子的理由写反了：失败初始化与中断用例其实已由 `rollbackFailedInit()` →
+  `releaseCodecCallbackThread()` 自行把 `codecCallbackThread` 置空，对它们该钩子是幂等空操作；真正
+  需要它兜底的是新增的 `changeOrientation` 用例。注释与 §20.2 第 8 项均已改写。
+- `changeOrientation` 用例注释里「重建后的会话拥有一个新的 Surface，所以计数恰为一」在本用例中不成
+  立 —— 存根让 `createInputSurface()` 回传同一个 mock；计数为一的真正原因是重建后的会话未被释放，
+  而计数为二即意味着重复释放。
+- CHANGELOG 的破坏性部分按约定从「修复」拆到**「变更」**，以加粗标题独立成条。
+- demo `MediaProjectionService.startScreenShare()` 的 `onInit()`/`onStart()` 仍未加固，而
+  `build().apply { onInit(); onStart() }` 这个形状会让「天真的 try/catch」变成资源孤儿：Kotlin 只在
+  整个右值正常求值后才赋值，`apply` 也只在正常完成时返回接收者，于是 `onStart()` 抛出时那个已完整
+  初始化的 processor 永远不会被存进 `screenProcessor`，`onReleaseScreenShare()` 再也拿不到它。改为
+  先赋值、再在 try 中驱动生命周期，失败时 `onRelease()` 并清空字段后**仍然重抛**（该路径在主线程、
+  由会上报的调用方发起，不是 Handler runnable，所以不应吞掉）。
+
+### 20.5 验证
+
+本轮全部结论为源码/字节码静态分析。机械检查：改动的 7 个 Kotlin 文件 0 行超 100 字符、0 尾随空格、
+括号配平、无失效 import。**编译、detekt、ktlint、单测、真机均未由 Claude 执行**（Claude 运行在远端，
+无法执行 Gradle）。新增 3 条用例与 3 处用例改名未经运行，须由能执行 Gradle 的一方验证。

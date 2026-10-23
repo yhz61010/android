@@ -64,6 +64,13 @@ class NetworkMonitorActivityTest {
         lookup.join(3_000)
         assertFalse(lookup.isAlive)
 
+        // The interleaving this case is about only exists while the posted runnable is still
+        // queued. Assert that rather than trust it: if a Robolectric upgrade ever idles the main
+        // looper during a lifecycle transition, the toast would fire before onDestroy and this
+        // case would report a harness change as a production regression. It proves only that
+        // something is queued, and against the code that toasted inline from the lookup thread
+        // this is what goes red first -- "looper was idle" then means "the toast already fired".
+        assertFalse(shadowOf(Looper.getMainLooper()).isIdle)
         controller.pause().stop().destroy()
         shadowOf(Looper.getMainLooper()).idle()
 
@@ -80,6 +87,10 @@ class NetworkMonitorActivityTest {
         }
     }
 
+    /**
+     * The reverse control for the case above: without it a `mockkStatic` that failed to intercept
+     * would make that `verify(exactly = 0)` vacuously green.
+     */
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `a failed lookup while the Activity is alive shows a toast`() {

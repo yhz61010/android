@@ -126,19 +126,28 @@ class LeoTextureViewApi22CodecThreadTest : LeoTextureViewCodecThreadTestBase() {
             assertTrue(creationStarted.await(2, TimeUnit.SECONDS))
             caller.interrupt()
             caller.join(2_000)
+            // Asserted inside the try on purpose. The finally only needs to unwedge the worker;
+            // interrupting the caller a second time there would set the very flag this case
+            // asserts, for a reason unrelated to the production code, and a lost interrupt
+            // restoration would then report green.
+            assertFalse(caller.isAlive)
         } finally {
             allowCreation.countDown()
-            caller.interrupt()
             caller.join(2_000)
         }
 
-        assertTrue(!caller.isAlive)
         assertTrue(failure.get() is InterruptedException)
         assertTrue(interrupted.get())
     }
 
     @Test
-    fun `worker interruption does not interrupt the caller`() {
+    fun `a worker-side InterruptedException is unwrapped without touching the caller flag`() {
+        // Boundary guard, not a red-before-green regression test: the stub throws on the decoder
+        // callback thread, so the caller sees ExecutionException and takes the pre-existing
+        // catch (Throwable) branch, which already unwrapped the cause. It therefore passes
+        // against the code before the InterruptedException branch existed. Its job is to keep
+        // that branch from being widened to worker-side failures, which would set the caller's
+        // interrupt flag for an interrupt that never targeted the caller.
         ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
         every { MediaCodec.createDecoderByType(any()) } throws
             InterruptedException("worker interrupted")

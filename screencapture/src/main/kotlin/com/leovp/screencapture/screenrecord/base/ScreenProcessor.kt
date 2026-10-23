@@ -51,6 +51,12 @@ interface ScreenProcessor {
      * By default `onStart()` may follow, and only `onRelease()` is final. **A one-shot
      * implementation may treat `onStop()` as equivalent to `onRelease()`**; check the concrete
      * strategy before relying on a restart.
+     *
+     * May throw: an implementation is allowed to attempt every teardown step and then report the
+     * first failure, with the remaining ones attached as suppressed. Whatever could be released
+     * has been released by then, so a caller that cannot usefully handle the failure should log
+     * it rather than let it escape -- notably when calling this from a `Handler` runnable or any
+     * other context where an uncaught throwable takes the process down.
      */
     fun onStop()
 
@@ -58,6 +64,11 @@ interface ScreenProcessor {
      * Releases every owned resource. A released processor is never restarted. Whether a fresh
      * `onInit()` can revive this instance is up to the implementation; a one-shot strategy
      * requires a new instance instead.
+     *
+     * May throw, under the same contract as [onStop]: every step is attempted, the first failure
+     * is reported with the rest suppressed, and a repeated call is a no-op rather than a double
+     * free. Read a throw as "released as far as possible, and here is what went wrong", not as
+     * "nothing was released".
      */
     fun onRelease()
 

@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Size
+import android.view.Surface
 import com.leovp.bytes.toHexString
 import com.leovp.image.createBitmap
 import com.leovp.log.LogContext
@@ -34,6 +35,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     ScreenProcessor {
 
     private var virtualDisplay: VirtualDisplay? = null
+    private var inputSurface: Surface? = null
 
     var h26xEncoder: MediaCodec? = null
         private set
@@ -244,6 +246,7 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         val callbackThread = HandlerThread("scr-rec-codec").apply { start() }
         codecCallbackThread = callbackThread
         val callbackHandler = Handler(callbackThread.looper)
+        var callbackRegisteredDuringInit = false
         try {
             val encoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 createCodec().also {
@@ -271,6 +274,12 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
                     task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
                         check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
                     }
+                } catch (error: InterruptedException) {
+                    abandoned.set(true)
+                    task.cancel(true)
+                    created.getAndSet(null)?.release()
+                    Thread.currentThread().interrupt()
+                    throw error
                 } catch (error: Throwable) {
                     abandoned.set(true)
                     task.cancel(true)
@@ -281,61 +290,56 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
             h26xEncoder = encoder
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             outputFormat = encoder.outputFormat
-            val surface = encoder.createInputSurface()
-            registerCallbackAboveAndroid14()
+            inputSurface = encoder.createInputSurface()
+            callbackRegisteredDuringInit = registerCallbackAboveAndroid14()
             virtualDisplay = builder.mediaProjection!!.createVirtualDisplay(
                 "screen-record",
                 builder.width,
                 builder.height,
                 builder.dpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
-                surface,
+                inputSurface,
                 null,
                 null
             )
             initHandler()
         } catch (error: Throwable) {
-            runCatching { h26xEncoder?.release() }
-            h26xEncoder = null
-            releaseCodecCallbackThread()
+            rollbackFailedInit(error, callbackRegisteredDuringInit)
             throw error
         }
     }
 
     override fun onRelease() {
         LogContext.log.i(TAG, "onRelease()")
-        synchronized(projectionCallbackLock) {
-            if (projectionCallbackRegistered) {
-                projectionCallbackRegistered = false
-                try {
-                    builder.mediaProjection?.unregisterCallback(projectionCallback)
-                } catch (error: Exception) {
-                    LogContext.log.e(TAG, "Unable to unregister projection callback.", error)
-                }
-            }
-        }
         // No videoEncoderLoop guard here. Callers stop before releasing, which clears that flag,
-        // so guarding on it skipped the two releases below entirely and leaked the encoder and
-        // the virtual display for the life of the process. onStop() keeps its own guard, and
-        // nulling the two fields makes a repeated release a no-op instead of a double free.
-        onStop()
-        releaseHandler()
-        h26xEncoder?.release()
-        h26xEncoder = null
-        releaseCodecCallbackThread()
-        virtualDisplay?.release()
+        // so guarding on it skipped the releases below and leaked the encoder, input surface, and
+        // virtual display for the life of the process. onStop() keeps its own guard, and clearing
+        // the resource fields makes a repeated release a no-op instead of a double free.
+        var failure = collectCleanupFailure(null) { unregisterProjectionCallback() }
+        failure = collectCleanupFailure(failure) { onStop() }
+        failure = collectCleanupFailure(failure) { releaseHandler() }
+        val display = virtualDisplay
         virtualDisplay = null
+        failure = collectCleanupFailure(failure) { display?.release() }
+        val surface = inputSurface
+        inputSurface = null
+        failure = collectCleanupFailure(failure) { surface?.release() }
+        val encoder = h26xEncoder
+        h26xEncoder = null
+        failure = collectCleanupFailure(failure) { encoder?.release() }
+        failure = collectCleanupFailure(failure) { releaseCodecCallbackThread() }
+        failure?.let { throw it }
     }
 
     override fun onStop() {
-        if (!videoEncoderLoop.get()) {
+        if (!videoEncoderLoop.getAndSet(false)) {
             return
         }
         LogContext.log.i(TAG, "onStop()")
-        videoEncoderLoop.set(false)
-        releaseHandler()
-        h26xEncoder?.stop()
-        builder.mediaProjection?.stop()
+        var failure = collectCleanupFailure(null) { releaseHandler() }
+        failure = collectCleanupFailure(failure) { h26xEncoder?.stop() }
+        failure = collectCleanupFailure(failure) { builder.mediaProjection?.stop() }
+        failure?.let { throw it }
     }
 
     override fun onStart() {
@@ -358,6 +362,8 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
     override fun changeOrientation() {
         runCatching { virtualDisplay?.release() }.onFailure { it.printStackTrace() }
         virtualDisplay = null
+        runCatching { inputSurface?.release() }.onFailure { it.printStackTrace() }
+        inputSurface = null
         runCatching { h26xEncoder?.release() }.onFailure { it.printStackTrace() }
         h26xEncoder = null
         releaseCodecCallbackThread()
@@ -386,6 +392,57 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         videoDataSendHandler = null
         videoDataSendThread?.quitSafely()
         videoDataSendThread = null
+    }
+
+    private fun rollbackFailedInit(
+        originalError: Throwable,
+        callbackRegisteredDuringInit: Boolean,
+    ) {
+        cleanupAfterInitFailure(originalError) { releaseHandler() }
+        val display = virtualDisplay
+        virtualDisplay = null
+        cleanupAfterInitFailure(originalError) { display?.release() }
+        if (callbackRegisteredDuringInit) {
+            cleanupAfterInitFailure(originalError) { unregisterProjectionCallback() }
+        }
+        val surface = inputSurface
+        inputSurface = null
+        cleanupAfterInitFailure(originalError) { surface?.release() }
+        val encoder = h26xEncoder
+        h26xEncoder = null
+        cleanupAfterInitFailure(originalError) { encoder?.release() }
+        cleanupAfterInitFailure(originalError) { releaseCodecCallbackThread() }
+    }
+
+    private inline fun cleanupAfterInitFailure(originalError: Throwable, cleanup: () -> Unit) {
+        try {
+            cleanup()
+        } catch (cleanupError: Throwable) {
+            if (cleanupError !== originalError) originalError.addSuppressed(cleanupError)
+        }
+    }
+
+    private inline fun collectCleanupFailure(
+        previousFailure: Throwable?,
+        cleanup: () -> Unit,
+    ): Throwable? = try {
+        cleanup()
+        previousFailure
+    } catch (cleanupError: Throwable) {
+        if (previousFailure == null) {
+            cleanupError
+        } else {
+            if (cleanupError !== previousFailure) previousFailure.addSuppressed(cleanupError)
+            previousFailure
+        }
+    }
+
+    private fun unregisterProjectionCallback() {
+        synchronized(projectionCallbackLock) {
+            if (!projectionCallbackRegistered) return
+            builder.mediaProjection?.unregisterCallback(projectionCallback)
+            projectionCallbackRegistered = false
+        }
     }
 
     private fun releaseCodecCallbackThread() {
@@ -502,13 +559,13 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }, null)
     }
 
-    private fun registerCallbackAboveAndroid14() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            synchronized(projectionCallbackLock) {
-                if (projectionCallbackRegistered) return
-                builder.mediaProjection!!.registerCallback(projectionCallback, null)
-                projectionCallbackRegistered = true
-            }
+    private fun registerCallbackAboveAndroid14(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
+        synchronized(projectionCallbackLock) {
+            if (projectionCallbackRegistered) return false
+            builder.mediaProjection!!.registerCallback(projectionCallback, null)
+            projectionCallbackRegistered = true
+            return true
         }
     }
 

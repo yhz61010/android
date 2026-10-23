@@ -256,4 +256,16 @@ class Screenshot2H26xStrategyApi22CallbackThreadTest {
         assertTrue(createThread.contains("scr-rec-codec"))
         verify(exactly = 1) { codec.setCallback(any()) }
     }
+
+    @Test
+    fun `codec worker interruption does not interrupt the caller`() {
+        every { MediaCodec.createEncoderByType(any()) } throws
+            InterruptedException("worker interrupted")
+
+        val failure = runCatching { subject.onInit() }.exceptionOrNull()
+        val callerInterrupted = Thread.interrupted()
+
+        assertIs<InterruptedException>(failure)
+        assertFalse(callerInterrupted)
+    }
 }

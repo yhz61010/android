@@ -97,8 +97,9 @@ class FloatViewCreator internal constructor(floatingView: FloatView) {
     /**
      * Creates and shows the float view while reporting whether it was attached successfully.
      * Unlike [show], this method converts creation and attachment failures into
-     * [FloatViewShowResult]. A duplicate tag returns [FloatViewShowResult.FAILED_AND_DETACHED]
-     * for the new view and leaves the existing view unchanged.
+     * [FloatViewShowResult]. A duplicate tag leaves the existing view unchanged and returns
+     * [FloatViewShowResult.FAILED_BUT_ATTACHED_HIDDEN] when that view previously failed removal;
+     * otherwise it returns [FloatViewShowResult.FAILED_AND_DETACHED] for the new view.
      */
     fun tryShow(): FloatViewShowResult = try {
         if (build()) {

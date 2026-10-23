@@ -378,11 +378,12 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
                     error("Screenshot recorder was already released and cannot be initialized")
             }
         } catch (error: InterruptedException) {
-            // The Future may still be queued or already building native resources. Leave that
-            // work on its owner thread: beginInit() rejects a queued request, while endInit()
-            // takes over teardown for an in-flight one. Interrupting the owner is unsafe.
-            requestRelease()
-            Thread.currentThread().interrupt()
+            if (Thread.currentThread().isInterrupted) {
+                // The Future may still be queued or already building native resources. Leave that
+                // work on its owner thread: beginInit() rejects a queued request, while endInit()
+                // takes over teardown for an in-flight one. Interrupting the owner is unsafe.
+                requestRelease()
+            }
             throw error
         }
     }
@@ -443,6 +444,9 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
     /** Waits for [task], unbounded when [timeoutMs] is null, unwrapping the action's failure. */
     private fun <T> awaitEglTask(task: FutureTask<T>, timeoutMs: Long?): T = try {
         if (timeoutMs == null) task.get() else task.get(timeoutMs, TimeUnit.MILLISECONDS)
+    } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+        throw e
     } catch (e: ExecutionException) {
         throw e.cause ?: e
     }
@@ -630,6 +634,12 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
                     check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
                     h26xEncoder = it
                 }
+            } catch (error: InterruptedException) {
+                abandoned.set(true)
+                task.cancel(true)
+                created.getAndSet(null)?.release()
+                Thread.currentThread().interrupt()
+                throw error
             } catch (error: Throwable) {
                 abandoned.set(true)
                 task.cancel(true)

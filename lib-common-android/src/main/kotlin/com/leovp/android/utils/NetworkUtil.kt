@@ -279,8 +279,9 @@ object NetworkUtil {
      * [unregisterWifiNetworkStatsAboveAndroidS] using the same [callback] instance.
      *
      * @return `true` when registration succeeds or is unnecessary below Android 12; `false` when
-     * replacing or registering the framework callback fails. Failed callbacks are detached and
-     * cannot deliver further business events.
+     * replacing or registering the framework callback fails. Failed callbacks are detached, so
+     * new platform events cannot reach the business listener; an invocation that already read the
+     * listener may still finish concurrently.
      */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getWifiNetworkStatsAboveAndroidS(ctx: Context, callback: (WifiSignal) -> Unit): Boolean {
@@ -321,7 +322,8 @@ object NetworkUtil {
      * instance used for registration must be supplied.
      * @return `true` when the callback is absent, successfully removed, or unnecessary below
      * Android 12; `false` when framework unregistration fails. The business listener is detached
-     * before framework teardown, so late platform events are ignored either way.
+     * before framework teardown, so events that begin afterwards are ignored. One invocation that
+     * already read the listener may still finish concurrently.
      */
     fun unregisterWifiNetworkStatsAboveAndroidS(
         ctx: Context,

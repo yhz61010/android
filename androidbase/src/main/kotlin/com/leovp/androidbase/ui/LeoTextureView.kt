@@ -205,6 +205,12 @@ class LeoTextureView @JvmOverloads constructor(
                     decoder = task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
                         check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
                     }
+                } catch (error: InterruptedException) {
+                    abandoned.set(true)
+                    task.cancel(true)
+                    created.getAndSet(null)?.release()
+                    Thread.currentThread().interrupt()
+                    throw error
                 } catch (error: Throwable) {
                     abandoned.set(true)
                     task.cancel(true)

@@ -11,8 +11,13 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -99,5 +104,52 @@ class CameraAvcEncoderApi22CallbackThreadTest : CameraAvcEncoderCallbackThreadTe
         } finally {
             encoder.release()
         }
+    }
+
+    @Test
+    fun `interrupted codec setup preserves the caller interrupt status`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        val creationStarted = CountDownLatch(1)
+        val allowCreation = CountDownLatch(1)
+        every { MediaCodec.createEncoderByType(any()) } answers {
+            creationStarted.countDown()
+            allowCreation.await()
+            codec
+        }
+        val failure = AtomicReference<Throwable?>()
+        val interrupted = AtomicBoolean(false)
+        val caller = Thread {
+            failure.set(runCatching { createEncoder() }.exceptionOrNull())
+            interrupted.set(Thread.currentThread().isInterrupted)
+            Thread.interrupted()
+        }
+
+        caller.start()
+        try {
+            assertTrue(creationStarted.await(2, TimeUnit.SECONDS))
+            caller.interrupt()
+            caller.join(2_000)
+        } finally {
+            allowCreation.countDown()
+            caller.interrupt()
+            caller.join(2_000)
+        }
+
+        assertTrue(!caller.isAlive)
+        assertTrue(failure.get() is InterruptedException)
+        assertTrue(interrupted.get())
+    }
+
+    @Test
+    fun `worker interruption does not interrupt the caller`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        every { MediaCodec.createEncoderByType(any()) } throws
+            InterruptedException("worker interrupted")
+
+        val failure = runCatching { createEncoder() }.exceptionOrNull()
+        val callerInterrupted = Thread.interrupted()
+
+        assertTrue(failure is InterruptedException)
+        assertFalse(callerInterrupted)
     }
 }

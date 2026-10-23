@@ -1837,7 +1837,7 @@ Boolean 使回滚只注销本次注册的那一个。`FloatViewCreator.tryShow()
 | 3 | 三处 `worker interruption does not interrupt the caller` 是**空通过**：存根在 worker 线程抛出，调用方收到的是 `ExecutionException`，新增的 `catch (InterruptedException)` 不会被选中，旧码的 `catch (Throwable)` 的 `throw (error.cause ?: error)` 已满足两个断言 | 改名为 `a worker-side InterruptedException is unwrapped without touching the caller flag`，并在注释中写明它是**边界守卫**而非红转绿回归测试，作用是防止该分支被放宽到 worker 侧失败 |
 | 4 | 三处 `interrupted codec setup preserves the caller interrupt status` 的 `finally` 里有第二次 `caller.interrupt()`，而存活断言在 `finally` 之外：首次 `join(2_000)` 超时就会为无关原因置上标志，使「丢失中断恢复」假绿 | 删除第二次 `interrupt()`，存活断言移入 `try` |
 | 5 | `BaseActivity` 的 `stale`-only 分支零覆盖：既有用例用 `destroy()` 同时置上两个标志，删掉 `stale` 半边仍全绿 | 新增 `a failed lookup queued before an explicit stop does not show a late toast`：Activity 保持存活，只靠世代计数拒绝 |
-| 6 | `collectCleanupFailure` 的 `addSuppressed` 聚合与自抑制身份守卫零覆盖（每个用例只注入一个失败） | 新增 `release aggregates a second cleanup failure as suppressed`，同时让 `codec.stop()` 与 `virtualDisplay.release()` 抛出，断言 `assertSame(stopFailure, failure)` 与 `suppressed.single()` |
+| 6 | `collectCleanupFailure` 的 `addSuppressed` 聚合零覆盖（每个用例只注入一个失败） | 新增 `release aggregates a second cleanup failure as suppressed`，同时让 `codec.stop()` 与 `virtualDisplay.release()` 抛出，断言 `assertSame(stopFailure, failure)` 与 `suppressed.single()`；该用例只覆盖多异常聚合，不覆盖自抑制身份守卫 |
 | 7 | `changeOrientation()` 的输入 Surface 释放零覆盖，而这正是泄漏按旋转复发的那一半 | 新增 `changeOrientation releases the input surface of the previous session` |
 | 8 | `ScreenRecordMediaCodecStrategyTest` 无 `@After` 释放策略。真正需要兜底的是新增的 `changeOrientation` 用例：它结束时策略仍持有完整资源（encoder、input surface、VirtualDisplay、两个 HandlerThread），用例内没有任何释放点。失败初始化与中断用例其实已由 `rollbackFailedInit()` → `releaseCodecCallbackThread()` 自行回滚并把 `codecCallbackThread` 置空，对它们该钩子是幂等空操作 | `createStrategy()` 登记到 `CopyOnWriteArrayList`，`tearDown()` 在 `unmockkAll()` **之前**逐个 `runCatching { onRelease() }` |
 | 9 | 两处迟到 Toast 用例依赖「Robolectric 生命周期切换不排空主 Looper」这一未断言前提，且负向断言在「runnable 被整体丢弃」时也会通过 | 在 `controller.pause()` 前加 `assertFalse(shadowOf(Looper.getMainLooper()).isIdle)`，并给正向用例补「反向对照」KDoc |
@@ -1890,3 +1890,47 @@ Boolean 使回滚只注销本次注册的那一个。`FloatViewCreator.tryShow()
 本轮全部结论为源码/字节码静态分析。机械检查：改动的 7 个 Kotlin 文件 0 行超 100 字符、0 尾随空格、
 括号配平、无失效 import。**编译、detekt、ktlint、单测、真机均未由 Claude 执行**（Claude 运行在远端，
 无法执行 Gradle）。新增 3 条用例与 3 处用例改名未经运行，须由能执行 Gradle 的一方验证。
+
+## 21. 第十三轮：拉取 `ef51ac0ad` 后的 Codex 复核（2026-10-23）
+
+### 21.1 复核发现与修正
+
+1. `ScreenProcessor` 的新 KDoc 与 CHANGELOG 把聚合释放语义写成了所有实现的统一契约，但
+   `ScreenRecordRawBmpStrategy` 等实现并不保证逐项聚合。现将接口 KDoc 改为「具体实现可抛出，须查阅
+   具体策略」，把「尝试全部步骤、首错外传、其余 suppressed」的确定契约下沉到
+   `ScreenRecordMediaCodecStrategy`，CHANGELOG 同步改为具体策略名。
+2. `MediaProjectionService.startScreenShare()` 在 `onInit()`/`onStart()` 失败后会调用 `onRelease()`，
+   但 `runCatching` 会静默丢弃二次释放失败。仅释放 processor 也不完整：此时编码循环标志尚未置位，
+   `ScreenRecordMediaCodecStrategy.onRelease()` 内部的 `onStop()` 会直接返回，不会停止刚取得的
+   `MediaProjection`。现保留原始启动异常，依次释放 processor、停止 projection，并把两项清理失败
+   附加为 suppressed；若清理重抛同一个启动异常则跳过自抑制。清空 `screenProcessor` 时增加身份检查，
+   避免错误清掉随后发布的新实例。两条单测覆盖多清理步骤继续执行、异常聚合与同实例异常。
+3. §20.2 第 6 项对测试覆盖范围的描述不准确。新增用例确实覆盖两个不同清理异常的聚合，但删除
+   `collectCleanupFailure` 的身份守卫后用例仍通过，因此不能声称覆盖了自抑制守卫；现已删除该断言和
+   误导性注释，保留准确的聚合测试。
+
+### 21.2 验证
+
+拉取后、修正前已执行受影响模块单测：
+`androidbase:testDebugUnitTest`、`camera2live:testDebugUnitTest`、
+`demo:testDevDebugUnitTest`、`screencapture:testDebugUnitTest`，使用 `--rerun-tasks --max-workers=2
+--no-parallel`，550 个任务全部通过。
+
+修正后完成以下验证：
+
+- 新增的 `MediaProjectionServiceTest` 在第一版处理函数实现前按预期编译失败；补充 projection 清理的
+  复核中，测试再次因处理函数无法接收 `MediaProjection` 而按预期编译失败。两次实现后的定向测试均
+  通过，最近一次为 511 个任务实际执行。
+- 删除 `collectCleanupFailure` 身份守卫的临时变异没有让 Claude 新增的聚合用例失败，证实它不覆盖
+  自抑制分支；恢复守卫后，该用例随 `screencapture` 全套单测通过。
+- `androidbase`、`camera2live` 的单测、`ktlintCheck`、`detekt` 在第一轮最终矩阵中完成并通过。
+- `demo:testDevDebugUnitTest`、`demo:detekt`、Demo 测试源 ktlint，以及 `screencapture` 的单测、
+  `ktlintCheck`、`detekt` 使用 `--rerun-tasks --max-workers=2 --no-parallel` 通过，535 个任务实际执行。
+- `demo:assembleDevDebug --rerun-tasks --max-workers=2 --no-parallel` 通过，600 个任务实际执行。
+- 补充 projection 失败清理后，使用 `--rerun-tasks --max-workers=1` 将上述 screencapture 与 Demo 验证
+  合并重跑，635 个任务全部通过；定向 `MediaProjectionServiceTest` 另以 511 个任务实际执行通过。
+- `demo:ktlintCheck` 仍被既有的 `AudioReceiver.kt:165 function-expression-body` 违规阻断；该文件不在
+  `ef51ac0ad` 或本轮修正范围内，§20.1 已记录；最终再次强制重跑仍只有这一条违规，未混入本轮修改。
+
+本轮未执行真机验证；MediaProjection、MediaCodec、Surface 与 HandlerThread 的真实设备生命周期仍需
+按仓库验证矩阵覆盖 API 21～26 和较新设备。

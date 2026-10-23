@@ -57,12 +57,14 @@
 
 ### 变更 (Changed)
 
-- **`ScreenProcessor.onStop()` / `onRelease()` 现在会抛出清理失败**：两者改为尝试每一个释放步骤，
+- **`ScreenRecordMediaCodecStrategy.onStop()` / `onRelease()` 现在会抛出清理失败**：两者改为尝试每一个释放步骤，
   然后抛出首个失败、其余以 `addSuppressed` 附加，而不再让第一个异常中断后续释放。抛出应读作「已
-  尽可能释放，并附上出错原因」，而非「什么都没释放」；重复调用是空操作而非 double free。此前被
-  `log.e` 吞掉的 `MediaProjection.Callback` 注销失败现在也会外传。从 `Handler` runnable 等「未捕获
-  异常即杀进程」的上下文调用时须自行捕获 —— demo 的 `MediaProjectionService` 已照此加固。契约已
-  写入 `ScreenProcessor` 的 KDoc。
+  尽可能释放，并附上出错原因」，而非「什么都没释放」；已移交释放的资源不会在重复调用时 double
+  free，失败的 `MediaProjection.Callback` 注销则保留为可重试。此前被 `log.e` 吞掉的注销失败现在也
+  会外传。从 `Handler` runnable 等「未捕获异常即杀进程」的上下文调用时须自行捕获 —— demo 的
+  `MediaProjectionService` 已照此加固；启动失败时还会释放 processor 并停止刚取得的
+  `MediaProjection`，两项清理失败均附加到原始启动异常。契约已写入具体策略及 `ScreenProcessor`
+  的 KDoc。
 - **`CameraAvcEncoder.queue` 不再公开**：内部队列深度不再属于公开契约；调用方不能再直接
   检查或修改队列，应通过丢帧 warning 观察编码过载。
 - **`FloatViewCreator.build()` 返回创建结果**：返回类型由 `Unit` 改为 `Boolean`；宿主 Activity
@@ -300,7 +302,7 @@
   负责释放，此前它只是 `onInit()` 里的局部变量、用完即弃，于是每次初始化和每次
   `changeOrientation()` 都泄漏一个 Surface。现提为字段，在 `onRelease()`、`changeOrientation()`
   与初始化失败回滚中释放。
-- **`ScreenProcessor` 释放路径不再半途而废**：`onStop()`/`onRelease()` 此前任一步抛出就会跳过其后
+- **`ScreenRecordMediaCodecStrategy` 释放路径不再半途而废**：`onStop()`/`onRelease()` 此前任一步抛出就会跳过其后
   的释放（例如编码器释放失败会连带漏掉 VirtualDisplay）。现在每一步都会尝试，首个失败在全部步骤
   结束后抛出、其余以 `addSuppressed` 附加；`onStop()` 的循环标志改为 `getAndSet(false)`，两个调用
   方不再可能同时通过守卫；注销 `MediaProjection.Callback` 的标志改为成功后才置位，失败可重试。

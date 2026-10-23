@@ -309,6 +309,11 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         }
     }
 
+    /**
+     * Attempts every cleanup step, then throws the first failure with later failures suppressed.
+     * Owned resources are detached before release to prevent double frees; a failed projection
+     * callback unregister remains eligible for retry because its registration flag is retained.
+     */
     override fun onRelease() {
         LogContext.log.i(TAG, "onRelease()")
         // No videoEncoderLoop guard here. Callers stop before releasing, which clears that flag,
@@ -331,6 +336,9 @@ class ScreenRecordMediaCodecStrategy private constructor(private val builder: Bu
         failure?.let { throw it }
     }
 
+    /**
+     * Attempts every stop step, then throws the first failure with later failures suppressed.
+     */
     override fun onStop() {
         if (!videoEncoderLoop.getAndSet(false)) {
             return

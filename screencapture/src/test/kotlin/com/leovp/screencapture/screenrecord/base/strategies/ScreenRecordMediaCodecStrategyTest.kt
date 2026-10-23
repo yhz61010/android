@@ -238,9 +238,7 @@ class ScreenRecordMediaCodecStrategyTest {
         val failure = runCatching { strategy.onRelease() }.exceptionOrNull()
 
         // onStop() rethrows its own first failure into onRelease()'s collector, so the earlier
-        // failure wins and the later one is attached instead of lost. This is also the only case
-        // that exercises the identity guard in collectCleanupFailure: without it, re-collecting
-        // the same instance would raise "Self-suppression not permitted".
+        // failure wins and the later one is attached instead of lost.
         assertSame(stopFailure, failure)
         assertSame(displayFailure, failure?.suppressed?.single())
         verify(exactly = 1) { surface.release() }

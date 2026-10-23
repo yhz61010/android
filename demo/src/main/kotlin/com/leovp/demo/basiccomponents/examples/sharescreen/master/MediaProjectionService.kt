@@ -264,19 +264,21 @@ class MediaProjectionService : Service() {
         // Publish before driving the lifecycle. With `build().apply { onInit(); onStart() }` the
         // assignment only happened on normal completion, so an onStart() failure left a fully
         // initialized processor that onReleaseScreenShare() could no longer reach. onStart() has
-        // no rollback of its own, hence the explicit release here. The failure is still rethrown
-        // because that is what this path already did -- closing the orphan is the whole change,
-        // and swallowing here would hide a screen share that silently never started. Contrast
-        // the two serviceHandler.post sites, which must swallow: an escaping throwable there
-        // kills service-thread's Looper during teardown, after the work is already done.
+        // no rollback of its own, hence the explicit release here. Since a failed start has not
+        // enabled the processor's running flag, that release does not stop the projection; the
+        // failure helper therefore owns both cleanup steps. The failure is still rethrown because
+        // that is what this path already did -- closing the orphan is the whole change, and
+        // swallowing here would hide a screen share that silently never started. Contrast the two
+        // serviceHandler.post sites, which must swallow: an escaping throwable there kills
+        // service-thread's Looper during teardown, after the work is already done.
         screenProcessor = processor
         try {
             processor.onInit()
             processor.onStart()
         } catch (error: Throwable) {
             LogContext.log.e(TAG, "startScreenShare() failed; releasing the processor.", error)
-            runCatching { processor.onRelease() }
-            screenProcessor = null
+            releaseProcessorAfterStartFailure(processor, mediaProjectionRef, error)
+            if (screenProcessor === processor) screenProcessor = null
             throw error
         }
     }
@@ -345,4 +347,22 @@ class MediaProjectionService : Service() {
 
 interface ScreenDataUpdateListener {
     fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long)
+}
+
+/** Cleans both owners without replacing [startFailure] when either cleanup step also fails. */
+internal fun releaseProcessorAfterStartFailure(
+    processor: ScreenProcessor,
+    mediaProjection: MediaProjection,
+    startFailure: Throwable,
+) {
+    try {
+        processor.onRelease()
+    } catch (releaseFailure: Throwable) {
+        if (releaseFailure !== startFailure) startFailure.addSuppressed(releaseFailure)
+    }
+    try {
+        mediaProjection.stop()
+    } catch (stopFailure: Throwable) {
+        if (stopFailure !== startFailure) startFailure.addSuppressed(stopFailure)
+    }
 }

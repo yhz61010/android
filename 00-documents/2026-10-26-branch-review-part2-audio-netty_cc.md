@@ -146,6 +146,20 @@ override fun flush() {
 callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补两条回归：成功路径验证
 `flush()` 严格先于 `start()`；任一调用抛出时只上报一次失败，且 flush 失败后不得再调 `start()`。
 
+**失败分支在 M-3 落地前不可观测（复核补记，2026-10-26）**：上面这段修法的成功路径解决了静音，但它
+新增的失败分支对唯一会触发它的调用方是空转的。已核实 `OpusStreamPlayer.kt:77-97` 构造 `OpusDecoder`
+时只传 **7 个位置实参，止于 `callback: IDecodeCallback`**（`OpusDecoder.kt:32`），而其后的
+`endCallback`（`:33`）与 `errorCallback`（`:34`）均带默认值 `{}`，因此两者都取默认空实现。因此 `reportCodecFailure(failure)` →
+`notifyCodecFailure`（`OpusDecoder.kt:115`）→ `errorCallback.invoke(error)` 落进空实现，只剩那行
+`log.e` 留痕。更要紧的是：若 `codec.flush()` 成功而 `codec.start()` 抛出，codec 停在「已 flush 未
+start」状态，而 `lifecycleState` 不变（即 M-3），`isRunning` 仍为 true、`decode()` 继续收帧 ——
+**退回 H-1 的症状，且只有一条日志**。
+
+因此要区分两侧：H-1 的**症状**与 M-3 无关（H-1 主路径不抛任何异常，没有失败可供 M-3 的通道丢弃）；
+但 H-1 的**修法**在失败分支上依赖 M-3 —— 没有 M-3 的终态与错误通道，这条分支既通知不到调用方，也
+不阻止会话继续空转。实施 H-1 时应二选一：要么同批落地 M-3，要么在本修法的失败分支内自行把会话推入
+终态（而不是只上报），并在 KDoc 写明该选择。
+
 ### M-1（MEDIUM）AAC 把「AudioTrack 一个字节都没收下」当成功，整段播放可无声地「自然结束」
 
 - 文件：`audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt:124-128`
@@ -1091,7 +1105,10 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    > 执行 `codec.flush()` 和 `codec.start()`，失败则退出锁后调 `reportCodecFailure()`。不能调
    > `super.flush()` 后无条件 start，因为基类会吞掉 flush 异常。建议紧随 M-9 实施。H-1 本身
    > 就会造成永久静音且没有失败回调；M-3 是独立的 codec
-   > 失败终态与错误通道缺口，不是 H-1 的触发条件。本条为复核补入的**建议**，不是作者决策。
+   > 失败终态与错误通道缺口，不是 H-1 的触发条件。**反向则有依赖**：H-1 修法新增的失败分支经
+   > `reportCodecFailure` 上报，而 `OpusStreamPlayer` 未接 `errorCallback`，故在 M-3 落地前该分支
+   > 不可观测（见 §3 H-1 的复核补记）—— 实施时需同批落地 M-3，或在该分支内自行推入终态。
+   > 本条为复核补入的**建议**，不是作者决策。
 
 2. **实施 C5 §4**：先写“超时仍进入 `UNINITIALIZED`”失败测试，再移动终态写入；只运行
    `BaseNettyLifecycleTest` 目标用例和 basenetty 质量检查。
@@ -1116,7 +1133,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 | 顺位 | 编号 | 一句话 | 依赖 / 备注 |
 |---|---|---|---|
 | 1 | **H-1** | 异步 `flush()` 后未 `start()`，OPUS 首次丢帧即永久静音（§3 唯一 HIGH） | 见 §5.3 的遗漏补记；建议紧随 M-9 |
-| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | 与 H-1 是两条独立的永久静音路径；可为了共享流播放器失败回归而同批，但不存在正确性依赖 |
+| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | **症状**与 H-1 独立（两条并行的永久静音路径）；但 H-1 **修法的失败分支**依赖本项才可观测 —— `OpusStreamPlayer` 未接 `errorCallback`，见 §3 H-1 的复核补记。宜与 H-1 同批，否则需在 H-1 修法内自行推入终态 |
 | 3 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 结构性缺口与可达路径已静态确认，真机只用于验证设备表现和修复后行为，不应将「是否修复」交给真机结果决定 |
 | 4 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦 |
 | 5 | **A2** | `MicRecorder.startRecord()` 无重入守卫 | 可独立修复同一实例上的双 job；与 M-8 同批仅是审查与真机录音回归的便利，不是正确性前提 |

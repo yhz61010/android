@@ -115,18 +115,28 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 - 后果：flush 后编解码器不再请求输入缓冲 → `onInputBufferAvailable` 不再回调 → 队列填满 64 槽后 `decode()` 持续返回 false → **本次会话 OPUS 流永久静音**，而 `isRunning` 仍为 true、没有任何失败回调。该后果由 H-1 单独引起，不以 M-3 触发 codec 异常为前提；只能整体 stop 并新建实例恢复。
 - 范围：`AacStreamPlayer.kt:220` 的 `flush()` 作用在 `AacDecoder : BaseMediaCodecSynchronous` 上，同步模式无此契约，**不受影响**。
 - 确定性：**确定**（Android 公开文档的显式契约 + 仓库内可达调用路径 + 代码中确无 `start()`）。
-- 附带（**推断，置信度 0.6**）：flush 与在飞异步回调之间无世代校验，`onOutputBufferAvailable` 的 `finally`（`BaseMediaCodecAsynchronous.kt:110-112`）可能用失效 index 调 `releaseOutputBuffer()` 而抛出，被 `:114-119` 升级成一次伪 codec 失败。
-- 修复方案（放在 `BaseMediaCodecAsynchronous`，与同步路径对称）：
+- 附带竞态（**结构可达确定，设备上是否命中未验证**）：回调可以已进入
+  `onInputBufferAvailable` / `onOutputBufferAvailable`，但尚在等 `codecOperationLock`。另一线程拿到锁并
+  执行 `flush()` 后，该回调再获锁会继续使用 flush 前取得的 index；
+  `onOutputBufferAvailable` 的 `finally`（`BaseMediaCodecAsynchronous.kt:110-112`）可能用失效 index
+  调 `releaseOutputBuffer()`，被 `:114-119` 升级成伪 codec 失败。**只把 flush/start
+  放在同一次锁持有期内不能隔离这种已进入但未获锁的回调。**
+- 修复方案（放在 `BaseMediaCodecAsynchronous`）：flush + start 与回调世代栅栏必须同时落地，
+  不能只加 `codec.start()`。
 
 ```kotlin
+/** Incremented under the codec lock before every asynchronous flush. */
+private val callbackGeneration = AtomicLong(0)
+
 /**
  * Asynchronous codecs stop requesting buffers after a flush. MediaCodec.flush() requires
- * start() to resume codec operations, so do both under one lock acquisition to keep stale
- * callbacks out of the gap.
+ * start() to resume codec operations. Increment the callback generation before invalidating
+ * buffer indexes so callbacks that entered before this flush cannot use an old index later.
  */
 override fun flush() {
     val failure = withCodecOperationLock {
         check(isRunning) { "flush() requires a running codec session" }
+        callbackGeneration.incrementAndGet()
         runCatchingPreservingCancellation {
             codec.flush()
             codec.start()
@@ -139,15 +149,54 @@ override fun flush() {
 }
 ```
 
+四个 `MediaCodec.Callback` 在函数入口、尚未等待 codec 锁时快照世代；获锁后先复核，
+不匹配就直接返回。对 buffer 回调，这个返回不能再归还 index，因为 index 已被
+`MediaCodec.flush()` 失效：
+
+```kotlin
+override fun onOutputBufferAvailable(
+    codec: MediaCodec,
+    index: Int,
+    info: MediaCodec.BufferInfo,
+) {
+    if (isReleasing) return
+    val observedGeneration = callbackGeneration.get()
+    runCatchingPreservingCancellation {
+        withCodecOperationLock {
+            if (isReleasing || observedGeneration != callbackGeneration.get()) {
+                return@withCodecOperationLock
+            }
+            // Existing callback body, including releaseOutputBuffer(index, false).
+        }
+    }.onFailure { /* existing failure reporting */ }
+}
+```
+
+同款入口快照与锁内复核必须用于 input、output、format-changed 和 error 回调，避免
+旧 format/error 回调在 flush 后污染新会话。世代只在锁内递增，回调只读取；
+`AtomicLong` 用来建立锁外快照的可见性，不取代 `codecOperationLock`。MediaCodec 尚未分发的旧
+callback 由 `flush()` 作废，世代栅栏专门处理已进入 Kotlin 回调但尚未获锁的窗口。
+
 可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`）；`codec`、`isRunning`、
 `withCodecOperationLock` 与 `reportCodecFailure` 均可供子类使用。这里不调 `super.flush()`，因为基类会
 吞掉 `codec.flush()` 的异常，子类将无法知道是否还能安全执行 `codec.start()`。flush 和 start 在同一次
 锁持有期内顺序执行，任一失败都在锁外经现有失败通道上报，符合 `reportCodecFailure()` 对 owner
-callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补两条回归：成功路径验证
-`flush()` 严格先于 `start()`；任一调用抛出时只上报一次失败，且 flush 失败后不得再调 `start()`。
+callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补三类回归：
+
+1. 成功路径验证 `flush()` 严格先于 `start()`。
+2. 任一调用抛出时只上报一次失败，且 flush 失败后不得再调 `start()`。
+3. `TestCodec` 增加只在测试子类内可见的 helper：它先用 `withCodecOperationLock`
+   持锁，再启动 callback executor。executor 在调 callback 前先递减 `callbackInvoked`
+   latch；测试有界轮询该线程进入 `WAITING`（本路径唯一等待点就是
+   `ReentrantLock`），从而证明回调已读取旧 generation 并暂停在获锁前。持锁线程
+   利用 `ReentrantLock` 可重入性在 helper 内调 `flush()`，完成 generation 递增 +
+   flush + start 后退出 helper，再等 callback 结束。断言旧 output index 没有调
+   `getOutputBuffer()` / `releaseOutputBuffer()`、没有伪失败上报；input 路径补对称用例，
+   断言旧 index 没有调 `getInputBuffer()` / `queueInputBuffer()`。所有等待均使用
+   2 秒上界，`finally` 里放行 latch 并关闭 executor，不使用无上界 sleep。
 
 **失败分支在 M-3 落地前不可观测（复核补记，2026-10-26）**：上面这段修法的成功路径解决了静音，但它
-新增的失败分支对唯一会触发它的调用方是空转的。已核实 `OpusStreamPlayer.kt:77-97` 构造 `OpusDecoder`
+新增的失败分支对仓库内唯一会触发该 flush 路径的调用方是空转的。已核实 `OpusStreamPlayer.kt:77-97` 构造 `OpusDecoder`
 时只传 **7 个位置实参，止于 `callback: IDecodeCallback`**（`OpusDecoder.kt:32`），而其后的
 `endCallback`（`:33`）与 `errorCallback`（`:34`）均带默认值 `{}`，因此两者都取默认空实现。因此 `reportCodecFailure(failure)` →
 `notifyCodecFailure`（`OpusDecoder.kt:115`）→ `errorCallback.invoke(error)` 落进空实现，只剩那行
@@ -157,8 +206,8 @@ start」状态，而 `lifecycleState` 不变（即 M-3），`isRunning` 仍为 t
 
 因此要区分两侧：H-1 的**症状**与 M-3 无关（H-1 主路径不抛任何异常，没有失败可供 M-3 的通道丢弃）；
 但 H-1 的**修法**在失败分支上依赖 M-3 —— 没有 M-3 的终态与错误通道，这条分支既通知不到调用方，也
-不阻止会话继续空转。实施 H-1 时应二选一：要么同批落地 M-3，要么在本修法的失败分支内自行把会话推入
-终态（而不是只上报），并在 KDoc 写明该选择。
+不阻止会话继续空转。**H-1 与 M-3 必须同批落地**；不再保留“H-1 自行推入终态”这套
+重复状态机，避免 flush 失败与其它 codec 失败走不同的终态协议。
 
 ### M-1（MEDIUM）AAC 把「AudioTrack 一个字节都没收下」当成功，整段播放可无声地「自然结束」
 
@@ -379,14 +428,57 @@ sampleSource = null
 - 触发条件：任何 `CodecException`/`IllegalStateException`/子类回调异常（如损坏 AAC 帧，或帧超过 `KEY_MAX_INPUT_SIZE = 8 * 1024`（`BaseMediaCodec.kt:272`）时 `inBuf.put(input)` 抛 `BufferOverflowException`）。
 - 后果：worker 退出或 codec 进入错误态后 `isRunning` 仍为 true → 流播放器继续入队 → 队列填满 → `decodeOrDropLocked` 进入「丢帧 + flush + resync」死循环（在 OPUS 上叠加 H-1）→ **永久静音且调用方永不知情**，`MediaCodec`/`AudioTrack` 一直被持有。文件播放器不受影响（已接错误回调）。
 - 确定性：机制**确定**；真机发生频率取决于码流质量（推断）。
-- 修复方案（两步，任一步单独生效）：
+- 修复方案：下列三步是同一个失败协议，**必须同批完成**；只加 decoder callback
+  不会改变 `isRunning`，只在播放器自有 `ioScope` 中调挂起 stop 又会命中
+  `StreamPlayerStopper.kt:22-27` 的 owned-scope 守卫。
+
+  1. 在 `BaseMediaCodec` 增加 `FAILED` 状态，并让 `reportCodecFailure()` 成为唯一的
+     `RUNNING -> FAILED` CAS 入口。CAS 失败就不再重复通知；`isRunning` 立即变 false，
+     `isReleasing` 将 `FAILED` 视为拒绝后续 codec 回调的终态。`markReleasing()` 允许
+     `FAILED -> RELEASING`，因此 owner 仍可随后执行完整 `releaseAndJoin()`。同时将
+     `notifyCodecFailure()` 从 `public open` 收窄为 `protected open`，它只是子类 owner-notification
+     钩子，外部调用方不得绕过 `reportCodecFailure()` 直接调用它。更新 `isReleasing`
+     KDoc，明确该属性也在 `FAILED` 时阻止后续 codec 操作，而不是说资源已释放。
 
 ```kotlin
-// 1) AacDecoder: give it the same failure channel OpusDecoder already has.
+private enum class LifecycleState {
+    NEW, STARTING, RUNNING, FAILED, RELEASING, RELEASED,
+}
+
+protected val isReleasing: Boolean
+    get() = when (lifecycleState.get()) {
+        LifecycleState.FAILED,
+        LifecycleState.RELEASING,
+        LifecycleState.RELEASED -> true
+        else -> false
+    }
+
+/** Moves a live codec to FAILED and notifies its owner at most once, outside the codec lock. */
+protected fun reportCodecFailure(error: Throwable) {
+    if (!lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)) return
+    runCatchingPreservingCancellation { notifyCodecFailure(error) }
+        .onFailure { LogContext.log.e(TAG, "Codec failure callback failed", it) }
+}
+
+/** Subclass hook reached only through reportCodecFailure(). */
+protected open fun notifyCodecFailure(error: Throwable) {
+    LogContext.log.e(TAG, "Codec failure reported", error)
+}
+```
+
+  2. `AacDecoder` 增加与 `OpusDecoder` 对称的 `errorCallback`，并删掉两个 decoder
+     `errorCallback` 的默认空 lambda；两个 stream player 都增加
+     独立于播放 `ioScope` 的 `terminalScope`、`failureTerminalStarted: AtomicBoolean` 和必填
+     `onFailure: (Throwable) -> Unit` 构造参数。decoder 错误回调只调 `requestCodecFailure(error)`；
+     该函数 CAS 一次后在 `terminalScope` 调 `stopPlayingAndJoin()`，完整释放 decoder 和
+     AudioTrack 后才调客户 `onFailure`。`terminalScope` 不能是 `ioScope` 子作用域，否则
+     `StreamPlayerStopper` 会拒绝自作用域 join。
+
+```kotlin
 class AacDecoder(
     // ...
     private val callback: IDecodeCallback,
-    private val errorCallback: (Throwable) -> Unit = {},
+    private val errorCallback: (Throwable) -> Unit,
 ) : BaseMediaCodecSynchronous(/* ... */) {
 
     override fun notifyCodecFailure(error: Throwable) {
@@ -394,9 +486,45 @@ class AacDecoder(
         errorCallback.invoke(error)
     }
 }
-// 2) Both stream players must wire errorCallback to their one-shot stop path, so a dead
-//    codec tears the session down instead of silently dropping every frame.
+
+private val failureTerminalStarted = AtomicBoolean(false)
+private val terminalScope = CoroutineScope(
+    SupervisorJob() +
+        Dispatchers.IO +
+        CoroutineName("stream-player-terminal") +
+        CoroutineExceptionHandler { _, error ->
+            LogContext.log.e(TAG, "Unhandled terminal cleanup failure", error)
+        }
+)
+
+private fun requestCodecFailure(codecError: Throwable) {
+    if (!failureTerminalStarted.compareAndSet(false, true)) return
+    terminalScope.launch {
+        val cleanupFailure =
+            runCatchingPreservingCancellation { stopPlayingAndJoin() }.exceptionOrNull()
+        if (cleanupFailure != null && cleanupFailure !== codecError) {
+            codecError.addSuppressed(cleanupFailure)
+        }
+        runCatchingPreservingCancellation { onFailure(codecError) }
+            .onFailure { LogContext.log.e(TAG, "Failure callback failed", it) }
+    }
+}
 ```
+
+     `OpusDecoder` 同步把现有 `errorCallback: (Throwable) -> Unit = {}` 改为必填参数；
+     `OpusFilePlayer` 已显式传入 `requestFailure`，只需更新其余构造点。
+
+  3. `AudioPlayer` 增加必填 `onFailure: (Throwable) -> Unit` 并传给 AAC/OPUS stream player；
+     Demo 和仓库内所有构造点同步显式处理失败。不给默认空 lambda，否则只是把
+     `OpusDecoder` 的空通道上移一层，外部 owner 仍无法观测。更新两个 decoder、
+     两个 stream player、`AudioPlayer` 以及 `BaseMediaCodec.notifyCodecFailure()` 可见性变更的
+     KDoc，并更新
+     `CHANGELOG.md`：升级用户必须提供失败处理，不保留仅为旧构造器存在的兼容壳。
+
+回归至少覆盖：第一次 codec 失败后 `decode()` / `encode()` 立即拒绝新数据，并只通知
+一次；`FAILED` 仍可进入 `releaseAndJoin()` 且 codec 只释放一次；stream player 的错误清理不在
+`ioScope` 中执行，decoder/AudioTrack 释放完成后客户才收到一次 `onFailure`；
+`AudioPlayer` 的 AAC/OPUS 路径均能把原始 `Throwable` 传给调用方。
 
 ### M-4（MEDIUM）异步路径缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()`
 
@@ -1100,14 +1228,16 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
    > **遗漏补记（Claude，2026-10-26）：H-1 应接在本项之后、下一项之前。**
    > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是 §3 新发现中**唯一的 HIGH**（§4 A2 也已升级为 HIGH），
-   > 严重度高于本节任何一项，但未被排入 1–8 项。它与其余各项无依赖关系，修法是在
-   > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1），在同一次 codec 锁持有期内依次
-   > 执行 `codec.flush()` 和 `codec.start()`，失败则退出锁后调 `reportCodecFailure()`。不能调
+   > 严重度高于本节任何一项，但未被排入 1–8 项。修法是在
+   > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1），同时增加回调世代栅栏；在同一次
+   > codec 锁持有期内依次递增世代、执行 `codec.flush()` 和 `codec.start()`，失败则退出锁后调
+   > `reportCodecFailure()`。不能调
    > `super.flush()` 后无条件 start，因为基类会吞掉 flush 异常。建议紧随 M-9 实施。H-1 本身
    > 就会造成永久静音且没有失败回调；M-3 是独立的 codec
    > 失败终态与错误通道缺口，不是 H-1 的触发条件。**反向则有依赖**：H-1 修法新增的失败分支经
    > `reportCodecFailure` 上报，而 `OpusStreamPlayer` 未接 `errorCallback`，故在 M-3 落地前该分支
-   > 不可观测（见 §3 H-1 的复核补记）—— 实施时需同批落地 M-3，或在该分支内自行推入终态。
+   > 不可观测（见 §3 H-1 的复核补记）—— 实施时必须同批落地 M-3，统一使用
+   > `RUNNING -> FAILED -> RELEASING` 终态协议，不在 H-1 分支内另建一套状态机。
    > 本条为复核补入的**建议**，不是作者决策。
 
 2. **实施 C5 §4**：先写“超时仍进入 `UNINITIALIZED`”失败测试，再移动终态写入；只运行
@@ -1132,21 +1262,20 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 | 顺位 | 编号 | 一句话 | 依赖 / 备注 |
 |---|---|---|---|
-| 1 | **H-1** | 异步 `flush()` 后未 `start()`，OPUS 首次丢帧即永久静音（§3 唯一 HIGH） | 见 §5.3 的遗漏补记；建议紧随 M-9 |
-| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | **症状**与 H-1 独立（两条并行的永久静音路径）；但 H-1 **修法的失败分支**依赖本项才可观测 —— `OpusStreamPlayer` 未接 `errorCallback`，见 §3 H-1 的复核补记。宜与 H-1 同批，否则需在 H-1 修法内自行推入终态 |
-| 3 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 结构性缺口与可达路径已静态确认，真机只用于验证设备表现和修复后行为，不应将「是否修复」交给真机结果决定 |
-| 4 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦 |
-| 5 | **A2** | `MicRecorder.startRecord()` 无重入守卫 | 可独立修复同一实例上的双 job；与 M-8 同批仅是审查与真机录音回归的便利，不是正确性前提 |
-| 6 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 共用 `record()` 函数邻域和序列化方案，宜同批；不要另建一套只靠 `@Volatile` 的发布规则 |
-| 7 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
-| 8 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
-| 9 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
-| 10 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
+| 1 | **H-1 + M-3** | 异步 `flush()` 后未 `start()`，且 codec 失败不进终态、流播放器无失败通道 | 两条缺陷的**症状**可独立出现；但 H-1 修法的失败分支依赖 M-3 统一终态与通知。必须同批实施，见 §3 H-1/M-3 与 §5.3 补记 |
+| 2 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 结构性缺口与可达路径已静态确认，真机只用于验证设备表现和修复后行为，不应将「是否修复」交给真机结果决定 |
+| 3 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦 |
+| 4 | **A2** | `MicRecorder.startRecord()` 无重入守卫 | 可独立修复同一实例上的双 job；与 M-8 同批仅是审查与真机录音回归的便利，不是正确性前提 |
+| 5 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 共用 `record()` 函数邻域和序列化方案，宜同批；不要另建一套只靠 `@Volatile` 的发布规则 |
+| 6 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
+| 7 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
+| 8 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
+| 9 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
 
 两点必须同时注意：
 
 1. **§5.2 是验证矩阵，不是实施排期。** 其中 M-1 与 M4 已分别纳入 §5.3 的 M-2/M-7 批次；
-   `H-1、M-4、A2、B4-b、M-8、L-7` 仍在本节的未决列表中。只有实施了对应修复，才执行
+   `H-1 + M-3、M-4、A2、B4-b、M-8、L-7` 仍在本节的未决列表中。只有实施了对应修复，才执行
    §5.2 对应的真机项；不能把「未修复，因而无法验证」记成通过。
 2. **M-9 之前不要跑 §5.1 的整套命令。** `demo:ktlintCheck` 被既有违规阻断（§3 M-9），在它修掉之前
    ktlint 环节的失败会掩盖其它改动自身的问题。

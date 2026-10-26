@@ -172,9 +172,180 @@ writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes).toLong())
 - 触发条件：调用方按 CLAUDE.md「释放类 API 统一为挂起函数（`releaseAndJoin()` …）」的约定，对 `AacFilePlayer` 调 `releaseAndJoin()` 而非 `stop()`。
 - 后果：codec 释放、worker 退出，但 `MediaExtractor`（持文件 fd）与 `AudioTrack`（native 混音器资源）泄漏；`terminalStarted` 仍为 false，`endCallback`/`errorCb` 引用不被清空（延长对 Activity lambda 的持有）。后续再调 `stop()` 可补救，但语义上调用方已认为释放完成。
 - 确定性：**确定**（可见性与调用关系可直接读出）。Demo 走的是 `AudioActivity.kt:365-367` 的 `player.stop()`，故为 API 契约缺口而非活跃 bug。
-- 修复方案：**本项需作者决策**，两个方向代价差异大：
-  - **方案 A（彻底，推荐但工作量大）**：把 `AacFilePlayer` 从 `BaseMediaCodecSynchronous` 的子类改为持有者，与 `OpusFilePlayer` 对齐 —— 新增私有 `AacFileDecoder : BaseMediaCodecSynchronous`，`AacFilePlayer` 只暴露 `playAac()`/`stop()`。这是结构性重构，会改变公开继承关系，须记入 CHANGELOG「变更」。
-  - **方案 B（最低限度）**：在 `AacFilePlayer` 类级 KDoc 写明「继承而来的 `start()`/`flush()`/`releaseAndJoin()` 不是本类的生命周期入口，唯一释放入口是 `stop()`」。只是缓解，无法阻止误用。
+- 作者决策（2026-10-26）：**采用组合，不保留仅用于兼容旧版本的继承入口。** 只补 KDoc
+  无法阻止调用方继续误用 `releaseAndJoin()`，也无法使编译器表达「播放器释放必须覆盖 decoder、
+  extractor 和 AudioTrack」这一所有权约束。按仓库现行 API 演进规则，升级用户应迁移到播放器的
+  `playAac()` / `stop()` 生命周期。
+- 代码级修改方案：
+  1. 新建 `audio/src/main/kotlin/com/leovp/audio/aac/AacFileDecoder.kt`，声明只在模块内可见的
+     decoder 会话接口和生产实现。播放器只依赖接口，生产实现负责原来由播放器继承得到的
+     `BaseMediaCodecSynchronous` 钩子：
+
+```kotlin
+internal interface AacDecoderSession {
+    fun start()
+    suspend fun releaseAndJoin()
+}
+
+internal fun interface AacDecoderFactory {
+    fun create(
+        source: AacSampleSource,
+        audioDecodeInfo: AudioDecoderInfo,
+        onPcmDecoded: (ByteArray) -> Unit,
+        onEndOfStream: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ): AacDecoderSession
+}
+
+internal class AacFileDecoder(
+    private val source: AacSampleSource,
+    audioDecodeInfo: AudioDecoderInfo,
+    private val onPcmDecoded: (ByteArray) -> Unit,
+    private val onEndOfStreamCallback: () -> Unit,
+    private val onFailure: (Throwable) -> Unit,
+) : BaseMediaCodecSynchronous(
+    codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
+    sampleRate = audioDecodeInfo.sampleRate,
+    channelCount = audioDecodeInfo.channelCount,
+), AacDecoderSession {
+    private var currentSampleTimeUs = -1L
+
+    override fun setFormatOptions(format: MediaFormat) = Unit
+    override fun createMediaFormat() = Unit
+
+    override fun createCodec() {
+        codec = MediaCodec.createDecoderByType(source.mime)
+        codec.configure(source.format, null, null, 0)
+    }
+
+    override fun onInputData(inBuf: ByteBuffer): Int {
+        currentSampleTimeUs = source.sampleTimeUs
+        val size = source.readSampleData(inBuf)
+        if (size >= 0) source.advance() else currentSampleTimeUs = -1L
+        return size
+    }
+
+    override fun computePresentationTimeUs(): Long = currentSampleTimeUs
+
+    override fun onOutputData(
+        outBuf: ByteBuffer,
+        info: MediaCodec.BufferInfo,
+        isConfig: Boolean,
+        isKeyFrame: Boolean,
+    ) = onPcmDecoded(outBuf.toByteArray())
+
+    override fun onEndOfStream() = onEndOfStreamCallback()
+    override fun notifyCodecFailure(error: Throwable) = onFailure(error)
+}
+```
+
+  2. 新建 `audio/src/main/kotlin/com/leovp/audio/aac/AacSampleSource.kt`，把
+     `MediaExtractor` 的文件扫描与读取包装成可替换的模块内部所有权边界。`open()` 必须在找不到
+     AAC track 或 `setDataSource()` 失败时就释放刚创建的 extractor，不能把半初始化资源交给播放器：
+
+```kotlin
+internal interface AacSampleSource {
+    val mime: String
+    val format: MediaFormat
+    val sampleTimeUs: Long
+    fun readSampleData(buffer: ByteBuffer): Int
+    fun advance()
+    fun release()
+}
+
+internal fun interface AacSampleSourceFactory {
+    fun open(file: File): AacSampleSource
+}
+
+internal object MediaExtractorAacSampleSourceFactory : AacSampleSourceFactory {
+    override fun open(file: File): AacSampleSource {
+        val extractor = MediaExtractor()
+        try {
+            extractor.setDataSource(file.absolutePath)
+            val track = (0 until extractor.trackCount).firstOrNull { index ->
+                extractor.getTrackFormat(index)
+                    .getString(MediaFormat.KEY_MIME)
+                    ?.startsWith("audio/") == true
+            } ?: error("AAC file does not contain a supported audio track")
+            val format = extractor.getTrackFormat(track)
+            val mime = requireNotNull(format.getString(MediaFormat.KEY_MIME))
+            extractor.selectTrack(track)
+            return MediaExtractorAacSampleSource(extractor, mime, format)
+        } catch (error: Throwable) {
+            try {
+                extractor.release()
+            } catch (cleanupFailure: Throwable) {
+                if (cleanupFailure !== error) error.addSuppressed(cleanupFailure)
+            }
+            throw error
+        }
+    }
+}
+```
+
+     `MediaExtractorAacSampleSource` 是 `private` adapter，逐项委托 `sampleTime`、
+     `readSampleData(buffer, 0)`、`advance()` 与 `release()`；`release()` 用
+     `AtomicBoolean.compareAndSet(false, true)` 保证恰好一次。
+  3. 修改 `AacFilePlayer.kt`：删除 `: BaseMediaCodecSynchronous(...)`、所有 codec hook、
+     `mime` / `mediaFormat` / `currentSampleTimeUs`，改为持有：
+
+```kotlin
+private var sampleSource: AacSampleSource? = null
+private var decoder: AacDecoderSession? = null
+```
+
+     公共构造器保持 `Context + AudioDecoderInfo + usage + contentType` 的正常使用入口；增加模块内部
+     构造器接收 `AudioOutput`、`AacSampleSourceFactory`、`AacDecoderFactory`，供 §M-7 的 JVM fake
+     注入。生产构造器固定传入 `AudioTrackOutput`、`MediaExtractorAacSampleSourceFactory` 和
+     `AacDecoderFactory(::AacFileDecoder)`。
+  4. `playAac()` 在 `lifecycleMutex` 内按下列顺序发布资源，任一步失败仍走现有
+     `finishPlayback(ExplicitStop)`：
+
+```kotlin
+val source = sampleSourceFactory.open(aacFile)
+sampleSource = source
+val playbackDecoder = decoderFactory.create(
+    source = source,
+    audioDecodeInfo = audioDecodeInfo,
+    onPcmDecoded = ::writeDecodedPcm,
+    onEndOfStream = {
+        terminalScope.launch {
+            finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false)
+        }
+    },
+    onFailure = { error ->
+        terminalScope.launch {
+            finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
+        }
+    },
+)
+decoder = playbackDecoder
+audioOutput.play()
+playbackDecoder.start()
+```
+
+     原 `onOutputData()` 的 AudioTrack 写入与帧计数移到
+     `private fun writeDecodedPcm(pcm: ByteArray)`，并合并 M-1 的非正返回值失败处理，避免重构后
+     又保留静默成功缺陷。
+  5. `finishPlayback()` 保持现有终态栅栏。`decoder` 与 `sampleSource` 继续使用普通 nullable 字段，所有
+     读写都限定在 `lifecycleMutex` 内；释放时先复制到局部变量并立即把字段置 null，禁止使用
+     `AtomicReference` 制造第二套同步规则：
+
+```kotlin
+audioOutput.stop()
+val playbackDecoder = decoder
+decoder = null
+val playbackSource = sampleSource
+sampleSource = null
+```
+
+     随后依次执行 `playbackDecoder?.releaseAndJoin()` → `playbackSource?.release()` →
+     `audioOutput.release()` → 清空回调 → `terminalCompletion.complete(Unit)`。每一步继续使用现有
+     suppressed-exception 聚合，不能因 decoder 释放失败跳过 source/output 释放。
+  6. 更新 `AacFilePlayer` 类级 KDoc：明确它是一次性播放器，并加入迁移说明：旧版本继承暴露的
+     `start()`、`flush()`、`releaseAndJoin()` 已移除；调用方使用 `playAac()` 启动、使用挂起
+     `stop()` 完整释放。同步更新 `CHANGELOG.md` 的「AAC/OPUS 文件播放器采用确定性一次性会话」条目，
+     记录源码与二进制不兼容以及上述替代入口；不增加废弃兼容壳。
 
 ### M-3（MEDIUM）codec 失败不改生命周期状态，`isRunning` 仍为 true；两个流播放器没有失败通道
 
@@ -277,11 +448,106 @@ if (!codecFailed.get() && !isReleasing && outputEosReceived) {
 - 事实：`audio/src/test` 共 6 个测试文件，播放器层一个也没有。`OpusFilePlayer.kt:480-486` 的释放顺序（H3）、`:195` 的非阻塞 offer（H2）、`AacFilePlayer.kt:161` 的一次性闸（H4）、`:134-137` 的 EOF 自动释放（H5）全部可以被改回旧写法而不会有任何测试变红。既有文档 `2026-09-02-...md:1141` 已记录同一结论，说明该缺口跨轮未闭合。
 - 后果：本切片四个阻塞级修复没有任何自动化保护；§4 M4 那种「reader 测试祝福、player 实现拒绝」的契约撕裂正是缺少播放器层测试的直接产物。
 - 确定性：**确定**。
-- 修复方案：`BaseMediaCodecAsynchronousTest` / `BaseMediaCodecSynchronousTest` 已证明这类生命周期时序在 JVM + mockk 上可测。建议至少补 4 个用例（可用 Robolectric 提供 `AudioTrack`/`MediaCodec` 替身，或先把 `AudioTrackPlayer` 抽成接口以便注入）：
-  1. `playAac()`/`playOpus()` 第二次调用抛异常且**不改动**任何现有会话状态（H4）；
-  2. 自然 EOF 后 `endCallback` 触发前 `MediaExtractor.release()`/`AudioTrack.release()` 已各调恰好一次（H5）；
-  3. 消费协程阻塞在 `write` 时 `stop()` 能在界限内返回，且 `release()` 严格晚于 join（H3）；
-  4. 以 start code 结尾的 .opus 文件走 `endCallback`（§4 M4 的回归锁）。
+- 作者决策（2026-10-26）：**本轮补齐播放器层回归，但不以 Robolectric shadow 作为主要夹具。**
+  `AudioTrack` / `MediaCodec` shadow 无法证明真实 native write 阻塞、codec callback 或驱动释放顺序；
+  这些用例的目标是锁定 owner 的状态机和调用次序，使用可控 fake 更确定。Robolectric 只可另补
+  Android 构造冒烟测试，且不能替代 §5.2 的真机验证。
+- 代码级测试接缝：
+  1. 新建 `audio/src/main/kotlin/com/leovp/audio/base/AudioOutput.kt`，只暴露两个文件播放器实际使用
+     的最小模块内部契约，不把测试接缝加入公开 API：
+
+```kotlin
+internal interface AudioOutput {
+    val playbackHeadPosition: Int
+    fun play()
+    fun write(pcmBytes: ByteArray): Int
+    fun stop()
+    fun release()
+}
+
+internal class AudioTrackOutput(
+    private val delegate: AudioTrackPlayer,
+) : AudioOutput {
+    override val playbackHeadPosition: Int get() = delegate.playbackHeadPosition
+    override fun play() = delegate.play()
+    override fun write(pcmBytes: ByteArray): Int = delegate.write(pcmBytes)
+    override fun stop() = delegate.stop()
+    override fun release() = delegate.release()
+}
+```
+
+     `AacFilePlayer` 与 `OpusFilePlayer` 的生产构造器都创建
+     `AudioTrackOutput(AudioTrackPlayer(...))`；模块内部构造器接收 `AudioOutput`。不要把
+     `AudioTrackPlayer` 改成 `open`，也不要暴露 public 测试构造器。
+  2. 为 OPUS 增加与 M-2 对称的内部 decoder 接缝，放在
+     `audio/src/main/kotlin/com/leovp/audio/opus/OpusFileDecoder.kt`：
+
+```kotlin
+internal interface OpusDecoderSession {
+    val isAcceptingInput: Boolean
+    fun start()
+    fun decode(data: ByteArray): Boolean
+    fun signalEndOfStream(): Boolean
+    suspend fun releaseAndJoin()
+}
+
+internal fun interface OpusDecoderFactory {
+    fun create(
+        csd: OpusCsd,
+        audioDecodeInfo: AudioDecoderInfo,
+        onPcmDecoded: (ByteArray) -> Unit,
+        onEndOfStream: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ): OpusDecoderSession
+}
+```
+
+     生产 adapter 私有持有 `OpusDecoder` 并逐项委托；`OpusFilePlayer.createDecoder()` 返回
+     `OpusDecoderSession`，`submitWithBackpressure()` / `signalEndOfStreamWithBackpressure()` 参数同步
+     改成该接口。公开 `OpusDecoder` 不实现 internal interface，避免把测试接缝带入其公开继承图。
+  3. 新建 `audio/src/test/kotlin/com/leovp/audio/testing/FakeAudioOutput.kt`。fake 使用
+     `CopyOnWriteArrayList<String>` 记录 `play/write-start/write-end/stop/release`；可选的
+     `CompletableDeferred<Unit> writeEntered` 与 `allowWriteToReturn` 控制一次阻塞写；各方法用
+     `AtomicInteger` 暴露调用次数，`writeResult` 默认返回输入字节数。
+  4. 在 `AacFilePlayerTest.kt` 内定义 `FakeAacSampleSource` 与 `FakeAacDecoderSession`。decoder fake 的
+     `start()` 只计数，`releaseAndJoin()` 可由两个 deferred（`releaseEntered`、`allowRelease`）控制，
+     并提供 `emitPcm()`、`emitEnd()`、`emitFailure()` 显式驱动 player 回调。不要使用反射改私有字段。
+  5. 在 `OpusFilePlayerTest.kt` 内定义 `FakeOpusDecoderSession`。`decode()` 记录帧并返回可配置结果，
+     `signalEndOfStream()` 记录 EOS 并调用 `onEndOfStream`，`releaseAndJoin()` 记录释放次序。测试输入用
+     `@TempDir` 创建真实小文件，继续走 `OpusFramedFileReader`，只替换 Android codec/output 边界。
+- 必须先红后绿落地以下用例：
+  1. `AacFilePlayerTest.playAac called twice leaves active session untouched`：第一次 `playAac()` 后记录
+     source/decoder/output 的计数；第二次调用断言 `IllegalStateException`，并断言 factory 未再次打开、
+     decoder 未再次创建或释放、output 未 stop/release、回调引用仍属于第一次会话。旧实现若在一次性
+     闸门之前动资源应使该测试失败。
+  2. `AacFilePlayerTest.natural end releases decoder source and output before callback`：fake decoder
+     调 `emitEnd()`；用 `CompletableDeferred` 等待 callback；断言事件严格为
+     `output-stop < decoder-release < source-release < output-release < end-callback`，每个释放计数均为 1，
+     `errorCallback` 为 0。随后再调 `stop()`，断言所有计数不变，锁定幂等终态。
+  3. `OpusFilePlayerTest.stop wakes blocked write and releases only after playback jobs exit`：先让
+     `FakeAudioOutput.write()` 在 `writeEntered` 后挂起；启动 `stop()`，断言 `stop` 事件已发生但
+     `release` 尚未发生；`stop()` 触发 fake 解锁写入后等待返回，最终断言
+     `write-end < decoder-release < output-release` 且 `stop()` 在 2 秒测试上界内完成。fake 的
+     `stop()` 必须负责完成 `allowWriteToReturn`，模拟生产 `AudioTrack.stop()` 唤醒 write。
+  4. `OpusFilePlayerTest.trailing start code completes normally`：新增测试 helper
+     `buildOpusConfigFrame()`，按 `AudioCodecUtil.parseOpusConfigFrame()` 已记录的 little-endian 布局写入
+     `IAudioMediaCodec.OPUS_AOPUSHDR + csd0.size + csd0 + AOPUSDLY + 8 + csd1 + AOPUSPRL + 8 + csd2`；
+     再构造 `START_CODE + configFrame + START_CODE + frame + START_CODE` 的文件。fake decoder 接受 frame
+     并在收到 EOS 后完成 codec EOS；断言 `endCallback == 1`、`errorCallback == 0`、只提交一个非空音频帧，
+     证明末尾边界不会再次被当作空 payload 解码。
+  5. 为 H2 另加 `OpusFilePlayerTest.full decoded queue reports failure without blocking codec callback`：
+     先投递一帧并等待 fake output 的 `writeEntered`，使消费协程稳定阻塞；随后再投递
+     `DECODED_QUEUE_CAPACITY + 1` 帧，最后一帧必定越过队列容量。每次 callback 都必须在当前测试线程
+     立即返回，溢出帧触发 error callback/终态清理而不是阻塞。用
+     `assertTimeoutPreemptively(java.time.Duration.ofSeconds(2))` 包住投递循环，等待清理完成后断言
+     `output.release == 1`。
+- 每个用例先在未改生产代码或临时回退对应守卫时运行并确认失败，再恢复实现确认通过；最终运行：
+
+```bash
+./gradlew :audio:testDebugUnitTest --tests '*AacFilePlayerTest*' \
+  --tests '*OpusFilePlayerTest*' --rerun-tasks
+./gradlew :audio:testDebugUnitTest :audio:ktlintCheck :audio:detekt --rerun-tasks
+```
 
 ### M-8（MEDIUM）demo 三个录音开关互不排斥，`micRecorder` 被覆盖即泄漏
 
@@ -580,10 +846,118 @@ verify(exactly = 0) { mediaCodec.release() }
 
 行号之所以逐条对齐：`BaseNettyClient.kt` 自 `0f84de546` 以来未再改动，而该提交与提案文档提交 `2a259b5b3` 的时间戳完全相同（同一批推送），即提案就是针对当前这个状态写的。
 
-- 落地建议：
-  - **实施提案 §4**（`releaseNow()` 把 netty 释放段包进 `try`，`finally` 里 `connectStatus.set(UNINITIALIZED)`；`releaseNetty()` 删掉 `:925-926` 的状态写入与那行日志）。不改返回值语义、不吞异常、不改超时值、不改守卫，与 `BaseNettyServer.kt:358-366` 同形。提案 §4.2 的代码片段可直接采用。
-  - **提案 §5（方案 B，守卫改用 `released`，让从未连接的客户端也能释放 group）是独立且更严重的问题**（真实的 `NioEventLoopGroup` 泄漏），同样仍适用，但按提案 §7 应作为**独立提交**，不与 §4 合并。
-  - 补充一点（提案未写）：§4 落地后 `release()` 的 `false` 有两种含义 —— 「守卫拒绝」与「netty 超时但状态已终结」。若调用方需区分，建议在 KDoc 写明「`false` 不保证资源未释放」，而不是改返回类型（改 sealed result 会波及 `AudioSender.kt:280`、demo WebSocket 示例等多处，收益不值）。
+- 作者决策（2026-10-26）：**§4 与 §5 方案 B 均在本轮实施，但保持两个独立变更和两组回归。**
+  不新增 `ClientConnectStatus.RELEASED`，不扩大公开枚举；§4 修终态契约，§5B 修从未连接实例的真实
+  event-loop 泄漏，任一项都不依赖另一项才能成立。
+- 代码级修改方案一（§4，终态补齐）：
+  1. 在 `BaseNettyClient.releaseNow()` 中只把 netty 释放段放入 `try/finally`；前面的 retry 和 inbound
+     handler 清理保持原顺序。`finally` 无条件写 `UNINITIALIZED`，使成功、返回 `false`、超时取消以及
+     `shutdownGracefully()` 抛异常都得到同一公开终态：
+
+```kotlin
+private suspend fun releaseNow(): Boolean {
+    // Keep this assignment in the standalone §4 change. The later §5B change moves it
+    // atomically into release()'s synchronized ownership guard.
+    released = true
+    disconnectManually = true
+    LogContext.log.w(tag, "Releasing retry handler...")
+    resumeConnectContinuation(connectStatus.get())
+    stopRetryHandler()
+    retryScope.cancel()
+
+    LogContext.log.w(tag, "Releasing default socket handler first...")
+    try {
+        defaultInboundHandler?.release()
+    } catch (error: Exception) {
+        LogContext.log.e(tag, "Release inbound handler error.", error)
+    }
+    defaultInboundHandler = null
+    channelInitializer = null
+
+    return try {
+        val nettyReleased =
+            withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }
+        if (nettyReleased == null) {
+            LogContext.log.e(
+                tag,
+                "Netty release did not finish within " +
+                    "${NETTY_RELEASE_TIMEOUT_IN_MILLS}ms. " +
+                    "Check whether closing the channel, not the event loop, used up the budget."
+            )
+            false
+        } else {
+            nettyReleased
+        }
+    } finally {
+        connectStatus.set(ClientConnectStatus.UNINITIALIZED)
+        LogContext.log.w(tag, "=====> Socket released <=====")
+    }
+}
+```
+
+     这里用单一 `return try`，避免在 `try` 内两个显式 `return` 增加 `ReturnCount`；不要在 finally 中
+     改写 `releaseNetty()` 的布尔结果或捕获原异常。
+  2. `releaseNetty()` 删除成功分支中的
+     `connectStatus.set(ClientConnectStatus.UNINITIALIZED)` 和 `Socket released` 日志，仅保留
+     `terminationFuture().awaitCompletion(); true`。终态及日志现在只有 `releaseNow()` 一个所有者。
+  3. 更新 `release()` KDoc：明确越过状态守卫后，无论 netty 是否在预算内确认终止，返回时
+     `connectStatus` 都为 `UNINITIALIZED`；`false` 既可能表示守卫拒绝，也可能表示关闭已请求但未在
+     预算内确认完成，因此**不表示资源仍可重用或允许再次 connect**。
+  4. 在 `BaseNettyLifecycleTest.kt` 新增
+     `release timeout still lands on UNINITIALIZED and reports false`：将 client 状态置为 `CONNECTED`，
+     用 `DefaultChannelPromise(EmbeddedChannel())` 作为永不完成的 `channel.close()` 返回值；断言首次
+     `release()` 返回 `false`、状态为 `UNINITIALIZED`、第二次 `release()` 返回 `false`。测试结束在
+     `finally` 完成 promise 并 `finishAndReleaseAll()`，避免测试自己残留 Netty 资源。
+- 代码级修改方案二（§5B，从未连接实例也必须释放）：
+  1. `release()` 的同步守卫只按一次性 `released` 和两个活动过渡态拒绝；在同一个
+     `synchronized(this)` 临界区内先置 `released = true`，再置 `RELEASING`，使并发 release 只有一个
+     调用者取得所有权：
+
+```kotlin
+synchronized(this) {
+    val status = connectStatus.get()
+    if (
+        released ||
+        status == ClientConnectStatus.RELEASING ||
+        status == ClientConnectStatus.DISCONNECTING
+    ) {
+        LogContext.log.w(tag, "Releasing now or already released or disconnecting")
+        return false
+    }
+    released = true
+    connectStatus.set(ClientConnectStatus.RELEASING)
+}
+return withContext(NonCancellable) { releaseNow() }
+```
+
+     同时删除 `releaseNow()` 原第一行 `released = true`；这是把同一个写操作前移，不是删掉
+     `released` 语义。`UNINITIALIZED` 不再拒绝，因此构造时已经创建、但尚未 connect 的
+     `workerGroup` 也会进入 `shutdownGracefully()`。
+  2. 在 `BaseNettyLifecycleTest.kt` 新增
+     `release before connect terminates worker group exactly once`：直接构造 `TestClient`，不调用
+     `connect()`；断言首次 `release()` 为 `true`、状态仍为 `UNINITIALIZED`、通过现有反射 helper 取得
+     `workerGroup` 后 `isTerminated == true`；第二次 `release()` 为 `false` 且 group 状态不变。反射访问
+     沿用该测试类 companion object 的现有模式，新增精确 helper：
+
+```kotlin
+private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
+    BaseNettyClient::class.java.getDeclaredField("workerGroup").let { field ->
+        field.isAccessible = true
+        field.get(client) as NioEventLoopGroup
+    }
+```
+  3. 再新增 `concurrent release has one owner`：用 `CountDownLatch` 同时启动两个协程调用 `release()`，
+     断言结果集合恰为 `[false, true]`，最终 `UNINITIALIZED` 且 group 已终止，锁定
+     `released = true` 必须与状态转换处于同一 synchronized 块。
+  4. `CHANGELOG.md` 的 basenetty 生命周期条目分别记录两种行为：释放超时/失败仍进入终态；从未连接的
+     client 调 `release()` 现在会真实关闭构造时创建的 event-loop group，而不是直接返回 `false`。
+     不把两条压成“改进释放”一句，便于升级用户判断 `release()` 返回值与耗时变化。
+- 分项验证顺序：每组测试先在旧实现上确认失败，再实施对应修改并只跑目标测试；两组均通过后运行：
+
+```bash
+./gradlew :basenetty:testDebugUnitTest --tests '*BaseNettyLifecycleTest*' --rerun-tasks
+./gradlew :basenetty:ktlintCheck :basenetty:detekt --rerun-tasks
+```
 
 ### C6（确认机制，维持「可接受的设计取舍」）超时取消后 `terminationFuture` 永不被观察
 
@@ -592,46 +966,26 @@ verify(exactly = 0) { mediaCodec.release() }
 - **对称性核实**：服务端 `BaseNettyServer.kt:423-435` 的 `shutdownNetty()` 是**完全相同的形状** —— `serverChannel.close().awaitOrLog(...)`（`:426`）被取消后 `finally` 的 `requestEventLoopShutdown()`（`:432`）照样跑，但 `:434` 的 `awaitEventLoopShutdown()` 同样被跳过。所以这**不是客户端独有的不对称**（与 C5 不同），而是两端一致的有意设计。
 - 裁决：**可接受**。理由三条：(1) group 关闭请求已发出，`shutdownGracefully` 幂等，等不等它终止都不改变 group 的命运；(2) 超时预算存在的理由恰恰是「关闭卡住时不能把调用方的 teardown 链拖住」（`:894-896` 的注释），再去等 2 秒与该目标直接冲突；(3) 真正丢掉的只是**可观测性**。
 - 确定性：机制**确定**；「可接受」**推断（高置信度）**。
-- 若要修的最小改法（只补观察，不加等待）：在 `:912-922` 的 `finally` 里给 `shutdownGracefully()` 返回的 future 挂 listener，不挂起、不阻塞。
-
-```kotlin
-} finally {
-    // ... (existing comment unchanged) ...
-    LogContext.log.w(tag, "Releasing socket...")
-    val shutdownFuture =
-        workerGroup.shutdownGracefully(0, SHUTDOWN_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-    // The release budget may already be spent on the channel close, in which case the await
-    // below is never reached and a loop that never terminates leaves no trace at all. A
-    // listener observes it without suspending: the termination future is owned by
-    // GlobalEventExecutor, not by the group being shut down, so it is still notified after
-    // the group's own threads are gone.
-    if (!shutdownFuture.isDone) {
-        shutdownFuture.addListener { future ->
-            if (future.isSuccess) {
-                LogContext.log.w(tag, "=====> Worker group terminated <=====")
-            } else {
-                LogContext.log.e(tag, "Worker group did not terminate.", future.cause())
-            }
-        }
-    }
-}
-```
-
-- 两点说明：
-  - `isDone` 预检是必须的 —— `NettyFutureExt.kt:22-27` 的 KDoc 已记录「已完成 future 上 `addListener()` 若 executor 是已终止的 event loop 则永不回调」。此处 future 的 executor 是 `GlobalEventExecutor.INSTANCE`（netty `MultithreadEventExecutorGroup` 构造时 `terminationFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE)`），不会终止，故 listener 一定被通知 —— 这是本改法可行的前提。**确定性：推断（置信度 ~90%，依据 netty 实现，未在本环境核对版本源码）。实施前应核对 `gradle/libs.versions.toml` 里 netty 版本的 `MultithreadEventExecutorGroup`。**
-  - 不依赖 netty 内部细节的保守替代：在 `releaseNow()` 的 `finally`（C5 §4 会新增的那个）里加一次快照，信息量小但零假设：
-
-```kotlin
-if (!workerGroup.isTerminated) {
-    LogContext.log.e(
-        tag,
-        "Worker group not terminated when release() returned. " +
-            "isShuttingDown=${workerGroup.isShuttingDown}"
-    )
-}
-```
-
-  - 若实施 listener 版，建议**同时**给 `BaseNettyServer.kt:423-435` 做对称改动（两个 group 各一个 listener），否则会制造新的客户端/服务端不对称。
+- 作者决策（2026-10-26）：**本轮不实施 C6。** 它不改变 shutdown 请求是否发出，也没有已证实的
+  资源泄漏；为只增加日志而引入额外异步生命周期不符合当前收益/复杂度比例。
+- 对原 listener 提案的更正（已在本机依赖缓存核对 Netty `4.1.108.Final` 源码）：
+  1. `MultithreadEventExecutorGroup.terminationFuture` 确实是
+     `DefaultPromise(GlobalEventExecutor.INSTANCE)`；所有 child 的 termination listener 计数达到
+     `children.length` 时只调用 `terminationFuture.setSuccess(null)`。因此该 future 的正常实现没有
+     “终止失败”结果，原示例的 `future.cause()` 分支不是有效的永久不终止探测。
+  2. `GlobalEventExecutor` 不随 client/server event loop 终止，所以在**这个具体 future** 上，已完成后
+     `addListener()` 不存在 `NettyFutureExt` KDoc 所说的“提交给已终止 executor”风险；原文称
+     `isDone` 预检“必须”不成立。反过来，示例在 `isDone == true` 时什么也不记录，会漏掉已经完成的结果。
+  3. 更关键的是 listener 只能在 future **最终完成时**收到通知；若 group 永远不终止，future 永远不
+     complete，listener 也永远不执行。因此 listener 不能提供原文想要的“未终止可观测性”，只能补一条
+     最终成功日志。
+  4. 在 `releaseNow()` 返回时立即读取 `workerGroup.isTerminated` 也不可靠：`shutdownGracefully()` 是
+     异步请求，release 超时路径返回时 group 尚未终止是正常状态，这条快照会把正常异步收尾记成错误。
+- 若未来有日志、指标或线上问题证明需要检测“shutdown 请求发出后长期未终止”，应另立需求并同时修改
+  client/server：使用独立于 Netty group 的受控观察 scope，在 `shutdownGracefully()` 返回 future 后启动
+  一个带明确阈值的 watchdog；future 先完成则取消 watchdog，阈值到达则记录 group、channel 和线程状态。
+  该 scope 必须有明确 owner、异常处理和测试时钟，且不能延长 `release()` / `stopServer()` 的返回预算。
+  在没有这项需求前，不预先加入 listener、全局协程或定时器。
 
 ### 4.1 裁决汇总
 
@@ -643,7 +997,7 @@ if (!workerGroup.isTerminated) {
 | A3 超时断言证明力 | **形态修正**：worker 侧已闭锁，残留只在 release 侧；失效方向是假绿 | 4 处全准确 | MEDIUM |
 | B4 demo 主线程构造 MicRecorder | **AudioSender 推翻**；**`AudioActivity.record()` 确认**，预存未加重 | `:164` 准确但结论需拆分 | MEDIUM |
 | C5 `connectStatus` 停在 `RELEASING` | **确认**，「group 无补偿路径」修正为「关闭已请求，缺终态与观察点」；沿用 2026-10-16 §4 无需修订 | `:867` 准确，`:904`→`:906` | MEDIUM |
-| C6 `terminationFuture` 永不被观察 | **确认机制，维持可接受**；服务端同形；建议只补 listener | `:928`/`:945` 准确 | LOW |
+| C6 `terminationFuture` 永不被观察 | **确认机制，维持可接受**；服务端同形；本轮明确不改 | `:928`/`:945` 准确 | LOW |
 
 ---
 
@@ -682,12 +1036,27 @@ if (!workerGroup.isTerminated) {
 - **A2 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，确认无 PCM 帧交错、无 `AudioRecord` 泄漏、无 native 崩溃。
 - **L-7**：打印 `OpusDecoder` 回调所在线程名，确证「回调落在主 Looper」这一推断。
 
-### 5.3 本轮未解决、需作者决策的项
+### 5.3 作者决策与实施顺序（2026-10-26）
 
-1. **M-2 的方案选择**：`AacFilePlayer` 从继承改为组合（方案 A，结构性重构 + CHANGELOG「变更」条目），还是只补 KDoc 警示（方案 B）。
-2. **C5 的实施时机**：提案 §4（终态补齐）与 §5（守卫改用 `released`，修真实 group 泄漏）按提案 §7 应分两个提交，需确认是否本轮一并做。
-3. **C6 是否动手**：当前判为可接受的设计取舍；若要补 listener 观察，需先核对 netty 版本的 `MultithreadEventExecutorGroup` 实现，并同步改服务端以保持对称。
-4. **M-7 的测试投入**：四个阻塞级修复（H2–H5）至今零回归保护，补齐需要 Robolectric 替身或把 `AudioTrackPlayer` 抽成接口以便注入 —— 这是本切片最大的结构性缺口。
+四项原待决策内容均已确定，不再留给实施者二次选型：
+
+1. **先修 M-9**：只把 `AudioReceiver.startMicRecording()` 改为表达式体，运行
+   `:demo:ktlintCheck`，先清除会掩盖后续结果的已知基线阻断。
+2. **实施 C5 §4**：先写“超时仍进入 `UNINITIALIZED`”失败测试，再移动终态写入；只运行
+   `BaseNettyLifecycleTest` 目标用例和 basenetty 质量检查。
+3. **独立实施 C5 §5B**：先写“从未 connect 也释放 group”和“并发 release 只有一个 owner”失败
+   测试，再把守卫改为 `released`；不新增 `RELEASED` 枚举。若进行 Git 提交，§4 与 §5B 使用两个独立
+   commit，不能把测试与另一项实现交叉放置。
+4. **实施 M-2 与 M-7 的共同接缝**：先加入 `AudioOutput`、AAC source/decoder session、OPUS decoder
+   session 及 fake；这些类型全部为 `internal`，公开构造器不暴露测试依赖。
+5. **实施 M-2 组合重构**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；
+   同一改动更新类 KDoc、Demo 调用（若编译暴露旧继承 API）和 CHANGELOG。
+6. **补 M-7 五个回归用例**：逐条完成 red/green；M-2 的 AAC 终态测试与 OPUS 的阻塞写/尾边界/H2
+   测试全部通过后，再运行 audio 模块质量检查。
+7. **C6 不实施**：不加 listener、即时 `isTerminated` 错误日志、watchdog 或全局观察协程；仅保留本文
+   的机制说明。以后只有出现明确的线上可观测性需求时才单独设计 client/server 对称方案。
+8. **最后做集成验证**：运行 §5.1 命令以及 `:demo:assembleDevDebug`；音频/MediaCodec 行为按 §5.2
+   真机矩阵验证。未具备设备时必须把相应用例列为未验证，不用 Robolectric 结果替代。
 
 ---
 

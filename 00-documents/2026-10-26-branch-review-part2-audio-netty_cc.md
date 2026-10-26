@@ -112,7 +112,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
   5. `BaseMediaCodec.start()` 是一次性的（`:99` 的 `NEW -> STARTING` CAS），无法再调用来恢复。
   6. `BaseMediaCodec.kt:193` 另一处 `codec.flush()` 在 `releaseCodecOnce()` 内紧跟 `codec.release()`，不需要 start，不属本缺陷。
 - 触发条件：**常规事件，非异常路径** —— `OpusStreamPlayer.decodeOrDropLocked()` 的丢帧分支，`decoder.queueSize >= 64` 或 `abs(latencyInMs) > audioLatencyThresholdInMs`（初值 `AUDIO_ALLOW_LATENCY_LIMIT_IN_MS = 500`，`:42`、`:145`）。
-- 后果：flush 后编解码器不再请求输入缓冲 → `onInputBufferAvailable` 不再回调 → 队列填满 64 槽后 `decode()` 持续返回 false → **本次会话 OPUS 流永久静音**，而 `isRunning` 仍为 true、无任何错误上报（叠加 M-3）。只能整体 stop 并新建实例恢复。
+- 后果：flush 后编解码器不再请求输入缓冲 → `onInputBufferAvailable` 不再回调 → 队列填满 64 槽后 `decode()` 持续返回 false → **本次会话 OPUS 流永久静音**，而 `isRunning` 仍为 true、没有任何失败回调。该后果由 H-1 单独引起，不以 M-3 触发 codec 异常为前提；只能整体 stop 并新建实例恢复。
 - 范围：`AacStreamPlayer.kt:220` 的 `flush()` 作用在 `AacDecoder : BaseMediaCodecSynchronous` 上，同步模式无此契约，**不受影响**。
 - 确定性：**确定**（Android 公开文档的显式契约 + 仓库内可达调用路径 + 代码中确无 `start()`）。
 - 附带（**推断，置信度 0.6**）：flush 与在飞异步回调之间无世代校验，`onOutputBufferAvailable` 的 `finally`（`BaseMediaCodecAsynchronous.kt:110-112`）可能用失效 index 调 `releaseOutputBuffer()` 而抛出，被 `:114-119` 升级成一次伪 codec 失败。
@@ -125,15 +125,26 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
  * callbacks out of the gap.
  */
 override fun flush() {
-    withCodecOperationLock {
-        super.flush()
-        runCatchingPreservingCancellation { codec.start() }
-            .onFailure { LogContext.log.e(TAG, "restart after flush error", it) }
+    val failure = withCodecOperationLock {
+        check(isRunning) { "flush() requires a running codec session" }
+        runCatchingPreservingCancellation {
+            codec.flush()
+            codec.start()
+        }.exceptionOrNull()
+    }
+    if (failure != null) {
+        LogContext.log.e(TAG, "flush and restart failed", failure)
+        reportCodecFailure(failure)
     }
 }
 ```
 
-可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`），同线程嵌套取锁安全；`codec` 是 `internal lateinit var`（`:47`）、`withCodecOperationLock` 是 `protected`（`:259`），子类均可访问；`super.flush()` 自带 `check(lifecycleState == RUNNING)`，非运行态会在 `start()` 之前抛出，顺序正确。
+可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`）；`codec`、`isRunning`、
+`withCodecOperationLock` 与 `reportCodecFailure` 均可供子类使用。这里不调 `super.flush()`，因为基类会
+吞掉 `codec.flush()` 的异常，子类将无法知道是否还能安全执行 `codec.start()`。flush 和 start 在同一次
+锁持有期内顺序执行，任一失败都在锁外经现有失败通道上报，符合 `reportCodecFailure()` 对 owner
+callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补两条回归：成功路径验证
+`flush()` 严格先于 `start()`；任一调用抛出时只上报一次失败，且 flush 失败后不得再调 `start()`。
 
 ### M-1（MEDIUM）AAC 把「AudioTrack 一个字节都没收下」当成功，整段播放可无声地「自然结束」
 
@@ -554,10 +565,27 @@ internal fun interface OpusDecoderFactory {
 - 文件：`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/AudioActivity.kt:120-130`、`:321`；布局 `demo/src/main/res/layout/activity_audio.xml`
 - 事实（已核实）：布局是六个独立 `ToggleButton`（`:9/:19/:30/:40/:49/:105`），**没有 `RadioGroup`**；三个录音开关各自 `if (isChecked) record(AudioType.X) else stopRecording()`。先开 PCM 再开 AAC，`:321` 的 `micRecorder = MicRecorder(...)` 直接覆盖上一个引用。
 - 后果：第一个 `MicRecorder` 的 `AudioRecord`、编码器、record job 全部失去引用，永不 `stopRecordAndJoin()` → 泄漏；两个 `AudioRecord` 会话并发录同一麦克风。
-- 关系：这是 §4 A2 的 demo 侧对偶 —— 库侧缺 `startRecord()` 的一次性闸门，Activity 侧缺「新建前先停旧的」。
+- 关系：本项与 §4 A2 都涉及录音会话所有权，但是两个独立缺陷。M-8 是 Activity 新建第二个 `MicRecorder` 后覆盖第一个实例；A2 是同一个 `MicRecorder` 被重复调用 `startRecord()`。任一项都可独立修复对应路径，不以另一项同批落地为正确性前提。
 - 是否本切片引入：**不是**，merge base（`97c84d242:demo/.../AudioActivity.kt:247`）形状相同，**预存**。
 - 确定性：**确定**。
-- 修复方案：`record()` 开头先 `stopRecording()`，或把三个 ToggleButton 改成互斥（RadioGroup / 单选逻辑）。前者改动小，后者更符合交互语义。
+- 修复方案：不能只在 `record()` 开头调现有 `stopRecording()`。它会把旧实例置空后通过 `launchCleanup`
+  异步执行 `stopRecordAndJoin()`，新实例可能在旧 `AudioRecord` 和编码器完全释放前已创建并启动。
+  应与 B4-b 共用一套序列化实现：
+  1. 增加 `recordingMutex: Mutex`、`recordingSequence: AtomicLong` 和
+     `recordingIntent: AtomicReference<RecordingIntent>`；`RecordingIntent` 在同一个不可变值中携带
+     `generation` 与 nullable `AudioType`，避免两个原子字段独立更新造成「新代号 + 旧类型」。
+     `micRecorder` 仅在 mutex 内读写，不再依赖一个单独的 `@Volatile` 字段来传递所有权。
+  2. 用户点击录音开关时立即创建并发布新 `RecordingIntent`；开启请求在弹权限框**之前**
+     就捕获该 intent，权限回调只有在 `recordingIntent.get() == capturedIntent` 时才能继续，不得在
+     回调返回时重新生成更新的 generation。关闭开关与 `onStop()` 发布 `type = null` 的新 intent。
+     每次发布后在 `ioScope` 调同一个 `reconcileRecording(capturedIntent)`，新 intent 使尚未获得
+     mutex 的旧请求失效。
+  3. `reconcileRecording()` 获得 mutex 后先校验 generation，再 detach 当前 recorder 并**等待**
+     `stopRecordAndJoin()` 返回；只有旧会话完整释放后，才可以打开文件、构造 `MicRecorder` 并调
+     `startRecord()`。这三步都留在 `Dispatchers.IO`。
+  4. 构造后、发布前再校验当前 intent 与 Activity 至少处于 `STARTED` 状态；若已失效，对局部
+     recorder 调 `stopRecordAndJoin()` 后丢弃，禁止迟到的权限回调或构造结果在 `onStop()` 后重新发布。
+  5. 三个 ToggleButton 可再补单选状态同步来修正 UI，但 UI 互斥不能替代上述资源序列化。
 
 ### M-9（MEDIUM）本切片内一条既有 ktlint 违规使整个 `staticCheck` 无法通过
 
@@ -818,7 +846,10 @@ verify(exactly = 0) { mediaCodec.release() }
 
 - 是否本切片加重：**不是**。`97c84d242:demo/.../AudioActivity.kt:233-258` 的 `record()` 结构完全相同，MicRecorder 构造侧的重量在本切片也没新增。**预存，未加重** —— 需修正原记录「本分支加重了」的提法。
 - 确定性：主线程执行**确定**（权限回调在主 Looper）；`createEncoderByType` 的耗时量级**推断**（高置信度，未实测）。
-- 修复方案：把三段搬进 `ioScope.launch{}`，失败经 `withContext(Dispatchers.Main)` 报 toast。注意 `micRecorder` 届时从 IO 线程写、主线程（`stopRecording()`，`:335-338`）读，需把 `AudioActivity.kt:87` 的 `private var micRecorder` 改成 `@Volatile`，并补一次 publish-then-recheck（否则 `onStop()` 可能先跑、读到 null）—— 这与 `AudioSender.kt:78-92/:184-192` 已有的做法同形，可直接照抄那套注释论证。本项应与 §3 M-8 一并处理。
+- 修复方案：把三段搬进 `ioScope.launch {}`，失败经 `withContext(Dispatchers.Main)` 报 toast；
+  并与 §3 M-8 共用 `recordingMutex + RecordingIntent` 的完整方案。现有 `stopRecording()` 的
+  detach-then-launch 不能与 IO 线程创建资源安全互锁；只给 `micRecorder` 加 `@Volatile` 也只能解决
+  可见性，无法保证「旧 recorder 释放完成后才构造新 recorder」。
 
 ### C5（确认 + 一处修正）`releaseNetty()` 超时后 `connectStatus` 永久停在 `RELEASING`
 
@@ -1031,20 +1062,21 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 按 CLAUDE.md「Camera、Camera2、音频、MediaCodec、MediaProjection、OpenGL、NFC、蓝牙和 JNI/Native 相关修改还必须补充真机验证」：
 
-- **H-1**：OPUS 流播放触发丢帧（队列满或延迟 > 500 ms）后，确认 flush + start 之后音频恢复而非永久静音。这是本轮唯一的 HIGH，也是最需要真机确认的一项。
+- **H-1**：OPUS 流播放触发丢帧（队列满或延迟 > 500 ms）后，确认 flush + start 之后音频恢复而非永久静音。这是 §3 新发现中唯一的 HIGH；本文 §4 另有被升级为 HIGH 的 A2。
 - **M-1**：构造 AudioTrack 非 PLAYING 的场景（播放中被其他应用抢占音频焦点），确认改后走失败回调而非 `endCallback`。
-- **M-4**：OPUS 文件自然播完，确认不再出现「正常播完却报错」，且设备侧不抛 `IllegalStateException`。
+- **M4 / M-4**：OPUS 文件自然播完，分别确认 M4 的「尾随 start code 空 payload」不再误报失败，以及 M-4 的 EOS 后不再提交普通输入缓冲、设备侧不抛 `IllegalStateException`。
 - **A2 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，确认无 PCM 帧交错、无 `AudioRecord` 泄漏、无 native 崩溃。
 - **L-7**：打印 `OpusDecoder` 回调所在线程名，确证「回调落在主 Looper」这一推断。
 
-**注意**：上列各项的**实施**决策见 §5.3（仅 C5／C6／M-2／M-7／M-9）与 §5.4（其余）。本节只说明
+**注意**：上列各项的**实施**决策见 §5.3（主项为 C5／C6／M-2／M-7／M-9，
+其中 M-2/M-7 分别带入 M-1/M4）与 §5.4（其余）。本节只说明
 「若实施，必须真机验证什么」，不代表这些修复已被排期。
 
 ### 5.3 作者决策与实施顺序（2026-10-26）
 
 > **范围说明（复核补记，Claude，2026-10-26）**：本节结论的是本文原先列出的**四项待决策**
 > （M-2 的方案选择、C5 的实施时机、C6 是否动手、M-7 的测试投入），**不是本文全部发现的实施计划**。
-> 下列 1–8 项为作者决策，仅覆盖 C5、C6、M-2、M-7、M-9 五条；本文另有 12 条编号发现与 12 条 LOW
+> 下列 1–8 项为作者决策，主项为 C5、C6、M-2、M-7、M-9，其中 M-2 的重构同时落地 M-1，M-7 的尾边界回归用例同时要求落地 M4。本文其余发现
 > 尚无实施决策，见 §5.4。**照本节走到最后一项的集成验证，并不等于本轮审查已交付。**
 
 四项原待决策内容均已确定，不再留给实施者二次选型：
@@ -1053,13 +1085,13 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    `:demo:ktlintCheck`，先清除会掩盖后续结果的已知基线阻断。
 
    > **遗漏补记（Claude，2026-10-26）：H-1 应接在本项之后、下一项之前。**
-   > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是本文**唯一的 HIGH**，
+   > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是 §3 新发现中**唯一的 HIGH**（§4 A2 也已升级为 HIGH），
    > 严重度高于本节任何一项，但未被排入 1–8 项。它与其余各项无依赖关系，修法是在
-   > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1）。可行性已核：`codecOperationLock`
-   > 是 `ReentrantLock`（`BaseMediaCodec.kt:62`），同线程嵌套取锁安全；`codec` 为
-   > `internal lateinit var`（`:47`）、`withCodecOperationLock` 为 `protected`（`:259`），子类均可
-   > 访问。建议紧随 M-9 实施，因为它同时是 M-3 在 OPUS 路径上的放大器 —— 两者叠加才构成「永久
-   > 静音且调用方永不知情」。本条为复核补入的**建议**，不是作者决策。
+   > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1），在同一次 codec 锁持有期内依次
+   > 执行 `codec.flush()` 和 `codec.start()`，失败则退出锁后调 `reportCodecFailure()`。不能调
+   > `super.flush()` 后无条件 start，因为基类会吞掉 flush 异常。建议紧随 M-9 实施。H-1 本身
+   > 就会造成永久静音且没有失败回调；M-3 是独立的 codec
+   > 失败终态与错误通道缺口，不是 H-1 的触发条件。本条为复核补入的**建议**，不是作者决策。
 
 2. **实施 C5 §4**：先写“超时仍进入 `UNINITIALIZED`”失败测试，再移动终态写入；只运行
    `BaseNettyLifecycleTest` 目标用例和 basenetty 质量检查。
@@ -1068,10 +1100,9 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    commit，不能把测试与另一项实现交叉放置。
 4. **实施 M-2 与 M-7 的共同接缝**：先加入 `AudioOutput`、AAC source/decoder session、OPUS decoder
    session 及 fake；这些类型全部为 `internal`，公开构造器不暴露测试依赖。
-5. **实施 M-2 组合重构**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；
+5. **实施 M-2 组合重构，同时落地 M-1**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；`writeDecodedPcm()` 必须将 `AudioTrack.write()` 的非正返回值转为失败终态，不得保留「静默丢弃却走 `endCallback`」的 M-1 路径；
    同一改动更新类 KDoc、Demo 调用（若编译暴露旧继承 API）和 CHANGELOG。
-6. **补 M-7 五个回归用例**：逐条完成 red/green；M-2 的 AAC 终态测试与 OPUS 的阻塞写/尾边界/H2
-   测试全部通过后，再运行 audio 模块质量检查。
+6. **落地 M4 并补 M-7 五个回归用例**：先按 §4 M4 跳过尾随 start code 产生的空 payload，不能只增加一条永远为绿的期望；再逐条完成 M-7 的 red/green。M-2/M-1 的 AAC 终态测试与 OPUS 的阻塞写/尾边界/H2 测试全部通过后，再运行 audio 模块质量检查。
 7. **C6 不实施**：不加 listener、即时 `isTerminated` 错误日志、watchdog 或全局观察协程；仅保留本文
    的机制说明。以后只有出现明确的线上可观测性需求时才单独设计 client/server 对称方案。
 8. **最后做集成验证**：运行 §5.1 命令以及 `:demo:assembleDevDebug`；音频/MediaCodec 行为按 §5.2
@@ -1084,23 +1115,22 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 | 顺位 | 编号 | 一句话 | 依赖 / 备注 |
 |---|---|---|---|
-| 1 | **H-1** | 异步 `flush()` 后未 `start()`，OPUS 首次丢帧即永久静音（唯一 HIGH） | 见 §5.3 的遗漏补记；建议紧随 M-9 |
-| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | 与 H-1 叠加才成「永久静音且无上报」，建议与 H-1 同批 |
-| 3 | **M-1** | AAC 把「AudioTrack 一字节未收」当成功，整段静默丢弃仍走 `endCallback` | 独立；修法经已有 `notifyCodecFailure` 通道，与 M-2 重构有交集，宜在 M-2 之后或同批 |
-| 4 | **M4** | `OpusFilePlayer` 把合法的文件结尾形态判成会话失败 | 独立；其回归锁正是 §5.3 第 6 项 M-7 的第 4 条用例，宜与 M-7 同批 |
-| 5 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 独立；后果为推断（0.6），建议先真机确认再定是否修 |
-| 6 | **M-8 + A2** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏；`MicRecorder.startRecord()` 无重入守卫 | 同一问题的 demo 侧与库侧，必须同批，否则只修一侧仍可复现 |
-| 7 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 在同一函数邻域，宜与第 6 项同批；需把 `micRecorder` 改 `@Volatile` |
-| 8 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
-| 9 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
-| 10 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
-| 11 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
+| 1 | **H-1** | 异步 `flush()` 后未 `start()`，OPUS 首次丢帧即永久静音（§3 唯一 HIGH） | 见 §5.3 的遗漏补记；建议紧随 M-9 |
+| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | 与 H-1 是两条独立的永久静音路径；可为了共享流播放器失败回归而同批，但不存在正确性依赖 |
+| 3 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 结构性缺口与可达路径已静态确认，真机只用于验证设备表现和修复后行为，不应将「是否修复」交给真机结果决定 |
+| 4 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦 |
+| 5 | **A2** | `MicRecorder.startRecord()` 无重入守卫 | 可独立修复同一实例上的双 job；与 M-8 同批仅是审查与真机录音回归的便利，不是正确性前提 |
+| 6 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 共用 `record()` 函数邻域和序列化方案，宜同批；不要另建一套只靠 `@Volatile` 的发布规则 |
+| 7 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
+| 8 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
+| 9 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
+| 10 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
 
 两点必须同时注意：
 
-1. **§5.2 与 §5.3 当前对不上。** §5.2「必须真机验证的项」点名 `H-1、M-1、M-4、A2、B4-b、M-8、L-7`，
-   而 §5.3 未安排其中任何一项的实施 —— 即文档要求真机验证一批它从未排期的修复。本节即为消除该
-   矛盾而补；实施决策落定后，应回头让 §5.2 与 §5.3／§5.4 的条目一致。
+1. **§5.2 是验证矩阵，不是实施排期。** 其中 M-1 与 M4 已分别纳入 §5.3 的 M-2/M-7 批次；
+   `H-1、M-4、A2、B4-b、M-8、L-7` 仍在本节的未决列表中。只有实施了对应修复，才执行
+   §5.2 对应的真机项；不能把「未修复，因而无法验证」记成通过。
 2. **M-9 之前不要跑 §5.1 的整套命令。** `demo:ktlintCheck` 被既有违规阻断（§3 M-9），在它修掉之前
    ktlint 环节的失败会掩盖其它改动自身的问题。
 

@@ -1,6 +1,6 @@
 # `review/native-modules` 对比 `master` 的快速代码审查（2026-10-20）
 
-> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）新增 G11、G12、G13。第七轮（Codex，2026-10-21）对此前确认的 26 项做了实现改动，其中 F6、F9、G7 仅部分落地。第八轮（Claude，2026-10-21）的复核与后续公开 API 修正见 §15 和 §14.2。G11/G13 随 `b0c417d95`、`f6cbb985e` 和 `fec53929a` 落地后，远端记录见 §16；Codex 后续复核确认 G13 已正确落地，但 G11 仍存在 `stopTrafficMonitor()` 返回后才启动监控的剩余竞态。第十轮（Codex，2026-10-22）已使最终发布/启动与停止串行化，并以新增竞态用例验证停止栅栏，见 §17。另有一条跨分支待办（Detekt 任务未设 `classpath`，导致 `!!` 等需类型解析的规则实际失效）记于 §18，不在本分支修复。第二轮详审的**第 2/3 部分**（audio + basenetty + demo 音频/Socket）记于独立文档 `00-documents/2026-10-26-branch-review-part2-audio-netty_cc.md`，§编号在该文档内本地重新起算；第 3/3 部分（原生模块 + demo 其余 + 构建脚本）尚未开始。
+> 本文分两部分：§0–§8 为第一轮快速审查；§9 起为第二轮详细审查，目前完成第 1/3 部分（录屏与共享基础库），第一轮在该范围内的结论以 §10 的裁决为准。Codex 随后在同一 HEAD 上对文档方案做了第三轮源码复核；该轮更正已经直接并入 §10–§14，在当时不代表代码已实施。第四轮（Claude，2026-10-20）对 Codex 的修订逐条对照源码复核，补充了 F2 缺失常量与测试影响、G4 的 `@RequiresApi`、G9 的真实迟到窗口，并按录屏所有者的既有隔离策略撤回 F10 的 `Error` 重抛。第五轮再次对照 AOSP 与当前控制流，进一步订正 FrameDropper 的多周期推进规则，修复 F10 验证项矛盾，并推翻第四轮 G3 的重试 token 判断；对应位置均保留轮次说明。第六轮（Claude，2026-10-20）新增 G11、G12、G13。第七轮（Codex，2026-10-21）对此前确认的 26 项做了实现改动，其中 F6、F9、G7 仅部分落地。第八轮（Claude，2026-10-21）的复核与后续公开 API 修正见 §15 和 §14.2。G11/G13 随 `b0c417d95`、`f6cbb985e` 和 `fec53929a` 落地后，远端记录见 §16；Codex 后续复核确认 G13 已正确落地，但 G11 仍存在 `stopTrafficMonitor()` 返回后才启动监控的剩余竞态。第十轮（Codex，2026-10-22）已使最终发布/启动与停止串行化，并以新增竞态用例验证停止栅栏，见 §17。另有一条跨分支待办（Detekt 任务未设 `classpath`，导致 `!!` 等需类型解析的规则实际失效）记于 §18，不在本分支修复。第二轮详审的**第 2/3 部分**（audio + basenetty + demo 音频/Socket）记于独立文档 `00-documents/2026-10-26-branch-review-part2-audio-netty_cc.md`，§编号在该文档内本地重新起算；第 3/3 部分（原生模块 + demo 其余 + 构建脚本）尚未开始。第十三轮（Codex，2026-10-23）对 `ef51ac0ad` 的复核与修正见 §21，第十四轮（Claude，2026-10-26）对该提交的复核见 §22。
 
 ## 0. 范围与方法
 
@@ -1935,3 +1935,50 @@ Boolean 使回滚只注销本次注册的那一个。`FloatViewCreator.tryShow()
 
 本轮未执行真机验证；MediaProjection、MediaCodec、Surface 与 HandlerThread 的真实设备生命周期仍需
 按仓库验证矩阵覆盖 API 21～26 和较新设备。
+
+---
+
+## 22. 第十四轮：`7dcb532d5` 复核（Claude，2026-10-26）
+
+对 Codex 提交 `7dcb532d5 fix(screencapture): harden projection teardown` 及其 §21 自述的复核。
+**结论：通过。** 它修掉了 `ef51ac0ad` 的一个真缺陷，并纠正了本文档此前两处错误论断。本轮为源码
+静态分析，未执行 Gradle、未做真机验证。
+
+### 22.1 确认 Codex 的三项修正（均已逐条核对源码）
+
+1. **启动失败后投屏从未停止 —— 真缺陷，确认。** `builder.mediaProjection?.stop()` 只存在于
+   `ScreenRecordMediaCodecStrategy.onStop()` 内（`:351`），而 `onStop()` 首行是
+   `if (!videoEncoderLoop.getAndSet(false)) return`（`:343`）；`onStart()` 把 `videoEncoderLoop.set(true)`
+   放在**最后一行**（`:362`）。因此 `onStart()` 抛出时该标志仍为 false → `onRelease()` 内
+   `collectCleanupFailure(failure) { onStop() }` 立即早退 → MediaProjection 一直活着。
+   `ef51ac0ad` 的 `runCatching { processor.onRelease() }` 既丢弃释放失败又不停投屏，
+   `releaseProcessorAfterStartFailure()` 两件事都做了，并以 `!==` 守卫避免自抑制。
+   另：该函数取 `:235` 的局部 `val mediaProjectionRef`（`:236` 已 `requireNotNull`）而非
+   `lateinit var mediaProjection` 字段，规避了字段重赋值的隐患。
+2. **`ef51ac0ad` 的接口 KDoc 过度承诺 —— 确认。** `ScreenProcessor` 有三个实现，按
+   `collectCleanupFailure` 命中数统计：`ScreenRecordMediaCodecStrategy` 11、
+   `ScreenRecordRawBmpStrategy` 0、`Screenshot2H26xStrategy` 0。把「尝试全部步骤、首错外传、
+   其余 suppressed」与「已尽可能释放」写成接口级保证，对三分之二的实现不成立。下沉到具体
+   strategy 并把 CHANGELOG 改为具体策略名是正确的。
+3. **§20.2 第 6 项关于身份守卫的论断是错的 —— 确认。** `collectCleanupFailure`（`:433-446`）在
+   `previousFailure == null` 时直接返回新异常、**不调 `addSuppressed`**；
+   `release aggregates a second cleanup failure as suppressed` 用例中 `onStop()` 抛出时
+   `previousFailure` 正是 null，故 `:443` 的 `!==` 守卫从未被触发。Codex 另以变异测试实证
+   （删除守卫后该用例仍通过），记于 §21.2。相应断言与注释已删除。
+
+### 22.2 本轮新发现
+
+| 编号 | 文件 | 问题 | 确定性 |
+|---|---|---|---|
+| **M-1** | `ScreenProcessor.kt:55-58`（`onRelease` 的 KDoc） | 「不得让失败从 `Handler` runnable 逃出」的警告只保留在 `onStop()` 上，`onRelease()` 的那段被删。而 `onRelease()` 仍从 `serviceHandler.post{}` 调用（`MediaProjectionService.kt:313-319`），同样的危害、同样的仓库内调用形态，文档只警告一半。应补回 | 确定 |
+| **M-2** | `MediaProjectionService.kt:93` | `var screenProcessor: ScreenProcessor? = null` 既是 **public** 又非 `@Volatile`。新增的 `if (screenProcessor === processor)`（`:281`）守卫依赖读到当前值，但该字段在 `startScreenShare()` 的调用方线程写（`:274`/`:281`）、在两个 `serviceHandler.post{}` 块里由 service-thread 读（`:303`/`:319`）。预存问题（`ef51ac0ad` 亦未加），但新守卫把它的可靠性变成了前提。建议 `@Volatile` 并收敛为 `private`（需先确认 demo 内无外部读取方） | 确定（JMM） |
+| **M-3** | `demo/.../audio/receiver/AudioReceiver.kt:164-166` | **本分支当前过不了 `staticCheck`**：`private fun startMicRecording(): MicRecorder { return MicRecorder(...) }` 是单 return 表达式体，ktlint `function-expression-body` 要求写成 `= MicRecorder(...)`。`ignoreFailures = false`，故 `demo:ktlintCheck` 红。§21.2 已如实记录其仍被阻断。该文件属第 2/3 切片，详见 `2026-10-26-branch-review-part2-audio-netty_cc.md` §3 M-9 | 确定（已读源码确认） |
+| **L-1** | 提交 `7dcb532d5` | 提交信息只有一行标题、无正文。本提交改变了行为（失败时停止 projection）并纠正了两处已写入文档的论断，这些应进提交信息；本链上其它提交均有详细正文 | 确定 |
+| **L-2** | `ScreenRecordMediaCodecStrategy.kt:443` | `collectCleanupFailure` 的 `!==` 身份守卫现已被证明**无任何测试覆盖**（见 §22.1 第 3 条）。Codex 的两条新测试覆盖的是 demo 侧 helper 的自抑制，不是 strategy 侧这道守卫。要么补一条让它变红的用例（需构造某步骤重抛已累积的同一实例），要么在注释中注明它是纯防御性的 | 确定 |
+| **L-3** | `MediaProjectionService.kt:315-317` | 注释仍断言接口级行为 —— 「by then it has already released every resource it could」—— 而被调对象类型是 `ScreenProcessor?`。这正是 §22.1 第 2 条刚从接口 KDoc 删除的那个过度承诺，与 Codex 自身的理由不自洽。应改为指向具体策略，或删去该保证 | 确定 |
+
+### 22.3 验证状态
+
+本轮**未执行任何 Gradle 命令、未做真机验证**，全部结论为源码静态分析。M-3 是读源码确认的规则违反，
+未经 ktlint 实际运行证实（Codex 在 §21.2 记录其已实际运行并被阻断）。M-1/L-3 为文档一致性，
+M-2/L-2 若实施需重跑 `screencapture` 与 `demo` 的单测、detekt、ktlint。

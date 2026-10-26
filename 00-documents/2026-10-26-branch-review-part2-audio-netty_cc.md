@@ -99,7 +99,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 
 严重度按 `.claude/rules/common/code-review.md`：CRITICAL 阻断合并、HIGH 应在合并前修、MEDIUM 建议修、LOW 可选。**本节全部修复方案均未编译、未运行、未真机验证。**
 
-统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 8 ／ LOW 12。
+统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 9 ／ LOW 12。
 
 ### H-1（HIGH）异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音
 
@@ -292,6 +292,40 @@ if (!codecFailed.get() && !isReleasing && outputEosReceived) {
 - 是否本切片引入：**不是**，merge base（`97c84d242:demo/.../AudioActivity.kt:247`）形状相同，**预存**。
 - 确定性：**确定**。
 - 修复方案：`record()` 开头先 `stopRecording()`，或把三个 ToggleButton 改成互斥（RadioGroup / 单选逻辑）。前者改动小，后者更符合交互语义。
+
+### M-9（MEDIUM）本切片内一条既有 ktlint 违规使整个 `staticCheck` 无法通过
+
+- 文件：`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/receiver/AudioReceiver.kt:164-166`
+- 事实：
+
+```kotlin
+/** Builds and starts the recorder; the caller publishes it and re-checks `stopping`. */
+private fun startMicRecording(): MicRecorder {
+    return MicRecorder(
+```
+
+  单 return 表达式体，ktlint 标准规则 `function-expression-body` 要求写成 `= MicRecorder(...)`。
+  `.editorconfig` 未关闭该规则（只设了 `max_line_length = 100`），而项目 ktlint 为
+  `ignoreFailures = false`。
+- 后果：`demo:ktlintCheck` 失败 → **`./gradlew staticCheck` 在本分支红**。这不是本切片新引入的，
+  但它使 §5.1 的验证命令无法整体通过，也挡住本文档所有修复方案的验证路径。
+- 确定性：**确定**（已读源码确认规则违反）。Codex 在
+  `2026-10-20-branch-review-vs-master_cc.md` §21.2 记录其实际运行 `demo:ktlintCheck` 时仍被这一条
+  且仅这一条阻断。
+- 为何本轮细审未发现：`AudioReceiver.kt` 属 §1.1 中「已被 `2026-10-15` 审查包覆盖的 30 个文件」，
+  本轮对该桶只做结论复核，未重新过一遍 lint。**这是本轮方法上的缺口**：既有覆盖只保证逻辑结论
+  被复核过，不保证静态检查仍然通过。
+- 修复方案：
+
+```kotlin
+/** Builds and starts the recorder; the caller publishes it and re-checks `stopping`. */
+private fun startMicRecording(): MicRecorder = MicRecorder(
+    // ... existing arguments unchanged ...
+)
+```
+
+  注意随之而来的缩进变化须满足 `max_line_length = 100`；改完应以
+  `./gradlew :demo:ktlintCheck --rerun-tasks` 单独确认，再跑整套 `staticCheck`。
 
 ### LOW 条目
 
@@ -634,6 +668,9 @@ if (!workerGroup.isTerminated) {
   :audio:testDebugUnitTest :basenetty:testDebugUnitTest \
   :demo:testDevDebugUnitTest detekt ktlintCheck
 ```
+
+**注意：这条命令当前无法整体通过** —— `demo:ktlintCheck` 被 §3 M-9 的既有违规阻断，须先修掉
+`AudioReceiver.kt:164-166`，否则 ktlint 环节的失败会掩盖本文档修复方案自身的问题。
 
 ### 5.2 必须真机验证的项
 

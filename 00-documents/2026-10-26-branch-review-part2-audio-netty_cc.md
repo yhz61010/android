@@ -2,7 +2,7 @@
 
 > 本文是 `00-documents/2026-10-20-branch-review-vs-master_cc.md` 第二轮详细审查的**第 2/3 部分**。
 > 该文档第 141 行定义了三份切片的范围，第 1/3（录屏与共享基础库）已完成并记录在其 §9–§20；
-> 本文承接第 2/3，§编号本地从 §1 重新开始，不接续前文的 §21。第 3/3（原生模块 + demo 其余 +
+> 本文承接第 2/3，§编号本地从 §1 重新开始，不接续该文档的章节编号（其现已延伸至 §22）。第 3/3（原生模块 + demo 其余 +
 > 构建脚本）尚未开始。
 
 ## 1. 范围与方法
@@ -79,7 +79,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 | **M16** `codecJob` 非 `@Volatile` | **已修复** | `BaseMediaCodec.kt:55-56` 已标 `@Volatile`，`:174-176` 补了重读排序理由 |
 | **M17** 一次性会话测试缺口 | **已修复** | `BaseMediaCodecAsynchronousTest.kt:254`（并发 start）、`:285`（重复 release 恰好一次）、`:183`/`:210`（迟到 output 回调） |
 | **M19 / L16** 重复 AAC CSD 覆盖并泄漏 decoder | **已修复（owner 侧）** | `AacStreamPlayer.kt:97-120` 短包先比对 `activeCsd`，活动会话中重复或变化的 CSD 一律拒绝；`OpusStreamPlayer.kt:105` 为 `csd0 == null && size == 83` 守卫。`AacDecoder`/`OpusDecoder` 自身无对应守卫，但 `BaseMediaCodec.kt:99` 的一次性 `start()` 使二次启动必抛，所有权只由 owner 持有，故无需 decoder 侧守卫 |
-| **M24** 输入 EOS 后无墙钟上界 | **worker 侧已修复，join 侧仍成立** | `BaseMediaCodecSynchronous.kt:44`、`:56` 加了 `eosDrainTimeoutMs`（3 s）；但 `BaseMediaCodec.kt:172`、`:177` 的两次 `cancelAndJoin()` 在 `NonCancellable` 下仍无上界（属基类，既有文档 §10.2 已记录为有意选择） |
+| **M24** 输入 EOS 后无墙钟上界 | **worker 侧已修复，join 侧仍成立** | `BaseMediaCodecSynchronous.kt:44`、`:56` 加了 `eosDrainTimeoutMs`（3 s）；但 `BaseMediaCodec.kt:172`、`:177` 的两次 `cancelAndJoin()` 在 `NonCancellable` 下仍无上界（属基类，`2026-09-02-audio-media-teardown-followup-fixes_cc.md` §10.2 已记录为有意选择） |
 | **M30** 异步输出行为变更未记录 | **已修复** | `CHANGELOG.md:466-467` 三条（空非 config 输出不再回调、带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`、`onOutputFormatChanged` 现在真正触发）均已记录 |
 | **M31** 三个数据回调的锁契约 | **形态已变：已文档化，未结构性消除** | KDoc 已补，但 `OpusDecoder.kt:111-113` 仍在锁内调用调用方提供的 `endCallback` |
 | **L11** `mime!!` | **已消除** | `AacFilePlayer.kt:91-92` 改用 `requireNotNull` |
@@ -822,7 +822,8 @@ verify(exactly = 0) { mediaCodec.release() }
 
 ### C5（确认 + 一处修正）`releaseNetty()` 超时后 `connectStatus` 永久停在 `RELEASING`
 
-- 原记录：第 71、102 行，行号 `:904` → 现为 **`:906`**（偏移 2 行），`:867` 准确。
+- 原记录：第 71、102 行，行号 `:904` 与 `:867` **均准确**。
+  （**更正，2026-10-26 复核**：本节此前写作「`:904` → 现为 `:906`，偏移 2 行」，这是错的。`:904` 正是超时分支的 `return false`，与原记录指向一致；`:906` 是成功路径的 `return nettyReleased`，属另一条语句。）
 - 事实（已核实）：`releaseNow()` 的 `withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }` 在 `null` 时 `return false`（`:906` 之前）而**不动状态**；`connectStatus` 只在 `:925` 的成功分支（`terminationFuture().awaitCompletion()` 之后）写 `UNINITIALIZED`。随后 `release()` 的守卫（`:858-868`）把 `RELEASING` 当「正在释放」返回 false。
 - **修正：「worker group 无补偿路径」这句要改。** `releaseNetty()` 的 `finally`（`:912-922`）在超时路径上**一定会执行** `workerGroup.shutdownGracefully(0, 2, SECONDS)`（`:921`，非挂起，在被取消的协程里照样跑完）。group 的关闭请求已发出，netty 会自己走完终止流程 —— **不是资源泄漏，是状态与契约不一致**。准确说法是「没有终态、没有观察点」。这与 `2026-10-16-...` §3 的结论一致（该文档本就写明「不是资源泄漏」）。
 - 后果（照该提案 §3 的四条，逐条在当前 HEAD 核实，全部仍成立）：
@@ -996,7 +997,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 | A2 `startRecord()` 无重入守卫 | **确认 + 后果升级**（native use-after-release）；预存未加重 | `:231` 准确 | HIGH |
 | A3 超时断言证明力 | **形态修正**：worker 侧已闭锁，残留只在 release 侧；失效方向是假绿 | 4 处全准确 | MEDIUM |
 | B4 demo 主线程构造 MicRecorder | **AudioSender 推翻**；**`AudioActivity.record()` 确认**，预存未加重 | `:164` 准确但结论需拆分 | MEDIUM |
-| C5 `connectStatus` 停在 `RELEASING` | **确认**，「group 无补偿路径」修正为「关闭已请求，缺终态与观察点」；沿用 2026-10-16 §4 无需修订 | `:867` 准确，`:904`→`:906` | MEDIUM |
+| C5 `connectStatus` 停在 `RELEASING` | **确认**，「group 无补偿路径」修正为「关闭已请求，缺终态与观察点」；沿用 2026-10-16 §4 无需修订 | `:867`、`:904` 均准确 | MEDIUM |
 | C6 `terminationFuture` 永不被观察 | **确认机制，维持可接受**；服务端同形；本轮明确不改 | `:928`/`:945` 准确 | LOW |
 
 ---
@@ -1036,12 +1037,30 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 - **A2 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，确认无 PCM 帧交错、无 `AudioRecord` 泄漏、无 native 崩溃。
 - **L-7**：打印 `OpusDecoder` 回调所在线程名，确证「回调落在主 Looper」这一推断。
 
+**注意**：上列各项的**实施**决策见 §5.3（仅 C5／C6／M-2／M-7／M-9）与 §5.4（其余）。本节只说明
+「若实施，必须真机验证什么」，不代表这些修复已被排期。
+
 ### 5.3 作者决策与实施顺序（2026-10-26）
+
+> **范围说明（复核补记，Claude，2026-10-26）**：本节结论的是本文原先列出的**四项待决策**
+> （M-2 的方案选择、C5 的实施时机、C6 是否动手、M-7 的测试投入），**不是本文全部发现的实施计划**。
+> 下列 1–8 项为作者决策，仅覆盖 C5、C6、M-2、M-7、M-9 五条；本文另有 12 条编号发现与 12 条 LOW
+> 尚无实施决策，见 §5.4。**照本节走到最后一项的集成验证，并不等于本轮审查已交付。**
 
 四项原待决策内容均已确定，不再留给实施者二次选型：
 
 1. **先修 M-9**：只把 `AudioReceiver.startMicRecording()` 改为表达式体，运行
    `:demo:ktlintCheck`，先清除会掩盖后续结果的已知基线阻断。
+
+   > **遗漏补记（Claude，2026-10-26）：H-1 应接在本项之后、下一项之前。**
+   > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是本文**唯一的 HIGH**，
+   > 严重度高于本节任何一项，但未被排入 1–8 项。它与其余各项无依赖关系，修法是在
+   > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1）。可行性已核：`codecOperationLock`
+   > 是 `ReentrantLock`（`BaseMediaCodec.kt:62`），同线程嵌套取锁安全；`codec` 为
+   > `internal lateinit var`（`:47`）、`withCodecOperationLock` 为 `protected`（`:259`），子类均可
+   > 访问。建议紧随 M-9 实施，因为它同时是 M-3 在 OPUS 路径上的放大器 —— 两者叠加才构成「永久
+   > 静音且调用方永不知情」。本条为复核补入的**建议**，不是作者决策。
+
 2. **实施 C5 §4**：先写“超时仍进入 `UNINITIALIZED`”失败测试，再移动终态写入；只运行
    `BaseNettyLifecycleTest` 目标用例和 basenetty 质量检查。
 3. **独立实施 C5 §5B**：先写“从未 connect 也释放 group”和“并发 release 只有一个 owner”失败
@@ -1057,6 +1076,33 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    的机制说明。以后只有出现明确的线上可观测性需求时才单独设计 client/server 对称方案。
 8. **最后做集成验证**：运行 §5.1 命令以及 `:demo:assembleDevDebug`；音频/MediaCodec 行为按 §5.2
    真机矩阵验证。未具备设备时必须把相应用例列为未验证，不用 Robolectric 结果替代。
+
+### 5.4 尚无实施决策的发现（复核补记，Claude，2026-10-26）
+
+§5.3 只结论了原四项待决策。下列发现**均已给出代码级修法，但没有实施决策**，需作者排期。顺序按
+严重度与相互依赖建议，**不代表已获批准**。
+
+| 顺位 | 编号 | 一句话 | 依赖 / 备注 |
+|---|---|---|---|
+| 1 | **H-1** | 异步 `flush()` 后未 `start()`，OPUS 首次丢帧即永久静音（唯一 HIGH） | 见 §5.3 的遗漏补记；建议紧随 M-9 |
+| 2 | **M-3** | codec 失败不改 `lifecycleState`，两个流播放器无失败通道 | 与 H-1 叠加才成「永久静音且无上报」，建议与 H-1 同批 |
+| 3 | **M-1** | AAC 把「AudioTrack 一字节未收」当成功，整段静默丢弃仍走 `endCallback` | 独立；修法经已有 `notifyCodecFailure` 通道，与 M-2 重构有交集，宜在 M-2 之后或同批 |
+| 4 | **M4** | `OpusFilePlayer` 把合法的文件结尾形态判成会话失败 | 独立；其回归锁正是 §5.3 第 6 项 M-7 的第 4 条用例，宜与 M-7 同批 |
+| 5 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 独立；后果为推断（0.6），建议先真机确认再定是否修 |
+| 6 | **M-8 + A2** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏；`MicRecorder.startRecord()` 无重入守卫 | 同一问题的 demo 侧与库侧，必须同批，否则只修一侧仍可复现 |
+| 7 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 在同一函数邻域，宜与第 6 项同批；需把 `micRecorder` 改 `@Volatile` |
+| 8 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
+| 9 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
+| 10 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
+| 11 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
+
+两点必须同时注意：
+
+1. **§5.2 与 §5.3 当前对不上。** §5.2「必须真机验证的项」点名 `H-1、M-1、M-4、A2、B4-b、M-8、L-7`，
+   而 §5.3 未安排其中任何一项的实施 —— 即文档要求真机验证一批它从未排期的修复。本节即为消除该
+   矛盾而补；实施决策落定后，应回头让 §5.2 与 §5.3／§5.4 的条目一致。
+2. **M-9 之前不要跑 §5.1 的整套命令。** `demo:ktlintCheck` 被既有违规阻断（§3 M-9），在它修掉之前
+   ktlint 环节的失败会掩盖其它改动自身的问题。
 
 ---
 

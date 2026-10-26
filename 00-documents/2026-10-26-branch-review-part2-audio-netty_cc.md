@@ -217,26 +217,51 @@ start」状态，而 `lifecycleState` 不变（即 M-3），`isRunning` 仍为 t
 - 触发条件：`play()` 成功后 AudioTrack 离开 `PLAYSTATE_PLAYING`（被其他组件 pause、音频焦点/路由异常），或 audioserver 重启导致 `ERROR_DEAD_OBJECT`。
 - 后果：整首 AAC 被解码并静默丢弃，`endCallback` 照常触发，Demo 把按钮恢复成「播完了」，调用方拿不到任何线索；`ERROR_DEAD_OBJECT` 这类硬错误被完全吞掉，违反 `coding-style.md` 的「Never silently swallow errors」。
 - 确定性：**确定**（代码路径与返回值语义可直接读出）；哪些设备状态会让 `playState` 掉出 PLAYING 属运行期因素，未验证。
-- 修复方案（与 OPUS 对齐，经已有的 `notifyCodecFailure` 终态通道）：
+- 修复方案：**只写 M-2 之后的形态。** §5.3 第 5 项把 M-1 与 M-2 排在同一步，而 M-2 会把
+  `AacFilePlayer` 从 `BaseMediaCodecSynchronous` 的子类改为持有者 —— 届时它既调不到
+  `notifyCodecFailure`（且 §3 M-3 还要把该钩子从 `public open` 收窄为 `protected open`），也不再有
+  `onOutputData` 这个 codec 回调。落点是 M-2 第 5 步引入的 `private fun writeDecodedPcm(pcm: ByteArray)`，
+  走 player **自有**的终态协议，不经任何 codec 钩子：
 
 ```kotlin
-val writtenBytes = audioTrackPlayer.write(chunkPCM)
-// A non-positive write means the track is no longer playing or the audio server is gone.
-// Reporting it beats ending the session through endCallback with nothing played, which is
-// far harder to diagnose. Teardown already ignores this once terminal cleanup has begun.
-if (writtenBytes <= 0) {
-    if (!terminalStarted.get()) {
-        notifyCodecFailure(
-            IllegalStateException("AudioTrack accepted no data (code=$writtenBytes)")
-        )
+/**
+ * Single failure entry for this player: the decoder session's onFailure and a refused
+ * AudioTrack write both land here, so one session cannot end through two protocols.
+ * Non-suspending on purpose - it is reached from the decoder callback thread.
+ */
+private fun requestFailure(error: Throwable) {
+    if (terminalStarted.get()) return
+    terminalScope.launch {
+        finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
     }
-    return
 }
-val pcmFrameBytes = Short.SIZE_BYTES * audioDecodeInfo.channelCount
-writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes).toLong())
+
+private fun writeDecodedPcm(pcm: ByteArray) {
+    if (pcm.isEmpty()) return
+    val writtenBytes = audioOutput.write(pcm)
+    // A non-positive write means the track is no longer playing or the audio server is gone.
+    // Reporting it beats ending the session through endCallback with nothing played, which is
+    // far harder to diagnose. Teardown already ignores this once terminal cleanup has begun.
+    if (writtenBytes <= 0) {
+        requestFailure(IllegalStateException("AudioTrack accepted no data (code=$writtenBytes)"))
+        return
+    }
+    val pcmFrameBytes = Short.SIZE_BYTES * audioDecodeInfo.channelCount
+    writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes).toLong())
+}
 ```
 
-`notifyCodecFailure` 已是 `:139-143` 的 `terminalScope.launch`，非阻塞，可安全在持 `codecOperationLock` 的 worker 回调内调用。
+  可行性已核：`terminalScope`（`AacFilePlayer.kt:80`）、`terminalStarted`（`:74`）、
+  `finishPlayback(TerminalReason.Failure(...), propagateFailure = false)` 与 `TerminalReason` 在 M-2
+  重构后全部留在 player 上 —— 现有的 `notifyCodecFailure` 覆写（`:139-143`）本来就只是
+  `terminalScope.launch { finishPlayback(...) }` 这一句，所以 `requestFailure()` 只是把它从 codec
+  钩子改成普通私有函数，并让 `AacFileDecoder` 的 `onFailure` 回调也指向同一个入口。
+  `finishPlayback` 自身已由 `terminalStarted` 的 CAS（`:217`）保证单次执行，`requestFailure` 里那层
+  `terminalStarted.get()` 只是避免白启一个注定早退的协程，不是正确性所需。
+  `terminalScope` 非阻塞，因此该调用在解码回调线程上是安全的。
+
+  **不要**保留本节早先那版经 `notifyCodecFailure(...)` 的写法：它依赖 M-2 将要删除的继承关系，
+  在同一步落地后无法编译。
 
 ### M-2（MEDIUM）`AacFilePlayer` 暴露继承来的 `releaseAndJoin()`，而它只释放 MediaCodec
 
@@ -472,7 +497,11 @@ protected open fun notifyCodecFailure(error: Throwable) {
      `onFailure: (Throwable) -> Unit` 构造参数。decoder 错误回调只调 `requestCodecFailure(error)`；
      该函数 CAS 一次后在 `terminalScope` 调 `stopPlayingAndJoin()`，完整释放 decoder 和
      AudioTrack 后才调客户 `onFailure`。`terminalScope` 不能是 `ioScope` 子作用域，否则
-     `StreamPlayerStopper` 会拒绝自作用域 join。
+     `StreamPlayerStopper` 会拒绝自作用域 join。该作用域照搬既有先例
+     `OpusFilePlayer.kt:88-91`（`SupervisorJob + Dispatchers.IO + CoroutineName` 并挂
+     `CoroutineExceptionHandler`），**并沿用其「不由播放器自身取消」的所有权**：终态清理就跑在它
+     里面，播放器无法在 teardown 中取消承载该 teardown 的作用域。它只承载一次性失败路径，会话结束
+     后无挂起工作，故刻意不取消 —— 这一点要写进 KDoc，避免后续维护者误以为漏了取消。
 
 ```kotlin
 class AacDecoder(
@@ -1247,7 +1276,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    commit，不能把测试与另一项实现交叉放置。
 4. **实施 M-2 与 M-7 的共同接缝**：先加入 `AudioOutput`、AAC source/decoder session、OPUS decoder
    session 及 fake；这些类型全部为 `internal`，公开构造器不暴露测试依赖。
-5. **实施 M-2 组合重构，同时落地 M-1**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；`writeDecodedPcm()` 必须将 `AudioTrack.write()` 的非正返回值转为失败终态，不得保留「静默丢弃却走 `endCallback`」的 M-1 路径；
+5. **实施 M-2 组合重构，同时落地 M-1**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；`writeDecodedPcm()` 必须将 `AudioTrack.write()` 的非正返回值转为失败终态，不得保留「静默丢弃却走 `endCallback`」的 M-1 路径。接法已在 §3 M-1 定好：新增 player 私有的 `requestFailure(error)`（`terminalScope.launch { finishPlayback(Failure(...), propagateFailure = false) }`），由 `writeDecodedPcm` 与 `AacFileDecoder` 的 `onFailure` 共用；**不得**沿用 §3 M-1 早先那版经 `notifyCodecFailure(...)` 的写法 —— 本步删除的正是它依赖的继承关系，且 §3 M-3 会把该钩子收窄为 `protected`；
    同一改动更新类 KDoc、Demo 调用（若编译暴露旧继承 API）和 CHANGELOG。
 6. **落地 M4 并补 M-7 五个回归用例**：先按 §4 M4 跳过尾随 start code 产生的空 payload，不能只增加一条永远为绿的期望；再逐条完成 M-7 的 red/green。M-2/M-1 的 AAC 终态测试与 OPUS 的阻塞写/尾边界/H2 测试全部通过后，再运行 audio 模块质量检查。
 7. **C6 不实施**：不加 listener、即时 `isTerminated` 错误日志、watchdog 或全局观察协程；仅保留本文

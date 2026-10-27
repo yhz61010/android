@@ -9,10 +9,11 @@
 
 | 项目 | 值 |
 |------|----|
-| 审查分支 | `review/native-modules`，HEAD `ef51ac0ad` |
+| 审查快照 | `review/native-modules`，HEAD `ef51ac0ad` |
+| 本次复核快照 | HEAD `a458f7b9d`；`ef51ac0ad..a458f7b9d` 未改动 `audio`、`basenetty` 或本部分 demo 源码，只更新审查文档及第 1/3 部分的录屏代码，因此本文的源码定位仍以 `ef51ac0ad` 为准 |
 | 对比基线 | 与 `origin/master` 的合并基 `97c84d242`（`docs: update Claude repository guidance`） |
-| 本分支代码差异 | 249 个文件，+17116 / −4953（已排除 `00-documents/` 与 `.claude/`） |
-| 本部分范围 | `audio`（主源码 + 测试）、`basenetty`、demo 音频示例与 Socket 调用方，共 **43 个文件，+4644 / −960**，占分支代码新增的约 27% |
+| 本分支代码差异 | 250 个文件，+17193 / −4953（已排除 `00-documents/` 与 `.claude/`；于 HEAD `a458f7b9d` 重新统计） |
+| 本部分范围 | `audio`（主源码 + 测试）、`basenetty`、demo `examples/audio` 及其单测与 Socket 调用方，共 **43 个文件，+4644 / −960**，占分支代码新增的约 27%；`examples/cipher/AudioCipherActivity.kt` 虽含 Audio 字样但属于 cipher 示例，另有 +27 / −8，本切片未计入，留给第 3/3 的「demo 其余」 |
 | 方法 | 3 个细审代理按切片通读改动文件全文（不只看 hunk），复核既有文档结论在当前 HEAD 是否仍成立，裁决第一轮遗留的悬置发现，并对未被任何文档覆盖的文件做补审；随后由独立复核代理对每条发现做对抗性核验（缺陷是否真实、行号是否准确、修法能否编译并通过 detekt/ktlint、是否兼容 minSdk 21、是否破坏调用方） |
 | 执行方式 | **全部为源码静态分析，未执行 Gradle、未做真机验证。** 文中「确定」指依据公开 Android API 文档或仓库代码可直接证实；「推断」单独标注置信度。所有验证项一律标注「未验证」 |
 | 代码改动 | 本轮审查阶段源码无改动 |
@@ -74,19 +75,19 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 | **H5 / M18** AAC 自然 EOF 泄漏 fd 与 AudioTrack | **已修复** | `AacFilePlayer.kt:134-137` 的 `onEndOfStream()` 改为 `terminalScope.launch { finishPlayback(NaturalEnd) }`；该路径 `:230` 先排空 AudioTrack、`:233-234` `stop()`+`releaseAndJoin()`、`:239 releaseExternalResources()`（`:299-308` 释放 `MediaExtractor` 与 `AudioTrack`），全部完成后才在 `:266` 调完成回调 |
 | **M10** EOF 回调无合法停止途径 | **形态已变，风险闭环** | `endCallback` 仍是 `() -> Unit`（`:158`），但 `:253 terminalCompletion.complete(Unit)` 发生在 `releaseAndJoin()` 返回之后、客户端回调之前，所以从回调里 `runBlocking { stop() }` 会命中 `:217-221` 的重复分支立即返回，不再 join 自身；且回调运行在 `terminalScope`（IO）而非 codec worker。**残留**：公开 KDoc 未写明回调所在线程，见 §3 L-7 |
 | **M13** 同步尾音丢失 / `onEndOfStream()` 双触发 | **已修复** | `BaseMediaCodecSynchronous.kt:113` 返回 `!outputEosReceived`；`:51-73` 输入 EOS 后进入带 3 秒上界的排空循环；`:76` 是全文件唯一的 `onEndOfStream()` 调用点且由 `outputEosReceived` 守卫，结构上不可能双触发 |
-| **M14** 两条公开 API 破坏未记入 CHANGELOG | **已修复** | `CHANGELOG.md:203-205` 已写明 `AacDecoder.decode()` 的 JVM 描述符由 `([B)V` 变为 `([B)Z`、预编译调用方不重编译会得到运行期 `NoSuchMethodError`，以及非 `RUNNING` 状态调用 `flush()` 现在抛 `IllegalStateException` |
+| **M14** 两条公开 API 破坏未记入 CHANGELOG | **已修复** | `CHANGELOG.md:205-208` 已写明 `AacDecoder.decode()` 的 JVM 描述符由 `([B)V` 变为 `([B)Z`、预编译调用方不重编译会得到运行期 `NoSuchMethodError`，以及非 `RUNNING` 状态调用 `flush()` 现在抛 `IllegalStateException` |
 | **M15 / M32** 钩子锁契约未文档化 | **已修复** | `BaseMediaCodec.kt:79-82`、`:85-88`、`:136-141`、`:144-150`、`:205-212`、`:262-265`、`:277-280` 全部补了锁契约；`IAudioMediaCodec.kt:24-26`、`:32-35`、`:43-46`、`:87-90`、`:94-97` 即本切片 `+19` 行的内容。**但该 KDoc 对同步路径不成立**，见 §3 L-1 |
 | **M16** `codecJob` 非 `@Volatile` | **已修复** | `BaseMediaCodec.kt:55-56` 已标 `@Volatile`，`:174-176` 补了重读排序理由 |
 | **M17** 一次性会话测试缺口 | **已修复** | `BaseMediaCodecAsynchronousTest.kt:254`（并发 start）、`:285`（重复 release 恰好一次）、`:183`/`:210`（迟到 output 回调） |
 | **M19 / L16** 重复 AAC CSD 覆盖并泄漏 decoder | **已修复（owner 侧）** | `AacStreamPlayer.kt:97-120` 短包先比对 `activeCsd`，活动会话中重复或变化的 CSD 一律拒绝；`OpusStreamPlayer.kt:105` 为 `csd0 == null && size == 83` 守卫。`AacDecoder`/`OpusDecoder` 自身无对应守卫，但 `BaseMediaCodec.kt:99` 的一次性 `start()` 使二次启动必抛，所有权只由 owner 持有，故无需 decoder 侧守卫 |
 | **M24** 输入 EOS 后无墙钟上界 | **worker 侧已修复，join 侧仍成立** | `BaseMediaCodecSynchronous.kt:44`、`:56` 加了 `eosDrainTimeoutMs`（3 s）；但 `BaseMediaCodec.kt:172`、`:177` 的两次 `cancelAndJoin()` 在 `NonCancellable` 下仍无上界（属基类，`2026-09-02-audio-media-teardown-followup-fixes_cc.md` §10.2 已记录为有意选择） |
-| **M30** 异步输出行为变更未记录 | **已修复** | `CHANGELOG.md:466-467` 三条（空非 config 输出不再回调、带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`、`onOutputFormatChanged` 现在真正触发）均已记录 |
+| **M30** 异步输出行为变更未记录 | **已修复** | `CHANGELOG.md:468-469` 三条（空非 config 输出不再回调、带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`、`onOutputFormatChanged` 现在真正触发）均已记录 |
 | **M31** 三个数据回调的锁契约 | **形态已变：已文档化，未结构性消除** | KDoc 已补，但 `OpusDecoder.kt:111-113` 仍在锁内调用调用方提供的 `endCallback` |
 | **L11** `mime!!` | **已消除** | `AacFilePlayer.kt:91-92` 改用 `requireNotNull` |
 | **L12** `stop()` 体内阻塞调用无 dispatcher | **已消除** | `AacFilePlayer.kt:213`、`OpusFilePlayer.kt:164` 都加了 `withContext(Dispatchers.IO)` |
 | **L18** `pause()` 内 `flush()` 紧随 `pause()` | **仍成立** | `AudioTrackPlayer.kt:251-256` 的 `audioTrack.pause()` 后立刻 `audioTrack.flush()`；`stop()`（`:274`）仍先调 `pause()`，消费者此时未必已 join |
 | **L26** `write()` 失败与「什么都没写」不可区分 | **仍成立且本切片放大** | `AudioTrackPlayer.kt:209-212` 新增 `getOrElse { ... 0 }`，异常路径也返回 0，见 §3 L-4 |
-| **L28** 补偿用裸 `runCatching` / output index 不归还 | **已修复** | `BaseMediaCodecSynchronous.kt:153`、`BaseMediaCodecAsynchronous.kt:72` 改用 `runCatchingPreservingCancellation`；`BaseMediaCodecSynchronous.kt:191-193`、`BaseMediaCodecAsynchronous.kt:110-112` 的 `finally` 保证归还 index |
+| **L28** 补偿用裸 `runCatching` / output index 不归还 | **部分修复，异步异常语义仍需调整** | `BaseMediaCodecSynchronous.kt:153`、`BaseMediaCodecAsynchronous.kt:72` 改用 `runCatchingPreservingCancellation`；`BaseMediaCodecSynchronous.kt:191-193`、`BaseMediaCodecAsynchronous.kt:110-112` 的 `finally` 保证归还 index。协程 worker 中保留取消是对的，但异步 MediaCodec Handler 回调不是协程，helper 会把 `CancellationException` 逃到 Looper，见 §3 M-5 |
 | **H8** codec 失败绕过终态 | **仅文件播放器闭环，流播放器仍成立** | `AacFilePlayer.kt:138-142` 有 `notifyCodecFailure` 覆写；`AacDecoder` 无覆写，`AacStreamPlayer.kt:65-90` 与 `OpusStreamPlayer.kt:77-97` 均未接错误回调，见 §3 M-3 |
 
 ### 2.2 `2026-10-15-audio-netty-teardown-review-package_cc.md` 覆盖的 30 个文件
@@ -99,7 +100,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 
 严重度按 `.claude/rules/common/code-review.md`：CRITICAL 阻断合并、HIGH 应在合并前修、MEDIUM 建议修、LOW 可选。**本节全部修复方案均未编译、未运行、未真机验证。**
 
-统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 9 ／ LOW 12。
+统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 11 ／ LOW 10（本次复核新增 M-10，L-8 提升为 MEDIUM；原 L-12 经复核推翻）。
 
 ### H-1（HIGH）异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音
 
@@ -125,26 +126,40 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
   不能只加 `codec.start()`。
 
 ```kotlin
-/** Incremented under the codec lock before every asynchronous flush. */
+/** Changed under the codec lock after every asynchronous flush attempt. */
 private val callbackGeneration = AtomicLong(0)
 
 /**
  * Asynchronous codecs stop requesting buffers after a flush. MediaCodec.flush() requires
- * start() to resume codec operations. Increment the callback generation before invalidating
- * buffer indexes so callbacks that entered before this flush cannot use an old index later.
+ * start() to resume codec operations. Change the callback generation after flush() returns and
+ * before start(): a callback that entered before or during flush keeps the old generation and
+ * cannot use an invalidated index after this lock is released.
  */
 override fun flush() {
-    val failure = withCodecOperationLock {
+    var transitionedToFailed = false
+    var failure: Exception? = null
+    withCodecOperationLock {
         check(isRunning) { "flush() requires a running codec session" }
-        callbackGeneration.incrementAndGet()
-        runCatchingPreservingCancellation {
-            codec.flush()
+        try {
+            try {
+                codec.flush()
+            } finally {
+                // Invalidate callbacks that entered before or during the attempt even when flush
+                // fails; M-3 will move the session to FAILED after this lock is released.
+                callbackGeneration.incrementAndGet()
+            }
             codec.start()
-        }.exceptionOrNull()
+        } catch (error: Exception) {
+            failure = error
+            // State only; owner code is notified after leaving the codec lock.
+            transitionedToFailed = transitionToCodecFailure()
+        }
     }
-    if (failure != null) {
-        LogContext.log.e(TAG, "flush and restart failed", failure)
-        reportCodecFailure(failure)
+    failure?.let { error ->
+        if (transitionedToFailed) {
+            LogContext.log.e(TAG, "flush and restart failed", error)
+            notifyTransitionedCodecFailure(error)
+        }
     }
 }
 ```
@@ -161,39 +176,62 @@ override fun onOutputBufferAvailable(
 ) {
     if (isReleasing) return
     val observedGeneration = callbackGeneration.get()
-    runCatchingPreservingCancellation {
+    try {
         withCodecOperationLock {
             if (isReleasing || observedGeneration != callbackGeneration.get()) {
                 return@withCodecOperationLock
             }
             // Existing callback body, including releaseOutputBuffer(index, false).
         }
-    }.onFailure { /* existing failure reporting */ }
+    } catch (error: Exception) {
+        if (!isReleasing) {
+            LogContext.log.e(TAG, "Output buffer callback failed", error)
+            reportCodecFailure(error)
+        }
+    }
 }
 ```
 
 同款入口快照与锁内复核必须用于 input、output、format-changed 和 error 回调，避免
-旧 format/error 回调在 flush 后污染新会话。世代只在锁内递增，回调只读取；
+旧 format/error 回调在 flush 后污染新会话。世代只在锁内、`codec.flush()` 尝试结束后且
+`codec.start()` 之前递增（flush 抛出时也由 `finally` 递增），回调只读取；
 `AtomicLong` 用来建立锁外快照的可见性，不取代 `codecOperationLock`。MediaCodec 尚未分发的旧
 callback 由 `flush()` 作废，世代栅栏专门处理已进入 Kotlin 回调但尚未获锁的窗口。
 
+不能在 `codec.flush()` **之前**递增世代：回调可能在「递增之后、flush 返回之前」进入，快照到新值后
+等待同一把锁；flush 返回并释放锁后它会错误地通过世代复核，继续使用刚失效的 index。若
+`codec.flush()` 抛出，`finally` 仍须在释放锁前改变世代，否则等待同一把锁的旧 callback 可能抢在
+`reportCodecFailure()` 之前进入并触碰 index。仅递增世代仍不够：若旧 callback 在世代递增后、状态
+切换前才进入，它会快照到新世代。因此失败路径还必须在同一锁内调用 M-3 的
+`transitionToCodecFailure()`，先把状态切到 `FAILED`；释放锁后再用
+`notifyTransitionedCodecFailure()` 通知 owner，绝不能在 codec 锁内调用客户代码。该失败分支必须继续
+与 M-3 同批落地。
+
 可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`）；`codec`、`isRunning`、
-`withCodecOperationLock` 与 `reportCodecFailure` 均可供子类使用。这里不调 `super.flush()`，因为基类会
+`withCodecOperationLock` 均可供子类使用；M-3 将补受保护的两阶段失败 helper。这里不调 `super.flush()`，因为基类会
 吞掉 `codec.flush()` 的异常，子类将无法知道是否还能安全执行 `codec.start()`。flush 和 start 在同一次
 锁持有期内顺序执行，任一失败都在锁外经现有失败通道上报，符合 `reportCodecFailure()` 对 owner
-callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补三类回归：
+callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronousTest` 补五类回归：
 
-1. 成功路径验证 `flush()` 严格先于 `start()`。
+1. 成功路径验证 `flush()` 严格先于 generation 切换，generation 切换严格先于 `start()`。
 2. 任一调用抛出时只上报一次失败，且 flush 失败后不得再调 `start()`。
 3. `TestCodec` 增加只在测试子类内可见的 helper：它先用 `withCodecOperationLock`
    持锁，再启动 callback executor。executor 在调 callback 前先递减 `callbackInvoked`
    latch；测试有界轮询该线程进入 `WAITING`（本路径唯一等待点就是
    `ReentrantLock`），从而证明回调已读取旧 generation 并暂停在获锁前。持锁线程
-   利用 `ReentrantLock` 可重入性在 helper 内调 `flush()`，完成 generation 递增 +
-   flush + start 后退出 helper，再等 callback 结束。断言旧 output index 没有调
+   利用 `ReentrantLock` 可重入性在 helper 内调 `flush()`，完成 flush + generation 递增 +
+   start 后退出 helper，再等 callback 结束。断言旧 output index 没有调
    `getOutputBuffer()` / `releaseOutputBuffer()`、没有伪失败上报；input 路径补对称用例，
    断言旧 index 没有调 `getInputBuffer()` / `queueInputBuffer()`。所有等待均使用
    2 秒上界，`finally` 里放行 latch 并关闭 executor，不使用无上界 sleep。
+4. 另补一条能区分递增顺序的竞态测试：mock `codec.flush()` 用 latch 阻塞；flush 线程已进入
+   `codec.flush()` 后才启动 callback，使 callback 在 **flush 进行中**完成 generation 快照并阻塞在
+   `codecOperationLock`。放行 flush 后断言该 callback 被世代栅栏丢弃。若实现错误地在 flush 前递增，
+   该用例会让旧 callback 通过并触碰 index，必须先红；仅覆盖「flush 调用前 callback 已等待锁」的测试
+   不能证明递增顺序正确。
+5. flush/start 失败测试还要让一个旧 callback 等待 codec 锁，并在锁释放后与 owner 通知竞争；断言它
+   只能观察到 `FAILED` 并退出，不能触碰 index，同时 owner 恰好收到一次原始 failure。该用例锁定“状态
+   转换在锁内、owner 通知在锁外”，防止以后把两阶段 helper 又合并回竞态实现。
 
 **失败分支在 M-3 落地前不可观测（复核补记，2026-10-26）**：上面这段修法的成功路径解决了静音，但它
 新增的失败分支对仓库内唯一会触发该 flush 路径的调用方是空转的。已核实 `OpusStreamPlayer.kt:77-97` 构造 `OpusDecoder`
@@ -453,12 +491,13 @@ sampleSource = null
 - 触发条件：任何 `CodecException`/`IllegalStateException`/子类回调异常（如损坏 AAC 帧，或帧超过 `KEY_MAX_INPUT_SIZE = 8 * 1024`（`BaseMediaCodec.kt:272`）时 `inBuf.put(input)` 抛 `BufferOverflowException`）。
 - 后果：worker 退出或 codec 进入错误态后 `isRunning` 仍为 true → 流播放器继续入队 → 队列填满 → `decodeOrDropLocked` 进入「丢帧 + flush + resync」死循环（在 OPUS 上叠加 H-1）→ **永久静音且调用方永不知情**，`MediaCodec`/`AudioTrack` 一直被持有。文件播放器不受影响（已接错误回调）。
 - 确定性：机制**确定**；真机发生频率取决于码流质量（推断）。
-- 修复方案：下列三步是同一个失败协议，**必须同批完成**；只加 decoder callback
+- 修复方案：下列四步是同一个失败协议，**必须同批完成**；只加 decoder callback
   不会改变 `isRunning`，只在播放器自有 `ioScope` 中调挂起 stop 又会命中
   `StreamPlayerStopper.kt:22-27` 的 owned-scope 守卫。
 
-  1. 在 `BaseMediaCodec` 增加 `FAILED` 状态，并让 `reportCodecFailure()` 成为唯一的
-     `RUNNING -> FAILED` CAS 入口。CAS 失败就不再重复通知；`isRunning` 立即变 false，
+  1. 在 `BaseMediaCodec` 增加 `FAILED` 状态，并把失败协议拆为“只转换状态”和“只通知 owner”两个
+     受保护 helper；普通路径仍通过 `reportCodecFailure()` 一次完成两步。CAS 失败就不再重复通知；
+     `isRunning` 立即变 false，
      `isReleasing` 将 `FAILED` 视为拒绝后续 codec 回调的终态。`markReleasing()` 允许
      `FAILED -> RELEASING`，因此 owner 仍可随后执行完整 `releaseAndJoin()`。同时将
      `notifyCodecFailure()` 从 `public open` 收窄为 `protected open`，它只是子类 owner-notification
@@ -478,30 +517,106 @@ protected val isReleasing: Boolean
         else -> false
     }
 
-/** Moves a live codec to FAILED and notifies its owner at most once, outside the codec lock. */
-protected fun reportCodecFailure(error: Throwable) {
-    if (!lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)) return
-    runCatchingPreservingCancellation { notifyCodecFailure(error) }
-        .onFailure { LogContext.log.e(TAG, "Codec failure callback failed", it) }
+/** State-only half of failure reporting; safe to call while the codec lock is held. */
+protected fun transitionToCodecFailure(): Boolean =
+    lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)
+
+/** Owner-notification half; the caller must have won [transitionToCodecFailure]. */
+protected fun notifyTransitionedCodecFailure(error: Throwable) {
+    try {
+        notifyCodecFailure(error)
+    } catch (callbackFailure: Exception) {
+        // This is a plain, non-suspending owner hook. CancellationException has no structured
+        // cancellation meaning here and must not escape a MediaCodec Handler callback.
+        LogContext.log.e(TAG, "Codec failure callback failed", callbackFailure)
+    }
 }
 
-/** Subclass hook reached only through reportCodecFailure(). */
+/** Moves a live codec to FAILED and then notifies its owner at most once. */
+protected fun reportCodecFailure(error: Throwable) {
+    if (transitionToCodecFailure()) notifyTransitionedCodecFailure(error)
+}
+
+/** Subclass hook reached only after this session has won its RUNNING -> FAILED transition. */
 protected open fun notifyCodecFailure(error: Throwable) {
     LogContext.log.e(TAG, "Codec failure reported", error)
 }
 ```
 
-  2. `AacDecoder` 增加与 `OpusDecoder` 对称的 `errorCallback`，并删掉两个 decoder
+     两阶段 helper 不是让任意子类随意拆开调用：唯一需要拆开的路径是 H-1 的 async flush/restart。
+     它必须在仍持 codec 锁时调用 `transitionToCodecFailure()`，让等待锁的旧 callback 一获锁就看到
+     `FAILED`；随后退出锁才调用 `notifyTransitionedCodecFailure()`，维持 owner callback 不在 codec 锁内
+     执行的契约。其它同步/异步处理失败继续只调 `reportCodecFailure()`。
+     `notifyCodecFailure` 是普通非挂起 hook，因此通知边界显式 catch `Exception`（包括
+     `CancellationException`），不能继续用只适合协程体的 `runCatchingPreservingCancellation`；否则 M-5
+     所述 Handler 线程逃逸会从数据 callback 转移到 owner-notification callback。
+
+  2. 先让 `StreamPlayerStopper` 自己成为并发 teardown 的单一协调点：在现有 caller-job `require`
+     **之后**增加 `stopStarted: AtomicBoolean`、`stopCompleted: CompletableDeferred<Throwable?>` 与首个调用者执行、
+     后到调用者只等待同一屏障的协议。屏障必须在 `finally` 完成，且保留当前「守卫拒绝时零副作用」的
+     测试；不能把 once 标志放在 `require` 前，否则会把 A1 换一种形式带回来。这样外部
+     `AudioPlayer.releaseAndJoin()` 与 codec 失败协程并发调用 `stopPlayingAndJoin()` 时，只会有一个调用者
+     detach decoder、取消 `ioScope`、join worker 和释放 AudioTrack，另一个等待同一结果；不能只靠
+     单独的 codec-failure once 标志，因为它只合并多个 codec error，管不到外部 stop。
+
+     为了让流播放器安全决定谁负责取消独立的 `terminalScope`，`stopAndJoin()` 再接收一个仅供内部使用的
+     `onLeaderClaimed: () -> Unit = {}`：它只能在 caller-job 守卫通过且 `stopStarted` CAS 成功之后、任何
+     挂起点之前调用。这样显式 stop 不会像 A1 那样在非法自作用域调用时提前消耗终态所有权；follower
+     也不会误取消正承载失败清理的 scope。
+
+```kotlin
+private val stopStarted = AtomicBoolean(false)
+private val stopCompleted = CompletableDeferred<Throwable?>()
+
+suspend fun stopAndJoin(
+    onLeaderClaimed: () -> Unit = {},
+    releaseDecoderAndJoin: suspend (Decoder) -> Unit,
+) {
+    val ownerJob = ioScope.coroutineContext[Job]
+    val callerJob = currentCoroutineContext()[Job]
+    require(ownerJob == null || callerJob == null || !ownerJob.containsJob(callerJob)) {
+        "stopAndJoin() must be called outside the player-owned coroutine scope"
+    }
+    if (!stopStarted.compareAndSet(false, true)) {
+        stopCompleted.await()?.let { throw it }
+        return
+    }
+    var failure: Throwable? = null
+    try {
+        // Still before the first suspension, but inside the barrier's try/finally: even an
+        // internal hook regression must not strand every follower on stopCompleted.
+        onLeaderClaimed()
+        withContext(Dispatchers.IO + NonCancellable) {
+            // Existing prepareStop -> owner join -> decoder release -> AudioTrack release order.
+        }
+    } catch (error: Throwable) {
+        failure = error
+        throw error
+    } finally {
+        stopCompleted.complete(failure)
+    }
+}
+```
+
+     生产实现保留现有逐步异常处理；上段省略号不是把原 cleanup 删除。后到调用者重抛同一个非空失败，
+     避免 leader 失败却让 follower 误报成功。若失败是 `CancellationException`，在 leader/follower 重抛前
+     都先记录 teardown failure，避免它在无日志的 `launch` 中只表现为普通取消。
+
+  3. `AacDecoder` 增加与 `OpusDecoder` 对称的 `errorCallback`，并删掉两个 decoder
      `errorCallback` 的默认空 lambda；两个 stream player 都增加
-     独立于播放 `ioScope` 的 `terminalScope`、`failureTerminalStarted: AtomicBoolean` 和必填
+     独立于播放 `ioScope` 的 `terminalScope`、原子 `terminalOwner`（`OPEN` / `FAILURE` /
+     `EXPLICIT_STOP`）和必填
      `onFailure: (Throwable) -> Unit` 构造参数。decoder 错误回调只调 `requestCodecFailure(error)`；
-     该函数 CAS 一次后在 `terminalScope` 调 `stopPlayingAndJoin()`，完整释放 decoder 和
+     该函数只有在 `terminalOwner` 从 `OPEN` CAS 为 `FAILURE` 后才在 `terminalScope` 调
+     `stopPlayingAndJoin()`，完整释放 decoder 和
      AudioTrack 后才调客户 `onFailure`。`terminalScope` 不能是 `ioScope` 子作用域，否则
      `StreamPlayerStopper` 会拒绝自作用域 join。该作用域照搬既有先例
      `OpusFilePlayer.kt:88-91`（`SupervisorJob + Dispatchers.IO + CoroutineName` 并挂
-     `CoroutineExceptionHandler`），**并沿用其「不由播放器自身取消」的所有权**：终态清理就跑在它
-     里面，播放器无法在 teardown 中取消承载该 teardown 的作用域。它只承载一次性失败路径，会话结束
-     后无挂起工作，故刻意不取消 —— 这一点要写进 KDoc，避免后续维护者误以为漏了取消。
+     `CoroutineExceptionHandler`）。失败协程在客户回调结束后的 `finally` 中取消它；显式 stop 只有通过
+     第 2 步的 leader hook 成功把 `OPEN` 改为 `EXPLICIT_STOP` 时，才在 stop 完成后取消它。两个 CAS
+     形成唯一所有者：失败先赢时显式 stop 只等待同一 teardown，不能提前取消失败回调；显式 stop 先赢
+     时迟到 codec error 不再新建失败任务。不能只在 stop 返回后读取一个 failure once 标志再决定是否
+     cancel，那是 check-then-act，恰好会遗漏“读取 false 后、cancel 前”到达的 codec error。
 
 ```kotlin
 class AacDecoder(
@@ -516,7 +631,9 @@ class AacDecoder(
     }
 }
 
-private val failureTerminalStarted = AtomicBoolean(false)
+private enum class TerminalOwner { OPEN, FAILURE, EXPLICIT_STOP }
+
+private val terminalOwner = AtomicReference(TerminalOwner.OPEN)
 private val terminalScope = CoroutineScope(
     SupervisorJob() +
         Dispatchers.IO +
@@ -527,15 +644,45 @@ private val terminalScope = CoroutineScope(
 )
 
 private fun requestCodecFailure(codecError: Throwable) {
-    if (!failureTerminalStarted.compareAndSet(false, true)) return
+    if (!terminalOwner.compareAndSet(TerminalOwner.OPEN, TerminalOwner.FAILURE)) return
     terminalScope.launch {
-        val cleanupFailure =
-            runCatchingPreservingCancellation { stopPlayingAndJoin() }.exceptionOrNull()
-        if (cleanupFailure != null && cleanupFailure !== codecError) {
-            codecError.addSuppressed(cleanupFailure)
+        try {
+            // terminalScope is independent and has not been cancelled. A CancellationException
+            // escaping NonCancellable teardown is therefore a cleanup failure, not caller
+            // cancellation; capture it so the original codec failure still reaches the owner.
+            val cleanupFailure = try {
+                stopPlayingAndJoin()
+                null
+            } catch (error: Throwable) {
+                error
+            }
+            if (cleanupFailure != null && cleanupFailure !== codecError) {
+                codecError.addSuppressed(cleanupFailure)
+            }
+            try {
+                onFailure(codecError)
+            } catch (callbackFailure: Exception) {
+                LogContext.log.e(TAG, "Failure callback failed", callbackFailure)
+            }
+        } finally {
+            terminalScope.cancel()
         }
-        runCatchingPreservingCancellation { onFailure(codecError) }
-            .onFailure { LogContext.log.e(TAG, "Failure callback failed", it) }
+    }
+}
+
+suspend fun stopPlayingAndJoin() {
+    var ownsTerminalScope = false
+    try {
+        streamPlayerStopper.stopAndJoin(
+            onLeaderClaimed = {
+                ownsTerminalScope = terminalOwner.compareAndSet(
+                    TerminalOwner.OPEN,
+                    TerminalOwner.EXPLICIT_STOP,
+                )
+            },
+        ) { it.releaseAndJoin() }
+    } finally {
+        if (ownsTerminalScope) terminalScope.cancel()
     }
 }
 ```
@@ -543,7 +690,7 @@ private fun requestCodecFailure(codecError: Throwable) {
      `OpusDecoder` 同步把现有 `errorCallback: (Throwable) -> Unit = {}` 改为必填参数；
      `OpusFilePlayer` 已显式传入 `requestFailure`，只需更新其余构造点。
 
-  3. `AudioPlayer` 增加必填 `onFailure: (Throwable) -> Unit` 并传给 AAC/OPUS stream player；
+  4. `AudioPlayer` 增加必填 `onFailure: (Throwable) -> Unit` 并传给 AAC/OPUS stream player；
      Demo 和仓库内所有构造点同步显式处理失败。不给默认空 lambda，否则只是把
      `OpusDecoder` 的空通道上移一层，外部 owner 仍无法观测。更新两个 decoder、
      两个 stream player、`AudioPlayer` 以及 `BaseMediaCodec.notifyCodecFailure()` 可见性变更的
@@ -552,7 +699,10 @@ private fun requestCodecFailure(codecError: Throwable) {
 
 回归至少覆盖：第一次 codec 失败后 `decode()` / `encode()` 立即拒绝新数据，并只通知
 一次；`FAILED` 仍可进入 `releaseAndJoin()` 且 codec 只释放一次；stream player 的错误清理不在
-`ioScope` 中执行，decoder/AudioTrack 释放完成后客户才收到一次 `onFailure`；
+`ioScope` 中执行，decoder/AudioTrack 释放完成后客户才收到一次 `onFailure`；外部 stop 与 codec
+failure 并发时 `StreamPlayerStopper` 只 detach/release 一次且另一方等待同一屏障；守卫拒绝仍不消耗
+once 标志；显式 stop 赢得终态所有权时迟到错误不触发失败回调，失败赢得所有权时显式 stop 不会提前
+取消失败回调；两条终态路径完成后 terminal scope 均已取消；
 `AudioPlayer` 的 AAC/OPUS 路径均能把原始 `Throwable` 传给调用方。
 
 ### M-4（MEDIUM）异步路径缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()`
@@ -579,37 +729,57 @@ override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
 }
 ```
 
-### M-5（MEDIUM）异步 `onOutputFormatChanged` 无异常边界，子类抛出即杀 MediaCodec 回调线程
+### M-5（MEDIUM）异步 `MediaCodec.Callback` 没有适用于 Handler 线程的统一异常边界
 
-- 文件：`audio/.../mediacodec/BaseMediaCodecAsynchronous.kt:122-131`
-- 事实：同一个 `MediaCodec.Callback` 的其余三个回调都被 `runCatchingPreservingCancellation { ... }.onFailure { ... reportCodecFailure(it) }` 包住（`:34`/`:79`、`:93`/`:114`、`:135`/`:140`），只有 `onOutputFormatChanged` 是裸的。同步路径相反：`drainOutput()` 的 `onOutputFormatChanged(codec, outputFormat)`（`BaseMediaCodecSynchronous.kt:172`）在 `process()` 的 try 内，异常被转成 `reportCodecFailure`（`:88-104`）。
-- 触发条件：任何覆写 `IAudioMediaCodec.onOutputFormatChanged` 的子类抛出异常。该钩子**本切片刚从死 API 变为真正触发**（`CHANGELOG.md:467`），仓库内尚无覆写，风险全在下游。
-- 后果：异常逃到 MediaCodec 回调 handler 线程 → 未捕获异常 → 进程崩溃；而同一异常在同步路径上只是一次 codec 失败上报。
-- 确定性：**确定**（代码结构可证）；仓库内无可达触发点。
-- 修复方案：
+- 文件：`audio/.../mediacodec/BaseMediaCodecAsynchronous.kt:32-145`
+- 事实：`onOutputFormatChanged`（`:122-131`）完全没有异常边界；其余三个回调虽然包了
+  `runCatchingPreservingCancellation`，但该 helper 会**无条件重抛 `CancellationException`**。这对协程体
+  是正确语义，对 `MediaCodec.Callback` 所在的普通 Handler/Looper 线程却不是：客户实现主动抛出的
+  `CancellationException` 没有父协程可取消，会直接逃到 Looper。`onInputBufferAvailable`、
+  `onOutputBufferAvailable` 因而跳过 `.onFailure { reportCodecFailure(...) }`；`onError` 的子类 hook 若抛
+  `CancellationException`，还会跳过后面对原始 `CodecException` 的上报。文档先前所写“其余三个回调
+  已有安全边界”不成立。
+- 触发条件：下游覆写 `onInputData`、`onOutputData`、`onEndOfStream`、`onOutputFormatChanged` 或
+  `onError` 时抛出 `CancellationException`；`onOutputFormatChanged` 则抛出任意 `Exception` 都可触发。
+  其中 format hook **本切片刚从死 API 变为真正触发**（`CHANGELOG.md:469`）；仓库内实现目前不抛，风险
+  主要在公开继承面。
+- 后果：异常逃到 MediaCodec 回调线程，可能终止 Looper/进程；codec 生命周期仍停在 `RUNNING`，owner
+  收不到失败通知。同步路径的普通处理异常会经 `process()` 转成 `reportCodecFailure`，两条路径语义不一致。
+- 确定性：**确定**（helper 与调用线程结构可直接读出）；仓库内无已知可达抛出点。
+- 修复方案：四个 callback 都改用普通 `try/catch (Exception)` 作为最外层边界，不再在非协程线程使用
+  `runCatchingPreservingCancellation`。input/output 保留现有 buffer 归还逻辑；format 使用下列形态；
+  error hook 抛出时把 hook failure 作为 suppressed 加到原始 `CodecException`，随后仍只通过 M-3 的
+  `reportCodecFailure(codecException)` 上报一次，不能因 hook 失败丢掉平台原始错误。M-3 的
+  `notifyTransitionedCodecFailure()` 也必须用普通 `try/catch (Exception)` 包住非挂起 owner hook；否则
+  数据 callback 虽被兜住，owner 的 `CancellationException` 仍会从同一 Handler 线程逃出。
 
 ```kotlin
 override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
     if (isReleasing) return
-    runCatchingPreservingCancellation {
+    try {
         withCodecOperationLock {
             if (isReleasing) return@withCodecOperationLock
             this@BaseMediaCodecAsynchronous.format = format
             this@BaseMediaCodecAsynchronous.onOutputFormatChanged(codec, format)
         }
-    }.onFailure {
+    } catch (error: Exception) {
         if (!isReleasing) {
-            LogContext.log.e(TAG, "Format changed callback failed", it)
-            reportCodecFailure(it)
+            LogContext.log.e(TAG, "Format changed callback failed", error)
+            reportCodecFailure(error)
         }
     }
 }
 ```
 
+另一方面不要 catch `Throwable`，`OutOfMemoryError`、`LinkageError` 等 VM/linkage 错误继续透传，不能
+伪装成可恢复的 codec 会话失败。回归测试必须分别让 input、output/EOS、format 与 error hook 抛
+`CancellationException`，断言异常不逃出 callback、生命周期只转换一次、owner 收到一次失败；error
+hook 用例还要断言 owner 收到的是原始 `CodecException`，hook failure 位于 `suppressed`。
+
 ### M-6（MEDIUM）同步 `onEndOfStream()` 无异常边界，抛出即逃到无兜底的 `ioScope`
 
 - 文件：`audio/.../mediacodec/BaseMediaCodecSynchronous.kt:76`、`BaseMediaCodec.kt:49`
-- 事实：`:76` 是 `ioScope.launch { ... }` 协程体的最后一条语句，裸调用 `if (!codecFailed.get() && !isReleasing && outputEosReceived) onEndOfStream()`；协程体内其余异常都已被 `process()`（`:86-104`）或 `reportCodecFailure()`（`BaseMediaCodec.kt:225-228`）吸收。而 `ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))`（`BaseMediaCodec.kt:49`）**既无 `SupervisorJob` 也无 `CoroutineExceptionHandler`**，根 `launch` 抛出即走默认未捕获处理器。异步路径相反：`onEndOfStream()`（`BaseMediaCodecAsynchronous.kt:109`）在 `runCatchingPreservingCancellation` 内。
+- 事实：`:76` 是 `ioScope.launch { ... }` 协程体的最后一条语句，裸调用 `if (!codecFailed.get() && !isReleasing && outputEosReceived) onEndOfStream()`；协程体内其余异常都已被 `process()`（`:86-104`）或 `reportCodecFailure()`（`BaseMediaCodec.kt:225-228`）吸收。而 `ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))`（`BaseMediaCodec.kt:49`）**既无 `SupervisorJob` 也无 `CoroutineExceptionHandler`**，根 `launch` 抛出即走默认未捕获处理器。异步 `onEndOfStream()` 位于 output callback 的现有 helper 内，但该 helper 对 `CancellationException` 同样不安全，已统一纳入 M-5；本项只处理同步 worker 的结构化取消判定。
 - 触发条件：子类或 owner 的完成回调抛出。仓库内 `AacFilePlayer.kt:134-136` 只做 `terminalScope.launch{}`，不抛；风险在下游实现与 owner lambda。
 - 后果：进程崩溃，且 codec 与 `AudioTrack` 的确定性释放被跳过。
 - 确定性：**确定**（机制）；仓库内无可达触发点。
@@ -617,12 +787,30 @@ override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
 
 ```kotlin
 // Owner completion callbacks must not kill the worker coroutine: ioScope carries no
-// CoroutineExceptionHandler, so an escaping throwable would reach the platform handler.
+// CoroutineExceptionHandler, so an escaping throwable would reach the platform handler. Route
+// the failure through the same terminal protocol as input/output/codec failures; merely logging
+// it would leave lifecycleState RUNNING and give an owner no cleanup signal.
 if (!codecFailed.get() && !isReleasing && outputEosReceived) {
-    runCatchingPreservingCancellation { onEndOfStream() }
-        .onFailure { LogContext.log.e(TAG, "End of stream callback failed", it) }
+    try {
+        onEndOfStream()
+    } catch (error: CancellationException) {
+        // A callback may throw CancellationException as an ordinary failure. Preserve it only
+        // when this worker is actually being cancelled.
+        if (!currentCoroutineContext().isActive) throw error
+        codecFailed.set(true)
+        reportCodecFailure(error)
+    } catch (error: Exception) {
+        codecFailed.set(true)
+        reportCodecFailure(error)
+    }
 }
 ```
+
+该修法与 M-3 同批验证：M-3 让 `reportCodecFailure()` 原子进入 `FAILED` 并只通知一次。只 catch 后记日志
+虽然能避免未捕获异常，却会让 codec 保持 `RUNNING`，且 owner 收不到终态清理信号，不能闭合本项后果。
+测试还要覆盖两种 `CancellationException`：活动中的 owner callback 主动抛出时按 codec failure 处理；
+worker 已被取消时继续传播结构化取消，不伪造失败通知。
+`Error` 不在本项的可恢复边界内，继续透传，不能被转换为普通 codec failure。
 
 ### M-7（MEDIUM）H2/H3/H4/H5 的修复仍然零回归测试
 
@@ -723,6 +911,11 @@ internal fun interface OpusDecoderFactory {
      立即返回，溢出帧触发 error callback/终态清理而不是阻塞。用
      `assertTimeoutPreemptively(java.time.Duration.ofSeconds(2))` 包住投递循环，等待清理完成后断言
      `output.release == 1`。
+  6. 若另行批准实施提升后的 L-8，再增加
+     `OpusFilePlayerTest.oversized payload is rejected before allocation`：构造只含
+     config、一个 start code 和超过 8 KiB payload 的稀疏/小型测试文件（不要真的构造巨型数组），断言
+     reader 在 `ByteArray(payloadSize)` 前抛出带 size/limit 的输入错误，player 最终只调一次
+     `errorCallback`、不调 `endCallback`，decoder factory 未收到超限 frame，decoder/output 均释放一次。
 - 每个用例先在未改生产代码或临时回退对应守卫时运行并确认失败，再恢复实现确认通过；最终运行：
 
 ```bash
@@ -744,19 +937,39 @@ internal fun interface OpusDecoderFactory {
   应与 B4-b 共用一套序列化实现：
   1. 增加 `recordingMutex: Mutex`、`recordingSequence: AtomicLong` 和
      `recordingIntent: AtomicReference<RecordingIntent>`；`RecordingIntent` 在同一个不可变值中携带
-     `generation` 与 nullable `AudioType`，避免两个原子字段独立更新造成「新代号 + 旧类型」。
+     `generation`、nullable `AudioType` 与 `PendingPermission / Ready / Stop` phase，避免多个原子字段
+     独立更新造成「新代号 + 旧类型/旧权限状态」。
      `micRecorder` 仅在 mutex 内读写，不再依赖一个单独的 `@Volatile` 字段来传递所有权。
-  2. 用户点击录音开关时立即创建并发布新 `RecordingIntent`；开启请求在弹权限框**之前**
-     就捕获该 intent，权限回调只有在 `recordingIntent.get() == capturedIntent` 时才能继续，不得在
-     回调返回时重新生成更新的 generation。关闭开关与 `onStop()` 发布 `type = null` 的新 intent。
-     每次发布后在 `ioScope` 调同一个 `reconcileRecording(capturedIntent)`，新 intent 使尚未获得
-     mutex 的旧请求失效。
-  3. `reconcileRecording()` 获得 mutex 后先校验 generation，再 detach 当前 recorder 并**等待**
-     `stopRecordAndJoin()` 返回；只有旧会话完整释放后，才可以打开文件、构造 `MicRecorder` 并调
-     `startRecord()`。这三步都留在 `Dispatchers.IO`。
-  4. 构造后、发布前再校验当前 intent 与 Activity 至少处于 `STARTED` 状态；若已失效，对局部
+  2. 用户点击录音开关时立即创建并发布 `PendingPermission` intent；开启请求在弹权限框**之前**
+     就捕获该值。发布 pending 后可以调 `reconcileRecording()` 有序停止旧 recorder，但 pending **不得**
+     打开文件或创建 `MicRecorder`。权限成功时先创建
+     `readyIntent = capturedPending.copy(phase = Ready)`，再用
+     `compareAndSet(capturedPending, readyIntent)` 晋升同一代 intent；只有 CAS 成功才把**这个
+     `readyIntent` 实例**传给 reconcile 并启动，不得继续传旧 pending，也不得在回调返回时生成一个更新 generation，
+     否则迟到的旧权限回调会冒充最新请求。`onStop()` 无条件发布 `type = null, phase = Stop` 的新 intent；某个按钮的
+     `isChecked = false` 不能“先读 type、再无条件 set”：应在 CAS 循环中读取 current，若 type 已不同就
+     返回；仍相同时创建新一代 stop 并 `compareAndSet(current, stopIntent)`，CAS 失败就重读。这样旧 PCM
+     按钮稍后被取消不会覆盖已经切换到 AAC/OPUS 的新会话。权限拒绝也必须发布 stop intent 并调
+     `reconcileRecording()`，不能留下“UI 已拒绝但旧 recorder 仍在录”的状态。拒绝回调先创建
+     `deniedStop = capturedPending.copy(type = null, phase = Stop)`，再
+     `compareAndSet(capturedPending, deniedStop)`；CAS 失败表示用户已发出更新意图，迟到拒绝不得停止新会话
+     或重置新按钮。每次成功发布后在 `ioScope` 调同一个 reconcile，并传入**刚写进 AtomicReference 的
+     精确对象实例**；新 intent 使尚未获得 mutex 的旧请求失效。
+  3. `reconcileRecording()` 获得 mutex 后必须校验 `recordingIntent.get() === capturedIntent`（或等价的
+     完整不可变值比较），不能只校验 generation：`PendingPermission -> Ready/Stop` 刻意沿用同一代，若
+     旧 pending reconcile 晚于 ready reconcile 获锁，只比 generation 会反过来 detach 并停止刚启动的
+     recorder。完整 intent 校验通过后再 detach 当前 recorder 并**等待**
+     `stopRecordAndJoin()` 返回；`Stop` / `PendingPermission` 到这里结束，只有 `Ready` 才可以在旧会话
+     完整释放后打开文件、构造 `MicRecorder` 并调 `startRecord()`。这三步都留在 `Dispatchers.IO`。
+     输出流先创建、`MicRecorder` 构造随后抛出时，对象没有返回且其 `onStop` 不会替 Activity 关闭这个流；
+     因而构造区必须保留局部流所有权，在 recorder 成功接管前用 `try/finally` 关闭，不能只依赖
+     `recordCallbackFor(...).onStop()`。构造成功后则由 recorder 的一次性停止回调关闭，避免双 owner。
+  4. 构造后、发布前再次校验**完整 intent 身份**与 Activity 至少处于 `STARTED` 状态；若已失效，对局部
      recorder 调 `stopRecordAndJoin()` 后丢弃，禁止迟到的权限回调或构造结果在 `onStop()` 后重新发布。
-  5. 三个 ToggleButton 可再补单选状态同步来修正 UI，但 UI 互斥不能替代上述资源序列化。
+  5. 三个 ToggleButton 必须同步成单选视觉状态，但 UI 互斥不能替代上述资源序列化。程序化取消另外两个
+     按钮时使用 `updatingRecordingButtons` 之类的局部 guard，或统一走“仅当前 intent 类型的 off 事件才
+     能 stop”的处理器，避免取消旧按钮的 listener 反过来发布 `type = null`。补测试覆盖“PCM 开启 →
+     AAC 开启 → PCM 的迟到 off 回调”不会停止 AAC，以及权限回调晚于 `onStop()` 时不会创建 recorder。
 
 ### M-9（MEDIUM）本切片内一条既有 ktlint 违规使整个 `staticCheck` 无法通过
 
@@ -792,44 +1005,78 @@ private fun startMicRecording(): MicRecorder = MicRecorder(
   注意随之而来的缩进变化须满足 `max_line_length = 100`；改完应以
   `./gradlew :demo:ktlintCheck --rerun-tasks` 单独确认，再跑整套 `staticCheck`。
 
-### LOW 条目
+### M-10（MEDIUM）`MicRecorder.stopRecordAndJoin()` 赢得停止所有权后仍可被调用方取消，确定性释放会半途退出
+
+- 文件：`audio/src/main/kotlin/com/leovp/audio/MicRecorder.kt:401-420`
+- 事实：`:410` 先用 `stopped.compareAndSet(false, true)` 赢得唯一停止所有权；随后 `:417` 的
+  `job?.cancelAndJoin()` 仍直接运行在调用方上下文。`NonCancellable` 只存在于更晚的
+  `finishRecorderReleaseAndJoin()` 内（`:447`），并不覆盖前面的 join。若调用方已取消或在 join 时取消，
+  `cancelAndJoin()` 抛 `CancellationException`，`:418 recordJob = null`、`:419 ioScope.cancel()` 与
+  `:420 finishRecorderReleaseAndJoin(ok)` 全部被跳过。
+- 后果：`AudioRecord.stop()` 已执行，但 `AudioRecord.release()`、encoder `releaseAndJoin()`、
+  `callback.onStop()` 和 `releaseCompleted.complete(Unit)` 都可能不执行；因为 `stopped` 已经是 true，后到
+  stop 只能在 `releaseCompleted.await()` 等一个永远不会完成的信号。公开 KDoc 所承诺的“返回时 worker
+  已退出且资源已释放”因此不成立。
+- 是否本切片引入：**不是**。合并基 `97c84d242` 的同一函数已是先赢得 `stopped`、再在调用方上下文
+  `cancelAndJoin()`、最后才进入内部 `NonCancellable` 释放的相同结构；本切片只是移除旧非挂起入口，
+  **预存，未加重**。
+- 确定性：控制流与取消语义**确定**；仓库内当前 demo cleanup scope 通常不主动取消，所以现有 demo
+  显形概率较低，但公开库调用方可直接触发。
+- 修复方案：先按 A2 的共同生命周期锁在零副作用 caller-job 守卫之后赢得 `stopped` 并快照 job；只有
+  leader 进入 `withContext(NonCancellable)`，在其中完成 `stopAudioRecord()` → captured job
+  `cancelAndJoin()` → 锁内清空 `recordJob` → `ioScope.cancel()` →
+  `finishRecorderReleaseAndJoin(ok)`。follower 不替 leader 重跑 cleanup，但必须先等 `releaseCompleted`，
+  再等 A2 新增的 `recordLoopCompleted`，不能在资源已关而 record job 尚未离开 body 时提前返回。
+  worker 自己触发失败时按 A2 的共同协议竞争停止所有权：赢者不 join 自己，在 NonCancellable 中释放；
+  外部 leader 已先赢时它只退出，由外部路径 join。两种方向都必须完成同一对屏障。
+  不要把 caller-job `require` 放进 `NonCancellable` 后或放到 `stopped` CAS 后，否则非法自调用会再次消耗
+  一次性停止标志。
+- 测试：用 `runTest` 启动外部 stop leader，在 fake `AudioRecord.stop()` 已返回、record job 尚未退出时
+  取消 leader；断言 leader 仍完成 encoder/AudioRecord 释放并完成 `releaseCompleted`，随后第二个 stop
+  只在 `recordLoopCompleted` 后有界返回。另覆盖 worker 先赢失败清理、外部 stop 作为 follower 的方向，
+  并保留“record job 自调用在任何副作用前抛出”的回归，防止 NonCancellable 重构破坏守卫。
+
+### 原 LOW 条目（L-8 本次复核提升为 MEDIUM）
 
 | 编号 | 文件 | 一句话 | 确定性 |
 |---|---|---|---|
-| **L-1** | `IAudioMediaCodec.kt:94-98` | 新增 KDoc 写「Called while the codec operation lock is held」，**对同步路径不成立** —— `BaseMediaCodecSynchronous.kt:76` 在 worker 协程里、锁外、且在该 worker 自身的 Job 上调用。实现若在同步路径从该回调调 `releaseAndJoin()`，会命中 `BaseMediaCodec.kt:165` 的 `require(codecJob !== currentCoroutineContext()[Job])` 而抛出，KDoc 未提示。19 行新 KDoc 也都没写「实现抛出时会发生什么」，而三条路径处理各不相同（异步转 codec 失败、同步 `onInputData`/`onOutputData` 转 codec 失败、同步 `onEndOfStream` 杀进程）。另 `AacDecoder.kt:90` 的 `queue.poll(50, MILLISECONDS)` 持锁阻塞最多 50 ms，与同份 KDoc 的「must return promptly」字面冲突（有界，契约应写「有界」而非 promptly） | 确定 |
+| **L-1** | `IAudioMediaCodec.kt:94-98` | 新增 KDoc 写「Called while the codec operation lock is held」，**对同步路径不成立** —— `BaseMediaCodecSynchronous.kt:76` 在 worker 协程里、锁外、且在该 worker 自身的 Job 上调用。实现若在同步路径从该回调调 `releaseAndJoin()`，会命中 `BaseMediaCodec.kt:165` 的 `require(codecJob !== currentCoroutineContext()[Job])` 而抛出，KDoc 未提示。19 行新 KDoc 也都没写「实现抛出时会发生什么」，而路径处理并不一致：同步 `onInputData`/`onOutputData` 的普通 `Exception` 转 codec failure，同步 `onEndOfStream` 当前逃出 worker；异步普通 `Exception` 多数转 failure，但 `CancellationException` 会被错误重抛到 Handler（见 M-5）。另 `AacDecoder.kt:90` 的 `queue.poll(50, MILLISECONDS)` 持锁阻塞最多 50 ms，与同份 KDoc 的「must return promptly」字面冲突（有界，契约应写「有界」而非 promptly） | 确定 |
 | **L-2** | `BaseMediaCodecSynchronous.kt:88-93` | 同步路径**从不调用** `onError()`（全文件 `grep` 零命中），只调 `reportCodecFailure(e)`；异步路径（`BaseMediaCodecAsynchronous.kt:138`）先调子类 `onError` 再上报。覆写 `onError` 的同步子类拿不到 `CodecException`，而 KDoc（`IAudioMediaCodec.kt:87-91`）描述得像两条路径一致。建议改 KDoc 写明「只有异步路径触发 `onError`，同步路径统一走 `notifyCodecFailure`」 | 确定 |
 | **L-3** | `AacEncoder.kt:80-81` | `csd0` 仍是非 `@Volatile` 的公开读取面；本切片已把 `OpusEncoder` 的三个 CSD 字段合并为单个 `@Volatile`（`:179-184`），两者不对称。`csd0` 写入点分属三个线程（`:91`/`:109`/`:240`，都在锁内），而公开 getter 供外部任意线程不持锁读取 → 无 happens-before，外部消费方可能长期读到 `null`。仓库内无读取方 | 确定（JMM）；下游影响推断 |
-| **L-4** | `AudioTrackPlayer.kt:187-212`、`:199-202` | `write()` 现在整体包进 `runCatchingPreservingCancellation { ... }.getOrElse { ...; 0 }`，异常**不再外抛**（合并基无 try/catch，`IllegalStateException` 会传给调用方）。这是公开 API 行为变更，`CHANGELOG.md:259-261` 只记了奇数字节与负错误码，**此条遗漏**。另 `logRouting("first-write")`（`:199-202`）位于已成功写入之后、返回值之前且在 `runCatching` 内：若 `routedDevice`/`getDevices()` 抛出，**已真实写入的字节会被报成 0** → `AacFilePlayer.kt:120-126` 的 `writtenAudioFrames` 少计 → `awaitAudioTrackDrain()` 提前退出剪掉尾音（L26 的延伸）。仅 debug 构建。次要：该调用点在 `AacStreamPlayer` 路径上处于 codec 操作锁内，debug 构建会在锁内多做 4 次 AudioManager binder 调用 | 确定 |
-| **L-5** | `BaseMediaCodecSynchronous.kt:46` | worker 的唯一安装点 `override fun onCodecStarted()` 未标 `final`，而基类该方法是 `protected open`（`BaseMediaCodec.kt:150`）。同步子类覆写而不调 `super` 会让 `codecJob` 永不赋值：`start()` 成功、`isRunning` 为 true、`decode()` 返回 true，但没有任何东西排空队列。仓库内两个同步子类都未覆写。建议 `final override` 并把子类启动点收敛到 `onBeforeCodecStart()` | 确定 |
+| **L-4** | `AudioTrackPlayer.kt:187-212`、`:199-202` | `write()` 现在整体包进 `runCatchingPreservingCancellation { ... }.getOrElse { ...; 0 }`，异常**不再外抛**（合并基无 try/catch，`IllegalStateException` 会传给调用方）。这是公开 API 行为变更，`CHANGELOG.md:261-263` 只记了奇数字节与负错误码，**此条遗漏**。另 `logRouting("first-write")`（`:199-202`）位于已成功写入之后、返回值之前且在 `runCatching` 内：若 `routedDevice`/`getDevices()` 抛出，**已真实写入的字节会被报成 0** → `AacFilePlayer.kt:120-126` 的 `writtenAudioFrames` 少计 → `awaitAudioTrackDrain()` 提前退出剪掉尾音（L26 的延伸）。仅 debug 构建。次要：该调用点在 `AacStreamPlayer` 路径上处于 codec 操作锁内，debug 构建会在锁内多做 4 次 AudioManager binder 调用 | 确定 |
+| **L-5** | `BaseMediaCodecSynchronous.kt:46` | worker 的唯一安装点 `override fun onCodecStarted()` 未标 `final`，而基类该方法是 `protected open`（`BaseMediaCodec.kt:150`）。同步子类覆写而不调 `super` 会让 `codecJob` 永不赋值：`start()` 成功、`isRunning` 为 true、`decode()` 返回 true，但没有任何东西排空队列。仓库内两个同步子类都未覆写。修复时将其改为 `final override`；若仍需给下游保留“worker 已安装后的扩展点”，新增由该 final 方法在 `codecJob` 赋值后调用的受保护钩子并写明不得等待 worker/teardown，不能笼统要求迁到语义不同的 `onBeforeCodecStart()`。同步更新 KDoc/CHANGELOG 的公开继承影响 | 确定 |
 | **L-6** | `OpusFramedFileReaderTest.kt:85-99` | `` `overlapping start code prefix remains payload data` `` 是**半表演用例**：代理用脚本实证，现实现与「失配即重置且不回看当前字节」的错误实现对该输入给出相同结果（`payload = "\|le\|lex"` 的第二个前缀被 `x` 打断，不会长成真正匹配）。且对 `"\|leo\|"` 这个 start code，`prefixTable` 在循环中实际用到的 `prefix[0..3]` 全为 0，KMP 与「重置+回看」完全等价，`buildPrefixTable`（`:72-83`）当前**没有任何用例能证伪**。其余 6 个用例逐条判为真实断言（含 `:101` 跨 8KB 缓冲边界那条，能证伪 `:57` 的绝对位置算式）。建议补两条：前缀后紧跟真 start code、自重叠 start code（如 `"aab"`，`prefixTable = [0,1,0]`） | 确定（已实证） |
 | **L-7** | `OpusFilePlayer.kt:130-136`、`BaseMediaCodecAsynchronous.kt:27-29` | `setCallback(cb)` 单参版使用 MediaCodec 构造时确定的 handler，而 `MediaCodec` 构造取 `Looper.myLooper() ?: Looper.getMainLooper()`；`createCodec()` 经 `OpusDecoder.start()` 在 `Dispatchers.IO`（无 Looper）执行 → **回调全部投递到主 Looper**。因此 `onDecoded`（`:193`）、`endCallback`（`:203`）、`errorCallback`（`:204`）及每帧的 `withCodecOperationLock` 获取都在主线程。当前这些回调体都有界非阻塞（即 H2 的修复内容），不是活跃 bug，但这正是 H2 的回归面且未写进任何 KDoc。`minSdk = 21` 不能无条件用 API 23 的 `setCallback(cb, handler)`，建议先把该约束写进 KDoc（含 `playOpus`/`playAac` 的「回调在播放器自己的 IO 作用域上，不是调用方线程」—— Demo 的 `runOnUiThread` 包裹即对此的隐式依赖，`AudioActivity.kt:190`、`:229`），彻底方案是用专用 `HandlerThread` 创建 codec | 推断（高置信度，机制来自 AOSP，需真机打印线程名确证） |
-| **L-8** | `OpusFramedFileReader.kt:28-36`、`OpusFilePlayer.kt:82-84` | `require(payloadSize in 0..Int.MAX_VALUE.toLong())` 之后直接 `ByteArray(payloadSize.toInt())`，上界 2 GiB —— 只在开头含一次 start code 的损坏文件会按「剩余文件长度」一次性分配。OPUS 单包最大约 1275 字节/通道流，兆字节级 payload 必然是损坏数据。后续 `OpusDecoder.kt:78 inBuf.put(input)` 会因超 `KEY_MAX_INPUT_SIZE`（8 KiB）抛 `BufferOverflowException` 并干净失败，故**不会崩溃**，但错误点从「reader 输入校验」漂移到「codec 缓冲溢出」，诊断成本高。建议加 `maxPayloadSize`（默认 8 KiB）。另 `ioScope`（`:82-84`）只有 `SupervisorJob + Dispatchers.IO + CoroutineName`，不像 `terminalScope`（`:88-91`）挂了 `CoroutineExceptionHandler`，而三个播放协程的 `catch (e: Exception)` 不覆盖 `Error`（如 OOM），逃逸后直达默认未捕获处理器（资源不泄漏，`:419` 的停滞检测 5 秒会拉起终态） | 确定 |
-| **L-9** | `OpusFilePlayer.kt:470-471`、`AacFilePlayer.kt:223-224` | 终态读取客户端回调字段（`completionCallback`/`failureCallback`，AAC 为 `cb`/`errorCb`）发生在 `lifecycleMutex.withLock`（`:475`/`:228`）**之前**，而写入发生在 `withLock` 之前（`:126-127`/`:162-163`）。**当前良性**：happens-before 由「赋值 → 协程启动 → 回调 → `terminalScope.launch`」这条链保证，`ExplicitStop` 路径不使用这两个字段。但良性结论依赖调用图，若将来新增一条不经协程启动的终态入口即失效。建议标 `@Volatile` 或把读取移进 `withLock` | 确定 |
-| **L-10** | `StreamPlayerStopper.kt:31` | `ownerJob?.cancelAndJoin()` 在 `NonCancellable` 内且**无自身超时**，而 CLAUDE.md「生命周期与释放约定」要求「每一步内部自带超时」。实际风险低：`prepareStop()`（`:47-59`）已先 `ioScope.cancel()` 并 `audioTrackPlayer.stop()` 唤醒阻塞写，唯一长时子协程是 `AacStreamPlayer.kt:150-161` 的 `delay(5s)` 看门狗（可取消），回滚协程 `:188` 用 `launch(NonCancellable)` 故不是 ioScope 子协程、不会被 join。当前有界，但有界性依赖「ioScope 里没有不可取消的阻塞」这条不成文约束。建议只在 KDoc 写明该约束，**不加超时**（加了会在 `NonCancellable` 外套 `withTimeout`，违反同一条约定） | 确定 |
+| **L-8（已提升为 MEDIUM）** | `OpusFramedFileReader.kt:28-36`、`OpusFilePlayer.kt:82-84` | `require(payloadSize in 0..Int.MAX_VALUE.toLong())` 之后直接 `ByteArray(payloadSize.toInt())`，上界接近 2 GiB —— 只在开头含一次 start code 的损坏文件会按「剩余文件长度」一次性分配。OPUS 单包最大约 1275 字节/通道流，兆字节级 payload 必然是损坏数据。这里可能在到达 codec 前就因数组分配抛 `OutOfMemoryError`；三个播放协程只 catch `Exception`，`ioScope`（`:82-84`）又没有 `CoroutineExceptionHandler`，因此不能写成“后续 `BufferOverflowException` 会干净失败、不会崩溃”。即使分配侥幸成功，`OpusDecoder.kt:78 inBuf.put(input)` 也会因超 `KEY_MAX_INPUT_SIZE`（8 KiB）失败。应在分配前给 `OpusFramedFileReader` 增加调用方传入的 `maxPayloadSize`（播放器按 codec 输入上限传 8 KiB），并补“超限时不分配 payload、走 `errorCallback` 后完成释放”的播放器测试；由于可由损坏/不可信文件稳定触发进程级 OOM，本项严重度应提升为 **MEDIUM**。不要尝试 catch `OutOfMemoryError` 后继续播放，边界校验才是修复 | 确定 |
+| **L-9** | `OpusFilePlayer.kt:470-471`、`AacFilePlayer.kt:223-224` | 终态读取客户端回调字段（`completionCallback`/`failureCallback`，AAC 为 `cb`/`errorCb`）发生在 `lifecycleMutex.withLock`（`:475`/`:228`）**之前**，而写入也发生在 mutex 外（`:126-127`/`:162-163`）。**当前良性**：happens-before 由「赋值 → 协程启动 → 回调 → `terminalScope.launch`」这条链保证，`ExplicitStop` 路径不使用这两个字段。但良性结论依赖调用图，若将来新增一条不经协程启动的终态入口即失效。最小修法是给四个引用加 `@Volatile`；若选择 mutex，则写入和读取必须一起迁入同一把 `lifecycleMutex`，只把读取移进去并不能与 mutex 外写入建立 happens-before | 确定 |
+| **L-10** | `StreamPlayerStopper.kt:31` | `ownerJob?.cancelAndJoin()` 在 `NonCancellable` 内且**无自身超时**，而补充规则要求释放步骤自身有界。`prepareStop()`（`:47-59`）会先取消 scope 并调用 `audioTrackPlayer.stop()` 唤醒常见阻塞写，但“所有子协程都能被这些动作唤醒”仍是未编码约束。原文称“加超时只能套在 `NonCancellable` 外”不成立：可以在 `withContext(NonCancellable)` 内使用 `withTimeout`。真正需要决策的是超时后的所有权——继续 `AudioTrack.release()` 可能与未退出的 native write 竞争，不释放则明确遗留资源。因此当前只能先补 KDoc 和针对现有阻塞点的终止测试；若要加入墙钟上界，必须先定义超时后是隔离并泄漏资源、后台继续观察，还是接受强制 release 风险，不能只机械包一层 timeout | 确定 |
 | **L-11** | `BaseMediaCodecAsynchronousTest.kt:483` | `assertReleaseWaitsForCallback`（`:464-492`）在 `:483` 只断言 `releaseFuture` 超时，没有像 `:65` 和 `:433` 那样补 `verify(exactly = 0) { subject.mediaCodec.release() }`。补上才与另两处对称；若按 §4 A3 的方案改造，顺手一起加 | 确定 |
-| **L-12** | `AudioSender.kt:86` | `senderClient`、`micRecorder`、`audioPlayer` 都加了 `@Volatile` 并在 `:80-83` 写了详细的 happens-before 论证，但 `senderHandler` 没加。它由 `start()` 在 IO 线程写（`:156`）、由 `sendRecAudioThread()` 的协程读（`:203`）。读到过期 `null` 只丢几帧（`:203` 是 `senderHandler?.`），不崩，但打破了 `:80-83` 注释所声明的规律，易致后续误判。要么加 `@Volatile`，要么在注释里说明它为何不需要 | 确定 |
 
 ### 3.1 未发现问题的区域
 
 明确记录通读后认为无需整改的部分，避免后续误判为漏审。
 
 **文件播放器（`OpusFilePlayer` / `AacFilePlayer`）**
-- 资源「恰好释放一次」：5 条退出路径（正常 EOF、`stop()`、启动失败、异步失败、协程取消）都收敛到同一个 `finishPlayback`，由 `terminalStarted` 的 CAS（`OpusFilePlayer.kt:464` / `AacFilePlayer.kt:217`）保证单次执行，`terminalCompletion` 作为后到者屏障。`closeInputFile()` 用 `AtomicReference.getAndSet` 实现幂等（`OpusFilePlayer.kt:532-539`）。
+- 播放器自身定义的 5 条终态路径（正常 EOF、`stop()`、启动失败、异步失败、协程取消）都收敛到同一个 `finishPlayback`，由 `terminalStarted` 的 CAS（`OpusFilePlayer.kt:464` / `AacFilePlayer.kt:217`）保证单次执行，`terminalCompletion` 作为后到者屏障。这里不包含 M-2 指出的 `AacFilePlayer` 继承型 `releaseAndJoin()`：该公开入口绕过 player 终态，正是待修缺口，不能据本条误判为所有公开释放入口都已闭环。`closeInputFile()` 用 `AtomicReference.getAndSet` 实现幂等（`OpusFilePlayer.kt:532-539`）。
 - **无孤儿实例**：`:168-169`（文件先 CAS 登记）、`:135`（`decoder` 先赋值后 `start()`）、`AacFilePlayer.kt:168-170`（extractor 先赋值后 `setDataSource`）都是先登记后使用；旧版 `MediaExtractor().apply { setDataSource(...) }` 这一经典陷阱已消除。
 - `cancelAndJoin()` 可终止性：每个阻塞点都有唤醒手段（文件读由 `closeInputFile()`、`AudioTrack.write` 由 `audioTrackPlayer.stop()`、`queue.poll(100ms)` 自带上界、其余是可取消 `delay`），且 `:480-486` 的顺序与之一一对应。
 - `NonCancellable` 边界：释放体在内（`OpusFilePlayer.kt:473`/`AacFilePlayer.kt:226`），状态守卫与屏障等待在外，每步超时都是内层 `withTimeoutOrNull`，没有在 `NonCancellable` 外再套 `withTimeout`。符合约定。
 - AAC 同步 worker 的 EOS/PTS：`onInputData` 现在在 `readSampleData` **之前**快照 `sampleTime`（`:100-101`）并在 EOF 分支显式置 -1（`:105`），修掉了旧版读 `advance()` 之后的 `sampleTime` 导致 PTS 偏一帧的问题。
-- 回调引用清理：`OpusFilePlayer.kt:503-504`、`AacFilePlayer.kt:306-307` 在终态置空客户端 lambda，无 Context 泄漏。
+- 回调引用清理：经 `finishPlayback` 的终态会在 `OpusFilePlayer.kt:503-504`、`AacFilePlayer.kt:306-307` 置空客户端 lambda；M-2 的继承型 `releaseAndJoin()` 不经这里，仍会保留引用，因此本条同样只描述播放器终态协议。
 
 **MediaCodec 基类与四个 codec**
 - 同步 EOS 排空与 `onEndOfStream` 恰好一次：`BaseMediaCodecSynchronous.kt:51-76` 的三段式逻辑自洽；失败已上报时不叠加超时失败（`:66`），`isReleasing` 时不伪装自然结束（`:66`、`:76`）。
-- input/output index 所有权：同步 `queueInputIfNeeded()` 的补偿（`:149-157`）与 `drainOutput()` 的 `finally`（`:191-193`）、异步 `:70-77` 与 `:110-112`，四条退出路径恰好归还一次，补偿本身用 `runCatchingPreservingCancellation` 保留取消语义。`audio` 模块无 `createInputSurface()` 使用，无 Surface 所有权问题。
+- input/output index 所有权：同步 `queueInputIfNeeded()` 的补偿（`:149-157`）与 `drainOutput()` 的 `finally`（`:191-193`）、异步 `:70-77` 与 `:110-112`，普通返回和普通异常路径会归还 index；`audio` 模块无 `createInputSurface()` 使用，无 Surface 所有权问题。异步 Handler 路径对 `CancellationException` 的边界语义不正确，不能纳入“已闭环”结论，见 M-5。
 - 持锁阻塞的上界：持 `codecOperationLock` 期间可达的阻塞调用都有界（`AacDecoder.onInputData` 的 50 ms `poll`、`dequeueOutputBuffer(10_000us)`）；`releaseAndJoin()` 在取锁前先 join worker，不存在持锁 join。
 - 一次性会话语义：四个 codec 子类的 `onBeforeCodecStart()`/`onCodecReleased()` 都只做有界本地状态复位，无锁内等待。
 - `OpusDecoder.signalEndOfStream()` 的 CAS 协议（`:104-109`）与 `OpusFilePlayer.kt:296-301` 的重试循环配合正确：`offer` 失败会回滚 `eosRequested` 以便重试，非运行态返回 false 后由 `check(isAcceptingInput)` 快速失败。单生产者模型下无竞态。（**注意**：这与 M-4 不矛盾 —— M-4 说的是消费侧 `onInputData` 在 EOS 之后的回落，不是生产侧的提交协议。）
 
 **共同项**
-- `CancellationException` 重抛：本切片全部合规。`BaseMediaCodecSynchronous.kt:86-87` 显式首位重抛且 `CodecException` 排在 `IllegalStateException` 之前；`runCatchingPreservingCancellation`（`RunCatchingExt.kt:8-9`）先 catch `CancellationException` 再 catch `Throwable`，顺序正确。
+- `AudioSender.senderHandler` 无需照 `senderClient` 一样加 `@Volatile`（原 L-12 推翻）：`:80-83` 的
+  注释明确只约束“由 `stop()` 跨线程读取”的资源字段，`stop()` 不读取 handler。handler 在连接协程中
+  先赋值并传给 client，`onConnected()` 之后才通过 dispatcher 启动读取它的发送协程；当前发布链没有
+  一个与写入并发、且缺少任务提交 happens-before 的读取点。
+- `CancellationException`：协程路径的保留语义正确，`BaseMediaCodecSynchronous.kt:86-87` 显式首位重抛且 `CodecException` 排在 `IllegalStateException` 之前；`runCatchingPreservingCancellation`（`RunCatchingExt.kt:8-9`）也会保留协程取消。但该 helper 被用于普通 MediaCodec Handler 回调时语义错误，不能概括为“本切片全部合规”，已在 M-5 单列并给出统一边界方案。
 - 中断处理：本切片无 `InterruptedException` 捕获点、无 `Future.get()`/`Thread.join()`，不存在「捕获后未恢复中断标志」。（`FutureTask.awaitDone` 用静态 `Thread.interrupted()` 会清除标志的那个坑只在 `BaseMediaCodec*Test` 里。）
 - 安全面：本切片不涉及导出组件、deep link、WebView、网络配置、密钥或凭据；新增日志（`AudioTrackPlayer.kt:144-157`）受 `BuildConfig.DEBUG` 门控，发布 AAR 中为 false，只输出设备类型/音量/AudioManager mode，无凭据或 PII。**无 CRITICAL 安全问题。**
 - 格式与规则（静态判断）：本切片文件未见超过 100 列的行、未见 `!!`；`ktlint_standard_import-ordering`（`.editorconfig:17`）与 detekt `ImportOrdering`（`10-configs/detekt.yml:782-783`）在本仓库均为 disabled，故几处「`com.leovp.*` 先于 `android.*` 且夹空行」的 import 布局**不是**违规；两个 `finishPlayback` 的 `throw` 都在最外层 `withContext` 之后（`OpusFilePlayer.kt:524`、`AacFilePlayer.kt:272`），嵌套 `finally` 内只做 `addSuppressed`，不触发 detekt `ThrowingExceptionFromFinally`。
@@ -848,7 +1095,7 @@ private fun startMicRecording(): MicRecorder = MicRecorder(
   2. `OpusFramedFileReader.kt:26-30` 对「payloadStart == file.length()」返回 `payloadSize = 0` 并**正常返回空 `data`**；
   3. `:231` 的 `require` 抛 `IllegalArgumentException` → `:269-274 catch (e: Exception)` → `requestFailure(e)` → `finishPlayback(Failure)` → `:514-516` 调 `errorCallback`，本该自然结束的会话被报成失败；
   4. 触发源确有其事：`AudioActivity.kt:291-292` 录制时是 `write(START_CODE)` 紧跟 `write(data)` 两次独立写入 `BufferedOutputStream`，进程在两者之间被杀或掉电即产出该形态文件；
-  5. 与 `CHANGELOG.md:576` 自称的「`OpusFilePlayer` 将文件自然结尾识别为最后一个 payload 的合法边界」也不一致。
+  5. 与 `CHANGELOG.md:578-580` 自称的「`OpusFilePlayer` 将文件自然结尾识别为最后一个 payload 的合法边界」也不一致。
 - 裁决：**确认**。
 - **关键修正：该 `require` 不能简单删除。** 已核实 `OpusDecoder.kt:100-101` 的 `decode()` 首个条件就是 `rawData.isNotEmpty()`，空数组**永远返回 false**；而 `submitWithBackpressure`（`OpusFilePlayer.kt:287-294`）是 `while (!decoder.decode(data))`，唯一出口是 `check(decoder.isAcceptingInput)`。所以提交空帧会变成 5 ms 间隔的无限自旋，直到 `:419` 的停滞检测 5 秒后把会话判死 —— 比现状更糟。
 - 修复方案：按边界处理，而不是提交空帧。
@@ -916,8 +1163,13 @@ suspend fun stopPlayingAndJoin() {
 /** Guards [startRecord] so one recorder can only open one capture session. */
 private val started = AtomicBoolean(false)
 
-@Volatile
-private var recordJob: Job? = null      // :117 currently non-volatile
+/** Serializes start ownership with stop's job snapshot; never held across a join. */
+private val recordingLifecycleLock = ReentrantLock()
+
+private var recordJob: Job? = null
+
+/** Completes only after the record coroutine has left its body, not merely after resources close. */
+private val recordLoopCompleted = CompletableDeferred<Unit>()
 ```
 
 ```kotlin
@@ -928,22 +1180,69 @@ private var recordJob: Job? = null      // :117 currently non-volatile
  * second reader over the same AudioRecord: the two jobs would interleave frames, and only the
  * last one is reachable from [stopRecordAndJoin], so release() could run while the orphan is
  * still inside the native read(). Create a new MicRecorder per session.
- *
- * Migration: a second startRecord() used to start another reader; it now reports the refusal
- * through [RecordCallback.onStop] and returns.
  */
 fun startRecord() {
     LogContext.log.w(TAG, "Do startRecord()")
-    if (stopped.get() || !started.compareAndSet(false, true)) {
-        LogContext.log.e(TAG, "startRecord() refused: already started or stopped")
-        return
+    recordingLifecycleLock.withLock {
+        check(!stopped.get()) { "A stopped MicRecorder cannot be started" }
+        check(started.compareAndSet(false, true)) {
+            "A MicRecorder instance can only be started once"
+        }
+        // Keep the existing state checks, startRecording(), and recordJob = ioScope.launch { ... }
+        // inside this lock. The launched job itself does not acquire or retain this lock, and
+        // completes recordLoopCompleted from its finally block.
     }
-    // ... existing body unchanged ...
 }
 ```
 
-- 说明：`started` 用独立 `AtomicBoolean` 而非复用 `stopped`，因为 `stopped` 的语义是「拒收/已停」，两者在 `failRecordStart()`（`:295-311`）里会打架。`recordJob` 加 `@Volatile` 的理由：`startRecord()` 在主线程写、`stopRecordAndJoin()` 在 IO 协程读，成功路径上两者之间没有共享同步点（`stopped.compareAndSet` 在 `:410`，而 `startRecord()` 成功路径不碰 `stopped`）。典型用法靠 `launch` 的任务提交建立 happens-before，实践中安全；但若 stop 协程早已挂在 `releaseCompleted.await()` 上则无此保证，读到过期 `null` 会直接跳过 join。参照 `BaseMediaCodec.kt:55-56` 的 `codecJob` 正是 `@Volatile`。确定性：数据竞争**确定**（JMM）；实际显形**推断（低概率）**。
-- 建议补测试：`MicRecorderTest`（Robolectric + mockk 影子化 `AudioRecord`），两次 `startRecord()` 后断言 `ioScope` 只有一个子协程。另见 §3 M-8（同一问题的 demo 侧对偶）。
+`stopRecordAndJoin()` 必须用同一把锁完成“赢得 `stopped` CAS + 快照 `recordJob`”，然后退出锁再执行
+`audioRecord.stop()`、`cancelAndJoin()` 和其余挂起清理；最终将 `recordJob = null` 也放回锁内：
+
+```kotlin
+val callerJob = currentCoroutineContext()[Job]
+val (ownsStop, job) = recordingLifecycleLock.withLock {
+    val currentJob = recordJob
+    require(currentJob !== callerJob) {
+        "stopRecordAndJoin() must be called by an external owner"
+    }
+    val owns = stopped.compareAndSet(false, true)
+    owns to if (owns) currentJob else null
+}
+if (!ownsStop) {
+    releaseCompleted.await()
+    recordLoopCompleted.await()
+    return
+}
+withContext(NonCancellable) {
+    // Existing stop / join / release sequence, using the captured job. See M-10.
+    // Clear recordJob under the lock after the captured job has exited.
+    recordingLifecycleLock.withLock { recordJob = null }
+}
+```
+
+锁不能跨 `cancelAndJoin()`、`releaseCompleted.await()`、`recordLoopCompleted.await()` 或客户回调持有，
+否则会把一个启动/停止竞态换成死锁。录音 job 的整个 body 必须用 `try/finally` 包裹，并只在 finally
+完成 `recordLoopCompleted`；`failRecordStart()` 在根本没有发布 job 的路径也要完成该屏障。这个交接保证：start 先赢时一定在 stop 快照前发布 job，stop 会等待它；stop 先赢时先置
+`stopped = true`，后到 start 在碰 `AudioRecord` 前抛 `IllegalStateException`。只加 `@Volatile` 不能提供
+这个复合原子性，仍允许 stop 在 job 赋值前读到 `null` 并释放资源，因此不再作为修法。caller-job
+`require` 必须保留在同一锁内、`stopped` CAS 之前，继续满足“非法自调用零副作用”的现有契约。
+
+`handleRecordingFailure()` 也必须纳入同一个所有权协议，不能继续在锁外直接 `stopped.set(true)`：worker
+先用 `recordingLifecycleLock` 竞争 `stopped.compareAndSet(false, true)`；赢者在
+`withContext(NonCancellable)` 中执行 `stopAudioRecord()`、`ioScope.cancel()` 与
+`finishRecorderReleaseAndJoin(false)`，但绝不 join 自己；若外部 stop 已先赢，worker 不再重复释放，直接
+离开并在 finally 完成 `recordLoopCompleted`。反过来，worker 先赢时外部 stop 是 follower，必须依次等待
+`releaseCompleted` 和 `recordLoopCompleted`，这样公开 API 返回时既完成 native/encoder 释放，也确认录音
+job 已真正退出。只等 `releaseCompleted` 不够：它当前在 worker 内、`handleRecordingFailure()` 返回前完成，
+与“worker 已退出”的公开承诺之间仍有窗口。
+
+- **作者决策（2026-10-27）**：重复或停止后调用直接抛 `IllegalStateException`。一次性 CAS 必须位于任何
+  `AudioRecord` 副作用之前；不能改成 `callback.onStop(false)`：`onStopNotified` 是整个 recorder 的一次性
+  完成通知，重复调用若抢先消费它，仍在运行的首个会话以后就收不到真实停止结果。KDoc 增加迁移说明：
+  旧版本会静默创建第二个 reader；新版本把重复/停止后启动视为调用方错误并立即抛出，调用方每次录音
+  创建新的 `MicRecorder`。该契约与同模块一次性 `BaseMediaCodec.start()` 和文件播放器重复启动一致。
+- 说明：`started` 用独立 `AtomicBoolean` 而非复用 `stopped`，因为 `stopped` 的语义是「拒收/已停」，两者在 `failRecordStart()`（`:295-311`）里会打架。锁负责 start/stop 的复合所有权交接，`started` 负责一次性 API 契约，两者职责不同。
+- 建议补测试：`MicRecorderTest`（Robolectric + mockk 影子化 `AudioRecord`），两次 `startRecord()` 后断言第二次抛出 `IllegalStateException`、`ioScope` 仍只有一个录音子协程，且活动会话的 `onStop` 未被第二次调用提前消费；停止后再次调用也必须抛出。再用 latch 阻塞 `startRecording()`，让 stop 与 start 竞争：分别固定 start 先赢与 stop 先赢的顺序，断言前者 join 唯一 job 后才 release，后者在任何 `AudioRecord` 启动副作用前拒绝 start。最后让 record job 自己先触发失败清理、外部 stop 随后进入 follower 路径，断言外部 stop 在 `recordLoopCompleted` 前不返回、两套资源只释放一次。另见 §3 M-8（同一问题的 demo 侧对偶）。
 
 ### A3（形态修正）超时断言的证明力
 
@@ -1236,7 +1535,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 - **H-1**：OPUS 流播放触发丢帧（队列满或延迟 > 500 ms）后，确认 flush + start 之后音频恢复而非永久静音。这是 §3 新发现中唯一的 HIGH；本文 §4 另有被升级为 HIGH 的 A2。
 - **M-1**：构造 AudioTrack 非 PLAYING 的场景（播放中被其他应用抢占音频焦点），确认改后走失败回调而非 `endCallback`。
 - **M4 / M-4**：OPUS 文件自然播完，分别确认 M4 的「尾随 start code 空 payload」不再误报失败，以及 M-4 的 EOS 后不再提交普通输入缓冲、设备侧不抛 `IllegalStateException`。
-- **A2 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，确认无 PCM 帧交错、无 `AudioRecord` 泄漏、无 native 崩溃。
+- **A2 / M-10 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，并在停止等待期间取消发起 stop 的协程；确认重复 start 明确失败、leader 取消后仍完成释放，且无 PCM 帧交错、`AudioRecord` 泄漏或 native 崩溃。
 - **L-7**：打印 `OpusDecoder` 回调所在线程名，确证「回调落在主 Looper」这一推断。
 
 **注意**：上列各项的**实施**决策见 §5.3（主项为 C5／C6／M-2／M-7／M-9，
@@ -1259,12 +1558,13 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是 §3 新发现中**唯一的 HIGH**（§4 A2 也已升级为 HIGH），
    > 严重度高于本节任何一项，但未被排入 1–8 项。修法是在
    > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1），同时增加回调世代栅栏；在同一次
-   > codec 锁持有期内依次递增世代、执行 `codec.flush()` 和 `codec.start()`，失败则退出锁后调
-   > `reportCodecFailure()`。不能调
+   > codec 锁持有期内依次执行 `codec.flush()`、在 `finally` 中递增世代、再执行 `codec.start()`，
+   > 失败时使用 H-1/M-3 的两阶段协议：锁内调 `transitionToCodecFailure()`，退出锁后仅在赢得转换时调
+   > `notifyTransitionedCodecFailure()`。不能调
    > `super.flush()` 后无条件 start，因为基类会吞掉 flush 异常。建议紧随 M-9 实施。H-1 本身
    > 就会造成永久静音且没有失败回调；M-3 是独立的 codec
    > 失败终态与错误通道缺口，不是 H-1 的触发条件。**反向则有依赖**：H-1 修法新增的失败分支经
-   > `reportCodecFailure` 上报，而 `OpusStreamPlayer` 未接 `errorCallback`，故在 M-3 落地前该分支
+   > M-3 的 owner-notification helper 上报，而 `OpusStreamPlayer` 未接 `errorCallback`，故在 M-3 落地前该分支
    > 不可观测（见 §3 H-1 的复核补记）—— 实施时必须同批落地 M-3，统一使用
    > `RUNNING -> FAILED -> RELEASING` 终态协议，不在 H-1 分支内另建一套状态机。
    > 本条为复核补入的**建议**，不是作者决策。
@@ -1278,7 +1578,10 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    session 及 fake；这些类型全部为 `internal`，公开构造器不暴露测试依赖。
 5. **实施 M-2 组合重构，同时落地 M-1**：`AacFilePlayer` 不再继承 codec 基类，按 §3 M-2 的顺序转移所有权与清理；`writeDecodedPcm()` 必须将 `AudioTrack.write()` 的非正返回值转为失败终态，不得保留「静默丢弃却走 `endCallback`」的 M-1 路径。接法已在 §3 M-1 定好：新增 player 私有的 `requestFailure(error)`（`terminalScope.launch { finishPlayback(Failure(...), propagateFailure = false) }`），由 `writeDecodedPcm` 与 `AacFileDecoder` 的 `onFailure` 共用；**不得**沿用 §3 M-1 早先那版经 `notifyCodecFailure(...)` 的写法 —— 本步删除的正是它依赖的继承关系，且 §3 M-3 会把该钩子收窄为 `protected`；
    同一改动更新类 KDoc、Demo 调用（若编译暴露旧继承 API）和 CHANGELOG。
-6. **落地 M4 并补 M-7 五个回归用例**：先按 §4 M4 跳过尾随 start code 产生的空 payload，不能只增加一条永远为绿的期望；再逐条完成 M-7 的 red/green。M-2/M-1 的 AAC 终态测试与 OPUS 的阻塞写/尾边界/H2 测试全部通过后，再运行 audio 模块质量检查。
+6. **落地 M4 并补 M-7 五个已批准回归用例**：先按 §4 M4 跳过尾随 start code 产生的空 payload，
+   不能只增加一条永远为绿的期望；再逐条完成 M-7 的 red/green。M-2/M-1 的 AAC 终态测试与 OPUS 的
+   阻塞写/尾边界/H2 测试全部通过后，再运行 audio 模块质量检查。L-8 的超限输入测试只随 §5.4 中
+   尚未批准的 L-8 修复落地，不在本条作者决策中偷渡实施。
 7. **C6 不实施**：不加 listener、即时 `isTerminated` 错误日志、watchdog 或全局观察协程；仅保留本文
    的机制说明。以后只有出现明确的线上可观测性需求时才单独设计 client/server 对称方案。
 8. **最后做集成验证**：运行 §5.1 命令以及 `:demo:assembleDevDebug`；音频/MediaCodec 行为按 §5.2
@@ -1293,18 +1596,19 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 |---|---|---|---|
 | 1 | **H-1 + M-3** | 异步 `flush()` 后未 `start()`，且 codec 失败不进终态、流播放器无失败通道 | 两条缺陷的**症状**可独立出现；但 H-1 修法的失败分支依赖 M-3 统一终态与通知。必须同批实施，见 §3 H-1/M-3 与 §5.3 补记 |
 | 2 | **M-4** | 异步缺输入 EOS 守卫，EOS 之后仍会 `queueInputBuffer()` | 结构性缺口与可达路径已静态确认，真机只用于验证设备表现和修复后行为，不应将「是否修复」交给真机结果决定 |
-| 3 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦 |
-| 4 | **A2** | `MicRecorder.startRecord()` 无重入守卫 | 可独立修复同一实例上的双 job；与 M-8 同批仅是审查与真机录音回归的便利，不是正确性前提 |
-| 5 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 共用 `record()` 函数邻域和序列化方案，宜同批；不要另建一套只靠 `@Volatile` 的发布规则 |
-| 6 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
-| 7 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
-| 8 | **M-5 / M-6** | 异步 `onOutputFormatChanged` 与同步 `onEndOfStream()` 无异常边界，抛出即杀进程 | 仓库内**无可达触发点**，风险全在下游实现；可择机 |
-| 9 | **12 条 LOW** | 见 §3「LOW 条目」表 | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证 |
+| 3 | **L-8（提升为 MEDIUM）** | 损坏 OPUS 文件可在 reader 中按接近 2 GiB 上限分配单个 payload | 在分配前按 codec 输入上限拒绝；不能依赖后续 `BufferOverflowException`，因为可能先 OOM。与 M4/M-7 的 OPUS 文件播放器批次同做最聚焦 |
+| 4 | **M-8** | demo 三个录音开关互不排斥致 `micRecorder` 覆盖泄漏 | 可独立修复；与 B4-b 共用同一个 mutex/generation 序列化方案时改动最聚焦；按钮 off 必须按当前 intent 类型过滤 |
+| 5 | **A2 + M-10** | `MicRecorder.startRecord()` 无重入守卫；stop leader 可在赢得所有权后被取消 | 两项共同修改 start/stop 所有权交接，必须同批使用同一把生命周期锁，并由 stop leader 在 `NonCancellable` 中完成释放；作者已决定重复/停止后 start 直接抛 `IllegalStateException`。与 M-8 同批仅是审查和真机回归便利，不是资源正确性的前提 |
+| 6 | **B4-b** | `AudioActivity.record()` 在主线程开文件、建 `AudioRecord`、起编码器 | 与 M-8 共用 `record()` 函数邻域和序列化方案，宜同批；不要另建一套只靠 `@Volatile` 的发布规则 |
+| 7 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
+| 8 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
+| 9 | **M-5 / M-6** | 异步四类 MediaCodec callback 缺少适用于 Handler 的统一异常边界；同步 `onEndOfStream()` 无异常边界 | 仓库内**无已知可达抛出点**；M-5 与 H-1 都改 `BaseMediaCodecAsynchronous` callback，宜同批并使用同一代际/失败协议；M-6 必须与 M-3 的 `FAILED`/owner 通知协议同批，不能只 catch 后记日志 |
+| 10 | **其余 10 条 LOW** | 见 §3「原 LOW 条目」表（不含已提升为 MEDIUM 的 L-8） | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证；原 L-12 已推翻，不实施 |
 
 两点必须同时注意：
 
 1. **§5.2 是验证矩阵，不是实施排期。** 其中 M-1 与 M4 已分别纳入 §5.3 的 M-2/M-7 批次；
-   `H-1 + M-3、M-4、A2、B4-b、M-8、L-7` 仍在本节的未决列表中。只有实施了对应修复，才执行
+   `H-1 + M-3、M-4、A2 + M-10、B4-b、M-8、L-7` 仍在本节的未决列表中。只有实施了对应修复，才执行
    §5.2 对应的真机项；不能把「未修复，因而无法验证」记成通过。
 2. **M-9 之前不要跑 §5.1 的整套命令。** `demo:ktlintCheck` 被既有违规阻断（§3 M-9），在它修掉之前
    ktlint 环节的失败会掩盖其它改动自身的问题。

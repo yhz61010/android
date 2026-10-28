@@ -1,18 +1,22 @@
 # `review/native-modules` 第二轮详审 · 第 2/3 部分：audio + basenetty + demo 音频/Socket（2026-10-26）
 
 > 本文是 `00-documents/2026-10-20-branch-review-vs-master_cc.md` 第二轮详细审查的**第 2/3 部分**。
-> 该文档第 141 行定义了三份切片的范围，第 1/3（录屏与共享基础库）已完成并记录在其 §9–§20；
+> 该文档第 142 行定义了三份切片的范围，第 1/3（录屏与共享基础库）已完成并记录在其 §9–§20；
 > 本文承接第 2/3，§编号本地从 §1 重新开始，不接续该文档的章节编号（其现已延伸至 §22）。第 3/3（原生模块 + demo 其余 +
 > 构建脚本）尚未开始。
+>
+> **行号同步（Claude，2026-10-27）**：本文引用的全部源码行号、计数与跨文档交叉引用已按 HEAD
+> `5c0a21f65` 全量复核并修正不一致项；源码定位基准仍为 `ef51ac0ad`（该提交以来 `audio`、`basenetty`
+> 与本部分 demo 源码未变，`CHANGELOG.md` 有变，见 §1 的「本次复核快照」）。本次只改文档，未改源码。
 
 ## 1. 范围与方法
 
 | 项目 | 值 |
 |------|----|
 | 审查快照 | `review/native-modules`，HEAD `ef51ac0ad` |
-| 本次复核快照 | HEAD `a458f7b9d`；`ef51ac0ad..a458f7b9d` 未改动 `audio`、`basenetty` 或本部分 demo 源码，只更新审查文档及第 1/3 部分的录屏代码，因此本文的源码定位仍以 `ef51ac0ad` 为准 |
+| 本次复核快照 | HEAD `5c0a21f65`；`ef51ac0ad..5c0a21f65` 未改动 `audio`、`basenetty` 或本部分 demo 源码，故本文的源码定位仍以 `ef51ac0ad` 为准。该区间改动的是审查文档、`AGENTS.md`、`CHANGELOG.md` 及第 1/3 部分的录屏代码；其中 `CHANGELOG.md` 有改动（+8/−6），故 §2.1 的两处 `CHANGELOG.md` 行号按**当前工作树**给出（已复核仍对齐），不以 `ef51ac0ad` 为准 |
 | 对比基线 | 与 `origin/master` 的合并基 `97c84d242`（`docs: update Claude repository guidance`） |
-| 本分支代码差异 | 250 个文件，+17193 / −4953（已排除 `00-documents/` 与 `.claude/`；于 HEAD `a458f7b9d` 重新统计） |
+| 本分支代码差异 | 250 个文件，+17193 / −4953（已排除 `00-documents/` 与 `.claude/`；于 HEAD `5c0a21f65` 重新统计，与 `a458f7b9d` 处完全相同，因该区间只有文档提交） |
 | 本部分范围 | `audio`（主源码 + 测试）、`basenetty`、demo `examples/audio` 及其单测与 Socket 调用方，共 **43 个文件，+4644 / −960**，占分支代码新增的约 27%；`examples/cipher/AudioCipherActivity.kt` 虽含 Audio 字样但属于 cipher 示例，另有 +27 / −8，本切片未计入，留给第 3/3 的「demo 其余」 |
 | 方法 | 3 个细审代理按切片通读改动文件全文（不只看 hunk），复核既有文档结论在当前 HEAD 是否仍成立，裁决第一轮遗留的悬置发现，并对未被任何文档覆盖的文件做补审；随后由独立复核代理对每条发现做对抗性核验（缺陷是否真实、行号是否准确、修法能否编译并通过 detekt/ktlint、是否兼容 minSdk 21、是否破坏调用方） |
 | 执行方式 | **全部为源码静态分析，未执行 Gradle、未做真机验证。** 文中「确定」指依据公开 Android API 文档或仓库代码可直接证实；「推断」单独标注置信度。所有验证项一律标注「未验证」 |
@@ -20,12 +24,12 @@
 
 ### 1.1 与既有文档的覆盖关系
 
-本部分 43 个文件中，**30 个**已被既有文档逐行详审，因此本轮对这部分的动作是「复核旧结论是否仍成立」，而非重新发现；**13 个**不在那份清单内，其中 12 个被另一份文档覆盖，1 个从未被任何文档提到。
+本部分 43 个文件中，**30 个**已被既有文档逐行详审，因此本轮对这部分的动作是「复核旧结论是否仍成立」，而非重新发现；**13 个**不在那份清单内，其中 12 个被另一份文档覆盖，1 个从未被任何文档审查过（`PcmFramePaddingTest.kt` 只在 `2026-10-15` 等文档中作为同目录参照被提及、在 `2026-08-31` 中作为 ktlint/detekt 重跑对象被列出，均未被审查）。
 
 | 覆盖来源 | 文件数 | 本轮动作 |
 |---|---|---|
 | `2026-10-15-audio-netty-teardown-review-package_cc.md`（5342 行，§A audio / §B demo 音频 / §C basenetty 关闭路径） | 30 | 结论复核 |
-| `2026-09-02-audio-media-teardown-followup-fixes_cc.md`（2178 行，H1–H5、M10–M17、L11–L17） | 12（与上表无重叠的部分） | 结论复核 + 补审 |
+| `2026-09-02-audio-media-teardown-followup-fixes_cc.md`（2178 行，条目跨 H1–H12 / M1–M39 / L1–L31，含 screencapture、floatview 等非本切片范围；其中原 H5、原 L16 已分别改编号为 M18、M19。本文 §2.1 以 20 行复核其 audio 相关的 23 条（三行各合并两个编号：H5/M18、M15/M32、M19/L16）：H2–H5、H8、M10、M13–M19、M24、M30–M32、L11、L12、L16、L18、L26、L28） | 12（与上表无重叠的部分） | 结论复核 + 补审 |
 | 无任何文档覆盖 | 1（`demo/src/test/.../audio/PcmFramePaddingTest.kt`） | 完整补审 |
 
 未被 `2026-10-15` 清单列入的 13 个文件及其规模：
@@ -34,7 +38,7 @@
 audio/src/main/kotlin/com/leovp/audio/opus/OpusFilePlayer.kt                    +462/-145
 audio/src/main/kotlin/com/leovp/audio/aac/AacFilePlayer.kt                      +223/-27
 audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecSynchronous.kt   +145/-100
-audio/src/main/kotlin/com/leovp/audio/opus/OpusFramedFileReaderTest.kt          +127/-0
+audio/src/test/kotlin/com/leovp/audio/opus/OpusFramedFileReaderTest.kt          +127/-0
 audio/src/main/kotlin/com/leovp/audio/AudioTrackPlayer.kt                       +94/-17
 audio/src/main/kotlin/com/leovp/audio/mediacodec/BaseMediaCodecAsynchronous.kt  +92/-43
 audio/src/main/kotlin/com/leovp/audio/opus/OpusFramedFileReader.kt              +84/-0
@@ -74,21 +78,21 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 | **H4** 第二次 `playAac()` 把 H2/H3 带回 | **已修复** | `AacFilePlayer.kt:161` 的 `check(started.compareAndSet(false, true))` 是 `playAac` 字面第一条语句，位于 `cb=`（`:162`）、`MediaExtractor()`（`:168`）、`audioTrackPlayer.play()`（`:183`）、`start()`（`:184`）之前且在 `try` 之外 → 重复调用不触发任何清理，现有会话逐字节不受影响。`OpusFilePlayer.kt:125` 有同款闸。旧的 `releaseAfterStartFailure()` 已不存在 |
 | **H5 / M18** AAC 自然 EOF 泄漏 fd 与 AudioTrack | **已修复** | `AacFilePlayer.kt:134-137` 的 `onEndOfStream()` 改为 `terminalScope.launch { finishPlayback(NaturalEnd) }`；该路径 `:230` 先排空 AudioTrack、`:233-234` `stop()`+`releaseAndJoin()`、`:239 releaseExternalResources()`（`:299-308` 释放 `MediaExtractor` 与 `AudioTrack`），全部完成后才在 `:266` 调完成回调 |
 | **M10** EOF 回调无合法停止途径 | **形态已变，风险闭环** | `endCallback` 仍是 `() -> Unit`（`:158`），但 `:253 terminalCompletion.complete(Unit)` 发生在 `releaseAndJoin()` 返回之后、客户端回调之前，所以从回调里 `runBlocking { stop() }` 会命中 `:217-221` 的重复分支立即返回，不再 join 自身；且回调运行在 `terminalScope`（IO）而非 codec worker。**残留**：公开 KDoc 未写明回调所在线程，见 §3 L-7 |
-| **M13** 同步尾音丢失 / `onEndOfStream()` 双触发 | **已修复** | `BaseMediaCodecSynchronous.kt:113` 返回 `!outputEosReceived`；`:51-73` 输入 EOS 后进入带 3 秒上界的排空循环；`:76` 是全文件唯一的 `onEndOfStream()` 调用点且由 `outputEosReceived` 守卫，结构上不可能双触发 |
+| **M13** 同步尾音丢失 / `onEndOfStream()` 双触发 | **已修复** | `BaseMediaCodecSynchronous.kt:113` 返回 `!outputEosReceived`；`:55-73` 输入 EOS 后进入带 3 秒上界的排空循环；`:76` 是全文件唯一的 `onEndOfStream()` 调用点且由 `outputEosReceived` 守卫，结构上不可能双触发 |
 | **M14** 两条公开 API 破坏未记入 CHANGELOG | **已修复** | `CHANGELOG.md:205-208` 已写明 `AacDecoder.decode()` 的 JVM 描述符由 `([B)V` 变为 `([B)Z`、预编译调用方不重编译会得到运行期 `NoSuchMethodError`，以及非 `RUNNING` 状态调用 `flush()` 现在抛 `IllegalStateException` |
 | **M15 / M32** 钩子锁契约未文档化 | **已修复** | `BaseMediaCodec.kt:79-82`、`:85-88`、`:136-141`、`:144-150`、`:205-212`、`:262-265`、`:277-280` 全部补了锁契约；`IAudioMediaCodec.kt:24-26`、`:32-35`、`:43-46`、`:87-90`、`:94-97` 即本切片 `+19` 行的内容。**但该 KDoc 对同步路径不成立**，见 §3 L-1 |
 | **M16** `codecJob` 非 `@Volatile` | **已修复** | `BaseMediaCodec.kt:55-56` 已标 `@Volatile`，`:174-176` 补了重读排序理由 |
-| **M17** 一次性会话测试缺口 | **已修复** | `BaseMediaCodecAsynchronousTest.kt:254`（并发 start）、`:285`（重复 release 恰好一次）、`:183`/`:210`（迟到 output 回调） |
-| **M19 / L16** 重复 AAC CSD 覆盖并泄漏 decoder | **已修复（owner 侧）** | `AacStreamPlayer.kt:97-120` 短包先比对 `activeCsd`，活动会话中重复或变化的 CSD 一律拒绝；`OpusStreamPlayer.kt:105` 为 `csd0 == null && size == 83` 守卫。`AacDecoder`/`OpusDecoder` 自身无对应守卫，但 `BaseMediaCodec.kt:99` 的一次性 `start()` 使二次启动必抛，所有权只由 owner 持有，故无需 decoder 侧守卫 |
+| **M17** 一次性会话测试缺口 | **已修复** | `BaseMediaCodecAsynchronousTest.kt:254`（并发 start）、`:285`（重复 release 恰好一次）、`:183`/`:28`（迟到回调；`:210` 覆盖的是「带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`」，不是迟到回调） |
+| **M19 / L16** 重复 AAC CSD 覆盖并泄漏 decoder | **已修复（owner 侧）** | `AacStreamPlayer.kt:97-120` 短包先比对 `activeCsd`，活动会话中重复或变化的 CSD 一律拒绝；`OpusStreamPlayer.kt:106` 为 `csd0 == null && size == 83` 守卫（`:105` 是其上方注释）。`AacDecoder`/`OpusDecoder` 自身无对应守卫，但 `BaseMediaCodec.kt:99` 的一次性 `start()` 使二次启动必抛，所有权只由 owner 持有，故无需 decoder 侧守卫 |
 | **M24** 输入 EOS 后无墙钟上界 | **worker 侧已修复，join 侧仍成立** | `BaseMediaCodecSynchronous.kt:44`、`:56` 加了 `eosDrainTimeoutMs`（3 s）；但 `BaseMediaCodec.kt:172`、`:177` 的两次 `cancelAndJoin()` 在 `NonCancellable` 下仍无上界（属基类，`2026-09-02-audio-media-teardown-followup-fixes_cc.md` §10.2 已记录为有意选择） |
 | **M30** 异步输出行为变更未记录 | **已修复** | `CHANGELOG.md:468-469` 三条（空非 config 输出不再回调、带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`、`onOutputFormatChanged` 现在真正触发）均已记录 |
-| **M31** 三个数据回调的锁契约 | **形态已变：已文档化，未结构性消除** | KDoc 已补，但 `OpusDecoder.kt:111-113` 仍在锁内调用调用方提供的 `endCallback` |
+| **M31** 三个数据回调的锁契约 | **形态已变：已文档化，未结构性消除** | KDoc 已补，但 `OpusDecoder.kt:111-113` 仍在锁内调用调用方提供的 `endCallback`。**处置**：本轮只复核不裁决，结构性消除未列入 §5.3/§5.4 的排期 |
 | **L11** `mime!!` | **已消除** | `AacFilePlayer.kt:91-92` 改用 `requireNotNull` |
 | **L12** `stop()` 体内阻塞调用无 dispatcher | **已消除** | `AacFilePlayer.kt:213`、`OpusFilePlayer.kt:164` 都加了 `withContext(Dispatchers.IO)` |
-| **L18** `pause()` 内 `flush()` 紧随 `pause()` | **仍成立** | `AudioTrackPlayer.kt:251-256` 的 `audioTrack.pause()` 后立刻 `audioTrack.flush()`；`stop()`（`:274`）仍先调 `pause()`，消费者此时未必已 join |
+| **L18** `pause()` 内 `flush()` 紧随 `pause()` | **仍成立** | `AudioTrackPlayer.kt:251-256` 的 `audioTrack.pause()` 后立刻 `audioTrack.flush()`；`stop()`（`:274`）仍先调 `pause()`，消费者此时未必已 join。**处置**：沿用 `2026-09-02` 的既有结论，本轮无新裁决，未列入 §5.3/§5.4 的排期 |
 | **L26** `write()` 失败与「什么都没写」不可区分 | **仍成立且本切片放大** | `AudioTrackPlayer.kt:209-212` 新增 `getOrElse { ... 0 }`，异常路径也返回 0，见 §3 L-4 |
 | **L28** 补偿用裸 `runCatching` / output index 不归还 | **部分修复，异步异常语义仍需调整** | `BaseMediaCodecSynchronous.kt:153`、`BaseMediaCodecAsynchronous.kt:72` 改用 `runCatchingPreservingCancellation`；`BaseMediaCodecSynchronous.kt:191-193`、`BaseMediaCodecAsynchronous.kt:110-112` 的 `finally` 保证归还 index。协程 worker 中保留取消是对的，但异步 MediaCodec Handler 回调不是协程，helper 会把 `CancellationException` 逃到 Looper，见 §3 M-5 |
-| **H8** codec 失败绕过终态 | **仅文件播放器闭环，流播放器仍成立** | `AacFilePlayer.kt:138-142` 有 `notifyCodecFailure` 覆写；`AacDecoder` 无覆写，`AacStreamPlayer.kt:65-90` 与 `OpusStreamPlayer.kt:77-97` 均未接错误回调，见 §3 M-3 |
+| **H8** codec 失败绕过终态 | **仅文件播放器闭环，流播放器仍成立** | `AacFilePlayer.kt:139-143` 有 `notifyCodecFailure` 覆写；`AacDecoder` 无覆写，`AacStreamPlayer.kt:66-91` 与 `OpusStreamPlayer.kt:77-97` 均未接错误回调，见 §3 M-3 |
 
 ### 2.2 `2026-10-15-audio-netty-teardown-review-package_cc.md` 覆盖的 30 个文件
 
@@ -100,7 +104,9 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 
 严重度按 `.claude/rules/common/code-review.md`：CRITICAL 阻断合并、HIGH 应在合并前修、MEDIUM 建议修、LOW 可选。**本节全部修复方案均未编译、未运行、未真机验证。**
 
-统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 11 ／ LOW 10（本次复核新增 M-10，L-8 提升为 MEDIUM；原 L-12 经复核推翻）。
+另：本节与 §4 的代码块只写改动主体，**未列出随之需要新增的 import**（如 `AtomicLong`、`AtomicBoolean`、`CompletableDeferred`、`currentCoroutineContext`/`isActive`、测试侧的 `ExecutorService`/`Future`/`AtomicReference`/`kotlin.test.fail`、`NioEventLoopGroup`），落地时须自行补齐；本仓库 detekt 零容忍，缺失或多余的 import 都会直接失败。代码块中的尾逗号只出现在**声明**处：`.editorconfig:14-15` 下 call-site 尾逗号规则为 enabled 而 `ktlint_code_style = android_studio` 使其默认不允许，调用点（含父构造调用）一律不写尾逗号，与 `AacDecoder.kt:30-35` 的既有写法一致。
+
+统计：CRITICAL 0 ／ HIGH 1 ／ MEDIUM 11 ／ LOW 10（本次复核新增 M-10，L-8 提升为 MEDIUM；原 L-12 —— 草稿中「`AudioSender.senderHandler` 应加 `@Volatile`」一条 —— 经复核推翻，理由见 §3.1）。
 
 ### H-1（HIGH）异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音
 
@@ -112,7 +118,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
   4. `OpusDecoder : BaseMediaCodecAsynchronous`（`OpusDecoder.kt:35`），而 `OpusStreamPlayer.kt:213` 在丢帧分支调 `decoder.flush()`，前后只有 `decodedPcmQueue.clear()` 与 `audioTrackPlayer.pause()/play()`（`:214-216`），**无任何 `start()`**。
   5. `BaseMediaCodec.start()` 是一次性的（`:99` 的 `NEW -> STARTING` CAS），无法再调用来恢复。
   6. `BaseMediaCodec.kt:193` 另一处 `codec.flush()` 在 `releaseCodecOnce()` 内紧跟 `codec.release()`，不需要 start，不属本缺陷。
-- 触发条件：**常规事件，非异常路径** —— `OpusStreamPlayer.decodeOrDropLocked()` 的丢帧分支，`decoder.queueSize >= 64` 或 `abs(latencyInMs) > audioLatencyThresholdInMs`（初值 `AUDIO_ALLOW_LATENCY_LIMIT_IN_MS = 500`，`:42`、`:145`）。
+- 触发条件：**常规事件，非异常路径** —— `OpusStreamPlayer.decodeOrDropLocked()` 的丢帧分支，`decoder.queueSize >= 64` 或 `abs(latencyInMs) > audioLatencyThresholdInMs`（初值为 `AUDIO_INIT_LATENCY_IN_MS = 1200`，`:40`、`:45`；播放开始 `REASSIGN_LATENCY_TIME_THRESHOLD = 5` 秒后才收紧为 `AUDIO_ALLOW_LATENCY_LIMIT_IN_MS = 500`，`:42`、`:145`）。
 - 后果：flush 后编解码器不再请求输入缓冲 → `onInputBufferAvailable` 不再回调 → 队列填满 64 槽后 `decode()` 持续返回 false → **本次会话 OPUS 流永久静音**，而 `isRunning` 仍为 true、没有任何失败回调。该后果由 H-1 单独引起，不以 M-3 触发 codec 异常为前提；只能整体 stop 并新建实例恢复。
 - 范围：`AacStreamPlayer.kt:220` 的 `flush()` 作用在 `AacDecoder : BaseMediaCodecSynchronous` 上，同步模式无此契约，**不受影响**。
 - 确定性：**确定**（Android 公开文档的显式契约 + 仓库内可达调用路径 + 代码中确无 `start()`）。
@@ -176,17 +182,20 @@ override fun onOutputBufferAvailable(
 ) {
     if (isReleasing) return
     val observedGeneration = callbackGeneration.get()
-    try {
+    // Keeps the existing idiom (BaseMediaCodecAsynchronous.kt:93, :114-119): a bare
+    // catch (Exception) here would also change this callback's CancellationException
+    // handling, which is M-5's separate subject.
+    runCatchingPreservingCancellation {
         withCodecOperationLock {
             if (isReleasing || observedGeneration != callbackGeneration.get()) {
                 return@withCodecOperationLock
             }
             // Existing callback body, including releaseOutputBuffer(index, false).
         }
-    } catch (error: Exception) {
+    }.onFailure {
         if (!isReleasing) {
-            LogContext.log.e(TAG, "Output buffer callback failed", error)
-            reportCodecFailure(error)
+            LogContext.log.e(TAG, "Output buffer callback failed", it)
+            reportCodecFailure(it)
         }
     }
 }
@@ -206,6 +215,21 @@ callback 由 `flush()` 作废，世代栅栏专门处理已进入 Kotlin 回调�
 `transitionToCodecFailure()`，先把状态切到 `FAILED`；释放锁后再用
 `notifyTransitionedCodecFailure()` 通知 owner，绝不能在 codec 锁内调用客户代码。该失败分支必须继续
 与 M-3 同批落地。
+
+**世代栅栏在成功路径上同样没有关严（复核补记，Claude，2026-10-27）**：上面只在 `codec.flush()` 之后
+递增一次，而锁一直持有到 `codec.start()` 之后才释放。一个在「世代已递增 → 锁被释放」这段窗口里**才
+进入** Kotlin 回调的旧 callback，会在入口快照到**新**世代，阻塞在 `codecOperationLock` 上，获锁后顺利
+通过锁内复核，然后继续用 flush 前的 index 走到
+`BaseMediaCodecAsynchronous.kt:110-112` 的 `releaseOutputBuffer()` —— 正是本条「附带竞态」要防的伪失败。
+因此上面代码块里那段 KDoc（「a callback that entered before or during flush … cannot use an
+invalidated index」）**在成功路径上不成立**；文档此前只为失败分支补了 `transitionToCodecFailure()`，
+成功分支没有对应补偿。
+
+要表达的真实条件是「**凡在 flush 持锁期间进入的回调都必须拒绝**」，而这不是一个在锁内递增的计数器能
+表达的：计数器的最终值在锁释放前就已可见。可行形态是改用一个在 `codec.flush()` **之前**置位、并在
+**锁释放之后**才清除的 `flushInProgress` 标记，回调在入口快照该标记，置位即无条件拒绝；代价是落在清除
+窗口里的一个**合法**新回调也会被丢弃（input 少一个槽，或 output 少归还一次 index）。该取舍与对应回归
+用例尚未论证，**本条修法在落地前需要先确定这一点**，不能按现有代码块照抄。
 
 可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`）；`codec`、`isRunning`、
 `withCodecOperationLock` 均可供子类使用；M-3 将补受保护的两阶段失败 helper。这里不调 `super.flush()`，因为基类会
@@ -237,8 +261,8 @@ callback 不在 codec 锁内执行的约定。需在 `BaseMediaCodecAsynchronous
 新增的失败分支对仓库内唯一会触发该 flush 路径的调用方是空转的。已核实 `OpusStreamPlayer.kt:77-97` 构造 `OpusDecoder`
 时只传 **7 个位置实参，止于 `callback: IDecodeCallback`**（`OpusDecoder.kt:32`），而其后的
 `endCallback`（`:33`）与 `errorCallback`（`:34`）均带默认值 `{}`，因此两者都取默认空实现。因此 `reportCodecFailure(failure)` →
-`notifyCodecFailure`（`OpusDecoder.kt:115`）→ `errorCallback.invoke(error)` 落进空实现，只剩那行
-`log.e` 留痕。更要紧的是：若 `codec.flush()` 成功而 `codec.start()` 抛出，codec 停在「已 flush 未
+`notifyCodecFailure`（`OpusDecoder.kt:115`）→ `errorCallback.invoke(error)` 落进空实现，只剩
+`BaseMediaCodecAsynchronous.flush()` 与 `OpusDecoder.kt:116` 两行 `log.e` 留痕。更要紧的是：若 `codec.flush()` 成功而 `codec.start()` 抛出，codec 停在「已 flush 未
 start」状态，而 `lifecycleState` 不变（即 M-3），`isRunning` 仍为 true、`decode()` 继续收帧 ——
 **退回 H-1 的症状，且只有一条日志**。
 
@@ -258,7 +282,7 @@ start」状态，而 `lifecycleState` 不变（即 M-3），`isRunning` 仍为 t
 - 修复方案：**只写 M-2 之后的形态。** §5.3 第 5 项把 M-1 与 M-2 排在同一步，而 M-2 会把
   `AacFilePlayer` 从 `BaseMediaCodecSynchronous` 的子类改为持有者 —— 届时它既调不到
   `notifyCodecFailure`（且 §3 M-3 还要把该钩子从 `public open` 收窄为 `protected open`），也不再有
-  `onOutputData` 这个 codec 回调。落点是 M-2 第 5 步引入的 `private fun writeDecodedPcm(pcm: ByteArray)`，
+  `onOutputData` 这个 codec 回调。落点是 M-2 第 4 步引入的 `private fun writeDecodedPcm(pcm: ByteArray)`，
   走 player **自有**的终态协议，不经任何 codec 钩子：
 
 ```kotlin
@@ -308,7 +332,7 @@ private fun writeDecodedPcm(pcm: ByteArray) {
 - 对照：`OpusFilePlayer` 用组合（`:97 private var decoder: OpusDecoder? = null`）而非继承，不存在该缺口。
 - 触发条件：调用方按 CLAUDE.md「释放类 API 统一为挂起函数（`releaseAndJoin()` …）」的约定，对 `AacFilePlayer` 调 `releaseAndJoin()` 而非 `stop()`。
 - 后果：codec 释放、worker 退出，但 `MediaExtractor`（持文件 fd）与 `AudioTrack`（native 混音器资源）泄漏；`terminalStarted` 仍为 false，`endCallback`/`errorCb` 引用不被清空（延长对 Activity lambda 的持有）。后续再调 `stop()` 可补救，但语义上调用方已认为释放完成。
-- 确定性：**确定**（可见性与调用关系可直接读出）。Demo 走的是 `AudioActivity.kt:365-367` 的 `player.stop()`，故为 API 契约缺口而非活跃 bug。
+- 确定性：**确定**（可见性与调用关系可直接读出）。Demo 走的是 `AudioActivity.kt:360-363`（`stopAacPlayback()`）中 `:363` 的 `player.stop()`，故为 API 契约缺口而非活跃 bug。
 - 作者决策（2026-10-26）：**采用组合，不保留仅用于兼容旧版本的继承入口。** 只补 KDoc
   无法阻止调用方继续误用 `releaseAndJoin()`，也无法使编译器表达「播放器释放必须覆盖 decoder、
   extractor 和 AudioTrack」这一所有权约束。按仓库现行 API 演进规则，升级用户应迁移到播放器的
@@ -343,7 +367,7 @@ internal class AacFileDecoder(
 ) : BaseMediaCodecSynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
     sampleRate = audioDecodeInfo.sampleRate,
-    channelCount = audioDecodeInfo.channelCount,
+    channelCount = audioDecodeInfo.channelCount
 ), AacDecoderSession {
     private var currentSampleTimeUs = -1L
 
@@ -432,7 +456,7 @@ private var decoder: AacDecoderSession? = null
 ```
 
      公共构造器保持 `Context + AudioDecoderInfo + usage + contentType` 的正常使用入口；增加模块内部
-     构造器接收 `AudioOutput`、`AacSampleSourceFactory`、`AacDecoderFactory`，供 §M-7 的 JVM fake
+     构造器接收 `AudioOutput`、`AacSampleSourceFactory`、`AacDecoderFactory`，供 §3 M-7 的 JVM fake
      注入。生产构造器固定传入 `AudioTrackOutput`、`MediaExtractorAacSampleSourceFactory` 和
      `AacDecoderFactory(::AacFileDecoder)`。
   4. `playAac()` 在 `lifecycleMutex` 内按下列顺序发布资源，任一步失败仍走现有
@@ -450,18 +474,16 @@ val playbackDecoder = decoderFactory.create(
             finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false)
         }
     },
-    onFailure = { error ->
-        terminalScope.launch {
-            finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
-        }
-    },
+    onFailure = ::requestFailure
 )
 decoder = playbackDecoder
 audioOutput.play()
 playbackDecoder.start()
 ```
 
-     原 `onOutputData()` 的 AudioTrack 写入与帧计数移到
+     `onFailure` 直接指向 M-1 的 `requestFailure`（而不是再内联一次 `terminalScope.launch { finishPlayback(...) }`），
+     否则会绕掉 `requestFailure` 里 `terminalStarted` 的快路径，把一个会话重新拆成两套终态协议 ——
+     那正是 M-1 的 KDoc 要防的形态。原 `onOutputData()` 的 AudioTrack 写入与帧计数移到
      `private fun writeDecodedPcm(pcm: ByteArray)`，并合并 M-1 的非正返回值失败处理，避免重构后
      又保留静默成功缺陷。
   5. `finishPlayback()` 保持现有终态栅栏。`decoder` 与 `sampleSource` 继续使用普通 nullable 字段，所有
@@ -487,13 +509,13 @@ sampleSource = null
 ### M-3（MEDIUM）codec 失败不改生命周期状态，`isRunning` 仍为 true；两个流播放器没有失败通道
 
 - 文件：`audio/.../aac/AacDecoder.kt:106-109`、`opus/OpusDecoder.kt:100-101`、`aac/AacEncoder.kt:236`、`opus/OpusEncoder.kt:235`
-- 事实：投递入口统一是 `isRunning && queue.offer(...)`。`isRunning`（`BaseMediaCodec.kt:77`）只看 `lifecycleState == RUNNING`；同步失败路径（`BaseMediaCodecSynchronous.kt:88-104`）只做 `codecFailed.set(true)` + `reportCodecFailure(e)`，异步失败路径（`BaseMediaCodecAsynchronous.kt:79-84`、`:114-119`、`:142`）同样只上报，**两者都不改 `lifecycleState`**。`AacDecoder` 没有覆写 `notifyCodecFailure`（全模块仅 `OpusDecoder.kt:115` 与 `AacFilePlayer.kt:138` 有），失败只落到 `BaseMediaCodec.kt:220-222` 的一条 `log.e`。`AacStreamPlayer.kt:65-90` 与 `OpusStreamPlayer.kt:77-97` 构造 decoder 时都只传 `IDecodeCallback`，`OpusStreamPlayer` 走位置参数，`endCallback`/`errorCallback` 取默认 `{}`（`OpusDecoder.kt:33-34`）。
+- 事实：投递入口统一是 `isRunning && queue.offer(...)`。`isRunning`（`BaseMediaCodec.kt:77`）只看 `lifecycleState == RUNNING`；同步失败路径（`BaseMediaCodecSynchronous.kt:88-104`）只做 `codecFailed.set(true)` + `reportCodecFailure(e)`，异步失败路径（`BaseMediaCodecAsynchronous.kt:79-84`、`:114-119`、`:142`）同样只上报，**两者都不改 `lifecycleState`**。`AacDecoder` 没有覆写 `notifyCodecFailure`（生产代码仅 `OpusDecoder.kt:115` 与 `AacFilePlayer.kt:139` 有，测试子类另有两处），失败只落到 `BaseMediaCodec.kt:220-222` 的一条 `log.e`。`AacStreamPlayer.kt:66-91` 与 `OpusStreamPlayer.kt:77-97` 构造 decoder 时都只传 `IDecodeCallback`，`OpusStreamPlayer` 走位置参数，`endCallback`/`errorCallback` 取默认 `{}`（`OpusDecoder.kt:33-34`）。
 - 触发条件：任何 `CodecException`/`IllegalStateException`/子类回调异常（如损坏 AAC 帧，或帧超过 `KEY_MAX_INPUT_SIZE = 8 * 1024`（`BaseMediaCodec.kt:272`）时 `inBuf.put(input)` 抛 `BufferOverflowException`）。
 - 后果：worker 退出或 codec 进入错误态后 `isRunning` 仍为 true → 流播放器继续入队 → 队列填满 → `decodeOrDropLocked` 进入「丢帧 + flush + resync」死循环（在 OPUS 上叠加 H-1）→ **永久静音且调用方永不知情**，`MediaCodec`/`AudioTrack` 一直被持有。文件播放器不受影响（已接错误回调）。
 - 确定性：机制**确定**；真机发生频率取决于码流质量（推断）。
 - 修复方案：下列四步是同一个失败协议，**必须同批完成**；只加 decoder callback
   不会改变 `isRunning`，只在播放器自有 `ioScope` 中调挂起 stop 又会命中
-  `StreamPlayerStopper.kt:22-27` 的 owned-scope 守卫。
+  `StreamPlayerStopper.kt:25-27` 的 owned-scope 守卫（`:22` 是函数签名，`:23-24` 取两个 Job）。
 
   1. 在 `BaseMediaCodec` 增加 `FAILED` 状态，并把失败协议拆为“只转换状态”和“只通知 owner”两个
      受保护 helper；普通路径仍通过 `reportCodecFailure()` 一次完成两步。CAS 失败就不再重复通知；
@@ -602,8 +624,10 @@ suspend fun stopAndJoin(
      避免 leader 失败却让 follower 误报成功。若失败是 `CancellationException`，在 leader/follower 重抛前
      都先记录 teardown failure，避免它在无日志的 `launch` 中只表现为普通取消。
 
-  3. `AacDecoder` 增加与 `OpusDecoder` 对称的 `errorCallback`，并删掉两个 decoder
-     `errorCallback` 的默认空 lambda；两个 stream player 都增加
+  3. `AacDecoder` 增加与 `OpusDecoder` 对称的 `errorCallback`（新增即为必填，不给默认值；
+     `AacDecoder` 现有参数只有 `sampleRate`/`channelCount`/`audioFormat`/`csd0`/`callback`，
+     本来就没有 `errorCallback` 可删），并删掉 `OpusDecoder.errorCallback` 的默认空 lambda
+     （`OpusDecoder.kt:34`）；两个 stream player 都增加
      独立于播放 `ioScope` 的 `terminalScope`、原子 `terminalOwner`（`OPEN` / `FAILURE` /
      `EXPLICIT_STOP`）和必填
      `onFailure: (Throwable) -> Unit` 构造参数。decoder 错误回调只调 `requestCodecFailure(error)`；
@@ -677,9 +701,9 @@ suspend fun stopPlayingAndJoin() {
             onLeaderClaimed = {
                 ownsTerminalScope = terminalOwner.compareAndSet(
                     TerminalOwner.OPEN,
-                    TerminalOwner.EXPLICIT_STOP,
+                    TerminalOwner.EXPLICIT_STOP
                 )
-            },
+            }
         ) { it.releaseAndJoin() }
     } finally {
         if (ownsTerminalScope) terminalScope.cancel()
@@ -714,7 +738,7 @@ once 标志；显式 stop 赢得终态所有权时迟到错误不触发失败回
   - `OpusDecoder` 的 EOS 标记是一次性队列元素，`onInputData`（`:74-81`）为 `currentInputIsEos = input === eosMarker`。**队列为空时 `input == null`，该赋值使标志回落为 `false`**，于是 `computePresentationTimeUs()`（`:94-98`）返回非负的 `currentInputPtsUs`，`BaseMediaCodecAsynchronous.kt:67` 会提交一个 0 字节的**普通**输入缓冲 —— 在输入 EOS 之后。（此处的回落机制已逐行核对源码确认。）
   - 该窗口不是理论窗口：MediaCodec 输入回调在单个 handler 上串行投递，EOS 被处理时通常已有若干 `onInputBufferAvailable` 消息排在队列里。
 - 触发条件：`OpusFilePlayer` 的每一次自然结束（`OpusFilePlayer.kt:262` → `signalEndOfStreamWithBackpressure`）。
-- 后果：违反 MediaCodec「提交 EOS 后不得再提交输入」的文档契约。具体表现取决于设备实现（**推断，置信度 0.6**）：抛 `IllegalStateException` → 被 `:114-119` 转成 codec 失败 → `OpusFilePlayer.kt:204` 的 `errorCallback = { requestFailure(it) }` 把一次正常播完的文件报成失败；或输出 EOS 永不到达，落到 codec EOS 的 3 秒超时。
+- 后果：违反 MediaCodec「提交 EOS 后不得再提交输入」的文档契约。具体表现取决于设备实现（**推断，置信度 0.6**）：抛 `IllegalStateException` → 被 `:79-84`（input 回调自己的 `onFailure`）转成 codec 失败 → `OpusFilePlayer.kt:204` 的 `errorCallback = { requestFailure(it) }` 把一次正常播完的文件报成失败；或输出 EOS 永不到达，落到 codec EOS 的 3 秒超时。
 - 确定性：结构性缺失与可达路径**确定**；设备侧后果**推断**。
 - 修复方案（一次性会话，无需重置）：
 
@@ -814,7 +838,7 @@ worker 已被取消时继续传播结构化取消，不伪造失败通知。
 
 ### M-7（MEDIUM）H2/H3/H4/H5 的修复仍然零回归测试
 
-- 文件：`audio/src/test/` 下无 `OpusFilePlayerTest` / `AacFilePlayerTest`；本切片唯一新增测试是 `OpusFramedFileReaderTest.kt`，只覆盖被抽出的扫描器
+- 文件：`audio/src/test/` 下无 `OpusFilePlayerTest` / `AacFilePlayerTest`；`audio` 模块本切片新增的测试文件只有两个（`BaseMediaCodecAsynchronousTest.kt`、`OpusFramedFileReaderTest.kt`），都落在 codec 基类与被抽出的扫描器层，播放器层一个也没有（本切片另有 3 个 demo 侧新增测试：`PcmFramePaddingTest.kt`、`SuspendTeardownGateTest.kt`、`TeardownSupportTest.kt`，同样不覆盖 audio 播放器）
 - 事实：`audio/src/test` 共 6 个测试文件，播放器层一个也没有。`OpusFilePlayer.kt:480-486` 的释放顺序（H3）、`:195` 的非阻塞 offer（H2）、`AacFilePlayer.kt:161` 的一次性闸（H4）、`:134-137` 的 EOF 自动释放（H5）全部可以被改回旧写法而不会有任何测试变红。既有文档 `2026-09-02-...md:1141` 已记录同一结论，说明该缺口跨轮未闭合。
 - 后果：本切片四个阻塞级修复没有任何自动化保护；§4 M4 那种「reader 测试祝福、player 实现拒绝」的契约撕裂正是缺少播放器层测试的直接产物。
 - 确定性：**确定**。
@@ -983,7 +1007,9 @@ private fun startMicRecording(): MicRecorder {
 ```
 
   单 return 表达式体，ktlint 标准规则 `function-expression-body` 要求写成 `= MicRecorder(...)`。
-  `.editorconfig` 未关闭该规则（只设了 `max_line_length = 100`），而项目 ktlint 为
+  `.editorconfig:13` 显式 `ktlint_standard = enabled`，其禁用清单（`:15-18`、`:23-24`）不含
+  `function-expression-body`；该规则在 ktlint 1.5.0（ktlint-gradle 14.2.0 的默认版本，项目未覆盖）
+  既非 experimental 也非 `ktlint_official` 专属，故 `ktlint_code_style = android_studio` 不会关闭它。而项目 ktlint 为
   `ignoreFailures = false`。
 - 后果：`demo:ktlintCheck` 失败 → **`./gradlew staticCheck` 在本分支红**。这不是本切片新引入的，
   但它使 §5.1 的验证命令无法整体通过，也挡住本文档所有修复方案的验证路径。
@@ -999,9 +1025,15 @@ private fun startMicRecording(): MicRecorder {
 /** Builds and starts the recorder; the caller publishes it and re-checks `stopping`. */
 private fun startMicRecording(): MicRecorder = MicRecorder(
     // ... existing arguments unchanged ...
-)
+).apply {
+    startRecord()
+}
 ```
 
+  **`.apply { startRecord() }` 必须保留**（真实代码为 `AudioReceiver.kt:193-195`）。上面「事实」块只截到
+  `:164-166`，若照 `= MicRecorder(...)` 直接收尾改写，录音器会被构造但**永不启动** —— 与该函数自己的
+  KDoc「Builds **and starts** the recorder」矛盾，且采集路径静默失效。`function-expression-body`
+  对带 `.apply {}` 尾调用的表达式体同样满足，不需要为过规则而删掉它。
   注意随之而来的缩进变化须满足 `max_line_length = 100`；改完应以
   `./gradlew :demo:ktlintCheck --rerun-tasks` 单独确认，再跑整套 `staticCheck`。
 
@@ -1043,14 +1075,14 @@ private fun startMicRecording(): MicRecorder = MicRecorder(
 | **L-1** | `IAudioMediaCodec.kt:94-98` | 新增 KDoc 写「Called while the codec operation lock is held」，**对同步路径不成立** —— `BaseMediaCodecSynchronous.kt:76` 在 worker 协程里、锁外、且在该 worker 自身的 Job 上调用。实现若在同步路径从该回调调 `releaseAndJoin()`，会命中 `BaseMediaCodec.kt:165` 的 `require(codecJob !== currentCoroutineContext()[Job])` 而抛出，KDoc 未提示。19 行新 KDoc 也都没写「实现抛出时会发生什么」，而路径处理并不一致：同步 `onInputData`/`onOutputData` 的普通 `Exception` 转 codec failure，同步 `onEndOfStream` 当前逃出 worker；异步普通 `Exception` 多数转 failure，但 `CancellationException` 会被错误重抛到 Handler（见 M-5）。另 `AacDecoder.kt:90` 的 `queue.poll(50, MILLISECONDS)` 持锁阻塞最多 50 ms，与同份 KDoc 的「must return promptly」字面冲突（有界，契约应写「有界」而非 promptly） | 确定 |
 | **L-2** | `BaseMediaCodecSynchronous.kt:88-93` | 同步路径**从不调用** `onError()`（全文件 `grep` 零命中），只调 `reportCodecFailure(e)`；异步路径（`BaseMediaCodecAsynchronous.kt:138`）先调子类 `onError` 再上报。覆写 `onError` 的同步子类拿不到 `CodecException`，而 KDoc（`IAudioMediaCodec.kt:87-91`）描述得像两条路径一致。建议改 KDoc 写明「只有异步路径触发 `onError`，同步路径统一走 `notifyCodecFailure`」 | 确定 |
 | **L-3** | `AacEncoder.kt:80-81` | `csd0` 仍是非 `@Volatile` 的公开读取面；本切片已把 `OpusEncoder` 的三个 CSD 字段合并为单个 `@Volatile`（`:179-184`），两者不对称。`csd0` 写入点分属三个线程（`:91`/`:109`/`:240`，都在锁内），而公开 getter 供外部任意线程不持锁读取 → 无 happens-before，外部消费方可能长期读到 `null`。仓库内无读取方 | 确定（JMM）；下游影响推断 |
-| **L-4** | `AudioTrackPlayer.kt:187-212`、`:199-202` | `write()` 现在整体包进 `runCatchingPreservingCancellation { ... }.getOrElse { ...; 0 }`，异常**不再外抛**（合并基无 try/catch，`IllegalStateException` 会传给调用方）。这是公开 API 行为变更，`CHANGELOG.md:261-263` 只记了奇数字节与负错误码，**此条遗漏**。另 `logRouting("first-write")`（`:199-202`）位于已成功写入之后、返回值之前且在 `runCatching` 内：若 `routedDevice`/`getDevices()` 抛出，**已真实写入的字节会被报成 0** → `AacFilePlayer.kt:120-126` 的 `writtenAudioFrames` 少计 → `awaitAudioTrackDrain()` 提前退出剪掉尾音（L26 的延伸）。仅 debug 构建。次要：该调用点在 `AacStreamPlayer` 路径上处于 codec 操作锁内，debug 构建会在锁内多做 4 次 AudioManager binder 调用 | 确定 |
+| **L-4** | `AudioTrackPlayer.kt:187-212`、`:199-202` | `write()` 现在整体包进 `runCatchingPreservingCancellation { ... }.getOrElse { ...; 0 }`，异常**不再外抛**（合并基无 try/catch，`IllegalStateException` 会传给调用方）。这是公开 API 行为变更，`CHANGELOG.md:261-263` 只记了奇数字节与负错误码，**此条遗漏**。另 `logRouting("first-write")`（`:199-202`）位于已成功写入之后、返回值之前且在 `runCatching` 内：若 `routedDevice`/`getDevices()` 抛出，**已真实写入的字节会被报成 0** → `AacFilePlayer.kt:124-128` 的 `writtenAudioFrames` 少计 → `awaitAudioTrackDrain()` 提前退出剪掉尾音（L26 的延伸）。仅 debug 构建。次要：该调用点在 `AacStreamPlayer` 路径上处于 codec 操作锁内，debug 构建会在锁内多做 4 次 AudioManager binder 调用 | 确定 |
 | **L-5** | `BaseMediaCodecSynchronous.kt:46` | worker 的唯一安装点 `override fun onCodecStarted()` 未标 `final`，而基类该方法是 `protected open`（`BaseMediaCodec.kt:150`）。同步子类覆写而不调 `super` 会让 `codecJob` 永不赋值：`start()` 成功、`isRunning` 为 true、`decode()` 返回 true，但没有任何东西排空队列。仓库内两个同步子类都未覆写。修复时将其改为 `final override`；若仍需给下游保留“worker 已安装后的扩展点”，新增由该 final 方法在 `codecJob` 赋值后调用的受保护钩子并写明不得等待 worker/teardown，不能笼统要求迁到语义不同的 `onBeforeCodecStart()`。同步更新 KDoc/CHANGELOG 的公开继承影响 | 确定 |
 | **L-6** | `OpusFramedFileReaderTest.kt:85-99` | `` `overlapping start code prefix remains payload data` `` 是**半表演用例**：代理用脚本实证，现实现与「失配即重置且不回看当前字节」的错误实现对该输入给出相同结果（`payload = "\|le\|lex"` 的第二个前缀被 `x` 打断，不会长成真正匹配）。且对 `"\|leo\|"` 这个 start code，`prefixTable` 在循环中实际用到的 `prefix[0..3]` 全为 0，KMP 与「重置+回看」完全等价，`buildPrefixTable`（`:72-83`）当前**没有任何用例能证伪**。其余 6 个用例逐条判为真实断言（含 `:101` 跨 8KB 缓冲边界那条，能证伪 `:57` 的绝对位置算式）。建议补两条：前缀后紧跟真 start code、自重叠 start code（如 `"aab"`，`prefixTable = [0,1,0]`） | 确定（已实证） |
-| **L-7** | `OpusFilePlayer.kt:130-136`、`BaseMediaCodecAsynchronous.kt:27-29` | `setCallback(cb)` 单参版使用 MediaCodec 构造时确定的 handler，而 `MediaCodec` 构造取 `Looper.myLooper() ?: Looper.getMainLooper()`；`createCodec()` 经 `OpusDecoder.start()` 在 `Dispatchers.IO`（无 Looper）执行 → **回调全部投递到主 Looper**。因此 `onDecoded`（`:193`）、`endCallback`（`:203`）、`errorCallback`（`:204`）及每帧的 `withCodecOperationLock` 获取都在主线程。当前这些回调体都有界非阻塞（即 H2 的修复内容），不是活跃 bug，但这正是 H2 的回归面且未写进任何 KDoc。`minSdk = 21` 不能无条件用 API 23 的 `setCallback(cb, handler)`，建议先把该约束写进 KDoc（含 `playOpus`/`playAac` 的「回调在播放器自己的 IO 作用域上，不是调用方线程」—— Demo 的 `runOnUiThread` 包裹即对此的隐式依赖，`AudioActivity.kt:190`、`:229`），彻底方案是用专用 `HandlerThread` 创建 codec | 推断（高置信度，机制来自 AOSP，需真机打印线程名确证） |
+| **L-7** | `OpusFilePlayer.kt:130-136`、`BaseMediaCodecAsynchronous.kt:27-29` | `setCallback(cb)` 单参版使用 MediaCodec 构造时确定的 handler，而 `MediaCodec` 构造取 `Looper.myLooper() ?: Looper.getMainLooper()`；`createCodec()` 经 `OpusDecoder.start()` 在 `Dispatchers.IO`（无 Looper）执行 → **回调全部投递到主 Looper**。因此 `onDecoded`（`:193`）、`endCallback`（`:203`）、`errorCallback`（`:204`）及每帧的 `withCodecOperationLock` 获取都在主线程。当前这些回调体都有界非阻塞（即 H2 的修复内容），不是活跃 bug，但这正是 H2 的回归面且未写进任何 KDoc。`minSdk = 21` 不能无条件用 API 23 的 `setCallback(cb, handler)`，建议先把该约束写进 KDoc（含 `playOpus`/`playAac` 的「回调在播放器自己的 IO 作用域上，不是调用方线程」—— Demo 的 `runOnUiThread` 包裹即对此的隐式依赖，`AudioActivity.kt:191`、`:230`），彻底方案是用专用 `HandlerThread` 创建 codec | 推断（高置信度，机制来自 AOSP，需真机打印线程名确证） |
 | **L-8（已提升为 MEDIUM）** | `OpusFramedFileReader.kt:28-36`、`OpusFilePlayer.kt:82-84` | `require(payloadSize in 0..Int.MAX_VALUE.toLong())` 之后直接 `ByteArray(payloadSize.toInt())`，上界接近 2 GiB —— 只在开头含一次 start code 的损坏文件会按「剩余文件长度」一次性分配。OPUS 单包最大约 1275 字节/通道流，兆字节级 payload 必然是损坏数据。这里可能在到达 codec 前就因数组分配抛 `OutOfMemoryError`；三个播放协程只 catch `Exception`，`ioScope`（`:82-84`）又没有 `CoroutineExceptionHandler`，因此不能写成“后续 `BufferOverflowException` 会干净失败、不会崩溃”。即使分配侥幸成功，`OpusDecoder.kt:78 inBuf.put(input)` 也会因超 `KEY_MAX_INPUT_SIZE`（8 KiB）失败。应在分配前给 `OpusFramedFileReader` 增加调用方传入的 `maxPayloadSize`（播放器按 codec 输入上限传 8 KiB），并补“超限时不分配 payload、走 `errorCallback` 后完成释放”的播放器测试；由于可由损坏/不可信文件稳定触发进程级 OOM，本项严重度应提升为 **MEDIUM**。不要尝试 catch `OutOfMemoryError` 后继续播放，边界校验才是修复 | 确定 |
 | **L-9** | `OpusFilePlayer.kt:470-471`、`AacFilePlayer.kt:223-224` | 终态读取客户端回调字段（`completionCallback`/`failureCallback`，AAC 为 `cb`/`errorCb`）发生在 `lifecycleMutex.withLock`（`:475`/`:228`）**之前**，而写入也发生在 mutex 外（`:126-127`/`:162-163`）。**当前良性**：happens-before 由「赋值 → 协程启动 → 回调 → `terminalScope.launch`」这条链保证，`ExplicitStop` 路径不使用这两个字段。但良性结论依赖调用图，若将来新增一条不经协程启动的终态入口即失效。最小修法是给四个引用加 `@Volatile`；若选择 mutex，则写入和读取必须一起迁入同一把 `lifecycleMutex`，只把读取移进去并不能与 mutex 外写入建立 happens-before | 确定 |
 | **L-10** | `StreamPlayerStopper.kt:31` | `ownerJob?.cancelAndJoin()` 在 `NonCancellable` 内且**无自身超时**，而补充规则要求释放步骤自身有界。`prepareStop()`（`:47-59`）会先取消 scope 并调用 `audioTrackPlayer.stop()` 唤醒常见阻塞写，但“所有子协程都能被这些动作唤醒”仍是未编码约束。原文称“加超时只能套在 `NonCancellable` 外”不成立：可以在 `withContext(NonCancellable)` 内使用 `withTimeout`。真正需要决策的是超时后的所有权——继续 `AudioTrack.release()` 可能与未退出的 native write 竞争，不释放则明确遗留资源。因此当前只能先补 KDoc 和针对现有阻塞点的终止测试；若要加入墙钟上界，必须先定义超时后是隔离并泄漏资源、后台继续观察，还是接受强制 release 风险，不能只机械包一层 timeout | 确定 |
-| **L-11** | `BaseMediaCodecAsynchronousTest.kt:483` | `assertReleaseWaitsForCallback`（`:464-492`）在 `:483` 只断言 `releaseFuture` 超时，没有像 `:65` 和 `:433` 那样补 `verify(exactly = 0) { subject.mediaCodec.release() }`。补上才与另两处对称；若按 §4 A3 的方案改造，顺手一起加 | 确定 |
+| **L-11** | `BaseMediaCodecAsynchronousTest.kt:483` | `assertReleaseWaitsForCallback`（`:465-494`）在 `:483` 只断言 `releaseFuture` 超时，没有像 `:65` 和 `:433` 那样补 `verify(exactly = 0) { subject.mediaCodec.release() }`。补上才与另两处对称；若按 §4 A3 的方案改造，顺手一起加 | 确定 |
 
 ### 3.1 未发现问题的区域
 
@@ -1077,11 +1109,12 @@ private fun startMicRecording(): MicRecorder = MicRecorder(
   先赋值并传给 client，`onConnected()` 之后才通过 dispatcher 启动读取它的发送协程；当前发布链没有
   一个与写入并发、且缺少任务提交 happens-before 的读取点。
 - `CancellationException`：协程路径的保留语义正确，`BaseMediaCodecSynchronous.kt:86-87` 显式首位重抛且 `CodecException` 排在 `IllegalStateException` 之前；`runCatchingPreservingCancellation`（`RunCatchingExt.kt:8-9`）也会保留协程取消。但该 helper 被用于普通 MediaCodec Handler 回调时语义错误，不能概括为“本切片全部合规”，已在 M-5 单列并给出统一边界方案。
-- 中断处理：本切片无 `InterruptedException` 捕获点、无 `Future.get()`/`Thread.join()`，不存在「捕获后未恢复中断标志」。（`FutureTask.awaitDone` 用静态 `Thread.interrupted()` 会清除标志的那个坑只在 `BaseMediaCodec*Test` 里。）
-- 安全面：本切片不涉及导出组件、deep link、WebView、网络配置、密钥或凭据；新增日志（`AudioTrackPlayer.kt:144-157`）受 `BuildConfig.DEBUG` 门控，发布 AAR 中为 false，只输出设备类型/音量/AudioManager mode，无凭据或 PII。**无 CRITICAL 安全问题。**
-- 格式与规则（静态判断）：本切片文件未见超过 100 列的行、未见 `!!`；`ktlint_standard_import-ordering`（`.editorconfig:17`）与 detekt `ImportOrdering`（`10-configs/detekt.yml:782-783`）在本仓库均为 disabled，故几处「`com.leovp.*` 先于 `android.*` 且夹空行」的 import 布局**不是**违规；两个 `finishPlayback` 的 `throw` 都在最外层 `withContext` 之后（`OpusFilePlayer.kt:524`、`AacFilePlayer.kt:272`），嵌套 `finally` 内只做 `addSuppressed`，不触发 detekt `ThrowingExceptionFromFinally`。
+- 中断处理：本切片**无 `InterruptedException` 捕获点**，因此不存在「捕获后未恢复中断标志」。但「无 `Thread.join()`/`Future.get()`」的表述不成立：`AudioActivity.kt:355` 有 `playbackThread?.join()`（主源码，且在 `launchCleanup` 的协程调度器上阻塞），`BaseNettyLifecycleTest.kt:183`/`:219` 有 `serverThread.join(1_000L)`，`Future.get()` 在 `BaseMediaCodec*Test` 里。（`FutureTask.awaitDone` 用静态 `Thread.interrupted()` 会清除标志的那个坑只在 `BaseMediaCodec*Test` 里。）
+- 安全面：本切片不涉及导出组件、deep link、WebView、网络配置、密钥或凭据；新增日志（`AudioTrackPlayer.kt:144-157`）受 `BuildConfig.DEBUG` 门控，发布 AAR 中为 false，输出设备类型、路由设备 `productName`（`:151`）、输出设备类型列表、音量与 AudioManager mode；`AudioDeviceInfo.getProductName()` 可能是用户自定义的蓝牙设备名，但该日志受 `BuildConfig.DEBUG` 门控（调用点 `:169-171`、`:199-202`），发布 AAR 中不输出，无凭据。**无 CRITICAL 安全问题。**
+- 格式与规则（静态判断）：本切片主源码按**字符**计只有两行超过 100 列（`BaseNettyClient.kt:35`、`AudioSender.kt:16`，各 102 字符），且都是 `import`，ktlint `max-line-length` 对 `KtImportDirective`/`KtPackageDirective` 豁免，故不构成违规（`OpusEncoder.kt:87` 为 102 **字节**但恰好 100 字符；两处方框注释字节虚高、字符数仅 75/83）。主源码存在三处 `!!`（`BaseNettyClient.kt:308`、`AudioReceiver.kt:221`、`AudioSender.kt:103`）；detekt `UnsafeCallOnNullableType`（`10-configs/detekt.yml:482-484`）为 active，但该规则需类型解析，而当前 `detekt` 任务未设 `classpath`（跨分支待办，见 `2026-10-20-branch-review-vs-master_cc.md` §18）故实际不报告 —— 这是工具限制，不等于代码已无 `!!`。`ktlint_standard_import-ordering`（`.editorconfig:17`）与 detekt `ImportOrdering`（`10-configs/detekt.yml:782-783`）在本仓库均为 disabled，故几处「`com.leovp.*` 先于 `android.*` 且夹空行」的 import 布局**不是**违规；两个 `finishPlayback` 的 `throw` 都在最外层 `withContext` 之后（`OpusFilePlayer.kt:524`、`AacFilePlayer.kt:272`），嵌套 `finally` 内只做 `addSuppressed`，不触发 detekt `ThrowingExceptionFromFinally`。
 
 ---
+
 ## 4. 第一轮悬置发现的裁决
 
 §1.2 列出的 6 条，加上第一轮的 M4。每条的行号都已对当前 HEAD 重新定位。
@@ -1097,7 +1130,7 @@ private fun startMicRecording(): MicRecorder = MicRecorder(
   4. 触发源确有其事：`AudioActivity.kt:291-292` 录制时是 `write(START_CODE)` 紧跟 `write(data)` 两次独立写入 `BufferedOutputStream`，进程在两者之间被杀或掉电即产出该形态文件；
   5. 与 `CHANGELOG.md:578-580` 自称的「`OpusFilePlayer` 将文件自然结尾识别为最后一个 payload 的合法边界」也不一致。
 - 裁决：**确认**。
-- **关键修正：该 `require` 不能简单删除。** 已核实 `OpusDecoder.kt:100-101` 的 `decode()` 首个条件就是 `rawData.isNotEmpty()`，空数组**永远返回 false**；而 `submitWithBackpressure`（`OpusFilePlayer.kt:287-294`）是 `while (!decoder.decode(data))`，唯一出口是 `check(decoder.isAcceptingInput)`。所以提交空帧会变成 5 ms 间隔的无限自旋，直到 `:419` 的停滞检测 5 秒后把会话判死 —— 比现状更糟。
+- **关键修正：该 `require` 不能简单删除。** 已核实 `OpusDecoder.kt:100-101` 的 `decode()` 首个条件就是 `rawData.isNotEmpty()`，空数组**永远返回 false**；而 `submitWithBackpressure`（`OpusFilePlayer.kt:288-294`）是 `while (!decoder.decode(data))`，唯一出口是 `check(decoder.isAcceptingInput)`。所以提交空帧会变成 5 ms 间隔的无限自旋，直到 `:419` 的停滞检测 5 秒后把会话判死 —— 比现状更糟。
 - 修复方案：按边界处理，而不是提交空帧。
 
 ```kotlin
@@ -1119,15 +1152,15 @@ submitWithBackpressure(playbackDecoder, payload.data)
 ### A1（确认机制 + 触发条件形态修正）流播放器 `stopped.set(true)` 先于守卫
 
 - 原记录：第 70 行，行号 `:249`（Aac）/`:243`（Opus）—— **均准确**。
-- 当前定位：`AacStreamPlayer.kt:248-251`、`OpusStreamPlayer.kt:242-245`；守卫在 `StreamPlayerStopper.kt:22-28`。
-- 事实（已核实）：`stopPlayingAndJoin()` 先 `stopped.set(true)` 再 `streamPlayerStopper.stopAndJoin{}`；而 `require` 位于 `withContext` **之前**，抛出即整个释放体不执行。`stopped` 置位后 `startPlayingStream()` 在 `:95` 与 `:98` 两处直接 `return`，播放器永久拒收帧，而 decoder 与 `audioTrackPlayer` 仍被持有。
+- 当前定位：`AacStreamPlayer.kt:248-251`、`OpusStreamPlayer.kt:242-245`；守卫（`require`）在 `StreamPlayerStopper.kt:25-27`，其后 `:28` 才是 `withContext`。
+- 事实（已核实）：`stopPlayingAndJoin()` 先 `stopped.set(true)` 再 `streamPlayerStopper.stopAndJoin{}`；而 `require` 位于 `withContext` **之前**，抛出即整个释放体不执行。`stopped` 置位后 `startPlayingStream()` 两处直接 `return`（`AacStreamPlayer.kt:95`/`:98`，`OpusStreamPlayer.kt:101`/`:104`），播放器永久拒收帧，而 decoder 与 `audioTrackPlayer` 仍被持有。
 - **反向证据**：`StreamPlayerStopperTest.kt:90-107` 这条用例的名字就是 `` `suspending stop rejects calls from its owned scope before side effects` ``，并断言 `verify(exactly = 0) { audioTrackPlayer.stop() }`。stopper 本身刻意做到了「守卫先于副作用」，两个调用方却在它外面又加了一个守卫前的副作用，正好破坏这个被测试固化的契约。对比 `BaseMediaCodec.kt:164-168`，那里 `require` 在 `markReleasing()` 之前，顺序是对的。
 - **触发条件修正（原判不完整，两个方向）**：
   1. **原判方向（漏报 → 泄漏）**：`containsJob`（`StreamPlayerStopper.kt:44-45`）只递归遍历 `children`，守卫只在 callerJob 是 ioScope 后代时触发。穷举调用链已核实：`stopPlayingAndJoin` 的唯一调用方是 `AudioPlayer.kt:193-194`；`AudioPlayer.releaseAndJoin()` 的全部调用点是 `AudioSender.kt:114/:277`、`AudioReceiver.kt:292/:339`、`AudioActivity.kt:356`、`ADPCMActivity.kt:143`，**无一处位于流播放器私有 `ioScope` 内**。故当前代码路径下守卫**不可达** —— 是面向未来调用方的陷阱，不是现网缺陷。
-  2. **原判遗漏方向（误报 → 死锁）**：守卫有假阴性。`runBlocking` 建的 `BlockingCoroutine` 父上下文是 `EmptyCoroutineContext`，**不继承调用方 Job**。故在 ioScope 子协程里写 `runBlocking { player.stopPlayingAndJoin() }`，callerJob 不是 ownerJob 后代 → 守卫放行 → `StreamPlayerStopper.kt:31` 的 `ownerJob.cancelAndJoin()` 去 join 一个正卡在 `runBlocking` 里等自己子协程的线程 → **死锁**。`MicRecorder.kt:402-405` 的 KDoc 明确承认了同一个洞，`StreamPlayerStopper` 的 KDoc 没有。
+  2. **原判遗漏方向（误报 → 死锁）**：守卫有假阴性。`runBlocking` 建的 `BlockingCoroutine` 父上下文是 `EmptyCoroutineContext`，**不继承调用方 Job**。故在 ioScope 子协程里写 `runBlocking { player.stopPlayingAndJoin() }`，callerJob 不是 ownerJob 后代 → 守卫放行 → `StreamPlayerStopper.kt:31` 的 `ownerJob.cancelAndJoin()` 去 join 一个正卡在 `runBlocking` 里等自己子协程的线程 → **死锁**。`MicRecorder.kt:402-405` 的**函数内注释**明确承认了同一个洞（其 KDoc 在 `:392-400`），`StreamPlayerStopper` 两处都没有。
 - 后果：IAE 抛出后 decoder 与该流播放器自己的 AudioTrack 永久泄漏。理论上再从正确作用域调一次能完成释放，但 demo 侧的 `SuspendTeardownGate`（`AudioSender.kt:63/:237`）与 `AudioActivity.launchCleanup` 的 detach-then-null 都是一次性闸门，不会重试 → 实际不可恢复。`AudioPlayer.kt:170-172` 的 KDoc 已写明「stopAndJoin() can also fail its own require()」，但它的 `finally` 只补救 AudioPlayer 自己那个 AudioTrack。
 - 确定性：机制**确定**；「当前不可达」**确定**（已穷举调用点）；runBlocking 死锁路径**确定**（基于 `runBlocking` 的 Job 语义）。
-- 修复方案（最小改动：删掉那一行）。安全性已核实：`detachDecoderForStop()`（`AacStreamPlayer.kt:253-255`、`OpusStreamPlayer.kt:247-248`）已在 `lock` 内做 `stopped.set(true)`，由 `prepareStop()` 在守卫**之后**调用；`startPlayingStream` 在 `lock` 内的第二次检查（`:98`）保证并发帧无论先后进锁都安全。提前置位只是省一次锁竞争的微优化。
+- 修复方案（最小改动：删掉那一行）。安全性已核实：`detachDecoderForStop()`（`AacStreamPlayer.kt:253-255`、`OpusStreamPlayer.kt:247-248`）已在 `lock` 内做 `stopped.set(true)`，由 `prepareStop()` 在守卫**之后**调用；`startPlayingStream` 在 `lock` 内的第二次检查（`AacStreamPlayer.kt:98` / `OpusStreamPlayer.kt:104`）保证并发帧无论先后进锁都安全。提前置位只是省一次锁竞争的微优化。
 
 ```kotlin
 /**
@@ -1144,7 +1177,7 @@ suspend fun stopPlayingAndJoin() {
 }
 ```
 
-两个文件各删一行，无 import 变化，不触发 detekt。**同时建议**（针对第 2 个方向）：在 `StreamPlayerStopper.kt:22` 的 `require` 上方补一条与 `MicRecorder.kt:402-405` 对齐的注释，说明该守卫只拦直接的后代调用，`runBlocking` 包装过的自调用拦不住且会死锁 —— 这是契约文档缺口，不改代码。
+两个文件各删一行，无 import 变化，不触发 detekt。**同时建议**（针对第 2 个方向）：在 `StreamPlayerStopper.kt:25` 的 `require` 上方补一条与 `MicRecorder.kt:402-405` 对齐的注释，说明该守卫只拦直接的后代调用，`runBlocking` 包装过的自调用拦不住且会死锁 —— 这是契约文档缺口，不改代码。
 
 ### A2（确认 + 后果升级）`MicRecorder.startRecord()` 无重入守卫
 
@@ -1156,7 +1189,7 @@ suspend fun stopPlayingAndJoin() {
   2. **`release()` 与未 join 的 job1 的 `read()` 竞争 → native use-after-release 风险**（原记录未提）。窗口窄（`:428` 的 `audioRecord.stop()` 会先唤醒阻塞的 read），但不为零。
   3. `callback.onStop` 由 `onStopNotified`（`:126/:488`）保证只投一次，故 job1 的异常路径 `handleRecordingFailure()`（`:289-293`）不会二次通知 —— 这部分无问题。
 - 是否本切片引入：**不是**。`97c84d242:audio/.../MicRecorder.kt` 的 `startRecord()` 形状完全一致，本切片只在 `:273` 加了 `if (stopped.get()) break`。**预存，未加重。** `audio/src/test/` 下无 `MicRecorderTest`，该路径零单测。
-- 确定性：缺守卫与覆盖**确定**；native 竞争窗口**推断（置信度 ~85%）**，依据是「cancel 不唤醒 native read」+「`stop()` 只在 `:428` 之后才调用」。
+- 确定性：缺守卫与覆盖**确定**；native 竞争窗口**推断（置信度 ~85%）**，依据是「cancel 不唤醒 native read」+「`release()`（`:470`，经 `:420` 的 `finishRecorderReleaseAndJoin`）只在 `:428` 的 `stop()` 之后才调用」。
 - 修复方案：
 
 ```kotlin
@@ -1168,7 +1201,10 @@ private val recordingLifecycleLock = ReentrantLock()
 
 private var recordJob: Job? = null
 
-/** Completes only after the record coroutine has left its body, not merely after resources close. */
+/**
+ * Completes only after the record coroutine has left its body, not merely after
+ * resources close.
+ */
 private val recordLoopCompleted = CompletableDeferred<Unit>()
 ```
 
@@ -1246,7 +1282,7 @@ job 已真正退出。只等 `releaseCompleted` 不够：它当前在 worker 内
 
 ### A3（形态修正）超时断言的证明力
 
-- 原记录：第 73 行，4 处行号 —— **全部准确**。
+- 原记录：第 73 行，4 处行号 —— **3 处精确，1 处差一行**（`BaseMediaCodecAsynchronousTest.kt` 首处断言起于 `:62`，原记录写作 `:63`，那是语句内部的 `releaseFuture.get(100ms)`；另三处 `:432`、`:483`、`BaseMediaCodecSynchronousTest.kt:41` 精确）。
 - **原记录范围偏大一半**：worker 侧的歧义已被闭锁消掉。四处断言之前都有一条 `await(2s)` 确认被测协程/回调已进入临界区（已核实）：`BaseMediaCodecSynchronousTest.kt:36`、`BaseMediaCodecAsynchronousTest.kt:59`、`:429`、`:480`。
 - **残留歧义只在 release 侧**：`releaseExecutor.submit { runBlocking { subject.releaseAndJoin() } }` 之后立刻 `get(100ms)`。TimeoutException 可能来自 (a) 真的被 `codecOperationLock`（`BaseMediaCodec.kt:62/:259`）挡住，也可能来自 (b) 单线程 executor 还没把任务调度起来。
 - **关键修正：失效方向是假绿，不是假红。** 在负载高的 CI 上 (b) 完全可能，此时该用例**静默通过**（`verify(exactly = 0)` 同样被平凡满足），不会变红。所以这是覆盖度缺口，不是 flaky 失败源 —— 原记录没有指出方向，容易被误判成「会随机挂」而去调大超时，那只会让假绿更稳固。
@@ -1314,7 +1350,7 @@ verify(exactly = 0) { mediaCodec.release() }
 2. `MicRecorder` 构造（`MicRecorder.kt:142-197`）：`AudioRecord.getMinBufferSize()`（`:144`）、`AudioRecord(...)`（`:176`）、`AudioEncoderManager.getWrapper(...)`（`:161`）—— 最后一个对 AAC/OPUS 会走到 `OpusEncoderWrapper.kt:18-31` 的 `.apply { start() }` → `BaseMediaCodec.start()` → `MediaCodec.createEncoderByType()` + `configure()` + `start()`；
 3. `startRecord()` → `audioRecord.startRecording()`（`MicRecorder.kt:238`）。
 
-- 是否本切片加重：**不是**。`97c84d242:demo/.../AudioActivity.kt:233-258` 的 `record()` 结构完全相同，MicRecorder 构造侧的重量在本切片也没新增。**预存，未加重** —— 需修正原记录「本分支加重了」的提法。
+- 是否本切片加重：**不是**。`97c84d242:demo/.../AudioActivity.kt:233-258` 的 `record()` 结构完全相同，MicRecorder 构造侧的重量在本切片也没新增。**预存，未加重** —— 与原记录第 74 行「预存。」的判断一致，无需修正（「本轮重写了该函数」属 A2 的第 72 行，另行处理）。
 - 确定性：主线程执行**确定**（权限回调在主 Looper）；`createEncoderByType` 的耗时量级**推断**（高置信度，未实测）。
 - 修复方案：把三段搬进 `ioScope.launch {}`，失败经 `withContext(Dispatchers.Main)` 报 toast；
   并与 §3 M-8 共用 `recordingMutex + RecordingIntent` 的完整方案。现有 `stopRecording()` 的
@@ -1323,14 +1359,14 @@ verify(exactly = 0) { mediaCodec.release() }
 
 ### C5（确认 + 一处修正）`releaseNetty()` 超时后 `connectStatus` 永久停在 `RELEASING`
 
-- 原记录：第 71、102 行，行号 `:904` 与 `:867` **均准确**。
+- 原记录：第 71 行，行号 `:904` 与 `:867` **均准确**（第 102 行是 C6 的记录，不含这两个行号）。
   （**更正，2026-10-26 复核**：本节此前写作「`:904` → 现为 `:906`，偏移 2 行」，这是错的。`:904` 正是超时分支的 `return false`，与原记录指向一致；`:906` 是成功路径的 `return nettyReleased`，属另一条语句。）
 - 事实（已核实）：`releaseNow()` 的 `withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }` 在 `null` 时 `return false`（`:906` 之前）而**不动状态**；`connectStatus` 只在 `:925` 的成功分支（`terminationFuture().awaitCompletion()` 之后）写 `UNINITIALIZED`。随后 `release()` 的守卫（`:858-868`）把 `RELEASING` 当「正在释放」返回 false。
 - **修正：「worker group 无补偿路径」这句要改。** `releaseNetty()` 的 `finally`（`:912-922`）在超时路径上**一定会执行** `workerGroup.shutdownGracefully(0, 2, SECONDS)`（`:921`，非挂起，在被取消的协程里照样跑完）。group 的关闭请求已发出，netty 会自己走完终止流程 —— **不是资源泄漏，是状态与契约不一致**。准确说法是「没有终态、没有观察点」。这与 `2026-10-16-...` §3 的结论一致（该文档本就写明「不是资源泄漏」）。
 - 后果（照该提案 §3 的四条，逐条在当前 HEAD 核实，全部仍成立）：
   1. 后续 `release()` 在守卫处返回 false，调用方（如 `AudioSender.kt:280`）无法区分「正在释放」与「上次释放超时」；
-  2. 私有状态 `RELEASING` 被永久留在公开可读的 `connectStatus`（`:263-265`，`private set` 但 getter 公开）；
-  3. 与 `BaseNettyServer.stopServer()` 的 KDoc 承诺不对称（`BaseNettyServer.kt:358-366` 的 `finally` 必落 `STOPPED` 并回调 `onStopped()`）；
+  2. 私有状态 `RELEASING` 被永久留在公开可读的 `connectStatus`（`:263-265`，`private set` 在 `:265`，getter 公开）；
+  3. 与 `BaseNettyServer.stopServer()` 的 KDoc 承诺不对称（`BaseNettyServer.kt:358-374` 的 `finally` 必落 `STOPPED`（`:366`）并回调 `onStopped()`（`:370`））；
   4. `releaseNow()` 没有 `finally`：`shutdownGracefully()` 自身抛（极罕见）会穿出两层 finally，状态同样停在 `RELEASING`。
 - 确定性：**确定**。
 - **修复方案：沿用 `00-documents/2026-10-16-basenetty-client-release-terminal-state_cc.md` 的 §4（主项），无需修订。** 该提案在当前 HEAD 仍完全适用，8 处行号引用已逐条抽查对齐：
@@ -1338,10 +1374,10 @@ verify(exactly = 0) { mediaCodec.release() }
 | 提案引用 | 当前 HEAD |
 |---|---|
 | §2.1 `release()` L853–872 | `:853` 起一致 |
-| §2.2 `releaseNow()` L874–907 | `:874` 起一致 |
-| §2.3 `releaseNetty()` L909–934 | `:909` 起一致 |
+| §2.1 `releaseNow()` L874–907 | `:874` 起一致 |
+| §2.1 `releaseNetty()` L909–934 | `:909` 起一致 |
 | §4.3 `connect()` 守卫 L383–409 从不按 `UNINITIALIZED` 拒绝 | `:383-409` 的 `when` 只列 `CONNECTING`/`CONNECTED`/`RELEASING`/`DISCONNECTING`，`else` 放行 |
-| §4.3 `doRetry()` L783–788 按 `released` 短路 | `:783` 首行 `if (released) return` |
+| §4.3 `doRetry()` L783–788 按 `released` 短路 | `:784` 为 `if (released) return`（函数自 `:783` 起） |
 | §4.3 `disconnectManually()` 守卫 L629–631 按 `UNINITIALIZED` 拒绝 | `:629-631` 为 `DISCONNECTED \|\| UNINITIALIZED` |
 | §5.1 `workerGroup` 由属性初始化器建（L247） | `:247 private val workerGroup = NioEventLoopGroup()` |
 | §5.3 `released` 为 `@Volatile`（L238–239） | `:238-239` 一致 |
@@ -1463,7 +1499,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 ### C6（确认机制，维持「可接受的设计取舍」）超时取消后 `terminationFuture` 永不被观察
 
-- 原记录：第 71 行，行号 `:928`/`:945` —— **仍准确**（`:928` 是 `releaseNetty()` 的 `catch (e: CancellationException)`，`:945` 是 `closeChannelAndAwait()` 的）。
+- 原记录：第 102 行，行号 `:928`/`:945` —— **仍准确**（`:928` 是 `releaseNetty()` 的 `catch (e: CancellationException)`，`:945` 是 `closeChannelAndAwait()` 的）。
 - 控制流：`withTimeoutOrNull`（`:897`）超时 → 取消打到 `channel.close().awaitCompletion()`（`:944`）→ `closeChannelAndAwait` 的 catch 重抛（`:945-946`）→ `releaseNetty` 的 `finally` 跑 `shutdownGracefully`（`:921`，请求已发出）→ `CancellationException` 继续向上 → `:923-933` 的 `return try { terminationFuture().awaitCompletion() ... }` 整段被跳过 → **永不观察**。`:913-916` 的注释本身就写明了这个取舍。
 - **对称性核实**：服务端 `BaseNettyServer.kt:423-435` 的 `shutdownNetty()` 是**完全相同的形状** —— `serverChannel.close().awaitOrLog(...)`（`:426`）被取消后 `finally` 的 `requestEventLoopShutdown()`（`:432`）照样跑，但 `:434` 的 `awaitEventLoopShutdown()` 同样被跳过。所以这**不是客户端独有的不对称**（与 C5 不同），而是两端一致的有意设计。
 - 裁决：**可接受**。理由三条：(1) group 关闭请求已发出，`shutdownGracefully` 幂等，等不等它终止都不改变 group 的命运；(2) 超时预算存在的理由恰恰是「关闭卡住时不能把调用方的 teardown 链拖住」（`:894-896` 的注释），再去等 2 秒与该目标直接冲突；(3) 真正丢掉的只是**可观测性**。
@@ -1496,9 +1532,9 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 | M4 `OpusFilePlayer` 空帧判失败 | **确认**，但修法必须是「跳过边界」而非删 `require` | `:231` 准确 | MEDIUM |
 | A1 流播放器 `stopped` 先于守卫 | **确认 + 触发条件形态修正**（当前不可达；另发现 runBlocking 死锁假阴性） | `:249`/`:243` 准确 | 契约 HIGH ／ 现网 LOW |
 | A2 `startRecord()` 无重入守卫 | **确认 + 后果升级**（native use-after-release）；预存未加重 | `:231` 准确 | HIGH |
-| A3 超时断言证明力 | **形态修正**：worker 侧已闭锁，残留只在 release 侧；失效方向是假绿 | 4 处全准确 | MEDIUM |
+| A3 超时断言证明力 | **形态修正**：worker 侧已闭锁，残留只在 release 侧；失效方向是假绿 | 4 处定位有效（AsyncTest 首处应为 `:62`） | MEDIUM |
 | B4 demo 主线程构造 MicRecorder | **AudioSender 推翻**；**`AudioActivity.record()` 确认**，预存未加重 | `:164` 准确但结论需拆分 | MEDIUM |
-| C5 `connectStatus` 停在 `RELEASING` | **确认**，「group 无补偿路径」修正为「关闭已请求，缺终态与观察点」；沿用 2026-10-16 §4 无需修订 | `:867`、`:904` 均准确 | MEDIUM |
+| C5 `connectStatus` 停在 `RELEASING` | **确认**，「group 无补偿路径」修正为「关闭已请求，缺终态与观察点」；沿用 2026-10-16 §4 无需修订，并同批实施该文档 §5 方案 B（两个独立变更） | `:867`、`:904` 均准确 | MEDIUM |
 | C6 `terminationFuture` 永不被观察 | **确认机制，维持可接受**；服务端同形；本轮明确不改 | `:928`/`:945` 准确 | LOW |
 
 ---
@@ -1532,7 +1568,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 按 CLAUDE.md「Camera、Camera2、音频、MediaCodec、MediaProjection、OpenGL、NFC、蓝牙和 JNI/Native 相关修改还必须补充真机验证」：
 
-- **H-1**：OPUS 流播放触发丢帧（队列满或延迟 > 500 ms）后，确认 flush + start 之后音频恢复而非永久静音。这是 §3 新发现中唯一的 HIGH；本文 §4 另有被升级为 HIGH 的 A2。
+- **H-1**：OPUS 流播放触发丢帧（队列满，或延迟超过 `audioLatencyThresholdInMs` —— 会话前 5 秒为 1200 ms，之后收紧为 500 ms）后，确认 flush + start 之后音频恢复而非永久静音。这是 §3 新发现中唯一的 HIGH；本文 §4 另有升级为 HIGH 的 A2，以及 A1（契约 HIGH ／ 现网 LOW）。
 - **M-1**：构造 AudioTrack 非 PLAYING 的场景（播放中被其他应用抢占音频焦点），确认改后走失败回调而非 `endCallback`。
 - **M4 / M-4**：OPUS 文件自然播完，分别确认 M4 的「尾随 start code 空 payload」不再误报失败，以及 M-4 的 EOS 后不再提交普通输入缓冲、设备侧不抛 `IllegalStateException`。
 - **A2 / M-10 / B4-b / M-8**：连续两次开启录音、三个录音开关交替切换，并在停止等待期间取消发起 stop 的协程；确认重复 start 明确失败、leader 取消后仍完成释放，且无 PCM 帧交错、`AudioRecord` 泄漏或 native 崩溃。
@@ -1547,7 +1583,8 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 > **范围说明（复核补记，Claude，2026-10-26）**：本节结论的是本文原先列出的**四项待决策**
 > （M-2 的方案选择、C5 的实施时机、C6 是否动手、M-7 的测试投入），**不是本文全部发现的实施计划**。
 > 下列 1–8 项为作者决策，主项为 C5、C6、M-2、M-7、M-9，其中 M-2 的重构同时落地 M-1，M-7 的尾边界回归用例同时要求落地 M4。本文其余发现
-> 尚无实施决策，见 §5.4。**照本节走到最后一项的集成验证，并不等于本轮审查已交付。**
+> 尚无实施决策，见 §5.4。另：§4 A2 带有一条 2026-10-27 追加的作者决策（重复或停止后再 `start()` 直接抛
+> `IllegalStateException`），它只定行为、不定排期，仍计入 §5.4 第 5 行。**照本节走到最后一项的集成验证，并不等于本轮审查已交付。**
 
 四项原待决策内容均已确定，不再留给实施者二次选型：
 
@@ -1555,7 +1592,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
    `:demo:ktlintCheck`，先清除会掩盖后续结果的已知基线阻断。
 
    > **遗漏补记（Claude，2026-10-26）：H-1 应接在本项之后、下一项之前。**
-   > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是 §3 新发现中**唯一的 HIGH**（§4 A2 也已升级为 HIGH），
+   > H-1（异步 `flush()` 后未 `start()`，OPUS 流播放首次丢帧即永久静音）是 §3 新发现中**唯一的 HIGH**（§4 A2 也已升级为 HIGH，A1 为契约 HIGH ／ 现网 LOW），
    > 严重度高于本节任何一项，但未被排入 1–8 项。修法是在
    > `BaseMediaCodecAsynchronous` 覆写 `flush()`（见 §3 H-1），同时增加回调世代栅栏；在同一次
    > codec 锁持有期内依次执行 `codec.flush()`、在 `finally` 中递增世代、再执行 `codec.start()`，
@@ -1587,7 +1624,7 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 8. **最后做集成验证**：运行 §5.1 命令以及 `:demo:assembleDevDebug`；音频/MediaCodec 行为按 §5.2
    真机矩阵验证。未具备设备时必须把相应用例列为未验证，不用 Robolectric 结果替代。
 
-### 5.4 尚无实施决策的发现（复核补记，Claude，2026-10-26）
+### 5.4 尚无实施决策的发现（复核补记，Claude，2026-10-26；2026-10-27 补入 A2 作者决策说明与第 11 行）
 
 §5.3 只结论了原四项待决策。下列发现**均已给出代码级修法，但没有实施决策**，需作者排期。顺序按
 严重度与相互依赖建议，**不代表已获批准**。
@@ -1603,7 +1640,8 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 | 7 | **A1** | 流播放器 `stopped.set(true)` 先于 `StreamPlayerStopper` 的守卫 | 现网不可达（已穷举调用点），修法是各删一行；另建议补 `runBlocking` 假阴性的契约注释 |
 | 8 | **A3** | 四处超时断言无法区分「被锁阻塞」与「尚未调度」，失效方向是假绿 | 纯测试加固，可与 §5.3 第 6 项一并做；顺带补 L-11 缺失的 `verify` |
 | 9 | **M-5 / M-6** | 异步四类 MediaCodec callback 缺少适用于 Handler 的统一异常边界；同步 `onEndOfStream()` 无异常边界 | 仓库内**无已知可达抛出点**；M-5 与 H-1 都改 `BaseMediaCodecAsynchronous` callback，宜同批并使用同一代际/失败协议；M-6 必须与 M-3 的 `FAILED`/owner 通知协议同批，不能只 catch 后记日志 |
-| 10 | **其余 10 条 LOW** | 见 §3「原 LOW 条目」表（不含已提升为 MEDIUM 的 L-8） | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证；原 L-12 已推翻，不实施 |
+| 10 | **其余 10 条 LOW** | 见 §3「原 LOW 条目」表（不含已提升为 MEDIUM 的 L-8） | 其中 L-4（`write()` 吞异常未记 CHANGELOG）属文档义务，建议随任一 audio 批次补上；L-7 需真机打印线程名确证；原 L-12（`AudioSender.senderHandler` 的 `@Volatile` 建议）已推翻，不实施 |
+| 11 | **B4-a 残留** | `AudioSender.start()`（`:146`）不是 `suspend`，KDoc 也未写线程约束 | 纯 API 契约，非缺陷（唯一调用点已在 `Dispatchers.IO` 上）。改为 `suspend fun start(...)` 或仅补 KDoc 说明「必须在非主线程调用」，可随 B4-b 同批 |
 
 两点必须同时注意：
 
@@ -1619,6 +1657,6 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 
 - `00-documents/2026-10-20-branch-review-vs-master_cc.md`：第一轮快审与第二轮第 1/3 部分（录屏与共享基础库）。
 - `00-documents/2026-10-15-audio-netty-teardown-review-package_cc.md`：audio/basenetty teardown 的七轮审查记录，本部分 30 个文件的结论来源。
-- `00-documents/2026-09-02-audio-media-teardown-followup-fixes_cc.md`：audio 播放器与 MediaCodec 基类的 H1–H5 / M10–M17 / L11–L17。
+- `00-documents/2026-09-02-audio-media-teardown-followup-fixes_cc.md`：audio 播放器与 MediaCodec 基类；条目跨 H1–H12 / M1–M39 / L1–L31（含 screencapture、floatview 等非本切片范围），本文 §2.1 复核其 audio 相关条目。
 - `00-documents/2026-10-16-basenetty-client-release-terminal-state_cc.md`：C5 的方案提案（§4/§5）。
 - `00-documents/2026-09-20-netty-shutdown-nonblocking_cc.md`：basenetty 非阻塞关闭的原始改动说明。

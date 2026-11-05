@@ -2,7 +2,10 @@ package com.leovp.audio.base
 
 import com.leovp.audio.AudioTrackPlayer
 import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,26 +22,46 @@ internal class StreamPlayerStopper<Decoder>(
     private val audioTrackPlayer: AudioTrackPlayer,
     private val detachDecoder: () -> Decoder?,
 ) {
-    suspend fun stopAndJoin(releaseDecoderAndJoin: suspend (Decoder) -> Unit) {
+    private val stopStarted = AtomicBoolean(false)
+    private val stopCompleted = CompletableDeferred<Throwable?>()
+
+    suspend fun stopAndJoin(
+        onLeaderClaimed: () -> Unit = {},
+        releaseDecoderAndJoin: suspend (Decoder) -> Unit,
+    ) {
         val ownerJob = ioScope.coroutineContext[Job]
         val callerJob = currentCoroutineContext()[Job]
         require(ownerJob == null || callerJob == null || !ownerJob.containsJob(callerJob)) {
             "stopAndJoin() must be called outside the player-owned coroutine scope"
         }
-        withContext(Dispatchers.IO + NonCancellable) {
-            val decoder = prepareStop()
-            try {
-                ownerJob?.cancelAndJoin()
-                decoder?.let { releaseDecoderAndJoin(it) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                LogContext.log.e(tag, "audioDecoder release error. msg=${e.message}", e)
-            } finally {
-                releaseAudioTrack()
-            }
+        if (!stopStarted.compareAndSet(false, true)) {
+            stopCompleted.await()?.let { throw it }
+            return
         }
-        LogContext.log.w(tag, "stopAndJoin() done")
+        var failure: Throwable? = null
+        try {
+            onLeaderClaimed()
+            withContext(Dispatchers.IO + NonCancellable) {
+                val decoder = prepareStop()
+                try {
+                    ownerJob?.cancelAndJoin()
+                    decoder?.let { releaseDecoderAndJoin(it) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(tag, "audioDecoder release error. msg=${e.message}", e)
+                } finally {
+                    releaseAudioTrack()
+                }
+            }
+            LogContext.log.w(tag, "stopAndJoin() done")
+        } catch (error: Throwable) {
+            failure = error
+            LogContext.log.e(tag, "stopAndJoin() failed", error)
+            throw error
+        } finally {
+            stopCompleted.complete(failure)
+        }
     }
 
     private fun Job.containsJob(target: Job): Boolean =
@@ -64,4 +87,19 @@ internal class StreamPlayerStopper<Decoder>(
                 LogContext.log.e(tag, "audioTrack release error. msg=${it.message}", it)
             }
     }
+}
+
+/** Selects exactly one terminal reason for a stream-player session. */
+internal class StreamPlayerTerminalGate {
+    private enum class Owner {
+        OPEN,
+        FAILURE,
+        EXPLICIT_STOP,
+    }
+
+    private val owner = AtomicReference(Owner.OPEN)
+
+    fun claimFailure(): Boolean = owner.compareAndSet(Owner.OPEN, Owner.FAILURE)
+
+    fun claimExplicitStop(): Boolean = owner.compareAndSet(Owner.OPEN, Owner.EXPLICIT_STOP)
 }

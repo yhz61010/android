@@ -162,38 +162,30 @@ class AudioReceiver {
         }
 
         /** Builds and starts the recorder; the caller publishes it and re-checks `stopping`. */
-        private fun startMicRecording(): MicRecorder {
-            return MicRecorder(
-                AudioActivity.audioEncoderInfo,
-                object : MicRecorder.RecordCallback {
-                    override fun onRecording(
-                        data: ByteArray,
-                        isConfig: Boolean,
-                        isKeyFrame: Boolean
-                    ) {
-                        recAudioQueue.offer(data)
-                        if (BuildConfig.DEBUG) {
-                            LogContext.log.d(
-                                TAG,
-                                "mic rec data[${data.size}] queue=${recAudioQueue.size}"
-                            )
-                        }
-                        // runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
+        private fun startMicRecording(): MicRecorder = MicRecorder(
+            AudioActivity.audioEncoderInfo,
+            object : MicRecorder.RecordCallback {
+                override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                    recAudioQueue.offer(data)
+                    if (BuildConfig.DEBUG) {
+                        LogContext.log.d(
+                            TAG,
+                            "mic rec data[${data.size}] queue=${recAudioQueue.size}"
+                        )
                     }
+                    // runCatching { micOs?.write(data) }.onFailure { it.printStackTrace() }
+                }
 
-                    override fun onStop(stopResult: Boolean) {
-                    }
-                },
-                defaultAudioType,
-                // Two-way voice: keep the VoIP capture chain. The library default
-                // (MIC, no effects) is meant for record-to-file playback, and using
-                // it here would let the far end hear its own echo.
-                audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                enableAdvancedFeatures = true
-            ).apply {
-                startRecord()
-            }
-        }
+                override fun onStop(stopResult: Boolean) {
+                }
+            },
+            defaultAudioType,
+            // Two-way voice: keep the VoIP capture chain. The library default
+            // (MIC, no effects) is meant for record-to-file playback, and using
+            // it here would let the far end hear its own echo.
+            audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+            enableAdvancedFeatures = true
+        ).apply { startRecord() }
 
         /**
          * Blocks on the queue rather than polling it every 10ms. Polling capped the drain at
@@ -248,7 +240,10 @@ class AudioReceiver {
         val player = AudioPlayer(
             ctx,
             AudioActivity.audioDecoderInfo,
-            defaultAudioType,
+            onFailure = { error ->
+                LogContext.log.e(TAG, "Received audio playback failed", error)
+            },
+            type = defaultAudioType,
             usage = AudioActivity.AUDIO_ATTR_USAGE,
             contentType = AudioActivity.AUDIO_ATTR_CONTENT_TYPE
         )

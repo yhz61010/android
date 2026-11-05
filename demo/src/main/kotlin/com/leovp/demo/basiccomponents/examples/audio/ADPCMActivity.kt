@@ -108,7 +108,12 @@ class ADPCMActivity : BaseDemonstrationActivity<ActivityADPCMBinding>(R.layout.a
             ensureActive()
             // Inside the job body, never outside it: a job cancelled before its first dispatch
             // never reaches this finally, so a player built on the click thread would leak.
-            val currentPlayer = AudioPlayer(this@ADPCMActivity, decoderInfo, AudioType.PCM)
+            val currentPlayer = AudioPlayer(
+                this@ADPCMActivity,
+                decoderInfo,
+                onFailure = { error -> LogContext.log.e(ITAG, "PCM playback failed", error) },
+                type = AudioType.PCM
+            )
             try {
                 try {
                     AdpcmImaQtDecoder(decoderInfo.sampleRate, decoderInfo.channelCount)

@@ -846,6 +846,10 @@ abstract class BaseNettyClient protected constructor(
      * bound is hit. It suspends rather than blocking, so it must be called from a coroutine -
      * it already had to be, but it used to park a dispatcher thread while it waited.
      *
+     * Once this call owns release, it always returns with [connectStatus] at
+     * [ClientConnectStatus.UNINITIALIZED], even when the bounded netty shutdown reports `false`
+     * or cleanup throws. A `false` result does not make this single-use client reusable.
+     *
      * Past the state guard this runs under [NonCancellable], for the same reason as
      * [BaseNettyServer.stopServer]: cancelling the caller cannot shorten a release, only strand
      * it on RELEASING with the event loop group alive for good. The timeout still applies.
@@ -856,23 +860,24 @@ abstract class BaseNettyClient protected constructor(
             "===== release() current state=${connectStatus.get().name} ====="
         )
         synchronized(this) {
-            if (ClientConnectStatus.UNINITIALIZED == connectStatus.get() ||
-                ClientConnectStatus.RELEASING == connectStatus.get() ||
-                ClientConnectStatus.DISCONNECTING == connectStatus.get()
+            val status = connectStatus.get()
+            if (released ||
+                ClientConnectStatus.RELEASING == status ||
+                ClientConnectStatus.DISCONNECTING == status
             ) {
                 LogContext.log.w(
                     tag,
-                    "Releasing now or already released or disconnecting or not initialized"
+                    "Releasing now or already released or disconnecting"
                 )
                 return false
             }
+            released = true
             connectStatus.set(ClientConnectStatus.RELEASING)
         }
         return withContext(NonCancellable) { releaseNow() }
     }
 
     private suspend fun releaseNow(): Boolean {
-        released = true
         disconnectManually = true
         LogContext.log.w(tag, "Releasing retry handler...")
         resumeConnectContinuation(connectStatus.get())
@@ -883,26 +888,40 @@ abstract class BaseNettyClient protected constructor(
         // Guarded like every other step: this hands control to subclass code, and letting it
         // throw here would skip the channel and the event loop group entirely.
         LogContext.log.w(tag, "Releasing default socket handler first...")
+        var releaseFailure: Throwable? = null
         try {
             defaultInboundHandler?.release()
-        } catch (e: Exception) {
-            LogContext.log.e(tag, "Release inbound handler error.", e)
+        } catch (error: Throwable) {
+            releaseFailure = error
+            LogContext.log.e(tag, "Release inbound handler error.", error)
+        } finally {
+            defaultInboundHandler = null
+            channelInitializer = null
         }
-        defaultInboundHandler = null
-        channelInitializer = null
 
         // Bounded here, at the resource boundary, for the same reason BaseNettyServer.stopServer()
         // is: callers chain this into a teardown sequence that deliberately carries no timeout of
         // its own, so a release that cannot finish must not hold that sequence forever.
-        val nettyReleased = withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }
-        if (nettyReleased == null) {
-            LogContext.log.e(
-                tag,
-                "Netty release did not finish within ${NETTY_RELEASE_TIMEOUT_IN_MILLS}ms. " +
-                    "Check whether closing the channel, not the event loop, used up the budget."
-            )
-            return false
+        var nettyReleased = false
+        try {
+            val boundedResult =
+                withTimeoutOrNull(NETTY_RELEASE_TIMEOUT_IN_MILLS) { releaseNetty() }
+            if (boundedResult == null) {
+                LogContext.log.e(
+                    tag,
+                    "Netty release did not finish within ${NETTY_RELEASE_TIMEOUT_IN_MILLS}ms. " +
+                        "Check whether closing the channel, not the event loop, used up the budget."
+                )
+            } else {
+                nettyReleased = boundedResult
+            }
+        } catch (error: Throwable) {
+            releaseFailure?.addSuppressed(error) ?: run { releaseFailure = error }
+        } finally {
+            connectStatus.set(ClientConnectStatus.UNINITIALIZED)
+            LogContext.log.w(tag, "=====> Socket released <=====")
         }
+        releaseFailure?.let { throw it }
         return nettyReleased
     }
 
@@ -922,8 +941,6 @@ abstract class BaseNettyClient protected constructor(
         }
         return try {
             workerGroup.terminationFuture().awaitCompletion()
-            connectStatus.set(ClientConnectStatus.UNINITIALIZED)
-            LogContext.log.w(tag, "=====> Socket released <=====")
             true
         } catch (e: CancellationException) {
             throw e

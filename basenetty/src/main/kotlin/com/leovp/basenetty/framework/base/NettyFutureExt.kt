@@ -2,8 +2,7 @@ package com.leovp.basenetty.framework.base
 
 import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GenericFutureListener
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -39,12 +38,29 @@ internal suspend fun <V> Future<V>.awaitCompletion() {
         return
     }
     suspendCancellableCoroutine { cont: CancellableContinuation<Unit> ->
-        val listener = GenericFutureListener<Future<V>> { future ->
+        val resumed = AtomicBoolean(false)
+        fun resumeFrom(future: Future<V>) {
             val failure = future.failureOrNull()
-            if (failure == null) cont.resume(Unit) else cont.resumeWithException(failure)
+            if (!resumed.compareAndSet(false, true)) return
+            if (failure == null) {
+                cont.resumeWith(Result.success(Unit))
+            } else {
+                cont.resumeWith(Result.failure(failure))
+            }
+        }
+        val listener = GenericFutureListener<Future<V>> { future ->
+            resumeFrom(future)
         }
         addListener(listener)
-        cont.invokeOnCancellation { removeListener(listener) }
+        cont.invokeOnCancellation {
+            resumed.set(true)
+            removeListener(listener)
+        }
+        // Completion may race the initial check and listener registration. Netty normally invokes
+        // a listener added to a done future, but a terminated executor can reject that notification
+        // and only log the rejection. Directly observing the final state closes that window; the
+        // atomic single-resume gate makes a concurrent listener notification harmless.
+        if (isDone) resumeFrom(this)
     }
 }
 

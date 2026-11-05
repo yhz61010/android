@@ -23,11 +23,15 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import java.net.URI
 import java.nio.charset.Charset
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class WebSocketClientActivity :
@@ -38,14 +42,18 @@ class WebSocketClientActivity :
         ActivityWebsocketClientBinding.inflate(layoutInflater)
 
     private val cs = CoroutineScope(Dispatchers.IO)
+    private val clientMutex = Mutex()
+    private val destroying = AtomicBoolean(false)
 
+    @Volatile
     private var webSocketClient: WebSocketClientDemo? = null
+    private var connectJob: Job? = null
     private lateinit var webSocketClientHandler: WebSocketClientHandlerDemo
     private val constantRetry = ConstantRetry(5, 2000)
 
-    private fun createSocket(): WebSocketClientDemo {
+    private fun createSocket(uri: URI): WebSocketClientDemo {
         val webSocketClient = WebSocketClientDemo(
-            URI(binding.etSvrIp.text.toString()),
+            uri,
             connectionListener,
             // assets.open("cert/websocket.org.crt")
             false,
@@ -58,6 +66,8 @@ class WebSocketClientActivity :
 
     fun onConnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
         LogContext.log.i(tag, "onConnectClick at ${SystemClock.elapsedRealtime()}")
+        if (destroying.get() || connectJob?.isActive == true || webSocketClient != null) return
+        val uri = URI(binding.etSvrIp.text.toString())
 
         // For none-ssl websocket or trust all certificates websocket, you can create just one
         // socket object,
@@ -76,12 +86,25 @@ class WebSocketClientActivity :
         // create socket ──> connect() ──> (optional)disconnectManually()  ──> release()
         //        ↑                                                               ↓
         //        └───────────────────────────────────────────────────────────────┘
-        cs.launch {
+        connectJob = cs.launch {
             for (i in 1..1) {
-                ensureActive()
-                webSocketClient = createSocket()
-                LogContext.log.i(tag, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
-                webSocketClient?.connect()
+                val client = createSocket(uri)
+                var published = false
+                try {
+                    clientMutex.withLock {
+                        if (!destroying.get()) {
+                            webSocketClient = client
+                            published = true
+                        }
+                    }
+                    if (!published) return@launch
+                    LogContext.log.i(tag, "[$i] do connect at ${SystemClock.elapsedRealtime()}")
+                    client.connect()
+                } finally {
+                    // Until publication this coroutine is the sole owner. Cancellation between
+                    // construction and publication must not leak the client's event loop group.
+                    if (!published) client.release()
+                }
                 // webSocketClient?.disconnectManually()
                 // webSocketClient?.release()
                 // LogContext.log.i(tag, "= released
@@ -103,26 +126,26 @@ class WebSocketClientActivity :
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch { webSocketClient?.release() }
+        cs.launch {
+            val client = clientMutex.withLock {
+                webSocketClient.also { webSocketClient = null }
+            }
+            client?.release()
+        }
     }
 
     override fun onDestroy() {
-        // The scope is cancelled from inside its last coroutine, once release() has returned. A
-        // cancel() issued right here instead could land before this coroutine is first
-        // dispatched, which skips the whole body and release() never runs. Cancelling afterwards
-        // still cancels a connect() that is in flight - its invokeOnCancellation cleans up - and
-        // release() itself is bounded by its own timeout, so the cancel cannot cut it short.
-        //
-        // If onConnectClick's coroutine has been dispatched but has not assigned webSocketClient
-        // yet, release() no-ops on the null, and the connect it then runs builds a client nothing
-        // will release. Narrow, and no cancel timing closes it: a cancel that lands before the
-        // first dispatch skips that coroutine entirely, one that lands after it is already past
-        // the assignment.
-        cs.launch {
-            try {
-                webSocketClient?.release()
-            } finally {
-                cs.cancel()
+        if (destroying.compareAndSet(false, true)) {
+            cs.launch {
+                try {
+                    connectJob?.cancelAndJoin()
+                    val client = clientMutex.withLock {
+                        webSocketClient.also { webSocketClient = null }
+                    }
+                    client?.release()
+                } finally {
+                    cs.cancel()
+                }
             }
         }
         super.onDestroy()

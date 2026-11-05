@@ -350,11 +350,14 @@ abstract class BaseNettyServer protected constructor(
         }
         connectState.set(ServerConnectStatus.UNINITIALIZED)
         withContext(NonCancellable) {
+            var releaseFailure: Throwable? = null
             try {
-                // Inside the try as well: releaseInboundHandler() only catches Exception, and an
-                // Error out of subclass code must not leave the state on UNINITIALIZED either.
-                releaseInboundHandler()
-                shutdownBounded { shutdownNetty() }
+                releaseFailure = releaseInboundHandler()
+                try {
+                    shutdownBounded { shutdownNetty() }
+                } catch (error: Throwable) {
+                    releaseFailure?.addSuppressed(error) ?: run { releaseFailure = error }
+                }
             } finally {
                 // In a finally, because the KDoc above promises these two run regardless.
                 // awaitOrLog() only guards the awaits; a throw from close() or
@@ -368,10 +371,12 @@ abstract class BaseNettyServer protected constructor(
                 // finally would also discard whatever the teardown above was already raising.
                 try {
                     connectionListener.onStopped()
-                } catch (e: Exception) {
-                    LogContext.log.e(tag, "onStopped() error.", e)
+                } catch (error: Throwable) {
+                    releaseFailure?.addSuppressed(error) ?: run { releaseFailure = error }
+                    LogContext.log.e(tag, "onStopped() error.", error)
                 }
             }
+            releaseFailure?.let { throw it }
         }
         return@withLock true
     }
@@ -383,11 +388,16 @@ abstract class BaseNettyServer protected constructor(
      */
     private suspend fun releaseUnstartedServer() = withContext(NonCancellable) {
         LogContext.log.w(tag, "Not started; releasing the event loops so a later start is refused")
+        var releaseFailure: Throwable? = null
         try {
-            releaseInboundHandler()
-            shutdownBounded {
-                requestEventLoopShutdown()
-                awaitEventLoopShutdown()
+            releaseFailure = releaseInboundHandler()
+            try {
+                shutdownBounded {
+                    requestEventLoopShutdown()
+                    awaitEventLoopShutdown()
+                }
+            } catch (error: Throwable) {
+                releaseFailure?.addSuppressed(error) ?: run { releaseFailure = error }
             }
         } finally {
             // In a finally for the same reason as in stopServer(): this state is what refuses a
@@ -395,19 +405,23 @@ abstract class BaseNettyServer protected constructor(
             // this call just won was meant to prevent.
             connectState.set(ServerConnectStatus.STOPPED)
         }
+        releaseFailure?.let { throw it }
     }
 
-    private fun releaseInboundHandler() {
+    private fun releaseInboundHandler(): Throwable? {
         // Guarded like every other step: this hands control to subclass code, and letting it
         // throw here would skip the channel and both event loop groups entirely.
         LogContext.log.w(tag, "Releasing default server inbound handler first...")
-        try {
+        return try {
             defaultServerInboundHandler?.release()
-        } catch (e: Exception) {
-            LogContext.log.e(tag, "Release inbound handler error.", e)
+            null
+        } catch (error: Throwable) {
+            LogContext.log.e(tag, "Release inbound handler error.", error)
+            error
+        } finally {
+            defaultServerInboundHandler = null
+            channelInitializer = null
         }
-        defaultServerInboundHandler = null
-        channelInitializer = null
     }
 
     private suspend fun shutdownBounded(block: suspend () -> Unit) {

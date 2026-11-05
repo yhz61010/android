@@ -18,6 +18,13 @@ import java.util.concurrent.TimeUnit
  * If I use asynchronous MediaCodec, in my phone(HuaWei Honor V20) and Samsung Galaxy S9+,
  * it will not play sound due to MediaCodec state error.
  *
+ * [errorCallback] runs after the codec enters its terminal failed state. Upgrading callers must
+ * provide it, and all precompiled consumers must be rebuilt because the constructor JVM descriptor
+ * changed.
+ *
+ * @param errorCallback Terminal codec failure callback. It must return promptly and must not call
+ *   `releaseAndJoin()` synchronously from the codec worker.
+ *
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
@@ -27,6 +34,7 @@ class AacDecoder(
     audioFormat: Int,
     private val csd0: ByteArray,
     private val callback: IDecodeCallback,
+    private val errorCallback: (Throwable) -> Unit,
 ) : BaseMediaCodecSynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
     sampleRate = sampleRate,
@@ -111,6 +119,11 @@ class AacDecoder(
     // timeUsPerFrame = 1_000_000L / sampleRate * 1024
     // presentationTimeUs = totalFrames * timeUsPerFrame
     override fun computePresentationTimeUs(): Long = currentInputPtsUs
+
+    override fun notifyCodecFailure(error: Throwable) {
+        LogContext.log.e(TAG, "AAC decoder failed", error)
+        errorCallback.invoke(error)
+    }
 
     override fun onCodecReleased() {
         queue.clear()

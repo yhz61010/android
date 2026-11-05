@@ -7,7 +7,8 @@ import android.media.AudioAttributes
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
-import com.leovp.audio.AudioTrackPlayer
+import com.leovp.audio.base.AndroidFileAudioOutput
+import com.leovp.audio.base.FileAudioOutput
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.mediacodec.BaseMediaCodecSynchronous
 import com.leovp.bytes.toByteArray
@@ -36,21 +37,35 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
+ * One-shot AAC file player that owns its extractor, decoder session and AudioTrack as one unit.
+ *
+ * This class no longer extends `BaseMediaCodecSynchronous`. Upgrading callers must replace any
+ * inherited codec-level `releaseAndJoin()` call with [stop], which waits for the complete player
+ * teardown. Precompiled consumers must be rebuilt because the superclass changed.
+ *
  * Author: Michael Leo
  * Date: 2020/9/17 下午5:01
  */
-class AacFilePlayer(
-    ctx: Context,
+class AacFilePlayer internal constructor(
     private val audioDecodeInfo: AudioDecoderInfo,
-    // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    usage: Int = AudioAttributes.USAGE_MEDIA,
-    // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
-) : BaseMediaCodecSynchronous(
-    MediaFormat.MIMETYPE_AUDIO_AAC,
-    audioDecodeInfo.sampleRate,
-    audioDecodeInfo.channelCount
+    private val audioOutput: FileAudioOutput,
+    private val sourceFactory: AacSampleSourceFactory,
+    private val decoderFactory: AacDecoderSessionFactory?,
 ) {
+    constructor(
+        ctx: Context,
+        audioDecodeInfo: AudioDecoderInfo,
+        // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+        usage: Int = AudioAttributes.USAGE_MEDIA,
+        // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+        contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+    ) : this(
+        audioDecodeInfo,
+        AndroidFileAudioOutput(ctx, audioDecodeInfo, usage, contentType),
+        AndroidAacSampleSourceFactory,
+        null
+    )
+
     companion object {
         private const val TAG = "AacFilePlayer"
         private val AUDIO_TRACK_DRAIN_TIMEOUT = 3.seconds
@@ -59,12 +74,7 @@ class AacFilePlayer(
         private val DRAIN_POLL_INTERVAL = 20.milliseconds
     }
 
-    private val audioTrackPlayer: AudioTrackPlayer =
-        AudioTrackPlayer(ctx, audioDecodeInfo, usage = usage, contentType = contentType)
-
-    private var mediaFormat: MediaFormat? = null
-    private var mime: String? = null
-    private var mediaExtractor: MediaExtractor? = null
+    private var sampleSource: AacSampleSource? = null
     private var currentSampleTimeUs = -1L
     private val writtenAudioFrames = AtomicLong(0)
 
@@ -82,33 +92,19 @@ class AacFilePlayer(
             terminalExceptionHandler
     )
     private val lifecycleMutex = Mutex()
+    private var decoder: AacDecoderSession? = null
 
-    override fun setFormatOptions(format: MediaFormat) {}
-
-    override fun createMediaFormat() {}
-
-    override fun createCodec() {
-        val codecMime = requireNotNull(mime) { "AAC mime is not initialized" }
-        val codecFormat = requireNotNull(mediaFormat) { "AAC format is not initialized" }
-        codec = MediaCodec.createDecoderByType(codecMime)
-        codec.configure(codecFormat, null, null, 0)
-        // LogContext.log.w(TAG, "mediaFormat=$mediaFormat")
-    }
-
-    override fun onInputData(inBuf: ByteBuffer): Int {
-        val extractor = mediaExtractor
-        currentSampleTimeUs = extractor?.sampleTime ?: -1
-        val sampleSize = extractor?.readSampleData(inBuf, 0) ?: -1
-        if (sampleSize > -1) {
-            extractor?.advance()
-        } else {
+    private fun readSample(inBuf: ByteBuffer): Int {
+        val sample = sampleSource?.readSample(inBuf) ?: AacSample(-1, -1)
+        currentSampleTimeUs = sample.presentationTimeUs
+        if (sample.size < 0) {
             currentSampleTimeUs = -1
-            LogContext.log.d(TAG, "readSampleData sampleSize=$sampleSize")
+            LogContext.log.d(TAG, "readSampleData sampleSize=${sample.size}")
         }
-        return sampleSize
+        return sample.size
     }
 
-    override fun onOutputData(
+    private fun writeDecodedPcm(
         outBuf: ByteBuffer,
         info: MediaCodec.BufferInfo,
         isConfig: Boolean,
@@ -121,26 +117,65 @@ class AacFilePlayer(
                 TAG,
                 "PCM data[${chunkPCM.size}] isConfig=$isConfig isKeyFrame=$isKeyFrame"
             )
-            val writtenBytes = audioTrackPlayer.write(chunkPCM)
-            if (writtenBytes > 0) {
-                val pcmFrameBytes = Short.SIZE_BYTES * audioDecodeInfo.channelCount
-                writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes).toLong())
-            }
+            val writtenBytes = requireSuccessfulAacAudioWrite(audioOutput.write(chunkPCM))
+            val pcmFrameBytes = Short.SIZE_BYTES * audioDecodeInfo.channelCount
+            writtenAudioFrames.addAndGet((writtenBytes / pcmFrameBytes).toLong())
         }
     }
 
-    override fun computePresentationTimeUs(): Long = currentSampleTimeUs
-
-    override fun onEndOfStream() {
-        // Teardown must run outside the codec worker; releaseAndJoin() cannot join its caller.
-        terminalScope.launch { finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false) }
-    }
-
-    override fun notifyCodecFailure(error: Throwable) {
+    private fun requestFailure(error: Throwable) {
         terminalScope.launch {
             finishPlayback(TerminalReason.Failure(error), propagateFailure = false)
         }
     }
+
+    /** Owns the codec worker privately so callers cannot bypass the player's full teardown. */
+    private inner class AndroidDecoderSession(
+        private val mime: String,
+        private val mediaFormat: MediaFormat,
+    ) : BaseMediaCodecSynchronous(
+        MediaFormat.MIMETYPE_AUDIO_AAC,
+        audioDecodeInfo.sampleRate,
+        audioDecodeInfo.channelCount
+    ),
+        AacDecoderSession {
+        override fun setFormatOptions(format: MediaFormat) = Unit
+
+        override fun createMediaFormat() = Unit
+
+        override fun createCodec() {
+            codec = MediaCodec.createDecoderByType(mime)
+            codec.configure(mediaFormat, null, null, 0)
+        }
+
+        override fun onInputData(inBuf: ByteBuffer): Int = readSample(inBuf)
+
+        override fun onOutputData(
+            outBuf: ByteBuffer,
+            info: MediaCodec.BufferInfo,
+            isConfig: Boolean,
+            isKeyFrame: Boolean,
+        ) = writeDecodedPcm(outBuf, info, isConfig, isKeyFrame)
+
+        override fun computePresentationTimeUs(): Long = currentSampleTimeUs
+
+        override fun onEndOfStream() {
+            terminalScope.launch {
+                finishPlayback(TerminalReason.NaturalEnd, propagateFailure = false)
+            }
+        }
+
+        override fun notifyCodecFailure(error: Throwable) = requestFailure(error)
+    }
+
+    private fun createDecoder(source: AacSampleSource): AacDecoderSession = decoderFactory?.create(
+        audioDecodeInfo,
+        ::readSample,
+        { currentSampleTimeUs },
+        ::writeDecodedPcm,
+        { terminalScope.launch { finishPlayback(TerminalReason.NaturalEnd, false) } },
+        ::requestFailure
+    ) ?: AndroidDecoderSession(source.mime, source.mediaFormat)
 
     /**
      * Starts this one-shot player.
@@ -165,23 +200,12 @@ class AacFilePlayer(
             withContext(Dispatchers.IO) {
                 lifecycleMutex.withLock {
                     check(!terminalStarted.get()) { "AacFilePlayer is stopping" }
-                    val extractor = MediaExtractor()
-                    mediaExtractor = extractor
-                    extractor.setDataSource(aacFile.absolutePath)
-                    for (i in 0 until extractor.trackCount) {
-                        val format = extractor.getTrackFormat(i)
-                        mime = format.getString(MediaFormat.KEY_MIME)
-                        if (mime?.startsWith("audio/") == true) {
-                            extractor.selectTrack(i)
-                            mediaFormat = format
-                            break
-                        }
-                    }
-                    check(mediaFormat != null && !mime.isNullOrBlank()) {
-                        "AAC file does not contain a supported audio track"
-                    }
-                    audioTrackPlayer.play()
-                    start()
+                    val source = sourceFactory.open(aacFile)
+                    sampleSource = source
+                    val playbackDecoder = createDecoder(source)
+                    decoder = playbackDecoder
+                    audioOutput.play()
+                    playbackDecoder.start()
                 }
             }
         } catch (e: CancellationException) {
@@ -193,7 +217,7 @@ class AacFilePlayer(
                 e.addSuppressed(cleanupFailure)
             }
             throw e
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             LogContext.log.e(TAG, "AAC playback start failed", e)
             try {
                 withContext(Dispatchers.IO + NonCancellable) {
@@ -223,23 +247,39 @@ class AacFilePlayer(
         val completionCallback = cb
         val failureCallback = errorCb
         var releaseFailure: Throwable? = null
+        fun recordReleaseFailure(failure: Throwable) {
+            releaseFailure?.addSuppressed(failure) ?: run { releaseFailure = failure }
+        }
         withContext(NonCancellable) {
             try {
                 lifecycleMutex.withLock {
                     try {
-                        if (reason == TerminalReason.NaturalEnd) awaitAudioTrackDrain()
+                        if (reason == TerminalReason.NaturalEnd) {
+                            try {
+                                awaitAudioTrackDrain()
+                            } catch (failure: Throwable) {
+                                recordReleaseFailure(failure)
+                            }
+                        }
                         // stop() wakes a potentially blocking write before releaseAndJoin() waits
                         // for the codec worker, so AudioTrack.release() never races that write.
-                        audioTrackPlayer.stop()
-                        releaseAndJoin()
-                    } catch (failure: Throwable) {
-                        releaseFailure = failure
+                        try {
+                            audioOutput.stop()
+                        } catch (failure: Throwable) {
+                            recordReleaseFailure(failure)
+                        }
+                        val playbackDecoder = decoder
+                        decoder = null
+                        try {
+                            playbackDecoder?.releaseAndJoin()
+                        } catch (failure: Throwable) {
+                            recordReleaseFailure(failure)
+                        }
                     } finally {
                         try {
                             releaseExternalResources()
                         } catch (cleanupFailure: Throwable) {
-                            releaseFailure?.addSuppressed(cleanupFailure)
-                                ?: run { releaseFailure = cleanupFailure }
+                            recordReleaseFailure(cleanupFailure)
                         } finally {
                             // Complete the teardown barrier before invoking client code. A
                             // completion callback may synchronously call stop(), which must return
@@ -294,22 +334,107 @@ class AacFilePlayer(
     }
 
     private fun unsignedPlaybackHeadPosition(): Long =
-        audioTrackPlayer.playbackHeadPosition.toLong() and 0xFFFF_FFFFL
+        audioOutput.playbackHeadPosition.toLong() and 0xFFFF_FFFFL
 
     private fun releaseExternalResources() {
-        val extractor = mediaExtractor
-        mediaExtractor = null
-        runCatchingPreservingCancellation { extractor?.release() }
-            .onFailure { LogContext.log.e(TAG, "MediaExtractor release failed", it) }
-        audioTrackPlayer.release()
-        currentSampleTimeUs = -1
-        cb = null
-        errorCb = null
+        val source = sampleSource
+        sampleSource = null
+        var releaseFailure: Throwable? = null
+        try {
+            source?.release()
+        } catch (failure: Throwable) {
+            releaseFailure = failure
+        }
+        try {
+            audioOutput.release()
+        } catch (failure: Throwable) {
+            releaseFailure?.addSuppressed(failure) ?: run { releaseFailure = failure }
+        } finally {
+            currentSampleTimeUs = -1
+            cb = null
+            errorCb = null
+        }
+        releaseFailure?.let { throw it }
     }
+}
+
+internal fun requireSuccessfulAacAudioWrite(writtenBytes: Int): Int {
+    check(writtenBytes > 0) { "AudioTrack accepted no AAC PCM bytes: $writtenBytes" }
+    return writtenBytes
 }
 
 private sealed interface TerminalReason {
     data object ExplicitStop : TerminalReason
     data object NaturalEnd : TerminalReason
     data class Failure(val error: Throwable) : TerminalReason
+}
+
+internal data class AacSample(val size: Int, val presentationTimeUs: Long)
+
+internal interface AacSampleSource {
+    val mime: String
+    val mediaFormat: MediaFormat
+
+    fun readSample(buffer: ByteBuffer): AacSample
+
+    fun release()
+}
+
+internal fun interface AacSampleSourceFactory {
+    fun open(file: File): AacSampleSource
+}
+
+private object AndroidAacSampleSourceFactory : AacSampleSourceFactory {
+    override fun open(file: File): AacSampleSource {
+        val extractor = MediaExtractor()
+        try {
+            extractor.setDataSource(file.absolutePath)
+            for (index in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(index)
+                val mime = format.getString(MediaFormat.KEY_MIME)
+                if (mime?.startsWith("audio/") == true) {
+                    extractor.selectTrack(index)
+                    return AndroidAacSampleSource(extractor, mime, format)
+                }
+            }
+            error("AAC file does not contain a supported audio track")
+        } catch (error: Throwable) {
+            runCatchingPreservingCancellation { extractor.release() }
+                .onFailure(error::addSuppressed)
+            throw error
+        }
+    }
+}
+
+private class AndroidAacSampleSource(
+    private val extractor: MediaExtractor,
+    override val mime: String,
+    override val mediaFormat: MediaFormat,
+) : AacSampleSource {
+    override fun readSample(buffer: ByteBuffer): AacSample {
+        val presentationTimeUs = extractor.sampleTime
+        val size = extractor.readSampleData(buffer, 0)
+        if (size >= 0) extractor.advance()
+        return AacSample(size, if (size >= 0) presentationTimeUs else -1)
+    }
+
+    override fun release() = extractor.release()
+}
+
+internal interface AacDecoderSession {
+    fun start()
+
+    suspend fun releaseAndJoin()
+}
+
+internal fun interface AacDecoderSessionFactory {
+    @Suppress("LongParameterList")
+    fun create(
+        decoderInfo: AudioDecoderInfo,
+        readSample: (ByteBuffer) -> Int,
+        presentationTimeUs: () -> Long,
+        writeOutput: (ByteBuffer, MediaCodec.BufferInfo, Boolean, Boolean) -> Unit,
+        onEndOfStream: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ): AacDecoderSession
 }

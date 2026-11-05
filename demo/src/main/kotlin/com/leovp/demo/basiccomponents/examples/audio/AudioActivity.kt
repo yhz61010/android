@@ -36,6 +36,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.activity_audio) {
     override fun getTagName(): String = ITAG
@@ -77,6 +79,8 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         LogContext.log.e(TAG, "Unhandled audio demo coroutine failure", error)
     }
     private val ioScope = CoroutineScope(ioScopeJob + Dispatchers.IO + ioExceptionHandler)
+    private val recordingMutex = Mutex()
+    private val recordingIntents = RecordingIntentCoordinator()
 
     // Named for the channel layout on purpose. Recording and playback used to be stereo; a
     // leftover stereo capture opened with the mono configuration below would play at the wrong
@@ -119,15 +123,15 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         binding.tvIp.text = NetworkUtil.getIp()[0]
 
         binding.btnRecordPcm.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.PCM) else stopRecording()
+            if (isChecked) record(AudioType.PCM) else stopRecording(AudioType.PCM)
         }
 
         binding.btnRecordAac.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.AAC) else stopRecording()
+            if (isChecked) record(AudioType.AAC) else stopRecording(AudioType.AAC)
         }
 
         binding.btnRecordOpus.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) record(AudioType.OPUS) else stopRecording()
+            if (isChecked) record(AudioType.OPUS) else stopRecording(AudioType.OPUS)
         }
 
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
@@ -135,6 +139,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                 audioPlayer = AudioPlayer(
                     this@AudioActivity,
                     audioDecoderInfo,
+                    onFailure = { error -> LogContext.log.e(TAG, "PCM playback failed", error) },
                     type = AudioType.PCM,
                     usage = AUDIO_ATTR_USAGE,
                     contentType = AUDIO_ATTR_CONTENT_TYPE
@@ -263,79 +268,183 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
      * current recording is writing into, and `onRecording` swallows the resulting write error -
      * so the recording would produce an empty file with nothing to show the user why.
      */
-    private fun recordCallbackFor(type: AudioType, out: BufferedOutputStream?) =
-        object : MicRecorder.RecordCallback {
-            override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
-                when (type) {
-                    AudioType.PCM -> runCatching {
-                        LogContext.log.d(TAG, "PCM data[${data.size}]")
-                        out?.write(data)
-                    }.onFailure { it.printStackTrace() }
-
-                    AudioType.AAC -> {
-                        LogContext.log.i(
-                            TAG,
-                            "Get encoded AAC Data[${data.size}] isConfig=$isConfig " +
-                                "isKeyFrame=$isKeyFrame"
-                        )
-                        runCatching { out?.write(data) }.onFailure { it.printStackTrace() }
-                    }
-
-                    AudioType.OPUS -> {
-                        LogContext.log.i(
-                            TAG,
-                            "Get encoded OPUS Data[${data.size}] isConfig=$isConfig " +
-                                "isKeyFrame=$isKeyFrame"
-                        )
-                        runCatching {
-                            out?.write(OpusFilePlayer.START_CODE.encodeToByteArray())
-                            out?.write(data)
-                        }.onFailure { it.printStackTrace() }
-                    }
-
-                    else -> Unit
+    private fun recordCallbackFor(
+        token: Long,
+        type: AudioType,
+        out: BufferedOutputStream?,
+        recorderRef: AtomicReference<MicRecorder?>
+    ) = object : MicRecorder.RecordCallback {
+        override fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+            when (type) {
+                AudioType.PCM -> {
+                    LogContext.log.d(TAG, "PCM data[${data.size}]")
+                    out?.write(data)
                 }
-            }
 
-            override fun onStop(stopResult: Boolean) {
-                runCatching {
-                    out?.flush()
-                    out?.close()
-                }.onFailure { it.printStackTrace() }
+                AudioType.AAC -> {
+                    LogContext.log.i(
+                        TAG,
+                        "Get encoded AAC Data[${data.size}] isConfig=$isConfig " +
+                            "isKeyFrame=$isKeyFrame"
+                    )
+                    out?.write(data)
+                }
+
+                AudioType.OPUS -> {
+                    LogContext.log.i(
+                        TAG,
+                        "Get encoded OPUS Data[${data.size}] isConfig=$isConfig " +
+                            "isKeyFrame=$isKeyFrame"
+                    )
+                    out?.write(OpusFilePlayer.START_CODE.encodeToByteArray())
+                    out?.write(data)
+                }
+
+                else -> Unit
             }
         }
 
+        override fun onStop(stopResult: Boolean) {
+            runCatching {
+                out?.flush()
+                out?.close()
+            }.onFailure { LogContext.log.e(TAG, "Close recording output failed", it) }
+            if (!stopResult && recordingIntents.failIfCurrent(token, type)) {
+                val failedRecorder = recorderRef.get()
+                launchCleanup("Finalize failed recording") {
+                    recordingMutex.withLock {
+                        if (micRecorder === failedRecorder) micRecorder = null
+                    }
+                    failedRecorder?.stopRecordAndJoin()
+                }
+                runOnUiThread {
+                    when (type) {
+                        AudioType.PCM -> binding.btnRecordPcm.isChecked = false
+                        AudioType.AAC -> binding.btnRecordAac.isChecked = false
+                        AudioType.OPUS -> binding.btnRecordOpus.isChecked = false
+                        else -> Unit
+                    }
+                    toast("Recording stopped after a start or capture failure")
+                }
+            }
+        }
+    }
+
     private fun record(type: AudioType) {
+        val token = recordingIntents.requestStart(type)
+        when (type) {
+            AudioType.PCM -> {
+                binding.btnRecordAac.isChecked = false
+                binding.btnRecordOpus.isChecked = false
+            }
+            AudioType.AAC -> {
+                binding.btnRecordPcm.isChecked = false
+                binding.btnRecordOpus.isChecked = false
+            }
+            AudioType.OPUS -> {
+                binding.btnRecordPcm.isChecked = false
+                binding.btnRecordAac.isChecked = false
+            }
+            else -> Unit
+        }
         XXPermissions.with(this)
             .permission(PermissionLists.getRecordAudioPermission())
             .request { _, deniedList ->
                 val allGranted = deniedList.isEmpty()
                 if (allGranted) {
-                    LogContext.log.i(ITAG, "Record type: $type")
-                    val out = when (type) {
-                        AudioType.PCM -> BufferedOutputStream(FileOutputStream(pcmFile))
-                        AudioType.AAC -> BufferedOutputStream(FileOutputStream(aacFile))
-                        AudioType.OPUS -> BufferedOutputStream(FileOutputStream(opusFile))
-                        else -> null
+                    ioScope.launch {
+                        recordingMutex.withLock {
+                            if (!recordingIntents.isCurrent(token, type)) return@withLock
+                            val previous = micRecorder
+                            micRecorder = null
+                            previous?.stopRecordAndJoin()
+                            if (!recordingIntents.isCurrent(token, type)) return@withLock
+
+                            LogContext.log.i(ITAG, "Record type: $type")
+                            var out: BufferedOutputStream? = null
+                            var recorder: MicRecorder? = null
+                            val recorderRef = AtomicReference<MicRecorder?>(null)
+                            try {
+                                out = when (type) {
+                                    AudioType.PCM ->
+                                        BufferedOutputStream(FileOutputStream(pcmFile))
+                                    AudioType.AAC ->
+                                        BufferedOutputStream(FileOutputStream(aacFile))
+                                    AudioType.OPUS ->
+                                        BufferedOutputStream(FileOutputStream(opusFile))
+                                    else -> null
+                                }
+                                recorder =
+                                    MicRecorder(
+                                        audioEncoderInfo,
+                                        recordCallbackFor(token, type, out, recorderRef),
+                                        type
+                                    )
+                                recorderRef.set(recorder)
+                                if (!recordingIntents.isCurrent(token, type)) {
+                                    recorder.stopRecordAndJoin()
+                                    return@withLock
+                                }
+                                micRecorder = recorder
+                                recorder.startRecord()
+                            } catch (error: Exception) {
+                                val failedCurrentIntent =
+                                    recordingIntents.failIfCurrent(token, type)
+                                if (micRecorder === recorder) micRecorder = null
+                                try {
+                                    recorder?.stopRecordAndJoin()
+                                } catch (cleanupFailure: Exception) {
+                                    error.addSuppressed(cleanupFailure)
+                                }
+                                runCatching { out?.close() }
+                                    .onFailure(error::addSuppressed)
+                                LogContext.log.e(TAG, "Start recording failed", error)
+                                if (failedCurrentIntent) {
+                                    runOnUiThread {
+                                        toast("Unable to start recording")
+                                        when (type) {
+                                            AudioType.PCM -> binding.btnRecordPcm.isChecked = false
+                                            AudioType.AAC -> binding.btnRecordAac.isChecked = false
+                                            AudioType.OPUS ->
+                                                binding.btnRecordOpus.isChecked = false
+                                            else -> Unit
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    micRecorder =
-                        MicRecorder(audioEncoderInfo, recordCallbackFor(type, out), type)
-                    micRecorder?.startRecord()
                 } else {
                     //  val doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(
                     //      this@AudioActivity,
                     //      deniedList
                     //  )
-                    toast("Deny record permission")
-                    finish()
+                    if (recordingIntents.failIfCurrent(token, type)) {
+                        toast("Deny record permission")
+                        finish()
+                    }
                 }
             }
     }
 
-    private fun stopRecording() {
-        val recorder = micRecorder ?: return
-        micRecorder = null
-        launchCleanup("Stop recording") { recorder.stopRecordAndJoin() }
+    private fun stopRecording(type: AudioType) {
+        val token = recordingIntents.requestStopToken(type) ?: return
+        stopRecording(token)
+    }
+
+    private fun stopAllRecording() {
+        stopRecording(recordingIntents.stopAll())
+    }
+
+    private fun stopRecording(token: Long) {
+        launchCleanup("Stop recording") {
+            recordingMutex.withLock {
+                if (!recordingIntents.isStopped(token)) return@withLock
+                val recorder = micRecorder
+                micRecorder = null
+                recorder?.stopRecordAndJoin()
+            }
+        }
     }
 
     private fun stopPcmPlayback() {
@@ -378,7 +487,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
         audioSender = null
         launchCleanup("Stop audio receiver") { receiver?.stopServer() }
         launchCleanup("Stop audio sender") { sender?.stop() }
-        stopRecording()
+        stopAllRecording()
         stopPcmPlayback()
         stopAacPlayback()
         stopOpusPlayback()

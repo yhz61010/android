@@ -18,12 +18,22 @@ import com.leovp.audio.opus.OpusStreamPlayer
 import com.leovp.log.LogContext
 
 /**
+ * Plays one audio session and reports terminal AAC/OPUS decoder failures through [onFailure].
+ *
+ * Upgrading callers must provide [onFailure]. It runs after the stream decoder, its worker scope,
+ * and its AudioTrack have completed teardown. PCM and compressed-PCM sessions do not currently
+ * produce decoder failures through this callback, but use the same constructor contract so a
+ * caller can change [type] without losing its failure path.
+ *
+ * @param onFailure Terminal stream-decoder failure callback. It must return promptly.
+ *
  * Author: Michael Leo
  * Date: 2020/9/16 下午5:03
  */
 class AudioPlayer(
     ctx: Context,
     private val audioDecoderInfo: AudioDecoderInfo,
+    onFailure: (Throwable) -> Unit,
     private val type: AudioType = AudioType.PCM,
     mode: Int = AudioTrack.MODE_STREAM,
     // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
@@ -47,12 +57,12 @@ class AudioPlayer(
         when (type) {
             AudioType.AAC -> {
                 LogContext.log.w(TAG, "AAC Decoder")
-                aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo)
+                aacStreamPlayer = AacStreamPlayer(ctx, audioDecoderInfo, onFailure)
             }
 
             AudioType.OPUS -> {
                 LogContext.log.w(TAG, "OPUS Decoder")
-                opusStreamPlayer = OpusStreamPlayer(ctx, audioDecoderInfo)
+                opusStreamPlayer = OpusStreamPlayer(ctx, audioDecoderInfo, onFailure)
             }
 
             else -> {

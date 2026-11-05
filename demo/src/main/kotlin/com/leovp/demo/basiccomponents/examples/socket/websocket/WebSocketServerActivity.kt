@@ -120,9 +120,18 @@ class WebSocketServerActivity :
         override fun onStartFailed(netty: BaseNettyServer, code: Int, msg: String?) {
             LogContext.log.w(tag, "onFailed code: $code message: $msg")
             toast("onFailed code: $code message: $msg", debug = true)
-            // Release the reference so the user can retry once the port is free again.
-            webSocketServer = null
-            webSocketServerHandler = null
+            // A failed bind still owns both event loop groups. Keep the instance published until
+            // stopServer() has released them; clearing it first would orphan those threads.
+            cs.launch {
+                try {
+                    netty.stopServer()
+                } finally {
+                    if (webSocketServer === netty) {
+                        webSocketServer = null
+                        webSocketServerHandler = null
+                    }
+                }
+            }
             runOnUiThread {
                 binding.btnStartServer.isEnabled = true
                 binding.btnStop.isEnabled = false

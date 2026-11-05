@@ -10,14 +10,53 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 
 class StreamPlayerStopperTest {
+    @Test
+    fun `concurrent callers share one teardown`() = runTest {
+        val releaseStarted = CompletableDeferred<Unit>()
+        val allowRelease = CompletableDeferred<Unit>()
+        var detachCount = 0
+        val scope = CoroutineScope(Job())
+        val audioTrackPlayer = mockk<AudioTrackPlayer>(relaxed = true)
+        val subject = StreamPlayerStopper("Test", scope, audioTrackPlayer) {
+            detachCount++
+            Any()
+        }
+
+        val leader = async {
+            subject.stopAndJoin {
+                releaseStarted.complete(Unit)
+                allowRelease.await()
+            }
+        }
+        releaseStarted.await()
+        val follower = async {
+            subject.stopAndJoin {
+                error("Follower must not release the decoder")
+            }
+        }
+        yield()
+
+        assertFalse(follower.isCompleted)
+        allowRelease.complete(Unit)
+        leader.await()
+        follower.await()
+
+        assertEquals(1, detachCount)
+        verify(exactly = 1) { audioTrackPlayer.stop() }
+        verify(exactly = 1) { audioTrackPlayer.release() }
+    }
+
     @Test
     fun `suspending stop propagates cancellation after common cleanup`() = runTest {
         val events = mutableListOf<String>()

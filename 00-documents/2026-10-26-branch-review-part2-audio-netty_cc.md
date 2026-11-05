@@ -8,6 +8,10 @@
 > **行号同步（Claude，2026-10-27）**：本文引用的全部源码行号、计数与跨文档交叉引用已按 HEAD
 > `5c0a21f65` 全量复核并修正不一致项；源码定位基准仍为 `ef51ac0ad`（该提交以来 `audio`、`basenetty`
 > 与本部分 demo 源码未变，`CHANGELOG.md` 有变，见 §1 的「本次复核快照」）。本次只改文档，未改源码。
+>
+> **当前状态（Codex，2026-11-04）**：已整合远端 `938347e19` 并保留本地未提交实施记录。§1～§6 的
+> 行号及“未实施”结论描述历史快照；当前工作树的实施状态见 §7。H-1 已按 §7.6 改为底层 codec 会话
+> 替换，§7.5 保留重开问题时的证据；本文旧方案代码块不得作为最终实现直接照抄。
 
 ## 1. 范围与方法
 
@@ -73,10 +77,10 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 
 | 条目 | 裁决 | 证据 |
 |---|---|---|
-| **H2** OPUS 主线程挂死 | **已修复** | `OpusFilePlayer.kt:195` 以 `queue.offer(pcmData)` 取代阻塞 `put()`，满队列走 `:199-200` 丢弃并报错；`:194` 另加 `terminalStarted` 快路径。持 `codecOperationLock` 可达的每个回调体都已有界（`onDecoded→offer`、`OpusDecoder.kt:75 onInputData→queue.poll()`、`:203 endCallback→codecEos.complete()`、`:204 errorCallback→terminalScope.launch{}`）。`queue.clear()` 移到 `:491`（join 之后的 finally）。死锁环已断 |
-| **H3** 停止竞态崩溃 | **已修复** | `OpusFilePlayer.kt:480-486` 严格按「`playbackScopeJob.cancel()` → `closeInputFile()` 唤醒阻塞文件读 → `audioTrackPlayer.stop()` 唤醒阻塞 `AudioTrack.write` → `cancelAndJoin()` → `decoder.releaseAndJoin()`」执行，整体在 `:473 withContext(NonCancellable)` 内，`audioTrackPlayer.release()` 在 `:492` 的 join 之后。`stop()` 已是 `suspend` 且自带 `withContext(Dispatchers.IO)`（`:163-165`） |
-| **H4** 第二次 `playAac()` 把 H2/H3 带回 | **已修复** | `AacFilePlayer.kt:161` 的 `check(started.compareAndSet(false, true))` 是 `playAac` 字面第一条语句，位于 `cb=`（`:162`）、`MediaExtractor()`（`:168`）、`audioTrackPlayer.play()`（`:183`）、`start()`（`:184`）之前且在 `try` 之外 → 重复调用不触发任何清理，现有会话逐字节不受影响。`OpusFilePlayer.kt:125` 有同款闸。旧的 `releaseAfterStartFailure()` 已不存在 |
-| **H5 / M18** AAC 自然 EOF 泄漏 fd 与 AudioTrack | **已修复** | `AacFilePlayer.kt:134-137` 的 `onEndOfStream()` 改为 `terminalScope.launch { finishPlayback(NaturalEnd) }`；该路径 `:230` 先排空 AudioTrack、`:233-234` `stop()`+`releaseAndJoin()`、`:239 releaseExternalResources()`（`:299-308` 释放 `MediaExtractor` 与 `AudioTrack`），全部完成后才在 `:266` 调完成回调 |
+| **H2** OPUS 主线程挂死 | **已修复** | `OpusFilePlayer.createDecoder()` 的 PCM 回调使用有界 `queue.offer()`，队列满立即 `requestFailure()`；`finishPlayback()` 只在 worker 退出后清队列。播放器层队列溢出回归验证失败回调发生在 decoder/AudioTrack 完整释放之后 |
+| **H3** 停止竞态崩溃 | **已修复** | `OpusFilePlayer.finishPlayback()` 按「取消生产者 → 关闭文件 → stop AudioTrack 唤醒阻塞 write → join worker → release decoder → release AudioTrack」执行，整体位于 `NonCancellable`。每一步独立尝试并聚合异常，stop 失败不会跳过 join/release；阻塞写入回归验证了实际顺序 |
+| **H4** 第二次 `playAac()` 把 H2/H3 带回 | **已修复** | `AacFilePlayer.playAac()` 与 `OpusFilePlayer.playOpus()` 的 `started.compareAndSet(false, true)` 均在发布回调和创建资源之前；重复调用直接抛 `IllegalStateException`。播放器层测试验证第二次 AAC 启动不改动现有 source/decoder/output |
+| **H5 / M18** AAC 自然 EOF 泄漏 fd 与 AudioTrack | **已修复** | 私有 `AndroidDecoderSession.onEndOfStream()` 进入统一 `finishPlayback(NaturalEnd)`；排空、stop、decoder join、sample source/output release 全部完成后才回调。source/output 释放失败也逐步尝试并聚合，回调字段在 `finally` 无条件清空 |
 | **M10** EOF 回调无合法停止途径 | **形态已变，风险闭环** | `endCallback` 仍是 `() -> Unit`（`:158`），但 `:253 terminalCompletion.complete(Unit)` 发生在 `releaseAndJoin()` 返回之后、客户端回调之前，所以从回调里 `runBlocking { stop() }` 会命中 `:217-221` 的重复分支立即返回，不再 join 自身；且回调运行在 `terminalScope`（IO）而非 codec worker。**残留**：公开 KDoc 未写明回调所在线程，见 §3 L-7 |
 | **M13** 同步尾音丢失 / `onEndOfStream()` 双触发 | **已修复** | `BaseMediaCodecSynchronous.kt:113` 返回 `!outputEosReceived`；`:55-73` 输入 EOS 后进入带 3 秒上界的排空循环；`:76` 是全文件唯一的 `onEndOfStream()` 调用点且由 `outputEosReceived` 守卫，结构上不可能双触发 |
 | **M14** 两条公开 API 破坏未记入 CHANGELOG | **已修复** | `CHANGELOG.md:205-208` 已写明 `AacDecoder.decode()` 的 JVM 描述符由 `([B)V` 变为 `([B)Z`、预编译调用方不重编译会得到运行期 `NoSuchMethodError`，以及非 `RUNNING` 状态调用 `flush()` 现在抛 `IllegalStateException` |
@@ -87,12 +91,12 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 | **M24** 输入 EOS 后无墙钟上界 | **worker 侧已修复，join 侧仍成立** | `BaseMediaCodecSynchronous.kt:44`、`:56` 加了 `eosDrainTimeoutMs`（3 s）；但 `BaseMediaCodec.kt:172`、`:177` 的两次 `cancelAndJoin()` 在 `NonCancellable` 下仍无上界（属基类，`2026-09-02-audio-media-teardown-followup-fixes_cc.md` §10.2 已记录为有意选择） |
 | **M30** 异步输出行为变更未记录 | **已修复** | `CHANGELOG.md:468-469` 三条（空非 config 输出不再回调、带 payload 的 EOS 先 `onOutputData` 再 `onEndOfStream`、`onOutputFormatChanged` 现在真正触发）均已记录 |
 | **M31** 三个数据回调的锁契约 | **形态已变：已文档化，未结构性消除** | KDoc 已补，但 `OpusDecoder.kt:111-113` 仍在锁内调用调用方提供的 `endCallback`。**处置**：本轮只复核不裁决，结构性消除未列入 §5.3/§5.4 的排期 |
-| **L11** `mime!!` | **已消除** | `AacFilePlayer.kt:91-92` 改用 `requireNotNull` |
-| **L12** `stop()` 体内阻塞调用无 dispatcher | **已消除** | `AacFilePlayer.kt:213`、`OpusFilePlayer.kt:164` 都加了 `withContext(Dispatchers.IO)` |
+| **L11** `mime!!` | **已消除** | AAC 输入由 `AacSampleSource` 在打开时校验并以非空 `mime` / `mediaFormat` 暴露，播放器不再持有可空 mime |
+| **L12** `stop()` 体内阻塞调用无 dispatcher | **已消除** | AAC/OPUS 的公开 `stop()` 均切到 `Dispatchers.IO` 后进入统一终态 |
 | **L18** `pause()` 内 `flush()` 紧随 `pause()` | **仍成立** | `AudioTrackPlayer.kt:251-256` 的 `audioTrack.pause()` 后立刻 `audioTrack.flush()`；`stop()`（`:274`）仍先调 `pause()`，消费者此时未必已 join。**处置**：沿用 `2026-09-02` 的既有结论，本轮无新裁决，未列入 §5.3/§5.4 的排期 |
 | **L26** `write()` 失败与「什么都没写」不可区分 | **仍成立且本切片放大** | `AudioTrackPlayer.kt:209-212` 新增 `getOrElse { ... 0 }`，异常路径也返回 0，见 §3 L-4 |
-| **L28** 补偿用裸 `runCatching` / output index 不归还 | **部分修复，异步异常语义仍需调整** | `BaseMediaCodecSynchronous.kt:153`、`BaseMediaCodecAsynchronous.kt:72` 改用 `runCatchingPreservingCancellation`；`BaseMediaCodecSynchronous.kt:191-193`、`BaseMediaCodecAsynchronous.kt:110-112` 的 `finally` 保证归还 index。协程 worker 中保留取消是对的，但异步 MediaCodec Handler 回调不是协程，helper 会把 `CancellationException` 逃到 Looper，见 §3 M-5 |
-| **H8** codec 失败绕过终态 | **仅文件播放器闭环，流播放器仍成立** | `AacFilePlayer.kt:139-143` 有 `notifyCodecFailure` 覆写；`AacDecoder` 无覆写，`AacStreamPlayer.kt:66-91` 与 `OpusStreamPlayer.kt:77-97` 均未接错误回调，见 §3 M-3 |
+| **L28** 补偿用裸 `runCatching` / output index 不归还 | **已修复** | 同步 worker 保留真正的协程取消；异步 Handler callback 将业务抛出的 `CancellationException` 作为 codec failure 处理，不再逃到 Looper。input/output index 的补偿仍在 `finally`，新增回归覆盖 input/output/format/error/owner hook 与同步 EOS 取消 |
+| **H8** codec 失败绕过终态 | **已修复** | `AacDecoder`、`OpusDecoder` 与 `AudioPlayer` 均要求失败回调；两个 stream player 用单次终态 CAS 进入共享 teardown，完整释放 decoder、worker 与 AudioTrack 后只向 owner 上报一次 |
 
 ### 2.2 `2026-10-15-audio-netty-teardown-review-package_cc.md` 覆盖的 30 个文件
 
@@ -135,12 +139,7 @@ audio/src/main/kotlin/com/leovp/audio/aac/AacEncoder.kt                         
 /** Changed under the codec lock after every asynchronous flush attempt. */
 private val callbackGeneration = AtomicLong(0)
 
-/**
- * Asynchronous codecs stop requesting buffers after a flush. MediaCodec.flush() requires
- * start() to resume codec operations. Change the callback generation after flush() returns and
- * before start(): a callback that entered before or during flush keeps the old generation and
- * cannot use an invalidated index after this lock is released.
- */
+/** Historical incomplete proposal; see section 7.5 before implementation. */
 override fun flush() {
     var transitionedToFailed = false
     var failure: Exception? = null
@@ -204,8 +203,9 @@ override fun onOutputBufferAvailable(
 同款入口快照与锁内复核必须用于 input、output、format-changed 和 error 回调，避免
 旧 format/error 回调在 flush 后污染新会话。世代只在锁内、`codec.flush()` 尝试结束后且
 `codec.start()` 之前递增（flush 抛出时也由 `finally` 递增），回调只读取；
-`AtomicLong` 用来建立锁外快照的可见性，不取代 `codecOperationLock`。MediaCodec 尚未分发的旧
-callback 由 `flush()` 作废，世代栅栏专门处理已进入 Kotlin 回调但尚未获锁的窗口。
+`AtomicLong` 用来建立锁外快照的可见性，不取代 `codecOperationLock`。需要区分 index 失效与 callback
+消失：Android 明确说明 flush 后仍可能收到未处理的旧 output callback，不能假定其消息全部被清除。
+这段计数器代码只隔离入口快照发生在 generation 递增之前的回调，不能覆盖全部旧回调，见 §7.5。
 
 不能在 `codec.flush()` **之前**递增世代：回调可能在「递增之后、flush 返回之前」进入，快照到新值后
 等待同一把锁；flush 返回并释放锁后它会错误地通过世代复核，继续使用刚失效的 index。若
@@ -225,11 +225,10 @@ callback 由 `flush()` 作废，世代栅栏专门处理已进入 Kotlin 回调�
 invalidated index」）**在成功路径上不成立**；文档此前只为失败分支补了 `transitionToCodecFailure()`，
 成功分支没有对应补偿。
 
-要表达的真实条件是「**凡在 flush 持锁期间进入的回调都必须拒绝**」，而这不是一个在锁内递增的计数器能
-表达的：计数器的最终值在锁释放前就已可见。可行形态是改用一个在 `codec.flush()` **之前**置位、并在
-**锁释放之后**才清除的 `flushInProgress` 标记，回调在入口快照该标记，置位即无条件拒绝；代价是落在清除
-窗口里的一个**合法**新回调也会被丢弃（input 少一个槽，或 output 少归还一次 index）。该取舍与对应回归
-用例尚未论证，**本条修法在落地前需要先确定这一点**，不能按现有代码块照抄。
+需要拒绝的是**携带已被 flush 失效 index 的旧回调**，不能把“flush 持锁期间进入”直接等同于“旧回调”：
+`codec.start()` 后合法新回调也可能在锁释放前到达。一个在 `codec.flush()` 前置位、锁释放后清除的
+`flushInProgress` 标记不能独立解决问题；它既可能丢弃合法新 buffer 而失去归还机会，也无法识别清除
+标记后才进入的旧回调。该思路不作为可实施修法，最终协议和确定性回归要求见 §7.5。
 
 可行性已核：`codecOperationLock` 是 `ReentrantLock`（`BaseMediaCodec.kt:62`）；`codec`、`isRunning`、
 `withCodecOperationLock` 均可供子类使用；M-3 将补受保护的两阶段失败 helper。这里不调 `super.flush()`，因为基类会
@@ -1660,3 +1659,151 @@ private fun getWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
 - `00-documents/2026-09-02-audio-media-teardown-followup-fixes_cc.md`：audio 播放器与 MediaCodec 基类；条目跨 H1–H12 / M1–M39 / L1–L31（含 screencapture、floatview 等非本切片范围），本文 §2.1 复核其 audio 相关条目。
 - `00-documents/2026-10-16-basenetty-client-release-terminal-state_cc.md`：C5 的方案提案（§4/§5）。
 - `00-documents/2026-09-20-netty-shutdown-nonblocking_cc.md`：basenetty 非阻塞关闭的原始改动说明。
+
+---
+
+## 7. 2026-10-29 实施与反复复核（Codex 本机）
+
+§5.4 中除明确裁决“不实施”的 C6 外，当前分支可复现且方案明确的 H-1 的 restart 部分、M-1、M-3～M-10、A1～A3、
+B4-b、C5、L-8，以及补充复核发现的 Netty Future 注册竞态、Wi-Fi callback 注销句柄丢失和 Demo
+WebSocket 创建/销毁竞态，均已实施。H-1 在 §7.5 复核后使用 §7.6 的新会话方案修复，旧版 generation
+实现及当时的自动化结果不能证明最终隔离协议。详细代码级记录见
+`00-documents/2026-10-29-branch-review-remediation-implementation.md`。
+
+关键落点：
+
+| 范围 | 实施结果 |
+|---|---|
+| MediaCodec | `FAILED` 一次性终态；异步 reset 替换 native 会话，回调绑定注册时代号；失败上报锁内核对代号并转换状态；EOS 输入门闩；四类 callback 与同步 EOS 异常边界 |
+| stream player | decoder 错误通过 `AudioPlayer.onFailure` 上报；终态 CAS 区分失败/显式停止；并发停止共享 `StreamPlayerStopper` 单 owner 屏障；删除 stopper 之前的预置 `stopped` |
+| OPUS 文件 | 8 KiB 分配前上限；尾随 start code 自然结束；中间空帧仍失败；播放器决策测试 |
+| AAC 文件 | codec 改为私有组合；删除继承得到的局部 release 入口；AudioTrack 非正写入进入失败终态 |
+| MicRecorder | 单会话 gate；重复/停止后 start 抛异常；stop leader 不可取消；构造回滚完成屏障不早放行 |
+| Demo 录音 | mutex + generation；文件/AudioRecord/encoder 移到 IO；旧权限/按钮/失败回调不能覆盖新会话；写文件异常不再吞掉 |
+| basenetty | 未连接 client 也释放；并发单 owner；handler `Throwable` 后继续清理；超时/失败仍进入稳定终态 |
+| Android 网络 | framework 注销成功后才移除 callback 映射；失败保留已 detach 句柄供重试 |
+| Demo WebSocket | 保存并等待连接 Job；发布与销毁互斥；server 启动失败先 stop 再清字段 |
+
+### 7.1 TDD 证据
+
+- Netty future 竞态测试在旧实现超时，修复后二次检查通过。
+- Wi-Fi 注销失败重试测试在旧实现因 map 已删除失败，修复后通过。
+- 未连接 client、并发 release、client/server handler `Error` 四条用例在旧实现失败，修复后通过。
+- 异步 flush/restart、失败终态单次、EOS 后输入、format callback 异常四条用例在旧实现失败，修复后通过。
+- OPUS 超限 payload、播放器三类空 payload 决策，AAC 0/负写入，MicRecorder gate，Demo 录音意图与迟到
+  同格式失败 token 均先出现编译失败或断言失败，再由最小实现转绿。
+- `StreamPlayerStopper` 并发调用测试在旧实现会执行两次 detach/AudioTrack release；终态 gate 测试在
+  helper 尚不存在时编译失败。加入单 owner 屏障与失败/显式停止互斥后，两组测试转绿。
+
+### 7.2 验证结果
+
+- 受影响模块 `audio`、`basenetty`、`lib-common-android`、`demo` 的 `ktlintCheck` 与 `detekt` 使用
+  `--rerun-tasks --max-workers=1` 通过。
+- `:audio:testDebugUnitTest :basenetty:testDebugUnitTest :lib-common-android:testDebugUnitTest
+  :demo:testDevDebugUnitTest :demo:assembleDevDebug --rerun-tasks --max-workers=1` 通过，649 个任务实际执行。
+- 新增迟到失败 token 用例的定向 Demo 测试通过，511 个任务实际执行。
+- 全仓 `./gradlew staticCheck --rerun-tasks --max-workers=1` 通过，耗时 3 分 37 秒，1425 个任务
+  实际执行。该聚合任务包含全仓质量检查、debug 单测/lint 和应用仪器测试 APK 构建，但没有在设备上
+  执行 instrumentation，因此不代表真机测试。
+- 最终复核又收紧同格式旧 token 的启动异常/权限拒绝路径后，重新执行 Demo 单测、ktlint、detekt 和
+  `assembleDevDebug`，50 秒内 620 个任务实际执行并通过；因此该最后修改也有当前代码证据覆盖。
+- 2026-11-03 补齐 stream decoder 失败上报和并发终止屏障后，先通过禁用 once CAS 的临时变异确认
+  `concurrent callers share one teardown` 会失败，恢复实现后定向测试通过。随后执行
+  `:audio:testDebugUnitTest :audio:ktlintCheck :audio:detekt :basenetty:testDebugUnitTest
+  :basenetty:ktlintCheck :basenetty:detekt :lib-common-android:testDebugUnitTest
+  :lib-common-android:ktlintCheck :lib-common-android:detekt :demo:testDevDebugUnitTest
+  :demo:ktlintCheck :demo:detekt :demo:assembleDevDebug --rerun-tasks`，1 分 31 秒内 683 个任务实际执行
+  并通过。首次运行暴露 `AudioActivity.onCreate()` 达到 Detekt `LongMethod` 上限，压缩等价失败回调写法后
+  重跑通过。
+
+### 7.3 仍需真机验证
+
+本轮未执行真机测试。MediaCodec/AudioRecord/AudioTrack 与 socket 生命周期仍须按 §5.2 和实施记录 §7
+覆盖至少一台 API 21～26 设备和一台较新设备；JVM/Mock/Robolectric 结果不得替代真实声音、恢复能力、
+资源释放和长时间运行验证。
+
+### 7.4 2026-11-03～04 播放器层证据复核
+
+再次按 M-5～M-7 的原始验收条件反查后，确认此前的测试证据不完整：AAC 只有非正写入纯函数测试，
+OPUS 只有 payload 决策测试，不能证明真实 `finishPlayback()` 的资源顺序、阻塞写入唤醒、队列溢出终态
+和一次性回调。现已增加模块内部 source/decoder/audio-output 接缝及播放器层 fake 回归，不改变公开 API。
+
+本轮同时修复三个源码问题：
+
+1. `BaseMediaCodec.start()` 遇到 `Error` 时原先跳过 codec stop/release；现统一回滚任意 `Throwable` 后
+   重新抛出；
+2. `AacFilePlayer.playAac()` / `OpusFilePlayer.playOpus()` 初始化遇到 `Error` 时原先跳过终态清理；现与
+   `Exception` 使用相同的 `NonCancellable` 回滚；
+3. 两个播放器的 `AudioTrack.stop()` 失败原先会短路 decoder/worker release；现逐步尝试全部清理并以
+   suppressed 聚合后续失败。
+
+新增回归覆盖异步 input/output/format/error/owner hook 的 `CancellationException`、同步 EOS 取消、
+MediaCodec 启动 `Error`、AAC/OPUS 初始化 `Error`、stop 失败继续释放、AAC 一次性自然终态、OPUS
+尾随 start code、阻塞写入和 decoded queue overflow。详细代码级说明见实施记录 §8。
+
+最终验证结果：audio 单测/ktlint/detekt 110 个任务通过；basenetty、lib-common-android、Demo 的单测、
+ktlint、detekt 与 `assembleDevDebug` 662 个任务通过；全仓 `staticCheck --rerun-tasks --max-workers=1`
+1425 个任务通过。三组均为 2026-11-04 当前代码的重新执行结果。未运行设备 instrumentation，真机边界
+仍保持 §7.3 的未验证状态。
+
+### 7.5 2026-11-04 整合远端后的 H-1 裁决
+
+远端提交 `938347e19` 只修改本文。整合时保留了本地 §7 实施和测试记录，§2.1 中 L11/L12/L28/H8 使用
+当前实现状态，M31/L18 保留远端新增的处置说明。原文头部快照、行号同步与 §5 未实施列表均为历史记录。
+
+**H-1 重新打开，严重度保持 HIGH。** 当前 `BaseMediaCodecAsynchronous.flush()` 在同一把操作锁内执行
+`codec.flush() -> generation++ -> codec.start()`；callback 仅在入口读取当时的 generation。旧 output
+callback 如果在递增后才进入，就会读取新 generation 并通过锁内比较；即使把计数器推迟到锁释放前的
+最后一条语句，也不能区分锁释放后才被分发的旧回调与合法新回调。
+
+依据：[Android 13 AOSP `MediaCodec.flush()` 契约与实现](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android13-release/media/java/android/media/MediaCodec.java#2361)
+明确要求丢弃 flush 后仍待处理的旧 output callback index；Java `flush()` 清理 tracked buffers 后调用
+`native_flush()`，并未以 Java 消息队列屏障保证应用 callback 入口已全部执行。本结论是公开契约和当前
+代码的静态推导，尚未证明特定设备必然出现该时序。
+
+**不采用 `flushInProgress` 入口快照后无条件丢弃的修法。** 新 input/output 回调同样可能落入标记窗口；
+丢弃合法 callback 会使仍属于客户端的 buffer 没有提交或归还机会，有 codec 停滞风险。标记清除后的
+迟到旧回调也没有被识别。该协议不能同时证明“旧 index 不触碰”和“合法新 buffer 不遗失”。
+
+最终实现需要先设计受控的 callback 分发队列与 flush/restart 屏障，或在 flush 时替换整个 codec 会话并
+按会话身份隔离旧回调。两者影响线程/codec 所有权与 API 21 创建路径，属于架构选择，本文尚未批准
+其一；本轮仅整合和审查文档，不据此修改源码。
+
+验收必须直接驱动旧、新回调交错，而非只检查 `flush()` / `start()` 的调用次数：
+
+1. 在 generation 已递增而 restart 尚未返回时投递旧 output，验证不读取、不归还旧 index；
+2. 在 flush/restart 返回后才分发旧 output，验证仍被隔离；
+3. 在 restart 期间及之后投递合法新 input/output，验证正常处理并提交/归还，不能误丢；
+4. 两次连续 flush、flush/restart 失败、并发 release 下保持相同隔离和一次性失败通知。
+
+当前 `flush restarts an asynchronous codec` 测试仅验证一次 flush、两次 start，不能证明上述条件；没有
+找到其它覆盖 generation 交错或 flush/restart 失败的现存回归。§7.2/§7.4 的通过记录维持原意，但不作为
+H-1 完整关闭证据。源码未随这次文档整合改变，因此本轮只检查合并结果、路径、格式和 `git diff --check`。
+
+### 7.6 H-1 最终修复：替换底层会话
+
+用户授权修复后，采用 §7.5 的会话替换方向。`BaseMediaCodecAsynchronous.flush()` 在 codec 操作锁内
+递增代号、摘除旧实例、尝试旧 `flush()`/`release()`，再用 `createMediaFormat()` 和 `createCodec()`
+重建并启动新实例；旧回调绑定旧代号，而非在进入时读取全局新值，因此无论何时分发都不能处理旧 index。
+合法新回调绑定新代号，start 期间到达也能在取得锁后正常处理。此方案没有 `flushInProgress` 丢 buffer
+窗口，不依赖 Android 删除已排队的 callback。
+
+基类关联清理一并补齐：native flush 的 `CancellationException` 不再短路 release/子类 hook，而在全部
+尝试后传播；启动回滚的清理失败附加到原始启动异常，保留最初根因。两条回归均先在旧实现失败。
+
+关联复核还修复 callback 失败上报与 reset 的竞争：`reportSessionFailure()` 在锁内同时核对会话代号并
+转换 `FAILED`，锁外通知 owner，避免旧异常终止新会话。基类新增 nullable active-codec backing field
+及 `detachCodec()`；退休实例已移交给 reset，不会在最终 teardown 再释放一次。
+
+回归覆盖旧四类 callback 晚到、新 callback 在 replacement start 期间到达、连续两次重置、旧 codec
+flush/release 双失败聚合、replacement 创建/启动失败及并发 release。测试不再仅核对调用次数，而是
+直接断言旧 index 不读取/归还、新 index 正常处理、每个 codec 只释放一次和 owner 锁外通知。
+
+行为迁移：异步 flush 现在包含 codec 重建成本，会重新产生 codec config/format；覆写 `createCodec()`
+的子类必须每次创建新实例，`setFormatOptions()` 须重建完整输入配置/CSD。细节见该 API KDoc、CHANGELOG
+和实施记录 §9。API 21 不需要增加高版本 callback Handler API。实际重置延迟与声音恢复仍需真机验证。
+
+最终组合验证（2026-11-04）：`:audio:testDebugUnitTest :audio:ktlintCheck :audio:detekt
+:demo:assembleDevDebug staticCheck --rerun-tasks --max-workers=1 --no-daemon` 通过，4 分 45 秒内 1461 个
+任务实际执行；audio 共 84 条单测通过，其中异步基类 40 条。H-1 的源码与 JVM 回归闭环，当前修复范围
+内未发现剩余明确问题；真机功能和性能仍未验证。完整实现、迁移和验证证据见实施记录 §9。

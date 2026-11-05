@@ -293,7 +293,6 @@ object NetworkUtil {
             val networkCallback = WifiSignalNetworkCallback(ctx, callback)
             synchronized(wifiNetworkCallbackLock) {
                 wifiNetworkCallbacks[callback]?.let { previousCallback ->
-                    wifiNetworkCallbacks.remove(callback)
                     previousCallback.detachListener()
                     if (!unregisterWifiNetworkCallback(
                             connectivityManager,
@@ -303,6 +302,7 @@ object NetworkUtil {
                     ) {
                         return false
                     }
+                    wifiNetworkCallbacks.remove(callback)
                 }
                 try {
                     connectivityManager.registerNetworkCallback(request, networkCallback)
@@ -321,9 +321,10 @@ object NetworkUtil {
      * Stops the listener registered by [getWifiNetworkStatsAboveAndroidS]. The same [callback]
      * instance used for registration must be supplied.
      * @return `true` when the callback is absent, successfully removed, or unnecessary below
-     * Android 12; `false` when framework unregistration fails. The business listener is detached
-     * before framework teardown, so events that begin afterwards are ignored. One invocation that
-     * already read the listener may still finish concurrently.
+     * Android 12; `false` when framework unregistration fails. On failure the detached framework
+     * callback remains tracked so a later call can retry the framework teardown. Events that begin
+     * after detachment are ignored, while one invocation that already read the listener may still
+     * finish concurrently.
      */
     fun unregisterWifiNetworkStatsAboveAndroidS(
         ctx: Context,
@@ -331,13 +332,15 @@ object NetworkUtil {
     ): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         synchronized(wifiNetworkCallbackLock) {
-            val networkCallback = wifiNetworkCallbacks.remove(callback) ?: return true
+            val networkCallback = wifiNetworkCallbacks[callback] ?: return true
             networkCallback.detachListener()
-            return unregisterWifiNetworkCallback(
+            val unregistered = unregisterWifiNetworkCallback(
                 ctx.connectivityManager,
                 networkCallback,
                 "current"
             )
+            if (unregistered) wifiNetworkCallbacks.remove(callback)
+            return unregistered
         }
     }
 

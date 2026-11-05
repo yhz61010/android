@@ -1,15 +1,15 @@
 package com.leovp.audio.aac
 
-import com.leovp.audio.base.runCatchingPreservingCancellation
-
 import android.content.Context
 import android.media.AudioTrack
 import android.os.SystemClock
 import com.leovp.audio.AudioTrackPlayer
 import com.leovp.audio.BuildConfig
 import com.leovp.audio.base.StreamPlayerStopper
+import com.leovp.audio.base.StreamPlayerTerminalGate
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
+import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,17 +17,32 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
+ * One-shot AAC stream player.
+ *
+ * [onFailure] runs once, after complete decoder and AudioTrack teardown. Upgrading callers must
+ * provide this callback and rebuild because the constructor JVM descriptor changed.
+ *
+ * @param onFailure Terminal decoder failure callback. It must return promptly.
+ *
  * Author: Michael Leo
  * Date: 20-8-20 下午5:18
  */
-class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderInfo) {
+class AacStreamPlayer(
+    ctx: Context,
+    private val audioDecoderInfo: AudioDecoderInfo,
+    private val onFailure: (Throwable) -> Unit,
+) {
     companion object {
         private const val TAG = "AacStreamPlayer"
         private const val AUDIO_DATA_QUEUE_CAPACITY = 10
@@ -40,6 +55,14 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
     private var audioLatencyThresholdInMs = AUDIO_INIT_LATENCY_IN_MS
 
     private val ioScope = CoroutineScope(Dispatchers.IO + Job())
+    private val terminalExceptionHandler = CoroutineExceptionHandler { _, error ->
+        LogContext.log.e(TAG, "Unhandled AAC stream terminal failure", error)
+    }
+    private val terminalScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO + CoroutineName("aac-stream-player-terminal") +
+            terminalExceptionHandler
+    )
+    private val terminalGate = StreamPlayerTerminalGate()
 
     /** Private monitor serializing init/decode/flush/stop. Never lock on `this`. */
     private val lock = Any()
@@ -87,8 +110,29 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
                         }
                     }
                 }
-            }
+            },
+            errorCallback = ::requestDecoderFailure
         ).apply { start() }
+    }
+
+    private fun requestDecoderFailure(error: Throwable) {
+        if (!terminalGate.claimFailure()) return
+        LogContext.log.e(TAG, "Decoder entered a terminal failure", error)
+        terminalScope.launch {
+            try {
+                stopPlayingAndJoin()
+            } catch (cleanupFailure: Throwable) {
+                if (cleanupFailure !== error) error.addSuppressed(cleanupFailure)
+                LogContext.log.e(TAG, "Decoder failure cleanup failed", cleanupFailure)
+            }
+            try {
+                onFailure(error)
+            } catch (callbackFailure: Exception) {
+                LogContext.log.e(TAG, "Decoder failure callback failed", callbackFailure)
+            } finally {
+                terminalScope.cancel()
+            }
+        }
     }
 
     fun startPlayingStream(audioData: ByteArray, dropFrameCallback: () -> Unit) {
@@ -246,8 +290,16 @@ class AacStreamPlayer(ctx: Context, private val audioDecoderInfo: AudioDecoderIn
      * waiting for the decoder worker to exit.
      */
     suspend fun stopPlayingAndJoin() {
-        stopped.set(true)
-        streamPlayerStopper.stopAndJoin { it.releaseAndJoin() }
+        var ownsTerminalScope = false
+        try {
+            streamPlayerStopper.stopAndJoin(
+                onLeaderClaimed = {
+                    ownsTerminalScope = terminalGate.claimExplicitStop()
+                }
+            ) { it.releaseAndJoin() }
+        } finally {
+            if (ownsTerminalScope) terminalScope.cancel()
+        }
     }
 
     private fun detachDecoderForStop(): AacDecoder? = synchronized(lock) {

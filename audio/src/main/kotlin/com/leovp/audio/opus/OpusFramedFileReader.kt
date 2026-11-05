@@ -8,6 +8,7 @@ internal class OpusFilePayload(val data: ByteArray, val nextStartCodePosition: L
 internal class OpusFramedFileReader(private val file: RandomAccessFile, startCode: ByteArray) {
     companion object {
         private const val SCAN_BUFFER_SIZE = 8 * 1024
+        private const val MAX_PAYLOAD_SIZE = 8 * 1024
     }
 
     private val startCode = startCode.copyOf()
@@ -27,6 +28,9 @@ internal class OpusFramedFileReader(private val file: RandomAccessFile, startCod
         val payloadSize = payloadEnd - payloadStart
         require(payloadSize in 0..Int.MAX_VALUE.toLong()) {
             "Invalid OPUS payload size: $payloadSize"
+        }
+        require(payloadSize <= MAX_PAYLOAD_SIZE) {
+            "OPUS payload exceeds codec input capacity: $payloadSize"
         }
 
         return OpusFilePayload(

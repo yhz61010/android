@@ -16,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 
@@ -190,6 +191,34 @@ class BaseMediaCodecSynchronousTest {
         assertEquals(0, subject.endCount.get())
     }
 
+    @Test
+    fun `CancellationException from active EOS callback becomes a codec failure`() = runTest {
+        val failure = CountDownLatch(1)
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        every { mediaCodec.dequeueInputBuffer(0) } returns 0
+        every { mediaCodec.getInputBuffer(0) } returns ByteBuffer.allocate(16)
+        every { mediaCodec.dequeueOutputBuffer(any(), any()) } answers {
+            firstArg<MediaCodec.BufferInfo>().flags = MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            1
+        }
+        every { mediaCodec.getOutputBuffer(1) } returns ByteBuffer.allocate(0)
+        val callbackFailure = CancellationException("EOS callback cancelled itself")
+        val subject = FailureCodec(
+            mediaCodec,
+            failure,
+            inputPtsUs = -1,
+            endFailure = callbackFailure
+        )
+
+        subject.start()
+        assertTrue(failure.await(2, TimeUnit.SECONDS), "EOS callback failure was not reported")
+        subject.releaseAndJoin()
+
+        assertEquals(1, subject.endCount.get())
+        assertEquals(1, subject.failureCount.get())
+        assertEquals(callbackFailure, subject.lastFailure)
+    }
+
     private class BlockingCodec(
         private val mediaCodec: MediaCodec,
         private val enteredInput: CountDownLatch,
@@ -267,6 +296,7 @@ class BaseMediaCodecSynchronousTest {
         private val mediaCodec: MediaCodec,
         private val failure: CountDownLatch,
         private val inputPtsUs: Long = 0,
+        private val endFailure: Exception? = null,
     ) : BaseMediaCodecSynchronous(
         codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
         sampleRate = 8_000,
@@ -274,6 +304,8 @@ class BaseMediaCodecSynchronousTest {
     ) {
         val failureCount = AtomicInteger(0)
         val endCount = AtomicInteger(0)
+        var lastFailure: Throwable? = null
+            private set
 
         override val eosDrainTimeoutMs: Long = 50
 
@@ -297,12 +329,14 @@ class BaseMediaCodecSynchronousTest {
         override fun computePresentationTimeUs(): Long = inputPtsUs
 
         override fun notifyCodecFailure(error: Throwable) {
+            lastFailure = error
             failureCount.incrementAndGet()
             failure.countDown()
         }
 
         override fun onEndOfStream() {
             endCount.incrementAndGet()
+            endFailure?.let { throw it }
         }
     }
 }

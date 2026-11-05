@@ -57,6 +57,39 @@
 
 ### 变更 (Changed)
 
+- **audio / MediaCodec 失败终态与文件播放边界收敛**：`BaseMediaCodec` 新增一次性的
+  `FAILED` 终态，异步 codec 的 `flush()` 会在同一操作锁内使旧回调代号失效、摘除并释放旧 codec，
+  再按原始音频配置创建并启动新的 codec；回调绑定注册时的会话代号，旧回调即使迟到也不会触碰失效
+  buffer。重置增加一次 codec 重建成本，并会重新产生配置/格式事件；覆写 `createCodec()` 的子类必须
+  每次创建新 native 实例，`setFormatOptions()` 必须可重建原始 CSD 等配置（具体迁移见 `flush()` KDoc）。
+  输入 EOS 后不再提交普通数据，四类异步回调及同步 EOS 回调的普通异常会进入统一
+  失败通道。`notifyCodecFailure()` 收窄为 `protected`，外部只能由 codec 子类覆写。
+  `AacFilePlayer` 不再继承 `BaseMediaCodecSynchronous`，codec session 改为播放器私有组合对象；下游不能
+  再通过继承得到的 `releaseAndJoin()` 绕过文件、AudioTrack 与回调的整体终态，须统一调用 `stop()`。
+  `AacDecoder`、`OpusDecoder` 与 `AudioPlayer` 构造器新增必填失败回调；升级后的调用方必须显式处理
+  decoder 失败，且 JVM descriptor 已改变。stream player 会在完整释放 decoder、worker 与 AudioTrack
+  后回调一次；显式停止与失败并发时共享同一个 teardown 屏障，不会重复释放。以上均为二进制不兼容
+  变更，升级后须重新编译。AAC 的
+  `AudioTrack.write()` 返回 0 或负值现在进入
+  失败终态，不再静默当作自然播放结束。OPUS 文件只把最后一个 start code 后的空 payload 视为自然结束，
+  中间空帧仍报错；超过 8 KiB codec 输入上限的 payload 在分配前拒绝。MediaCodec 或 AAC/OPUS 文件
+  播放器初始化抛出 `Error` 时也会先完整回滚已经创建的 codec、source 和 AudioTrack 再重新抛出；
+  teardown 的 stop、worker join 与 decoder/output release 会全部尝试，首个失败外传、其余作为
+  suppressed 保留，不再因 `AudioTrack.stop()` 失败而跳过后续释放。
+  基类 native 清理抛出的 `CancellationException` 延后到 flush、release、子类 hook 全部尝试后再传播；
+  启动回滚的清理异常附加到原始启动失败，不再将原始失败覆盖。
+- **`MicRecorder` 改为严格单会话**：同一实例只允许一次 `startRecord()`；重复启动或停止后再启动会抛
+  `IllegalStateException`，调用方开始新录音必须创建新实例。启动、record Job 发布和 stop 所有权由同一
+  生命周期门闩串行化；赢得 stop 的调用者即使被取消，也会在 `NonCancellable` 中完成 AudioRecord、
+  encoder 和音效释放。构造失败及启动失败的异步回滚会在真正释放完成后才放行等待者。
+- **basenetty teardown 失败也进入稳定终态**：客户端未调用 `connect()` 也可释放 EventLoopGroup；并发
+  `release()` 只有一个 owner，超时或 handler 抛出任意 `Throwable` 后仍完成底层关闭并把状态迁移到
+  `UNINITIALIZED`，随后传播原始失败。服务端对 handler 的 `Throwable` 采用相同的“继续清理、聚合
+  suppressed、最后传播”协议。Netty future 在“首次检查未完成、listener 注册时已经完成”的窗口增加
+  注册后二次检查和单次恢复门闩，避免终止 executor 拒绝 listener 后永久挂起。
+- **Wi-Fi 网络回调注销失败可重试**：`NetworkUtil` 仅在 framework 注销成功后删除内部 callback 映射；
+  注销异常仍返回 `false`，但保留已与业务 listener 脱钩的 callback 句柄，后续调用可再次注销，避免
+  framework 持有全局 callback 而本地已失去句柄。
 - **`ScreenRecordMediaCodecStrategy.onStop()` / `onRelease()` 现在会抛出清理失败**：两者改为尝试每一个释放步骤，
   然后抛出首个失败、其余以 `addSuppressed` 附加，而不再让第一个异常中断后续释放。抛出应读作「已
   尽可能释放，并附上出错原因」，而非「什么都没释放」；已移交释放的资源不会在重复调用时 double

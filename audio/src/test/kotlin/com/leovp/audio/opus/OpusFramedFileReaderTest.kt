@@ -113,6 +113,25 @@ class OpusFramedFileReaderTest {
         }
     }
 
+    @Test
+    fun `payload larger than codec input capacity is rejected before allocation`() {
+        val startCode = "|leo|".encodeToByteArray()
+        val file = File.createTempFile("opus-reader-oversized", ".bin")
+        try {
+            RandomAccessFile(file, "rw").use {
+                it.write(startCode)
+                it.setLength(startCode.size + 8_193L)
+                val reader = OpusFramedFileReader(it, startCode)
+
+                val error = assertFailsWith<IllegalArgumentException> { reader.readPayload(0) }
+
+                assertEquals("OPUS payload exceeds codec input capacity: 8193", error.message)
+            }
+        } finally {
+            file.delete()
+        }
+    }
+
     private fun withTemporaryFile(data: ByteArray, block: (RandomAccessFile) -> Unit) {
         val file = File.createTempFile("opus-reader", ".bin")
         try {

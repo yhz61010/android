@@ -14,12 +14,14 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 
@@ -251,6 +253,385 @@ class BaseMediaCodecAsynchronousTest {
     }
 
     @Test
+    fun `flush replaces the codec and ignores late callbacks from the retired session`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val replacement = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        val replacementCallback = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { replacement.setCallback(capture(replacementCallback)) } just Runs
+        val subject = TestCodec(mediaCodec, replacementCodec = replacement)
+
+        subject.attachCallback()
+        subject.flush()
+
+        verify(exactly = 1) { mediaCodec.flush() }
+        verify(exactly = 1) { mediaCodec.release() }
+        verify(exactly = 1) { replacement.start() }
+        val replacementFormat = subject.currentFormat()
+        val info = MediaCodec.BufferInfo()
+        callbackSlot.captured.onOutputBufferAvailable(mediaCodec, 9, info)
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 11)
+        callbackSlot.captured.onError(mediaCodec, mockk(relaxed = true))
+        callbackSlot.captured.onOutputFormatChanged(mediaCodec, mockk(relaxed = true))
+        verify(exactly = 0) { mediaCodec.getOutputBuffer(any()) }
+        verify(exactly = 0) { mediaCodec.releaseOutputBuffer(any(), any<Boolean>()) }
+        verify(exactly = 0) { mediaCodec.getInputBuffer(any()) }
+        assertEquals(0, subject.failureCount)
+        assertSame(replacementFormat, subject.currentFormat())
+
+        replacementCallback.captured.onOutputBufferAvailable(replacement, 10, info)
+        replacementCallback.captured.onInputBufferAvailable(replacement, 12)
+        verify(exactly = 1) { replacement.getOutputBuffer(10) }
+        verify(exactly = 1) { replacement.releaseOutputBuffer(10, false) }
+        verify(exactly = 1) { replacement.getInputBuffer(12) }
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { mediaCodec.release() }
+        verify(exactly = 1) { replacement.release() }
+    }
+
+    @Test
+    fun `codec failure is terminal and owner is notified once`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(11) } returns ByteBuffer.allocate(8)
+        val subject = TestCodec(mediaCodec)
+
+        subject.attachCallback()
+        callbackSlot.captured.onError(mediaCodec, mockk(relaxed = true))
+        callbackSlot.captured.onError(mediaCodec, mockk(relaxed = true))
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 11)
+
+        assertEquals(1, subject.failureCount)
+        verify(exactly = 0) { mediaCodec.getInputBuffer(11) }
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `new callbacks during reset start are processed while old callbacks are rejected`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val newCodec = mockk<MediaCodec>(relaxed = true)
+        val oldCallback = slot<MediaCodec.Callback>()
+        val newCallback = slot<MediaCodec.Callback>()
+        every { oldCodec.setCallback(capture(oldCallback)) } just Runs
+        every { newCodec.setCallback(capture(newCallback)) } just Runs
+        val subject = TestCodec(oldCodec, replacementCodec = newCodec)
+        subject.attachCallback()
+        every { newCodec.start() } answers {
+            oldCallback.captured.onOutputBufferAvailable(oldCodec, 1, MediaCodec.BufferInfo())
+            newCallback.captured.onOutputBufferAvailable(newCodec, 2, MediaCodec.BufferInfo())
+        }
+
+        subject.flush()
+
+        verify(exactly = 0) { oldCodec.getOutputBuffer(1) }
+        verify(exactly = 0) { oldCodec.releaseOutputBuffer(1, false) }
+        verify(exactly = 1) { newCodec.releaseOutputBuffer(2, false) }
+        assertEquals(0, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `consecutive resets retain only the latest callback session`() {
+        val codecs = List(3) { mockk<MediaCodec>(relaxed = true) }
+        val callbacks = List(3) { slot<MediaCodec.Callback>() }
+        codecs.forEachIndexed { index, codec ->
+            every { codec.setCallback(capture(callbacks[index])) } just Runs
+        }
+        val subject = TestCodec(codecs[0], replacementCodec = codecs[1])
+        subject.attachCallback()
+        subject.flush()
+        subject.nextCodec = codecs[2]
+        subject.flush()
+
+        codecs.forEachIndexed { index, codec ->
+            callbacks[index].captured.onOutputBufferAvailable(codec, index, MediaCodec.BufferInfo())
+        }
+
+        verify(exactly = 0) { codecs[0].getOutputBuffer(any()) }
+        verify(exactly = 0) { codecs[1].getOutputBuffer(any()) }
+        verify(exactly = 1) { codecs[2].releaseOutputBuffer(2, false) }
+        runBlocking { subject.releaseAndJoin() }
+        codecs.forEach { codec -> verify(exactly = 1) { codec.release() } }
+    }
+
+    @Test
+    fun `reset failure still retires old codec and reports only once outside the lock`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val failure = IllegalStateException("native flush failed")
+        every { oldCodec.flush() } throws failure
+        val subject = TestCodec(oldCodec, probeLockOnFailure = true)
+        subject.attachCallback()
+
+        subject.flush()
+
+        assertEquals(1, subject.failureCount)
+        assertSame(failure, subject.lastFailure)
+        assertTrue(subject.lockFreeDuringFailure == true)
+        assertFailsWith<IllegalStateException> { subject.flush() }
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { oldCodec.release() }
+    }
+
+    @Test
+    fun `replacement start failure is terminal and partial codec is released by owner`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val newCodec = mockk<MediaCodec>(relaxed = true)
+        every { newCodec.start() } throws IllegalStateException("start failed")
+        val subject = TestCodec(oldCodec, replacementCodec = newCodec)
+        subject.attachCallback()
+
+        subject.flush()
+
+        assertEquals(1, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { oldCodec.release() }
+        verify(exactly = 1) { newCodec.release() }
+    }
+
+    @Test
+    fun `replacement creation failure leaves no retired codec to release twice`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val subject = TestCodec(oldCodec)
+        subject.attachCallback()
+
+        subject.flush()
+
+        assertEquals(1, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { oldCodec.release() }
+        assertEquals(1, subject.releaseHookCount)
+    }
+
+    @Test
+    fun `release racing reset waits for ownership and prevents replacement start`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val newCodec = mockk<MediaCodec>(relaxed = true)
+        val enteredRetirement = CountDownLatch(1)
+        val continueRetirement = CountDownLatch(1)
+        val releaseThread = AtomicReference<Thread>()
+        val resetExecutor = Executors.newSingleThreadExecutor()
+        val releaseExecutor = Executors.newSingleThreadExecutor()
+        val subject = TestCodec(oldCodec, replacementCodec = newCodec)
+        subject.attachCallback()
+        every { oldCodec.release() } answers {
+            enteredRetirement.countDown()
+            check(continueRetirement.await(2, TimeUnit.SECONDS))
+        }
+
+        try {
+            val reset = resetExecutor.submit { subject.flush() }
+            assertTrue(enteredRetirement.await(2, TimeUnit.SECONDS))
+            val release = releaseExecutor.submit {
+                releaseThread.set(Thread.currentThread())
+                runBlocking { subject.releaseAndJoin() }
+            }
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
+            while (releaseThread.get()?.state != Thread.State.WAITING) {
+                check(System.nanoTime() < deadline) { "Release did not wait for codec lock" }
+                Thread.yield()
+            }
+            continueRetirement.countDown()
+            reset.get(2, TimeUnit.SECONDS)
+            release.get(2, TimeUnit.SECONDS)
+
+            verify(exactly = 0) { newCodec.start() }
+            verify(exactly = 1) { oldCodec.release() }
+            verify(exactly = 1) { newCodec.release() }
+            assertEquals(0, subject.failureCount)
+        } finally {
+            continueRetirement.countDown()
+            resetExecutor.shutdownNow()
+            releaseExecutor.shutdownNow()
+        }
+    }
+
+    @Test
+    fun `native retirement failures are aggregated without double release`() {
+        val oldCodec = mockk<MediaCodec>(relaxed = true)
+        val flushError = IllegalStateException("flush failed")
+        val releaseError = IllegalStateException("release failed")
+        every { oldCodec.flush() } throws flushError
+        every { oldCodec.release() } throws releaseError
+        val subject = TestCodec(oldCodec)
+        subject.attachCallback()
+
+        subject.flush()
+
+        assertSame(flushError, subject.lastFailure)
+        assertTrue(flushError.suppressed.contains(releaseError))
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { oldCodec.release() }
+    }
+
+    @Test
+    fun `native cleanup cancellation still releases codec and subclass state`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val cancellation = CancellationException("native flush cancelled")
+        every { mediaCodec.flush() } throws cancellation
+        val subject = TestCodec(mediaCodec)
+        subject.attachCallback()
+
+        assertFailsWith<CancellationException> {
+            runBlocking { subject.releaseAndJoin() }
+        }
+
+        verify(exactly = 1) { mediaCodec.release() }
+        assertEquals(1, subject.releaseHookCount)
+        runBlocking { subject.releaseAndJoin() }
+        verify(exactly = 1) { mediaCodec.release() }
+    }
+
+    @Test
+    fun `start failure remains primary when cleanup throws cancellation`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val failure = AssertionError("start failed")
+        val cancellation = CancellationException("native flush cancelled")
+        every { mediaCodec.flush() } throws cancellation
+        val subject = TestCodec(mediaCodec, startHookFailure = failure)
+
+        val thrown = assertFailsWith<AssertionError> { subject.attachCallback() }
+
+        assertSame(failure, thrown)
+        assertTrue(failure.suppressed.contains(cancellation))
+        verify(exactly = 1) { mediaCodec.release() }
+        assertEquals(1, subject.releaseHookCount)
+    }
+
+    @Test
+    fun `input callback after EOS does not queue another buffer`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(any()) } returns ByteBuffer.allocate(8)
+        val subject = TestCodec(mediaCodec, inputPtsUs = -1)
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 12)
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 13)
+
+        verify(exactly = 1) {
+            mediaCodec.queueInputBuffer(
+                12,
+                0,
+                0,
+                0,
+                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            )
+        }
+        verify(exactly = 0) { mediaCodec.queueInputBuffer(13, any(), any(), any(), any()) }
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `format callback failure is contained and terminates the session`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val subject = TestCodec(mediaCodec, failFormat = true)
+
+        subject.attachCallback()
+        callbackSlot.captured.onOutputFormatChanged(mediaCodec, mockk())
+
+        assertEquals(1, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `CancellationException from input callback becomes a codec failure`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(14) } returns ByteBuffer.allocate(8)
+        val failure = CancellationException("input callback cancelled itself")
+        val subject = TestCodec(mediaCodec, inputFailure = failure)
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 14)
+
+        assertSame(failure, subject.lastFailure)
+        assertEquals(1, subject.failureCount)
+        verify(exactly = 1) { mediaCodec.queueInputBuffer(14, 0, 0, 0, 0) }
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `CancellationException from output callback becomes a codec failure`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getOutputBuffer(15) } returns ByteBuffer.allocate(4)
+        val failure = CancellationException("output callback cancelled itself")
+        val subject = TestCodec(mediaCodec, outputFailure = failure)
+        val info = MediaCodec.BufferInfo().apply { size = 4 }
+
+        subject.attachCallback()
+        callbackSlot.captured.onOutputBufferAvailable(mediaCodec, 15, info)
+
+        assertSame(failure, subject.lastFailure)
+        assertEquals(1, subject.failureCount)
+        verify(exactly = 1) { mediaCodec.releaseOutputBuffer(15, false) }
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `CancellationException from format callback becomes a codec failure`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val failure = CancellationException("format callback cancelled itself")
+        val subject = TestCodec(mediaCodec, formatFailure = failure)
+
+        subject.attachCallback()
+        callbackSlot.captured.onOutputFormatChanged(mediaCodec, mockk())
+
+        assertSame(failure, subject.lastFailure)
+        assertEquals(1, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `CancellationException from error hook is suppressed on original codec error`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val codecFailure = mockk<MediaCodec.CodecException>(relaxed = true)
+        val hookFailure = CancellationException("error hook cancelled itself")
+        val subject = TestCodec(mediaCodec, errorHookFailure = hookFailure)
+
+        subject.attachCallback()
+        callbackSlot.captured.onError(mediaCodec, codecFailure)
+
+        assertSame(codecFailure, subject.lastFailure)
+        verify(exactly = 1) { codecFailure.addSuppressed(hookFailure) }
+        assertEquals(1, subject.failureCount)
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
+    fun `CancellationException from owner failure hook does not escape callback thread`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        every { mediaCodec.getInputBuffer(16) } returns ByteBuffer.allocate(8)
+        val codecFailure = IllegalStateException("input failed")
+        val ownerFailure = CancellationException("owner callback cancelled itself")
+        val subject = TestCodec(
+            mediaCodec,
+            inputFailure = codecFailure,
+            ownerFailure = ownerFailure
+        )
+
+        subject.attachCallback()
+        callbackSlot.captured.onInputBufferAvailable(mediaCodec, 16)
+
+        assertEquals(1, subject.failureCount)
+        assertTrue(codecFailure.suppressed.contains(ownerFailure))
+        runBlocking { subject.releaseAndJoin() }
+    }
+
+    @Test
     fun `concurrent start admits only one caller`() {
         val ready = CountDownLatch(2)
         val startTogether = CountDownLatch(1)
@@ -374,6 +755,22 @@ class BaseMediaCodecAsynchronousTest {
 
         assertEquals("A BaseMediaCodec instance can only be started once", error.message)
         verify(exactly = 1) { mediaCodec.start() }
+        verify(exactly = 1) { mediaCodec.release() }
+    }
+
+    @Test
+    fun `Error during codec start is rethrown after native cleanup`() {
+        val mediaCodec = mockk<MediaCodec>(relaxed = true)
+        val callbackSlot = slot<MediaCodec.Callback>()
+        every { mediaCodec.setCallback(capture(callbackSlot)) } just Runs
+        val startFailure = AssertionError("start hook failed")
+        val subject = TestCodec(mediaCodec, startHookFailure = startFailure)
+
+        val thrown = runCatching { subject.start() }.exceptionOrNull()
+
+        assertSame(startFailure, thrown)
+        verify(exactly = 1) { mediaCodec.release() }
+        runBlocking { subject.releaseAndJoin() }
         verify(exactly = 1) { mediaCodec.release() }
     }
 
@@ -506,14 +903,23 @@ class BaseMediaCodecAsynchronousTest {
         private val continueError: CountDownLatch? = null,
         private val failInput: Boolean = false,
         private val failError: Boolean = false,
+        private val failFormat: Boolean = false,
+        private val inputFailure: Exception? = null,
+        private val outputFailure: Exception? = null,
+        private val formatFailure: Exception? = null,
+        private val errorHookFailure: Exception? = null,
+        private val ownerFailure: Exception? = null,
+        private val startHookFailure: Throwable? = null,
         private val probeLockOnFailure: Boolean = false,
         private val inputSize: Int = 0,
         private val inputPtsUs: Long = 0,
+        private val replacementCodec: MediaCodec? = null,
     ) : BaseMediaCodecAsynchronous(
         codecName = MediaFormat.MIMETYPE_AUDIO_AAC,
         sampleRate = 8_000,
         channelCount = 1
     ) {
+        var nextCodec: MediaCodec? = replacementCodec
         var errorCount: Int = 0
             private set
         var releaseHookCount: Int = 0
@@ -524,15 +930,16 @@ class BaseMediaCodecAsynchronousTest {
             private set
         var failureCount: Int = 0
             private set
+        var lastFailure: Throwable? = null
+            private set
 
         /** Set by [notifyCodecFailure] when [probeLockOnFailure] is on. */
         var lockFreeDuringFailure: Boolean? = null
             private set
 
         fun attachCallback(initialFormat: MediaFormat? = null) {
-            codec = mediaCodec
+            start()
             initialFormat?.let { format = it }
-            setMediaCodecOptions(mediaCodec)
         }
 
         fun currentFormat(): MediaFormat = format
@@ -544,7 +951,8 @@ class BaseMediaCodecAsynchronousTest {
         }
 
         override fun createCodec() {
-            codec = mediaCodec
+            codec = if (created) requireNotNull(nextCodec) else mediaCodec
+            created = true
             enteredStart?.countDown()
             continueStart?.let {
                 assertTrue(it.await(2, TimeUnit.SECONDS), "Timed out waiting to continue start()")
@@ -552,7 +960,14 @@ class BaseMediaCodecAsynchronousTest {
             setMediaCodecOptions(codec)
         }
 
+        private var created = false
+
+        override fun onCodecStarted() {
+            startHookFailure?.let { throw it }
+        }
+
         override fun onInputData(inBuf: ByteBuffer): Int {
+            inputFailure?.let { throw it }
             if (failInput) error("input failed")
             enteredInput?.countDown()
             continueInput?.let {
@@ -567,6 +982,7 @@ class BaseMediaCodecAsynchronousTest {
             isConfig: Boolean,
             isKeyFrame: Boolean,
         ) {
+            outputFailure?.let { throw it }
             outputCount++
         }
 
@@ -574,7 +990,9 @@ class BaseMediaCodecAsynchronousTest {
 
         override fun notifyCodecFailure(error: Throwable) {
             failureCount++
+            lastFailure = error
             if (probeLockOnFailure) lockFreeDuringFailure = probeCodecLockIsFree()
+            ownerFailure?.let { throw it }
         }
 
         /** `true` when another thread can take the codec operation lock right now. */
@@ -594,6 +1012,7 @@ class BaseMediaCodecAsynchronousTest {
                 assertTrue(it.await(2, TimeUnit.SECONDS), "Timed out waiting for error callback")
             }
             errorCount++
+            errorHookFailure?.let { throw it }
             if (failError) error("error hook failed")
         }
 
@@ -602,6 +1021,8 @@ class BaseMediaCodecAsynchronousTest {
             continueFormat?.let {
                 assertTrue(it.await(2, TimeUnit.SECONDS), "Timed out waiting for format callback")
             }
+            formatFailure?.let { throw it }
+            if (failFormat) error("format hook failed")
         }
 
         override fun onCodecReleased() {

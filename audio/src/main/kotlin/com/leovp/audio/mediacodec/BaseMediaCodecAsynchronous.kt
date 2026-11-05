@@ -2,12 +2,12 @@
 
 package com.leovp.audio.mediacodec
 
-import com.leovp.audio.base.runCatchingPreservingCancellation
-
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
 import com.leovp.log.LogContext
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Author: Michael Leo
@@ -24,16 +24,30 @@ abstract class BaseMediaCodecAsynchronous(
         private const val TAG = "MediaCodecAsync"
     }
 
-    override fun setMediaCodecOptions(codec: MediaCodec) {
-        codec.setCallback(mediaCodecCallback)
+    private val callbackGeneration = AtomicLong(0)
+    private val inputEosQueued = AtomicBoolean(false)
+
+    override fun onBeforeCodecStart() {
+        callbackGeneration.set(0)
+        inputEosQueued.set(false)
     }
 
-    private val mediaCodecCallback = object : MediaCodec.Callback() {
+    override fun setMediaCodecOptions(codec: MediaCodec) {
+        codec.setCallback(SessionCallback(callbackGeneration.get()))
+    }
+
+    private inner class SessionCallback(private val epoch: Long) : MediaCodec.Callback() {
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
             if (isReleasing) return
-            runCatchingPreservingCancellation {
+            val observedGeneration = epoch
+            try {
                 withCodecOperationLock {
-                    if (isReleasing) return@withCodecOperationLock
+                    if (isReleasing ||
+                        observedGeneration != callbackGeneration.get() ||
+                        inputEosQueued.get()
+                    ) {
+                        return@withCodecOperationLock
+                    }
                     var inputQueued = false
                     var fallbackFlags = 0
                     try {
@@ -58,6 +72,7 @@ abstract class BaseMediaCodecAsynchronous(
                                 0,
                                 MediaCodec.BUFFER_FLAG_END_OF_STREAM
                             )
+                            inputEosQueued.set(true)
                         } else {
                             require(size >= 0) { "Codec input size must be non-negative" }
                             require(size <= inputBuf.capacity()) {
@@ -69,17 +84,17 @@ abstract class BaseMediaCodecAsynchronous(
                         inputQueued = true
                     } catch (original: Throwable) {
                         if (!inputQueued) {
-                            runCatchingPreservingCancellation {
+                            runCatching {
                                 codec.queueInputBuffer(index, 0, 0, 0, fallbackFlags)
                             }.onFailure(original::addSuppressed)
                         }
                         throw original
                     }
                 }
-            }.onFailure {
+            } catch (error: Exception) {
                 if (!isReleasing) {
-                    LogContext.log.e(TAG, "Input buffer callback failed", it)
-                    reportCodecFailure(it)
+                    LogContext.log.e(TAG, "Input buffer callback failed", error)
+                    reportSessionFailure(epoch, error)
                 }
             }
         }
@@ -90,9 +105,12 @@ abstract class BaseMediaCodecAsynchronous(
             info: MediaCodec.BufferInfo
         ) {
             if (isReleasing) return
-            runCatchingPreservingCancellation {
+            val observedGeneration = epoch
+            try {
                 withCodecOperationLock {
-                    if (isReleasing) return@withCodecOperationLock
+                    if (isReleasing || observedGeneration != callbackGeneration.get()) {
+                        return@withCodecOperationLock
+                    }
                     try {
                         val outputBuffer = codec.getOutputBuffer(index)
                         val isConfig =
@@ -111,35 +129,114 @@ abstract class BaseMediaCodecAsynchronous(
                         codec.releaseOutputBuffer(index, false)
                     }
                 }
-            }.onFailure {
+            } catch (error: Exception) {
                 if (!isReleasing) {
-                    LogContext.log.e(TAG, "Output buffer callback failed", it)
-                    reportCodecFailure(it)
+                    LogContext.log.e(TAG, "Output buffer callback failed", error)
+                    reportSessionFailure(epoch, error)
                 }
             }
         }
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
             if (isReleasing) return
-            withCodecOperationLock {
-                if (isReleasing) return@withCodecOperationLock
-                // Subsequent data will conform to new format.
-                // Can ignore if using getOutputFormat(outputBufferId)
-                this@BaseMediaCodecAsynchronous.format = format // option B
-                this@BaseMediaCodecAsynchronous.onOutputFormatChanged(codec, format)
+            val observedGeneration = epoch
+            try {
+                withCodecOperationLock {
+                    if (isReleasing || observedGeneration != callbackGeneration.get()) {
+                        return@withCodecOperationLock
+                    }
+                    // Subsequent data will conform to new format.
+                    this@BaseMediaCodecAsynchronous.format = format
+                    this@BaseMediaCodecAsynchronous.onOutputFormatChanged(codec, format)
+                }
+            } catch (error: Exception) {
+                if (!isReleasing) {
+                    LogContext.log.e(TAG, "Output format callback failed", error)
+                    reportSessionFailure(epoch, error)
+                }
             }
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
             if (isReleasing) return
-            runCatchingPreservingCancellation {
+            val observedGeneration = epoch
+            try {
                 withCodecOperationLock {
-                    if (isReleasing) return@withCodecOperationLock
-                    this@BaseMediaCodecAsynchronous.onError(codec, e)
+                    if (isReleasing || observedGeneration != callbackGeneration.get()) {
+                        return@withCodecOperationLock
+                    }
+                    try {
+                        this@BaseMediaCodecAsynchronous.onError(codec, e)
+                    } catch (hookFailure: Exception) {
+                        e.addSuppressed(hookFailure)
+                        LogContext.log.e(TAG, "Codec error hook failed", hookFailure)
+                    }
                 }
-            }.onFailure { LogContext.log.e(TAG, "Codec error hook failed", it) }
-            // Owner notification happens outside the codec lock, as notifyCodecFailure() promises.
-            if (!isReleasing) reportCodecFailure(e)
+            } catch (callbackFailure: Exception) {
+                e.addSuppressed(callbackFailure)
+            }
+            reportSessionFailure(epoch, e)
+        }
+    }
+
+    /** Rechecks session ownership atomically with failure transition, then notifies unlocked. */
+    private fun reportSessionFailure(generation: Long, error: Throwable) {
+        val transitioned = withCodecOperationLock {
+            generation == callbackGeneration.get() && transitionToCodecFailure()
+        }
+        if (transitioned) notifyTransitionedCodecFailure(error)
+    }
+
+    /**
+     * Resets asynchronous processing by retiring the native codec and configuring a fresh one.
+     *
+     * Unlike the old flush/start implementation, callbacks bind to their native session at
+     * registration, so delayed old buffer indices cannot be mistaken for newly issued indices.
+     * Reset has the cost of codec recreation and re-emits codec configuration/format events.
+     * Subclasses overriding createCodec() must create a fresh native instance on every call;
+     * setFormatOptions() must reconstruct the input configuration, including codec-specific data.
+     * Already queued subclass input is retained; callers must coordinate their own stream queues.
+     */
+    override fun flush() {
+        var failure: Throwable? = null
+        var transitionedToFailed = false
+        withCodecOperationLock {
+            check(isRunning) { "flush() requires a running codec session" }
+            callbackGeneration.incrementAndGet()
+            inputEosQueued.set(false)
+            val retiringCodec = checkNotNull(detachCodec())
+            try {
+                try {
+                    retiringCodec.flush()
+                } catch (error: Throwable) {
+                    failure = error
+                }
+                try {
+                    retiringCodec.release()
+                } catch (error: Throwable) {
+                    failure?.addSuppressed(error) ?: run { failure = error }
+                }
+                failure?.let { throw it }
+                createMediaFormat()
+                createCodec()
+                if (codec === retiringCodec) {
+                    detachCodec()
+                    error("Asynchronous reset requires a new native codec")
+                }
+                if (!isRunning) {
+                    // A concurrent release owner will dispose of the newly published codec.
+                    return@withCodecOperationLock
+                }
+                codec.start()
+            } catch (error: Throwable) {
+                failure = error
+                transitionedToFailed = transitionToCodecFailure()
+            }
+        }
+        failure?.let { error ->
+            LogContext.log.e(TAG, "flush and restart failed", error)
+            if (transitionedToFailed) notifyTransitionedCodecFailure(error)
+            if (error is Error) throw error
         }
     }
 }

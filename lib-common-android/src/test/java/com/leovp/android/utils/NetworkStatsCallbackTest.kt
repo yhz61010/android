@@ -84,6 +84,30 @@ class NetworkStatsCallbackTest {
     }
 
     @Test
+    fun `failed framework unregister keeps the callback handle for retry`() {
+        val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
+        val context = mockk<Context>(relaxed = true) {
+            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
+        }
+        val callback: (NetworkUtil.WifiSignal) -> Unit = {}
+        NetworkUtil.getWifiNetworkStatsAboveAndroidS(context, callback)
+        every {
+            connectivityManager.unregisterNetworkCallback(
+                any<ConnectivityManager.NetworkCallback>()
+            )
+        } throws IllegalStateException("transient unregister failure") andThen Unit
+
+        assertFalse(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback))
+        assertTrue(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback))
+
+        verify(exactly = 2) {
+            connectivityManager.unregisterNetworkCallback(
+                any<ConnectivityManager.NetworkCallback>()
+            )
+        }
+    }
+
+    @Test
     fun `failed replacement unregister does not register a second callback`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
         val context = mockk<Context>(relaxed = true) {

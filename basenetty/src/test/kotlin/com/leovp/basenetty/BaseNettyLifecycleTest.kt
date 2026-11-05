@@ -22,15 +22,21 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.util.concurrent.DefaultPromise
+import io.netty.util.concurrent.Future
 import io.netty.util.concurrent.GlobalEventExecutor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -69,6 +75,56 @@ class BaseNettyLifecycleTest {
         // shutting down the worker group and must land on UNINITIALIZED within its own budget.
         assertTrue(client.release())
         assertEquals(ClientConnectStatus.UNINITIALIZED, client.connectStatus.get())
+    }
+
+    @Test
+    fun `release before connect terminates worker group exactly once`(): Unit = runBlocking {
+        val client = TestClient(listener = RecordingClientListener())
+        val workerGroup = getClientWorkerGroup(client)
+
+        assertTrue(client.release())
+        assertTrue(workerGroup.isTerminated)
+        assertEquals(ClientConnectStatus.UNINITIALIZED, client.connectStatus.get())
+        assertFalse(client.release())
+    }
+
+    @Test
+    fun `concurrent client release has one owner`(): Unit = runBlocking {
+        val client = TestClient(listener = RecordingClientListener())
+
+        val results = coroutineScope {
+            List(2) { async(Dispatchers.Default) { client.release() } }.awaitAll()
+        }
+
+        assertEquals(listOf(false, true), results.sorted())
+        assertTrue(getClientWorkerGroup(client).isTerminated)
+        assertEquals(ClientConnectStatus.UNINITIALIZED, client.connectStatus.get())
+    }
+
+    @Test
+    fun `client handler Error still releases worker group`(): Unit = runBlocking {
+        val client = TestClient(listener = RecordingClientListener())
+        client.initHandler(ErrorClientHandler(client))
+        client.connectStatus.set(ClientConnectStatus.CONNECTED)
+
+        val thrown = runCatching { client.release() }.exceptionOrNull()
+
+        assertTrue(thrown is AssertionError)
+        assertTrue(getClientWorkerGroup(client).isTerminated)
+        assertEquals(ClientConnectStatus.UNINITIALIZED, client.connectStatus.get())
+    }
+
+    @Test
+    fun `server handler Error still releases event loops`(): Unit = runBlocking {
+        val server = TestServer(RecordingServerListener())
+        server.initHandler(ErrorServerHandler(server))
+
+        val thrown = runCatching { server.stopServer() }.exceptionOrNull()
+
+        assertTrue(thrown is AssertionError)
+        assertTrue(getServerBossGroup(server).isTerminated)
+        assertTrue(getServerWorkerGroup(server).isTerminated)
+        assertEquals(ServerConnectStatus.STOPPED, server.connectState.get())
     }
 
     @Test
@@ -428,6 +484,12 @@ class BaseNettyLifecycleTest {
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
     }
 
+    private class ErrorClientHandler(netty: BaseNettyClient) :
+        BaseClientChannelInboundHandler<Any>(netty) {
+        override fun release(): Unit = throw AssertionError("client handler release failed")
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
+    }
+
     private class TestWebSocketClient(
         listener: ClientConnectListener<BaseNettyClient>,
         uri: URI = URI("ws://127.0.0.1:1/ws"),
@@ -500,6 +562,20 @@ class BaseNettyLifecycleTest {
             assertTrue(thrown is IllegalStateException)
             assertEquals("Netty future was cancelled", thrown?.message)
         }
+
+    @Test
+    fun `awaitCompletion observes completion racing listener registration`() {
+        runBlocking {
+            val future = mockk<Future<Unit>>(relaxed = true)
+            every { future.isDone } returnsMany listOf(false, true)
+            every { future.isSuccess } returns true
+            every { future.addListener(any()) } returns future
+
+            withTimeout(100) { future.awaitCompletion() }
+
+            verify(exactly = 1) { future.addListener(any()) }
+        }
+    }
 
     @Test
     fun `second stop on a stopped server is a no-op and onStopped fires once`(): Unit =
@@ -587,6 +663,12 @@ class BaseNettyLifecycleTest {
     private class TestServerHandler(netty: BaseNettyServer) :
         BaseServerChannelInboundHandler<Any>(netty) {
         override fun release() = Unit
+        override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
+    }
+
+    private class ErrorServerHandler(netty: BaseNettyServer) :
+        BaseServerChannelInboundHandler<Any>(netty) {
+        override fun release(): Unit = throw AssertionError("server handler release failed")
         override fun onReceivedData(ctx: ChannelHandlerContext, msg: Any) = Unit
     }
 
@@ -688,5 +770,23 @@ class BaseNettyLifecycleTest {
                 set(client, value)
             }
         }
+
+        fun getClientWorkerGroup(client: BaseNettyClient): NioEventLoopGroup =
+            BaseNettyClient::class.java.getDeclaredField("workerGroup").run {
+                isAccessible = true
+                get(client) as NioEventLoopGroup
+            }
+
+        fun getServerBossGroup(server: BaseNettyServer): NioEventLoopGroup =
+            BaseNettyServer::class.java.getDeclaredField("bossGroup").run {
+                isAccessible = true
+                get(server) as NioEventLoopGroup
+            }
+
+        fun getServerWorkerGroup(server: BaseNettyServer): NioEventLoopGroup =
+            BaseNettyServer::class.java.getDeclaredField("workerGroup").run {
+                isAccessible = true
+                get(server) as NioEventLoopGroup
+            }
     }
 }

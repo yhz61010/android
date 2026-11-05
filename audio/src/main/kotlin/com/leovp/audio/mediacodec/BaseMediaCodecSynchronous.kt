@@ -11,6 +11,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -73,7 +74,18 @@ abstract class BaseMediaCodecSynchronous(
             }
             // Only signal normal EOS. Error termination goes through notifyCodecFailure(), and an
             // intentional teardown (isReleasing) must not masquerade as a clean end-of-stream.
-            if (!codecFailed.get() && !isReleasing && outputEosReceived) onEndOfStream()
+            if (!codecFailed.get() && !isReleasing && outputEosReceived) {
+                try {
+                    onEndOfStream()
+                } catch (error: CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                    codecFailed.set(true)
+                    reportCodecFailure(error)
+                } catch (error: Exception) {
+                    codecFailed.set(true)
+                    reportCodecFailure(error)
+                }
+            }
         }
     }
 

@@ -18,6 +18,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  * https://www.rfc-editor.org/rfc/rfc7845#section-5.1
  * https://developer.android.com/reference/android/media/MediaCodec#CSD
  *
+ * [errorCallback] runs after the codec enters its terminal failed state. Upgrading callers must
+ * provide it so decoder failures cannot silently stop playback.
+ *
+ * @param errorCallback Terminal codec failure callback. It must return promptly and must not call
+ *   `releaseAndJoin()` synchronously from a MediaCodec callback.
+ *
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
@@ -31,7 +37,7 @@ class OpusDecoder(
     val csd2: ByteArray,
     private val callback: IDecodeCallback,
     private val endCallback: () -> Unit = {},
-    private val errorCallback: (Throwable) -> Unit = {},
+    private val errorCallback: (Throwable) -> Unit,
 ) : BaseMediaCodecAsynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,

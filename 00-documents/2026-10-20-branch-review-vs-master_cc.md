@@ -1982,3 +1982,18 @@ Boolean 使回滚只注销本次注册的那一个。`FloatViewCreator.tryShow()
 本轮**未执行任何 Gradle 命令、未做真机验证**，全部结论为源码静态分析。M-3 是读源码确认的规则违反，
 未经 ktlint 实际运行证实（Codex 在 §21.2 记录其已实际运行并被阻断）。M-1/L-3 为文档一致性，
 M-2/L-2 若实施需重跑 `screencapture` 与 `demo` 的单测、detekt、ktlint。
+
+---
+
+## 23. 第二个 1/3 切片实施状态（Codex，2026-10-29）
+
+audio / MediaCodec / basenetty 第二切片中经复核确认、方案明确的问题已在当前工作树实施，并在实施后
+进行多轮源码复读、定向红绿测试、受影响模块质量检查、完整模块单测和 Demo 集成编译。问题与代码级
+修法以以下两份文档为准：
+
+- `00-documents/2026-10-26-branch-review-part2-audio-netty_cc.md` §7；
+- `00-documents/2026-10-29-branch-review-remediation-implementation.md`。
+
+本节只同步总体进度，不复制第二切片的技术细节。当前结果属于 Codex 本机 Gradle/JVM 验证；音频、
+MediaCodec 和真实 socket 行为仍需真机验证。后续 H-1 复核、修复及最终 `staticCheck` 结果以第二切片
+文档 §7.5～§7.6 和实施记录 §9 为准。

@@ -3,7 +3,6 @@ package com.leovp.audio.mediacodec
 import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaFormat
-import com.leovp.audio.base.runCatchingPreservingCancellation
 import com.leovp.audio.mediacodec.iter.IAudioMediaCodec
 import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
@@ -11,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,12 +39,21 @@ abstract class BaseMediaCodec(
         NEW,
         STARTING,
         RUNNING,
+        FAILED,
         RELEASING,
         RELEASED,
     }
 
     internal lateinit var format: MediaFormat
-    internal lateinit var codec: MediaCodec
+    private var activeCodec: MediaCodec? = null
+    internal var codec: MediaCodec
+        get() = checkNotNull(activeCodec) { "No active codec session" }
+        set(value) {
+            activeCodec = value
+        }
+
+    /** Transfers native ownership under the codec operation lock before retirement. */
+    protected fun detachCodec(): MediaCodec? = activeCodec.also { activeCodec = null }
 
     protected val ioScope = CoroutineScope(Dispatchers.IO + CoroutineName("base-mediacodec"))
 
@@ -69,7 +78,8 @@ abstract class BaseMediaCodec(
     protected val isReleasing: Boolean
         get() = when (lifecycleState.get()) {
             LifecycleState.RELEASING,
-            LifecycleState.RELEASED -> true
+            LifecycleState.RELEASED,
+            LifecycleState.FAILED -> true
             else -> false
         }
 
@@ -120,15 +130,17 @@ abstract class BaseMediaCodec(
                 ) { "Codec teardown began while start() was in progress" }
                 onCodecStarted()
             }
-        } catch (e: Exception) {
+        } catch (error: Throwable) {
             lifecycleState.set(LifecycleState.RELEASING)
             ioScope.cancel()
             try {
                 releaseCodecOnce()
+            } catch (cleanupFailure: Throwable) {
+                error.addSuppressed(cleanupFailure)
             } finally {
                 lifecycleState.set(LifecycleState.RELEASED)
             }
-            throw e
+            throw error
         }
     }
 
@@ -160,6 +172,8 @@ abstract class BaseMediaCodec(
      * Replaces the removed non-suspend release(). Migration: await this from a coroutine the
      * owner controls; subclasses that overrode release() put that work in [onCodecReleased]
      * instead, as this method is not open.
+     * A CancellationException raised by native cleanup or a release hook is rethrown only after
+     * every native/subclass cleanup step has been attempted; it cannot skip codec release.
      */
     suspend fun releaseAndJoin() {
         require(codecJob !== currentCoroutineContext()[Job]) {
@@ -189,16 +203,24 @@ abstract class BaseMediaCodec(
     protected fun releaseCodecOnce() {
         withCodecOperationLock {
             if (!codecReleased.compareAndSet(false, true)) return@withCodecOperationLock
-            if (::codec.isInitialized) {
-                runCatchingPreservingCancellation { codec.flush() }
-                    .onFailure { LogContext.log.e(TAG, "flush error", it) }
+            var cancellation: CancellationException? = null
+            fun cleanup(message: String, action: () -> Unit) {
+                runCatching(action).onFailure { error ->
+                    LogContext.log.e(TAG, message, error)
+                    if (error is CancellationException) {
+                        cancellation?.addSuppressed(error) ?: run { cancellation = error }
+                    }
+                }
+            }
+            val retiringCodec = detachCodec()
+            if (retiringCodec != null) {
+                cleanup("flush error") { retiringCodec.flush() }
 
                 // These are the magic lines for Samsung phone. DO NOT try to remove or refactor me.
-                runCatchingPreservingCancellation { codec.release() }
-                    .onFailure { LogContext.log.e(TAG, "release error", it) }
+                cleanup("release error") { retiringCodec.release() }
             }
-            runCatchingPreservingCancellation { onCodecReleased() }
-                .onFailure { LogContext.log.e(TAG, "Subclass cleanup error", it) }
+            cleanup("Subclass cleanup error") { onCodecReleased() }
+            cancellation?.let { throw it }
         }
     }
 
@@ -216,24 +238,49 @@ abstract class BaseMediaCodec(
      *
      * This callback is invoked outside [withCodecOperationLock]. Implementations should schedule
      * terminal cleanup and return promptly; the failed codec instance must not be reused.
+     * It is a subclass hook, not an external failure injection API; callers that previously
+     * invoked it directly must instead react to their wrapper's public error callback.
      */
-    open fun notifyCodecFailure(error: Throwable) {
+    protected open fun notifyCodecFailure(error: Throwable) {
         LogContext.log.e(TAG, "Codec failure reported", error)
     }
 
-    /** Delivers a codec failure without allowing an owner callback exception to kill the worker. */
+    /** Atomically moves the active session into its terminal failed state. */
+    protected fun transitionToCodecFailure(): Boolean =
+        lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)
+
+    /** Delivers a failure whose state transition has already been won, outside the codec lock. */
+    protected fun notifyTransitionedCodecFailure(error: Throwable) {
+        try {
+            notifyCodecFailure(error)
+        } catch (callbackFailure: Exception) {
+            error.addSuppressed(callbackFailure)
+            LogContext.log.e(TAG, "Codec failure callback failed", callbackFailure)
+        }
+    }
+
+    /** Moves to FAILED and notifies the owner at most once. */
     protected fun reportCodecFailure(error: Throwable) {
-        runCatchingPreservingCancellation { notifyCodecFailure(error) }
-            .onFailure { LogContext.log.e(TAG, "Codec failure callback failed", it) }
+        if (transitionToCodecFailure()) notifyTransitionedCodecFailure(error)
     }
 
     open fun flush() {
+        var failure: Exception? = null
+        var transitionedToFailed = false
         withCodecOperationLock {
             check(lifecycleState.get() == LifecycleState.RUNNING) {
                 "flush() requires a running codec session"
             }
-            runCatchingPreservingCancellation { codec.flush() }
-                .onFailure { LogContext.log.e(TAG, "flush error", it) }
+            try {
+                codec.flush()
+            } catch (error: Exception) {
+                failure = error
+                transitionedToFailed = transitionToCodecFailure()
+            }
+        }
+        failure?.let { error ->
+            LogContext.log.e(TAG, "flush error", error)
+            if (transitionedToFailed) notifyTransitionedCodecFailure(error)
         }
     }
 

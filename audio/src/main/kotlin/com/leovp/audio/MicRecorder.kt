@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -116,8 +117,8 @@ class MicRecorder(
 
     private var recordJob: Job? = null
 
-    /** Guards [stopRecordAndJoin] re-entry. */
-    private val stopped = AtomicBoolean(false)
+    /** Serializes one-shot start, record-job publication and stop ownership. */
+    private val lifecycleGate = MicRecorderLifecycleGate()
 
     /** Guards [finishRecorderReleaseAndJoin] so AudioRecord/encoder release runs once. */
     private val released = AtomicBoolean(false)
@@ -208,7 +209,7 @@ class MicRecorder(
      */
     private fun rollbackFailedInit(record: AudioRecord?, cause: Throwable) {
         LogContext.log.e(TAG, "MicRecorder init failed; rolling back", cause)
-        stopped.set(true)
+        lifecycleGate.claimStop()
         released.set(true)
         releaseAdvancedFeatures(true)
         runCatchingPreservingCancellation { record?.release() }.onFailure {
@@ -228,73 +229,97 @@ class MicRecorder(
         ioScope.cancel()
     }
 
+    /**
+     * Starts this one-shot recorder.
+     *
+     * A recorder instance cannot be restarted. Create a new [MicRecorder] for each recording.
+     *
+     * @throws IllegalStateException when this instance was already started or teardown began.
+     */
     fun startRecord() {
-        LogContext.log.w(TAG, "Do startRecord()")
-        if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
-            failRecordStart("AudioRecord is not initialized")
-            return
-        }
-        try {
-            audioRecord.startRecording()
-        } catch (e: SecurityException) {
-            LogContext.log.e(TAG, "RECORD_AUDIO permission denied", e)
-            failRecordStart("AudioRecord start failed")
-            return
-        } catch (e: IllegalStateException) {
-            LogContext.log.e(TAG, "AudioRecord start failed", e)
-            failRecordStart("AudioRecord start failed")
-            return
-        }
-        if (audioRecord.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
-            failRecordStart("AudioRecord did not enter the recording state")
-            return
-        }
-        recordJob = ioScope.launch {
+        synchronized(lifecycleGate) {
+            lifecycleGate.claimStart()
+            LogContext.log.w(TAG, "Do startRecord()")
+            if (audioRecord.state != AudioRecord.STATE_INITIALIZED) {
+                failRecordStart("AudioRecord is not initialized")
+                return
+            }
             try {
-                // Keep a fixed reusable capacity; never shrink/reassign this buffer (AUD-6).
-                val pcmBuffer = ShortArray(bufferSizeInBytes / 2)
-                while (true) {
-                    ensureActive()
-                    val recordSize = audioRecord.read(pcmBuffer, 0, pcmBuffer.size)
-                    when {
-                        recordSize > 0 -> {
-                            // Slice only for this frame; the backing buffer stays full-size.
-                            val frame = pcmBuffer.copyOfRange(0, recordSize).toByteArrayLE()
-                            encodeWrapper?.encode(frame)
-                                ?: callback.onRecording(frame, isConfig = false, isKeyFrame = false)
-                        }
+                audioRecord.startRecording()
+            } catch (e: SecurityException) {
+                LogContext.log.e(TAG, "RECORD_AUDIO permission denied", e)
+                failRecordStart("AudioRecord start failed")
+                return
+            } catch (e: IllegalStateException) {
+                LogContext.log.e(TAG, "AudioRecord start failed", e)
+                failRecordStart("AudioRecord start failed")
+                return
+            }
+            if (audioRecord.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+                failRecordStart("AudioRecord did not enter the recording state")
+                return
+            }
+            val job = ioScope.launch(start = CoroutineStart.LAZY) {
+                val ownerJob = currentCoroutineContext()[Job]
+                try {
+                    // Keep a fixed reusable capacity; never shrink/reassign this buffer (AUD-6).
+                    val pcmBuffer = ShortArray(bufferSizeInBytes / 2)
+                    while (true) {
+                        ensureActive()
+                        val recordSize = audioRecord.read(pcmBuffer, 0, pcmBuffer.size)
+                        when {
+                            recordSize > 0 -> {
+                                // Slice only for this frame; the backing buffer stays full-size.
+                                val frame = pcmBuffer.copyOfRange(0, recordSize).toByteArrayLE()
+                                encodeWrapper?.encode(frame)
+                                    ?: callback.onRecording(
+                                        frame,
+                                        isConfig = false,
+                                        isKeyFrame = false
+                                    )
+                            }
 
-                        recordSize == 0 -> continue
+                            recordSize == 0 -> continue
 
-                        else -> {
-                            // AudioRecord.stop() wakes a blocked read with a negative status on
-                            // some devices. It is an expected shutdown signal after `stopped` is
-                            // set, not a recording failure.
-                            if (stopped.get()) break
-                            LogContext.log.e(TAG, "AudioRecord.read error=$recordSize")
-                            handleRecordingFailure()
-                            break
+                            else -> {
+                                // AudioRecord.stop() wakes a blocked read with a negative status on
+                                // some devices. It is expected after stop ownership is claimed.
+                                if (lifecycleGate.isStopping) break
+                                LogContext.log.e(TAG, "AudioRecord.read error=$recordSize")
+                                handleRecordingFailure()
+                                break
+                            }
                         }
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogContext.log.e(TAG, "Recording loop failed", e)
+                    handleRecordingFailure()
+                } finally {
+                    synchronized(lifecycleGate) {
+                        if (recordJob === ownerJob) recordJob = null
+                    }
                 }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                LogContext.log.e(TAG, "Recording loop failed", e)
-                handleRecordingFailure()
             }
+            recordJob = job
+            job.start()
         }
     }
 
     private suspend fun handleRecordingFailure() {
-        stopped.set(true)
-        stopAudioRecord()
-        finishRecorderReleaseAndJoin(stopSucceeded = false)
+        val ownsStop = synchronized(lifecycleGate) { lifecycleGate.claimStop() }
+        if (!ownsStop) return
+        withContext(NonCancellable) {
+            stopAudioRecord()
+            ioScope.cancel()
+            finishRecorderReleaseAndJoin(stopSucceeded = false)
+        }
     }
 
     private fun failRecordStart(message: String) {
         LogContext.log.e(TAG, message)
-        stopped.set(true)
+        lifecycleGate.claimStop()
         stopAudioRecord()
         // startRecord() is a non-suspend public entry point, so the deterministic release cannot
         // be awaited here. NonCancellable so the rollback survives the ioScope.cancel() below.
@@ -403,21 +428,29 @@ class MicRecorder(
         // fast without half-stopping the recorder or consuming the one-shot `stopped` flag
         // (remediation R-8). NOTE: this rejects only a *direct* self-call; a call wrapped in
         // runBlocking on the record thread has a different Job and still cannot be made safe here.
-        val job = recordJob
-        require(job !== currentCoroutineContext()[Job]) {
-            "stopRecordAndJoin() must be called by an external owner"
+        val callerJob = currentCoroutineContext()[Job]
+        val (job, ownsStop) = synchronized(lifecycleGate) {
+            val activeJob = recordJob
+            require(activeJob !== callerJob) {
+                "stopRecordAndJoin() must be called by an external owner"
+            }
+            activeJob to lifecycleGate.claimStop()
         }
-        if (!stopped.compareAndSet(false, true)) {
+        if (!ownsStop) {
             releaseCompleted.await()
+            job?.join()
             return
         }
-        LogContext.log.i(TAG, "Stop recording audio")
-        val ok = stopAudioRecord()
-
-        job?.cancelAndJoin()
-        recordJob = null
-        ioScope.cancel()
-        finishRecorderReleaseAndJoin(ok)
+        withContext(NonCancellable) {
+            LogContext.log.i(TAG, "Stop recording audio")
+            val ok = stopAudioRecord()
+            job?.cancelAndJoin()
+            synchronized(lifecycleGate) {
+                if (recordJob === job) recordJob = null
+            }
+            ioScope.cancel()
+            finishRecorderReleaseAndJoin(ok)
+        }
     }
 
     /** Stops the AudioRecord so a blocked read() returns. Releases nothing. */
@@ -497,5 +530,26 @@ class MicRecorder(
          */
         fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean)
         fun onStop(stopResult: Boolean)
+    }
+}
+
+internal class MicRecorderLifecycleGate {
+    private var started = false
+
+    @Volatile
+    var isStopping: Boolean = false
+        private set
+
+    @Synchronized
+    fun claimStart() {
+        check(!started && !isStopping) { "MicRecorder can only be started once" }
+        started = true
+    }
+
+    @Synchronized
+    fun claimStop(): Boolean {
+        if (isStopping) return false
+        isStopping = true
+        return true
     }
 }

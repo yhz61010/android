@@ -102,7 +102,10 @@ class AudioSender {
             val player = AudioPlayer(
                 ctx!!,
                 AudioActivity.audioDecoderInfo,
-                defaultAudioType,
+                onFailure = { error ->
+                    LogContext.log.e(TAG, "Received audio playback failed", error)
+                },
+                type = defaultAudioType,
                 usage = AudioActivity.AUDIO_ATTR_USAGE,
                 contentType = AudioActivity.AUDIO_ATTR_CONTENT_TYPE
             )

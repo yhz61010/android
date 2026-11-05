@@ -2,7 +2,8 @@ package com.leovp.audio.opus
 
 import android.content.Context
 import android.media.AudioAttributes
-import com.leovp.audio.AudioTrackPlayer
+import com.leovp.audio.base.AndroidFileAudioOutput
+import com.leovp.audio.base.FileAudioOutput
 import com.leovp.audio.base.bean.AudioDecoderInfo
 import com.leovp.audio.base.iters.IDecodeCallback
 import com.leovp.audio.base.runCatchingPreservingCancellation
@@ -49,14 +50,24 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Author: Michael Leo
  * Date: 2023/5/5 16:03
  */
-class OpusFilePlayer(
-    ctx: Context,
+class OpusFilePlayer internal constructor(
     private val audioDecoderInfo: AudioDecoderInfo,
-    // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
-    usage: Int = AudioAttributes.USAGE_MEDIA,
-    // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
-    contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+    private val audioOutput: FileAudioOutput,
+    private val decoderFactory: OpusDecoderSessionFactory?,
 ) {
+    constructor(
+        ctx: Context,
+        audioDecoderInfo: AudioDecoderInfo,
+        // AudioAttributes.USAGE_VOICE_COMMUNICATION  AudioAttributes.USAGE_MEDIA
+        usage: Int = AudioAttributes.USAGE_MEDIA,
+        // AudioAttributes.CONTENT_TYPE_SPEECH  AudioAttributes.CONTENT_TYPE_MUSIC
+        contentType: Int = AudioAttributes.CONTENT_TYPE_MUSIC,
+    ) : this(
+        audioDecoderInfo,
+        AndroidFileAudioOutput(ctx, audioDecoderInfo, usage, contentType),
+        null
+    )
+
     companion object {
         private const val TAG = "OpusFilePlayer"
         private const val DECODED_QUEUE_CAPACITY = 64
@@ -91,10 +102,8 @@ class OpusFilePlayer(
     )
     private val lifecycleMutex = Mutex()
 
-    private val audioTrackPlayer =
-        AudioTrackPlayer(ctx, audioDecoderInfo, usage = usage, contentType = contentType)
     private val inputFile = AtomicReference<RandomAccessFile?>(null)
-    private var decoder: OpusDecoder? = null
+    private var decoder: OpusDecoderSession? = null
     private var completionCallback: (() -> Unit)? = null
     private var failureCallback: ((Throwable) -> Unit)? = null
 
@@ -134,7 +143,7 @@ class OpusFilePlayer(
                     val playbackDecoder = createDecoder(playbackInput.opusCsd)
                     decoder = playbackDecoder
                     playbackDecoder.start()
-                    audioTrackPlayer.play()
+                    audioOutput.play()
                     launchPlaybackJobs(playbackInput, playbackDecoder)
                 }
             }
@@ -147,7 +156,7 @@ class OpusFilePlayer(
                 e.addSuppressed(cleanupFailure)
             }
             throw e
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             try {
                 withContext(Dispatchers.IO + NonCancellable) {
                     finishPlayback(TerminalReason.ExplicitStop)
@@ -182,29 +191,46 @@ class OpusFilePlayer(
         return OpusPlaybackInput(framedFileReader, firstAudioFramePosition, opusCsd)
     }
 
-    private fun createDecoder(opusCsd: OpusCsd): OpusDecoder = OpusDecoder(
-        sampleRate = audioDecoderInfo.sampleRate,
-        channelCount = audioDecoderInfo.channelCount,
-        audioFormat = audioDecoderInfo.audioFormat,
-        csd0 = opusCsd.csd0,
-        csd1 = opusCsd.csd1,
-        csd2 = opusCsd.csd2,
-        callback = object : IDecodeCallback {
-            override fun onDecoded(pcmData: ByteArray) {
-                if (pcmData.isEmpty() || terminalStarted.get()) return
+    private fun createDecoder(opusCsd: OpusCsd): OpusDecoderSession {
+        val onPcmDecoded: (ByteArray) -> Unit = { pcmData ->
+            if (pcmData.isNotEmpty() && !terminalStarted.get()) {
                 if (queue.offer(pcmData)) {
                     queuedPcmCount.incrementAndGet()
-                    return
+                } else {
+                    droppedPcmCount.incrementAndGet()
+                    requestFailure(IllegalStateException("Decoded PCM queue is full"))
                 }
-                droppedPcmCount.incrementAndGet()
-                requestFailure(IllegalStateException("Decoded PCM queue is full"))
             }
-        },
-        endCallback = { codecEos.complete(Unit) },
-        errorCallback = { requestFailure(it) }
-    )
+        }
+        val onEnd = {
+            codecEos.complete(Unit)
+            Unit
+        }
+        val onFailure: (Throwable) -> Unit = ::requestFailure
+        return decoderFactory?.create(
+            opusCsd,
+            audioDecoderInfo,
+            onPcmDecoded,
+            onEnd,
+            onFailure
+        ) ?: AndroidOpusDecoderSession(
+            OpusDecoder(
+                sampleRate = audioDecoderInfo.sampleRate,
+                channelCount = audioDecoderInfo.channelCount,
+                audioFormat = audioDecoderInfo.audioFormat,
+                csd0 = opusCsd.csd0,
+                csd1 = opusCsd.csd1,
+                csd2 = opusCsd.csd2,
+                callback = object : IDecodeCallback {
+                    override fun onDecoded(pcmData: ByteArray) = onPcmDecoded(pcmData)
+                },
+                endCallback = onEnd,
+                errorCallback = onFailure
+            )
+        )
+    }
 
-    private fun launchPlaybackJobs(input: OpusPlaybackInput, playbackDecoder: OpusDecoder) {
+    private fun launchPlaybackJobs(input: OpusPlaybackInput, playbackDecoder: OpusDecoderSession) {
         ioScope.launch { produceDecoderInput(input, playbackDecoder) }
         ioScope.launch { consumeDecodedPcm() }
         ioScope.launch { awaitNaturalCompletion() }
@@ -212,7 +238,7 @@ class OpusFilePlayer(
 
     private suspend fun produceDecoderInput(
         input: OpusPlaybackInput,
-        playbackDecoder: OpusDecoder,
+        playbackDecoder: OpusDecoderSession,
     ) {
         var startCodeBeginPos = input.firstAudioFramePosition
         var submittedFrameCount = 0L
@@ -228,7 +254,7 @@ class OpusFilePlayer(
                 currentCoroutineContext().ensureActive()
                 awaitDecodedQueueCapacity()
                 val payload = input.reader.readPayload(startCodeBeginPos)
-                require(payload.data.isNotEmpty()) { "Empty OPUS audio frame" }
+                if (!shouldSubmitOpusPayload(payload)) break
                 submitWithBackpressure(playbackDecoder, payload.data)
                 submittedFrameCount++
 
@@ -285,7 +311,7 @@ class OpusFilePlayer(
         }
     }
 
-    private suspend fun submitWithBackpressure(decoder: OpusDecoder, data: ByteArray) {
+    private suspend fun submitWithBackpressure(decoder: OpusDecoderSession, data: ByteArray) {
         while (!decoder.decode(data)) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder is not accepting input" }
@@ -293,7 +319,7 @@ class OpusFilePlayer(
         }
     }
 
-    private suspend fun signalEndOfStreamWithBackpressure(decoder: OpusDecoder) {
+    private suspend fun signalEndOfStreamWithBackpressure(decoder: OpusDecoderSession) {
         while (!decoder.signalEndOfStream()) {
             currentCoroutineContext().ensureActive()
             check(decoder.isAcceptingInput) { "OPUS decoder stopped before accepting EOS" }
@@ -306,7 +332,7 @@ class OpusFilePlayer(
             while (true) {
                 currentCoroutineContext().ensureActive()
                 val pcmData = queue.poll(100, TimeUnit.MILLISECONDS) ?: continue
-                val writtenBytes = audioTrackPlayer.write(pcmData)
+                val writtenBytes = audioOutput.write(pcmData)
                 check(writtenBytes >= 0) { "AudioTrack write failed with code $writtenBytes" }
                 // A zero-length write means the track is not playing or the write was swallowed.
                 // Counting it as consumed would drain the queue at full speed, keep the stall
@@ -449,7 +475,7 @@ class OpusFilePlayer(
         } ?: false
 
     private fun unsignedPlaybackHeadPosition(): Long =
-        audioTrackPlayer.playbackHeadPosition.toLong() and 0xFFFF_FFFFL
+        audioOutput.playbackHeadPosition.toLong() and 0xFFFF_FFFFL
 
     private fun pcmFrameBytes(): Int = Short.SIZE_BYTES * audioDecoderInfo.channelCount
 
@@ -470,6 +496,9 @@ class OpusFilePlayer(
         val onCompletion = completionCallback
         val onFailure = failureCallback
         var releaseFailure: Throwable? = null
+        fun recordReleaseFailure(failure: Throwable) {
+            releaseFailure?.addSuppressed(failure) ?: run { releaseFailure = failure }
+        }
         withContext(NonCancellable) {
             try {
                 lifecycleMutex.withLock {
@@ -479,20 +508,29 @@ class OpusFilePlayer(
                         // exit.
                         playbackScopeJob.cancel()
                         closeInputFile()
-                        audioTrackPlayer.stop()
-                        playbackScopeJob.cancelAndJoin()
+                        try {
+                            audioOutput.stop()
+                        } catch (failure: Throwable) {
+                            recordReleaseFailure(failure)
+                        }
+                        try {
+                            playbackScopeJob.cancelAndJoin()
+                        } catch (failure: Throwable) {
+                            recordReleaseFailure(failure)
+                        }
                         val playbackDecoder = decoder
                         decoder = null
-                        playbackDecoder?.releaseAndJoin()
-                    } catch (failure: Throwable) {
-                        releaseFailure = failure
+                        try {
+                            playbackDecoder?.releaseAndJoin()
+                        } catch (failure: Throwable) {
+                            recordReleaseFailure(failure)
+                        }
                     } finally {
                         try {
                             queue.clear()
-                            audioTrackPlayer.release()
+                            audioOutput.release()
                         } catch (cleanupFailure: Throwable) {
-                            releaseFailure?.addSuppressed(cleanupFailure)
-                                ?: run { releaseFailure = cleanupFailure }
+                            recordReleaseFailure(cleanupFailure)
                         } finally {
                             val playbackFailure = (reason as? TerminalReason.Failure)?.error
                             val cleanupError = releaseFailure
@@ -537,6 +575,46 @@ class OpusFilePlayer(
             LogContext.log.e(TAG, "Close OPUS input failed", e)
         }
     }
+}
+
+internal fun shouldSubmitOpusPayload(payload: OpusFilePayload): Boolean {
+    if (payload.data.isNotEmpty()) return true
+    require(payload.nextStartCodePosition == null) { "Empty OPUS audio frame" }
+    return false
+}
+
+internal interface OpusDecoderSession {
+    val isAcceptingInput: Boolean
+
+    fun start()
+
+    fun decode(rawData: ByteArray): Boolean
+
+    fun signalEndOfStream(): Boolean
+
+    suspend fun releaseAndJoin()
+}
+
+internal fun interface OpusDecoderSessionFactory {
+    fun create(
+        csd: OpusCsd,
+        decoderInfo: AudioDecoderInfo,
+        onPcmDecoded: (ByteArray) -> Unit,
+        onEndOfStream: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ): OpusDecoderSession
+}
+
+private class AndroidOpusDecoderSession(private val delegate: OpusDecoder) : OpusDecoderSession {
+    override val isAcceptingInput: Boolean get() = delegate.isAcceptingInput
+
+    override fun start() = delegate.start()
+
+    override fun decode(rawData: ByteArray): Boolean = delegate.decode(rawData)
+
+    override fun signalEndOfStream(): Boolean = delegate.signalEndOfStream()
+
+    override suspend fun releaseAndJoin() = delegate.releaseAndJoin()
 }
 
 private data class OpusPlaybackInput(

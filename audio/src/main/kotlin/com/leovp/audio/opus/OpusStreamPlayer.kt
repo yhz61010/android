@@ -253,7 +253,12 @@ class OpusStreamPlayer(
                     "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
-            runCatchingPreservingCancellation { decoder.flush() }.getOrNull()
+            // Shed the backlog rather than reset the codec. Clearing the decoder input queue is
+            // what actually reduces latency here; the asynchronous flush() replaces the whole
+            // codec session, which costs a codec recreation while this monitor and the codec
+            // operation lock are held - the opposite of what this branch is for. Frames already
+            // inside the codec still decode, so a few stale frames may play.
+            decoder.clearPendingInput()
             decodedPcmQueue.clear()
             runCatchingPreservingCancellation { audioTrackPlayer.pause() }.getOrNull()
             runCatchingPreservingCancellation { audioTrackPlayer.play() }.getOrNull()

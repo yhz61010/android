@@ -261,6 +261,10 @@ class AacStreamPlayer(
                     "latency[$latencyInMs] play=${getAudioTimeUs() / 1000}"
             )
             frameCount = 0
+            // Drop the queued backlog first; flush() alone leaves it to be decoded and played.
+            // Unlike the OPUS path, AacDecoder is synchronous, so its flush() is a plain codec
+            // reset and cheap enough to keep here.
+            decoder.clearPendingInput()
             runCatchingPreservingCancellation { decoder.flush() }.getOrNull()
             runCatchingPreservingCancellation { audioTrackPlayer.pause() }.getOrNull()
             runCatchingPreservingCancellation { audioTrackPlayer.play() }.getOrNull()

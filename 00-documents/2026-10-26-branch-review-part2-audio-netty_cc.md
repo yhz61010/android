@@ -1807,3 +1807,152 @@ flush/release 双失败聚合、replacement 创建/启动失败及并发 release
 :demo:assembleDevDebug staticCheck --rerun-tasks --max-workers=1 --no-daemon` 通过，4 分 45 秒内 1461 个
 任务实际执行；audio 共 84 条单测通过，其中异步基类 40 条。H-1 的源码与 JVM 回归闭环，当前修复范围
 内未发现剩余明确问题；真机功能和性能仍未验证。完整实现、迁移和验证证据见实施记录 §9。
+
+## 8. 2026-11-10 对 §7.6 会话替换实现的复审（Claude）
+
+本节的审查对象是 HEAD `739928440` 的**实现**，而非 §1 的 `ef51ac0ad` 快照，因此单独编号、不并入 §3。
+§7.6 选定的会话替换方向在**正确性**上已复核成立（§8.1）；本节三条发现都不质疑该方向，而是关于它的
+**代价落点**，以及一条先于本次提交存在的语义缺口。全部为源码静态分析，**未编译、未运行、未真机，
+一律「未验证」**。
+
+统计：CRITICAL 0 ／ HIGH 0 ／ MEDIUM 3 ／ LOW 0。
+
+### 8.1 H-1 的会话替换修复：正确性已复核成立
+
+- 旧回调的世代绑定在 `SessionCallback` **实例**上（`BaseMediaCodecAsynchronous.kt:39` 的构造参数
+  `epoch`），而不是在方法入口读取全局值。旧回调只会被投递给注册在退役实例上的旧 `SessionCallback`，
+  其 `epoch` 永久是旧值，因此**在结构上不存在**「入口快照到新世代」这一窗口 —— `938347e19` 记录的
+  该缺口在本实现下不成立，§7.5 对 `flushInProgress` 入口标记的否决理由（会误丢合法 buffer）亦成立。
+- 退役实例在 `:215` 被整体 `release()`，陈旧 index 没有可作用的 codec。
+- 专门复核了一个会使栅栏归零的失效点：`onBeforeCodecStart()` 内有 `callbackGeneration.set(0)`
+  （`BaseMediaCodecAsynchronous.kt:30-32`），若 `createCodec()` 调用它则世代被重置回 0。核实
+  `onBeforeCodecStart()` **只在 `BaseMediaCodec.start():118` 被调用**，而 `createCodec()`
+  （`BaseMediaCodec.kt:328-337`）只调 `setMediaCodecOptions`，故 flush 路径中新 callback 取到的是
+  递增后的新世代。**栅栏成立。**
+- 并发 release 的归属也已复核：`flush()` 与 `releaseCodecOnce()` 争用同一把 `codecOperationLock`，
+  `BaseMediaCodecAsynchronous.kt:226-229` 的 `if (!isRunning) return` 把新建实例交给随后取锁的
+  release 处置（`BaseMediaCodec.kt:215` 的 `detachCodec()` 会取到它），未见泄漏路径。
+
+### 8.2 M-11（MEDIUM）会话替换的成本落在逐帧判定的丢帧路径上，持锁期间收流线程与 codec 回调全停
+
+- 文件：`audio/.../mediacodec/BaseMediaCodecAsynchronous.kt:200-240`、`opus/OpusStreamPlayer.kt:231-266`
+- 事实：异步 `flush()` 不再是状态复位，而是整条 codec 创建链 —— `detachCodec()`（`:207`）→ 旧实例
+  `flush()`（`:210`）与 `release()`（`:215`）→ `createMediaFormat()`（`:220`）→ `createCodec()`
+  （`:221`，内部为 `createDecoderByType` + `configure` + `setCallback`，见 `BaseMediaCodec.kt:328-337`）
+  → `codec.start()`（`:230`），并重新产生 codec config/format。成本量级从亚毫秒升到**数十毫秒**
+  （绝对值需真机实测）。
+- 唯一生产调用点是 `OpusStreamPlayer.kt:256` 的丢帧分支。已全仓库核实其余 `.flush()` 调用点均不属
+  异步生产路径：测试、基类释放路径（`BaseMediaCodec.kt:217`）、以及走同步基类的
+  `AacStreamPlayer.kt:264`（`AacDecoder : BaseMediaCodecSynchronous`，用基类朴素 `codec.flush()`，
+  `BaseMediaCodec.kt:267-275`，**不受影响**）。
+- 触发是**逐帧判定**的：`decodeOrDropLocked`（`:231`）由 `startPlayingStream` 对每个到达帧调用，
+  条件为 `decoder.queueSize >= AUDIO_DATA_QUEUE_CAPACITY(64) || abs(latencyInMs) > 阈值`（`:246-247`）。
+- 频率形态（已核实，并据此下调一个更悲观的初步判断）：丢帧分支末尾 `:266` 复位 `playStartTimeInUs`，
+  且 `:258` 的 `audioTrackPlayer.pause()` 内部是 `audioTrack.pause()` + `audioTrack.flush()`
+  （`AudioTrackPlayer.kt:253-254`），`AudioTrack.flush()` 复位 `playbackHeadPosition`，故下一帧的
+  `latencyInMs` 回到 ≈ 0；`queueSize >= 64` 也只需新 codec 消费掉一帧即转假。**因此不是「每帧一次
+  重建」，而是「每轮积压一次重建」** —— 持续过载时，每当 64 帧输入队列重新填满（20 ms/帧 ≈ 1.3 s
+  音频）触发一次。
+- 后果：
+  1. `decoder.flush()` 在 `OpusStreamPlayer` 自己的 `synchronized(lock)` 内被调用（`decodeOrDropLocked`
+     整体在 monitor 内），codec 重建期间**收流线程被阻塞**，socket 读取产生回压；
+  2. 重建全程持有 `codecOperationLock`，所有 codec 回调排队等待（叠加 §8.3 即落在主线程）；
+  3. 该分支的意图是**削减延迟**，却在最需要追赶的时刻注入数十毫秒停顿。
+- 确定性：成本构成与调用链**确定**；绝对耗时与听感影响**需真机实测**。
+- **处置**：§8.5 顺位 1 + 2 已于 2026-11-10 实施，见 §8.6。本条所引行号为改动前（基准
+  `739928440`）的状态。
+
+### 8.3 M-12（MEDIUM）异步 codec 回调落在主 Looper，与 §8.2 的持锁重建叠加
+
+- 文件：`BaseMediaCodecAsynchronous.kt:36`、`OpusStreamPlayer.kt:99-120`、`AudioPlayer.kt:115`
+- 事实：`codec.setCallback(SessionCallback(callbackGeneration.get()))` 使用**单参**重载，未指定 Handler。
+  `MediaCodec` 未指定 Handler 时把回调投递到**创建它的线程的 Looper**，该线程无 Looper 时回退到
+  **主 Looper**。而创建链是：netty 收流线程 → `AudioPlayer.kt:115 startPlayingStream` →
+  `synchronized(lock)` → `initDecoderLocked` → `OpusDecoder(...).apply { start() }`
+  （`OpusStreamPlayer.kt:120`）→ `BaseMediaCodec.start()` → `createCodec()`；netty EventLoop 无 Looper。
+- 后果：每个 `onInputBufferAvailable` / `onOutputBufferAvailable` 都在主线程上抢 `codecOperationLock`，
+  而 §8.2 的重建在收流线程上持该锁数十毫秒 → **每轮积压造成一次主线程停顿**，持续过载下有卡顿与
+  ANR 风险。
+- 关系：主 Looper 这一点**先于本次提交存在**；本次提交把持锁时长从可忽略提升到数十毫秒，才使其具备
+  实际危害。
+- minSdk 约束：`MediaCodec.setCallback(Callback, Handler)` 是 **API 23**，本仓库 minSdk 21 不能直接使用
+  （§7.6「API 21 不需要增加高版本 callback Handler API」的判断正确）。API 21 下的等效做法是**在自有
+  HandlerThread 的 Looper 上创建 codec**，`MediaCodec` 构造时即捕获该 Looper。
+- 确定性：未指定 Handler **确定**（代码可直接读出）；「创建线程无 Looper 因而回退到主 Looper」为
+  **推断**（依据 MediaCodec 文档化行为，置信度高）。**落地前须先用一行 `Looper.myLooper()` 日志在真机
+  确认**，不要据推断直接改动线程架构。
+
+### 8.4 M-13（MEDIUM）丢帧/重同步不清 decoder 输入队列，≈1.3 s 陈旧编码帧仍会被播放
+
+- 文件：`OpusStreamPlayer.kt:256-257`、`opus/OpusDecoder.kt:51`、`:59`、`:126-127`
+- 事实：丢帧分支只清 `decodedPcmQueue`（PCM 输出队列，`:257`），**不清 decoder 的输入队列**。
+  `OpusDecoder.queue` 是 `ArrayBlockingQueue<ByteArray>(64)`（`:51`），只在 `onCodecReleased()`
+  （`:126-127`）被清空。异步 `flush()` 的 KDoc 亦明确写出「Already queued subclass input is retained;
+  callers must coordinate their own stream queues」（`BaseMediaCodecAsynchronous.kt:198`），且基类在
+  flush 路径上**不存在任何子类清理钩子**（基类可用钩子仅 `setFormatOptions`/`setMediaCodecOptions`/
+  `onBeforeCodecStart`/`onCodecStarted`/`onCodecReleased`/`notifyCodecFailure`）。
+- 后果：当触发原因是队列满时，丢帧分支做完「丢掉当前帧 + 重建 codec + 清 PCM 队列 + 重启 AudioTrack」
+  之后，decoder 输入队列里仍有 64 帧（20 ms/帧 ≈ **1.3 s**）陈旧编码帧会被新 codec 解码并播放 ——
+  刚被 `AudioTrack.flush()` 丢掉的延迟又从输入侧回来了。重同步因此只复位了时间基准，并未真正削减积压。
+- 关系：**先于本次提交存在**（旧实现的朴素 `flush()` 同样不清子类队列），与 §7.6 的修复方向无关；但与
+  §8.2 共因 —— 积压不被清掉，就会周期性重新填满并再次触发整体重建。
+- 确定性：**确定**（队列定义、唯一清空点与 KDoc 均可直接读出）。
+- 补充：`AacStreamPlayer` 是同一形态（`AacStreamPlayer.kt:48` 容量 10、`:254` 触发、`:264` flush），
+  积压上限小一个量级，但语义缺口相同。
+- **处置**：§8.5 顺位 1 + 2 已于 2026-11-10 实施，见 §8.6。本条所引行号为改动前（基准
+  `739928440`）的状态。
+
+### 8.5 处置建议与实施顺序
+
+| 顺位 | 项 | 动作 | 风险 |
+|---|---|---|---|
+| 1 | **M-13** | 丢帧分支在清 `decodedPcmQueue` 的同时清掉 decoder 输入队列（由 `OpusDecoder`/`AacDecoder` 暴露 `clearPendingInput()`，或由基类在 flush 时提供子类钩子），使「丢帧重同步」真正削减积压 | 低。目标明确，与该分支既有意图一致 |
+| 2 | **M-11** | 评估**把 `decoder.flush()` 从丢帧分支移除**：丢弃未解码积压不需要任何 codec 操作（已由顺位 1 覆盖），flush 额外丢掉的只是 codec 内在途的数帧（数十 ms 陈旧音频），收益远小于数十毫秒停顿的代价。若移除，异步 `flush()` 将不再有生产调用点，退化为仅由测试覆盖的 API | 中。改变重同步语义，须真机对比听感与延迟收敛 |
+| 3 | **M-12** | 先按 §8.3 用日志确认回调所在 Looper；确认落在主线程后，改为在自有 HandlerThread 的 Looper 上创建 codec（API 21 可行，不需 API 23 的 `setCallback(cb, handler)`） | 中高。改动线程与 codec 所有权，属 §7.5 所述架构选择，需用户批准 |
+| 4 | （备选）§7.5 的屏障路线 | 若顺位 2 不被采纳而仍要降低成本：回到 §7.5 列出的「受控 callback 分发队列 + flush/restart 屏障」，在自有 Looper 上以哨兵消息借 FIFO 顺序隔离旧回调，可同时消除重建成本与 §8.3 的主线程阻塞 | 高。§7.5 已将其与会话替换并列为架构选择，用户此前选定会话替换；重新开启需明确决策 |
+
+验证要求（全部**未验证**）：顺位 1、2 需补 JVM 回归（积压确被清空、重同步后不再播放陈旧帧），并按
+§5.2 做真机弱网验证；顺位 3 须先取得 Looper 日志证据。
+
+### 8.6 §8.5 顺位 1 + 2 的实施记录（Claude，2026-11-10）
+
+用户批准顺位 1 + 2 后实施；顺位 3（回调 Looper）与顺位 4（§7.5 屏障路线）**未动**，仍待决策与真机
+Looper 证据。本节行号为实施后的当前工作树状态。
+
+**改动内容**
+
+| 文件 | 改动 |
+|---|---|
+| `opus/OpusDecoder.kt:73-75` | 新增 `fun clearPendingInput()`，清空输入队列（队列仍在 `:51`，`queueSize` 在 `:59`）。KDoc 写明用途与一条约束：EOS 标记走同一条队列，故不得在 `signalEndOfStream()` 之后调用 |
+| `aac/AacDecoder.kt:63-65` | 同上（队列 `:49`，`queueSize` `:54`） |
+| `opus/OpusStreamPlayer.kt:261` | 丢帧分支的 `decoder.flush()` 替换为 `decoder.clearPendingInput()`，并就近注释说明为何不再重置 codec；其后 `:262` 清 PCM 队列、`:263-264` 重启 AudioTrack、`:271` 复位时间基准均不变 |
+| `aac/AacStreamPlayer.kt:267` | 在既有 `flush()`（`:268`）之前补一次 `clearPendingInput()`。该路径的 `AacDecoder : BaseMediaCodecSynchronous`，`flush()` 是基类朴素 `codec.flush()`（`BaseMediaCodec.kt:267-275`），成本低，故保留 |
+| `CHANGELOG.md` | `[Unreleased]` → 性能，记行为变更、新增 API 与连带结果 |
+
+**不做接口改动**：`clearPendingInput()` 与既有 `queueSize` 同层，作为两个 decoder 各自的具体成员，
+未加入 `IAudioMediaCodec`，与 `queueSize` 的现有归属保持一致。
+
+**连带结果（已全仓库核实）**：`BaseMediaCodecAsynchronous.flush()` 自此**没有生产调用点**。现存
+codec 包装类 `flush()` 调用仅剩 `AacStreamPlayer.kt:268`（走同步基类）与基类释放路径
+`BaseMediaCodec.kt:217`，其余均在 `BaseMediaCodecAsynchronousTest` 中。§7.6 的会话替换实现因此退化为
+仅由单元测试覆盖的 API —— 它的正确性仍成立（§8.1），只是不再位于任何热路径上。若日后重新引入异步
+flush 的生产调用点，§8.2 的成本结论需同时复查。
+
+**静态合规自查（非执行）**：新增行均 ≤ 100 列（`.editorconfig:12 max_line_length = 100`）；
+`OpusStreamPlayer` 的 `runCatchingPreservingCancellation` 导入未因移除 flush 调用而失效 —— 仍有 5 处
+使用（`:175`、`:225`、`:263`、`:264`、`:340`）；两个新方法是「单语句 Unit 块体」，而
+`ktlint_standard_function-expression-body` 只改写函数体为单条 `return` 或赋值表达式的情形，
+`queue.clear()` 两者皆非，且同文件已有通过该检查的同形先例
+（`OpusDecoder.kt:132 override fun onEndOfStream { endCallback.invoke() }`，§7.6 记录 `:audio:ktlintCheck`
+在该分支通过）。**以上为静态判断，未执行 ktlint/detekt。**
+
+**尚缺的验证（未验证）**
+
+1. **JVM 回归未补**：本仓库现无任何测试构造 `OpusDecoder` / `AacDecoder`（已核实
+   `audio/src/test`、`demo/src/test` 下无此类构造），新增回归需要先建 mockk/Robolectric 承载。应断言：
+   丢帧分支执行后 `decoder.queueSize == 0`；OPUS 路径不再调用底层 `MediaCodec.flush()`；
+   AAC 路径仍调用一次；`clearPendingInput()` 不影响 `isAcceptingInput`。
+2. **编译与静态检查未执行**：Claude Code 无法运行 Gradle。需本机执行
+   `./gradlew --continue --rerun-tasks :audio:testDebugUnitTest detekt ktlintCheck`。
+3. **真机验证未做**：按 §5.2，需弱网下对比改动前后的延迟收敛、听感（陈旧帧是否可察）与主线程表现
+   （后者仍受 §8.3 影响，本轮未修）。

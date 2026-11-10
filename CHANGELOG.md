@@ -7,6 +7,17 @@
 
 ### 性能 (Performance)
 
+- **audio 丢帧重同步不再重建 codec 会话(§8 M-11/M-13)**:`OpusStreamPlayer` 的丢帧分支此前调
+  `decoder.flush()`,而异步 `flush()` 已改为「摘除旧实例并整体重建 codec 会话」,于是每轮积压都要在
+  持有播放器 monitor 与 codec 操作锁期间付一次 codec 重建成本;该分支本意是削减延迟,反而注入停顿。
+  现改为 `decoder.clearPendingInput()`,直接丢弃仍停在 decoder 输入队列中的积压(上限 64 帧,
+  20 ms/帧 ≈ 1.3 s 音频),完全不触碰 codec。`AacStreamPlayer` 走同步基类,其 `flush()` 是低成本的
+  codec 复位,保留,但同样先清积压。
+  - **行为变更**:重同步此前只复位时间基准,输入队列里的陈旧编码帧仍会被解码播放;现在这些积压会被
+    真正丢弃。codec 内已在途的数帧仍会解码,因此仍可能播出数十毫秒陈旧音频。
+  - **新增 API**:`OpusDecoder.clearPendingInput()`、`AacDecoder.clearPendingInput()`。
+    `OpusDecoder` 的 EOS 标记走同一条队列,故该方法不得在 `signalEndOfStream()` 之后调用(见 KDoc)。
+  - 连带结果:`BaseMediaCodecAsynchronous.flush()` 自此没有生产调用点,仅由单元测试覆盖。
 - **camerax 编码器能力查询不再泄漏 + 按 mime 缓存(H1)**:`CodecExt` 的
   `getSupported{ColorFormat,ProfileLevels}For{Encoder,Decoder}` 原 `createEncoderByType()` 后只读
   能力、从不 `release()`(靠 GC finalizer 回收原生编码器);改为 `try/finally` 立即释放,编码器能力

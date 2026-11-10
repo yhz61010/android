@@ -53,6 +53,17 @@ class AacDecoder(
 
     val queueSize: Int get() = queue.size
 
+    /**
+     * Discards every frame still waiting to be submitted to the codec.
+     *
+     * Stream owners use this to shed accumulated latency; a resync that only restarts AudioTrack
+     * would replay the queued backlog instead of dropping it. Frames already handed to the codec
+     * are unaffected and still decode.
+     */
+    fun clearPendingInput() {
+        queue.clear()
+    }
+
     // ByteBuffer key
     // AAC Profile 5 bits | SampleRate 4 bits | Channel Count 4 bits | Others 3 bits (normally 0)
     // Example: AAC LC, 44.1 kHz, Mono. Separate values: 2, 4, 1.

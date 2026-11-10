@@ -59,6 +59,21 @@ class OpusDecoder(
     val queueSize: Int get() = queue.size
     val isAcceptingInput: Boolean get() = isRunning && !eosRequested.get()
 
+    /**
+     * Discards every frame still waiting to be submitted to the codec.
+     *
+     * Stream owners use this to shed accumulated latency. The queue holds up to 64 frames, about
+     * 1.3 seconds of audio at 20 ms per frame, so a resync that only restarts AudioTrack would
+     * replay that whole backlog. Frames already handed to the codec are unaffected and still
+     * decode.
+     *
+     * Must not be called after signalEndOfStream(): the end-of-stream marker travels through this
+     * same queue and clearing it would drop the marker.
+     */
+    fun clearPendingInput() {
+        queue.clear()
+    }
+
     override fun setFormatOptions(format: MediaFormat) {
         // https://developer.android.com/reference/android/media/MediaCodec#CSD
         val csd0BB = ByteBuffer.wrap(csd0)

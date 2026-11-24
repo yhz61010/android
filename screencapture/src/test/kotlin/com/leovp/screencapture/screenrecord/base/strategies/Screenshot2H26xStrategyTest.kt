@@ -1,5 +1,6 @@
 package com.leovp.screencapture.screenrecord.base.strategies
 
+import android.app.Activity
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.opengl.EGL14
@@ -29,6 +30,7 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -157,17 +159,188 @@ class Screenshot2H26xStrategyTest {
     }
 
     @Test
+    fun `recording failure callback can synchronously await release`() {
+        val failure = IllegalStateException("Encoder start failed")
+        val callbackFinished = CountDownLatch(1)
+        val callbackReleased = AtomicBoolean()
+        val encoderReleased = AtomicBoolean()
+        val eglReleased = AtomicBoolean()
+        val resourcesReleasedBeforeCallback = AtomicBoolean()
+        every { codec.start() } throws failure
+        every { codec.release() } answers { encoderReleased.set(true) }
+        every { EGL14.eglTerminate(any()) } answers {
+            eglReleased.set(true)
+            true
+        }
+        every { listener.onError(failure) } answers {
+            resourcesReleasedBeforeCallback.set(encoderReleased.get() && eglReleased.get())
+            callbackReleased.set(
+                runBlocking { withTimeoutOrNull(500) { subject.releaseAndJoin() } } == true
+            )
+            callbackFinished.countDown()
+        }
+
+        subject.startRecord(mockk<Activity>(relaxed = true))
+
+        assertTrue(callbackFinished.await(3, TimeUnit.SECONDS), "Failure was not delivered")
+        assertTrue(resourcesReleasedBeforeCallback.get(), "Callback ran before resource release")
+        assertTrue(callbackReleased.get(), "onError deadlocked while awaiting releaseAndJoin")
+        assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
+        assertNull(subject.h26xEncoder)
+        verify(exactly = 1) { listener.onError(failure) }
+        verify(exactly = 1) { codec.release() }
+    }
+
+    @Test
+    fun `initialization failure callback can synchronously await release`() {
+        val failure = IllegalStateException("Encoder configuration failed")
+        val callbackFinished = CountDownLatch(1)
+        val callbackReleased = AtomicBoolean()
+        val encoderReleased = AtomicBoolean()
+        val releasedBeforeCallback = AtomicBoolean()
+        every {
+            codec.configure(any(), null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        } throws failure
+        every { codec.release() } answers { encoderReleased.set(true) }
+        every { listener.onError(failure) } answers {
+            releasedBeforeCallback.set(encoderReleased.get())
+            callbackReleased.set(
+                runBlocking { withTimeoutOrNull(500) { subject.releaseAndJoin() } } == true
+            )
+            callbackFinished.countDown()
+        }
+
+        subject.startRecord(mockk<Activity>(relaxed = true))
+
+        assertTrue(callbackFinished.await(3, TimeUnit.SECONDS), "Failure was not delivered")
+        assertTrue(releasedBeforeCallback.get(), "Callback ran before encoder release")
+        assertTrue(callbackReleased.get(), "onError deadlocked while awaiting releaseAndJoin")
+        assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
+        assertNull(subject.h26xEncoder)
+        verify(exactly = 1) { listener.onError(failure) }
+        verify(exactly = 1) { codec.release() }
+        verify(exactly = 0) { codec.start() }
+    }
+
+    @Test
+    fun `recording output failure reports once after release even when listener throws`() {
+        val failure = IllegalStateException("Output buffer failed")
+        val startEntered = CountDownLatch(1)
+        val resumeStart = CountDownLatch(1)
+        val callbackFinished = CountDownLatch(1)
+        val callbackReleased = AtomicBoolean()
+        every { codec.start() } answers {
+            startEntered.countDown()
+            check(resumeStart.await(3, TimeUnit.SECONDS))
+        }
+        every { codec.getOutputBuffer(7) } throws failure
+        every { listener.onError(failure) } answers {
+            callbackReleased.set(
+                runBlocking { withTimeoutOrNull(500) { subject.releaseAndJoin() } } == true
+            )
+            callbackFinished.countDown()
+            error("Listener failed")
+        }
+
+        try {
+            subject.startRecord(mockk<Activity>(relaxed = true))
+            assertTrue(startEntered.await(3, TimeUnit.SECONDS))
+            callback.captured.onOutputBufferAvailable(codec, 7, MediaCodec.BufferInfo())
+            resumeStart.countDown()
+
+            assertTrue(callbackFinished.await(3, TimeUnit.SECONDS), "Failure was not delivered")
+            assertTrue(callbackReleased.get(), "onError deadlocked while awaiting releaseAndJoin")
+            assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
+            subject.onStop()
+            subject.onRelease()
+            callback.captured.onOutputBufferAvailable(codec, 8, MediaCodec.BufferInfo())
+            verify(exactly = 1) { listener.onError(failure) }
+            verify(exactly = 1) { codec.releaseOutputBuffer(7, false) }
+            verify(exactly = 0) { codec.getOutputBuffer(8) }
+            verify(exactly = 1) { codec.release() }
+            assertNull(subject.h26xEncoder)
+        } finally {
+            resumeStart.countDown()
+        }
+    }
+
+    @Test
+    fun `stopping queued recording waits for owner release without reporting failure`() {
+        subject.onInit()
+        val ownerBlocked = CountDownLatch(1)
+        val resumeOwner = CountDownLatch(1)
+        executor().execute {
+            ownerBlocked.countDown()
+            check(resumeOwner.await(3, TimeUnit.SECONDS))
+        }
+
+        try {
+            assertTrue(ownerBlocked.await(3, TimeUnit.SECONDS))
+            subject.startRecord(mockk<Activity>(relaxed = true))
+            subject.onStop()
+
+            assertNull(runBlocking { withTimeoutOrNull(100) { subject.releaseAndJoin() } })
+            assertSame(codec, subject.h26xEncoder)
+            verify(exactly = 0) { codec.release() }
+            resumeOwner.countDown()
+
+            assertTrue(runBlocking { withTimeout(3_000) { subject.releaseAndJoin() } })
+            assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
+            assertNull(subject.h26xEncoder)
+            verify(exactly = 1) { codec.release() }
+            verify(exactly = 0) { codec.start() }
+            verify(exactly = 0) { listener.onError(any()) }
+        } finally {
+            resumeOwner.countDown()
+        }
+    }
+
+    @Test
+    fun `stopping during encoder start releases without reporting cancellation`() {
+        val startEntered = CountDownLatch(1)
+        val resumeStart = CountDownLatch(1)
+        every { codec.start() } answers {
+            startEntered.countDown()
+            check(resumeStart.await(3, TimeUnit.SECONDS))
+        }
+
+        try {
+            subject.startRecord(mockk<Activity>(relaxed = true))
+            assertTrue(startEntered.await(3, TimeUnit.SECONDS))
+            subject.onStop()
+            resumeStart.countDown()
+
+            assertTrue(runBlocking { withTimeout(3_000) { subject.releaseAndJoin() } })
+            assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
+            assertNull(subject.h26xEncoder)
+            verify(exactly = 1) { codec.stop() }
+            verify(exactly = 1) { codec.release() }
+            verify(exactly = 0) { listener.onError(any()) }
+        } finally {
+            resumeStart.countDown()
+        }
+    }
+
+    @Test
     fun `output failure without recording job releases and reports once`() {
         val failure = IllegalStateException("Output buffer failed")
         val reported = CountDownLatch(1)
+        val callbackReleased = AtomicBoolean()
         every { codec.getOutputBuffer(7) } throws failure
-        every { listener.onError(failure) } answers { reported.countDown() }
+        every { listener.onError(failure) } answers {
+            callbackReleased.set(
+                runBlocking { withTimeoutOrNull(500) { subject.releaseAndJoin() } } == true
+            )
+            reported.countDown()
+        }
         subject.onInit()
         subject.onStart()
 
         callback.captured.onOutputBufferAvailable(codec, 7, MediaCodec.BufferInfo())
 
         assertTrue(reported.await(3, TimeUnit.SECONDS), "Failure was not delivered")
+        assertTrue(callbackReleased.get(), "onError deadlocked while awaiting releaseAndJoin")
+        assertTrue(executor().awaitTermination(3, TimeUnit.SECONDS))
         assertNull(subject.h26xEncoder)
         verify(exactly = 1) { codec.releaseOutputBuffer(7, false) }
         verify(exactly = 1) { codec.release() }

@@ -32,7 +32,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val emissions = AtomicInteger()
         val schedulers = mutableListOf<FakeScheduler>()
@@ -64,7 +64,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val attempts = AtomicInteger()
         val scheduler = FakeScheduler()
@@ -109,7 +109,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val dispatchReached = CountDownLatch(1)
         val releaseDispatch = CountDownLatch(1)
@@ -150,7 +150,7 @@ class NetworkMonitorLifecycleTest {
     fun `failed initial scheduling rolls back the monitor session`() {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val scheduler = FakeScheduler(failOnPost = true)
         val context = RuntimeEnvironment.getApplication() as Application
@@ -186,7 +186,7 @@ class NetworkMonitorLifecycleTest {
             }
             true
         }
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val schedulers = mutableListOf<FakeScheduler>()
         val results = mutableListOf<NetworkMonitor.NetworkMonitorResult>()
@@ -221,7 +221,7 @@ class NetworkMonitorLifecycleTest {
             callbacks += secondArg<(NetworkUtil.WifiSignal) -> Unit>()
             true
         }
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
         val schedulers = mutableListOf<FakeScheduler>()
         val results = mutableListOf<NetworkMonitor.NetworkMonitorResult>()
         val monitor = NetworkMonitor(
@@ -246,6 +246,134 @@ class NetworkMonitorLifecycleTest {
     }
 
     @Test
+    fun `stop relinquishes a failed Wi-Fi handle to process cleanup`() {
+        mockkObject(NetworkUtil)
+        val callbacks = mutableListOf<(NetworkUtil.WifiSignal) -> Unit>()
+        val unregisterAttempts = mutableListOf<(NetworkUtil.WifiSignal) -> Unit>()
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } answers {
+            callbacks += secondArg<(NetworkUtil.WifiSignal) -> Unit>()
+            true
+        }
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } answers {
+            unregisterAttempts += firstArg<(NetworkUtil.WifiSignal) -> Unit>()
+            unregisterAttempts.size > 1
+        }
+        val monitor = NetworkMonitor(
+            RuntimeEnvironment.getApplication(),
+            "127.0.0.1",
+            {},
+            schedulerFactory = { FakeScheduler() }
+        )
+
+        try {
+            monitor.startMonitor()
+            monitor.stopMonitor()
+            monitor.stopMonitor()
+            monitor.stopMonitor()
+
+            assertEquals(1, unregisterAttempts.size)
+            assertTrue(unregisterAttempts.all { it === callbacks.single() })
+        } finally {
+            every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
+    fun `restart waits for process cleanup before accepting a new Wi-Fi subscription`() {
+        mockkObject(NetworkUtil)
+        val callbacks = mutableListOf<(NetworkUtil.WifiSignal) -> Unit>()
+        val unregisterAttempts = mutableListOf<(NetworkUtil.WifiSignal) -> Unit>()
+        var cleanupPending = false
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } answers {
+            if (cleanupPending) {
+                false
+            } else {
+                callbacks += secondArg<(NetworkUtil.WifiSignal) -> Unit>()
+                true
+            }
+        }
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } answers {
+            unregisterAttempts += firstArg<(NetworkUtil.WifiSignal) -> Unit>()
+            cleanupPending = true
+            false
+        }
+        val monitor = NetworkMonitor(
+            RuntimeEnvironment.getApplication(),
+            "127.0.0.1",
+            {},
+            schedulerFactory = { FakeScheduler() }
+        )
+
+        try {
+            monitor.startMonitor()
+            monitor.stopMonitor()
+            repeat(3) { monitor.startMonitor() }
+
+            assertEquals(1, callbacks.size)
+            assertEquals(1, unregisterAttempts.size)
+            assertTrue(unregisterAttempts.all { it === callbacks.single() })
+
+            cleanupPending = false
+            monitor.startMonitor()
+            monitor.stopMonitor()
+
+            assertEquals(2, callbacks.size)
+            assertEquals(2, unregisterAttempts.size)
+            assertSame(callbacks.first(), unregisterAttempts.first())
+            assertSame(callbacks.last(), unregisterAttempts.last())
+        } finally {
+            cleanupPending = false
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
+    fun `failed old Wi-Fi unregistration cannot pollute a restarted session`() {
+        mockkObject(NetworkUtil)
+        every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
+        val callbacks = mutableListOf<(NetworkUtil.WifiSignal) -> Unit>()
+        every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } answers {
+            callbacks += secondArg<(NetworkUtil.WifiSignal) -> Unit>()
+            true
+        }
+        var canUnregister = false
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } answers {
+            canUnregister
+        }
+        val schedulers = mutableListOf<FakeScheduler>()
+        val results = mutableListOf<NetworkMonitor.NetworkMonitorResult>()
+        val monitor = NetworkMonitor(
+            RuntimeEnvironment.getApplication(),
+            "127.0.0.1",
+            results::add,
+            schedulerFactory = { FakeScheduler().also(schedulers::add) }
+        )
+
+        try {
+            monitor.startMonitor()
+            val oldCallback = callbacks.single()
+            monitor.startMonitor()
+            oldCallback.invoke(NetworkUtil.WifiSignal(100, -40, 5, 95))
+            schedulers.last().runNext()
+            assertEquals(-1, results.single().wifiScore)
+
+            canUnregister = true
+            monitor.startMonitor()
+            callbacks.last().invoke(NetworkUtil.WifiSignal(72, -45, 4, 90))
+            oldCallback.invoke(NetworkUtil.WifiSignal(-1, -1, -1, -1))
+            schedulers.last().runNext()
+            assertEquals(90, results.last().wifiScore)
+        } finally {
+            canUnregister = true
+            monitor.stopMonitor()
+            unmockkObject(NetworkUtil)
+        }
+    }
+
+    @Test
     fun `monitor and traffic helper retain only application context`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val app = activity.applicationContext
@@ -253,7 +381,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(capture(monitorContext), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
         val scheduler = FakeScheduler()
         val monitor = NetworkMonitor(activity, "127.0.0.1", {}, schedulerFactory = { scheduler })
         val constructor = TrafficStatHelper::class.java.getDeclaredConstructor(Context::class.java)
@@ -277,7 +405,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
         val scheduler = FakeScheduler()
         val monitor = NetworkMonitor(
             RuntimeEnvironment.getApplication(),
@@ -305,7 +433,7 @@ class NetworkMonitorLifecycleTest {
             1.0
         }
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val schedulers = mutableListOf<FakeScheduler>()
         val emissions = AtomicInteger()
@@ -343,7 +471,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val callbackEntered = CountDownLatch(1)
         val releaseCallback = CountDownLatch(1)
@@ -387,7 +515,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val callbackEntered = CountDownLatch(1)
         val releaseCallback = CountDownLatch(1)
@@ -444,7 +572,7 @@ class NetworkMonitorLifecycleTest {
         mockkObject(NetworkUtil)
         every { NetworkUtil.getLatency(any(), any(), any()) } returns 1.0
         every { NetworkUtil.getWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
-        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any(), any()) } returns true
+        every { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(any()) } returns true
 
         val firstEntered = CountDownLatch(1)
         val releaseFirst = CountDownLatch(1)

@@ -14,6 +14,10 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
+ * Migration: callers must now provide [errorCallback] and rebuild precompiled consumers.
+ * It reports terminal codec/output failures outside the codec lock. Return promptly and hand
+ * cleanup to an external coroutine; do not synchronously await release from this callback.
+ *
  * Author: Michael Leo
  * Date: 20-6-18 下午2:05
  */
@@ -23,6 +27,7 @@ class AacEncoder(
     private val bitrate: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val callback: IEncodeCallback,
+    private val errorCallback: (Throwable) -> Unit,
 ) : BaseMediaCodecAsynchronous(
     MediaFormat.MIMETYPE_AUDIO_AAC,
     sampleRate,
@@ -234,6 +239,10 @@ class AacEncoder(
     }
 
     fun encode(input: ByteArray): Boolean = isRunning && queue.offer(input)
+
+    override fun notifyCodecFailure(error: Throwable) {
+        errorCallback(error)
+    }
 
     override fun onCodecReleased() {
         queue.clear()

@@ -6,6 +6,14 @@ package com.leovp.audio.base.iters
  */
 interface AudioEncoderWrapper {
     /**
+     * The selected terminal encoding/output failure, retained after release. This can become
+     * visible before the asynchronous failure callback runs. After [releaseAndJoin] returns it
+     * includes every failure selected before teardown, even if its notification was delayed.
+     * Migration: custom wrappers must expose their stable failure snapshot, or null when healthy.
+     */
+    val failure: Throwable?
+
+    /**
      * @param input The byte order of [input] is little endian.
      */
     fun encode(input: ByteArray)

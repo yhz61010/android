@@ -136,7 +136,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         binding.btnPlayPCM.setOnCheckedChangeListener { btn, isChecked ->
             if (isChecked) {
-                audioPlayer = AudioPlayer(
+                val player = AudioPlayer(
                     this@AudioActivity,
                     audioDecoderInfo,
                     onFailure = { error -> LogContext.log.e(TAG, "PCM playback failed", error) },
@@ -144,6 +144,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     usage = AUDIO_ATTR_USAGE,
                     contentType = AUDIO_ATTR_CONTENT_TYPE
                 )
+                audioPlayer = player
                 val playbackThread = Thread {
                     val pcmIs = BufferedInputStream(FileInputStream(pcmFile))
                     pcmInputStream.set(pcmIs)
@@ -161,7 +162,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                                     } else {
                                         readBuffer.copyOf(readSize)
                                     }
-                                audioPlayer?.play(pcmData)
+                                player.play(pcmData)
                             }
                         }
                     } catch (e: Exception) {
@@ -170,7 +171,9 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                         }
                     } finally {
                         pcmInputStream.compareAndSet(pcmIs, null)
-                        runOnUiThread { btn.isChecked = false }
+                        runOnUiThread {
+                            if (audioPlayer === player) btn.isChecked = false
+                        }
                     }
                 }
                 playPcmThread = playbackThread
@@ -193,25 +196,21 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     try {
                         player.playAac(
                             aacFile = aacFile,
-                            endCallback = { runOnUiThread { btn.isChecked = false } },
+                            endCallback = {
+                                runOnUiThread {
+                                    if (aacFilePlayer === player) btn.isChecked = false
+                                }
+                            },
                             errorCallback = { error ->
                                 LogContext.log.e(TAG, "AAC playback failed", error)
-                                runOnUiThread {
-                                    if (aacFilePlayer === player) aacFilePlayer = null
-                                    btn.isChecked = false
-                                    toast("Unable to play AAC file")
-                                }
+                                resetAacPlaybackAfterFailure(player)
                             }
                         )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
                         LogContext.log.e(TAG, "Play AAC file failed", e)
-                        runOnUiThread {
-                            if (aacFilePlayer === player) aacFilePlayer = null
-                            btn.isChecked = false
-                            toast("Unable to play AAC file")
-                        }
+                        resetAacPlaybackAfterFailure(player)
                     }
                 }
             } else {
@@ -232,30 +231,44 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     try {
                         player.playOpus(
                             opusFile = opusFile,
-                            endCallback = { runOnUiThread { btn.isChecked = false } },
+                            endCallback = {
+                                runOnUiThread {
+                                    if (opusFilePlayer === player) btn.isChecked = false
+                                }
+                            },
                             errorCallback = { error ->
                                 LogContext.log.e(TAG, "Play OPUS file failed", error)
-                                runOnUiThread {
-                                    if (opusFilePlayer === player) opusFilePlayer = null
-                                    btn.isChecked = false
-                                    toast("Unable to play OPUS file")
-                                }
+                                resetOpusPlaybackAfterFailure(player)
                             }
                         )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
                         LogContext.log.e(TAG, "Start OPUS playback failed", e)
-                        runOnUiThread {
-                            if (opusFilePlayer === player) opusFilePlayer = null
-                            btn.isChecked = false
-                            toast("Unable to play OPUS file")
-                        }
+                        resetOpusPlaybackAfterFailure(player)
                     }
                 }
             } else {
                 stopOpusPlayback()
             }
+        }
+    }
+
+    private fun resetAacPlaybackAfterFailure(player: AacFilePlayer) {
+        runOnUiThread {
+            if (aacFilePlayer !== player) return@runOnUiThread
+            aacFilePlayer = null
+            binding.btnPlayAac.isChecked = false
+            toast("Unable to play AAC file")
+        }
+    }
+
+    private fun resetOpusPlaybackAfterFailure(player: OpusFilePlayer) {
+        runOnUiThread {
+            if (opusFilePlayer !== player) return@runOnUiThread
+            opusFilePlayer = null
+            binding.btnPlayOpus.isChecked = false
+            toast("Unable to play OPUS file")
         }
     }
 
@@ -306,10 +319,10 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
 
         override fun onStop(stopResult: Boolean) {
             runCatching {
-                out?.flush()
                 out?.close()
             }.onFailure { LogContext.log.e(TAG, "Close recording output failed", it) }
-            if (!stopResult && recordingIntents.failIfCurrent(token, type)) {
+            val failedToken = if (stopResult) null else recordingIntents.failIfCurrent(token, type)
+            if (failedToken != null) {
                 val failedRecorder = recorderRef.get()
                 launchCleanup("Finalize failed recording") {
                     recordingMutex.withLock {
@@ -318,6 +331,7 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     failedRecorder?.stopRecordAndJoin()
                 }
                 runOnUiThread {
+                    if (!recordingIntents.isStopped(failedToken)) return@runOnUiThread
                     when (type) {
                         AudioType.PCM -> binding.btnRecordPcm.isChecked = false
                         AudioType.AAC -> binding.btnRecordAac.isChecked = false
@@ -399,8 +413,11 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                                 runCatching { out?.close() }
                                     .onFailure(error::addSuppressed)
                                 LogContext.log.e(TAG, "Start recording failed", error)
-                                if (failedCurrentIntent) {
+                                if (failedCurrentIntent != null) {
                                     runOnUiThread {
+                                        if (!recordingIntents.isStopped(failedCurrentIntent)) {
+                                            return@runOnUiThread
+                                        }
                                         toast("Unable to start recording")
                                         when (type) {
                                             AudioType.PCM -> binding.btnRecordPcm.isChecked = false
@@ -419,9 +436,13 @@ class AudioActivity : BaseDemonstrationActivity<ActivityAudioBinding>(R.layout.a
                     //      this@AudioActivity,
                     //      deniedList
                     //  )
-                    if (recordingIntents.failIfCurrent(token, type)) {
-                        toast("Deny record permission")
-                        finish()
+                    val failedToken = recordingIntents.failIfCurrent(token, type)
+                    if (failedToken != null) {
+                        runOnUiThread {
+                            if (!recordingIntents.isStopped(failedToken)) return@runOnUiThread
+                            toast("Deny record permission")
+                            finish()
+                        }
                     }
                 }
             }

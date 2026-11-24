@@ -25,6 +25,7 @@ class FlaterExtLimitTest {
     fun `decompress within the cap round-trips normally`() {
         val data = "hello world".encodeToByteArray()
 
-        data.compress().decompress(maxOutputSize = 1024).decodeToString() shouldBeEqualTo "hello world"
+        data.compress().decompress(maxOutputSize = 1024).decodeToString() shouldBeEqualTo
+            "hello world"
     }
 }

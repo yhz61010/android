@@ -1,6 +1,7 @@
 package com.leovp.demo.basiccomponents.examples.ffmpeg.utils
 
 import android.os.SystemClock
+import android.util.Size
 import com.leovp.android.exts.screenAvailableResolution
 import com.leovp.ffmpeg.video.H264HevcDecoder
 import com.leovp.json.toJsonString
@@ -15,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.launch
 
 /**
@@ -41,8 +44,6 @@ class DecodeH264RawFileByFFMpeg {
     private lateinit var nalUnitReader: AnnexBNalUnitReader
     private var renderWidth = 0
     private var renderHeight = 0
-    private var configuredVideoWidth = 0
-    private var configuredVideoHeight = 0
 
     private val videoDecoder = H264HevcDecoder()
 
@@ -79,7 +80,6 @@ class DecodeH264RawFileByFFMpeg {
         val renderSize = glSurfaceView.context.screenAvailableResolution
         renderWidth = renderSize.width
         renderHeight = renderSize.height
-        updateVideoDimension(videoInfo.width, videoInfo.height)
     }
 
     private fun initDecoder(sps: ByteArray, pps: ByteArray): H264HevcDecoder.DecodeVideoInfo {
@@ -92,22 +92,21 @@ class DecodeH264RawFileByFFMpeg {
     private fun decodeVideo(rawVideo: ByteArray): List<H264HevcDecoder.DecodedVideoFrame> =
         videoDecoder.decodeFrames(rawVideo)
 
-    private fun renderFrame(frame: H264HevcDecoder.DecodedVideoFrame) {
-        updateVideoDimension(frame.width, frame.height)
+    private suspend fun renderFrame(frame: H264HevcDecoder.DecodedVideoFrame) {
+        val startedAt = SystemClock.elapsedRealtime()
         val yuv420Type = if (videoInfo.pixelFormatId < 0) {
             BaseRenderer.Yuv420Type.I420
         } else {
             BaseRenderer.Yuv420Type.getType(videoInfo.pixelFormatId)
         }
-        glSurfaceView.render(frame.yuvOrRgbBytes, yuv420Type)
-    }
-
-    private fun updateVideoDimension(width: Int, height: Int) {
-        if (width <= 0 || height <= 0) return
-        if (width == configuredVideoWidth && height == configuredVideoHeight) return
-        glSurfaceView.setVideoDimension(width, height, renderWidth, renderHeight)
-        configuredVideoWidth = width
-        configuredVideoHeight = height
+        glSurfaceView.renderAndAwait(
+            frame.yuvOrRgbBytes,
+            Size(frame.width, frame.height),
+            Size(renderWidth, renderHeight),
+            yuv420Type
+        )
+        val remaining = FRAME_INTERVAL_MS - (SystemClock.elapsedRealtime() - startedAt)
+        if (remaining > 0) delay(remaining.milliseconds)
     }
 
     fun close() {
@@ -163,7 +162,7 @@ class DecodeH264RawFileByFFMpeg {
                     )
                 }
                 if (reachedEndOfFile && !isClosed) {
-                    videoDecoder.drain().forEach(::renderFrame)
+                    videoDecoder.drain().forEach { renderFrame(it) }
                 }
             }.onFailure {
                 if (it !is CancellationException) {
@@ -173,15 +172,14 @@ class DecodeH264RawFileByFFMpeg {
         }
     }
 
-    private fun decodeAndRender(encodedPacket: ByteArray, nalType: Int) {
+    private suspend fun decodeAndRender(encodedPacket: ByteArray, nalType: Int) {
         val startNs = SystemClock.elapsedRealtimeNanos()
-        var endNs = startNs
         try {
             if (isClosed) return
             val decodedFrames = decodeVideo(encodedPacket)
             val decodedNs = SystemClock.elapsedRealtimeNanos()
-            decodedFrames.forEach(::renderFrame)
-            endNs = SystemClock.elapsedRealtimeNanos()
+            decodedFrames.forEach { renderFrame(it) }
+            val endNs = SystemClock.elapsedRealtimeNanos()
             val nalTypeName =
                 when (nalType) {
                     H264_NAL_SPS -> "SPS"
@@ -202,11 +200,7 @@ class DecodeH264RawFileByFFMpeg {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            endNs = SystemClock.elapsedRealtimeNanos()
             LogContext.log.e(TAG, "decode error.", e)
         }
-
-        val sleepOffset = FRAME_INTERVAL_MS - (endNs - startNs) / 1_000_000
-        if (sleepOffset > 0 && !isClosed) Thread.sleep(sleepOffset)
     }
 }

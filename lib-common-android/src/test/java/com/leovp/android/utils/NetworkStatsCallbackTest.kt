@@ -7,6 +7,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.slot
+import java.util.concurrent.TimeUnit
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,16 +20,49 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class NetworkStatsCallbackTest {
+    private val managers = mutableListOf<ConnectivityManager>()
+
+    private fun context(manager: ConnectivityManager): Context {
+        managers += manager
+        val app = mockk<Context>(relaxed = true)
+        every { app.applicationContext } returns app
+        every { app.getSystemService(Context.CONNECTIVITY_SERVICE) } returns manager
+        return app
+    }
+
+    @After
+    fun releaseRegistrations() {
+        managers.forEach { manager ->
+            every {
+                manager.unregisterNetworkCallback(any<ConnectivityManager.NetworkCallback>())
+            } returns Unit
+        }
+        val callbacksField = NetworkUtil::class.java.getDeclaredField("wifiNetworkCallbacks")
+            .apply { isAccessible = true }
+        @Suppress("UNCHECKED_CAST")
+        val callbacks = callbacksField.get(NetworkUtil) as Map<(NetworkUtil.WifiSignal) -> Unit, *>
+        callbacks.keys.toList().forEach { NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(it) }
+        // A pending callback is intentionally no longer addressable by its business key.
+        val pendingField = NetworkUtil::class.java.getDeclaredField("pendingWifiCleanup")
+            .apply { isAccessible = true }
+        val lockField = NetworkUtil::class.java.getDeclaredField("wifiNetworkCallbackLock")
+            .apply { isAccessible = true }
+        val lock = checkNotNull(lockField.get(NetworkUtil))
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+        while (synchronized(lock) { (pendingField.get(NetworkUtil) as Set<*>).isNotEmpty() }) {
+            assertTrue("pending test cleanup did not finish", System.nanoTime() < deadline)
+            Thread.sleep(10)
+        }
+    }
+
     @Test
     fun `wifi stats listener is registered once and can be unregistered`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
-        val context = mockk<Context>(relaxed = true) {
-            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
-        }
+        val context = context(connectivityManager)
         val callback: (NetworkUtil.WifiSignal) -> Unit = {}
 
         assertTrue(NetworkUtil.getWifiNetworkStatsAboveAndroidS(context, callback))
-        assertTrue(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback))
+        assertTrue(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(callback))
 
         verify(exactly = 1) {
             connectivityManager.registerNetworkCallback(
@@ -51,9 +86,7 @@ class NetworkStatsCallbackTest {
     @Test
     fun `failed framework unregister detaches the business callback`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
-        val context = mockk<Context>(relaxed = true) {
-            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
-        }
+        val context = context(connectivityManager)
         var callbackCount = 0
         val callback: (NetworkUtil.WifiSignal) -> Unit = { callbackCount++ }
         val frameworkCallback = slot<ConnectivityManager.NetworkCallback>()
@@ -71,7 +104,7 @@ class NetworkStatsCallbackTest {
         } throws
             IllegalStateException("transient unregister failure")
 
-        val unregistered = NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback)
+        val unregistered = NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(callback)
         frameworkCallback.captured.onLost(mockk(relaxed = true))
 
         assertFalse(unregistered)
@@ -84,11 +117,9 @@ class NetworkStatsCallbackTest {
     }
 
     @Test
-    fun `failed framework unregister keeps the callback handle for retry`() {
+    fun `failed framework unregister retries independently of repeated calls`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
-        val context = mockk<Context>(relaxed = true) {
-            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
-        }
+        val context = context(connectivityManager)
         val callback: (NetworkUtil.WifiSignal) -> Unit = {}
         NetworkUtil.getWifiNetworkStatsAboveAndroidS(context, callback)
         every {
@@ -97,10 +128,10 @@ class NetworkStatsCallbackTest {
             )
         } throws IllegalStateException("transient unregister failure") andThen Unit
 
-        assertFalse(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback))
-        assertTrue(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(context, callback))
+        assertFalse(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(callback))
+        assertTrue(NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(callback))
 
-        verify(exactly = 2) {
+        verify(timeout = 5_000, exactly = 2) {
             connectivityManager.unregisterNetworkCallback(
                 any<ConnectivityManager.NetworkCallback>()
             )
@@ -110,9 +141,7 @@ class NetworkStatsCallbackTest {
     @Test
     fun `failed replacement unregister does not register a second callback`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
-        val context = mockk<Context>(relaxed = true) {
-            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
-        }
+        val context = context(connectivityManager)
         val callback: (NetworkUtil.WifiSignal) -> Unit = {}
         NetworkUtil.getWifiNetworkStatsAboveAndroidS(context, callback)
         every {
@@ -134,11 +163,7 @@ class NetworkStatsCallbackTest {
     @Test
     fun `registration failure is reported without retaining a mapping`() {
         val connectivityManager = mockk<ConnectivityManager>(relaxed = true)
-        val appContext = mockk<Context>(relaxed = true)
-        val context = mockk<Context> {
-            every { applicationContext } returns appContext
-            every { getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
-        }
+        val context = context(connectivityManager)
         val callback: (NetworkUtil.WifiSignal) -> Unit = {}
         every {
             connectivityManager.registerNetworkCallback(

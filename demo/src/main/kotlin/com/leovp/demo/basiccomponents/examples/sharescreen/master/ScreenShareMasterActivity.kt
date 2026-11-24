@@ -48,7 +48,6 @@ import com.leovp.json.toJsonString
 import com.leovp.json.toObject
 import com.leovp.log.LogContext
 import com.leovp.log.base.ITAG
-import com.leovp.screencapture.screenrecord.base.strategies.ScreenRecordMediaCodecStrategy
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -56,6 +55,8 @@ import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import java.util.Timer
 import java.util.TimerTask
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -92,6 +93,8 @@ class ScreenShareMasterActivity :
     private var lastScreenRotation = 0
     private var testTimer: Timer? = null
     private var testTimerTask: TimerTask? = null
+    private val destroyed = AtomicBoolean(false)
+    private val rotationGeneration = AtomicLong()
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
@@ -99,40 +102,51 @@ class ScreenShareMasterActivity :
     private var mediaProjectService: MediaProjectionService? = null
     private var serviceIntent: Intent? = null
     private var bound: Boolean = false
+    private var bindingRequested = false
+    private var serviceStarted = false
     private var serviceConn = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder) {
+            if (destroyed.get()) return
             LogContext.log.i(ITAG, "===== onServiceConnected($name) =====")
             bound = true
-            mediaProjectService = (service as MediaProjectionService.CustomBinder).service.also {
-                it.outputH26xFile = true
-                it.screenDataUpdateListener = object : ScreenDataUpdateListener {
-                    @SuppressLint("SetTextI18n")
-                    override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
-                        LogContext.log.d(
-                            tag,
-                            "onUpdate[${data.size}] flags=$flags " +
-                                "presentationTimeUs=$presentationTimeUs"
-                        )
-                        if (clientChannel != null) {
-                            runOnUiThread {
+            val connectedService = (service as MediaProjectionService.CustomBinder).service
+            if (mediaProjectService !== connectedService) {
+                mediaProjectService?.screenDataUpdateListener = null
+            }
+            mediaProjectService = connectedService
+            connectedService.outputH26xFile = true
+            connectedService.screenDataUpdateListener = object : ScreenDataUpdateListener {
+                @SuppressLint("SetTextI18n")
+                override fun onUpdate(data: ByteArray, flags: Int, presentationTimeUs: Long) {
+                    if (destroyed.get() || mediaProjectService !== connectedService) return
+                    LogContext.log.d(
+                        tag,
+                        "onUpdate[${data.size}] flags=$flags " +
+                            "presentationTimeUs=$presentationTimeUs"
+                    )
+                    if (clientChannel != null) {
+                        runOnUiThread {
+                            if (!destroyed.get() && mediaProjectService === connectedService) {
                                 binding.txtInfo.text =
                                     "flags=$flags Data length=${data.size} " +
                                     "presentationTimeUs=$presentationTimeUs"
                             }
-                            runCatching {
-                                clientChannel?.let { ch ->
-                                    webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data)
-                                }
-                            }.onFailure { e -> e.printStackTrace() }
-                        } // if
-                    } // onUpdate
-                } // ScreenDataUpdateListener
-            } // mediaProjectService also
+                        }
+                        runCatching {
+                            clientChannel?.let { ch ->
+                                webSocketServerHandler.sendVideoData(ch, CMD_GRAPHIC_DATA, data)
+                            }
+                        }.onFailure { e -> e.printStackTrace() }
+                    }
+                }
+            }
         } // ServiceConnection
 
         override fun onServiceDisconnected(name: ComponentName?) {
             LogContext.log.w(ITAG, "===== onServiceDisconnected($name) =====")
             bound = false
+            mediaProjectService?.screenDataUpdateListener = null
+            mediaProjectService = null
         }
     }
 
@@ -147,17 +161,40 @@ class ScreenShareMasterActivity :
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     LogContext.log.w(ITAG, "Prepare to record...")
-
+                    val owner = mediaProjectService
+                    if (destroyed.get() || !bindingRequested || !bound || owner == null) {
+                        LogContext.log.w(
+                            ITAG,
+                            "Ignore capture consent without a bound service owner."
+                        )
+                        return@registerForActivityResult
+                    }
+                    val captureData = result.data
+                        ?: error("Intent data is null. Can not capture screen!")
+                    val startIntent = checkNotNull(serviceIntent) {
+                        "MediaProjectionService intent can't be null."
+                    }
+                    // API 26+ imposes a short promotion deadline; timeout exception types vary by
+                    // release. Wait for consent and an owner that can promote immediately.
+                    serviceStarted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(startIntent)
+                    } else {
+                        startService(startIntent)
+                    } != null
+                    if (!serviceStarted) return@registerForActivityResult
+                    try {
+                        owner.startForegroundNotification()
+                    } catch (error: Throwable) {
+                        serviceStarted = false
+                        try {
+                            stopService(startIntent)
+                        } catch (stopFailure: Throwable) {
+                            if (stopFailure !== error) error.addSuppressed(stopFailure)
+                        }
+                        throw error
+                    }
                     startServer()
-                    checkNotNull(mediaProjectService) { "mediaProjectService can not be null!" }
-                    // https://stackoverflow.com/questions/77307867/screen-capture-mediaprojection-o
-                    // n-android-14
-                    mediaProjectService?.startForegroundNotification()
-                    mediaProjectService?.setData(
-                        result.resultCode,
-                        result.data
-                            ?: error("Intent data is null. Can not capture screen!")
-                    )
+                    owner.setData(result.resultCode, captureData)
                     val screenInfo = screenAvailableResolution
                     val setting = ScreenShareSetting(
                         // Round the value to the nearest multiple of 16.
@@ -174,7 +211,7 @@ class ScreenShareMasterActivity :
                     // configure will be crashed.
                     // setting.bitrateMode = MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
                     // setting.iFrameInterval = 3
-                    mediaProjectService?.startScreenShare(setting)
+                    owner.startScreenShare(setting)
                 } else {
                     LogContext.log.w(ITAG, "Permission denied!")
                     toast("Permission denied!", error = true)
@@ -184,12 +221,8 @@ class ScreenShareMasterActivity :
         serviceIntent = Intent(this, MediaProjectionService::class.java)
         val serviceIntentRef = serviceIntent
         requireNotNull(serviceIntentRef) { "MediaProjectionService intent can't be null." }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntentRef)
-        } else {
-            startService(serviceIntentRef)
-        }
-        bindService(serviceIntentRef, serviceConn, BIND_AUTO_CREATE)
+        // Binding alone is safe while the user waits or declines screen-capture consent.
+        bindingRequested = bindService(serviceIntentRef, serviceConn, BIND_AUTO_CREATE)
 
         binding.txtInfo.text = NetworkUtil.getIp()[0]
 
@@ -212,9 +245,11 @@ class ScreenShareMasterActivity :
             startManageDrawOverlaysPermission()
         }
 
+        val generation = rotationGeneration.get()
         testTimerTask = object : TimerTask() {
             @SuppressLint("NewApi")
             override fun run() {
+                if (destroyed.get() || generation != rotationGeneration.get()) return
                 runCatching {
                     val currentScreenRotation = screenSurfaceRotation
                     // LogContext.log.e("currentScreenRotation=$currentScreenRotation
@@ -222,10 +257,9 @@ class ScreenShareMasterActivity :
                     if (currentScreenRotation != lastScreenRotation) {
                         lastScreenRotation = currentScreenRotation
                         runOnUiThread {
-                            val processor =
-                                mediaProjectService
-                                    ?.screenProcessor as? ScreenRecordMediaCodecStrategy
-                            processor?.changeOrientation()
+                            if (!destroyed.get() && generation == rotationGeneration.get()) {
+                                mediaProjectService?.changeOrientation()
+                            }
                         }
                     }
                 }
@@ -278,14 +312,30 @@ class ScreenShareMasterActivity :
     }
 
     override fun onDestroy() {
+        destroyed.set(true)
+        rotationGeneration.incrementAndGet()
+        testTimerTask?.cancel()
+        testTimer?.cancel()
+        testTimerTask = null
+        testTimer = null
         LogContext.log.w(ITAG, "onDestroy(bound=$bound)")
         FloatView.removeAll(immediately = true)
         stopServer()
-        mediaProjectService?.onReleaseScreenShare()
-        if (bound) {
+        mediaProjectService?.let { service ->
+            service.screenDataUpdateListener = null
+            service.onReleaseScreenShare()
+        }
+        mediaProjectService = null
+        if (bindingRequested) {
+            bindingRequested = false
+            bound = false
             unbindService(serviceConn)
+        }
+        if (serviceStarted) {
+            serviceStarted = false
             serviceIntent?.let { stopService(it) }
         }
+        serviceIntent = null
         super.onDestroy()
     }
 
@@ -513,10 +563,14 @@ class ScreenShareMasterActivity :
     }
 
     fun onScreenshotClick(@Suppress("unused") view: View) {
+        if (destroyed.get()) return
+        val generation = rotationGeneration.get()
         LogContext.log.w(tag, "Click Screenshot button.")
         toast("Prepare to take screenshot in 3s...")
         Handler(Looper.getMainLooper()).postDelayed({
-            mediaProjectService?.takeScreenshot(screenWidth, screenRealHeight)
+            if (!destroyed.get() && generation == rotationGeneration.get()) {
+                mediaProjectService?.takeScreenshot(screenWidth, screenRealHeight)
+            }
         }, 3000)
     }
 }

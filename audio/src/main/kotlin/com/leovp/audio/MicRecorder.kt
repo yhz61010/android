@@ -21,11 +21,13 @@ import com.leovp.log.LogContext
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
@@ -108,12 +110,18 @@ class MicRecorder(
         private const val TAG = "MicRec"
     }
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(
+        Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, error ->
+            LogContext.log.e(TAG, "Recorder cleanup failed", error)
+        }
+    )
+    private val initializationCompleted = CompletableDeferred<Unit>()
+    private val recordingFailed = AtomicBoolean(false)
 
     val audioRecord: AudioRecord
     private var bufferSizeInBytes = 0
 
-    private var encodeWrapper: AudioEncoderWrapper?
+    private var encodeWrapper: AudioEncoderWrapper? = null
 
     private var recordJob: Job? = null
 
@@ -159,41 +167,50 @@ class MicRecorder(
                 "bufferSizeInBytes=$bufferSizeInBytes"
         )
 
-        encodeWrapper = AudioEncoderManager.getWrapper(
-            type,
-            encoderInfo,
-            object : OutputCallback {
-                override fun output(out: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
-                    callback.onRecording(out, isConfig, isKeyFrame)
-                }
-            }
-        )
-        LogContext.log.w(TAG, "encodeWrapper=$encodeWrapper")
-
-        // MediaRecorder.AudioSource.MIC
-        // MediaRecorder.AudioSource.VOICE_COMMUNICATION
-        // MediaRecorder.AudioSource.CAMCORDER
-        val record = try {
-            AudioRecord(
-                audioSource,
-                encoderInfo.sampleRate,
-                encoderInfo.channelConfig,
-                encoderInfo.audioFormat,
-                bufferSizeInBytes
+        var initialized = false
+        try {
+            encodeWrapper = AudioEncoderManager.getWrapper(
+                type,
+                encoderInfo,
+                object : OutputCallback {
+                    override fun output(out: ByteArray, isConfig: Boolean, isKeyFrame: Boolean) {
+                        callback.onRecording(out, isConfig, isKeyFrame)
+                    }
+                },
+                onFailure = ::onEncoderFailure
             )
-        } catch (e: Throwable) {
-            rollbackFailedInit(null, e)
-            throw e
-        }
-        audioRecord = record
-        // https://blog.csdn.net/lavender1626/article/details/80394253
-        if (enableAdvancedFeatures) {
-            try {
-                initAdvancedFeatures()
+            LogContext.log.w(TAG, "encodeWrapper=$encodeWrapper")
+
+            // MediaRecorder.AudioSource.MIC
+            // MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            // MediaRecorder.AudioSource.CAMCORDER
+            val record = try {
+                AudioRecord(
+                    audioSource,
+                    encoderInfo.sampleRate,
+                    encoderInfo.channelConfig,
+                    encoderInfo.audioFormat,
+                    bufferSizeInBytes
+                )
             } catch (e: Throwable) {
-                rollbackFailedInit(record, e)
+                rollbackFailedInit(null, e)
                 throw e
             }
+            audioRecord = record
+            // https://blog.csdn.net/lavender1626/article/details/80394253
+            if (enableAdvancedFeatures) {
+                try {
+                    initAdvancedFeatures()
+                } catch (e: Throwable) {
+                    rollbackFailedInit(record, e)
+                    throw e
+                }
+            }
+            initialized = true
+        } finally {
+            // An early encoder callback must not access audioRecord before construction settles.
+            if (!initialized) ioScope.cancel()
+            initializationCompleted.complete(Unit)
         }
     }
 
@@ -292,6 +309,7 @@ class MicRecorder(
                         }
                     }
                 } catch (e: CancellationException) {
+                    if (!lifecycleGate.isStopping) handleRecordingFailure()
                     throw e
                 } catch (e: Exception) {
                     LogContext.log.e(TAG, "Recording loop failed", e)
@@ -307,7 +325,17 @@ class MicRecorder(
         }
     }
 
+    private fun onEncoderFailure(error: Throwable) {
+        recordingFailed.set(true)
+        LogContext.log.e(TAG, "Recording encoder failed", error)
+        ioScope.launch {
+            initializationCompleted.await()
+            stopRecordAndJoin()
+        }
+    }
+
     private suspend fun handleRecordingFailure() {
+        recordingFailed.set(true)
         val ownsStop = synchronized(lifecycleGate) { lifecycleGate.claimStop() }
         if (!ownsStop) return
         withContext(NonCancellable) {
@@ -324,9 +352,8 @@ class MicRecorder(
         // startRecord() is a non-suspend public entry point, so the deterministic release cannot
         // be awaited here. NonCancellable so the rollback survives the ioScope.cancel() below.
         //
-        // The body must not throw: NonCancellable replaces the parent job, this scope carries no
-        // CoroutineExceptionHandler, and both finishRecorderReleaseAndJoin() and the client
-        // callback it invokes can throw. An escaping throwable would kill the process.
+        // NonCancellable replaces the parent job. Handle rollback failures here because both
+        // finishRecorderReleaseAndJoin() and the client callback it invokes can throw.
         ioScope.launch(NonCancellable) {
             runCatchingPreservingCancellation {
                 finishRecorderReleaseAndJoin(stopSucceeded = false)
@@ -492,6 +519,8 @@ class MicRecorder(
                     LogContext.log.e(TAG, "encoder release error", e)
                 }
             } finally {
+                // The codec may have selected FAILED before its unlocked notification arrives.
+                if (encodeWrapper?.failure != null) ok = false
                 completeRecorderRelease(ok)
             }
         }
@@ -511,7 +540,7 @@ class MicRecorder(
 
     private fun completeRecorderRelease(result: Boolean) {
         try {
-            notifyStopOnce(result)
+            notifyStopOnce(result && !recordingFailed.get())
         } finally {
             releaseCompleted.complete(Unit)
         }
@@ -529,6 +558,13 @@ class MicRecorder(
          * @param data The byte order of [data] is little endian.
          */
         fun onRecording(data: ByteArray, isConfig: Boolean, isKeyFrame: Boolean)
+
+        /**
+         * Called once after capture and encoder resources have been released. Terminal encoding
+         * or output callback failures now stop capture and report false, including failures before
+         * startRecord(). The callback can run on an IO worker and must not synchronously wait for
+         * stopRecordAndJoin(); hand further cleanup to an external coroutine.
+         */
         fun onStop(stopResult: Boolean)
     }
 }

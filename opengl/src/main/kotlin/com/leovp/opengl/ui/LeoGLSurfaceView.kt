@@ -5,6 +5,7 @@ package com.leovp.opengl.ui
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
+import android.util.Size
 import android.view.MotionEvent
 import android.view.ViewGroup
 import com.leovp.android.utils.TouchHelper
@@ -93,5 +94,40 @@ class LeoGLSurfaceView(context: Context, attributeSet: AttributeSet? = null) :
         // 由于是请求异步线程进行渲染，所以不是同步方法，调用后不会立刻就进行渲染。
         // 渲染会回调到 Renderer 接口的 onDrawFrame 方法。
         requestRender()
+    }
+
+    /**
+     * Submits one file-playback frame and suspends until the GL thread has drawn it. Dimensions
+     * and pixels are applied together on that thread, so a later batch frame cannot overwrite it.
+     * This confirms GL consumption, not physical display presentation or GPU completion.
+     *
+     * Awaited producers are serialized. While the surface is unavailable this suspends until a
+     * draw becomes possible; cancel the producing coroutine on teardown to discard queued work.
+     * Pixels are copied before enqueueing. A GL upload already claimed when cancellation occurs
+     * may finish after this returns, using its own snapshot rather than [yuvData]. Keep the array
+     * unchanged during submission. Use [render] for latest-frame live previews.
+     */
+    suspend fun renderAndAwait(
+        yuvData: ByteArray,
+        videoSize: Size,
+        renderSize: Size,
+        type: BaseRenderer.Yuv420Type = BaseRenderer.Yuv420Type.I420,
+    ) {
+        require(videoSize.width > 0 && videoSize.height > 0) {
+            "Video dimensions must be positive"
+        }
+        val ownedYuvData = yuvData.copyOf()
+        renderer.renderAndAwait(
+            {
+                renderer.setVideoDimension(
+                    videoSize.width,
+                    videoSize.height,
+                    renderSize.width,
+                    renderSize.height
+                )
+                renderer.feedData(ownedYuvData, type)
+            },
+            ::requestRender
+        )
     }
 }

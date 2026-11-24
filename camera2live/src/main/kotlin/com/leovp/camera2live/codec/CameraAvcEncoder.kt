@@ -14,11 +14,11 @@ import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.FutureTask
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Author: Michael Leo
@@ -217,38 +217,11 @@ class CameraAvcEncoder @JvmOverloads constructor(
                 encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
                 encoder.setCallback(mediaCodecCallback, callbackHandler)
             } else {
-                val abandoned = AtomicBoolean(false)
-                val created = AtomicReference<MediaCodec?>(null)
-                val task = FutureTask {
-                    val codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-                    created.set(codec)
-                    try {
-                        check(!abandoned.get()) { "Codec creation was abandoned" }
-                        codec.setCallback(mediaCodecCallback)
-                        check(!abandoned.get()) { "Codec creation was abandoned" }
-                        codec
-                    } catch (error: Throwable) {
-                        if (created.compareAndSet(codec, null)) codec.release()
-                        throw error
-                    }
-                }
-                check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
-                try {
-                    encoder = task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
-                        check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
-                    }
-                } catch (error: InterruptedException) {
-                    abandoned.set(true)
-                    task.cancel(true)
-                    created.getAndSet(null)?.release()
-                    Thread.currentThread().interrupt()
-                    throw error
-                } catch (error: Throwable) {
-                    abandoned.set(true)
-                    task.cancel(true)
-                    created.getAndSet(null)?.release()
-                    throw (error.cause ?: error)
-                }
+                encoder = createLegacyCodec(
+                    callbackHandler,
+                    { MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC) },
+                    mediaCodecCallback
+                )
             }
             val encodedDataThread = HandlerThread("$TAG-data-callback").apply { start() }
             dataCallbackThread = encodedDataThread
@@ -263,6 +236,55 @@ class CameraAvcEncoder @JvmOverloads constructor(
             stopDataCallbackThread()
             throw e
         }
+    }
+
+    /** The callback worker owns native setup until the caller accepts an atomic handoff. */
+    private fun createLegacyCodec(
+        handler: Handler,
+        createCodec: () -> MediaCodec,
+        callback: MediaCodec.Callback,
+    ): MediaCodec {
+        val abandoned = AtomicBoolean(false)
+        val handoff = SynchronousQueue<Result<MediaCodec>>()
+        val posted = handler.post {
+            var codec: MediaCodec? = null
+            var handedOff = false
+            try {
+                codec = createCodec()
+                check(!abandoned.get()) { "Codec creation was abandoned" }
+                codec.setCallback(callback)
+                check(!abandoned.get()) { "Codec creation was abandoned" }
+                handedOff = handoff.offer(
+                    Result.success(codec), CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS
+                )
+            } catch (error: Throwable) {
+                if (!abandoned.get()) {
+                    handoff.offer(
+                        Result.failure(error), CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS
+                    )
+                }
+            } finally {
+                if (!handedOff) {
+                    runCatching { codec?.release() }.onFailure {
+                        LogContext.log.e(TAG, "Abandoned codec release failed", it)
+                    }
+                }
+            }
+        }
+        check(posted) { "Codec callback thread rejected creation" }
+        val result = try {
+            handoff.poll(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        } catch (error: InterruptedException) {
+            abandoned.set(true)
+            Thread.currentThread().interrupt()
+            throw error
+        }
+        if (result == null) {
+            abandoned.set(true)
+            throw TimeoutException("Timed out waiting for codec callback setup")
+        }
+        // Worker exceptions are unwrapped outside the caller-interruption branch.
+        return result.getOrThrow()
     }
 
     fun offerDataIntoQueue(data: ByteArray) {

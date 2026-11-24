@@ -994,7 +994,7 @@ internal fun interface OpusDecoderFactory {
      能 stop”的处理器，避免取消旧按钮的 listener 反过来发布 `type = null`。补测试覆盖“PCM 开启 →
      AAC 开启 → PCM 的迟到 off 回调”不会停止 AAC，以及权限回调晚于 `onStop()` 时不会创建 recorder。
 
-### M-9（MEDIUM）本切片内一条既有 ktlint 违规使整个 `staticCheck` 无法通过
+### M-9（MEDIUM）本切片内一条既有 ktlint 违规阻断显式 Demo 质量检查
 
 - 文件：`demo/src/main/kotlin/com/leovp/demo/basiccomponents/examples/audio/receiver/AudioReceiver.kt:164-166`
 - 事实：
@@ -1010,8 +1010,9 @@ private fun startMicRecording(): MicRecorder {
   `function-expression-body`；该规则在 ktlint 1.5.0（ktlint-gradle 14.2.0 的默认版本，项目未覆盖）
   既非 experimental 也非 `ktlint_official` 专属，故 `ktlint_code_style = android_studio` 不会关闭它。而项目 ktlint 为
   `ignoreFailures = false`。
-- 后果：`demo:ktlintCheck` 失败 → **`./gradlew staticCheck` 在本分支红**。这不是本切片新引入的，
-  但它使 §5.1 的验证命令无法整体通过，也挡住本文档所有修复方案的验证路径。
+- 后果：`demo:ktlintCheck` 失败，使 §5.1 中显式调用全仓 ktlint 的命令无法整体通过。这不是本切片新引入的。
+  **2026-11-06 订正**：此前把它推导为 `staticCheck` 也失败是错误的；该聚合任务没有依赖 Demo 的
+  ktlint，具体覆盖缺口见 §7.2，不能用它代替显式模块质量检查。
 - 确定性：**确定**（已读源码确认规则违反）。Codex 在
   `2026-10-20-branch-review-vs-master_cc.md` §21.2 记录其实际运行 `demo:ktlintCheck` 时仍被这一条
   且仅这一条阻断。
@@ -1703,8 +1704,10 @@ WebSocket 创建/销毁竞态，均已实施。H-1 在 §7.5 复核后使用 §7
   :demo:testDevDebugUnitTest :demo:assembleDevDebug --rerun-tasks --max-workers=1` 通过，649 个任务实际执行。
 - 新增迟到失败 token 用例的定向 Demo 测试通过，511 个任务实际执行。
 - 全仓 `./gradlew staticCheck --rerun-tasks --max-workers=1` 通过，耗时 3 分 37 秒，1425 个任务
-  实际执行。该聚合任务包含全仓质量检查、debug 单测/lint 和应用仪器测试 APK 构建，但没有在设备上
-  执行 instrumentation，因此不代表真机测试。
+  实际执行。2026-11-06 复核订正：该聚合任务的质量依赖只指向根项目；debug 正则会漏掉普通库的
+  `testDebugUnitTest` / `lintDebug` 主入口。匹配到的 flavor debug、`lintVitalAnalyzeDebug` 等及
+  传递依赖会执行部分 lint；它仍不等于完整库单测、标准 lint 和全仓模块质量检查。应用仪器测试
+  APK 构建也不代表执行了设备 instrumentation。
 - 最终复核又收紧同格式旧 token 的启动异常/权限拒绝路径后，重新执行 Demo 单测、ktlint、detekt 和
   `assembleDevDebug`，50 秒内 620 个任务实际执行并通过；因此该最后修改也有当前代码证据覆盖。
 - 2026-11-03 补齐 stream decoder 失败上报和并发终止屏障后，先通过禁用 once CAS 的临时变异确认
@@ -1956,3 +1959,13 @@ flush 的生产调用点，§8.2 的成本结论需同时复查。
    `./gradlew --continue --rerun-tasks :audio:testDebugUnitTest detekt ktlintCheck`。
 3. **真机验证未做**：按 §5.2，需弱网下对比改动前后的延迟收敛、听感（陈旧帧是否可察）与主线程表现
    （后者仍受 §8.3 影响，本轮未修）。
+
+## 附录：2026-11-06 分支复审修复
+
+本轮又确认并修复编码器失败未传到录音拥有者、Wi-Fi 注销重试句柄丢失、录屏错误通知早于释放屏障、
+录音及播放的迟到 UI 回调、Cipher 准备期间销毁后的资源交接问题。复核还补齐失败通知延迟时的停止结果、
+输出流 flush 失败后的关闭及 PCM 输出取消清理。新参数和 wrapper 失败快照的迁移见 KDoc / CHANGELOG。
+
+静态结论、回归红绿证据、全仓显式组合检查以及最后边界修正的单独验证，统一记录于
+`superpowers/2026-11-06-review-findings-remediation.md`。本轮未执行真机测试；§7 中的历史任务成功记录
+不因本节而扩大覆盖，也不能替代本轮对改后代码的复验。

@@ -363,6 +363,7 @@ powermock-junit4 = { module = "org.powermock:powermock-module-junit4", version.r
 powermock-core = { module = "org.powermock:powermock-core", version.ref = "powermock-version" }
 powermock-api = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermock-version" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric-version" }
+khronos-opengl-api = { module = "org.khronos:opengl-api", version = "gl1.1-android-2.1_r1" }
 mars-xlog = { module = "com.tencent.mars:mars-xlog", version.ref = "mars-xlog" }
 # androidTestImplementation
 mannodermaus-junit5-core = { module = "de.mannodermaus.junit5:android-test-core", version.ref = "mannodermaus-junit5" }

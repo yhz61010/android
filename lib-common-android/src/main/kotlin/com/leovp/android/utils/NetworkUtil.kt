@@ -28,6 +28,8 @@ import java.net.Socket
 import java.net.SocketAddress
 import java.util.IdentityHashMap
 import java.util.Locale
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * Author: Michael Leo
@@ -56,6 +58,11 @@ object NetworkUtil {
     private val wifiNetworkCallbackLock = Any()
     private val wifiNetworkCallbacks =
         IdentityHashMap<(WifiSignal) -> Unit, WifiSignalNetworkCallback>()
+    private val pendingWifiCleanup = mutableSetOf<WifiSignalNetworkCallback>()
+    private var wifiCleanupExecutor: ScheduledThreadPoolExecutor? = null
+    private const val INITIAL_WIFI_CLEANUP_DELAY_MS = 1_000L
+    private const val MAX_WIFI_CLEANUP_DELAY_MS = 30_000L
+    private var wifiCleanupDelayMillis = INITIAL_WIFI_CLEANUP_DELAY_MS
 
     data class ProxyInfo(val type: Proxy.Type, val url: String, val port: Int)
 
@@ -279,7 +286,10 @@ object NetworkUtil {
      * [unregisterWifiNetworkStatsAboveAndroidS] using the same [callback] instance.
      *
      * @return `true` when registration succeeds or is unnecessary below Android 12; `false` when
-     * replacing or registering the framework callback fails. Failed callbacks are detached, so
+     * replacing or registering the framework callback fails, no application context is available,
+     * or a previous failed teardown is still pending anywhere in this process. Pending teardown
+     * blocks new Wi-Fi subscriptions to bound resource use; existing subscriptions remain active.
+     * Failed callbacks are detached, so
      * new platform events cannot reach the business listener; an invocation that already read the
      * listener may still finish concurrently.
      */
@@ -289,23 +299,22 @@ object NetworkUtil {
             val request = NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .build()
-            val connectivityManager = ctx.connectivityManager
-            val networkCallback = WifiSignalNetworkCallback(ctx, callback)
+            // A framework callback and a pending cleanup may outlive the caller's Activity.
+            val appContext = ctx.applicationContext ?: return false
+            val networkCallback = WifiSignalNetworkCallback(appContext, callback)
             synchronized(wifiNetworkCallbackLock) {
-                wifiNetworkCallbacks[callback]?.let { previousCallback ->
+                wifiNetworkCallbacks.remove(callback)?.let { previousCallback ->
                     previousCallback.detachListener()
-                    if (!unregisterWifiNetworkCallback(
-                            connectivityManager,
-                            previousCallback,
-                            "previous"
-                        )
-                    ) {
+                    if (!releaseWifiNetworkCallback(previousCallback)) {
                         return false
                     }
-                    wifiNetworkCallbacks.remove(callback)
                 }
+                if (pendingWifiCleanup.isNotEmpty()) return false
                 try {
-                    connectivityManager.registerNetworkCallback(request, networkCallback)
+                    networkCallback.connectivityManager.registerNetworkCallback(
+                        request,
+                        networkCallback
+                    )
                 } catch (error: Exception) {
                     networkCallback.detachListener()
                     Log.e(TAG, "Failed to register the Wi-Fi network callback", error)
@@ -320,34 +329,86 @@ object NetworkUtil {
     /**
      * Stops the listener registered by [getWifiNetworkStatsAboveAndroidS]. The same [callback]
      * instance used for registration must be supplied.
+     *
+     * Migration: remove the Context argument from earlier versions. Teardown uses the application
+     * manager captured at registration, and a failed immediate teardown no longer requires a
+     * later call from the original owner.
+     *
      * @return `true` when the callback is absent, successfully removed, or unnecessary below
-     * Android 12; `false` when framework unregistration fails. On failure the detached framework
-     * callback remains tracked so a later call can retry the framework teardown. Events that begin
+     * Android 12; `false` when immediate framework unregistration fails. Either result relinquishes
+     * the caller's ownership: the business key and listener are released immediately. On failure,
+     * only the detached framework callback and its application-scoped manager are retained by a
+     * process cleanup worker. It retries after one second, with exponential backoff capped at
+     * thirty seconds, until framework unregistration succeeds. The worker shuts down when empty.
+     * The caller need not keep its monitor or Activity alive or call this method again. A later
+     * call with the same business callback is an absent-listener success, even if detached cleanup
+     * is still pending. Events that begin
      * after detachment are ignored, while one invocation that already read the listener may still
      * finish concurrently.
      */
-    fun unregisterWifiNetworkStatsAboveAndroidS(
-        ctx: Context,
-        callback: (WifiSignal) -> Unit,
-    ): Boolean {
+    fun unregisterWifiNetworkStatsAboveAndroidS(callback: (WifiSignal) -> Unit): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
         synchronized(wifiNetworkCallbackLock) {
-            val networkCallback = wifiNetworkCallbacks[callback] ?: return true
+            val networkCallback = wifiNetworkCallbacks.remove(callback) ?: return true
             networkCallback.detachListener()
-            val unregistered = unregisterWifiNetworkCallback(
-                ctx.connectivityManager,
-                networkCallback,
-                "current"
-            )
-            if (unregistered) wifiNetworkCallbacks.remove(callback)
-            return unregistered
+            return releaseWifiNetworkCallback(networkCallback)
+        }
+    }
+
+    // All cleanup state is guarded by wifiNetworkCallbackLock. A queued task captures only this
+    // singleton, never a business callback, monitor, or Activity. Admission stays closed while any
+    // teardown is pending, so repeated starts/destructions cannot accumulate orphan registrations.
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun releaseWifiNetworkCallback(callback: WifiSignalNetworkCallback): Boolean {
+        if (unregisterWifiNetworkCallback(callback.connectivityManager, callback)) return true
+        pendingWifiCleanup.add(callback)
+        if (wifiCleanupExecutor == null) {
+            wifiCleanupDelayMillis = INITIAL_WIFI_CLEANUP_DELAY_MS
+            wifiCleanupExecutor = ScheduledThreadPoolExecutor(1) { task ->
+                Thread(task, "wifi-callback-cleanup").apply { isDaemon = true }
+            }
+            scheduleWifiCleanup()
+        }
+        return false
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun scheduleWifiCleanup() {
+        wifiCleanupExecutor?.schedule(
+            { retryWifiCleanup() },
+            wifiCleanupDelayMillis,
+            TimeUnit.MILLISECONDS
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun retryWifiCleanup() {
+        // Keep framework IPC outside the registry lock: a stalled cleanup must not hold up
+        // another monitor's stop or a new subscription's admission rejection.
+        val callbacks = synchronized(wifiNetworkCallbackLock) { pendingWifiCleanup.toList() }
+        val released = callbacks.filter { callback ->
+            unregisterWifiNetworkCallback(callback.connectivityManager, callback)
+        }
+        synchronized(wifiNetworkCallbackLock) {
+            // Each final callback instance is registered once. Entries added while IPC was in
+            // flight are distinct instances and remain owned by this same worker for its next run.
+            pendingWifiCleanup.removeAll(released.toSet())
+            if (pendingWifiCleanup.isEmpty()) {
+                wifiCleanupExecutor?.shutdown()
+                wifiCleanupExecutor = null
+            } else {
+                wifiCleanupDelayMillis = (wifiCleanupDelayMillis * 2)
+                    .coerceAtMost(MAX_WIFI_CLEANUP_DELAY_MS)
+                scheduleWifiCleanup()
+            }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
     private class WifiSignalNetworkCallback(context: Context, callback: (WifiSignal) -> Unit) :
         ConnectivityManager.NetworkCallback() {
-        private val appContext = context.applicationContext ?: context
+        private val appContext = context
+        val connectivityManager = appContext.connectivityManager
 
         @Volatile
         private var listener: ((WifiSignal) -> Unit)? = callback
@@ -373,12 +434,13 @@ object NetworkUtil {
     private fun unregisterWifiNetworkCallback(
         connectivityManager: ConnectivityManager,
         networkCallback: ConnectivityManager.NetworkCallback,
-        callbackLabel: String,
     ): Boolean = try {
         connectivityManager.unregisterNetworkCallback(networkCallback)
         true
     } catch (e: Exception) {
-        Log.e(TAG, "Failed to unregister the $callbackLabel Wi-Fi network callback", e)
+        // AOSP treats an already unregistered callback as success. Other exceptions (including
+        // IllegalArgumentException) do not prove teardown; do not infer state from OEM messages.
+        Log.e(TAG, "Failed to unregister the Wi-Fi network callback", e)
         false
     }
 

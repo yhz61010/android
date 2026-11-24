@@ -60,14 +60,15 @@ class OpusDecoder(
     val isAcceptingInput: Boolean get() = isRunning && !eosRequested.get()
 
     /**
-     * Discards every frame still waiting to be submitted to the codec.
+     * Discards frames still stored in the decoder input queue.
      *
      * Stream owners use this to shed accumulated latency. The queue holds up to 64 frames, about
      * 1.3 seconds of audio at 20 ms per frame, so a resync that only restarts AudioTrack would
-     * replay that whole backlog. Frames already handed to the codec are unaffected and still
-     * decode.
+     * replay that whole backlog. An input callback that already took a frame may still submit it;
+     * work already inside the codec is also unaffected.
      *
-     * Must not be called after signalEndOfStream(): the end-of-stream marker travels through this
+     * Serialize this call with signalEndOfStream(), and do not call it after EOS was requested:
+     * the end-of-stream marker travels through this
      * same queue and clearing it would drop the marker.
      */
     fun clearPendingInput() {

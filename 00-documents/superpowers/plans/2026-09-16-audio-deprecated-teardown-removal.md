@@ -2080,4 +2080,3 @@ Task 1–4 实施后做了四路静态审查，发现的问题及修正记录在
   "`release()` 在 `UNINITIALIZED` 时不会进 `stopRetryHandler()`，靠的是 start() job 已被 join"。
 - CHANGELOG audio 条目补录 `AudioPlayer.releaseAndJoin()` 的释放顺序变更与 demo 音频侧重构。
 - basenetty 侧见 `00-documents/2026-09-20-netty-shutdown-nonblocking_cc.md` §13（R23–R26）。
-

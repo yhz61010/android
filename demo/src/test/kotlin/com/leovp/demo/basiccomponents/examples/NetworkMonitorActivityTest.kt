@@ -1,12 +1,16 @@
 package com.leovp.demo.basiccomponents.examples
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkRequest
 import android.os.Looper
+import com.leovp.android.exts.connectivityManager
 import com.leovp.android.exts.toast
 import com.leovp.androidbase.utils.network.InternetUtil
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -15,6 +19,8 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +30,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -53,6 +63,44 @@ class NetworkMonitorActivityTest {
         unmockkStatic("com.leovp.android.exts.ToastExtKt")
         unmockkObject(InternetUtil)
         stopKoin()
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `destroy releases a real monitor whose framework teardown initially fails`() {
+        val manager = mockk<ConnectivityManager>(relaxed = true)
+        val framework = slot<ConnectivityManager.NetworkCallback>()
+        every {
+            manager.registerNetworkCallback(any<NetworkRequest>(), capture(framework))
+        } just Runs
+        val attempts = AtomicInteger()
+        val cleaned = CountDownLatch(1)
+        every {
+            manager.unregisterNetworkCallback(any<ConnectivityManager.NetworkCallback>())
+        } answers {
+            if (attempts.incrementAndGet() == 1) error("transient binder failure")
+            cleaned.countDown()
+        }
+        mockkStatic("com.leovp.android.exts.ContextExtKt")
+        every { any<Context>().connectivityManager } returns manager
+        val controller = Robolectric.buildActivity(NetworkMonitorActivity::class.java).setup()
+        try {
+            lookupCallback.captured.invoke(listOf("127.0.0.1"))
+            controller.pause().stop().destroy()
+
+            val holder = NetworkMonitorActivity::class.java.getDeclaredField("networkMonitor")
+                .apply { isAccessible = true }.get(controller.get()) as AtomicReference<*>
+            assertNull(holder.get())
+            val listener = framework.captured.javaClass.getDeclaredField("listener")
+                .apply { isAccessible = true }
+            assertNull(listener.get(framework.captured))
+            assertTrue(cleaned.await(5, TimeUnit.SECONDS))
+        } finally {
+            every {
+                manager.unregisterNetworkCallback(any<ConnectivityManager.NetworkCallback>())
+            } just Runs
+            unmockkStatic("com.leovp.android.exts.ContextExtKt")
+        }
     }
 
     @Test

@@ -65,6 +65,10 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     // 标识 GLSurfaceView 是否准备好
     private var hasVisibility = false
+    private val awaitedFrames = AwaitedFrameRenderer(this)
+
+    internal suspend fun renderAndAwait(prepare: () -> Unit, requestDraw: () -> Unit) =
+        awaitedFrames.render(prepare, requestDraw)
 
     //  Called once to set up the view's OpenGL ES environment.
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
@@ -131,6 +135,14 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
 
     //  Called for each redraw of the view.
     override fun onDrawFrame(unused: GL10) {
+        try {
+            awaitedFrames.drawFrame { drawCurrentFrame() }
+        } catch (error: Exception) {
+            LogContext.log.e(tag, "drawFrame() failed", error, outputType = LogOutType.FRAMEWORK)
+        }
+    }
+
+    private fun drawCurrentFrame() {
         synchronized(this) {
             if (y.capacity() > 0) {
                 y.position(0)
@@ -162,15 +174,7 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 // Calculate the projection and view transformation
                 // Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
-                runCatching {
-                    drawTexture(mvpMatrix, yuv420Type)
-                }.onFailure {
-                    LogContext.log.e(
-                        tag,
-                        "drawTexture() error.", it,
-                        outputType = LogOutType.FRAMEWORK
-                    )
-                }
+                drawTexture(mvpMatrix, yuv420Type)
             }
         }
     }
@@ -179,6 +183,10 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
      * 设置渲染的YUV数据的宽高
      * @param width 宽度
      * @param height 高度
+     *
+     * Migration: after a surface size is known, its current dimensions determine the aspect
+     * ratio. [renderWidth] and [renderHeight] are bootstrap fallbacks; cached pre-rotation values
+     * no longer overwrite the geometry established by [onSurfaceChanged].
      */
     @Synchronized
     fun setVideoDimension(width: Int, height: Int, renderWidth: Int, renderHeight: Int) {
@@ -193,8 +201,8 @@ class GLRenderer(private val context: Context) : BaseRenderer() {
                 width,
                 height,
                 keepRatio,
-                renderWidth,
-                renderHeight
+                outputWidth.takeIf { it > 0 } ?: renderWidth,
+                outputHeight.takeIf { it > 0 } ?: renderHeight
             )
 
             if (width != videoWidth || height != videoHeight) {

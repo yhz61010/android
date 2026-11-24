@@ -1311,6 +1311,7 @@ class Camera2ComponentHelper(
         enqueueCameraSwitch()
     }
 
+    @RequiresPermission(android.Manifest.permission.CAMERA)
     private fun enqueueCameraSwitch() {
         cameraScope.launch {
             try {

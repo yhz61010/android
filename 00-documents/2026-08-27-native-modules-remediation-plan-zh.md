@@ -706,7 +706,7 @@ configurations.matching {
 
 按 D3，把 `ffmpeg-javacpp` 的 `abiFilters` 明确收窄为 `arm64-v8a`，只保留 FFmpeg 和 JavaCPP 的 `android-arm64` classifier，并在 README/CHANGELOG 标注当前不支持 armeabi-v7a、x86、x86_64。
 
-发布前解包 AAR，确认 `lib/arm64-v8a/` 同时包含 JavaCPP loader 和 FFmpeg 所需 `.so`，且不存在会让消费者误判为受支持的其它 ABI 目录；在 arm64 真机执行最小 ADPCM 解码和资源释放测试，不只检查 Gradle resolve。
+发布前核对 `.module` 和 POM：FFmpeg 与 JavaCPP 的 Native artifact selector / classifier 均应为 `android-arm64`，同时保留所需 Java 类依赖。该模块的 AAR 本体不内嵌这些传递 Native 库，不能要求解包 AAR 后出现 `lib/arm64-v8a/` 或 JNI `.so`。应从真实发布坐标构建消费端，核对其解析到的 classifier JAR、Native 资源与最终打包结果，并在 arm64 真机执行最小 ADPCM 解码和释放，不能只检查 Gradle resolve。（2026-11-06 复核订正）
 
 ## 11. FFmpeg 源码到发布二进制的闭环
 

@@ -190,6 +190,11 @@ class NetworkMonitor internal constructor(
      * [stopMonitor]. It does hold up every later result of this instance, the sessions a later
      * [startMonitor] creates included, because callbacks are dispatched one at a time.
      *
+     * Failed Wi-Fi teardown is owned by [NetworkUtil]'s process cleanup worker, independently of
+     * this monitor's lifetime. While any teardown is pending in the process, new sessions continue
+     * ping and traffic monitoring without a Wi-Fi subscription. Existing subscriptions elsewhere
+     * remain active. Start again after cleanup succeeds to subscribe to Wi-Fi signals again.
+     *
      * Migration: earlier versions dispatched the callback while holding the lifecycle lock and
      * therefore forbade waiting inside a callback for a thread that calls [startMonitor] or
      * [stopMonitor]. That restriction is gone, and with it the guarantee that a running callback
@@ -228,7 +233,8 @@ class NetworkMonitor internal constructor(
 
     /**
      * Stops future results and releases monitoring resources. This instance can subsequently be
-     * started again.
+     * started again. Failed Wi-Fi teardown is detached and retried by [NetworkUtil] without keeping
+     * this monitor, its consumer callback, or the caller's Activity alive. Repeated stops are safe.
      *
      * Migration: earlier versions guaranteed that an already running callback had finished before
      * this method returned, because the callback was dispatched while holding the lifecycle lock.
@@ -257,7 +263,7 @@ class NetworkMonitor internal constructor(
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun registerWifiSignalCallback(generation: Long, scheduler: NetworkMonitorScheduler) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || wifiSignalCallback != null) return
         val sessionCallback: (NetworkUtil.WifiSignal) -> Unit = { signal ->
             synchronized(monitorLifecycleLock) {
                 if (isCurrentMonitor(generation, scheduler)) globalWifiSignal = signal
@@ -273,8 +279,8 @@ class NetworkMonitor internal constructor(
     private fun unregisterWifiSignalCallback() {
         val callback = wifiSignalCallback ?: return
         wifiSignalCallback = null
-        if (!NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(ctx, callback)) {
-            LogContext.log.w(TAG, "Wi-Fi signal callback unregistration failed")
+        if (!NetworkUtil.unregisterWifiNetworkStatsAboveAndroidS(callback)) {
+            LogContext.log.w(TAG, "Wi-Fi signal callback teardown deferred to process cleanup")
         }
     }
 

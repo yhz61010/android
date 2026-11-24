@@ -23,10 +23,10 @@ import com.leovp.bytes.toHexString
 import com.leovp.log.LogContext
 import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.FutureTask
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Author: Michael Leo
@@ -185,38 +185,11 @@ class LeoTextureView @JvmOverloads constructor(
                 decoder = MediaCodec.createDecoderByType(mime)
                 decoder.setCallback(mediaCodecCallback, callbackHandler)
             } else {
-                val abandoned = AtomicBoolean(false)
-                val created = AtomicReference<MediaCodec?>(null)
-                val task = FutureTask {
-                    val codec = MediaCodec.createDecoderByType(mime)
-                    created.set(codec)
-                    try {
-                        check(!abandoned.get()) { "Codec creation was abandoned" }
-                        codec.setCallback(mediaCodecCallback)
-                        check(!abandoned.get()) { "Codec creation was abandoned" }
-                        codec
-                    } catch (error: Throwable) {
-                        if (created.compareAndSet(codec, null)) codec.release()
-                        throw error
-                    }
-                }
-                check(callbackHandler.post(task)) { "Codec callback thread rejected creation" }
-                try {
-                    decoder = task.get(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS).also {
-                        check(created.compareAndSet(it, null)) { "Codec ownership handoff failed" }
-                    }
-                } catch (error: InterruptedException) {
-                    abandoned.set(true)
-                    task.cancel(true)
-                    created.getAndSet(null)?.release()
-                    Thread.currentThread().interrupt()
-                    throw error
-                } catch (error: Throwable) {
-                    abandoned.set(true)
-                    task.cancel(true)
-                    created.getAndSet(null)?.release()
-                    throw (error.cause ?: error)
-                }
+                decoder = createLegacyCodec(
+                    callbackHandler,
+                    { MediaCodec.createDecoderByType(mime) },
+                    mediaCodecCallback
+                )
             }
             val ownedDecoder = checkNotNull(decoder)
             ownedDecoder.configure(format, this.surface, null, 0)
@@ -227,6 +200,55 @@ class LeoTextureView @JvmOverloads constructor(
             stopDecoderCallbackThread()
             throw e
         }
+    }
+
+    /** The callback worker owns native setup until the caller accepts an atomic handoff. */
+    private fun createLegacyCodec(
+        handler: Handler,
+        createCodec: () -> MediaCodec,
+        callback: MediaCodec.Callback,
+    ): MediaCodec {
+        val abandoned = AtomicBoolean(false)
+        val handoff = SynchronousQueue<Result<MediaCodec>>()
+        val posted = handler.post {
+            var codec: MediaCodec? = null
+            var handedOff = false
+            try {
+                codec = createCodec()
+                check(!abandoned.get()) { "Codec creation was abandoned" }
+                codec.setCallback(callback)
+                check(!abandoned.get()) { "Codec creation was abandoned" }
+                handedOff = handoff.offer(
+                    Result.success(codec), CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS
+                )
+            } catch (error: Throwable) {
+                if (!abandoned.get()) {
+                    handoff.offer(
+                        Result.failure(error), CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS
+                    )
+                }
+            } finally {
+                if (!handedOff) {
+                    runCatching { codec?.release() }.onFailure {
+                        LogContext.log.e(TAG, "Abandoned codec release failed", it)
+                    }
+                }
+            }
+        }
+        check(posted) { "Codec callback thread rejected creation" }
+        val result = try {
+            handoff.poll(CALLBACK_SETUP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        } catch (error: InterruptedException) {
+            abandoned.set(true)
+            Thread.currentThread().interrupt()
+            throw error
+        }
+        if (result == null) {
+            abandoned.set(true)
+            throw TimeoutException("Timed out waiting for codec callback setup")
+        }
+        // Worker exceptions are unwrapped outside the caller-interruption branch.
+        return result.getOrThrow()
     }
 
     // In most of Samsung devices, we MUST release MediaCodec before using it again.

@@ -2,6 +2,8 @@ package com.leovp.demo.basiccomponents.examples.audio
 
 import com.leovp.audio.base.AudioType
 import kotlin.test.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -44,9 +46,9 @@ class RecordingIntentCoordinatorTest {
         val oldAttempt = coordinator.requestStart(AudioType.AAC)
         val replacement = coordinator.requestStart(AudioType.AAC)
 
-        assertFalse(coordinator.failIfCurrent(oldAttempt, AudioType.AAC))
+        assertNull(coordinator.failIfCurrent(oldAttempt, AudioType.AAC))
         assertTrue(coordinator.isCurrent(replacement, AudioType.AAC))
-        assertTrue(coordinator.failIfCurrent(replacement, AudioType.AAC))
+        assertNotNull(coordinator.failIfCurrent(replacement, AudioType.AAC))
         assertFalse(coordinator.isCurrent(replacement, AudioType.AAC))
     }
 }

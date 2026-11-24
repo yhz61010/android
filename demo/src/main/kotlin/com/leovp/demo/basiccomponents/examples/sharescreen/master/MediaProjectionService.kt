@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Binder
@@ -11,12 +12,11 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import android.os.Looper
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import com.leovp.android.exts.getBaseDirString
 import com.leovp.android.exts.toast
-import com.leovp.androidbase.utils.media.VideoUtil
-import com.leovp.demo.basiccomponents.BasicFragment
 import com.leovp.image.compressBitmap
 import com.leovp.image.writeToFile
 import com.leovp.json.toJsonString
@@ -29,7 +29,8 @@ import io.karn.notify.Notify
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import okhttp3.internal.closeQuietly
+import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * On Android 14 or above, check the following blog:
@@ -69,6 +70,10 @@ import okhttp3.internal.closeQuietly
  *  android:exported="false"
  *  android:foregroundServiceType="mediaProjection" />
  * </pre>
+ *
+ * The service owns output streams and its projection callback. The processor owns its display,
+ * codec and EGL resources; both owners must tolerate the system stopping projection first.
+ * Projection stop is a terminal producer operation, independent of releasing those app resources.
  */
 
 class MediaProjectionService : Service() {
@@ -79,8 +84,17 @@ class MediaProjectionService : Service() {
     }
 
     var outputH26xFile = false
-    private lateinit var videoH26xFile: File
-    private lateinit var videoH26xOs: BufferedOutputStream
+    private var videoH26xOs: BufferedOutputStream? = null
+    private val outputLock = Any()
+    private val lifecycleLock = Any()
+    private val captureGeneration = AtomicLong()
+
+    @Volatile
+    private var destroyed = false
+
+    @Volatile
+    private var acceptingWork = false
+    private var cleanupQueued = false
 
     private var resultCode = -1
     private lateinit var data: Intent
@@ -89,26 +103,60 @@ class MediaProjectionService : Service() {
     private lateinit var serviceHandler: Handler
     private val binder = CustomBinder()
     private lateinit var mediaProjectionManager: MediaProjectionManager
-    private lateinit var mediaProjection: MediaProjection
+    private var mediaProjection: MediaProjection? = null
+
+    @Volatile
+    private var projectionCallback: ServiceProjectionCallback? = null
+
+    private class ServiceProjectionCallback(
+        service: MediaProjectionService,
+        val projection: MediaProjection,
+        val generation: Long,
+    ) : MediaProjection.Callback() {
+        private val owner = WeakReference(service)
+        override fun onStop() {
+            owner.get()?.onProjectionStopped(this)
+        }
+    }
+
+    @Volatile
     var screenProcessor: ScreenProcessor? = null
         private set
 
-    val vpsSpsPps get() = run { (screenProcessor as? ScreenRecordMediaCodecStrategy)?.vpsSpsPpsBuf }
+    val vpsSpsPps
+        get() = if (acceptingWork && !destroyed) {
+            (screenProcessor as? ScreenRecordMediaCodecStrategy)?.vpsSpsPpsBuf
+        } else {
+            null
+        }
 
     var screenDataUpdateListener: ScreenDataUpdateListener? = null
 
-    private val screenDataListener = object : ScreenDataListener {
+    private fun screenDataListenerFor(generation: Long) = object : ScreenDataListener {
+        override fun onError(error: Throwable) {
+            synchronized(lifecycleLock) {
+                if (!isCurrentCapture(generation)) return
+                LogContext.log.e(TAG, "Screen capture failed; releasing the service owner.", error)
+                requestCaptureCleanup()
+            }
+        }
+
         override fun onDataUpdate(buffer: Any, flags: Int, presentationTimeUs: Long) {
+            if (!isCurrentCapture(generation)) return
             val data = buffer as ByteArray
-            if (outputH26xFile) {
-                try {
-                    videoH26xOs.write(data)
-                } catch (e: Exception) {
-                    LogContext.log.e(TAG, "onDataUpdate error", e)
+            synchronized(outputLock) {
+                if (isCurrentCapture(generation) && outputH26xFile) {
+                    try {
+                        videoH26xOs?.write(data)
+                    } catch (e: Exception) {
+                        LogContext.log.e(TAG, "onDataUpdate error", e)
+                    }
                 }
             }
             // LogContext.log.e("Data[${buffer.size}]≈${buffer.size*1.0f/1024/1024} flag=$flags")
-            screenDataUpdateListener?.onUpdate(data, flags, presentationTimeUs)
+            if (isCurrentCapture(generation)) {
+                screenDataUpdateListener?.onUpdate(data, flags, presentationTimeUs)
+            }
 
             // Bitmap for screenshot
             //            val file = FileUtil.createImageFile(app, "bmp")
@@ -133,7 +181,7 @@ class MediaProjectionService : Service() {
                 )
                 LogContext.log.w(TAG, "Output H.26x file path=$baseFolder")
                 baseFolder.mkdirs()
-                videoH26xFile = File(
+                val videoH26xFile = File(
                     baseFolder,
                     "screen" + when (VIDEO_ENCODE_TYPE) {
                         ScreenRecordMediaCodecStrategy.EncodeType.H264 -> ".h264"
@@ -154,7 +202,8 @@ class MediaProjectionService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         LogContext.log.i(TAG, "=====> onStartCommand <=====")
-        return START_STICKY
+        // A process restart cannot restore single-use projection consent or the native session.
+        return START_NOT_STICKY
     }
 
     override fun onRebind(intent: Intent?) {
@@ -170,6 +219,7 @@ class MediaProjectionService : Service() {
 
     override fun onDestroy() {
         LogContext.log.w(TAG, "=====> onDestroy <=====")
+        requestCaptureCleanup(destroyService = true)
         super.onDestroy()
     }
 
@@ -188,7 +238,11 @@ class MediaProjectionService : Service() {
                 clickIntent = PendingIntent.getActivity(
                     this@MediaProjectionService,
                     SystemClock.elapsedRealtime().toInt(),
-                    Intent(this@MediaProjectionService, BasicFragment::class.java),
+                    Intent(this@MediaProjectionService, ScreenShareMasterActivity::class.java)
+                        .addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        ),
                     // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     // } else {
@@ -214,8 +268,11 @@ class MediaProjectionService : Service() {
      * This method must be called before `startScreenShare()`
      */
     fun setData(resultCode: Int, data: Intent) {
-        this.resultCode = resultCode
-        this.data = data
+        synchronized(lifecycleLock) {
+            if (destroyed) return
+            this.resultCode = resultCode
+            this.data = data
+        }
     }
 
     // ==========================================
@@ -228,119 +285,239 @@ class MediaProjectionService : Service() {
      * This method must be following `setData()` method
      */
     fun startScreenShare(setting: ScreenShareSetting) {
-        LogContext.log.i(TAG, "startScreenShare: ${setting.toJsonString()}")
-        setDebugInfo()
-        mediaProjectionManager =
-            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        val mediaProjectionRef = mediaProjectionManager.getMediaProjection(resultCode, data)
-        requireNotNull(mediaProjectionRef) { "MediaProjection can't be null" }
-        mediaProjection = mediaProjectionRef
+        synchronized(lifecycleLock) {
+            if (destroyed || cleanupQueued || screenProcessor != null) return
+            // An OEM failure to unregister must not lose the old callback or let a new session
+            // overwrite its handle. Retry when the caller next starts or requests cleanup.
+            runCleanupStep("previous projection callback unregister") {
+                unregisterProjectionCallback()
+            }
+            if (projectionCallback != null) return
+            LogContext.log.i(TAG, "startScreenShare: ${setting.toJsonString()}")
+            val generation = captureGeneration.incrementAndGet()
+            setDebugInfo()
+            try {
+                mediaProjectionManager =
+                    applicationContext.getSystemService(MEDIA_PROJECTION_SERVICE) as
+                        MediaProjectionManager
+                val mediaProjectionRef = mediaProjectionManager.getMediaProjection(resultCode, data)
+                requireNotNull(mediaProjectionRef) { "MediaProjection can't be null" }
+                mediaProjection = mediaProjectionRef
+                val callback = ServiceProjectionCallback(this, mediaProjectionRef, generation)
+                projectionCallback = callback
+                mediaProjectionRef.registerCallback(callback, Handler(Looper.getMainLooper()))
 
-        val processor = ScreenCapture.Builder(
-            // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
-            setting.width,
-            // 800 1024 1280
-            setting.height,
-            setting.dpi,
-            mediaProjection,
-            // BY_IMAGE_2_H26x
-            // BY_MEDIA_CODEC
-            // BY_RAW_BMP
-            ScreenCapture.BY_MEDIA_CODEC,
-            screenDataListener
-        )
-            .setEncodeType(VIDEO_ENCODE_TYPE)
-            .setGoogleEncoder(false)
-            .setFps(setting.fps)
-            // For H26x and x264
-            .setBitrate(setting.bitrate)
-            // For H26x
-            .setBitrateMode(setting.bitrateMode)
-            // 20
-            .setIFrameInterval(setting.iFrameInterval)
-            // For bitmap
-            //          .setSampleSize(2)
-            .build()
-        // Publish before driving the lifecycle. With `build().apply { onInit(); onStart() }` the
-        // assignment only happened on normal completion, so an onStart() failure left a fully
-        // initialized processor that onReleaseScreenShare() could no longer reach. onStart() has
-        // no rollback of its own, hence the explicit release here. Since a failed start has not
-        // enabled the processor's running flag, that release does not stop the projection; the
-        // failure helper therefore owns both cleanup steps. The failure is still rethrown because
-        // that is what this path already did -- closing the orphan is the whole change, and
-        // swallowing here would hide a screen share that silently never started. Contrast the two
-        // serviceHandler.post sites, which must swallow: an escaping throwable there kills
-        // service-thread's Looper during teardown, after the work is already done.
-        screenProcessor = processor
-        try {
-            processor.onInit()
-            processor.onStart()
-        } catch (error: Throwable) {
-            LogContext.log.e(TAG, "startScreenShare() failed; releasing the processor.", error)
-            releaseProcessorAfterStartFailure(processor, mediaProjectionRef, error)
-            if (screenProcessor === processor) screenProcessor = null
-            throw error
+                val processor = ScreenCapture.Builder(
+                    // 600 768 720     [1280, 960][1280, 720][960, 720][720, 480]
+                    setting.width,
+                    // 800 1024 1280
+                    setting.height,
+                    setting.dpi,
+                    mediaProjectionRef,
+                    // BY_IMAGE_2_H26x
+                    // BY_MEDIA_CODEC
+                    // BY_RAW_BMP
+                    ScreenCapture.BY_MEDIA_CODEC,
+                    screenDataListenerFor(generation)
+                )
+                    .setEncodeType(VIDEO_ENCODE_TYPE)
+                    .setGoogleEncoder(false)
+                    .setFps(setting.fps)
+                    // For H26x and x264
+                    .setBitrate(setting.bitrate)
+                    // For H26x
+                    .setBitrateMode(setting.bitrateMode)
+                    // 20
+                    .setIFrameInterval(setting.iFrameInterval)
+                    // For bitmap
+                    //          .setSampleSize(2)
+                    .build()
+                // Publish before lifecycle calls so every partially initialized owner is reachable.
+                screenProcessor = processor
+                processor.onInit()
+                acceptingWork = true
+                processor.onStart()
+            } catch (error: Throwable) {
+                acceptingWork = false
+                captureGeneration.incrementAndGet()
+                LogContext.log.e(TAG, "startScreenShare() failed; releasing the processor.", error)
+                runCleanupStep("projection callback unregister after start failure") {
+                    unregisterProjectionCallback()
+                }
+                val processor = screenProcessor
+                val projection = mediaProjection
+                if (processor != null && projection != null) {
+                    releaseProcessorAfterStartFailure(processor, projection, error)
+                } else {
+                    runCleanupStep("projection stop after start failure") { projection?.stop() }
+                }
+                closeDebugOutput()
+                screenProcessor = null
+                mediaProjection = null
+                throw error
+            }
         }
     }
 
+    /** Stops and releases this one-shot capture; a new session needs fresh projection consent. */
     fun stopScreenShare() {
         LogContext.log.w(TAG, "stopScreenShare")
-        if (outputH26xFile) {
-            try {
-                videoH26xOs.flush()
-                videoH26xOs.closeQuietly()
-            } catch (e: Exception) {
-                LogContext.log.e(TAG, "stopScreenShare() exception.", e)
-            }
-        }
-
-        serviceHandler.post {
-            LogContext.log.w(TAG, "screenProcessor onStop()")
-            // onStop() reports a cleanup failure by throwing, and this body runs on
-            // service-thread's Looper, where an escaping throwable kills the process. A screen
-            // share that cannot be torn down cleanly is not worth a crash.
-            try {
-                screenProcessor?.onStop()
-            } catch (error: Throwable) {
-                LogContext.log.e(TAG, "screenProcessor onStop() failed.", error)
-            }
-        }
+        requestCaptureCleanup()
     }
 
     fun onReleaseScreenShare() {
         LogContext.log.w(TAG, "onReleaseScreenShare()")
-        stopScreenShare()
-        serviceHandler.post {
-            LogContext.log.w(TAG, "onReleaseScreenShare onRelease()")
-            // Same reasoning as onStop() above: onRelease() rethrows the first cleanup failure
-            // with the rest attached as suppressed, and by then it has already released every
-            // resource it could, so logging here loses nothing but the crash.
+        requestCaptureCleanup()
+    }
+
+    private fun onProjectionStopped(callback: ServiceProjectionCallback) {
+        synchronized(lifecycleLock) {
+            if (
+                destroyed ||
+                projectionCallback !== callback ||
+                mediaProjection !== callback.projection ||
+                captureGeneration.get() != callback.generation
+            ) {
+                return
+            }
+            requestCaptureCleanup()
+        }
+    }
+
+    private fun unregisterProjectionCallback() {
+        val callback = projectionCallback ?: return
+        callback.projection.unregisterCallback(callback)
+        // Clear only on success, so a failed unregister remains eligible for retry.
+        projectionCallback = null
+    }
+
+    private fun requestCaptureCleanup(destroyService: Boolean = false) {
+        synchronized(lifecycleLock) {
+            if (destroyService) destroyed = true
+            acceptingWork = false
+            captureGeneration.incrementAndGet()
+            if (cleanupQueued) return
+            cleanupQueued = true
+            // Keep the published owner until every step completes. Never remove older queued
+            // cleanup: onDestroy joins that work and only then requests the Looper to quit.
+            val cleanup = Runnable { releaseOwnedCapture() }
+            if (!serviceHandler.post(cleanup)) cleanup.run()
+        }
+    }
+
+    private fun releaseOwnedCapture() {
+        val (processor, projection) = synchronized(lifecycleLock) {
+            screenProcessor to mediaProjection
+        }
+        try {
+            runCleanupStep("projection callback unregister") { unregisterProjectionCallback() }
+            runCleanupStep("screenProcessor onStop") { processor?.onStop() }
+            runCleanupStep("screenProcessor onRelease") { processor?.onRelease() }
+            closeDebugOutput()
+            // onStop may already stop the projection; this idempotent fallback also covers
+            // partial startup and processor cleanup failures.
+            runCleanupStep("projection stop") { projection?.stop() }
+        } finally {
+            val quit = synchronized(lifecycleLock) {
+                screenProcessor = null
+                mediaProjection = null
+                cleanupQueued = false
+                if (destroyed) screenDataUpdateListener = null
+                destroyed
+            }
+            if (quit) serviceThread.quitSafely()
+        }
+    }
+
+    private fun closeDebugOutput() {
+        synchronized(outputLock) {
+            val output = videoH26xOs ?: return
             try {
-                screenProcessor?.onRelease()
-            } catch (error: Throwable) {
-                LogContext.log.e(TAG, "screenProcessor onRelease() failed.", error)
+                runCleanupStep("output flush") { output.flush() }
+            } finally {
+                runCleanupStep("output close") { output.close() }
+                videoH26xOs = null
+            }
+        }
+    }
+
+    private fun runCleanupStep(step: String, action: () -> Unit) {
+        try {
+            action()
+        } catch (error: Throwable) {
+            LogContext.log.e(TAG, "$step failed.", error)
+        }
+    }
+
+    private fun isCurrentCapture(generation: Long): Boolean =
+        acceptingWork && !destroyed && captureGeneration.get() == generation
+
+    /** Called on the main thread by the Activity's rotation observer. */
+    fun changeOrientation() {
+        synchronized(lifecycleLock) {
+            if (!acceptingWork || destroyed) return
+            try {
+                screenProcessor?.changeOrientation()
+            } catch (error: Exception) {
+                LogContext.log.e(TAG, "Capture rotation failed; releasing the owner.", error)
+                requestCaptureCleanup()
             }
         }
     }
 
     @Suppress("WeakerAccess")
     fun triggerIFrame() {
-        LogContext.log.w(TAG, "triggerIFrame()")
-        val encoder = (screenProcessor as? ScreenRecordMediaCodecStrategy)?.h26xEncoder
-        encoder?.let { VideoUtil.sendIdrFrameByManual(it) }
+        synchronized(lifecycleLock) {
+            if (!acceptingWork || destroyed) return
+            LogContext.log.w(TAG, "triggerIFrame()")
+            try {
+                (screenProcessor as? ScreenRecordMediaCodecStrategy)?.requestKeyFrame()
+            } catch (error: Exception) {
+                LogContext.log.e(TAG, "Key-frame request failed.", error)
+            }
+        }
     }
 
     fun takeScreenshot(width: Int?, height: Int?) {
-        LogContext.log.w(TAG, "Prepare to call takeScreenshot($width, $height)...")
-        screenProcessor?.takeScreenshot(width, height) { bmp ->
-            val compressedBmp = bmp.compressBitmap()
-            bmp.recycle()
-            val jpegFile =
-                File(this@MediaProjectionService.getBaseDirString("screenshot"), "screenshot.jpg")
-            compressedBmp.writeToFile(jpegFile)
-            compressedBmp.recycle()
-            LogContext.log.w(TAG, "onScreenshot[${jpegFile.length()}]")
-            toast("Screenshot saved[${jpegFile.length()}]")
+        synchronized(lifecycleLock) {
+            if (!acceptingWork || destroyed) return
+            val generation = captureGeneration.get()
+            LogContext.log.w(TAG, "Prepare to call takeScreenshot($width, $height)...")
+            try {
+                screenProcessor?.takeScreenshot(width, height) { bmp ->
+                    // Use the same FIFO as cleanup: an accepted save finishes before its owner is
+                    // cleared and another capture can start, including when stop arrives during IO.
+                    val posted = synchronized(lifecycleLock) {
+                        isCurrentCapture(generation) &&
+                            serviceHandler.post { saveScreenshot(bmp, generation) }
+                    }
+                    if (!posted) bmp.recycle()
+                }
+            } catch (error: Exception) {
+                // Busy and already-terminal strategies may reject synchronously. Retirement still
+                // owns terminal cleanup; an ordinary busy request must not stop the recording.
+                LogContext.log.e(TAG, "Screenshot request rejected.", error)
+                toast("Unable to capture screenshot", error = true)
+            }
+        }
+    }
+
+    private fun saveScreenshot(bitmap: Bitmap, generation: Long) {
+        try {
+            if (!isCurrentCapture(generation)) return
+            val compressed = bitmap.compressBitmap()
+            try {
+                val jpegFile = File(getBaseDirString("screenshot"), "screenshot.jpg")
+                compressed.writeToFile(jpegFile)
+                LogContext.log.w(TAG, "onScreenshot[${jpegFile.length()}]")
+                if (isCurrentCapture(generation)) toast("Screenshot saved[${jpegFile.length()}]")
+            } finally {
+                compressed.recycle()
+            }
+        } catch (error: Exception) {
+            LogContext.log.e(TAG, "Saving screenshot failed.", error)
+        } finally {
+            bitmap.recycle()
         }
     }
 }

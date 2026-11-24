@@ -7,12 +7,16 @@ import com.leovp.audio.base.iters.OutputCallback
 import com.leovp.audio.opus.OpusEncoder
 
 /**
+ * Migration: provide [onFailure] to handle terminal encoder/output failures. The callback can run
+ * on a codec callback thread; hand teardown to an external coroutine without waiting here.
+ *
  * Author: Michael Leo
  * Date: 2023/4/14 17:10
  */
 class OpusEncoderWrapper(
     encoderInfo: AudioEncoderInfo,
     private val outputCallback: OutputCallback,
+    onFailure: (Throwable) -> Unit,
 ) : AudioEncoderWrapper {
     private val encoder = OpusEncoder(
         sampleRate = encoderInfo.sampleRate,
@@ -27,8 +31,11 @@ class OpusEncoderWrapper(
             ) {
                 outputCallback.output(encodedBytes, isConfig, isKeyFrame)
             }
-        }
+        },
+        errorCallback = onFailure
     ).apply { start() }
+
+    override val failure: Throwable? get() = encoder.terminalFailure
 
     override fun encode(input: ByteArray) {
         encoder.encode(input)

@@ -13,6 +13,8 @@ class CompressedPcmEncoderWrapper(
     @Suppress("UNUSED_PARAMETER") encoderInfo: AudioEncoderInfo,
     private val outputCallback: OutputCallback
 ) : AudioEncoderWrapper {
+    override val failure: Throwable? get() = null
+
     override fun encode(input: ByteArray) {
         outputCallback.output(input.compress(), isConfig = false, isKeyFrame = false)
     }

@@ -140,9 +140,13 @@ caller-job 守卫仍位于 once CAS 之前，非法自作用域调用不会消�
 失败回调都必须通过 token 检查，不能发布或关闭新资源。
 
 文件创建、`MicRecorder` 构造和启动移至 IO scope；切换格式时先完整等待旧 recorder 停止，再创建新
-实例。启动异常会清空相同实例、等待其释放并关闭输出流。`RecordCallback.onRecording()` 不再吞文件
-写入异常：异常回到 recorder worker，触发失败 teardown；`onStop(false)` 只在 token 仍是当前意图时
-复位按钮，并用 recorder 身份比较避免迟到清理误停随后创建的同格式实例。
+实例。启动异常会清空相同实例、等待其释放并关闭输出流。
+
+2026-11-06 复核订正：PCM/压缩 PCM 的输出异常可回到录音 worker，但 AAC/OPUS 输出运行在编码器
+callback 线程。仅删除文件写入的 catch 不足以停止采集。本轮新增 encoder → wrapper → recorder 的
+失败通道，异步清理等待初始化完成后执行单次停止；失败与显式停止并发时仍报告 `onStop(false)`。
+旧版在 IO 线程检查 token 后直接排队复位按钮也存在窗口；现 UI 真正执行时再次核对失败后的停止代际，
+播放完成、启动失败与异步错误则检查对应 player 身份。详见 `superpowers/2026-11-06-review-findings-remediation.md`。
 
 ### 6.2 WebSocket Demo
 

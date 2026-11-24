@@ -225,13 +225,13 @@ class FingerPaintView @JvmOverloads constructor(
                     invalidate()
                     touchEventCallback?.onTouchUp(event.x, event.y, pathPaint)
                     // Route the lift as an accessibility click so TalkBack and any registered
-                    // OnClickListener are notified, instead of suppressing the lint (remediation L-D2).
+                    // OnClickListener are notified (remediation L-D2).
                     performClick()
                 }
 
                 MotionEvent.ACTION_CANCEL -> {
                     // Finalize the in-progress stroke on gesture cancellation so no partial path is
-                    // left dangling; no onTouchUp callback is fired for a cancel (remediation M-D6).
+                    // left dangling; cancel does not fire onTouchUp (remediation M-D6).
                     handleTouchEnd()
                     invalidate()
                 }
@@ -324,10 +324,9 @@ class FingerPaintView @JvmOverloads constructor(
         brushBitmap?.eraseColor(Color.TRANSPARENT)
         brushCanvas?.drawColor(Color.TRANSPARENT)
         try {
-            // Render over an immutable snapshot taken under the same monitor the structural mutators
-            // (undo/clear/drawUserPath/handleTouchStart) hold, so a concurrent change cannot skew the
-            // indices or raise ConcurrentModificationException mid-draw. The heavy drawing then runs
-            // outside the lock (remediation H9).
+            // Take an immutable paths snapshot under the monitor used by structural mutators
+            // (undo/clear/drawUserPath/handleTouchStart). This prevents skewed indices and
+            // ConcurrentModificationException; draw outside the lock (remediation H9).
             val snapshot = synchronized(this) { paths.toList() }
             for (index in snapshot.indices) {
                 val path = snapshot[index]
@@ -380,8 +379,8 @@ class FingerPaintView @JvmOverloads constructor(
     @Synchronized
     fun undo() {
         touchEventCallback?.onUndo()
-        // Only decrement the counter when a path was actually removed, and never let it go negative;
-        // an unconditional `countDrawn--` on an empty list underflowed the counter (remediation H7).
+        // Decrement only when a path was removed, and keep the counter nonnegative.
+        // An unconditional decrement on an empty list caused underflow (remediation H7).
         if (paths.isNotEmpty()) {
             paths.removeAt(paths.lastIndex)
             countDrawn = countDrawn.coerceAtMost(paths.size).coerceAtLeast(0)

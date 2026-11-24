@@ -68,6 +68,29 @@
 
 ### 变更 (Changed)
 
+- **录屏关键帧请求由策略持有原生操作权**：移除公开 `h26xEncoder` 属性；调用方改用
+  `ScreenRecordMediaCodecStrategy.requestKeyFrame()`，避免直接借用 codec 与异步退休并发。
+  非活动录制返回 `false`，原生请求异常交调用方处理；具体迁移见该方法 KDoc。
+- **GL 文件播放提交使用像素快照**：`renderAndAwait()` 入队前复制数据，取消后的在途上传不再
+  读取调用方数组；仍可取消等待，已由 GL 认领的帧可继续完成，不代表物理显示或 GPU 完成。
+
+- **MediaProjection 录屏改为单次授权会话与 EGL 分发**：`ScreenRecordMediaCodecStrategy` 的旋转复用
+  同一 VirtualDisplay；截图从同一投影纹理读取，不切换录制输出。`onStop()` 等价最终释放，调用方
+  再次录制须重新授权并创建新策略；EGL 释放等待超时或被中断时，资源仍由其线程持有并继续清理，
+  不能据此复用实例或提前释放借用资源。具体迁移及截图所有权见策略 KDoc。
+- **文件播放逐帧等待 GL 消费**：新增 `LeoGLSurfaceView.renderAndAwait()`，可取消地等待当前帧
+  绘制后再提交下一帧；这不代表 GPU 完成或屏幕已呈现。`GLRenderer.setVideoDimension()` 在 Surface
+  尺寸已知后使用当前 Surface 比例，传入渲染尺寸仅作初始化回退，避免旧尺寸覆盖旋转结果。
+
+- **AAC/OPUS 编码失败必须交给拥有者处理**：`AacEncoder`、`OpusEncoder` 新增必填
+  `errorCallback`，两个 encoder wrapper 与 `AudioEncoderManager.getWrapper()` 新增必填
+  `onFailure`；升级调用方须补充失败处理并重新编译。回调在 codec 锁外执行，必须及时返回，
+  不得在 codec callback 内同步等待释放。`MicRecorder` 将编码或输出回调失败汇入单次停止，
+  等待初始化与录音 worker 结束、释放资源后报告 `onStop(false)`；失败不会再静默留下麦克风继续采集。
+  `AudioEncoderWrapper` 新增必需的 `failure` 快照属性，自定义实现须提供稳定的终态失败原因；
+  codec 在锁内保存失败原因，停止结果不再依赖锁外错误通知是否已经抵达。
+  覆写 codec 失败流程的子类调用 `transitionToCodecFailure(error)` 时须提供原始异常。
+
 - **audio / MediaCodec 失败终态与文件播放边界收敛**：`BaseMediaCodec` 新增一次性的
   `FAILED` 终态，异步 codec 的 `flush()` 会在同一操作锁内使旧回调代号失效、摘除并释放旧 codec，
   再按原始音频配置创建并启动新的 codec；回调绑定注册时的会话代号，旧回调即使迟到也不会触碰失效
@@ -98,12 +121,15 @@
   `UNINITIALIZED`，随后传播原始失败。服务端对 handler 的 `Throwable` 采用相同的“继续清理、聚合
   suppressed、最后传播”协议。Netty future 在“首次检查未完成、listener 注册时已经完成”的窗口增加
   注册后二次检查和单次恢复门闩，避免终止 executor 拒绝 listener 后永久挂起。
-- **Wi-Fi 网络回调注销失败可重试**：`NetworkUtil` 仅在 framework 注销成功后删除内部 callback 映射；
-  注销异常仍返回 `false`，但保留已与业务 listener 脱钩的 callback 句柄，后续调用可再次注销，避免
-  framework 持有全局 callback 而本地已失去句柄。
+- **Wi-Fi 注销失败由独立清理任务接管**：`unregisterWifiNetworkStatsAboveAndroidS(callback)` 删除
+  无用的 Context 参数，升级调用方须同步调整并重新编译。注销立即移除业务 key 与 listener；返回
+  `false` 仅表示即时 framework 注销失败，后台任务已接管脱钩的 callback，无需保留 Activity 或重试。
+  清理按 1 秒起、最高 30 秒退避，完成后关闭线程；后台 Binder 调用在注册表锁外执行。pending 期间
+  拒绝新增 Wi-Fi 订阅，已有订阅继续运行；清理后重新 start 可恢复新订阅，ping/traffic 不受影响。
 - **`ScreenRecordMediaCodecStrategy.onStop()` / `onRelease()` 现在会抛出清理失败**：两者改为尝试每一个释放步骤，
-  然后抛出首个失败、其余以 `addSuppressed` 附加，而不再让第一个异常中断后续释放。抛出应读作「已
-  尽可能释放，并附上出错原因」，而非「什么都没释放」；已移交释放的资源不会在重复调用时 double
+  同步等待内完成时抛出首个失败、其余以 `addSuppressed` 附加，不因第一个异常跳过后续释放。等待
+  超时或中断时，EGL 线程继续持有资源并完成清理，迟到的清理失败记录日志；此时抛出不代表释放
+  已完成。已移交释放的资源不会在重复调用时 double
   free，失败的 `MediaProjection.Callback` 注销则保留为可重试。此前被 `log.e` 吞掉的注销失败现在也
   会外传。从 `Handler` runnable 等「未捕获异常即杀进程」的上下文调用时须自行捕获 —— demo 的
   `MediaProjectionService` 已照此加固；启动失败时还会释放 processor 并停止刚取得的
@@ -313,6 +339,33 @@
   回退到 idle,并新增状态描述供无障碍服务读取。
 
 ### 修复 (Fixed)
+
+- **补齐停止与在途工作交错**：AAC/OPUS 回调和同步 codec worker 的实际处理异常在操作锁内
+  保留，即使显式停止已关闭输入门禁，录音也不会把已有输出失败误报为成功；真实取消不误报。
+  录屏 Demo 处理退休等待期间的旋转/截图拒绝及截图队列过载，单次截图拒绝不停止录制。
+  关键帧请求与策略异步退休共用会话锁，避免原生 `setParameters()` 与 codec 释放并发。
+
+- **六项生命周期复审修复**：同步 codec 的活动回调自行抛出取消异常时进入 FAILED 并通知拥有者，
+  真正 worker 取消或释放不误报。WebSocket Demo 串行化断连与释放，在完成清理前保留实例。
+  FFmpeg Demo 的普通解码与 EOF drain 均逐输出帧等待 GL 消费并限速，避免批量帧互相覆盖。
+  投影 Service 的 stop/release/unbind/destroy 合并清理，排空资源释放和截图保存后退出 HandlerThread；
+  旧截图通过同一队列与会话门禁隔离，不再跨会话覆盖输出。系统撤销投影与活动会话的编码失败
+  同样释放 Service owner，旧会话错误不影响后续会话；Activity 销毁时取消 Timer、解除尚未完成的
+  绑定请求，并拦截迟到的连接、旋转与 UI 更新。
+- **录屏 Demo 的前台启动时序与通知回跳**：等待录屏授权期间仅绑定 Service，获得授权且仍连接
+  有效 owner 后才启动并立即显示前台通知，避免将启动提升期限跨越用户等待。Service 不再以
+  START_STICKY 重建无法恢复授权的空会话；通知点击改为复用当前录屏页，不再以 Fragment 为 Activity 目标。
+- **旧版 Android 的 codec 初始化所有权**：`ScreenRecordMediaCodecStrategy`、`LeoTextureView` 与
+  `CameraAvcEncoder` 在 API 21/22 上通过原子交接转移初始化后的 codec。超时或中断不再释放仍在
+  native `setCallback()` 中的实例，未交接资源由创建线程在初始化退出后释放；原生调用不返回时
+  不能承诺即时物理释放。
+- **复审补齐音频与网络会话隔离**：Wi-Fi 注销失败不再保留业务 lambda 与 Activity，独立后台任务
+  继续清理；旧注册未清理前不再创建新监听，ping/traffic 监控仍可继续。
+  截图录屏的错误回调延至释放屏障完成后执行，回调同步等待 `releaseAndJoin()` 不再等待自身返回。
+  音频 Demo 在主线程执行按钮副作用时重查录音代际或播放器身份；Cipher Demo 在销毁或准备失败时
+  释放尚未发布的 MediaPlayer 与文件描述符，不再于页面销毁后启动播放器。
+  PCM 输出自行取消时仍释放采集资源并报告失败，显式停止的预期取消保持成功；录音输出流关闭不再
+  因先行 flush 失败而被跳过。
 
 - **网络监控回调不再与生命周期死锁**：轮询任务此前在持有 `monitorLifecycleLock` 时同步执行调用方
   回调，而 `startMonitor()`/`stopMonitor()` 取同一把锁；调用方若在回调里等待主线程，而主线程正在

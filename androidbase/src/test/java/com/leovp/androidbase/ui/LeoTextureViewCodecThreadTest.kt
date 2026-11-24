@@ -6,13 +6,18 @@ import android.os.Build
 import android.util.Size
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -86,6 +91,112 @@ class LeoTextureViewApi28CodecThreadTest : LeoTextureViewCodecThreadTestBase() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class LeoTextureViewApi22CodecThreadTest : LeoTextureViewCodecThreadTestBase() {
+    @Test
+    fun `caller timeout after the worker final check still releases the unclaimed codec`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        val handoffEntered = CountDownLatch(1)
+        val allowHandoff = CountDownLatch(1)
+        val released = CountDownLatch(1)
+        val releaseCount = AtomicInteger()
+        val workerThread = AtomicReference<Thread?>()
+        val releaseThread = AtomicReference<Thread?>()
+        every { codec.setCallback(any()) } answers { workerThread.set(Thread.currentThread()) }
+        every { codec.release() } answers {
+            releaseThread.set(Thread.currentThread())
+            releaseCount.incrementAndGet()
+            released.countDown()
+        }
+        mockkConstructor(SynchronousQueue::class)
+        every {
+            anyConstructed<SynchronousQueue<Result<MediaCodec>>>().offer(any(), any(), any())
+        } answers {
+            handoffEntered.countDown()
+            assertTrue(allowHandoff.await(6, TimeUnit.SECONDS))
+            // The real zero-capacity queue must reject delivery after its receiver has gone.
+            callOriginal()
+        }
+        val failure = AtomicReference<Throwable?>()
+        val caller = Thread {
+            failure.set(runCatching { initializeDecoder() }.exceptionOrNull())
+        }
+        caller.start()
+        try {
+            assertTrue(handoffEntered.await(3, TimeUnit.SECONDS))
+            caller.join(4_000)
+            assertFalse(caller.isAlive)
+            assertTrue(failure.get() is TimeoutException)
+            assertEquals(0, releaseCount.get())
+        } finally {
+            allowHandoff.countDown()
+            caller.join(4_000)
+            try {
+                assertTrue(released.await(4, TimeUnit.SECONDS))
+            } finally {
+                unmockkConstructor(SynchronousQueue::class)
+            }
+        }
+        assertEquals(1, releaseCount.get())
+        assertEquals(workerThread.get(), releaseThread.get())
+    }
+
+    @Test
+    fun `interrupting setup never releases a codec still inside setCallback`() {
+        verifyAbandonedCallbackRelease(interruptCaller = true)
+    }
+
+    @Test
+    fun `timed out setup never releases a codec still inside setCallback`() {
+        verifyAbandonedCallbackRelease(interruptCaller = false)
+    }
+
+    private fun verifyAbandonedCallbackRelease(interruptCaller: Boolean) {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        val callbackEntered = CountDownLatch(1)
+        val allowCallbackReturn = CountDownLatch(1)
+        val released = CountDownLatch(1)
+        val releaseCount = AtomicInteger()
+        val workerThread = AtomicReference<Thread?>()
+        val releaseThread = AtomicReference<Thread?>()
+        every { codec.setCallback(any()) } answers {
+            workerThread.set(Thread.currentThread())
+            callbackEntered.countDown()
+            var waiting = true
+            while (waiting) {
+                try {
+                    allowCallbackReturn.await()
+                    waiting = false
+                } catch (_: InterruptedException) {
+                    // Model a native call that does not stop when Java interrupts its worker.
+                }
+            }
+        }
+        every { codec.release() } answers {
+            releaseThread.set(Thread.currentThread())
+            releaseCount.incrementAndGet()
+            released.countDown()
+        }
+        val failure = AtomicReference<Throwable?>()
+        val caller = Thread {
+            failure.set(runCatching { initializeDecoder() }.exceptionOrNull())
+            Thread.interrupted()
+        }
+        caller.start()
+        try {
+            assertTrue(callbackEntered.await(3, TimeUnit.SECONDS))
+            if (interruptCaller) caller.interrupt()
+            caller.join(4_000)
+            assertFalse("the caller must be able to abandon initialization", caller.isAlive)
+            assertEquals("the worker still owns the in-flight codec", 0, releaseCount.get())
+        } finally {
+            allowCallbackReturn.countDown()
+            caller.join(4_000)
+        }
+        assertTrue(failure.get() != null)
+        assertTrue(released.await(4, TimeUnit.SECONDS))
+        assertEquals(1, releaseCount.get())
+        assertEquals(workerThread.get(), releaseThread.get())
+    }
+
     @Test
     fun `codec creation and default callback share the dedicated thread before configure`() {
         ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)

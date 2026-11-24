@@ -16,6 +16,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
+ * Synchronous codec hooks run on the codec worker. A [CancellationException] thrown by a hook
+ * while that worker remains active is a terminal codec failure and notifies the owner. Actual
+ * worker cancellation and intentional release do not report a codec failure.
+ *
  * Author: Michael Leo
  * Date: 2023/5/4 10:18
  */
@@ -89,32 +93,34 @@ abstract class BaseMediaCodecSynchronous(
         }
     }
 
-    private fun process(): Boolean {
-        try {
-            return withCodecOperationLock {
-                if (isReleasing) return@withCodecOperationLock false
-                processWithCodecLock()
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: MediaCodec.CodecException) {
-            // Must be caught BEFORE IllegalStateException because CodecException subclasses it.
-            if (isReleasing) return stopWorkerDuringRelease("CodecException")
-            LogContext.log.e(TAG, "CodecException", e)
+    private suspend fun process(): Boolean {
+        val workerContext = currentCoroutineContext()
+        var failure: Exception? = null
+        var notifyOwner = false
+        fun captureFailure(error: Exception): Boolean {
             codecFailed.set(true)
-            reportCodecFailure(e)
-        } catch (e: IllegalStateException) {
-            if (isReleasing) return stopWorkerDuringRelease("Codec illegal state")
-            LogContext.log.e(TAG, "Codec illegal state, stopping", e)
-            codecFailed.set(true)
-            reportCodecFailure(e)
-        } catch (e: Exception) {
-            if (isReleasing) return stopWorkerDuringRelease("Decode error")
-            LogContext.log.e(TAG, "Unexpected decode error, stopping", e)
-            codecFailed.set(true)
-            reportCodecFailure(e)
+            failure = error
+            notifyOwner = captureCodecOperationFailure(error)
+            return false
         }
-        return false
+        val keepRunning = withCodecOperationLock {
+            if (isReleasing) return@withCodecOperationLock false
+            try {
+                processWithCodecLock()
+            } catch (error: CancellationException) {
+                workerContext.ensureActive()
+                if (isReleasing) false else captureFailure(error)
+            } catch (error: Exception) {
+                // Release can close its gate while an accepted operation is still returning a
+                // buffer. Preserve that operation's failure before native cleanup gets this lock.
+                captureFailure(error)
+            }
+        }
+        failure?.let { error ->
+            LogContext.log.e(TAG, "Codec processing failed", error)
+            if (notifyOwner) notifyTransitionedCodecFailure(error)
+        }
+        return keepRunning
     }
 
     /** Processes one input/output iteration while lifecycle teardown is excluded. */
@@ -215,15 +221,5 @@ abstract class BaseMediaCodecSynchronous(
         if (drainedOutput) {
             LogContext.log.d(TAG, "Decode cost: ${System.currentTimeMillis() - startedAt}ms")
         }
-    }
-
-    /**
-     * The worker touched the codec while it was being torn down (see [isReleasing]). This is
-     * expected shutdown noise, not a real failure: stop the loop quietly without reporting a codec
-     * failure or firing a fake end-of-stream (remediation R-4).
-     */
-    private fun stopWorkerDuringRelease(what: String): Boolean {
-        LogContext.log.w(TAG, "$what during intentional release; stopping worker")
-        return false
     }
 }

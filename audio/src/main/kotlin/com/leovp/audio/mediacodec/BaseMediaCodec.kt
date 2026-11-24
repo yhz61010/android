@@ -67,6 +67,10 @@ abstract class BaseMediaCodec(
     private val codecReleased = AtomicBoolean(false)
     private val lifecycleState = AtomicReference(LifecycleState.NEW)
 
+    @Volatile
+    internal var terminalFailure: Throwable? = null
+        private set
+
     /** Serializes codec callbacks and worker operations with flush/release. */
     private val codecOperationLock = ReentrantLock()
 
@@ -245,9 +249,27 @@ abstract class BaseMediaCodec(
         LogContext.log.e(TAG, "Codec failure reported", error)
     }
 
-    /** Atomically moves the active session into its terminal failed state. */
-    protected fun transitionToCodecFailure(): Boolean =
+    /**
+     * Atomically selects failure and saves its cause before teardown can pass the codec lock.
+     * Migration: subclasses must supply [error]; owner notification still belongs outside the lock.
+     */
+    protected fun transitionToCodecFailure(error: Throwable): Boolean = withCodecOperationLock {
+        val selected = lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)
+        if (selected && terminalFailure == null) terminalFailure = error
+        selected
+    }
+
+    /**
+     * Retains failure from an operation that already passed its running/session check. Invoke
+     * under the operation lock, rechecking any session epoch first. Release may have closed the
+     * input gate while this operation was running, but cannot pass native cleanup through this
+     * lock before the cause is saved. A real worker cancellation must be filtered by the caller.
+     * The return value selects unlocked owner notification; a releasing owner reads the snapshot.
+     */
+    protected fun captureCodecOperationFailure(error: Throwable): Boolean = withCodecOperationLock {
+        if (terminalFailure == null) terminalFailure = error
         lifecycleState.compareAndSet(LifecycleState.RUNNING, LifecycleState.FAILED)
+    }
 
     /** Delivers a failure whose state transition has already been won, outside the codec lock. */
     protected fun notifyTransitionedCodecFailure(error: Throwable) {
@@ -261,7 +283,7 @@ abstract class BaseMediaCodec(
 
     /** Moves to FAILED and notifies the owner at most once. */
     protected fun reportCodecFailure(error: Throwable) {
-        if (transitionToCodecFailure()) notifyTransitionedCodecFailure(error)
+        if (transitionToCodecFailure(error)) notifyTransitionedCodecFailure(error)
     }
 
     open fun flush() {
@@ -275,7 +297,7 @@ abstract class BaseMediaCodec(
                 codec.flush()
             } catch (error: Exception) {
                 failure = error
-                transitionedToFailed = transitionToCodecFailure()
+                transitionedToFailed = transitionToCodecFailure(error)
             }
         }
         failure?.let { error ->

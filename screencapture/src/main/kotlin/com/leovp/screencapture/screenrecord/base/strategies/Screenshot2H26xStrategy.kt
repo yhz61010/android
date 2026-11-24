@@ -761,7 +761,6 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
                 recordingFailure.compareAndSet(null, e)
             } finally {
                 releaseOwnedResources(stopEncoder = encoderStarted.get())
-                reportFailureIfAny()
             }
         }
         // Registering the job and claiming the teardown must be mutually exclusive:
@@ -796,7 +795,14 @@ class Screenshot2H26xStrategy internal constructor(private val builder: Screensh
                     }
                     // completeInlineRelease() closes the dispatcher and opens the barrier once
                     // the resources are really gone, so neither may be done early here.
-                    if (orphaned) dispatchInlineRelease() else recordingDispatcher.close()
+                    if (orphaned) {
+                        dispatchInlineRelease()
+                    } else {
+                        recordingDispatcher.close()
+                        // Notify only after the completed job opened the release barrier. A
+                        // listener may synchronously await releaseAndJoin() from onError().
+                        reportFailureIfAny()
+                    }
                 }
                 true
             }

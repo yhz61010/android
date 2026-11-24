@@ -151,6 +151,10 @@ import java.util.concurrent.ArrayBlockingQueue
  * Each "section" is prefixed by a 64-bit ID and a 64-bit length.
  * <https://developer.android.com/reference/android/media/MediaCodec#CSD>
  *
+ * Migration: callers must now provide [errorCallback] and rebuild precompiled consumers.
+ * It reports terminal codec/output failures outside the codec lock. Return promptly and hand
+ * cleanup to an external coroutine; do not synchronously await release from this callback.
+ *
  * Author: Michael Leo
  * Date: 2023/4/14 15:17
  */
@@ -160,6 +164,7 @@ class OpusEncoder(
     private val bitrate: Int,
     audioFormat: Int = AudioFormat.ENCODING_PCM_16BIT,
     private val callback: IEncodeCallback,
+    private val errorCallback: (Throwable) -> Unit,
 ) : BaseMediaCodecAsynchronous(
     codecName = MediaFormat.MIMETYPE_AUDIO_OPUS,
     sampleRate = sampleRate,
@@ -233,6 +238,10 @@ class OpusEncoder(
         1_000_000L * totalPcmBytes / getBytesPerSample() / sampleRate / channelCount
 
     fun encode(input: ByteArray): Boolean = isRunning && queue.offer(input)
+
+    override fun notifyCodecFailure(error: Throwable) {
+        errorCallback(error)
+    }
 
     override fun onCodecReleased() {
         queue.clear()

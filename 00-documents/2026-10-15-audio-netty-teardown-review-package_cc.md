@@ -4461,7 +4461,7 @@ private fun Future<*>.failureOrNull(): Throwable? = when {
 ```diff
 @@ -107,8 +107,24 @@ class WebSocketClientActivity :
      }
- 
+
      override fun onDestroy() {
 -        cs.launch { webSocketClient?.release() }
 -        cs.cancel()
@@ -4485,7 +4485,7 @@ private fun Future<*>.failureOrNull(): Throwable? = when {
 +        }
          super.onDestroy()
      }
- 
+
 ```
 
 #### C.5.3 `EventBusBridgeClientActivity.kt`
@@ -4493,7 +4493,7 @@ private fun Future<*>.failureOrNull(): Throwable? = when {
 ```diff
 @@ -86,8 +86,17 @@ class EventBusBridgeClientActivity :
      }
- 
+
      override fun onDestroy() {
 -        ioScope.launch { webSocket?.release() }
 -        ioScope.cancel()
@@ -4510,7 +4510,7 @@ private fun Future<*>.failureOrNull(): Throwable? = when {
 +        }
          super.onDestroy()
      }
- 
+
 ```
 
 说明（两处相同）：`launch` 默认 `CoroutineStart.DEFAULT`，在 `Dispatchers.IO` 上是异步派发；HEAD 里紧随其后的 `scope.cancel()` 几乎必然在该协程首次被调度前落地，而一个尚未开始执行就被取消的协程**整个 body 都不会运行**——`release()` 根本不会被调用，event loop group 泄漏。`NonCancellable` 只保护"守卫之后"的关闭体，救不了从未进入 `release()` 的情形。现在的写法（第六轮 J.2）把 `cancel()` 挪进同一协程的 `finally`：`release()`（自身有 3 s 资源层超时）返回之后再取消 scope，此时落点必然在 `onConnectClick` 协程派发之后，所以它还能顺带取消一个仍在进行中的 `connect()`（其 `invokeOnCancellation` 会清理）；从 scope 自己的最后一个协程里取消它是合法的，Job 随之完成，不再有"scope 永不取消"这个弱化的生命周期约定。`kotlinx.coroutines.cancel` 的 import 因此保留，diff 不再触及 import 段。残余的窄窗口只剩一种：`onConnectClick` 的协程已被派发、但尚未把 client 赋给字段，此时 `release()` 对 null 空转，随后建出的 client 无人释放；任何 `cancel()` 时机都关不上它——落在首次派发前会整个跳过该协程（不会建 client），落在派发后则已越过赋值（见 `WebSocketClientActivity` 注释第二段、§J.2 与 §J.13）。
@@ -5339,4 +5339,3 @@ CHANGELOG 写了迁移方式，但替代函数自己的 KDoc 一句没提。七�
 `RELEASING`，与服务端"三条路径都落 `STOPPED`"不对称；连带发现"从未连接的客户端调 `release()` 被
 `UNINITIALIZED` 守卫拒绝、`NioEventLoopGroup` 泄漏"。分析、原因与两套方案（均**未改代码**）见
 `00-documents/2026-10-16-basenetty-client-release-terminal-state_cc.md`。
-

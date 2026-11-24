@@ -25,12 +25,13 @@ internal class RecordingIntentCoordinator {
         return generation
     }
 
+    /** Returns the stopped generation, which queued UI work must recheck before changing views. */
     @Synchronized
-    fun failIfCurrent(token: Long, type: AudioType): Boolean {
-        if (generation != token || desiredType != type) return false
+    fun failIfCurrent(token: Long, type: AudioType): Long? {
+        if (generation != token || desiredType != type) return null
         generation++
         desiredType = null
-        return true
+        return generation
     }
 
     @Synchronized

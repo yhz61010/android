@@ -241,6 +241,8 @@ abstract class BaseActivity<B : ViewBinding>(
      * [startTrafficNetwork] in [onStop]. The monitor is meant to keep polling while the Activity
      * is invisible, which is why [onStop] carries no "are you leaking it?" warning: such a warning
      * would fire precisely when things work as designed.
+     * Failed framework Wi-Fi teardown is transferred to application-scoped cleanup by
+     * [NetworkMonitor.stopMonitor]; this Activity can release its monitor immediately.
      *
      * Blocks the caller while a [NetworkMonitor.startMonitor] this Activity triggered is still
      * running on the DNS lookup thread, because publication and start share this method's lock.

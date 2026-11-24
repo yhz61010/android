@@ -65,8 +65,9 @@ val gson: Gson by lazy {
 
 fun Any?.toJsonString(): String = try {
     gson.toJson(this)
+} catch (err: CancellationException) {
+    throw err
 } catch (err: Exception) {
-    if (err is CancellationException) throw err
     LogContext.log.e(TAG, "toJsonString() error.", err)
     ""
 }
@@ -87,8 +88,9 @@ inline fun <reified T> String?.toObject(): T? = try {
     // Use a reified TypeToken so generic type arguments (e.g. List<CmdBean>) survive erasure;
     // T::class.java dropped them and Gson produced LinkedTreeMap elements (remediation H18).
     gson.fromJson(this, object : TypeToken<T>() {}.type)
+} catch (err: CancellationException) {
+    throw err
 } catch (err: Exception) {
-    if (err is CancellationException) throw err
     LogContext.log.e(TAG, "toObject() error.", err)
     null
 }
@@ -108,8 +110,9 @@ inline fun <reified T> String?.toObject(): T? = try {
  */
 fun <T> String?.toObject(type: Type): T? = try {
     gson.fromJson(this, type)
+} catch (err: CancellationException) {
+    throw err
 } catch (err: Exception) {
-    if (err is CancellationException) throw err
     LogContext.log.e(TAG, "toObject($type) error.", err)
     null
 }

@@ -46,6 +46,8 @@ import java.util.concurrent.atomic.AtomicReference
  * The price of that single critical section is that [onDestroy] can block on the main thread
  * while the lookup thread is inside `startMonitor()`, which spans a `HandlerThread` start and a
  * binder round trip -- the same trade `BaseActivity.stopTrafficMonitor()` documents.
+ * Failed Wi-Fi teardown is detached and retried by application-scoped cleanup, so this screen
+ * releases its monitor on destruction without retaining it for later retries.
  *
  * We need following permissions:
  * ```xml

@@ -787,4 +787,3 @@ R26 的三个用例未在本机执行。R23 的 `Error` 路径与 R22 一样无�
 `STOPPED`；另有"从未连接的客户端调 `release()` 被 `UNINITIALIZED` 守卫拒绝、`NioEventLoopGroup`
 泄漏"这一更大的不对称。分析、原因与两套修改方案（均未动代码）见
 `00-documents/2026-10-16-basenetty-client-release-terminal-state_cc.md`，待所有者决定后再实施。
-

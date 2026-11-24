@@ -54,11 +54,11 @@ class AacDecoder(
     val queueSize: Int get() = queue.size
 
     /**
-     * Discards every frame still waiting to be submitted to the codec.
+     * Discards frames still stored in the decoder input queue.
      *
      * Stream owners use this to shed accumulated latency; a resync that only restarts AudioTrack
-     * would replay the queued backlog instead of dropping it. Frames already handed to the codec
-     * are unaffected and still decode.
+     * would replay the queued backlog instead of dropping it. An input callback that already took
+     * a frame may still submit it; work already inside the codec is also unaffected.
      */
     fun clearPendingInput() {
         queue.clear()

@@ -22,6 +22,10 @@ dependencies {
     implementation(projects.log)
     implementation(projects.libCommonAndroid)
     implementation(projects.libCommonKotlin)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.bundles.test.runtime.only)
+    testRuntimeOnly(libs.khronos.opengl.api)
 }
 
 /** When use it: sourceJar.get() */

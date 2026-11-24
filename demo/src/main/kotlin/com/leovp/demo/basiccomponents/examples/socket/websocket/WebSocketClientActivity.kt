@@ -122,15 +122,29 @@ class WebSocketClientActivity :
     }
 
     fun onDisconnectClick(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch { webSocketClient?.disconnectManually() }
+        val client = webSocketClient ?: return
+        cs.launch {
+            clientMutex.withLock {
+                if (webSocketClient === client) client.disconnectManually()
+            }
+        }
     }
 
     fun onConnectRelease(@Suppress("UNUSED_PARAMETER") view: View) {
-        cs.launch {
-            val client = clientMutex.withLock {
-                webSocketClient.also { webSocketClient = null }
+        val client = webSocketClient ?: return
+        cs.launch { releaseClient(client) }
+    }
+
+    private suspend fun releaseClient(client: WebSocketClientDemo?) {
+        clientMutex.withLock {
+            if (client == null || webSocketClient !== client) return
+            // release() refuses a client that is still DISCONNECTING. Keep both operations
+            // serialized and retain ownership until the real teardown has finished.
+            try {
+                client.release()
+            } finally {
+                webSocketClient = null
             }
-            client?.release()
         }
     }
 
@@ -139,10 +153,7 @@ class WebSocketClientActivity :
             cs.launch {
                 try {
                     connectJob?.cancelAndJoin()
-                    val client = clientMutex.withLock {
-                        webSocketClient.also { webSocketClient = null }
-                    }
-                    client?.release()
+                    releaseClient(webSocketClient)
                 } finally {
                     cs.cancel()
                 }

@@ -53,11 +53,15 @@
 | Demo 单测 | `./gradlew :demo:testDevDebugUnitTest` |
 | Demo 真机测试 | `./gradlew :demo:connectedDevDebugAndroidTest` |
 | 全仓格式与静态分析 | `./gradlew ktlintCheck detekt` |
-| 全量质量验证 | `./gradlew staticCheck` |
+| 当前聚合验证（覆盖限制见下文） | `./gradlew staticCheck` |
 | 本地发布链路 | `./gradlew publishToMavenLocal` |
 | 库发布规则合并（替换模块名） | `./gradlew :android-restricted:mergeReleaseConsumerProguardFiles --rerun-tasks` |
 
-`testDebugUnitTest` 不能替代带 flavor 的 `testDevDebugUnitTest`。`staticCheck` 聚合质量检查、各模块 debug 变体单测/lint 和应用仪器测试 APK 构建，不代表已执行真机测试。
+`testDebugUnitTest` 不能替代带 flavor 的 `testDevDebugUnitTest`。
+当前 `staticCheck` 会漏掉普通库的 `testDebugUnitTest` / `lintDebug` 主入口，且 `ktlintCheck` / `detekt` 依赖只指向根项目。
+匹配到的 flavor debug、`lintVitalAnalyzeDebug` 等任务及其传递依赖可能执行部分 lint，但不能据此认定完整库单测、标准 lint 和全仓质量检查通过。
+完整 JVM 与质量验证需显式运行 `./gradlew testDebugUnitTest :demo:testDevDebugUnitTest ktlintCheck detekt`，受影响库的 `lintDebug` 另行指定。
+应用仪器测试 APK 构建和以上检查均不代表已执行真机测试。
 
 验证要求：
 
